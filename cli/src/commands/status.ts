@@ -1,20 +1,25 @@
 import { Command } from 'commander';
 import kleur from 'kleur';
+// @ts-ignore
+import prompts from 'prompts';
 import { getCandidatePaths } from '../core/context.js';
 import { calculateDiff } from '../core/diff.js';
+import { executeSync } from '../core/sync-executor.js';
 import { findRepoRoot } from '../utils/repo-root.js';
 import { getManifestPath } from '../core/manifest.js';
 import fs from 'fs-extra';
 import path from 'path';
+// @ts-ignore
+import Conf from 'conf';
 
 function formatRelativeTime(timestamp: number): string {
     const now = Date.now();
     const diff = now - timestamp;
-    
+
     const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
-    
+
     if (minutes < 1) return 'just now';
     if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
     if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
@@ -23,12 +28,14 @@ function formatRelativeTime(timestamp: number): string {
 
 export function createStatusCommand(): Command {
     return new Command('status')
-        .description('Show diff between repo and target environments (read-only)')
+        .description('Show status and optionally sync target environments')
         .option('--json', 'Output machine-readable JSON', false)
         .action(async (opts) => {
             const { json } = opts;
 
             const repoRoot = await findRepoRoot();
+
+            // Auto-detect all existing environments (no prompt needed for read-only view)
             const candidates = getCandidatePaths();
             const targets: string[] = [];
             for (const c of candidates) {
@@ -39,7 +46,6 @@ export function createStatusCommand(): Command {
                 return;
             }
 
-            // Collect data for all targets
             interface TargetStatus {
                 path: string;
                 name: string;
@@ -68,7 +74,7 @@ export function createStatusCommand(): Command {
                 results.push({ path: target, name: path.basename(target), lastSync, changes: changeSet as any, totalChanges });
             }
 
-            // ── JSON output ─────────────────────────────────────────────────
+            // ── JSON output ──────────────────────────────────────────────────
             if (json) {
                 console.log(JSON.stringify({ targets: results }, null, 2));
                 return;
@@ -110,11 +116,40 @@ export function createStatusCommand(): Command {
             console.log('\n' + table.toString());
 
             const totalPending = results.reduce((s, r) => s + r.totalChanges, 0);
-            if (totalPending > 0) {
-                console.log(kleur.yellow(`\n  ⚠  ${totalPending} pending change${totalPending !== 1 ? 's' : ''} across ${results.filter(r => r.totalChanges > 0).length} environment${results.filter(r => r.totalChanges > 0).length !== 1 ? 's' : ''}`));
-                console.log(kleur.gray(`  Run ${kleur.cyan('jaggers-config sync')} to apply\n`));
-            } else {
-                console.log(kleur.green(`\n  ✓ All environments up-to-date\n`));
+
+            if (totalPending === 0) {
+                console.log(kleur.green('\n  ✓ All environments up-to-date\n'));
+                return;
             }
+
+            const pending = results.filter(r => r.totalChanges > 0);
+            console.log(kleur.yellow(`\n  ⚠  ${totalPending} pending change${totalPending !== 1 ? 's' : ''} across ${pending.length} environment${pending.length !== 1 ? 's' : ''}\n`));
+
+            // ── Inline sync offer ────────────────────────────────────────────
+            const { proceed } = await prompts({
+                type: 'confirm',
+                name: 'proceed',
+                message: 'Apply sync now?',
+                initial: true,
+            });
+
+            if (!proceed) {
+                console.log(kleur.gray('  Skipped. Run jaggers-config sync anytime to apply.\n'));
+                return;
+            }
+
+            // Reuse the already-computed changeSets — no second diff needed
+            const store = new Conf({ projectName: 'jaggers-config-manager' });
+            const syncMode = (store.get('syncMode') as string) || 'copy';
+
+            let totalSynced = 0;
+            for (const r of pending) {
+                console.log(kleur.bold(`\n  → ${r.name}`));
+                const count = await executeSync(repoRoot, r.path, r.changes as any, syncMode as any, 'sync', false);
+                totalSynced += count;
+                console.log(kleur.green(`  ✓ ${count} item${count !== 1 ? 's' : ''} synced`));
+            }
+
+            console.log(kleur.bold().green(`\n✓ Done — ${totalSynced} item${totalSynced !== 1 ? 's' : ''} synced\n`));
         });
 }

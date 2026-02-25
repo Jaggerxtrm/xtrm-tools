@@ -124,25 +124,56 @@ export function checkRequiredEnvVars(): string[] {
 }
 
 /**
- * Prompt user about missing environment variables
- * Returns true if user wants to proceed anyway
+ * Prompt user to enter missing environment variables interactively.
+ * Saves provided values to .env and sets them in process.env.
+ * Returns true if all missing vars were provided (sync can continue).
  */
-export function handleMissingEnvVars(missing: string[]): boolean {
+export async function handleMissingEnvVars(missing: string[]): Promise<boolean> {
     if (missing.length === 0) {
         return true;
     }
 
-    console.log(kleur.yellow('\n  ⚠️  Missing environment variables:'));
+    // @ts-ignore
+    const prompts = (await import('prompts')).default;
+
+    const answers: Record<string, string> = {};
+
     for (const key of missing) {
         const config = REQUIRED_ENV_VARS[key];
-        console.log(kleur.yellow(`    - ${key}: ${config.description}`));
-        console.log(kleur.dim(`      Get your key from: ${config.getUrl()}`));
+        console.log(kleur.yellow(`\n  ⚠️  ${config.description} is required`));
+        console.log(kleur.dim(`     Get your key from: ${config.getUrl()}`));
+
+        const { value } = await prompts({
+            type: 'text',
+            name: 'value',
+            message: `Enter ${key}:`,
+            validate: (v: string) => v.trim().length > 0 || 'API key cannot be empty'
+        });
+
+        if (!value) {
+            console.log(kleur.gray(`  Skipped — ${key} not provided. MCP server will be skipped.`));
+            return false;
+        }
+
+        answers[key] = value.trim();
+        process.env[key] = value.trim();
     }
 
-    console.log(kleur.yellow(`\n  Please edit: ${ENV_FILE}`));
-    console.log(kleur.gray(`  Or copy from example: ${ENV_EXAMPLE_FILE}`));
+    // Persist to .env file
+    let envContent = fs.existsSync(ENV_FILE) ? fs.readFileSync(ENV_FILE, 'utf8') : '';
+    for (const [key, value] of Object.entries(answers)) {
+        const line = `${key}=${value}`;
+        const regex = new RegExp(`^${key}=.*$`, 'm');
+        if (regex.test(envContent)) {
+            envContent = envContent.replace(regex, line);
+        } else {
+            envContent += `\n${line}\n`;
+        }
+    }
+    fs.writeFileSync(ENV_FILE, envContent);
+    console.log(kleur.green(`  ✓ Saved to ${ENV_FILE}`));
 
-    return false; // Don't proceed automatically
+    return true;
 }
 
 export function getEnvFilePath(): string {

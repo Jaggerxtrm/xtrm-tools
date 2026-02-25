@@ -101,13 +101,12 @@ export async function executeSync(
                     src = path.join(repoRoot, 'config', 'settings.json');
                     dest = path.join(systemRoot, 'settings.json');
 
-                    console.log(kleur.gray(`  --> config/settings.json`));
-
                     const agent = detectAgent(systemRoot);
                     if (agent) {
-                        console.log(kleur.gray(`  (Skipped: ${agent} uses ${agent} mcp CLI for MCP servers)`));
                         continue;
                     }
+
+                    console.log(kleur.gray(`  --> config/settings.json`));
 
                     if (!isDryRun && await fs.pathExists(dest)) {
                         backups.push(await createBackup(dest));

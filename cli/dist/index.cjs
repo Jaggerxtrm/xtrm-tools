@@ -37263,20 +37263,45 @@ function checkRequiredEnvVars() {
   }
   return missing;
 }
-function handleMissingEnvVars(missing) {
+async function handleMissingEnvVars(missing) {
   if (missing.length === 0) {
     return true;
   }
-  console.log(kleur_default.yellow("\n  \u26A0\uFE0F  Missing environment variables:"));
+  const prompts4 = (await Promise.resolve().then(() => __toESM(require_prompts3(), 1))).default;
+  const answers = {};
   for (const key of missing) {
     const config3 = REQUIRED_ENV_VARS[key];
-    console.log(kleur_default.yellow(`    - ${key}: ${config3.description}`));
-    console.log(kleur_default.dim(`      Get your key from: ${config3.getUrl()}`));
+    console.log(kleur_default.yellow(`
+  \u26A0\uFE0F  ${config3.description} is required`));
+    console.log(kleur_default.dim(`     Get your key from: ${config3.getUrl()}`));
+    const { value } = await prompts4({
+      type: "text",
+      name: "value",
+      message: `Enter ${key}:`,
+      validate: (v) => v.trim().length > 0 || "API key cannot be empty"
+    });
+    if (!value) {
+      console.log(kleur_default.gray(`  Skipped \u2014 ${key} not provided. MCP server will be skipped.`));
+      return false;
+    }
+    answers[key] = value.trim();
+    process.env[key] = value.trim();
   }
-  console.log(kleur_default.yellow(`
-  Please edit: ${ENV_FILE}`));
-  console.log(kleur_default.gray(`  Or copy from example: ${ENV_EXAMPLE_FILE}`));
-  return false;
+  let envContent = import_fs_extra6.default.existsSync(ENV_FILE) ? import_fs_extra6.default.readFileSync(ENV_FILE, "utf8") : "";
+  for (const [key, value] of Object.entries(answers)) {
+    const line = `${key}=${value}`;
+    const regex2 = new RegExp(`^${key}=.*$`, "m");
+    if (regex2.test(envContent)) {
+      envContent = envContent.replace(regex2, line);
+    } else {
+      envContent += `
+${line}
+`;
+    }
+  }
+  import_fs_extra6.default.writeFileSync(ENV_FILE, envContent);
+  console.log(kleur_default.green(`  \u2713 Saved to ${ENV_FILE}`));
+  return true;
 }
 function getEnvFilePath() {
   return ENV_FILE;
@@ -37518,20 +37543,47 @@ async function syncMcpServersWithCli(agent, mcpConfig, dryRun = false, prune = f
     console.log(kleur_default.dim(`  \u2713 ${skippedCount} server(s) already installed`));
     return;
   }
-  const missingEnvVars = checkRequiredEnvVars();
-  if (missingEnvVars.length > 0) {
-    const shouldProceed = handleMissingEnvVars(missingEnvVars);
-    if (!shouldProceed) return;
+  let selectedNames = toAdd.map(([name]) => name);
+  if (!dryRun) {
+    const prompts4 = await Promise.resolve().then(() => __toESM(require_prompts3(), 1));
+    const { selected } = await prompts4.default({
+      type: "multiselect",
+      name: "selected",
+      message: `Select MCP servers to install via ${agent} CLI:`,
+      choices: toAdd.map(([name, server]) => ({
+        title: name,
+        description: server._notes?.description || "",
+        value: name,
+        selected: true
+      })),
+      hint: "- Space to toggle. Enter to confirm.",
+      instructions: false
+    });
+    if (!selected || selected.length === 0) {
+      console.log(kleur_default.gray("  Skipped MCP installation."));
+      return;
+    }
+    selectedNames = selected;
+    const missingEnvVars = checkRequiredEnvVars();
+    if (missingEnvVars.length > 0) {
+      const shouldProceed = await handleMissingEnvVars(missingEnvVars);
+      if (!shouldProceed) return;
+    }
   }
-  let successCount = 0;
+  const selectedSet = new Set(selectedNames);
+  const commandsToRun = [];
   for (const [name, server] of toAdd) {
+    if (!selectedSet.has(name)) continue;
     const cmd = buildAddCommand(agent, name, server);
-    if (cmd) {
-      const result = executeCommand(agent, cmd, dryRun);
-      if (result.success && !result.skipped) {
-        successCount++;
-        console.log(kleur_default.green(`  + ${name}`));
-      }
+    if (cmd) commandsToRun.push({ name, cmd });
+  }
+  if (commandsToRun.length === 0) return;
+  let successCount = 0;
+  for (const { name, cmd } of commandsToRun) {
+    const result = executeCommand(agent, cmd, dryRun);
+    if (result.success && !result.skipped) {
+      successCount++;
+      console.log(kleur_default.green(`  + ${name}`));
     }
   }
   if (skippedCount > 0) {
@@ -37640,12 +37692,11 @@ async function executeSync(repoRoot, systemRoot, changeSet, mode, actionType, is
         if (category === "config" && item === "settings.json" && actionType === "sync") {
           src = import_path10.default.join(repoRoot, "config", "settings.json");
           dest = import_path10.default.join(systemRoot, "settings.json");
-          console.log(kleur_default.gray(`  --> config/settings.json`));
           const agent2 = detectAgent(systemRoot);
           if (agent2) {
-            console.log(kleur_default.gray(`  (Skipped: ${agent2} uses ${agent2} mcp CLI for MCP servers)`));
             continue;
           }
+          console.log(kleur_default.gray(`  --> config/settings.json`));
           if (!isDryRun && await import_fs_extra9.default.pathExists(dest)) {
             backups.push(await createBackup(dest));
           }

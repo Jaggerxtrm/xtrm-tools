@@ -289,22 +289,58 @@ export async function syncMcpServersWithCli(
         return;
     }
 
-    // Only warn about missing env vars when we are actually about to add servers
-    const missingEnvVars = checkRequiredEnvVars();
-    if (missingEnvVars.length > 0) {
-        const shouldProceed = handleMissingEnvVars(missingEnvVars);
-        if (!shouldProceed) return;
+    // Step 1: Multiselect — all servers pre-selected, user can deselect with space
+    let selectedNames: string[] = toAdd.map(([name]) => name);
+
+    if (!dryRun) {
+        // @ts-ignore
+        const prompts = await import('prompts');
+        const { selected } = await prompts.default({
+            type: 'multiselect',
+            name: 'selected',
+            message: `Select MCP servers to install via ${agent} CLI:`,
+            choices: toAdd.map(([name, server]: [string, any]) => ({
+                title: name,
+                description: (server as any)._notes?.description || '',
+                value: name,
+                selected: true
+            })),
+            hint: '- Space to toggle. Enter to confirm.',
+            instructions: false
+        });
+
+        if (!selected || selected.length === 0) {
+            console.log(kleur.gray('  Skipped MCP installation.'));
+            return;
+        }
+
+        selectedNames = selected;
+
+        // Step 2: Only ask for env vars AFTER user confirms selection
+        const missingEnvVars = checkRequiredEnvVars();
+        if (missingEnvVars.length > 0) {
+            const shouldProceed = await handleMissingEnvVars(missingEnvVars);
+            if (!shouldProceed) return;
+        }
     }
 
-    let successCount = 0;
+    // Step 3: Build and execute commands for selected servers only
+    const selectedSet = new Set(selectedNames);
+    const commandsToRun: Array<{ name: string; cmd: string[] }> = [];
     for (const [name, server] of toAdd) {
+        if (!selectedSet.has(name)) continue;
         const cmd = buildAddCommand(agent, name, server as any);
-        if (cmd) {
-            const result = executeCommand(agent, cmd, dryRun);
-            if (result.success && !result.skipped) {
-                successCount++;
-                console.log(kleur.green(`  + ${name}`));
-            }
+        if (cmd) commandsToRun.push({ name, cmd });
+    }
+
+    if (commandsToRun.length === 0) return;
+
+    let successCount = 0;
+    for (const { name, cmd } of commandsToRun) {
+        const result = executeCommand(agent, cmd, dryRun);
+        if (result.success && !result.skipped) {
+            successCount++;
+            console.log(kleur.green(`  + ${name}`));
         }
     }
 

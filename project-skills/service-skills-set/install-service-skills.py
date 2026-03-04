@@ -9,6 +9,7 @@ Installs:
   .claude/skills/creating-service-skills/   — scaffold new service skills
   .claude/skills/using-service-skills/      — session-start catalog injection
   .claude/skills/updating-service-skills/   — drift detection on file writes
+  .claude/skills/scoping-service-skills/    — task intake and service routing
   .claude/settings.json                     — SessionStart + PostToolUse hooks
   .githooks/pre-commit                      — doc-reminder (non-blocking)
   .githooks/pre-push                        — skill-staleness (non-blocking)
@@ -32,7 +33,7 @@ GREEN  = "\033[0;32m"
 YELLOW = "\033[1;33m"
 NC     = "\033[0m"
 
-TRINITY = ["creating-service-skills", "using-service-skills", "updating-service-skills"]
+TRINITY = ["creating-service-skills", "using-service-skills", "updating-service-skills", "scoping-service-skills"]
 
 SETTINGS_HOOKS = {
     "SessionStart": [

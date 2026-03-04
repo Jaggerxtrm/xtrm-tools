@@ -119,13 +119,25 @@ export async function executeSync(
                     const repoConfig = await fs.readJson(src);
                     let finalRepoConfig = resolveConfigPaths(repoConfig, systemRoot);
 
+                    // When agent CLI handles MCP servers, strip them from the config merge
+                    // but still merge hooks, permissions, plugins, skillSuggestions, etc.
+                    if (agent) {
+                        delete finalRepoConfig.mcpServers;
+                        if (!isDryRun) console.log(kleur.dim(`      (MCP servers managed by ${agent} CLI — merging non-MCP settings only)`));
+                    }
+
                     const hooksSrc = path.join(repoRoot, 'config', 'hooks.json');
                     if (await fs.pathExists(hooksSrc)) {
                         const hooksRaw = await fs.readJson(hooksSrc);
                         const hooksAdapted = adapter.adaptHooksConfig(hooksRaw);
                         if (hooksAdapted.hooks) {
-                            finalRepoConfig.hooks = { ...(finalRepoConfig.hooks || {}), ...hooksAdapted.hooks };
+                            // hooks.json is the canonical source — replace template hooks entirely
+                            // to avoid Claude event names leaking into Gemini/Qwen configs
+                            finalRepoConfig.hooks = hooksAdapted.hooks;
                             if (!isDryRun) console.log(kleur.dim(`      (Injected hooks)`));
+                        }
+                        if (hooksAdapted.statusLine) {
+                            finalRepoConfig.statusLine = hooksAdapted.statusLine;
                         }
                     }
 
@@ -329,19 +341,23 @@ async function executeSyncAgentsSkills(
 
 function resolveConfigPaths(config: any, targetDir: string): any {
     const newConfig = JSON.parse(JSON.stringify(config));
+    const home = process.env.HOME || process.env.USERPROFILE || '';
 
     function recursiveReplace(obj: any) {
         for (const key in obj) {
             if (typeof obj[key] === 'string') {
-                if (obj[key].match(/\/[^\s"']+\/hooks\//)) {
-                    const hooksDir = path.join(targetDir, 'hooks');
-                    let replacementDir = `${hooksDir}/`;
-
-                    if (process.platform === 'win32') {
-                        replacementDir = replacementDir.replace(/\\/g, '/');
+                let val = obj[key];
+                // Resolve $HOME and ~ to actual home directory for comparison
+                // but only match absolute paths, not env-var paths like "$HOME/..."
+                if (!val.startsWith('$') && !val.startsWith('~')) {
+                    if (val.match(/\/[^\s"']+\/hooks\//)) {
+                        const hooksDir = path.join(targetDir, 'hooks');
+                        let replacementDir = `${hooksDir}/`;
+                        if (process.platform === 'win32') {
+                            replacementDir = replacementDir.replace(/\\/g, '/');
+                        }
+                        obj[key] = val.replace(/(\/[^\s"']+\/hooks\/)/g, replacementDir);
                     }
-
-                    obj[key] = obj[key].replace(/(\/[^\s"']+\/hooks\/)/g, replacementDir);
                 }
             } else if (typeof obj[key] === 'object' && obj[key] !== null) {
                 recursiveReplace(obj[key]);

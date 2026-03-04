@@ -5,8 +5,10 @@
 version: 1
 
 # ----------------------------------------------------------------------------
-# CCS Profiles: Cost-optimized simple delegation
-# Execute via: ccs {profile} -p "{task}"
+# CCS Profiles: Cost-optimized delegation via CCS wrapper (GLM only)
+# CCS wraps the claude CLI — only GLM is supported here.
+# Execute via: tmux new-session -d ... "env -u CLAUDECODE ccs glm -p '{task}' > /tmp/out.txt 2>&1"
+# For file modifications: add --dangerously-skip-permissions flag
 # ----------------------------------------------------------------------------
 ccs_profiles:
   glm:
@@ -17,22 +19,30 @@ ccs_profiles:
       - "format|lint|prettier"
       - "add.*type|type.*hint"
     cost: low
-    description: "GLM-4-Flash - Fast model for tests, typos, formatting"
+    description: "GLM-4-Flash - Fast model for tests, typos, formatting (via CCS, requires tmux)"
 
+# ----------------------------------------------------------------------------
+# Direct CLI: Gemini and Qwen are called directly — no CCS, no tmux workaround.
+# Execute via: gemini -p "{task}"  |  qwen "{task}"
+# For file modifications: add -y flag to auto-approve tool calls
+# ----------------------------------------------------------------------------
+direct_cli:
   gemini:
     patterns:
       - "think|analyze|reason|evaluate"
       - "architecture|entire|codebase"
       - "explain|describe|how.*work"
     cost: medium
-    description: "Gemini-Flash - Reasoning and long-context analysis"
+    description: "Gemini CLI - Reasoning and long-context analysis (gemini -p)"
+    allow_modifications_flag: "-y"
 
   qwen:
     patterns:
       - "quality|pattern|convention"
       - "refactor(?!.*sprint)|improve|optimize"
     cost: medium
-    description: "Qwen-2.5 - Code quality and pattern detection"
+    description: "Qwen CLI - Code quality and pattern detection (qwen)"
+    allow_modifications_flag: "-y"
 
 # ----------------------------------------------------------------------------
 # Orchestration Workflows: Direct multi-agent orchestration (Gemini + Qwen)
@@ -99,11 +109,11 @@ orchestration_workflows:
 
 # ----------------------------------------------------------------------------
 # Pattern Priority: Higher priority checked first
-# Orchestration workflows have priority over CCS simple tasks
 # ----------------------------------------------------------------------------
 priority:
   - orchestration_workflows  # Complex multi-agent tasks first
-  - ccs_profiles             # Simple cost-optimized tasks second
+  - direct_cli               # Gemini/Qwen direct CLIs second
+  - ccs_profiles             # GLM via CCS last (lowest cost)
 
 # ----------------------------------------------------------------------------
 # Default Backend: Used when no pattern matches
@@ -156,17 +166,18 @@ auto_focus:
 # Example: /delegation --unitai [task] → Force unitAI (auto-select workflow)
 # ----------------------------------------------------------------------------
 override_flags:
-  # CCS profile overrides
+  # CCS profile override (GLM only)
   - flag: "--glm"
     backend: ccs
     profile: glm
 
+  # Direct CLI overrides
   - flag: "--gemini"
-    backend: ccs
+    backend: direct_cli
     profile: gemini
 
   - flag: "--qwen"
-    backend: ccs
+    backend: direct_cli
     profile: qwen
 
   # unitAI workflow overrides

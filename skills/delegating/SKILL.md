@@ -105,19 +105,70 @@ When `backend: 'orchestration'` is selected, **Claude autonomously** chooses the
 
 1. **Parse override flag** (if present: `--glm`, `--gemini`, `--orchestrate`, etc.)
 2. **Auto-select backend** using keyword-based logic.
-3. **Route to appropriate backend:**
-   - **CCS**: `env -u CLAUDECODE ccs {profile} -p "{task}" > /tmp/ccs_out.txt 2>&1` (run via tmux, then `cat /tmp/ccs_out.txt`)
-     > **Note**: CCS wraps the `claude` CLI, which requires a PTY for output and blocks on the `CLAUDECODE` nested-session guard. Use tmux to provide a PTY and redirect output to a file:
-     > ```bash
-     > tmux new-session -d -s ccs_task "env -u CLAUDECODE ccs {profile} -p '{task}' > /tmp/ccs_out.txt 2>&1"
-     > sleep 30  # or poll until session exits
-     > cat /tmp/ccs_out.txt
-     > ```
-     > Gemini and Qwen are called directly and do not need this workaround.
-   - **Orchestration**:
-     - Use `gemini -p` or `qwen` based on the selected pattern.
-     - Capture output and pipe to the next agent as needed.
+3. **Route to appropriate backend** (see sections below).
 4. **Report results**: Backend, Workflow (if Orchestration), Cost indicator, Duration.
+
+---
+
+### CCS / GLM Execution
+
+CCS wraps the `claude` CLI and **only works with GLM**. It requires a PTY for output and is blocked by the `CLAUDECODE` nested-session guard — always run via tmux:
+
+```bash
+tmux new-session -d -s ccs_task "env -u CLAUDECODE ccs glm -p '{task}' > /tmp/ccs_out.txt 2>&1"
+sleep 30  # or poll until session exits
+cat /tmp/ccs_out.txt
+```
+
+**If the task requires file modifications**, add `--dangerously-skip-permissions`:
+
+```bash
+tmux new-session -d -s ccs_task "env -u CLAUDECODE ccs glm --dangerously-skip-permissions -p '{task}' > /tmp/ccs_out.txt 2>&1"
+```
+
+---
+
+### Gemini CLI Execution
+
+Gemini is a **direct CLI** — no tmux workaround needed:
+
+```bash
+gemini -p "task description"
+```
+
+**If the task requires file modifications**, add `-y` to auto-approve all tool calls:
+
+```bash
+gemini -y -p "task description"
+```
+
+---
+
+### Qwen CLI Execution
+
+Qwen is a **direct CLI** — no tmux workaround needed:
+
+```bash
+qwen "task description"
+```
+
+**If the task requires file modifications**, add `-y` to auto-approve all tool calls:
+
+```bash
+qwen -y "task description"
+```
+
+---
+
+### Orchestration Execution
+
+Multi-turn sequences use Gemini and Qwen **direct CLIs**. Add `-y` to all turns when modifications are expected:
+
+```bash
+gemini -y -p "..."            # Turn 1
+qwen -y "..."                 # Turn 2
+gemini -y -r latest -p "..."  # Turn 3 (refine)
+```
 
 ---
 

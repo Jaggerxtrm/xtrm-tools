@@ -4,6 +4,31 @@ Planned improvements and feature additions for Claude Code skills.
 
 ---
 
+## `install-service-skills` — Include `AGENTS.md` in Installation
+
+### Current State
+
+`jaggers-config install-service-skills` copies the Trinity skills and wires hooks into a target project's `.claude/` directory, but does not copy any agent context documentation to the project root.
+
+### Planned Enhancement
+
+Include `AGENTS.md` (or a project-scoped variant) as part of the `install-service-skills` installation flow so every project that uses jaggers-agent-tools automatically gets:
+
+- GitNexus MCP reference (already in current `AGENTS.md`)
+- bd (beads) issue tracking reference
+- Any future agent tooling context
+
+**Implementation:**
+- Copy repo `AGENTS.md` to the target project root during `installServiceSkills()`
+- If `AGENTS.md` already exists in the target, merge (append new sections not already present) rather than overwrite
+- Add the file to the manifest so it's tracked for future sync/drift detection
+
+**Priority:** 🟡 Medium — low effort, high value for new project onboarding
+
+**Timeline:** Next minor release
+
+---
+
 ## `prompt-improving` Skill
 
 ### Current State (v5.1.0)

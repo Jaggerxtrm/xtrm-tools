@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- **`AGENTS.md` — bd (beads) issue tracking section**: Comprehensive reference for the `bd` CLI covering session protocol, issue creation, dependency management, search/view commands, advanced features (`agent`, `gate`, `mol`, `audit`), and a bd vs TodoWrite decision table.
+
+### Roadmap
+
+- `AGENTS.md` should be included in the `jaggers-config install-service-skills` installation flow so all target projects get agent context out of the box (see ROADMAP.md).
+
+---
+
 ## [1.7.0] - 2026-02-25
 
 ### Added

@@ -12,3 +12,8 @@ node_modules/
 cli/node_modules
 /vsync_repo
 .gitnexus
+.dmux/
+
+# Dolt database files (added by bd init)
+.dolt/
+*.db

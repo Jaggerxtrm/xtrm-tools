@@ -36465,7 +36465,9 @@ function getCandidatePaths() {
   const isWindows4 = process.platform === "win32";
   const paths = [
     { label: ".claude", path: import_path.default.join(home, ".claude") },
+    { label: ".gemini", path: import_path.default.join(home, ".gemini") },
     { label: ".qwen", path: import_path.default.join(home, ".qwen") },
+    { label: "~/.gemini/antigravity", path: import_path.default.join(home, ".gemini", "antigravity") },
     { label: "~/.agents/skills", path: import_path.default.join(home, ".agents", "skills") }
   ];
   if (isWindows4 && appData) {

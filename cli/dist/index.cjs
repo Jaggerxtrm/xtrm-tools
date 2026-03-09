@@ -40857,7 +40857,7 @@ function resolveConfigPaths(config3, targetDir) {
 // src/utils/repo-root.ts
 var import_fs_extra10 = __toESM(require_lib2(), 1);
 var import_path11 = __toESM(require("path"), 1);
-async function findRepoRoot(startDir = process.cwd()) {
+async function walkUp(startDir) {
   let dir = import_path11.default.resolve(startDir);
   while (true) {
     const skillsPath = import_path11.default.join(dir, "skills");
@@ -40866,11 +40866,18 @@ async function findRepoRoot(startDir = process.cwd()) {
       return dir;
     }
     const parent = import_path11.default.dirname(dir);
-    if (parent === dir) {
-      throw new Error("Could not locate jaggers-agent-tools repo root. Run from within the cloned repository.");
-    }
+    if (parent === dir) return null;
     dir = parent;
   }
+}
+async function findRepoRoot() {
+  const fromCwd = await walkUp(process.cwd());
+  if (fromCwd) return fromCwd;
+  const fromBundle = await walkUp(import_path11.default.resolve(__dirname, "..", ".."));
+  if (fromBundle) return fromBundle;
+  throw new Error(
+    "Could not locate jaggers-agent-tools repo root.\nRun via `npx -y github:Jaggerxtrm/jaggers-agent-tools` or from within the cloned repository."
+  );
 }
 
 // src/utils/theme.ts

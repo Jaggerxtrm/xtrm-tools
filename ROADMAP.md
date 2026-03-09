@@ -2,8 +2,10 @@
 
 Planned improvements and feature additions for Claude Code skills.
 
----
 
+---
+## New documenting skill version
+Currently the CHANGELOG.md is updated via direct read>edit. Include a script that let's the agent run it and pass the changelog entry as an argument.
 ## `install-service-skills` — Include `AGENTS.md` in Installation
 
 ### Current State

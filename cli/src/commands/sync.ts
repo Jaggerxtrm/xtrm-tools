@@ -29,11 +29,10 @@ function renderPlanTable(allChanges: TargetChanges[]): void {
 
     const table = new Table({
         head: [
-            t.bold('Target'),
-            t.bold(kleur.green('+ New')),
-            t.bold(kleur.yellow('↑ Update')),
-            t.bold(kleur.red('! Drift')),
-            t.bold('Total'),
+            t.header('Target'),
+            t.header(kleur.green('+ New')),
+            t.header(kleur.yellow('↑ Update')),
+            t.header('Total'),
         ],
         style: { head: [], border: [] },
     });
@@ -41,14 +40,12 @@ function renderPlanTable(allChanges: TargetChanges[]): void {
     for (const { target, changeSet, totalChanges } of allChanges) {
         const missing  = Object.values(changeSet).reduce((s: number, c: any) => s + c.missing.length,  0) as number;
         const outdated = Object.values(changeSet).reduce((s: number, c: any) => s + c.outdated.length, 0) as number;
-        const drifted  = Object.values(changeSet).reduce((s: number, c: any) => s + c.drifted.length,  0) as number;
 
         table.push([
-            path.basename(target),
-            missing  > 0 ? kleur.green(String(missing))  : t.muted('—'),
-            outdated > 0 ? kleur.yellow(String(outdated)) : t.muted('—'),
-            drifted  > 0 ? kleur.red(String(drifted))    : t.muted('—'),
-            t.bold(String(totalChanges)),
+            kleur.white(path.basename(target)),           // primary data — white
+            missing  > 0 ? kleur.green(String(missing))  : t.label('—'),
+            outdated > 0 ? kleur.yellow(String(outdated)) : t.label('—'),
+            kleur.bold().white(String(totalChanges)),
         ]);
     }
 
@@ -67,11 +64,11 @@ async function renderSummaryCard(
     const lines = [
         hasDrift ? t.boldGreen('  ✓ Sync complete') + t.warning('  (with skipped drift)') : t.boldGreen('  ✓ Sync complete'),
         '',
-        `  ${t.muted('Targets')}   ${allChanges.length} environment${allChanges.length !== 1 ? 's' : ''}`,
-        `  ${t.muted('Synced')}    ${totalCount} item${totalCount !== 1 ? 's' : ''}`,
+        `  ${t.label('Targets')}   ${allChanges.length} environment${allChanges.length !== 1 ? 's' : ''}`,
+        `  ${t.label('Synced')}    ${totalCount} item${totalCount !== 1 ? 's' : ''}`,
         ...(hasDrift ? [
-            `  ${t.muted('Skipped')}   ${kleur.yellow(String(allSkipped.length))} drifted (local changes preserved)`,
-            `  ${t.muted('Hint')}      run ${t.accent('jaggers-config sync --backport')} to push them back`,
+            `  ${t.label('Skipped')}   ${kleur.yellow(String(allSkipped.length))} drifted (local changes preserved)`,
+            `  ${t.label('Hint')}      run ${t.accent('jaggers-config sync --backport')} to push them back`,
         ] : []),
         ...(isDryRun ? ['', t.accent('  Dry run — no changes written')] : []),
     ];
@@ -127,8 +124,24 @@ export function createSyncCommand(): Command {
             const diffCtx = await diffTasks.run({ allChanges: [] });
             const allChanges = diffCtx.allChanges;
 
+            // MCP sync always runs regardless of file changes
+            if (!backport && !dryRun) {
+                const emptyChangeSet = {
+                    skills: { missing: [], outdated: [], drifted: [], total: 0 },
+                    hooks: { missing: [], outdated: [], drifted: [], total: 0 },
+                    config: { missing: [], outdated: [], drifted: [], total: 0 },
+                    commands: { missing: [], outdated: [], drifted: [], total: 0 },
+                    'qwen-commands': { missing: [], outdated: [], drifted: [], total: 0 },
+                    'antigravity-workflows': { missing: [], outdated: [], drifted: [], total: 0 },
+                };
+                for (const target of targets) {
+                    console.log(t.bold(`\n  ${sym.arrow} ${path.basename(target)}`));
+                    await executeSync(repoRoot, target, emptyChangeSet, syncMode, 'sync', false);
+                }
+            }
+
             if (allChanges.length === 0) {
-                console.log('\n' + t.boldGreen('✓ All targets are up-to-date') + '\n');
+                console.log('\n' + t.boldGreen('✓ Files are up-to-date') + '\n');
                 return;
             }
 

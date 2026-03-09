@@ -108,13 +108,17 @@ export function loadEnvFile(): Record<string, string> {
 }
 
 /**
- * Check if required environment variables are set
- * Returns array of missing variable names
+ * Check if required environment variables are set.
+ * Pass an optional `subset` of var names to check only those.
+ * Known vars (in REQUIRED_ENV_VARS) get rich metadata; unknown vars are
+ * still checked so server-defined ${VAR} references are never silently dropped.
+ * Returns array of missing variable names.
  */
-export function checkRequiredEnvVars(): string[] {
+export function checkRequiredEnvVars(subset?: string[]): string[] {
     const missing: string[] = [];
+    const keysToCheck = subset ?? Object.keys(REQUIRED_ENV_VARS);
 
-    for (const [key] of Object.entries(REQUIRED_ENV_VARS)) {
+    for (const key of keysToCheck) {
         if (!process.env[key]) {
             missing.push(key);
         }
@@ -140,14 +144,18 @@ export async function handleMissingEnvVars(missing: string[]): Promise<boolean> 
 
     for (const key of missing) {
         const config = REQUIRED_ENV_VARS[key];
-        console.log(kleur.yellow(`\n  ⚠️  ${config.description} is required`));
-        console.log(kleur.dim(`     Get your key from: ${config.getUrl()}`));
+        if (config) {
+            console.log(kleur.yellow(`\n  ⚠️  ${config.description} is required`));
+            console.log(kleur.dim(`     Get your key from: ${config.getUrl()}`));
+        } else {
+            console.log(kleur.yellow(`\n  ⚠️  ${key} is required by a selected MCP server`));
+        }
 
         const { value } = await prompts({
             type: 'text',
             name: 'value',
             message: `Enter ${key}:`,
-            validate: (v: string) => v.trim().length > 0 || 'API key cannot be empty'
+            validate: (v: string) => v.trim().length > 0 || 'Value cannot be empty'
         });
 
         if (!value) {

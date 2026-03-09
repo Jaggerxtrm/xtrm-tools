@@ -3,9 +3,6 @@
   "version": "1.2.0",
   "description": "Installer for Jaggers Agent Tools (Skills & Hooks)",
   "type": "module",
-  "engines": {
-    "node": ">=20"
-  },
   "bin": {
     "jaggers-config": "./cli/dist/index.cjs"
   },

@@ -30,7 +30,9 @@ export function getCandidatePaths(): Array<{ label: string; path: string }> {
 
     const paths = [
         { label: '.claude', path: path.join(home, '.claude') },
+        { label: '.gemini', path: path.join(home, '.gemini') },
         { label: '.qwen', path: path.join(home, '.qwen') },
+        { label: '~/.gemini/antigravity', path: path.join(home, '.gemini', 'antigravity') },
         { label: '~/.agents/skills', path: path.join(home, '.agents', 'skills') },
     ];
 

@@ -30,8 +30,8 @@ export interface SelectedPlan {
 
 const STATUS_LABEL: Record<string, string> = {
     missing:  kleur.green('[+]'),
-    outdated: kleur.blue('[↑]'),
-    drifted:  kleur.red('[~]'),
+    outdated: kleur.yellow('[↑]'),    // yellow = actionable warning, not blue
+    drifted:  kleur.magenta('[≠]'),   // magenta = conflict/divergence
 };
 
 function fileChoices(target: TargetPlan): any[] {
@@ -41,7 +41,7 @@ function fileChoices(target: TargetPlan): any[] {
     ];
     for (const f of target.files) {
         const label = STATUS_LABEL[f.status] ?? '[?]';
-        const hint = f.status === 'drifted' ? kleur.dim(' local edits — skip recommended') : '';
+        const hint = f.status === 'drifted' ? kleur.dim('  local edits — skip recommended') : '';
         choices.push({
             title: `  ${label} ${f.category}/${f.name}${hint}`,
             value: { type: 'file', target: target.target, name: f.name, status: f.status, category: f.category },

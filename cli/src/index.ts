@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { Command } from 'commander';
-import kleur from 'kleur';
+import kleur from 'kleur'; // used in error handlers below
 
 // __dirname is available in CJS output (tsup target: cjs)
 declare const __dirname: string;
@@ -12,7 +12,7 @@ import { createSyncCommand } from './commands/sync.js';
 import { createStatusCommand } from './commands/status.js';
 import { createResetCommand } from './commands/reset.js';
 import { createAddOptionalCommand } from './commands/add-optional.js';
-import { createInstallServiceSkillsCommand } from './commands/install-service-skills.js';
+import { printBanner } from './utils/banner.js';
 
 const program = new Command();
 
@@ -34,7 +34,6 @@ program.addCommand(createSyncCommand());
 program.addCommand(createStatusCommand());
 program.addCommand(createResetCommand());
 program.addCommand(createAddOptionalCommand());
-program.addCommand(createInstallServiceSkillsCommand());
 
 // Default action: run sync (for backwards compatibility)
 program
@@ -61,9 +60,10 @@ process.on('unhandledRejection', (reason) => {
 
 // Show startup banner unless --help or --version flag is present
 const isHelpOrVersion = process.argv.some(a => a === '--help' || a === '-h' || a === '--version' || a === '-V');
-if (!isHelpOrVersion) {
-    console.log(kleur.bold(`\n  jaggers-config`) + kleur.dim(` v${version}`));
-    console.log(kleur.dim(`  Sync agent tools across AI environments\n`));
-}
 
-program.parseAsync(process.argv);
+(async () => {
+    if (!isHelpOrVersion) {
+        await printBanner(version);
+    }
+    program.parseAsync(process.argv);
+})();

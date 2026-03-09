@@ -1,7 +1,11 @@
-import { execSync } from 'child_process';
+import { execSync, exec } from 'child_process';
+import { promisify } from 'util';
+const execAsync = promisify(exec);
 import fs from 'fs-extra';
 import path from 'path';
 import kleur from 'kleur';
+// @ts-ignore
+import ora from 'ora';
 import { ensureEnvFile, loadEnvFile, checkRequiredEnvVars, handleMissingEnvVars, getEnvFilePath } from './env-manager.js';
 
 export type AgentName = 'claude' | 'gemini' | 'qwen';
@@ -103,10 +107,15 @@ const AGENT_CLI: Record<AgentName, AgentCLI> = {
     }
 };
 
+// Strip ANSI escape codes (e.g. qwen wraps ✓ in color codes)
+function stripAnsi(str: string): string {
+    return str.replace(/\x1b\[[0-9;]*m/g, '');
+}
+
 function parseMcpListOutput(output: string, pattern: RegExp): string[] {
     const servers: string[] = [];
     for (const line of output.split('\n')) {
-        const match = line.match(pattern);
+        const match = stripAnsi(line).match(pattern);
         if (match) {
             servers.push(match[1]);
         }
@@ -171,7 +180,7 @@ interface CommandResult {
     error?: string;
 }
 
-function executeCommand(agent: AgentName, args: string[], dryRun: boolean = false): CommandResult {
+function executeCommand(agent: AgentName, args: string[], dryRun: boolean = false, displayName?: string): CommandResult {
     const cli = AGENT_CLI[agent];
 
     const quotedArgs = args.map(arg => {
@@ -183,13 +192,13 @@ function executeCommand(agent: AgentName, args: string[], dryRun: boolean = fals
     const command = `${cli.command} ${quotedArgs.join(' ')}`;
 
     if (dryRun) {
-        console.log(kleur.cyan(`  [DRY RUN] ${command}`));
+        console.log(kleur.cyan(`  [DRY RUN] ${displayName ?? args.slice(2).join(' ')}`));
         return { success: true, dryRun: true };
     }
 
     try {
         execSync(command, { stdio: 'pipe', timeout: 10000 });
-        console.log(kleur.green(`  ✓ ${args.slice(2).join(' ')}`));
+        console.log(kleur.green(`  ✓ ${displayName ?? args.slice(2).join(' ')}`));
         return { success: true };
     } catch (error: any) {
         const stderr = error.stderr?.toString() || error.message;
@@ -233,12 +242,44 @@ export function getCurrentServers(agent: AgentName): string[] {
     try {
         const output = execSync(`${cli.command} ${cli.listArgs.join(' ')}`, {
             encoding: 'utf8',
-            stdio: ['pipe', 'pipe', 'ignore']
+            stdio: ['pipe', 'pipe', 'pipe']
         });
         return cli.parseList(output);
+    } catch (error: any) {
+        // Some CLIs (e.g. gemini) write server list to stderr
+        const combined = (error.stdout || '') + '\n' + (error.stderr || '');
+        return cli.parseList(combined);
+    }
+}
+
+export async function getCurrentServersAsync(agent: AgentName): Promise<string[]> {
+    const cli = AGENT_CLI[agent];
+    try {
+        const { stdout, stderr } = await execAsync(`${cli.command} ${cli.listArgs.join(' ')}`, {
+            timeout: 10000,
+        });
+        // Some CLIs (e.g. gemini) write server list to stderr
+        return cli.parseList(stdout + '\n' + stderr);
     } catch (error) {
         return [];
     }
+}
+
+/**
+ * Extract ${VAR_NAME} references from a list of server config objects
+ */
+function getServerEnvVarNames(servers: any[]): string[] {
+    const vars = new Set<string>();
+    const pattern = /\$\{([A-Z0-9_]+)\}/g;
+    for (const server of servers) {
+        const json = JSON.stringify(server);
+        let match;
+        const re = new RegExp(pattern.source, pattern.flags);
+        while ((match = re.exec(json)) !== null) {
+            vars.add(match[1]);
+        }
+    }
+    return Array.from(vars);
 }
 
 /**
@@ -265,7 +306,9 @@ export async function syncMcpServersWithCli(
         envInitialized = true;
     }
 
-    const currentServers = getCurrentServers(agent);
+    const spinner = ora({ text: kleur.dim('  checking installed servers…'), indent: 2 }).start();
+    const currentServers = await getCurrentServersAsync(agent);
+    spinner.stop();
     const currentServersSet = new Set(currentServers);
     const canonicalServers = new Set(Object.keys(mcpConfig.mcpServers || {}));
 
@@ -316,8 +359,10 @@ export async function syncMcpServersWithCli(
 
         selectedNames = selected;
 
-        // Step 2: Only ask for env vars AFTER user confirms selection
-        const missingEnvVars = checkRequiredEnvVars();
+        // Step 2: Only ask for env vars needed by the selected servers
+        const selectedEntries = toAdd.filter(([name]) => new Set(selectedNames).has(name));
+        const neededVarNames = getServerEnvVarNames(selectedEntries.map(([, s]) => s as any));
+        const missingEnvVars = checkRequiredEnvVars(neededVarNames);
         if (missingEnvVars.length > 0) {
             const shouldProceed = await handleMissingEnvVars(missingEnvVars);
             if (!shouldProceed) return;
@@ -337,10 +382,9 @@ export async function syncMcpServersWithCli(
 
     let successCount = 0;
     for (const { name, cmd } of commandsToRun) {
-        const result = executeCommand(agent, cmd, dryRun);
+        const result = executeCommand(agent, cmd, dryRun, name);
         if (result.success && !result.skipped) {
             successCount++;
-            console.log(kleur.green(`  + ${name}`));
         }
     }
 

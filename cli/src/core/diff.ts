@@ -85,6 +85,10 @@ export async function calculateDiff(repoRoot: string, systemRoot: string, pruneM
     };
 
     for (const [name, paths] of Object.entries(configMapping)) {
+        // settings.json is path-transformed on install for all agent environments,
+        // so the hash always differs — skip to prevent perpetual false "1 update"
+        if (name === 'settings.json' && adapter !== null) continue;
+
         const itemRepoPath = join(repoRoot, paths.repo);
         const itemSystemPath = join(systemRoot, paths.sys);
 

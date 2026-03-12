@@ -1,0 +1,235 @@
+import { Command } from 'commander';
+import kleur from 'kleur';
+import path from 'path';
+import fs from 'fs-extra';
+import { spawnSync } from 'child_process';
+
+// CJS: __dirname = cli/dist/ — two levels up = package root
+declare const __dirname: string;
+const PKG_ROOT = path.resolve(__dirname, '../..');
+const PROJECT_SKILLS_DIR = path.join(PKG_ROOT, 'project-skills');
+
+/**
+ * Deep merge settings.json hooks without overwriting existing user hooks.
+ * Appends new hooks to existing events intelligently.
+ */
+function deepMergeHooks(existing: Record<string, any>, incoming: Record<string, any>): Record<string, any> {
+    const result = { ...existing };
+
+    if (!result.hooks) result.hooks = {};
+    if (!incoming.hooks) return result;
+
+    for (const [event, incomingHooks] of Object.entries(incoming.hooks)) {
+        if (!result.hooks[event]) {
+            // Event doesn't exist — add it
+            result.hooks[event] = incomingHooks;
+        } else {
+            // Event exists — merge hooks intelligently
+            const existingEventHooks = Array.isArray(result.hooks[event]) ? result.hooks[event] : [result.hooks[event]];
+            const incomingEventHooks = Array.isArray(incomingHooks) ? incomingHooks : [incomingHooks];
+
+            // Merge by comparing command strings to avoid duplicates
+            const existingCommands = new Set(
+                existingEventHooks.map((h: any) => h.command || h.hooks?.[0]?.command).filter(Boolean)
+            );
+
+            const newHooks = incomingEventHooks.filter((h: any) => {
+                const cmd = h.command || h.hooks?.[0]?.command;
+                return !cmd || !existingCommands.has(cmd);
+            });
+
+            result.hooks[event] = [...existingEventHooks, ...newHooks];
+        }
+    }
+
+    return result;
+}
+
+/**
+ * Install a project skill package into the current project.
+ */
+async function installProjectSkill(toolName: string): Promise<void> {
+    const skillPath = path.join(PROJECT_SKILLS_DIR, toolName);
+
+    // Validation: Check if project skill exists
+    if (!await fs.pathExists(skillPath)) {
+        console.error(kleur.red(`\n✗ Project skill '${toolName}' not found.\n`));
+        console.error(kleur.dim(`  Available project skills:\n`));
+        await listProjectSkills();
+        process.exit(1);
+    }
+
+    // Get target project root
+    const projectRoot = getProjectRoot();
+    const claudeDir = path.join(projectRoot, '.claude');
+
+    console.log(kleur.dim(`\n  Installing project skill: ${kleur.cyan(toolName)}`));
+    console.log(kleur.dim(`  Target: ${projectRoot}\n`));
+
+    const skillClaudeDir = path.join(skillPath, '.claude');
+    const skillSettingsPath = path.join(skillClaudeDir, 'settings.json');
+    const skillSkillsDir = path.join(skillClaudeDir, 'skills');
+    const skillReadmePath = path.join(skillPath, 'README.md');
+
+    // Step 1: Hook Injection (deep merge settings.json)
+    if (await fs.pathExists(skillSettingsPath)) {
+        console.log(kleur.bold('── Installing Hooks ──────────────────────'));
+        const targetSettingsPath = path.join(claudeDir, 'settings.json');
+
+        await fs.mkdirp(path.dirname(targetSettingsPath));
+
+        let existingSettings: Record<string, any> = {};
+        if (await fs.pathExists(targetSettingsPath)) {
+            try {
+                existingSettings = JSON.parse(await fs.readFile(targetSettingsPath, 'utf8'));
+            } catch {
+                // malformed JSON — start fresh
+            }
+        }
+
+        const incomingSettings = JSON.parse(await fs.readFile(skillSettingsPath, 'utf8'));
+        const mergedSettings = deepMergeHooks(existingSettings, incomingSettings);
+
+        await fs.writeFile(targetSettingsPath, JSON.stringify(mergedSettings, null, 2) + '\n');
+        console.log(`${kleur.green('  ✓')} settings.json (hooks merged)`);
+    }
+
+    // Step 2: Skill Copy
+    if (await fs.pathExists(skillSkillsDir)) {
+        console.log(kleur.bold('\n── Installing Skills ─────────────────────'));
+        const targetSkillsDir = path.join(claudeDir, 'skills');
+
+        const skillEntries = await fs.readdir(skillSkillsDir);
+        for (const entry of skillEntries) {
+            const src = path.join(skillSkillsDir, entry);
+            const dest = path.join(targetSkillsDir, entry);
+            await fs.copy(src, dest, {
+                filter: (src: string) => !src.includes('.Zone.Identifier'),
+            });
+            console.log(`${kleur.green('  ✓')} .claude/skills/${entry}/`);
+        }
+    }
+
+    // Step 3: Documentation Copy
+    if (await fs.pathExists(skillReadmePath)) {
+        console.log(kleur.bold('\n── Installing Documentation ──────────────'));
+        const docsDir = path.join(claudeDir, 'docs');
+        await fs.mkdirp(docsDir);
+
+        const destReadme = path.join(docsDir, `${toolName}-readme.md`);
+        await fs.copy(skillReadmePath, destReadme);
+        console.log(`${kleur.green('  ✓')} .claude/docs/${toolName}-readme.md`);
+    }
+
+    // Step 4: Post-Install Guidance
+    console.log(kleur.bold('\n── Post-Install Steps ────────────────────'));
+    console.log(kleur.yellow('\n  ⚠ IMPORTANT: Manual setup required!\n'));
+    console.log(kleur.white(`  ${toolName} requires additional configuration.`));
+    console.log(kleur.white(`  Please read: ${kleur.cyan('.claude/docs/' + toolName + '-readme.md')}\n`));
+
+    if (toolName === 'tdd-guard') {
+        console.log(kleur.white('  Example for Vitest:'));
+        console.log(kleur.dim('    npm install --save-dev tdd-guard-vitest\n'));
+    }
+
+    console.log(kleur.green('  ✓ Installation complete!\n'));
+}
+
+/**
+ * List available project skills.
+ */
+async function listProjectSkills(): Promise<void> {
+    if (!await fs.pathExists(PROJECT_SKILLS_DIR)) {
+        console.log(kleur.dim('  No project skills available.\n'));
+        return;
+    }
+
+    const entries = await fs.readdir(PROJECT_SKILLS_DIR);
+    const skills: Array<{ name: string; description: string }> = [];
+
+    for (const entry of entries) {
+        const entryPath = path.join(PROJECT_SKILLS_DIR, entry);
+        const stat = await fs.stat(entryPath);
+        if (!stat.isDirectory()) continue;
+
+        const readmePath = path.join(entryPath, 'README.md');
+        let description = 'No description available';
+
+        if (await fs.pathExists(readmePath)) {
+            const readmeContent = await fs.readFile(readmePath, 'utf8');
+            const descMatch = readmeContent.match(/^#\s+\S+\s*\n\s*\n\s*([^#\n]+)/);
+            if (descMatch) {
+                description = descMatch[1].trim().split('\n')[0].slice(0, 80);
+            }
+        }
+
+        skills.push({ name: entry, description });
+    }
+
+    if (skills.length === 0) {
+        console.log(kleur.dim('  No project skills available.\n'));
+        return;
+    }
+
+    console.log(kleur.bold('\nAvailable Project Skills:\n'));
+
+    // Dynamic import for Table
+    const Table = require('cli-table3');
+    const table = new Table({
+        head: [kleur.cyan('Skill'), kleur.cyan('Description')],
+        colWidths: [25, 60],
+        style: { head: [], border: [] },
+    });
+
+    for (const skill of skills) {
+        table.push([kleur.white(skill.name), kleur.dim(skill.description)]);
+    }
+
+    console.log(table.toString());
+
+    console.log(kleur.bold('\n\nUsage:\n'));
+    console.log(kleur.dim('  xtrm install project <skill-name>   Install a project skill'));
+    console.log(kleur.dim('  xtrm install project list           List available skills\n'));
+
+    console.log(kleur.bold('Example:\n'));
+    console.log(kleur.dim('  xtrm install project tdd-guard\n'));
+}
+
+function getProjectRoot(): string {
+    const result = spawnSync('git', ['rev-parse', '--show-toplevel'], {
+        encoding: 'utf8',
+        timeout: 5000,
+    });
+    if (result.status !== 0) {
+        throw new Error('Not inside a git repository. Run this command from your target project directory.');
+    }
+    return path.resolve(result.stdout.trim());
+}
+
+export function createInstallProjectCommand(): Command {
+    const installProjectCmd = new Command('project')
+        .description('Install a project-specific skill package');
+
+    // Subcommand: install project <tool-name>
+    installProjectCmd
+        .argument('<tool-name>', 'Name of the project skill to install')
+        .action(async (toolName: string) => {
+            try {
+                await installProjectSkill(toolName);
+            } catch (err: any) {
+                console.error(kleur.red(`\n✗ ${err.message}\n`));
+                process.exit(1);
+            }
+        });
+
+    // Subcommand: install project list
+    const listCmd = new Command('list')
+        .description('List available project skills')
+        .action(async () => {
+            await listProjectSkills();
+        });
+
+    installProjectCmd.addCommand(listCmd);
+
+    return installProjectCmd;
+}

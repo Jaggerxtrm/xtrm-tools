@@ -31,7 +31,7 @@ The quality gate runs as a `PostToolUse` hook:
 
 1. You edit a TypeScript/JavaScript file
 2. After the edit completes, the hook fires
-3. `quality-check.js` validates the file
+3. `quality-check.cjs` validates the file
 4. Issues are reported with auto-fix when possible
 5. Exit code 2 blocks if critical errors found
 

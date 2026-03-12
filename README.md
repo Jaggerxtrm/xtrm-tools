@@ -1,13 +1,30 @@
-# Jaggers Agent Tools
+# XTRM-Tools
 
-Custom skills, hooks, and commands for Claude Code. This repository contains production-ready extensions to enhance Claude's capabilities with prompt improvement, task delegation, and development workflow automation.
-A smart CLI configuration and update mechanism makes it easy to copy skills, commands and hooks across different agentic IDEs or CLIs. You can clone the repo and reuse the install/update method for your very own purposes.
+**Claude Code tools installer** — skills, hooks, MCP servers, and project-specific extensions.
+
+> **ARCHITECTURAL DECISION (v2.0.0):** xtrm-tools now supports **Claude Code exclusively**. Hook translation for Gemini CLI and Qwen CLI was removed due to fragile, undocumented, and unofficially supported hook ecosystems. For Gemini/Qwen, users must manually configure their environments (see [Manual Setup for Gemini/Qwen](#manual-setup-for-geminiqwen)).
+
+This repository contains production-ready extensions to enhance Claude's capabilities with prompt improvement, task delegation, development workflow automation, and quality gates. The `xtrm` CLI provides a robust, modular "Plug & Play" installation engine for project-specific tools.
+
+## Quick Start
+
+```bash
+# Install globally (one-time)
+git clone https://github.com/Jaggerxtrm/xtrm-tools.git
+cd xtrm-tools/cli
+npm install && npm run build
+npm link
+
+# Install tools to your Claude Code environment
+xtrm install
+```
 
 ## Table of Contents
 
 - [Skills](#skills)
 - [Hooks](#hooks)
 - [Installation](#installation)
+- [Project Skills](#project-skills)
 - [Configuration](#configuration)
 - [Documentation](#documentation)
 - [Version History](#version-history)
@@ -195,6 +212,34 @@ Task intake and service routing for Docker service projects.
 
 **NOTE** certain skills are third-party utilities, i believe they can be useful.
 
+## Project Skills
+
+**Project Skills** are modular, plug-and-play tool packages that extend Claude's capabilities for specific workflows. Each skill includes pre-configured hooks, context skills, and documentation.
+
+### Available Project Skills
+
+| Skill | Description |
+|-------|-------------|
+| `tdd-guard` | Enforce Test-Driven Development — blocks implementation until failing tests exist |
+| `ts-quality-gate` | TypeScript/ESLint quality gate — runs on every edit, auto-fixes issues |
+| `py-quality-gate` | Python ruff/mypy quality gate — linting, formatting, and type checking |
+| `main-guard` | Git branch protection — blocks direct commits to main/master |
+
+### Installing Project Skills
+
+```bash
+# List available project skills
+xtrm install project list
+
+# Install a specific skill into your current project
+cd my-project
+xtrm install project tdd-guard
+```
+
+**Note:** Project skills install Claude hooks and skills into your project's `.claude/` directory. Some skills require additional manual setup (e.g., installing npm packages). Always read the documentation at `.claude/docs/<skill>-readme.md` after installation.
+
+---
+
 ## Installation
 
 ### 🚀 Zero-Cloning Installation (Recommended)
@@ -202,23 +247,23 @@ Task intake and service routing for Docker service projects.
 The fastest way to install or update on any machine — no cloning required:
 
 ```bash
-npx -y github:Jaggerxtrm/jaggers-agent-tools
+npx -y github:Jaggerxtrm/xtrm-tools
 ```
 
-This auto-detects your agent environments, shows a diff, and syncs everything in one step.
+This auto-detects your Claude Code environment, shows a diff, and syncs everything in one step.
 
 ---
 
 ### 🛠️ Local Installation (after cloning)
 
 ```bash
-git clone https://github.com/Jaggerxtrm/jaggers-agent-tools.git
-cd jaggers-agent-tools/cli
+git clone https://github.com/Jaggerxtrm/xtrm-tools.git
+cd xtrm-tools/cli
 npm install       # also runs `prepare` which builds the TypeScript
-npm link          # registers `jaggers-config` globally
+npm link          # registers `xtrm` globally
 ```
 
-You can now run `jaggers-config` from anywhere.
+You can now run `xtrm` from anywhere.
 
 ---
 
@@ -227,7 +272,7 @@ You can now run `jaggers-config` from anywhere.
 ### Synopsis
 
 ```
-jaggers-config <command> [options]
+xtrm <command> [options]
 ```
 
 | Command  | Description                       |
@@ -238,16 +283,16 @@ jaggers-config <command> [options]
 
 ---
 
-### `jaggers-config sync`
+### `xtrm install`
 
 The main command. Detects your agent environments, calculates what's changed, and applies updates.
 
 ```bash
-jaggers-config sync                # interactive — prompts for targets and confirmation
-jaggers-config sync --dry-run      # preview what WOULD change, write nothing
-jaggers-config sync -y             # skip confirmation prompts (CI-friendly)
-jaggers-config sync --prune        # also remove system items no longer in the repo
-jaggers-config sync --backport     # reverse direction: copy drifted local edits → repo
+xtrm install                # interactive — prompts for targets and confirmation
+xtrm install --dry-run      # preview what WOULD change, write nothing
+xtrm install -y             # skip confirmation prompts (CI-friendly)
+xtrm install --prune        # also remove system items no longer in the repo
+xtrm install --backport     # reverse direction: copy drifted local edits → repo
 ```
 
 **UX Features (v1.6.0+)**:
@@ -290,13 +335,13 @@ Protected keys (your local MCP servers, permissions, auth tokens, model preferen
 
 ---
 
-### `jaggers-config status`
+### `xtrm status`
 
 Read-only diff view with enhanced feedback — no files written:
 
 ```bash
-jaggers-config status       # auto-detects all environments
-jaggers-config status --json # machine-readable output
+xtrm status       # auto-detects all environments
+xtrm status --json # machine-readable output
 ```
 
 **Output includes (v1.7.0+)**:
@@ -310,12 +355,12 @@ jaggers-config status --json # machine-readable output
 
 ---
 
-### `jaggers-config reset`
+### `xtrm reset`
 
 Clears saved preferences (sync mode, etc.):
 
 ```bash
-jaggers-config reset
+xtrm reset
 ```
 
 ---
@@ -338,6 +383,52 @@ jaggers-config reset
    cp hooks/* ~/.claude/hooks/
    ```
 
+---
+
+## Manual Setup for Gemini/Qwen
+
+**ARCHITECTURAL DECISION (v2.0.0):** xtrm-tools no longer provides automated hook translation for Gemini CLI or Qwen CLI. This decision was made because:
+
+1. **Fragile ecosystems:** Hook support in Gemini/Qwen is unofficial and undocumented
+2. **Technical debt:** Maintaining translations introduces breaking changes with upstream updates
+3. **Focus:** We prioritize robust, well-tested Claude Code support
+
+If you use Gemini CLI or Qwen CLI, you can still use xtrm-tools skills and hooks with manual setup:
+
+### For Gemini CLI Users
+
+1. **Copy skills:**
+   ```bash
+   cp -r skills/* ~/.gemini/skills/
+   ```
+
+2. **Configure hooks manually:** Gemini uses `BeforeAgent`, `BeforeTool`, `SessionStart` events. Map Claude hooks as follows:
+   - `UserPromptSubmit` → `BeforeAgent`
+   - `PreToolUse` → `BeforeTool` (translate tool names: `Read`→`read_file`, `Write`→`write_file`, etc.)
+   - `SessionStart` → `SessionStart`
+
+3. **Reference:** See [Gemini CLI documentation](https://github.com/google-gemini/gemini-cli) for hook format.
+
+### For Qwen CLI Users
+
+1. **Copy skills:**
+   ```bash
+   cp -r skills/* ~/.qwen/skills/
+   ```
+
+2. **Configure hooks manually:** Qwen uses similar event names to Claude. Copy hook scripts from `hooks/` and wire them in `~/.qwen/settings.json`.
+
+3. **Reference:** See [Qwen CLI documentation](https://github.com/QwenLM/qwen-cli) for configuration format.
+
+### Limitations
+
+- ❌ No automated sync/updates (must manually copy changes)
+- ❌ No MCP server auto-installation
+- ❌ No project skills support (Claude Code only)
+- ❌ No hook translation (must configure manually)
+
+---
+
 ## Configuration
 
 ### MCP Servers (v1.7.0 Unified System)
@@ -358,14 +449,14 @@ MCP servers are configured from canonical sources with automatic format adaptati
 **Configuration Files**:
 - Core: [`config/mcp_servers.json`](config/mcp_servers.json)
 - Optional: [`config/mcp_servers_optional.json`](config/mcp_servers_optional.json)
-- Environment: [`~/.config/jaggers-agent-tools/.env`](~/.config/jaggers-agent-tools/.env) (auto-created)
+- Environment: [`~/.config/xtrm-tools/.env`](~/.config/xtrm-tools/.env) (auto-created)
 
 **Environment Variables**:
-- **Location:** `~/.config/jaggers-agent-tools/.env` (created automatically on first sync)
+- **Location:** `~/.config/xtrm-tools/.env` (created automatically on first sync)
 - **Required:** `CONTEXT7_API_KEY` for context7 server
 - **Validation:** Interactive prompts for missing API keys during sync
 - **Persistence:** Values preserved across syncs; never overwritten
-- Edit `~/.config/jaggers-agent-tools/.env` to add your API keys manually
+- Edit `~/.config/xtrm-tools/.env` to add your API keys manually
 
 **Unified MCP CLI Sync (v1.7.0)**:
 - Uses official `mcp add`/`mcp remove`/`mcp list` commands for all agents
@@ -379,13 +470,11 @@ MCP servers are configured from canonical sources with automatic format adaptati
 
 **Supported Agents**:
 - Claude Code (`~/.claude.json` via `mcp add` CLI)
-- Gemini (`gemini mcp` CLI)
-- Qwen (`qwen mcp` CLI)
 - Antigravity (`~/.gemini/antigravity/mcp_config.json` via `mcp add` CLI)
 
 **Deprecated (v1.7.0)**:
 - JSON file sync for Claude/Gemini/Qwen MCP — superseded by official `mcp` CLI method
-- Repo `.env` files — use centralized `~/.config/jaggers-agent-tools/.env`
+- Repo `.env` files — use centralized `~/.config/xtrm-tools/.env`
 
 **Documentation**: See [docs/mcp-servers-config.md](docs/mcp-servers-config.md) for complete setup guide.
 

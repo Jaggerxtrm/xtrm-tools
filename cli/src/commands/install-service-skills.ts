@@ -4,9 +4,21 @@ import path from 'path';
 import fs from 'fs-extra';
 import { spawnSync } from 'child_process';
 
-// CJS: __dirname = cli/dist/ — two levels up = package root
 declare const __dirname: string;
-const PKG_ROOT = path.resolve(__dirname, '../..');
+function resolvePkgRoot(): string {
+    const candidates = [
+        path.resolve(__dirname, '../..'),
+        path.resolve(__dirname, '../../..'),
+    ];
+
+    const match = candidates.find(candidate => fs.existsSync(path.join(candidate, 'project-skills')));
+    if (!match) {
+        throw new Error('Unable to locate project-skills directory from CLI runtime.');
+    }
+    return match;
+}
+
+const PKG_ROOT = resolvePkgRoot();
 const SKILLS_SRC = path.join(PKG_ROOT, 'project-skills', 'service-skills-set', '.claude');
 
 const TRINITY = [

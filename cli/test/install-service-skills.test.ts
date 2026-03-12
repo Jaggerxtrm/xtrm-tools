@@ -7,7 +7,8 @@ import { mergeSettingsHooks, installSkills, installGitHooks } from '../src/comma
 
 // __dirname in vitest context = cli/test/
 const REPO_ROOT = path.resolve(__dirname, '../..');
-const ACTUAL_SKILLS_SRC = path.join(REPO_ROOT, 'project-skills', 'service-skills-set', '.claude');
+const ACTUAL_SKILLS_SRC = path.join(REPO_ROOT, 'project-skills', 'service-skills-set', '.claude', 'skills');
+const ACTUAL_CLAUDE_SRC = path.join(REPO_ROOT, 'project-skills', 'service-skills-set', '.claude');
 
 describe('mergeSettingsHooks', () => {
     it('adds all three hooks to empty settings', () => {
@@ -75,34 +76,34 @@ describe('installGitHooks', () => {
     });
 
     it('creates .githooks/pre-commit with doc-reminder snippet', async () => {
-        await installGitHooks(tmpDir, ACTUAL_SKILLS_SRC);
+        await installGitHooks(tmpDir, ACTUAL_CLAUDE_SRC);
         const content = await fsExtra.readFile(path.join(tmpDir, '.githooks', 'pre-commit'), 'utf8');
         expect(content).toContain('# [jaggers] doc-reminder');
         expect(content).toContain('.claude/git-hooks/doc_reminder.py');
     });
 
     it('creates .githooks/pre-push with skill-staleness snippet', async () => {
-        await installGitHooks(tmpDir, ACTUAL_SKILLS_SRC);
+        await installGitHooks(tmpDir, ACTUAL_CLAUDE_SRC);
         const content = await fsExtra.readFile(path.join(tmpDir, '.githooks', 'pre-push'), 'utf8');
         expect(content).toContain('# [jaggers] skill-staleness');
         expect(content).toContain('.claude/git-hooks/skill_staleness.py');
     });
 
     it('copies hook scripts into .claude/git-hooks/', async () => {
-        await installGitHooks(tmpDir, ACTUAL_SKILLS_SRC);
+        await installGitHooks(tmpDir, ACTUAL_CLAUDE_SRC);
         expect(await fsExtra.pathExists(path.join(tmpDir, '.claude', 'git-hooks', 'doc_reminder.py'))).toBe(true);
         expect(await fsExtra.pathExists(path.join(tmpDir, '.claude', 'git-hooks', 'skill_staleness.py'))).toBe(true);
     });
 
     it('activates hooks in .git/hooks/', async () => {
-        await installGitHooks(tmpDir, ACTUAL_SKILLS_SRC);
+        await installGitHooks(tmpDir, ACTUAL_CLAUDE_SRC);
         expect(await fsExtra.pathExists(path.join(tmpDir, '.git', 'hooks', 'pre-commit'))).toBe(true);
         expect(await fsExtra.pathExists(path.join(tmpDir, '.git', 'hooks', 'pre-push'))).toBe(true);
     });
 
     it('is idempotent — does not duplicate snippets on re-run', async () => {
-        await installGitHooks(tmpDir, ACTUAL_SKILLS_SRC);
-        await installGitHooks(tmpDir, ACTUAL_SKILLS_SRC);
+        await installGitHooks(tmpDir, ACTUAL_CLAUDE_SRC);
+        await installGitHooks(tmpDir, ACTUAL_CLAUDE_SRC);
         const content = await fsExtra.readFile(path.join(tmpDir, '.githooks', 'pre-commit'), 'utf8');
         const count = (content.match(/# \[jaggers\] doc-reminder/g) ?? []).length;
         expect(count).toBe(1);

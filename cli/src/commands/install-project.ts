@@ -4,16 +4,28 @@ import path from 'path';
 import fs from 'fs-extra';
 import { spawnSync } from 'child_process';
 
-// CJS: __dirname = cli/dist/ — two levels up = package root
 declare const __dirname: string;
-const PKG_ROOT = path.resolve(__dirname, '../..');
+function resolvePkgRoot(): string {
+    const candidates = [
+        path.resolve(__dirname, '../..'),
+        path.resolve(__dirname, '../../..'),
+    ];
+
+    const match = candidates.find(candidate => fs.existsSync(path.join(candidate, 'project-skills')));
+    if (!match) {
+        throw new Error('Unable to locate project-skills directory from CLI runtime.');
+    }
+    return match;
+}
+
+const PKG_ROOT = resolvePkgRoot();
 const PROJECT_SKILLS_DIR = path.join(PKG_ROOT, 'project-skills');
 
 /**
  * Deep merge settings.json hooks without overwriting existing user hooks.
  * Appends new hooks to existing events intelligently.
  */
-function deepMergeHooks(existing: Record<string, any>, incoming: Record<string, any>): Record<string, any> {
+export function deepMergeHooks(existing: Record<string, any>, incoming: Record<string, any>): Record<string, any> {
     const result = { ...existing };
 
     if (!result.hooks) result.hooks = {};
@@ -45,10 +57,30 @@ function deepMergeHooks(existing: Record<string, any>, incoming: Record<string, 
     return result;
 }
 
+export function extractReadmeDescription(readmeContent: string): string {
+    const lines = readmeContent.split('\n');
+    const headingIndex = lines.findIndex(line => line.trim().startsWith('# '));
+    const searchStart = headingIndex >= 0 ? headingIndex + 1 : 0;
+
+    for (const rawLine of lines.slice(searchStart)) {
+        const line = rawLine.trim();
+        if (!line || line.startsWith('#') || line.startsWith('[![') || line.startsWith('<')) {
+            continue;
+        }
+
+        return line
+            .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+            .replace(/[*_`]/g, '')
+            .trim();
+    }
+
+    return 'No description available';
+}
+
 /**
  * Install a project skill package into the current project.
  */
-async function installProjectSkill(toolName: string): Promise<void> {
+export async function installProjectSkill(toolName: string, projectRootOverride?: string): Promise<void> {
     const skillPath = path.join(PROJECT_SKILLS_DIR, toolName);
 
     // Validation: Check if project skill exists
@@ -60,7 +92,7 @@ async function installProjectSkill(toolName: string): Promise<void> {
     }
 
     // Get target project root
-    const projectRoot = getProjectRoot();
+    const projectRoot = projectRootOverride ?? getProjectRoot();
     const claudeDir = path.join(projectRoot, '.claude');
 
     console.log(kleur.dim(`\n  Installing project skill: ${kleur.cyan(toolName)}`));
@@ -107,6 +139,24 @@ async function installProjectSkill(toolName: string): Promise<void> {
                 filter: (src: string) => !src.includes('.Zone.Identifier'),
             });
             console.log(`${kleur.green('  ✓')} .claude/skills/${entry}/`);
+        }
+    }
+
+    // Step 2b: Copy additional Claude assets (hooks, docs, etc.) shipped with the skill
+    if (await fs.pathExists(skillClaudeDir)) {
+        const claudeEntries = await fs.readdir(skillClaudeDir);
+
+        for (const entry of claudeEntries) {
+            if (entry === 'settings.json' || entry === 'skills') {
+                continue;
+            }
+
+            const src = path.join(skillClaudeDir, entry);
+            const dest = path.join(claudeDir, entry);
+            await fs.copy(src, dest, {
+                filter: (src: string) => !src.includes('.Zone.Identifier'),
+            });
+            console.log(`${kleur.green('  ✓')} .claude/${entry}/`);
         }
     }
 
@@ -157,10 +207,7 @@ async function listProjectSkills(): Promise<void> {
 
         if (await fs.pathExists(readmePath)) {
             const readmeContent = await fs.readFile(readmePath, 'utf8');
-            const descMatch = readmeContent.match(/^#\s+\S+\s*\n\s*\n\s*([^#\n]+)/);
-            if (descMatch) {
-                description = descMatch[1].trim().split('\n')[0].slice(0, 80);
-            }
+            description = extractReadmeDescription(readmeContent).slice(0, 80);
         }
 
         skills.push({ name: entry, description });

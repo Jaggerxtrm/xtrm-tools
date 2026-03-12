@@ -40634,7 +40634,18 @@ var import_path11 = __toESM(require("path"), 1);
 var import_path10 = __toESM(require("path"), 1);
 var import_fs_extra10 = __toESM(require_lib2(), 1);
 var import_child_process2 = require("child_process");
-var PKG_ROOT = import_path10.default.resolve(__dirname, "../..");
+function resolvePkgRoot() {
+  const candidates = [
+    import_path10.default.resolve(__dirname, "../.."),
+    import_path10.default.resolve(__dirname, "../../..")
+  ];
+  const match = candidates.find((candidate) => import_fs_extra10.default.existsSync(import_path10.default.join(candidate, "project-skills")));
+  if (!match) {
+    throw new Error("Unable to locate project-skills directory from CLI runtime.");
+  }
+  return match;
+}
+var PKG_ROOT = resolvePkgRoot();
 var PROJECT_SKILLS_DIR = import_path10.default.join(PKG_ROOT, "project-skills");
 function deepMergeHooks(existing, incoming) {
   const result = { ...existing };
@@ -40658,7 +40669,20 @@ function deepMergeHooks(existing, incoming) {
   }
   return result;
 }
-async function installProjectSkill(toolName) {
+function extractReadmeDescription(readmeContent) {
+  const lines = readmeContent.split("\n");
+  const headingIndex = lines.findIndex((line) => line.trim().startsWith("# "));
+  const searchStart = headingIndex >= 0 ? headingIndex + 1 : 0;
+  for (const rawLine of lines.slice(searchStart)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith("#") || line.startsWith("[![") || line.startsWith("<")) {
+      continue;
+    }
+    return line.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1").replace(/[*_`]/g, "").trim();
+  }
+  return "No description available";
+}
+async function installProjectSkill(toolName, projectRootOverride) {
   const skillPath = import_path10.default.join(PROJECT_SKILLS_DIR, toolName);
   if (!await import_fs_extra10.default.pathExists(skillPath)) {
     console.error(kleur_default.red(`
@@ -40669,7 +40693,7 @@ async function installProjectSkill(toolName) {
     await listProjectSkills();
     process.exit(1);
   }
-  const projectRoot = getProjectRoot();
+  const projectRoot = projectRootOverride ?? getProjectRoot();
   const claudeDir = import_path10.default.join(projectRoot, ".claude");
   console.log(kleur_default.dim(`
   Installing project skill: ${kleur_default.cyan(toolName)}`));
@@ -40708,6 +40732,20 @@ async function installProjectSkill(toolName) {
       console.log(`${kleur_default.green("  \u2713")} .claude/skills/${entry}/`);
     }
   }
+  if (await import_fs_extra10.default.pathExists(skillClaudeDir)) {
+    const claudeEntries = await import_fs_extra10.default.readdir(skillClaudeDir);
+    for (const entry of claudeEntries) {
+      if (entry === "settings.json" || entry === "skills") {
+        continue;
+      }
+      const src = import_path10.default.join(skillClaudeDir, entry);
+      const dest = import_path10.default.join(claudeDir, entry);
+      await import_fs_extra10.default.copy(src, dest, {
+        filter: (src2) => !src2.includes(".Zone.Identifier")
+      });
+      console.log(`${kleur_default.green("  \u2713")} .claude/${entry}/`);
+    }
+  }
   if (await import_fs_extra10.default.pathExists(skillReadmePath)) {
     console.log(kleur_default.bold("\n\u2500\u2500 Installing Documentation \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
     const docsDir = import_path10.default.join(claudeDir, "docs");
@@ -40742,10 +40780,7 @@ async function listProjectSkills() {
     let description = "No description available";
     if (await import_fs_extra10.default.pathExists(readmePath)) {
       const readmeContent = await import_fs_extra10.default.readFile(readmePath, "utf8");
-      const descMatch = readmeContent.match(/^#\s+\S+\s*\n\s*\n\s*([^#\n]+)/);
-      if (descMatch) {
-        description = descMatch[1].trim().split("\n")[0].slice(0, 80);
-      }
+      description = extractReadmeDescription(readmeContent).slice(0, 80);
     }
     skills.push({ name: entry, description });
   }

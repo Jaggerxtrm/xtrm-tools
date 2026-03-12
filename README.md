@@ -218,10 +218,13 @@ Task intake and service routing for Docker service projects.
 
 ### Available Project Skills
 
-| Skill | Description |
-|-------|-------------|
-| `service-skills-set` | Docker service expertise — gives Claude persistent knowledge about your services |
-| `tdd-guard` | Enforce Test-Driven Development — blocks implementation until failing tests exist |
+| Skill | Description | Hook Type |
+|-------|-------------|-----------|
+| `service-skills-set` | Docker service expertise — gives Claude persistent knowledge about your services | SessionStart, PreToolUse, PostToolUse |
+| `tdd-guard` | Enforce Test-Driven Development — blocks implementation until failing tests exist | PreToolUse, UserPromptSubmit |
+| `ts-quality-gate` | TypeScript/ESLint/Prettier quality gate — runs on every edit, auto-fixes issues | PostToolUse |
+| `py-quality-gate` | Python ruff/mypy quality gate — linting, formatting, and type checking | PostToolUse |
+| `main-guard` | Git branch protection — blocks direct edits to main/master branches | PreToolUse |
 
 ### Installing Project Skills
 
@@ -233,19 +236,12 @@ xtrm install project list
 cd my-project
 xtrm install project service-skills-set  # Docker service expertise
 xtrm install project tdd-guard           # TDD enforcement
+xtrm install project ts-quality-gate     # TypeScript quality
+xtrm install project py-quality-gate     # Python quality
+xtrm install project main-guard          # Git branch protection
 ```
 
 **Note:** Project skills install Claude hooks and skills into your project's `.claude/` directory. Some skills require additional manual setup (e.g., installing npm packages or Python dependencies). Always read the documentation at `.claude/docs/<skill>-readme.md` after installation.
-
-### Planned Project Skills
-
-The following skills are planned for future release:
-
-| Skill | Description |
-|-------|-------------|
-| `ts-quality-gate` | TypeScript/ESLint quality gate — runs on every edit, auto-fixes issues |
-| `py-quality-gate` | Python ruff/mypy quality gate — linting, formatting, and type checking |
-| `main-guard` | Git branch protection — blocks direct commits to main/master |
 
 ---
 

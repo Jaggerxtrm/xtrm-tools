@@ -2,11 +2,11 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Write|Edit",
+        "matcher": "Write|Edit|MultiEdit|TodoWrite",
         "hooks": [
           {
             "type": "command",
-            "command": "tdd-guard check",
+            "command": "tdd-guard",
             "timeout": 30
           }
         ]
@@ -17,8 +17,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "tdd-guard prompt-check",
-            "timeout": 10
+            "command": "tdd-guard --prompt-check",
+            "timeout": 15
           }
         ]
       }
@@ -28,7 +28,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "tdd-guard session-init",
+            "command": "tdd-guard --session-init",
             "timeout": 5
           }
         ]

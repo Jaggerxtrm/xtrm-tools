@@ -54936,13 +54936,11 @@ ${kleur_default.cyan("PROJECT SKILLS:")}
   \u2022 Documentation for manual setup steps
   
   Available project skills:
-  \u2022 ${kleur_default.white("service-skills-set")} \u2014 Docker service expertise (auto-activates on service operations)
-  \u2022 ${kleur_default.white("tdd-guard")} \u2014 Enforce Test-Driven Development workflow
-
-  Planned skills:
-  \u2022 ${kleur_default.white("ts-quality-gate")} \u2014 TypeScript/ESLint quality gate on edit
-  \u2022 ${kleur_default.white("py-quality-gate")} \u2014 Python ruff/mypy quality gate on edit
-  \u2022 ${kleur_default.white("main-guard")} \u2014 Git branch protection gate
+  \u2022 ${kleur_default.white("service-skills-set")} \u2014 Docker service expertise (SessionStart, PreToolUse, PostToolUse)
+  \u2022 ${kleur_default.white("tdd-guard")} \u2014 Enforce Test-Driven Development (PreToolUse, UserPromptSubmit)
+  \u2022 ${kleur_default.white("ts-quality-gate")} \u2014 TypeScript/ESLint/Prettier quality gate (PostToolUse)
+  \u2022 ${kleur_default.white("py-quality-gate")} \u2014 Python ruff/mypy quality gate (PostToolUse)
+  \u2022 ${kleur_default.white("main-guard")} \u2014 Git branch protection (PreToolUse)
 
 ${kleur_default.cyan("ARCHITECTURE:")}
 

@@ -64,13 +64,11 @@ ${kleur.cyan('PROJECT SKILLS:')}
   • Documentation for manual setup steps
   
   Available project skills:
-  • ${kleur.white('service-skills-set')} — Docker service expertise (auto-activates on service operations)
-  • ${kleur.white('tdd-guard')} — Enforce Test-Driven Development workflow
-
-  Planned skills:
-  • ${kleur.white('ts-quality-gate')} — TypeScript/ESLint quality gate on edit
-  • ${kleur.white('py-quality-gate')} — Python ruff/mypy quality gate on edit
-  • ${kleur.white('main-guard')} — Git branch protection gate
+  • ${kleur.white('service-skills-set')} — Docker service expertise (SessionStart, PreToolUse, PostToolUse)
+  • ${kleur.white('tdd-guard')} — Enforce Test-Driven Development (PreToolUse, UserPromptSubmit)
+  • ${kleur.white('ts-quality-gate')} — TypeScript/ESLint/Prettier quality gate (PostToolUse)
+  • ${kleur.white('py-quality-gate')} — Python ruff/mypy quality gate (PostToolUse)
+  • ${kleur.white('main-guard')} — Git branch protection (PreToolUse)
 
 ${kleur.cyan('ARCHITECTURE:')}
 

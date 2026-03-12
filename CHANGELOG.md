@@ -19,6 +19,92 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.0.0] - 2026-03-12
+
+### Added
+
+#### Project Skills Engine
+- **`cli/src/commands/install-project.ts`**: Generic "Plug & Play" project skill installer with deep merge for `settings.json` hooks
+- **`cli/src/commands/help.ts`**: Self-documenting help command with full CLI reference
+- **Project skills directory structure**: `project-skills/<skill>/.claude/` standard for modular tool packages
+
+#### Project Skills (5 skills shipped)
+- **`service-skills-set`**: Docker service expertise with SessionStart, PreToolUse, PostToolUse hooks
+- **`tdd-guard`**: Test-Driven Development enforcement with PreToolUse, UserPromptSubmit, SessionStart hooks
+- **`ts-quality-gate`**: TypeScript/ESLint/Prettier quality gate with `quality-check.js` (ported from bartolli/claude-code-typescript-hooks)
+- **`py-quality-gate`**: Python ruff/mypy quality gate with `quality-check.py` (custom implementation)
+- **`main-guard`**: Git branch protection with `main-guard.js` (blocks direct edits to main/master)
+
+#### Installation Commands
+- **`xtrm install`**: Global installation (replaces `sync`)
+- **`xtrm install project <tool-name>`**: Install project-specific skill package
+- **`xtrm install project list`**: List available project skills with descriptions
+
+### Changed
+
+#### CLI Rebranding
+- **Package renamed**: `jaggers-agent-tools` → `xtrm-tools`
+- **Binary renamed**: `jaggers-config` → `xtrm`
+- **Version bumped**: 1.7.0 → 2.0.0 (breaking changes)
+
+#### Command Restructure
+- **`sync` command** → renamed to `install` with updated messaging
+- **Default action**: Now shows help instead of running sync automatically
+- **`add-optional` command**: Removed (optional MCP servers now part of `install`)
+
+#### Architecture Decision
+- **Claude Code only support**: Removed multi-agent hook translation for Gemini/Qwen
+- **Focus**: Robust, well-tested Claude Code installation engine
+
+### Removed
+
+#### Multi-Agent Support
+- **`cli/src/utils/transform-gemini.ts`**: Deleted (Gemini hook translation)
+- **`cli/src/adapters/gemini.ts`**: Deleted (Gemini adapter)
+- **`cli/src/adapters/qwen.ts`**: Deleted (Qwen adapter)
+- **`transformToGeminiHooks`**, **`transformToGeminiFormat`**: Removed from `config-adapter.ts`
+- **Gemini/Qwen command generation**: Removed from `sync-executor.ts`
+
+#### Deprecated Commands
+- **`jaggers-config add-optional`**: Superseded by `xtrm install`
+- **`jaggers-config sync`**: Superseded by `xtrm install`
+
+### Fixed
+
+- **Project skills structure**: Standardized `.claude/settings.json` + `.claude/skills/` format
+- **Hook paths**: Corrected `$CLAUDE_PROJECT_DIR` references in all project skills
+- **Documentation**: README.md updated with accurate skill list and installation instructions
+
+### Documentation
+
+- **README.md**: Added Project Skills section, manual setup guide for Gemini/Qwen users
+- **Updated installation instructions**: `npm install -g github:Jaggerxtrm/xtrm-tools` recommended
+- **Each project skill**: Includes `README.md` and `SKILL.md` with usage guide
+
+### Migration Guide
+
+#### For Existing Users
+
+```bash
+# Old command (no longer works)
+jaggers-config sync
+
+# New command
+xtrm install
+
+# Global installation (recommended)
+npm install -g github:Jaggerxtrm/xtrm-tools
+
+# One-time run
+npx -y github:Jaggerxtrm/xtrm-tools install
+```
+
+#### For Gemini/Qwen Users
+
+Automated hook translation is no longer supported. See README.md "Manual Setup for Gemini/Qwen" section for manual configuration instructions.
+
+---
+
 ## [1.7.0] - 2026-02-25
 
 ### Added

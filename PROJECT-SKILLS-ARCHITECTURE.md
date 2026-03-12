@@ -51,6 +51,14 @@ project-skills/<tool-name>/
 5. **Post-Install Guidance:** Print a colorized, informative message. Since many tools (like TDD Guard) require language-specific setup (e.g., installing `tdd-guard-vitest` via npm), the CLI **must** instruct the user to read the copied README for the final manual steps.
 
 ## 4. Case Study: Integrating `tdd-guard`
+
+
+**Note for Agents:** The original repositories used as inspiration/sources for this work were cloned locally for reference. You can inspect them here (if the environment has not been cleared):
+
+- **TDD Guard Original Repo:** `/tmp/docs/tdd-guard/`
+
+- **Claude Code TS Hooks (Quality Gate):** `/tmp/docs/claude-code-typescript-hooks/`
+
 TDD Guard enforces Test-Driven Development by blocking agent implementation code until a failing test is written.
 
 It requires a two-part setup:

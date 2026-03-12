@@ -220,10 +220,8 @@ Task intake and service routing for Docker service projects.
 
 | Skill | Description |
 |-------|-------------|
+| `service-skills-set` | Docker service expertise — gives Claude persistent knowledge about your services |
 | `tdd-guard` | Enforce Test-Driven Development — blocks implementation until failing tests exist |
-| `ts-quality-gate` | TypeScript/ESLint quality gate — runs on every edit, auto-fixes issues |
-| `py-quality-gate` | Python ruff/mypy quality gate — linting, formatting, and type checking |
-| `main-guard` | Git branch protection — blocks direct commits to main/master |
 
 ### Installing Project Skills
 
@@ -233,10 +231,21 @@ xtrm install project list
 
 # Install a specific skill into your current project
 cd my-project
-xtrm install project tdd-guard
+xtrm install project service-skills-set  # Docker service expertise
+xtrm install project tdd-guard           # TDD enforcement
 ```
 
-**Note:** Project skills install Claude hooks and skills into your project's `.claude/` directory. Some skills require additional manual setup (e.g., installing npm packages). Always read the documentation at `.claude/docs/<skill>-readme.md` after installation.
+**Note:** Project skills install Claude hooks and skills into your project's `.claude/` directory. Some skills require additional manual setup (e.g., installing npm packages or Python dependencies). Always read the documentation at `.claude/docs/<skill>-readme.md` after installation.
+
+### Planned Project Skills
+
+The following skills are planned for future release:
+
+| Skill | Description |
+|-------|-------------|
+| `ts-quality-gate` | TypeScript/ESLint quality gate — runs on every edit, auto-fixes issues |
+| `py-quality-gate` | Python ruff/mypy quality gate — linting, formatting, and type checking |
+| `main-guard` | Git branch protection — blocks direct commits to main/master |
 
 ---
 

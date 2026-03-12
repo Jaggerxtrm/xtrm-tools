@@ -37048,9 +37048,31 @@ function getCandidatePaths() {
   }
   return paths;
 }
-async function getContext() {
+function resolveTargets(selector, candidates) {
+  if (!selector) return null;
+  const normalized = selector.trim().toLowerCase();
+  if (normalized === "*" || normalized === "all") {
+    return candidates.map((candidate) => candidate.path);
+  }
+  throw new Error(`Unknown install target selector '${selector}'. Use '*' or 'all'.`);
+}
+async function getContext(options = {}) {
+  const { selector, createMissingDirs = true } = options;
   const choices = [];
   const candidates = getCandidatePaths();
+  const directTargets = resolveTargets(selector, candidates);
+  if (directTargets) {
+    if (createMissingDirs) {
+      for (const target of directTargets) {
+        await import_fs_extra.default.ensureDir(target);
+      }
+    }
+    return {
+      targets: directTargets,
+      syncMode: config.get("syncMode"),
+      config
+    };
+  }
   for (const c of candidates) {
     const exists = await import_fs_extra.default.pathExists(c.path);
     const icon = exists ? kleur_default.green("\u25CF") : kleur_default.gray("\u25CB");
@@ -37079,8 +37101,10 @@ async function getContext() {
     console.log(kleur_default.gray("No targets selected."));
     process.exit(0);
   }
-  for (const target of response.targets) {
-    await import_fs_extra.default.ensureDir(target);
+  if (createMissingDirs) {
+    for (const target of response.targets) {
+      await import_fs_extra.default.ensureDir(target);
+    }
   }
   return {
     targets: response.targets,
@@ -40879,11 +40903,14 @@ async function renderSummaryCard(allChanges, totalCount, allSkipped, isDryRun) {
   }) + "\n");
 }
 function createInstallCommand() {
-  const installCmd = new Command("install").description("Install Claude Code tools (skills, hooks, MCP servers)").option("--dry-run", "Preview changes without making any modifications", false).option("-y, --yes", "Skip confirmation prompts", false).option("--prune", "Remove items not in the canonical repository", false).option("--backport", "Backport drifted local changes back to the repository", false).action(async (opts) => {
+  const installCmd = new Command("install").description("Install Claude Code tools (skills, hooks, MCP servers)").argument("[target-selector]", 'Install targets: use "*" or "all" to skip interactive target selection').option("--dry-run", "Preview changes without making any modifications", false).option("-y, --yes", "Skip confirmation prompts", false).option("--prune", "Remove items not in the canonical repository", false).option("--backport", "Backport drifted local changes back to the repository", false).action(async (targetSelector, opts) => {
     const { dryRun, yes, prune, backport } = opts;
     const actionType = backport ? "backport" : "install";
     const repoRoot = await findRepoRoot();
-    const ctx = await getContext();
+    const ctx = await getContext({
+      selector: targetSelector,
+      createMissingDirs: !dryRun
+    });
     const { targets, syncMode } = ctx;
     const diffTasks = new Listr(
       targets.map((target) => ({
@@ -54920,7 +54947,7 @@ ${kleur_default.cyan("USAGE:")}
 
 ${kleur_default.cyan("COMMANDS:")}
 
-  ${kleur_default.bold("install")} [options]
+  ${kleur_default.bold("install")} [target-selector] [options]
     Install Claude Code tools (skills, hooks, MCP servers) to your environment.
     
     Options:
@@ -54931,7 +54958,10 @@ ${kleur_default.cyan("COMMANDS:")}
     
     Examples:
       xtrm install              # Interactive install with confirmation
+      xtrm install all          # Install to all configured targets without prompting
+      xtrm install '*'          # Same as above; quote to avoid shell expansion
       xtrm install --dry-run    # Preview what would be installed
+      xtrm install all --dry-run -y  # CI-friendly preview across all targets
       xtrm install -y           # Non-interactive install
 
   ${kleur_default.bold("install project")} <tool-name>

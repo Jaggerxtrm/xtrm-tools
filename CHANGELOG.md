@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Installation Commands
 - **`xtrm install`**: Global installation (replaces `sync`)
+- **`xtrm install all` / `xtrm install '*'`**: Non-interactive global install across all known targets
 - **`xtrm install project <tool-name>`**: Install project-specific skill package
 - **`xtrm install project list`**: List available project skills with descriptions
 

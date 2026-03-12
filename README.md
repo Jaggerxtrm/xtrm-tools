@@ -315,7 +315,10 @@ The main command. Detects your agent environments, calculates what's changed, an
 
 ```bash
 xtrm install                # interactive — prompts for targets and confirmation
+xtrm install all            # install to all known targets without target prompt
+xtrm install '*'            # same as above; quote * to avoid shell expansion
 xtrm install --dry-run      # preview what WOULD change, write nothing
+xtrm install all --dry-run -y  # non-interactive preview across all targets
 xtrm install -y             # skip confirmation prompts (CI-friendly)
 xtrm install --prune        # also remove system items no longer in the repo
 xtrm install --backport     # reverse direction: copy drifted local edits → repo

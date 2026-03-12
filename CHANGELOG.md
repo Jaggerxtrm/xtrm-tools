@@ -31,9 +31,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Project Skills (5 skills shipped)
 - **`service-skills-set`**: Docker service expertise with SessionStart, PreToolUse, PostToolUse hooks
 - **`tdd-guard`**: Test-Driven Development enforcement with PreToolUse, UserPromptSubmit, SessionStart hooks
-- **`ts-quality-gate`**: TypeScript/ESLint/Prettier quality gate with `quality-check.js` (ported from bartolli/claude-code-typescript-hooks)
+- **`ts-quality-gate`**: TypeScript/ESLint/Prettier quality gate with `quality-check.cjs` (ported from bartolli/claude-code-typescript-hooks)
 - **`py-quality-gate`**: Python ruff/mypy quality gate with `quality-check.py` (custom implementation)
-- **`main-guard`**: Git branch protection with `main-guard.js` (blocks direct edits to main/master)
+- **`main-guard`**: Git branch protection with `main-guard.cjs` (blocks direct edits to main/master)
 
 #### Installation Commands
 - **`xtrm install`**: Global installation (replaces `sync`)

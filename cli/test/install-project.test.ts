@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdtemp, rm } from 'node:fs/promises';
+import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import fsExtra from 'fs-extra';
@@ -71,7 +72,7 @@ describe('installProjectSkill', () => {
     it('copies hook assets required by the installed project skill', async () => {
         await installProjectSkill('ts-quality-gate', tmpDir);
 
-        expect(await fsExtra.pathExists(path.join(tmpDir, '.claude', 'hooks', 'quality-check.js'))).toBe(true);
+        expect(await fsExtra.pathExists(path.join(tmpDir, '.claude', 'hooks', 'quality-check.cjs'))).toBe(true);
         expect(await fsExtra.pathExists(path.join(tmpDir, '.claude', 'hooks', 'hook-config.json'))).toBe(true);
         expect(await fsExtra.pathExists(path.join(tmpDir, '.claude', 'skills', 'using-ts-quality-gate', 'SKILL.md'))).toBe(true);
         expect(await fsExtra.pathExists(path.join(tmpDir, '.claude', 'docs', 'ts-quality-gate-readme.md'))).toBe(true);
@@ -94,6 +95,31 @@ describe('installProjectSkill', () => {
         const settings = await fsExtra.readJson(path.join(tmpDir, '.claude', 'settings.json'));
         expect(settings.hooks.PreToolUse).toHaveLength(2);
         expect(settings.hooks.CustomEvent).toEqual([{ command: 'echo keep-me' }]);
-        expect(await fsExtra.pathExists(path.join(tmpDir, '.claude', 'hooks', 'main-guard.js'))).toBe(true);
+        expect(await fsExtra.pathExists(path.join(tmpDir, '.claude', 'hooks', 'main-guard.cjs'))).toBe(true);
+    });
+
+    it('installs Node hook files that execute inside type-module projects', async () => {
+        await fsExtra.writeJson(path.join(tmpDir, 'package.json'), {
+            name: 'esm-target',
+            type: 'module',
+        }, { spaces: 2 });
+
+        await installProjectSkill('ts-quality-gate', tmpDir);
+        await installProjectSkill('main-guard', tmpDir);
+
+        const tsRun = spawnSync(
+            'node',
+            [path.join(tmpDir, '.claude', 'hooks', 'quality-check.cjs')],
+            {
+                cwd: tmpDir,
+                input: '{"tool_name":"Edit","tool_input":{"file_path":"/tmp/does-not-exist.ts"}}',
+                encoding: 'utf8',
+            },
+        );
+        expect(tsRun.status).toBe(0);
+
+        const settings = await fsExtra.readJson(path.join(tmpDir, '.claude', 'settings.json'));
+        const preToolUseCommand = settings.hooks.PreToolUse[0].hooks[0].command;
+        expect(preToolUseCommand).toContain('main-guard.cjs');
     });
 });

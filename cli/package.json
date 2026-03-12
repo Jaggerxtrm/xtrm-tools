@@ -26,12 +26,15 @@
     "listr2": "^10.1.1",
     "minimist": "^1.2.8",
     "ora": "^9.3.0",
+    "project": "^0.1.6",
     "prompts": "^2.4.2",
+    "tdd-guard": "^1.1.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^25.3.0",
+    "tdd-guard-vitest": "^0.1.6",
     "tsup": "^8.5.1",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",

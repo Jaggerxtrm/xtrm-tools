@@ -242,22 +242,41 @@ xtrm install project tdd-guard
 
 ## Installation
 
-### 🚀 Quick Installation (Recommended)
+### 🚀 Quick One-Time Run
 
-Install and run the latest version directly from GitHub:
+Run the latest version directly from GitHub without installing:
 
 ```bash
 npx -y github:Jaggerxtrm/xtrm-tools install
 ```
 
-This will:
-1. Clone the repository temporarily
-2. Build the CLI automatically
-3. Run the installation to your Claude Code environment
+This temporarily clones, builds, and runs the installation to your Claude Code environment.
 
 ---
 
-### 🛠️ Local Installation (for development or offline use)
+### 🛠️ Global Installation (Recommended for repeated use)
+
+Install globally from GitHub:
+
+```bash
+npm install -g github:Jaggerxtrm/xtrm-tools
+```
+
+Now you can run `xtrm` from anywhere:
+```bash
+xtrm install          # Install/update tools
+xtrm status           # Check for changes
+xtrm install project tdd-guard  # Install project skills
+```
+
+**To update later:**
+```bash
+npm install -g github:Jaggerxtrm/xtrm-tools@latest
+```
+
+---
+
+### 🔧 Local Installation (for development)
 
 ```bash
 git clone https://github.com/Jaggerxtrm/xtrm-tools.git
@@ -266,8 +285,6 @@ npm install       # installs dependencies
 npm run build     # compiles TypeScript to dist/
 npm link          # registers `xtrm` globally
 ```
-
-You can now run `xtrm` from anywhere.
 
 ---
 

@@ -1,7 +1,6 @@
 import path from 'path';
 import fs from 'fs-extra';
 import kleur from 'kleur';
-import { transformGeminiConfig, transformSkillToCommand } from '../utils/transform-gemini.js';
 import { safeMergeConfig } from '../utils/atomic-config.js';
 import { ConfigAdapter } from '../utils/config-adapter.js';
 import { syncMcpServersWithCli, loadCanonicalMcpConfig, detectAgent } from '../utils/sync-mcp-cli.js';
@@ -26,7 +25,6 @@ export async function executeSync(
     const normalizedRoot = path.normalize(systemRoot).replace(/\\/g, '/');
     const isAgentsSkills = normalizedRoot.includes('.agents/skills');
     const isClaude = systemRoot.includes('.claude') || systemRoot.includes('Claude');
-    const isQwen = systemRoot.includes('.qwen') || systemRoot.includes('Qwen');
 
     // ~/.agents/skills: skills-only, written directly into systemRoot (no subdirectory)
     if (isAgentsSkills) {
@@ -35,8 +33,6 @@ export async function executeSync(
 
     const categories: Array<keyof ChangeSet> = ['skills', 'hooks', 'config'];
 
-    if (isQwen) categories.push('qwen-commands');
-    else if (!isClaude) categories.push('commands');
 
     let count = 0;
     const adapter = new ConfigAdapter(systemRoot);
@@ -46,7 +42,7 @@ export async function executeSync(
         const agent = detectAgent(systemRoot);
 
         // Only sync MCP once per unique agent type per process run.
-        // Without this guard, selecting .claude + .gemini + .qwen causes
+        // Without this guard, selecting multiple Claude config directories causes
         // syncMcpServersWithCli to fire 3 times with identical output.
         if (agent && actionType === 'sync' && !syncedMcpAgents.has(agent)) {
             const coreConfig = loadCanonicalMcpConfig(repoRoot);
@@ -216,22 +212,6 @@ export async function executeSync(
                     if (!isDryRun) {
                         await fs.remove(dest);
                         await fs.copy(src, dest);
-                    }
-                }
-
-                if (category === 'skills' && !isClaude && actionType === 'sync') {
-                    const skillMdPath = path.join(src, 'SKILL.md');
-                    if (fs.existsSync(skillMdPath)) {
-                        const result = await transformSkillToCommand(skillMdPath);
-                        if (result && !isDryRun) {
-                            const commandDest = path.join(systemRoot, 'commands', `${result.commandName}.toml`);
-                            if (await fs.pathExists(commandDest)) {
-                                backups.push(await createBackup(commandDest));
-                            }
-                            await fs.ensureDir(path.dirname(commandDest));
-                            await fs.writeFile(commandDest, result.toml);
-                            console.log(kleur.cyan(`      (Auto-generated slash command: /${result.commandName})`));
-                        }
                     }
                 }
 

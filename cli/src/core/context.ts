@@ -15,6 +15,11 @@ export interface Context {
     config: any;
 }
 
+export interface GetContextOptions {
+    selector?: string;
+    createMissingDirs?: boolean;
+}
+
 // Initialize configuration (persists sync mode preference only)
 const config = new Conf({
     projectName: 'jaggers-config-manager',
@@ -43,9 +48,39 @@ export function getCandidatePaths(): Array<{ label: string; path: string }> {
     return paths;
 }
 
-export async function getContext(): Promise<Context> {
+export function resolveTargets(
+    selector: string | undefined,
+    candidates: Array<{ label: string; path: string }>,
+): string[] | null {
+    if (!selector) return null;
+
+    const normalized = selector.trim().toLowerCase();
+    if (normalized === '*' || normalized === 'all') {
+        return candidates.map(candidate => candidate.path);
+    }
+
+    throw new Error(`Unknown install target selector '${selector}'. Use '*' or 'all'.`);
+}
+
+export async function getContext(options: GetContextOptions = {}): Promise<Context> {
+    const { selector, createMissingDirs = true } = options;
     const choices = [];
     const candidates = getCandidatePaths();
+    const directTargets = resolveTargets(selector, candidates);
+
+    if (directTargets) {
+        if (createMissingDirs) {
+            for (const target of directTargets) {
+                await fs.ensureDir(target);
+            }
+        }
+
+        return {
+            targets: directTargets,
+            syncMode: config.get('syncMode') as SyncMode,
+            config,
+        };
+    }
 
     for (const c of candidates) {
         const exists = await fs.pathExists(c.path);
@@ -79,8 +114,10 @@ export async function getContext(): Promise<Context> {
     }
 
     // Ensure directories exist for selected targets
-    for (const target of response.targets) {
-        await fs.ensureDir(target);
+    if (createMissingDirs) {
+        for (const target of response.targets) {
+            await fs.ensureDir(target);
+        }
     }
 
     return {

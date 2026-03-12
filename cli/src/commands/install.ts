@@ -81,16 +81,20 @@ async function renderSummaryCard(
 export function createInstallCommand(): Command {
     const installCmd = new Command('install')
         .description('Install Claude Code tools (skills, hooks, MCP servers)')
+        .argument('[target-selector]', 'Install targets: use "*" or "all" to skip interactive target selection')
         .option('--dry-run', 'Preview changes without making any modifications', false)
         .option('-y, --yes', 'Skip confirmation prompts', false)
         .option('--prune', 'Remove items not in the canonical repository', false)
         .option('--backport', 'Backport drifted local changes back to the repository', false)
-        .action(async (opts) => {
+        .action(async (targetSelector, opts) => {
             const { dryRun, yes, prune, backport } = opts;
             const actionType = backport ? 'backport' : 'install';
 
             const repoRoot = await findRepoRoot();
-            const ctx = await getContext();
+            const ctx = await getContext({
+                selector: targetSelector,
+                createMissingDirs: !dryRun,
+            });
             const { targets, syncMode } = ctx;
 
             // Phase 1: Diff (concurrent via listr2)

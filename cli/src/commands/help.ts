@@ -13,7 +13,7 @@ ${kleur.cyan('USAGE:')}
 
 ${kleur.cyan('COMMANDS:')}
 
-  ${kleur.bold('install')} [options]
+  ${kleur.bold('install')} [target-selector] [options]
     Install Claude Code tools (skills, hooks, MCP servers) to your environment.
     
     Options:
@@ -24,7 +24,10 @@ ${kleur.cyan('COMMANDS:')}
     
     Examples:
       xtrm install              # Interactive install with confirmation
+      xtrm install all          # Install to all configured targets without prompting
+      xtrm install '*'          # Same as above; quote to avoid shell expansion
       xtrm install --dry-run    # Preview what would be installed
+      xtrm install all --dry-run -y  # CI-friendly preview across all targets
       xtrm install -y           # Non-interactive install
 
   ${kleur.bold('install project')} <tool-name>

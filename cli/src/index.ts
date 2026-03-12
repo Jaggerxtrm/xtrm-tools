@@ -1,51 +1,49 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { Command } from 'commander';
-import kleur from 'kleur'; // used in error handlers below
+import kleur from 'kleur';
 
 // __dirname is available in CJS output (tsup target: cjs)
 declare const __dirname: string;
 let version = '0.0.0';
 try { version = JSON.parse(readFileSync(resolve(__dirname, '../package.json'), 'utf8')).version; } catch { /* fallback */ }
 
-import { createSyncCommand } from './commands/sync.js';
+import { createInstallCommand } from './commands/install.js';
 import { createStatusCommand } from './commands/status.js';
 import { createResetCommand } from './commands/reset.js';
-import { createAddOptionalCommand } from './commands/add-optional.js';
+import { createHelpCommand } from './commands/help.js';
 import { printBanner } from './utils/banner.js';
 
 const program = new Command();
 
 program
-    .name('jaggers-config')
-    .description('Sync agent tools (skills, hooks, config, MCP servers) across AI environments')
+    .name('xtrm')
+    .description('Claude Code tools installer (skills, hooks, MCP servers)')
     .version(version);
 
 // Add exit override for cleaner unknown command error
 program.exitOverride((err) => {
     if (err.code === 'commander.unknownCommand') {
-        console.error(kleur.red(`\n✗ Unknown command. Run 'jaggers-config --help'\n`));
+        console.error(kleur.red(`\n✗ Unknown command. Run 'xtrm --help'\n`));
         process.exit(1);
     }
-    // Let commander handle other errors normally
+    process.exit(1);
 });
 
-program.addCommand(createSyncCommand());
+// Main commands
+program.addCommand(createInstallCommand());
 program.addCommand(createStatusCommand());
 program.addCommand(createResetCommand());
-program.addCommand(createAddOptionalCommand());
+program.addCommand(createHelpCommand());
 
-// Default action: run sync (for backwards compatibility)
+// Default action: show help
 program
     .action(async () => {
-        // Delegate to sync command by default
-        const syncCmd = createSyncCommand();
-        await syncCmd.parseAsync([], { from: 'user' });
+        program.help();
     });
 
-// Global error handlers for clean error messages (unexpected errors only)
+// Global error handlers
 process.on('uncaughtException', (err) => {
-    // Suppress commander errors (they're already handled)
     if ((err as any).code?.startsWith('commander.')) {
         return;
     }

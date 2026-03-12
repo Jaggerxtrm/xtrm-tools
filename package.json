@@ -1,10 +1,10 @@
 {
-  "name": "jaggers-agent-tools",
-  "version": "1.2.0",
-  "description": "Installer for Jaggers Agent Tools (Skills & Hooks)",
+  "name": "xtrm-tools",
+  "version": "2.0.0",
+  "description": "Claude Code tools installer (skills, hooks, MCP servers)",
   "type": "module",
   "bin": {
-    "jaggers-config": "./cli/dist/index.cjs"
+    "xtrm": "./cli/dist/index.cjs"
   },
   "scripts": {
     "build": "npm run build --prefix cli",

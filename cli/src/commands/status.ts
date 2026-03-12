@@ -140,14 +140,14 @@ export function createStatusCommand(): Command {
             });
 
             if (!selected || selected.length === 0) {
-                console.log(kleur.gray('  Skipped. Run jaggers-config sync anytime to apply.\n'));
+                console.log(kleur.gray('  Skipped. Run xtrm sync anytime to apply.\n'));
                 return;
             }
 
             const toSync = pending.filter(r => selected.includes(r.path));
 
             // Reuse the already-computed changeSets — no second diff needed
-            const store = new Conf({ projectName: 'jaggers-config-manager' });
+            const store = new Conf({ projectName: 'xtrm-manager' });
             const syncMode = (store.get('syncMode') as string) || 'copy';
 
             let totalSynced = 0;

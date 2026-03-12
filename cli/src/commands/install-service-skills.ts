@@ -190,7 +190,7 @@ export function getProjectRoot(pkgRoot: string): string {
 }
 
 export function createInstallServiceSkillsCommand(): Command {
-    return new Command('install-service-skills')
+    return new Command('install-project-skill')
         .description('Install the Service Skill Trinity into the current project')
         .action(async () => {
             let projectRoot: string;

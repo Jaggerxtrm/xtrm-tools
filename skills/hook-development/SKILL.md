@@ -17,6 +17,36 @@ Hooks are event-driven automation scripts that execute in response to Claude Cod
 - Load project context (SessionStart)
 - Automate workflows across the development lifecycle
 
+## Disclaimer & Security Considerations
+
+
+
+**USE AT YOUR OWN RISK**: Claude Code hooks execute arbitrary shell commands on your system automatically. By using hooks, you acknowledge that:
+
+- You are solely responsible for the commands you configure.
+
+- Hooks can modify, delete, or access any files your user account can access.
+
+- Malicious or poorly written hooks can cause data loss or system damage.
+
+- Anthropic provides no warranty and assumes no liability for any damages resulting from hook usage.
+
+- You should thoroughly test hooks in a safe environment before production use.
+
+
+
+**Security Best Practices**:
+
+1. **Validate and sanitize inputs**: Never trust input data blindly.
+
+2. **Always quote shell variables**: Use `"$VAR"` not `$VAR`.
+
+3. **Block path traversal**: Check for `..` in file paths.
+
+4. **Use absolute paths**: Specify full paths for scripts (use `${CLAUDE_PLUGIN_ROOT}`).
+
+5. **Skip sensitive files**: Avoid modifying `.env`, `.git/`, keys, etc.
+
 ## Hook Types
 
 ### Prompt-Based Hooks (Recommended)
@@ -664,6 +694,36 @@ echo "$output" | jq .
 
 ## Additional Resources
 
+
+### Reference Files
+
+
+
+For detailed patterns and advanced techniques, consult:
+
+- **`references/patterns.md`** - Common hook patterns (11+ proven patterns, including OS Notifications and Quality Gates)
+
+- **`references/migration.md`** - Migrating from basic to advanced hooks
+
+- **`references/advanced.md`** - Advanced use cases (Agent-based and HTTP hooks)
+
+
+
+### Example Hook Scripts
+
+
+
+Working examples in `examples/`:
+
+- **`validate-write.sh`** - File write validation example
+
+- **`validate-bash.sh`** - Bash command validation example
+
+- **`load-context.sh`** - SessionStart context loading example
+
+- **`quality-check.js`** - PostToolUse TypeScript/ESLint checker with smart caching
+
+
 ### Reference Files
 
 For detailed patterns and advanced techniques, consult:
@@ -710,3 +770,28 @@ To implement hooks in a plugin:
 9. Document hooks in plugin README
 
 Focus on prompt-based hooks for most use cases. Reserve command hooks for performance-critical or deterministic checks.
+
+## Troubleshooting & Limitations
+
+When developing hooks, keep these official limitations and common issues in mind:
+
+### Known Limitations
+- Modifying a file that a hook reads will trigger the hook on the *old* content if the file hasn't been saved to disk yet.
+- Hook outputs are limited to **1MB**. Larger outputs are truncated and might cause JSON parsing errors.
+- Output from prompt-based hooks is non-deterministic; always design them to fail gracefully.
+
+### Common Issues
+**1. Hook not firing:**
+- Check if Claude Code was restarted (hooks only load on startup).
+- Verify the matcher regex is correct (it's case-sensitive, e.g., `write` won't match `Write`).
+- Run `/hooks` to verify it's loaded.
+
+**2. JSON validation failed:**
+- The hook must output strict JSON on `stdout`.
+- Ensure your Bash script doesn't leak `echo` statements or tool logs (like `npm install`) into `stdout`. Redirect them to `stderr` (`>&2`) or `/dev/null`.
+
+**3. Stop hook runs forever:**
+- If a Stop hook returns `"decision": "block"`, Claude will try to fix the issue. If it can't figure it out, it might get stuck in an infinite loop. Always provide a clear `"reason"` on how to satisfy the hook.
+
+**4. Hook error in output:**
+- A command hook exited with a non-zero code but didn't provide valid JSON feedback on stderr. Ensure `exit 2` is accompanied by valid JSON feedback on stderr: `echo '{"decision": "deny", "reason": "..."}' >&2`.

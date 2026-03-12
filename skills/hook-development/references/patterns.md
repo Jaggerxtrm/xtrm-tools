@@ -344,3 +344,69 @@ fi
 - Per-project settings
 - Team-specific rules
 - Dynamic validation criteria
+
+## 10. OS Notification on Idle (Prompt or Command)
+
+A very common pattern is to notify the user when Claude is waiting for input (e.g., waiting for permission). Use the `Notification` event.
+
+### macOS (AppleScript)
+```json
+{
+  "Notification": [
+    {
+      "matcher": "*",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "osascript -e 'display notification \"Claude Code needs your attention\" with title \"Claude Code\"'"
+        }
+      ]
+    }
+  ]
+}
+```
+
+### Linux (notify-send)
+```json
+{
+  "Notification": [
+    {
+      "matcher": "*",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "notify-send 'Claude Code' 'Claude Code needs your attention'"
+        }
+      ]
+    }
+  ]
+}
+```
+
+## 11. Quality Gate / Linting (PostToolUse)
+
+Run code quality checks immediately after Claude edits a file. If issues are found, the hook exits with `2` and outputs the errors to `stderr`. Claude sees these errors in the tool result and automatically attempts to fix them.
+
+**Key Concepts for this Pattern:**
+- Target only file modification tools: `"matcher": "Write|Edit|MultiEdit"`
+- **Speed is critical:** Use caching (e.g., TSConfig hashing) because this hook runs on *every* edit. If it takes >1s, the agent loop feels sluggish.
+- Exit code must be `2` to indicate a recoverable error to Claude.
+- Output JSON on `stderr` containing the error details.
+
+```json
+{
+  "PostToolUse": [
+    {
+      "matcher": "Write|Edit|MultiEdit",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node ${CLAUDE_PLUGIN_ROOT}/examples/quality-check.js"
+        }
+      ]
+    }
+  ]
+}
+```
+
+*See `examples/quality-check.js` for a real-world implementation of a fast, caching TypeScript/ESLint checker.*

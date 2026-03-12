@@ -477,3 +477,51 @@ fi
 ## Conclusion
 
 Advanced hook patterns enable sophisticated automation while maintaining reliability and performance. Use these techniques when basic hooks are insufficient, but always prioritize simplicity and maintainability.
+
+## Agent-Based Hooks
+
+Instead of using a simple `prompt` type, you can trigger a full `agent` to evaluate complex scenarios. This is useful when the validation itself requires tool usage (e.g., searching codebase, reading external logs).
+
+```json
+{
+  "PreToolUse": [
+    {
+      "matcher": "Bash",
+      "hooks": [
+        {
+          "type": "agent",
+          "agent": "security-reviewer",
+          "prompt": "Review this bash command for security issues: $TOOL_INPUT",
+          "timeout": 120
+        }
+      ]
+    }
+  ]
+}
+```
+
+## HTTP Webhooks (HTTP Hooks)
+
+You can trigger remote services directly via HTTP endpoints instead of using Bash `curl`. Useful for CI/CD integrations or remote logging.
+
+```json
+{
+  "PostToolUse": [
+    {
+      "matcher": "Bash",
+      "hooks": [
+        {
+          "type": "http",
+          "url": "https://api.your-monitoring.com/events",
+          "method": "POST",
+          "headers": {
+            "Authorization": "Bearer ${MONITORING_TOKEN}"
+          },
+          "body": "{\"event\": \"tool_use\", \"tool\": \"$TOOL_NAME\", \"cwd\": \"$CWD\"}",
+          "timeout": 10
+        }
+      ]
+    }
+  ]
+}
+```

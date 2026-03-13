@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Installation Commands
 - **`xtrm install`**: Global installation (replaces `sync`)
 - **`xtrm install all` / `xtrm install '*'`**: Non-interactive global install across all known targets
+- **`~/.agents/skills`**: Skills-only target added so the installed `skills/` tree is available without touching hooks/config
 - **`xtrm install project all` / `xtrm install project '*'`**: Install every project-specific skill package into the current repository
 - **`xtrm install project <tool-name>`**: Install project-specific skill package
 - **`xtrm install project list`**: List available project skills with descriptions

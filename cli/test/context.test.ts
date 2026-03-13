@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { getCandidatePaths, resolveTargets } from '../src/core/context.js';
 
 describe('getCandidatePaths', () => {
-    it('returns only Claude Code targets', () => {
+    it('includes Claude Code and skills-only targets', () => {
         const candidates = getCandidatePaths();
-        expect(candidates.every(candidate => !candidate.path.includes('.gemini'))).toBe(true);
-        expect(candidates.every(candidate => !candidate.path.includes('.qwen'))).toBe(true);
-        expect(candidates.every(candidate => !candidate.path.includes('.agents'))).toBe(true);
+        expect(candidates.some(candidate => candidate.label === '.claude')).toBe(true);
+        expect(candidates.some(candidate => candidate.label === '.agents/skills')).toBe(true);
+        expect(candidates.length).toBe(2);
     });
 });
 

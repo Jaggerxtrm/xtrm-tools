@@ -51,4 +51,5 @@ jobs:
     - name: Run Tests
       run: |
         npm test || echo "npm test not configured yet"
+        npm test --prefix cli
         pytest skills/documenting/tests || echo "Pytest failed or not found"

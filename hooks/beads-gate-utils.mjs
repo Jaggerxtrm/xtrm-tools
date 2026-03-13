@@ -77,8 +77,9 @@ export function getInProgress(cwd) {
  */
 export function getTotalWork(cwd) {
   try {
-    // A single call with no status filter gives us both counts in the Total line.
-    const output = execSync('bd list --status=open --status=in_progress', {
+    // Use default status filter (non-closed) and parse Total summary.
+    // Repeating --status is not additive in bd CLI and can collapse to one status.
+    const output = execSync('bd list', {
       encoding: 'utf8', cwd, stdio: ['pipe', 'pipe', 'pipe'], timeout: 8000,
     });
     const counts = parseCounts(output);

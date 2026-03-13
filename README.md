@@ -221,7 +221,7 @@ Task intake and service routing for Docker service projects.
 | Skill | Description | Hook Type |
 |-------|-------------|-----------|
 | `service-skills-set` | Docker service expertise — gives Claude persistent knowledge about your services | SessionStart, PreToolUse, PostToolUse |
-| `tdd-guard` | Enforce Test-Driven Development — blocks implementation until failing tests exist | PreToolUse, UserPromptSubmit |
+| `tdd-guard` | Enforce Test-Driven Development — blocks implementation until failing tests exist | SessionStart, PreToolUse, UserPromptSubmit |
 | `ts-quality-gate` | TypeScript/ESLint/Prettier quality gate — runs on every edit, auto-fixes issues | PostToolUse |
 | `py-quality-gate` | Python ruff/mypy quality gate — linting, formatting, and type checking | PostToolUse |
 | `main-guard` | Git branch protection — blocks direct edits to main/master branches | PreToolUse |
@@ -239,6 +239,8 @@ xtrm install project tdd-guard           # TDD enforcement
 xtrm install project ts-quality-gate     # TypeScript quality
 xtrm install project py-quality-gate     # Python quality
 xtrm install project main-guard          # Git branch protection
+xtrm install project all                 # Install every available project skill
+xtrm install project '*'                 # Same as above; quote to avoid shell expansion
 ```
 
 **Note:** Project skills install Claude hooks and skills into your project's `.claude/` directory. Some skills require additional manual setup (e.g., installing npm packages or Python dependencies). Always read the documentation at `.claude/docs/<skill>-readme.md` after installation.
@@ -315,10 +317,10 @@ The main command. Detects your agent environments, calculates what's changed, an
 
 ```bash
 xtrm install                # interactive — prompts for targets and confirmation
-xtrm install all            # install to all known targets without target prompt
+xtrm install all            # install to all Claude Code targets without target prompt
 xtrm install '*'            # same as above; quote * to avoid shell expansion
 xtrm install --dry-run      # preview what WOULD change, write nothing
-xtrm install all --dry-run -y  # non-interactive preview across all targets
+xtrm install all --dry-run -y  # non-interactive preview across all Claude targets
 xtrm install -y             # skip confirmation prompts (CI-friendly)
 xtrm install --prune        # also remove system items no longer in the repo
 xtrm install --backport     # reverse direction: copy drifted local edits → repo
@@ -330,7 +332,7 @@ xtrm install --backport     # reverse direction: copy drifted local edits → re
 - **boxen summary card**: Completion summary with green/yellow border based on drift
 - **Themed output**: Semantic colors (success, error, warning, muted, accent) via `theme.ts`
 - **Interactive consent**: Multiselect for MCP servers (space to toggle, all pre-selected)
-- **Auto-detection**: Scans `~/.claude`, `~/.gemini`, `~/.qwen`, `~/.agents/skills` automatically
+- **Auto-detection**: Scans Claude Code targets automatically (`~/.claude`, plus `%APPDATA%/Claude` on Windows)
 - **Inline sync**: `status` command offers to apply sync immediately after showing changes
 - **Single confirmation**: See full plan across all targets, confirm once
 - **Safety guards**: Prune mode aborts on read failures; clean errors (no stack traces)
@@ -339,15 +341,12 @@ xtrm install --backport     # reverse direction: copy drifted local edits → re
 
 **What it syncs per target environment:**
 
-| Item            | Claude               | Gemini               | Qwen               | Agents (skills-only) |
-| --------------- | -------------------- | -------------------- | ------------------ | -------------------- |
-| `skills/`       | ✅ copy/symlink       | ✅ copy/symlink       | ✅ copy/symlink     | ✅ direct copy        |
-| `hooks/`        | ✅ copy/symlink       | ✅ copy/symlink       | ✅ copy/symlink     | ❌ skipped            |
-| `settings.json` | ✅ safe merge         | ✅ safe merge         | ✅ safe merge       | ❌ skipped            |
-| MCP servers     | `mcp add` CLI        | `mcp add` CLI        | `mcp add` CLI      | ❌ skipped            |
-| Slash commands  | auto-generated       | `.toml` files        | `.toml` files      | ❌ skipped            |
-
-**New in v1.7.0**: `~/.agents/skills` is now a first-class sync target for skills-only sync (no hooks/config/MCP).
+| Item            | Claude Code          |
+| --------------- | -------------------- |
+| `skills/`       | ✅ copy/symlink       |
+| `hooks/`        | ✅ copy/symlink       |
+| `settings.json` | ✅ safe merge         |
+| MCP servers     | `mcp add` CLI        |
 
 **Diff categories shown before sync:**
 
@@ -374,7 +373,7 @@ xtrm status --json # machine-readable output
 ```
 
 **Output includes (v1.7.0+)**:
-- Auto-detected environments: `~/.claude`, `~/.gemini`, `~/.qwen`, `~/.agents/skills`
+- Auto-detected environments: Claude Code targets only
 - cli-table3 formatted table with per-target change breakdown
 - Last synced time (relative: "3 hours ago")
 - Item counts from manifest (skills, hooks, config)

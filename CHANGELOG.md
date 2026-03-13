@@ -12,6 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **`AGENTS.md` — bd (beads) issue tracking section**: Comprehensive reference for the `bd` CLI covering session protocol, issue creation, dependency management, search/view commands, advanced features (`agent`, `gate`, `mol`, `audit`), and a bd vs TodoWrite decision table.
+- **`xtrm install project all` / `xtrm install project '*'`**: Non-interactive install of every available project skill into the current repository.
+
+### Fixed
+
+- **Claude-only target detection**: `xtrm install all` now enumerates Claude Code targets only, instead of surfacing stale Gemini/Qwen/Agents paths.
+- **Project-skill install-all coverage**: Added regression tests to verify merged hook counts and copied assets across all shipped project skills.
 
 ### Roadmap
 
@@ -38,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Installation Commands
 - **`xtrm install`**: Global installation (replaces `sync`)
 - **`xtrm install all` / `xtrm install '*'`**: Non-interactive global install across all known targets
+- **`xtrm install project all` / `xtrm install project '*'`**: Install every project-specific skill package into the current repository
 - **`xtrm install project <tool-name>`**: Install project-specific skill package
 - **`xtrm install project list`**: List available project skills with descriptions
 

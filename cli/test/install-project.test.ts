@@ -4,7 +4,13 @@ import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import fsExtra from 'fs-extra';
-import { deepMergeHooks, extractReadmeDescription, installProjectSkill } from '../src/commands/install-project.js';
+import {
+    deepMergeHooks,
+    extractReadmeDescription,
+    getAvailableProjectSkills,
+    installAllProjectSkills,
+    installProjectSkill,
+} from '../src/commands/install-project.js';
 
 describe('deepMergeHooks', () => {
     it('appends new hook entries without overwriting existing events', () => {
@@ -121,5 +127,53 @@ describe('installProjectSkill', () => {
         const settings = await fsExtra.readJson(path.join(tmpDir, '.claude', 'settings.json'));
         const preToolUseCommand = settings.hooks.PreToolUse[0].hooks[0].command;
         expect(preToolUseCommand).toContain('main-guard.cjs');
+    });
+});
+
+describe('installAllProjectSkills', () => {
+    let tmpDir: string;
+
+    beforeEach(async () => {
+        tmpDir = await mkdtemp(path.join(tmpdir(), 'xtrm-project-skill-all-'));
+        await fsExtra.ensureDir(path.join(tmpDir, '.claude'));
+    });
+
+    afterEach(async () => {
+        await rm(tmpDir, { recursive: true, force: true });
+    });
+
+    it('installs every available project skill with merged hooks and copied assets', async () => {
+        const availableSkills = await getAvailableProjectSkills();
+        expect(availableSkills).toEqual([
+            'main-guard',
+            'py-quality-gate',
+            'service-skills-set',
+            'tdd-guard',
+            'ts-quality-gate',
+        ]);
+
+        await installAllProjectSkills(tmpDir);
+
+        const settings = await fsExtra.readJson(path.join(tmpDir, '.claude', 'settings.json'));
+        expect(settings.hooks.SessionStart).toHaveLength(2);
+        expect(settings.hooks.PreToolUse).toHaveLength(3);
+        expect(settings.hooks.PostToolUse).toHaveLength(3);
+        expect(settings.hooks.UserPromptSubmit).toHaveLength(1);
+
+        expect(await fsExtra.pathExists(path.join(tmpDir, '.claude', 'hooks', 'main-guard.cjs'))).toBe(true);
+        expect(await fsExtra.pathExists(path.join(tmpDir, '.claude', 'hooks', 'quality-check.cjs'))).toBe(true);
+        expect(await fsExtra.pathExists(path.join(tmpDir, '.claude', 'hooks', 'quality-check.py'))).toBe(true);
+        expect(await fsExtra.pathExists(path.join(tmpDir, '.claude', 'git-hooks', 'doc_reminder.py'))).toBe(true);
+        expect(await fsExtra.pathExists(path.join(tmpDir, '.claude', 'service-registry.json'))).toBe(true);
+
+        expect(await fsExtra.pathExists(path.join(tmpDir, '.claude', 'skills', 'using-tdd-guard', 'SKILL.md'))).toBe(true);
+        expect(await fsExtra.pathExists(path.join(tmpDir, '.claude', 'skills', 'using-ts-quality-gate', 'SKILL.md'))).toBe(true);
+        expect(await fsExtra.pathExists(path.join(tmpDir, '.claude', 'skills', 'using-py-quality-gate', 'SKILL.md'))).toBe(true);
+        expect(await fsExtra.pathExists(path.join(tmpDir, '.claude', 'skills', 'using-service-skills', 'SKILL.md'))).toBe(true);
+
+        expect(await fsExtra.pathExists(path.join(tmpDir, '.claude', 'docs', 'tdd-guard-readme.md'))).toBe(true);
+        expect(await fsExtra.pathExists(path.join(tmpDir, '.claude', 'docs', 'ts-quality-gate-readme.md'))).toBe(true);
+        expect(await fsExtra.pathExists(path.join(tmpDir, '.claude', 'docs', 'py-quality-gate-readme.md'))).toBe(true);
+        expect(await fsExtra.pathExists(path.join(tmpDir, '.claude', 'docs', 'service-skills-set-readme.md'))).toBe(true);
     });
 });

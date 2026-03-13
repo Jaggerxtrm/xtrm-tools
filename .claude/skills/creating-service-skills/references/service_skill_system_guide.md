@@ -5,20 +5,6 @@
 
 ---
 
-## Table of Contents
-
-- [1. System Overview](#1-system-overview)
-- [2. System Architecture](#2-system-architecture)
-- [3. Mandatory Two-Phase Workflow](#3-mandatory-two-phase-workflow)
-- [4. Service Type Classification](#4-service-type-classification)
-- [5. Directory Structure](#5-directory-structure)
-- [6. Skill Lifecycle](#6-skill-lifecycle)
-- [7. Quality Gates](#7-quality-gates)
-- [8. Best Practices](#8-best-practices)
-- [9. Anti-Patterns](#9-anti-patterns)
-
----
-
 ## 1. System Overview
 
 The **Service Skill System** transforms an AI agent from a generic assistant into a service-aware operator. Each Docker service in your project gets a dedicated **skill package**: a structured combination of operational documentation and executable diagnostic scripts.

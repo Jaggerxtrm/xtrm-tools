@@ -78,8 +78,8 @@ If no registered expert covers the user's need:
 
 ## Session Start Hook
 
-The catalog injection is not handled by skill frontmatter hooks. Configure it in
-`.claude/settings.json` using `SessionStart`:
+The catalog injection is **not** handled by skill frontmatter hooks (SessionStart
+is not supported in skill-level hooks). It is configured in `.claude/settings.json`:
 
 ```json
 {

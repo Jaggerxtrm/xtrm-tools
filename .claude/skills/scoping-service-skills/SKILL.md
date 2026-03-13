@@ -24,7 +24,7 @@ in the conversation.
 
 ### Step 1 — Read the Registry
 
-Run this at the start, before deep task reasoning:
+Run this **immediately**, before any reasoning:
 
 ```bash
 python3 "$CLAUDE_PROJECT_DIR/.claude/skills/scoping-service-skills/scripts/scope.py"
@@ -73,7 +73,7 @@ Using the registry output, reason about which service(s) the task involves. Matc
 
 ### Step 4 — Output XML Scope Block
 
-Emit this block before moving into implementation:
+Emit this block **before doing anything else**:
 
 ```xml
 <scope>
@@ -120,15 +120,15 @@ For each `<service>` with `<load>now</load>`, immediately read the skill file:
 Read: .claude/skills/<service-id>/SKILL.md
 ```
 
-Load all matched skills before proceeding with the task.
+**Do not proceed with the task until all matched skills are loaded.**
 Adopt the expert persona, constraints, and diagnostic approach from each loaded skill.
 
 ---
 
 ### Step 6 — Execute
 
-Follow the workflow phases in order. For `investigation` tasks, include the
-regression-test phase — it keeps fixes durable.
+Follow the workflow phases in order. For `investigation` tasks, **never skip the
+regression-test phase** — a fix without a test is incomplete.
 
 ---
 
@@ -187,7 +187,7 @@ load-skill → answer
 
 ## Regression Test Binding
 
-When `intent = investigation` and a fix has been applied, write a regression
+When `intent = investigation` and a fix has been applied, always write a regression
 test. Use this decision tree:
 
 ```

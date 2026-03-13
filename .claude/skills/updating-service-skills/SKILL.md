@@ -109,7 +109,7 @@ Write to:
 - ✅ `.claude/skills/*/SKILL.md` — skill documentation updates
 - ✅ `.claude/skills/service-registry.json` — territory and sync timestamp updates
 
-Avoid:
+Do not:
 - ❌ Modify source code (read-only access to service territories)
 - ❌ Delete skills or registry entries
 

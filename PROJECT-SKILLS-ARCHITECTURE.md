@@ -80,6 +80,5 @@ To ensure consistent code quality across all projects, `xtrm-tools` will ship wi
 1. **`tdd-guard`**: Architectural gate. Blocks implementation until failing tests exist.
 2. **`ts-quality-gate`**: Post-edit hook for TypeScript. Runs `quality-check.js` (copied from `bartolli/claude-code-typescript-hooks`) to enforce TS/ESLint rules and autofix on the fly.
 3. **`py-quality-gate`**: Post-edit hook for Python. A custom Python script that mimics the TS gate logic, running `ruff` (for linting/formatting) and `mypy` (for type checking), failing with Exit Code 2 to force Claude to fix issues.
-4. **`main-guard`**: Git workflow gate. A port of the `specialists-main-guard.mjs` script from `unit.ai-specialists`. Blocks direct edits to the `master`/`main` branches and enforces feature branch creation.
 
 *Note on Git Pre-commit Hooks vs Claude Hooks:* While Git pre-commit hooks are useful, they occur too late in the agent's workflow (at commit time). Claude's native `PostToolUse` hooks are superior because they provide an immediate feedback loop (<1s) right after the agent edits a file, keeping the agent in context.

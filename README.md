@@ -224,7 +224,6 @@ Task intake and service routing for Docker service projects.
 | `tdd-guard` | Enforce Test-Driven Development — blocks implementation until failing tests exist | SessionStart, PreToolUse, UserPromptSubmit |
 | `ts-quality-gate` | TypeScript/ESLint/Prettier quality gate — runs on every edit, auto-fixes issues | PostToolUse |
 | `py-quality-gate` | Python ruff/mypy quality gate — linting, formatting, and type checking | PostToolUse |
-| `main-guard` | Git branch protection — blocks direct edits to main/master branches | PreToolUse |
 
 ### Installing Project Skills
 
@@ -238,7 +237,6 @@ xtrm install project service-skills-set  # Docker service expertise
 xtrm install project tdd-guard           # TDD enforcement
 xtrm install project ts-quality-gate     # TypeScript quality
 xtrm install project py-quality-gate     # Python quality
-xtrm install project main-guard          # Git branch protection
 xtrm install project all                 # Install every available project skill
 xtrm install project '*'                 # Same as above; quote to avoid shell expansion
 ```

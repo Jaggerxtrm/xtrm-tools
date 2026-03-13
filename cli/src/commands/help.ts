@@ -73,7 +73,6 @@ ${kleur.cyan('PROJECT SKILLS:')}
   • ${kleur.white('tdd-guard')} — Enforce Test-Driven Development (PreToolUse, UserPromptSubmit)
   • ${kleur.white('ts-quality-gate')} — TypeScript/ESLint/Prettier quality gate (PostToolUse)
   • ${kleur.white('py-quality-gate')} — Python ruff/mypy quality gate (PostToolUse)
-  • ${kleur.white('main-guard')} — Git branch protection (PreToolUse)
 
 ${kleur.cyan('INSTALL TARGETS:')}
 
@@ -97,7 +96,7 @@ ${kleur.cyan('RESOURCES:')}
   • Documentation: See README.md in the repository
   • Report Issues: https://github.com/Jaggerxtrm/xtrm-tools/issues
 
-${kleur.dim('Run \'xtrm <command> --help\' for more information on a specific command.')}
+${kleur.dim('Run \\'xtrm <command> --help\\' for more information on a specific command.')}
 `);
         });
 }

@@ -42,12 +42,12 @@ describe('deepMergeHooks', () => {
 describe('extractReadmeDescription', () => {
     it('extracts the first prose line after the title', async () => {
         const readme = await fsExtra.readFile(
-            path.join(__dirname, '../../project-skills/main-guard/README.md'),
+            path.join(__dirname, '../../project-skills/py-quality-gate/README.md'),
             'utf8',
         );
 
         expect(extractReadmeDescription(readme)).toBe(
-            'Git branch protection for Claude Code. Blocks direct edits to main/master branches and enforces feature branch workflow.',
+            'Python quality gate for Claude Code. Runs ruff (linting/formatting) and mypy (type checking) automatically on every file edit.',
         );
     });
 
@@ -96,12 +96,11 @@ describe('installProjectSkill', () => {
             { spaces: 2 },
         );
 
-        await installProjectSkill('main-guard', tmpDir);
+        await installProjectSkill('tdd-guard', tmpDir);
 
         const settings = await fsExtra.readJson(path.join(tmpDir, '.claude', 'settings.json'));
         expect(settings.hooks.PreToolUse).toHaveLength(2);
         expect(settings.hooks.CustomEvent).toEqual([{ command: 'echo keep-me' }]);
-        expect(await fsExtra.pathExists(path.join(tmpDir, '.claude', 'hooks', 'main-guard.cjs'))).toBe(true);
     });
 
     it('installs Node hook files that execute inside type-module projects', async () => {
@@ -111,7 +110,6 @@ describe('installProjectSkill', () => {
         }, { spaces: 2 });
 
         await installProjectSkill('ts-quality-gate', tmpDir);
-        await installProjectSkill('main-guard', tmpDir);
 
         const tsRun = spawnSync(
             'node',
@@ -125,8 +123,8 @@ describe('installProjectSkill', () => {
         expect(tsRun.status).toBe(0);
 
         const settings = await fsExtra.readJson(path.join(tmpDir, '.claude', 'settings.json'));
-        const preToolUseCommand = settings.hooks.PreToolUse[0].hooks[0].command;
-        expect(preToolUseCommand).toContain('main-guard.cjs');
+        const postToolUseCommand = settings.hooks.PostToolUse[0].hooks[0].command;
+        expect(postToolUseCommand).toContain('quality-check.cjs');
     });
 });
 
@@ -145,7 +143,6 @@ describe('installAllProjectSkills', () => {
     it('installs every available project skill with merged hooks and copied assets', async () => {
         const availableSkills = await getAvailableProjectSkills();
         expect(availableSkills).toEqual([
-            'main-guard',
             'py-quality-gate',
             'service-skills-set',
             'tdd-guard',
@@ -156,11 +153,10 @@ describe('installAllProjectSkills', () => {
 
         const settings = await fsExtra.readJson(path.join(tmpDir, '.claude', 'settings.json'));
         expect(settings.hooks.SessionStart).toHaveLength(2);
-        expect(settings.hooks.PreToolUse).toHaveLength(3);
+        expect(settings.hooks.PreToolUse).toHaveLength(2);
         expect(settings.hooks.PostToolUse).toHaveLength(3);
         expect(settings.hooks.UserPromptSubmit).toHaveLength(1);
 
-        expect(await fsExtra.pathExists(path.join(tmpDir, '.claude', 'hooks', 'main-guard.cjs'))).toBe(true);
         expect(await fsExtra.pathExists(path.join(tmpDir, '.claude', 'hooks', 'quality-check.cjs'))).toBe(true);
         expect(await fsExtra.pathExists(path.join(tmpDir, '.claude', 'hooks', 'quality-check.py'))).toBe(true);
         expect(await fsExtra.pathExists(path.join(tmpDir, '.claude', 'git-hooks', 'doc_reminder.py'))).toBe(true);

@@ -1,17 +1,7 @@
 {
   "hooks": {
     "PreToolUse": [
-      {
-        "matcher": "Write|Edit|MultiEdit|Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/hooks/main-guard.mjs\"",
-            "timeout": 5
-          }
-        ]
-      },
-      {
+{
         "matcher": "Read|Write|Edit|Glob|Grep|Bash",
         "hooks": [
           {

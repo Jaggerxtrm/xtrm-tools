@@ -373,7 +373,7 @@ xtrm status --json # machine-readable output
 ```
 
 **Output includes (v1.7.0+)**:
-- Auto-detected environments: Claude Code targets only
+- Auto-detected environments: Claude Code targets and the `~/.agents/skills` cache
 - cli-table3 formatted table with per-target change breakdown
 - Last synced time (relative: "3 hours ago")
 - Item counts from manifest (skills, hooks, config)

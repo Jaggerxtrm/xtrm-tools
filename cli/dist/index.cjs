@@ -40681,15 +40681,15 @@ async function getAvailableProjectSkills() {
     return [];
   }
   const entries = await import_fs_extra10.default.readdir(PROJECT_SKILLS_DIR);
-  const skills2 = [];
+  const skills = [];
   for (const entry of entries) {
     const entryPath = import_path10.default.join(PROJECT_SKILLS_DIR, entry);
     const stat = await import_fs_extra10.default.stat(entryPath);
     if (stat.isDirectory()) {
-      skills2.push(entry);
+      skills.push(entry);
     }
   }
-  return skills2.sort();
+  return skills.sort();
 }
 function deepMergeHooks(existing, incoming) {
   const result = { ...existing };
@@ -40810,20 +40810,20 @@ async function installProjectSkill(toolName, projectRootOverride) {
   console.log(kleur_default.green("  \u2713 Installation complete!\n"));
 }
 async function installAllProjectSkills(projectRootOverride) {
-  const skills2 = await getAvailableProjectSkills();
-  if (skills2.length === 0) {
+  const skills = await getAvailableProjectSkills();
+  if (skills.length === 0) {
     console.log(kleur_default.dim("  No project skills available.\n"));
     return;
   }
   const projectRoot = projectRootOverride ?? getProjectRoot();
   console.log(kleur_default.bold(`
-Installing ${skills2.length} project skills:
+Installing ${skills.length} project skills:
 `));
-  for (const skill of skills2) {
+  for (const skill of skills) {
     console.log(kleur_default.dim(`  \u2022 ${skill}`));
   }
   console.log("");
-  for (const skill of skills2) {
+  for (const skill of skills) {
     await installProjectSkill(skill, projectRoot);
   }
 }
@@ -40833,7 +40833,7 @@ async function listProjectSkills() {
     console.log(kleur_default.dim("  No project skills available.\n"));
     return;
   }
-  const skills2 = [];
+  const skills = [];
   for (const entry of entries) {
     const readmePath = import_path10.default.join(PROJECT_SKILLS_DIR, entry, "README.md");
     let description = "No description available";
@@ -40841,9 +40841,9 @@ async function listProjectSkills() {
       const readmeContent = await import_fs_extra10.default.readFile(readmePath, "utf8");
       description = extractReadmeDescription(readmeContent).slice(0, 80);
     }
-    skills2.push({ name: entry, description });
+    skills.push({ name: entry, description });
   }
-  if (skills2.length === 0) {
+  if (skills.length === 0) {
     console.log(kleur_default.dim("  No project skills available.\n"));
     return;
   }
@@ -40854,7 +40854,7 @@ async function listProjectSkills() {
     colWidths: [25, 60],
     style: { head: [], border: [] }
   });
-  for (const skill of skills2) {
+  for (const skill of skills) {
     table.push([kleur_default.white(skill.name), kleur_default.dim(skill.description)]);
   }
   console.log(table.toString());
@@ -55051,10 +55051,10 @@ ${kleur_default.cyan("PROJECT SKILLS:")}
 
 ${kleur_default.cyan("INSTALL TARGETS:")}
 
-  xtrm-tools v2.0.0 installs into Claude Code targets and the `.agents / skills` cache:
-  • ~/.claude
-  • %APPDATA%/Claude on Windows
-  • ~/.agents/skills (skills-only copy)
+  xtrm-tools v2.0.0 installs into Claude Code targets and the .agents/skills cache:
+  \u2022 ~/.claude
+  \u2022 %APPDATA%/Claude on Windows
+  \u2022 ~/.agents/skills (skills-only copy)
 
 ${kleur_default.cyan("ARCHITECTURE:")}
 
@@ -55067,9 +55067,9 @@ ${kleur_default.cyan("ARCHITECTURE:")}
 
 ${kleur_default.cyan("RESOURCES:")}
 
-  • Repository: https://github.com/Jaggerxtrm/xtrm-tools
-  • Documentation: See README.md in the repository
-  • Report Issues: https://github.com/Jaggerxtrm/xtrm-tools/issues
+  \u2022 Repository: https://github.com/Jaggerxtrm/xtrm-tools
+  \u2022 Documentation: See README.md in the repository
+  \u2022 Report Issues: https://github.com/Jaggerxtrm/xtrm-tools/issues
 
 ${kleur_default.dim("Run 'xtrm <command> --help' for more information on a specific command.")}
 `);

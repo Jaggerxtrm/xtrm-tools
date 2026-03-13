@@ -19,7 +19,7 @@ from pathlib import Path
 BOOTSTRAP_DIR = Path(__file__).parent.parent.parent / "creating-service-skills" / "scripts"
 sys.path.insert(0, str(BOOTSTRAP_DIR))
 
-from bootstrap import RootResolutionError, get_project_root, load_registry  # noqa: E402
+from bootstrap import RootResolutionError, get_project_root, load_registry  # noqa: E402  # type: ignore[import-not-found]
 
 
 def match_territory(file_path: str, territory: list[str], project_root: Path) -> bool:
@@ -109,7 +109,7 @@ def main() -> None:
 
     try:
         project_root = Path(get_project_root())
-        services = load_registry()
+        services = load_registry().get("services", {})
     except (RootResolutionError, Exception):
         sys.exit(0)
 

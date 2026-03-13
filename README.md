@@ -224,7 +224,7 @@ Task intake and service routing for Docker service projects.
 | `tdd-guard` | Enforce Test-Driven Development — blocks implementation until failing tests exist | SessionStart, PreToolUse, UserPromptSubmit |
 | `ts-quality-gate` | TypeScript/ESLint/Prettier quality gate — runs on every edit, auto-fixes issues | PostToolUse |
 | `py-quality-gate` | Python ruff/mypy quality gate — linting, formatting, and type checking | PostToolUse |
-| `main-guard` | Git branch protection — blocks direct edits to main/master branches | PreToolUse |
+| `main-guard` | Git branch protection — blocks direct edits and dangerous git ops (merge, cherry-pick, rebase, commit, reset --hard, force-push) on protected branches; enforces PR-only workflow | PreToolUse, Bash |
 
 ### Installing Project Skills
 
@@ -642,6 +642,10 @@ Once registered, skills activate automatically when Claude:
 
 | Version | Date       | Highlights                                         |
 | ------- | ---------- | -------------------------------------------------- |
+| 2.0.3   | 2026-03-13 | main-guard v2: Bash hook blocks dangerous git ops (merge, commit, force-push), full PR-only workflow SKILL.md; fix MultiEdit gap in PostToolUse matchers; fix skill_activator registry bug |
+| 2.0.2   | 2026-03-12 | Fix agents skills target description; project install-all regression tests |
+| 2.0.1   | 2026-03-12 | Fix Claude-only target detection; restore agents skills target |
+| 2.0.0   | 2026-03-12 | Claude Code exclusively; project skills engine (5 skills); CLI renamed `xtrm`; `install` replaces `sync` |
 | 1.7.0   | 2026-02-25 | GitNexus integration, unified 3-phase sync, MCP CLI sync, env management |
 | 1.6.0   | 2026-02-24 | Documenting skill hardening (drift detection, INDEX blocks) |
 | 1.5.0   | 2026-02-23 | Service Skills Set (Trinity), git hooks, auto-activation |
@@ -718,16 +722,18 @@ jaggers-agent-tools/
 │   └── settings.json            # Base settings template
 │
 ├── project-skills/              # Project-specific service skills
-│   └── service-skills-set/      # Trinity system for Docker service projects
-│       ├── install-service-skills.py  # Installer script
-│       ├── service-skills-readme.md   # Complete guide
-│       └── .claude/
-│           ├── settings.json    # Settings template with hooks
-│           ├── creating-service-skills/
-│           ├── using-service-skills/
-│           ├── updating-service-skills/
-│           ├── scoping-service-skills/
-│           └── git-hooks/
+│   ├── service-skills-set/      # Trinity system for Docker service projects
+│   │   ├── install-service-skills.py  # Installer script
+│   │   ├── service-skills-readme.md   # Complete guide
+│   │   └── .claude/             # Settings, Trinity skills, git-hooks
+│   ├── tdd-guard/               # TDD enforcement (blocks impl without failing test)
+│   │   └── .claude/             # hooks/tdd-guard.cjs, settings.json
+│   ├── ts-quality-gate/         # TypeScript/ESLint/Prettier quality gate
+│   │   └── .claude/             # hooks/quality-check.cjs, settings.json
+│   ├── py-quality-gate/         # Python ruff/mypy quality gate
+│   │   └── .claude/             # hooks/quality-check.py, settings.json
+│   └── main-guard/              # Git branch protection (PR-only workflow)
+│       └── .claude/             # hooks/main-guard.cjs, settings.json, skills/
 │
 ├── docs/                        # Documentation
 │   ├── mcp-servers-config.md    # MCP setup guide

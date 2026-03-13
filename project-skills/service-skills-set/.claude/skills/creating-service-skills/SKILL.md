@@ -20,7 +20,7 @@ immediately useful to any agent working on the service.
 
 ## Mandatory Two-Phase Workflow
 
-**Both phases are required. Never skip Phase 2.**
+**Use both phases every time.** Phase 1 gives structure; Phase 2 grounds the skill in real service behavior.
 
 ---
 
@@ -65,7 +65,7 @@ python3 "$CLAUDE_PROJECT_DIR/.claude/skills/creating-service-skills/scripts/deep
 
 ---
 
-### Phase 2: Agentic Deep Dive (Non-Negotiable)
+### Phase 2: Agentic Deep Dive
 
 After the skeleton exists, answer every research question by reading the actual
 source code. Use **Serena LSP tools exclusively** — never read entire files.
@@ -118,10 +118,10 @@ source code. Use **Serena LSP tools exclusively** — never read entire files.
 
 ---
 
-### Phase 2 Script Writing (Required — No Stubs)
+### Phase 2 Script Writing (Complete Implementation)
 
-After research is complete, replace ALL `[PENDING RESEARCH]` stubs in `scripts/`.
-Each script must be fully implemented — no TODOs, no placeholder SQL.
+After research is complete, replace all `[PENDING RESEARCH]` stubs in `scripts/`.
+Scripts should be ready to run end-to-end, without TODO markers or placeholder SQL.
 
 #### Mandatory DB Connection Pattern (all scripts that touch the DB)
 
@@ -207,10 +207,10 @@ Required features:
 
 See [references/script_quality_standards.md](references/script_quality_standards.md) for complete templates.
 
-#### `scripts/Makefile` (required — always present)
+#### `scripts/Makefile` (required)
 
-The scaffolder creates a stub `Makefile` in Phase 1. In Phase 2 you **must verify it is
-correct and complete** — it is the primary entry point users and agents use to run diagnostics.
+The scaffolder creates a stub `Makefile` in Phase 1. In Phase 2, verify it is
+correct and complete because it is the primary entry point for diagnostics.
 
 **Standard template** (copy verbatim, replace `<service-id>` comment only):
 
@@ -261,11 +261,11 @@ db:
 
 **Rules for the delegated Phase 2 agent:**
 
-1. **Do not remove or rename the standard targets** — they form the stable interface.
+1. **Keep standard targets stable** — avoid removing or renaming them because downstream workflows depend on them.
 2. **Add service-specific targets** below the standard block if the service needs them (e.g. `make auth`, `make schema`, `make backfill`).
-3. **The `_VENV` auto-detect path (`../../../../venv/bin/python3`) is fixed** — it resolves from `scripts/` → service dir → `skills/` → `.claude/` → project root → `venv/`. Do not change the depth.
-4. **Recipe lines use a real tab character**, not spaces. Makefile syntax requires this.
-5. **Verify with `make help`** after writing — the Python path shown must resolve to the project venv, not system python.
+3. **Keep the `_VENV` auto-detect path (`../../../../venv/bin/python3`) unchanged** — it resolves from `scripts/` → service dir → `skills/` → `.claude/` → project root → `venv/`.
+4. **Use real tab characters in recipe lines** so Makefile parsing works consistently.
+5. **Run `make help` after updates** and confirm the Python path resolves to the project venv.
 
 ---
 

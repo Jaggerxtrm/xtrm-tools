@@ -2,9 +2,31 @@
   "name": "xtrm-tools",
   "version": "2.0.0",
   "description": "Claude Code tools installer (skills, hooks, MCP servers)",
+  "license": "MIT",
   "type": "module",
   "bin": {
     "xtrm": "./cli/dist/index.cjs"
+  },
+  "files": [
+    "README.md",
+    "CHANGELOG.md",
+    "cli/dist",
+    "cli/package.json",
+    "config",
+    "hooks",
+    "skills",
+    "project-skills"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jaggerxtrm/xtrm-tools.git"
+  },
+  "homepage": "https://github.com/Jaggerxtrm/xtrm-tools#readme",
+  "bugs": {
+    "url": "https://github.com/Jaggerxtrm/xtrm-tools/issues"
   },
   "scripts": {
     "build": "npm run build --prefix cli",

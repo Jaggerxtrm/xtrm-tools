@@ -15,8 +15,13 @@ try {
   }).trim();
 } catch {}
 
+// Determine protected branches — env var override for tests and custom setups
+const protectedBranches = process.env.MAIN_GUARD_PROTECTED_BRANCHES
+  ? process.env.MAIN_GUARD_PROTECTED_BRANCHES.split(',').map(b => b.trim()).filter(Boolean)
+  : ['main', 'master'];
+
 // Not in a git repo or not on a protected branch — allow
-if (!branch || (branch !== 'main' && branch !== 'master')) {
+if (!branch || !protectedBranches.includes(branch)) {
   process.exit(0);
 }
 
@@ -68,8 +73,8 @@ if (tool === 'Bash') {
   if (/^git push/.test(cmd)) {
     const tokens = cmd.split(' ');
     const lastToken = tokens[tokens.length - 1];
-    const explicitMaster = /^(master|main)$/.test(lastToken) || /:(master|main)$/.test(lastToken);
-    const impliedMaster = tokens.length <= 3 && (branch === 'main' || branch === 'master');
+    const explicitMaster = protectedBranches.some(b => lastToken === b || lastToken.endsWith(`:${b}`));
+    const impliedMaster = tokens.length <= 3 && protectedBranches.includes(branch);
     if (explicitMaster || impliedMaster) {
       process.stderr.write(
         `⛔ Don't push directly to '${branch}' — use the PR workflow.\n\n` +

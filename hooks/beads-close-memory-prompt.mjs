@@ -1,13 +1,16 @@
 #!/usr/bin/env node
 // beads-close-memory-prompt — Claude Code PostToolUse hook
-// After `bd close`: injects a short reminder into Claude's context to capture
-// knowledge and consider underused beads features.
+// After `bd close`: clears session claim from bd kv, then injects a short
+// reminder into Claude's context to capture knowledge and consider underused
+// beads features.
 // Output to stdout is shown to Claude as additional context.
 //
 // Installed by: xtrm install
 
-import { readFileSync, existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
+import {
+  resolveCwd, isBeadsProject, clearSessionClaim, withSafeBdContext,
+} from './beads-gate-utils.mjs';
 
 let input;
 try {
@@ -16,32 +19,31 @@ try {
   process.exit(0);
 }
 
-// Only fire on Bash tool
 if (input.tool_name !== 'Bash') process.exit(0);
+if (!/\bbd\s+close\b/.test(input.tool_input?.command ?? '')) process.exit(0);
 
-const cmd = (input.tool_input?.command ?? '').trim();
+withSafeBdContext(() => {
+  const cwd = resolveCwd(input);
+  if (!isBeadsProject(cwd)) process.exit(0);
 
-// Only fire when the command is `bd close ...`
-if (!/\bbd\s+close\b/.test(cmd)) process.exit(0);
+  if (input.session_id) {
+    clearSessionClaim(input.session_id, cwd);
+  }
 
-// Only fire in projects that use beads
-const cwd = input.cwd ?? process.env.CLAUDE_PROJECT_DIR ?? process.cwd();
-if (!existsSync(join(cwd, '.beads'))) process.exit(0);
+  process.stdout.write(
+    '\n[beads] Issue(s) closed. Before moving on:\n\n' +
+    '  Knowledge worth keeping?\n' +
+    '    bd remember "key insight from this work"\n' +
+    '    bd memories <keyword>   -- search what is already stored\n\n' +
+    '  Discovered related work while implementing?\n' +
+    '    bd create --title="..." --deps=discovered-from:<id>\n\n' +
+    '  Underused features to consider:\n' +
+    '    bd dep add <a> <b>   -- link blocking relationships between issues\n' +
+    '    bd graph             -- visualize issue dependency graph\n' +
+    '    bd orphans           -- issues referenced in commits but still open\n' +
+    '    bd preflight         -- PR readiness checklist before gh pr create\n' +
+    '    bd stale             -- issues not touched recently\n'
+  );
 
-// Inject reminder into Claude's context
-process.stdout.write(
-  '\n[beads] Issue(s) closed. Before moving on:\n\n' +
-  '  Knowledge worth keeping?\n' +
-  '    bd remember "key insight from this work"\n' +
-  '    bd memories <keyword>   -- search what is already stored\n\n' +
-  '  Discovered related work while implementing?\n' +
-  '    bd create --title="..." --deps=discovered-from:<id>\n\n' +
-  '  Underused features to consider:\n' +
-  '    bd dep add <a> <b>   -- link blocking relationships between issues\n' +
-  '    bd graph             -- visualize issue dependency graph\n' +
-  '    bd orphans           -- issues referenced in commits but still open\n' +
-  '    bd preflight         -- PR readiness checklist before gh pr create\n' +
-  '    bd stale             -- issues not touched recently\n'
-);
-
-process.exit(0);
+  process.exit(0);
+});

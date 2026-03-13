@@ -59,6 +59,57 @@ describe('main-guard.mjs — MAIN_GUARD_PROTECTED_BRANCHES', () => {
     );
     expect(r.status).toBe(0);
   });
+
+  it('blocks Bash by default on protected branch (default-deny)', () => {
+    const r = runHook(
+      'main-guard.mjs',
+      { tool_name: 'Bash', tool_input: { command: 'cat > file.txt << EOF\nhello\nEOF' } },
+      { MAIN_GUARD_PROTECTED_BRANCHES: CURRENT_BRANCH },
+    );
+    expect(r.status).toBe(2);
+    expect(r.stderr).toContain('Bash is restricted');
+  });
+
+  it('allows safe Bash commands on protected branch', () => {
+    const safeCommands = [
+      'git status',
+      'git log --oneline -5',
+      'git diff HEAD',
+      'git checkout -b feature/x',
+      'git switch -c feature/y',
+      'git fetch origin',
+      'git pull',
+      'gh pr list',
+      'bd list',
+    ];
+    for (const command of safeCommands) {
+      const r = runHook(
+        'main-guard.mjs',
+        { tool_name: 'Bash', tool_input: { command } },
+        { MAIN_GUARD_PROTECTED_BRANCHES: CURRENT_BRANCH },
+      );
+      expect(r.status, `expected exit 0 for: ${command}`).toBe(0);
+    }
+  });
+
+  it('allows Bash when MAIN_GUARD_ALLOW_BASH=1 is set', () => {
+    const r = runHook(
+      'main-guard.mjs',
+      { tool_name: 'Bash', tool_input: { command: 'npm run build' } },
+      { MAIN_GUARD_PROTECTED_BRANCHES: CURRENT_BRANCH, MAIN_GUARD_ALLOW_BASH: '1' },
+    );
+    expect(r.status).toBe(0);
+  });
+
+  it('blocks git commit in Bash with workflow guidance', () => {
+    const r = runHook(
+      'main-guard.mjs',
+      { tool_name: 'Bash', tool_input: { command: 'git commit -m "oops"' } },
+      { MAIN_GUARD_PROTECTED_BRANCHES: CURRENT_BRANCH },
+    );
+    expect(r.status).toBe(2);
+    expect(r.stderr).toContain('feature branch');
+  });
 });
 
 // ── beads-gate-utils.mjs ─────────────────────────────────────────────────────

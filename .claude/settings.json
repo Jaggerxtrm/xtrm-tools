@@ -12,6 +12,16 @@
         ]
       },
       {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/hooks/main-guard.mjs\"",
+            "timeout": 5
+          }
+        ]
+      },
+      {
         "matcher": "Read|Write|Edit|Glob|Grep|Bash",
         "hooks": [
           {
@@ -77,6 +87,15 @@
           {
             "type": "command",
             "command": "tdd-guard --session-init",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "git config pull.ff only",
             "timeout": 5
           }
         ]

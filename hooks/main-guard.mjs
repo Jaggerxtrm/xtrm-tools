@@ -51,45 +51,86 @@ if (WRITE_TOOLS.has(tool)) {
   process.exit(2);
 }
 
-// Block direct commits and pushes to master — use feature branches + gh pr create/merge
+const WORKFLOW =
+  'Full workflow:\n' +
+  '  1. git checkout -b feature/<name>         \u2190 start here\n' +
+  '  2. bd create + bd update in_progress      track your work\n' +
+  '  3. Edit files / write code\n' +
+  '  4. bd close <id> && git add && git commit\n' +
+  '  5. git push -u origin feature/<name>\n' +
+  '  6. gh pr create --fill && gh pr merge --squash\n' +
+  '  7. git checkout master && git reset --hard origin/master\n';
+
 if (tool === 'Bash') {
   const cmd = (input.tool_input?.command ?? '').trim().replace(/\s+/g, ' ');
 
-  if (/^git commit/.test(cmd)) {
+  // Emergency override — escape hatch for power users
+  if (process.env.MAIN_GUARD_ALLOW_BASH === '1') {
+    process.exit(0);
+  }
+
+  // Safe allowlist — non-mutating commands allowed on protected branches
+  const SAFE_BASH_PATTERNS = [
+    /^git\s+(status|log|diff|branch|show|describe|fetch|remote|config)\b/,
+    /^git\s+pull\b/,
+    /^git\s+stash\b/,
+    /^git\s+worktree\b/,
+    /^git\s+(checkout|switch)\b/,
+    /^gh\s+/,
+    /^bd\s+/,
+  ];
+
+  if (SAFE_BASH_PATTERNS.some(p => p.test(cmd))) {
+    process.exit(0);
+  }
+
+  // Specific messages for common blocked operations
+  if (/^git\s+commit\b/.test(cmd)) {
     process.stderr.write(
-      `⛔ Don't commit directly to '${branch}' — use a feature branch.\n\n` +
-      'Full workflow:\n' +
-      '  1. git checkout -b feature/<name>         ← start here\n' +
-      '  2. bd create + bd update in_progress      track your work\n' +
-      '  3. Edit files / write code\n' +
-      '  4. bd close <id> && git add && git commit\n' +
-      '  5. git push -u origin feature/<name>\n' +
-      '  6. gh pr create --fill && gh pr merge --squash\n' +
-      '  7. git checkout master && git reset --hard origin/master\n'
+      `\u26D4 Don't commit directly to '${branch}' \u2014 use a feature branch.\n\n` +
+      WORKFLOW
     );
     process.exit(2);
   }
 
-  if (/^git push/.test(cmd)) {
+  if (/^git\s+push\b/.test(cmd)) {
     const tokens = cmd.split(' ');
     const lastToken = tokens[tokens.length - 1];
-    const explicitMaster = protectedBranches.some(b => lastToken === b || lastToken.endsWith(`:${b}`));
-    const impliedMaster = tokens.length <= 3 && protectedBranches.includes(branch);
-    if (explicitMaster || impliedMaster) {
+    const explicitProtected = protectedBranches.some(b => lastToken === b || lastToken.endsWith(`:${b}`));
+    const impliedProtected = tokens.length <= 3 && protectedBranches.includes(branch);
+    if (explicitProtected || impliedProtected) {
       process.stderr.write(
-        `⛔ Don't push directly to '${branch}' — use the PR workflow.\n\n` +
+        `\u26D4 Don't push directly to '${branch}' \u2014 use the PR workflow.\n\n` +
         'Next steps:\n' +
-        '  5. git push -u origin <feature-branch>     ← push your branch\n' +
+        '  5. git push -u origin <feature-branch>     \u2190 push your branch\n' +
         '  6. gh pr create --fill                      create PR\n' +
         '     gh pr merge --squash                     merge it\n' +
         '  7. git checkout master                      sync master\n' +
         '     git reset --hard origin/master\n\n' +
-        'If you\'re not on a feature branch yet:\n' +
+        "If you're not on a feature branch yet:\n" +
         '  git checkout -b feature/<name>    (then re-commit and push)\n'
       );
       process.exit(2);
     }
+    // Pushing to a feature branch — allow
+    process.exit(0);
   }
+
+  // Default deny — block everything else on protected branches
+  process.stderr.write(
+    `\u26D4 Bash is restricted on '${branch}' \u2014 use a feature branch for file writes and script execution.\n\n` +
+    'Allowed on protected branches:\n' +
+    '  git status / log / diff / branch / fetch / pull / stash\n' +
+    '  git checkout -b <name>   (create feature branch \u2014 the exit path)\n' +
+    '  git switch -c <name>     (same)\n' +
+    '  git worktree / config\n' +
+    '  gh <any>                 (GitHub CLI)\n' +
+    '  bd <any>                 (beads issue tracking)\n\n' +
+    'To run arbitrary commands:\n' +
+    '  1. git checkout -b feature/<name>   \u2190 move to a feature branch, or\n' +
+    '  2. MAIN_GUARD_ALLOW_BASH=1 <command>  (escape hatch, use sparingly)\n'
+  );
+  process.exit(2);
 }
 
 process.exit(0);

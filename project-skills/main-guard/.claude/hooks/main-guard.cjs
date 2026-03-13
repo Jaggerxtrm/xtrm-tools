@@ -138,19 +138,45 @@ function printSuccess(branch) {
 }
 
 /**
+ * Check if a bash command is a dangerous git operation on a protected branch.
+ * Returns { isDangerous: bool, reason: string }
+ */
+function checkBashCommand(command) {
+  if (!command || typeof command !== 'string') return { isDangerous: false };
+  const cmd = command.trim();
+  if (!/git\s+/.test(cmd)) return { isDangerous: false };
+  if (/git\s+merge\b(?!\s+--abort)/.test(cmd)) {
+    return { isDangerous: true, reason: 'git merge bypasses PR workflow — use gh pr merge instead' };
+  }
+  if (/git\s+cherry-pick\b(?!\s+--abort)/.test(cmd)) {
+    return { isDangerous: true, reason: 'git cherry-pick bypasses PR workflow' };
+  }
+  if (/git\s+rebase\b(?!\s+(--abort|--skip|--continue))/.test(cmd)) {
+    return { isDangerous: true, reason: 'git rebase on a protected branch bypasses PR workflow' };
+  }
+  if (/git\s+reset\s+--hard/.test(cmd)) {
+    return { isDangerous: true, reason: 'git reset --hard is destructive on a protected branch' };
+  }
+  if (/git\s+push\b.*\s(--force|-f)\b/.test(cmd)) {
+    return { isDangerous: true, reason: 'git push --force overwrites remote history' };
+  }
+  if (/git\s+commit\b/.test(cmd)) {
+    return { isDangerous: true, reason: 'git commit directly on protected branch — use a feature branch and PR instead' };
+  }
+  return { isDangerous: false };
+}
+
+/**
  * Main entry point
  */
 function main() {
   log('');
   log('🔒 Main Guard - Branch Protection Check', colors.blue);
   log('─────────────────────────────────────────', colors.blue);
-  
-  // Parse input
+
   const input = parseInput();
-  
-  // Get current branch
   const branch = getCurrentBranch();
-  
+
   if (!branch) {
     logWarning('Not in a git repository - skipping branch protection');
     log('', colors.yellow);
@@ -158,17 +184,28 @@ function main() {
     log('', colors.reset);
     process.exit(0);
   }
-  
+
   logInfo(`Current branch: ${branch}`);
-  
-  // Check if protected
+
+  // Bash tool: block dangerous git operations on protected branches
+  if (input && input.tool_name === 'Bash') {
+    const command = (input.tool_input && input.tool_input.command) || '';
+    const { isDangerous, reason } = checkBashCommand(command);
+    if (isDangerous && isProtectedBranch(branch)) {
+      log(`\n🛑 BLOCKED: ${reason}\n   Branch: ${branch}\n   Command: ${command}\n`, colors.red);
+      process.exit(2);
+    }
+    printSuccess(branch);
+    process.exit(0);
+  }
+
+  // Write/Edit/MultiEdit: block all file edits on protected branches
   if (isProtectedBranch(branch)) {
     const suggestedBranch = suggestBranchName(input || {});
     printBlocked(branch, suggestedBranch);
     process.exit(2);
   }
-  
-  // Not a protected branch - allow
+
   printSuccess(branch);
   process.exit(0);
 }

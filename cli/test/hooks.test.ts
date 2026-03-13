@@ -92,6 +92,23 @@ describe('main-guard.mjs — MAIN_GUARD_PROTECTED_BRANCHES', () => {
     }
   });
 
+  it('blocks mutating checkout forms on protected branch', () => {
+    const blockedCommands = [
+      'git checkout -- README.md',
+      'git checkout HEAD -- README.md',
+      'git switch --detach HEAD',
+    ];
+    for (const command of blockedCommands) {
+      const r = runHook(
+        'main-guard.mjs',
+        { tool_name: 'Bash', tool_input: { command } },
+        { MAIN_GUARD_PROTECTED_BRANCHES: CURRENT_BRANCH },
+      );
+      expect(r.status, `expected exit 2 for: ${command}`).toBe(2);
+      expect(r.stderr).toContain('Bash is restricted');
+    }
+  });
+
   it('allows Bash when MAIN_GUARD_ALLOW_BASH=1 is set', () => {
     const r = runHook(
       'main-guard.mjs',

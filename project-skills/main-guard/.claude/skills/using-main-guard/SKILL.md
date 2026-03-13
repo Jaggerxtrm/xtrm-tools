@@ -1,135 +1,176 @@
+---
+name: using-main-guard
+description: >-
+  Git branch protection skill. Blocks direct file edits and dangerous git
+  operations (merge, cherry-pick, rebase, commit, reset --hard, force-push) on
+  protected branches (main, master, develop). Use this skill when an edit or
+  git command is blocked, when starting new work and unsure which branch
+  workflow to follow, or when you need the correct branch/worktree → push → PR
+  → merge → cleanup sequence.
+---
+
 # Using Main Guard
 
-**Main Guard** enforces Git branch protection by blocking direct edits to protected branches (main, master, develop).
+**Main Guard** enforces a PR-only workflow for protected branches. It blocks:
 
-## What It Does
+- **File edits** (Write/Edit/MultiEdit) directly on protected branches
+- **Dangerous git ops** via Bash: `git merge`, `git cherry-pick`, `git rebase`,
+  `git commit`, `git reset --hard`, `git push --force/-f`
 
-- **Blocks direct edits** to protected branches
-- **Enforces feature branch workflow**
-- **Suggests branch names** based on your task
-- **Prevents accidental commits** to main/master
+All changes to protected branches must go through GitHub PRs.
 
-## How It Works
+---
 
-When you attempt to write or edit files:
+## The Correct Workflow
 
-1. PreToolUse hook fires before Write/Edit
-2. Runs `main-guard.js` to check current branch
-3. If on protected branch: **blocks the action**
-4. If on feature branch: **allows the action**
+### 1. Start: Create a Branch or Worktree
+
+**Worktrees (preferred for agents)** — isolated working directory, main stays clean:
+
+```bash
+git worktree add ../feat-task-name feat/task-name
+cd ../feat-task-name
+```
+
+**Simple branch** — for quick or interactive tasks:
+
+```bash
+git checkout -b feat/task-name
+# or: git checkout -b fix/issue-123
+```
+
+Branch naming conventions:
+- `feat/<description>` — new feature
+- `fix/<description>` — bug fix or issue reference (`fix/issue-123`)
+- `chore/<description>` — maintenance, docs, config
+
+### 2. Work and Commit
+
+Make your changes, then commit on the feature branch:
+
+```bash
+git add <specific-files>
+git commit -m "feat: description of change"
+```
+
+### 3. Push and Open PR
+
+```bash
+git push -u origin HEAD
+gh pr create --fill
+```
+
+`--fill` uses your commit message as PR title and body. Edit as needed before submitting.
+
+### 4. Merge via GitHub
+
+```bash
+gh pr merge --squash    # squash all commits into one clean entry on main
+# or:
+gh pr merge --merge     # preserve full commit history
+```
+
+Squash merge is preferred — keeps main's history linear and readable.
+
+### 5. Sync Main
+
+After merge, update your local main:
+
+```bash
+git checkout main
+git pull --ff-only
+```
+
+`--ff-only` prevents accidental local merges — if it fails, something is wrong upstream.
+
+### 6. Cleanup
+
+Remove the feature branch and worktree:
+
+```bash
+# Worktree (if used)
+git worktree remove ../feat-task-name
+
+# Delete local branch
+git branch -d feat/task-name
+
+# Prune stale remote-tracking refs
+git fetch --prune
+```
+
+For bulk cleanup of branches marked `[gone]` (deleted on remote): `/commit-commands:clean_gone`
+
+---
 
 ## Protected Branches
 
-By default, these branches are protected:
-- `main`
-- `master`
-- `develop`
+Default: `main`, `master`, `develop`
 
 Customize via environment variable:
+
 ```bash
 export MAIN_GUARD_PROTECTED_BRANCHES="main,master,develop,production"
-```
-
-## Installation
-
-```bash
-# Install project skill
-xtrm install project main-guard
-```
-
-## Usage
-
-### When Blocked
-
-If you try to edit files on a protected branch, you'll see:
-
-```
-🛑 BLOCKED: Direct edits to protected branches
-
-  Current branch: main
-
-  You cannot edit files directly on a protected branch.
-
-  📋 To proceed:
-     1. Create a feature branch: git checkout -b feat/task-name
-     2. Make your changes on that branch
-     3. Push and create a pull request
-```
-
-### Branch Name Suggestions
-
-The hook suggests branch names based on your task:
-- `feat/issue-123` - For feature requests
-- `fix/bug-456` - For bug fixes
-- `feat/description` - For general features
-
-## Configuration
-
-### Environment Variables
-
-```bash
-# Custom protected branches
-export MAIN_GUARD_PROTECTED_BRANCHES="main,master,develop,staging"
-
-# Support wildcards
+# Wildcards supported:
 export MAIN_GUARD_PROTECTED_BRANCHES="main,master,release/*,hotfix/*"
 ```
+
+---
+
+## What Gets Blocked
+
+### File Edits (Write/Edit/MultiEdit)
+
+Any file write on a protected branch is blocked immediately. Create a feature
+branch first.
+
+### Dangerous Git Operations (Bash)
+
+When on a protected branch, these Bash commands are blocked:
+
+| Command | Reason |
+|---------|--------|
+| `git merge` | Bypasses PR — use `gh pr merge` instead |
+| `git cherry-pick` | Direct cherry-pick bypasses review |
+| `git rebase` | Rebasing onto protected branch bypasses review |
+| `git commit` | Committing directly to protected branch — use a feature branch |
+| `git reset --hard` | Destructive — could lose history |
+| `git push --force` / `git push -f` | Never allowed on protected branches |
+
+These are always **allowed**:
+- `git pull --ff-only` — safe linear sync
+- `git fetch` / `git fetch --prune` — read-only
+- `gh pr create`, `gh pr merge` — proper PR workflow
+- `git log`, `git status`, `git diff` — read-only ops
+
+---
+
+## Hook Coverage
+
+| Event | Matcher | What it checks |
+|-------|---------|----------------|
+| `PreToolUse` | `Write\|Edit\|MultiEdit` | Blocks file edits on protected branches |
+| `PreToolUse` | `Bash` | Blocks dangerous git ops on protected branches |
+
+---
 
 ## Exit Codes
 
 | Code | Meaning |
 |------|---------|
-| 0 | Allowed (not on protected branch) |
+| 0 | Allowed |
 | 1 | Fatal error |
-| 2 | Blocked (on protected branch) |
+| 2 | Blocked |
 
-## Workflow
-
-### Recommended Git Flow
-
-```bash
-# Start new feature
-git checkout main
-git pull origin main
-git checkout -b feat/my-feature
-
-# Make changes (main-guard allows this)
-# ... edit files ...
-
-# Commit and push
-git add .
-git commit -m "feat: add my feature"
-git push -u origin feat/my-feature
-
-# Create PR on GitHub/GitLab
-```
-
-### Hotfix Flow
-
-```bash
-# Emergency fix
-git checkout main
-git checkout -b hotfix/urgent-fix
-
-# Make changes, commit, push
-# Create PR with expedited review
-```
+---
 
 ## Troubleshooting
 
-**"Not in a git repository"**
-- Hook skips gracefully when not in git repo
-- No protection applied outside git projects
+**"Not in a git repository"** — Hook skips gracefully, no protection applied.
 
-**"Could not determine git branch"**
-- Ensure git is installed and working
-- Check if `.git` folder exists
-
-**Hook not running**
-- Verify PreToolUse hook in `.claude/settings.json`
-- Check Node.js is installed
+**Hook not running** — Verify both PreToolUse entries in `.claude/settings.json`;
+check Node.js is installed.
 
 ## See Also
 
 - Full documentation: `.claude/docs/main-guard-readme.md`
-- Git flow: https://nvie.com/posts/a-successful-git-branching-model/
+- Bulk branch cleanup: `/commit-commands:clean_gone`

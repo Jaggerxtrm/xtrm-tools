@@ -69,13 +69,16 @@ if (tool === 'Bash') {
     process.exit(0);
   }
 
-  // Safe allowlist — non-mutating commands allowed on protected branches
+  // Safe allowlist — non-mutating commands + explicit branch-exit paths.
+  // Important: do not allow generic checkout/switch forms, which include
+  // mutating variants such as `git checkout -- <path>`.
   const SAFE_BASH_PATTERNS = [
     /^git\s+(status|log|diff|branch|show|describe|fetch|remote|config)\b/,
     /^git\s+pull\b/,
     /^git\s+stash\b/,
     /^git\s+worktree\b/,
-    /^git\s+(checkout|switch)\b/,
+    /^git\s+checkout\s+-b\s+\S+/,
+    /^git\s+switch\s+-c\s+\S+/,
     /^gh\s+/,
     /^bd\s+/,
   ];

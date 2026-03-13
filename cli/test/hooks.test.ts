@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { spawnSync, execSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdtempSync, mkdirSync, chmodSync, rmSync } from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -25,6 +26,14 @@ function runHook(
     encoding: 'utf8',
     env: { ...process.env, ...env },
   });
+}
+
+function withFakeBdDir(scriptBody: string) {
+  const tempDir = mkdtempSync(path.join(os.tmpdir(), 'xtrm-fakebd-'));
+  const fakeBdPath = path.join(tempDir, 'bd');
+  writeFileSync(fakeBdPath, scriptBody, { encoding: 'utf8' });
+  chmodSync(fakeBdPath, 0o755);
+  return { tempDir, fakeBdPath };
 }
 
 // ── main-guard.mjs — MAIN_GUARD_PROTECTED_BRANCHES ──────────────────────────
@@ -89,6 +98,45 @@ describe('beads-edit-gate.mjs', () => {
   it('imports from beads-gate-utils.mjs (no inline duplicate logic)', () => {
     const content = readFileSync(path.join(HOOKS_DIR, 'beads-edit-gate.mjs'), 'utf8');
     expect(content).toContain("from './beads-gate-utils.mjs'");
+  });
+
+  it('blocks when session has no claim but open issues exist (regression guard)', () => {
+    const projectDir = mkdtempSync(path.join(os.tmpdir(), 'xtrm-beads-project-'));
+    mkdirSync(path.join(projectDir, '.beads'));
+    const fake = withFakeBdDir(`#!/usr/bin/env bash
+set -euo pipefail
+if [[ "$1" == "kv" && "$2" == "get" ]]; then
+  exit 1
+fi
+if [[ "$1" == "list" ]]; then
+  cat <<'EOF'
+○ issue-1 P2 Open issue
+
+--------------------------------------------------------------------------------
+Total: 1 issues (1 open, 0 in progress)
+EOF
+  exit 0
+fi
+exit 1
+`);
+
+    try {
+      const r = runHook(
+        'beads-edit-gate.mjs',
+        {
+          session_id: 'session-regression-test',
+          tool_name: 'Write',
+          tool_input: { file_path: '/tmp/x' },
+          cwd: projectDir,
+        },
+        { PATH: `${fake.tempDir}:${process.env.PATH ?? ''}` },
+      );
+      expect(r.status).toBe(2);
+      expect(r.stderr).toContain('no active claim');
+    } finally {
+      rmSync(fake.tempDir, { recursive: true, force: true });
+      rmSync(projectDir, { recursive: true, force: true });
+    }
   });
 });
 

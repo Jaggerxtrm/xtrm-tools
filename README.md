@@ -332,7 +332,7 @@ xtrm install --backport     # reverse direction: copy drifted local edits → re
 - **boxen summary card**: Completion summary with green/yellow border based on drift
 - **Themed output**: Semantic colors (success, error, warning, muted, accent) via `theme.ts`
 - **Interactive consent**: Multiselect for MCP servers (space to toggle, all pre-selected)
-- **Auto-detection**: Scans Claude Code targets automatically (`~/.claude`, plus `%APPDATA%/Claude` on Windows)
+- **Auto-detection**: Scans Claude Code targets automatically (`~/.claude`, `%APPDATA%/Claude` on Windows) plus the `.agents/skills` cache for skills-only sync
 - **Inline sync**: `status` command offers to apply sync immediately after showing changes
 - **Single confirmation**: See full plan across all targets, confirm once
 - **Safety guards**: Prune mode aborts on read failures; clean errors (no stack traces)
@@ -341,12 +341,12 @@ xtrm install --backport     # reverse direction: copy drifted local edits → re
 
 **What it syncs per target environment:**
 
-| Item            | Claude Code          |
-| --------------- | -------------------- |
-| `skills/`       | ✅ copy/symlink       |
-| `hooks/`        | ✅ copy/symlink       |
-| `settings.json` | ✅ safe merge         |
-| MCP servers     | `mcp add` CLI        |
+| Item            | Claude Code (full)   | `~/.agents/skills` (skills-only) |
+| --------------- | -------------------- | --------------------------------- |
+| `skills/`       | ✅ copy/symlink       | ✅ direct copy                    |
+| `hooks/`        | ✅ copy/symlink       | ❌ skipped                        |
+| `settings.json` | ✅ safe merge         | ❌ skipped                        |
+| MCP servers     | `mcp add` CLI        | ❌ skipped                        |
 
 **Diff categories shown before sync:**
 

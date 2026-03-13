@@ -42,6 +42,7 @@ export function getCandidatePaths(): Array<{ label: string; path: string }> {
 
     const paths = [
         { label: '.claude', path: path.join(home, '.claude') },
+        { label: '.agents/skills', path: path.join(home, '.agents', 'skills') },
     ];
 
     if (isWindows && appData) {

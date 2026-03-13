@@ -37043,7 +37043,8 @@ function getCandidatePaths() {
   const appData = process.env.APPDATA;
   const isWindows3 = process.platform === "win32";
   const paths = [
-    { label: ".claude", path: import_path.default.join(home, ".claude") }
+    { label: ".claude", path: import_path.default.join(home, ".claude") },
+    { label: ".agents/skills", path: import_path.default.join(home, ".agents", "skills") }
   ];
   if (isWindows3 && appData) {
     paths.push({ label: "Claude (AppData)", path: import_path.default.join(appData, "Claude") });
@@ -40680,15 +40681,15 @@ async function getAvailableProjectSkills() {
     return [];
   }
   const entries = await import_fs_extra10.default.readdir(PROJECT_SKILLS_DIR);
-  const skills = [];
+  const skills2 = [];
   for (const entry of entries) {
     const entryPath = import_path10.default.join(PROJECT_SKILLS_DIR, entry);
     const stat = await import_fs_extra10.default.stat(entryPath);
     if (stat.isDirectory()) {
-      skills.push(entry);
+      skills2.push(entry);
     }
   }
-  return skills.sort();
+  return skills2.sort();
 }
 function deepMergeHooks(existing, incoming) {
   const result = { ...existing };
@@ -40809,20 +40810,20 @@ async function installProjectSkill(toolName, projectRootOverride) {
   console.log(kleur_default.green("  \u2713 Installation complete!\n"));
 }
 async function installAllProjectSkills(projectRootOverride) {
-  const skills = await getAvailableProjectSkills();
-  if (skills.length === 0) {
+  const skills2 = await getAvailableProjectSkills();
+  if (skills2.length === 0) {
     console.log(kleur_default.dim("  No project skills available.\n"));
     return;
   }
   const projectRoot = projectRootOverride ?? getProjectRoot();
   console.log(kleur_default.bold(`
-Installing ${skills.length} project skills:
+Installing ${skills2.length} project skills:
 `));
-  for (const skill of skills) {
+  for (const skill of skills2) {
     console.log(kleur_default.dim(`  \u2022 ${skill}`));
   }
   console.log("");
-  for (const skill of skills) {
+  for (const skill of skills2) {
     await installProjectSkill(skill, projectRoot);
   }
 }
@@ -40832,7 +40833,7 @@ async function listProjectSkills() {
     console.log(kleur_default.dim("  No project skills available.\n"));
     return;
   }
-  const skills = [];
+  const skills2 = [];
   for (const entry of entries) {
     const readmePath = import_path10.default.join(PROJECT_SKILLS_DIR, entry, "README.md");
     let description = "No description available";
@@ -40840,9 +40841,9 @@ async function listProjectSkills() {
       const readmeContent = await import_fs_extra10.default.readFile(readmePath, "utf8");
       description = extractReadmeDescription(readmeContent).slice(0, 80);
     }
-    skills.push({ name: entry, description });
+    skills2.push({ name: entry, description });
   }
-  if (skills.length === 0) {
+  if (skills2.length === 0) {
     console.log(kleur_default.dim("  No project skills available.\n"));
     return;
   }
@@ -40853,7 +40854,7 @@ async function listProjectSkills() {
     colWidths: [25, 60],
     style: { head: [], border: [] }
   });
-  for (const skill of skills) {
+  for (const skill of skills2) {
     table.push([kleur_default.white(skill.name), kleur_default.dim(skill.description)]);
   }
   console.log(table.toString());
@@ -55050,9 +55051,10 @@ ${kleur_default.cyan("PROJECT SKILLS:")}
 
 ${kleur_default.cyan("INSTALL TARGETS:")}
 
-  xtrm-tools v2.0.0 installs into Claude Code targets only:
-  \u2022 ~/.claude
-  \u2022 %APPDATA%/Claude on Windows
+  xtrm-tools v2.0.0 installs into Claude Code targets and the `.agents / skills` cache:
+  • ~/.claude
+  • %APPDATA%/Claude on Windows
+  • ~/.agents/skills (skills-only copy)
 
 ${kleur_default.cyan("ARCHITECTURE:")}
 
@@ -55065,9 +55067,9 @@ ${kleur_default.cyan("ARCHITECTURE:")}
 
 ${kleur_default.cyan("RESOURCES:")}
 
-  \u2022 Repository: https://github.com/Jaggerxtrm/xtrm-tools
-  \u2022 Documentation: See README.md in the repository
-  \u2022 Report Issues: https://github.com/Jaggerxtrm/xtrm-tools/issues
+  • Repository: https://github.com/Jaggerxtrm/xtrm-tools
+  • Documentation: See README.md in the repository
+  • Report Issues: https://github.com/Jaggerxtrm/xtrm-tools/issues
 
 ${kleur_default.dim("Run 'xtrm <command> --help' for more information on a specific command.")}
 `);

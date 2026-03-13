@@ -77,9 +77,10 @@ ${kleur.cyan('PROJECT SKILLS:')}
 
 ${kleur.cyan('INSTALL TARGETS:')}
 
-  xtrm-tools v2.0.0 installs into Claude Code targets only:
+  xtrm-tools v2.0.0 installs into Claude Code targets and the `.agents/skills` cache:
   • ~/.claude
   • %APPDATA%/Claude on Windows
+  • ~/.agents/skills (skills-only copy)
 
 ${kleur.cyan('ARCHITECTURE:')}
 

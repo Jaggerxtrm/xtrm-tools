@@ -82,6 +82,7 @@ async function renderSummaryCard(
 
 import { execSync } from 'child_process';
 
+import { spawnSync } from 'child_process';
 const BEADS_HOOK_PATTERN = /^beads-/;
 
 function filterBeadsFromChangeSet(changeSet: ChangeSet): ChangeSet {
@@ -97,9 +98,18 @@ function filterBeadsFromChangeSet(changeSet: ChangeSet): ChangeSet {
     };
 }
 
-async function isBeadsInstalled(): Promise<boolean> {
+function isBeadsInstalled(): boolean {
     try {
         execSync('bd --version', { stdio: 'ignore' });
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+function isDoltInstalled(): boolean {
+    try {
+        execSync('dolt version', { stdio: 'ignore' });
         return true;
     } catch {
         return false;
@@ -125,22 +135,50 @@ async function runGlobalInstall(
     let skipBeads = installOpts.excludeBeads ?? false;
 
     if (installOpts.checkBeads && !skipBeads) {
-        const beadsOk = await isBeadsInstalled();
-        if (!beadsOk) {
-            if (yes) {
-                console.log(t.muted('  ℹ beads not found — skipping beads gate hooks (re-run after installing beads+dolt)\n'));
-                skipBeads = true;
-            } else {
-                const { installBeads } = await prompts({
+        console.log(t.bold('\n  ⚙  beads + dolt  (workflow enforcement backend)'));
+        console.log(t.muted('  beads is a git-backed issue tracker; dolt is its SQL+git storage backend.'));
+        console.log(t.muted('  Without them the gate hooks install but provide no enforcement.\n'));
+
+        const beadsOk = isBeadsInstalled();
+        const doltOk = isDoltInstalled();
+
+        if (beadsOk && doltOk) {
+            console.log(t.success('  ✓ beads + dolt already installed\n'));
+        } else {
+            const missing = [!beadsOk && 'bd', !doltOk && 'dolt'].filter(Boolean).join(', ');
+
+            let doInstall = yes;
+            if (!yes) {
+                const { install } = await prompts({
                     type: 'confirm',
-                    name: 'installBeads',
-                    message: 'Install beads+dolt? Required for workflow enforcement hooks',
-                    initial: false,
+                    name: 'install',
+                    message: `Install beads + dolt? (${missing} not found) — required for workflow enforcement hooks`,
+                    initial: true,
                 });
-                if (!installBeads) {
-                    console.log(t.muted('  ℹ Skipping beads gate hooks. Re-run xtrm install all after installing beads+dolt.\n'));
-                    skipBeads = true;
+                doInstall = install;
+            }
+
+            if (doInstall) {
+                if (!beadsOk) {
+                    console.log(t.muted('\n  Installing @beads/bd...'));
+                    spawnSync('npm', ['install', '-g', '@beads/bd'], { stdio: 'inherit' });
+                    console.log(t.success('  ✓ bd installed'));
                 }
+                if (!doltOk) {
+                    console.log(t.muted('\n  Installing dolt...'));
+                    if (process.platform === 'darwin') {
+                        spawnSync('brew', ['install', 'dolt'], { stdio: 'inherit' });
+                    } else {
+                        spawnSync('sudo', ['bash', '-c',
+                            'curl -L https://github.com/dolthub/dolt/releases/latest/download/install.sh | bash',
+                        ], { stdio: 'inherit' });
+                    }
+                    console.log(t.success('  ✓ dolt installed'));
+                }
+                console.log('');
+            } else {
+                console.log(t.muted('  ℹ Skipping beads gate hooks. Re-run xtrm install all after installing beads+dolt.\n'));
+                skipBeads = true;
             }
         }
     }
@@ -267,7 +305,8 @@ export function createInstallCommand(): Command {
         .option('--backport', 'Backport drifted local changes back to the repository', false)
         .action(async (targetSelector, opts) => {
             const { dryRun, yes, prune, backport } = opts;
-            const actionType = backport ? 'backport' : 'install';
+            const syncType: 'sync' | 'backport' = backport ? 'backport' : 'sync';
+            const actionLabel = backport ? 'backport' : 'install';
 
             const repoRoot = await findRepoRoot();
             const ctx = await getContext({
@@ -308,13 +347,16 @@ export function createInstallCommand(): Command {
             // MCP sync always runs regardless of file changes
             if (!backport && !dryRun) {
                 const emptyChangeSet = {
-                    skills: { missing: [], outdated: [], drifted: [], total: 0 },
-                    hooks: { missing: [], outdated: [], drifted: [], total: 0 },
-                    config: { missing: [], outdated: [], drifted: [], total: 0 },
+                    skills: { missing: [] as string[], outdated: [] as string[], drifted: [] as string[], total: 0 },
+                    hooks: { missing: [] as string[], outdated: [] as string[], drifted: [] as string[], total: 0 },
+                    config: { missing: [] as string[], outdated: [] as string[], drifted: [] as string[], total: 0 },
+                    commands: { missing: [] as string[], outdated: [] as string[], drifted: [] as string[], total: 0 },
+                    'qwen-commands': { missing: [] as string[], outdated: [] as string[], drifted: [] as string[], total: 0 },
+                    'antigravity-workflows': { missing: [] as string[], outdated: [] as string[], drifted: [] as string[], total: 0 },
                 };
                 for (const target of targets) {
                     console.log(t.bold(`\n  ${sym.arrow} ${path.basename(target)}`));
-                    await executeSync(repoRoot, target, emptyChangeSet, syncMode, 'install', false);
+                    await executeSync(repoRoot, target, emptyChangeSet, syncMode, 'sync', false);
                 }
             }
 
@@ -337,7 +379,7 @@ export function createInstallCommand(): Command {
                 const { confirm } = await prompts({
                     type: 'confirm',
                     name: 'confirm',
-                    message: `Proceed with ${actionType} (${totalChangesCount} total changes)?`,
+                    message: `Proceed with ${actionLabel} (${totalChangesCount} total changes)?`,
                     initial: true,
                 });
                 if (!confirm) {
@@ -346,19 +388,18 @@ export function createInstallCommand(): Command {
                 }
             }
 
-            // Phase 4: Execute install
+            // Phase 4: Execute
             let totalCount = 0;
 
             for (const { target, changeSet, skippedDrifted } of allChanges) {
                 console.log(t.bold(`\n  ${sym.arrow} ${path.basename(target)}`));
 
-                const count = await executeSync(repoRoot, target, changeSet, syncMode, actionType, dryRun);
+                const count = await executeSync(repoRoot, target, changeSet, syncMode, syncType, dryRun);
                 totalCount += count;
 
-                // Track skipped drifted
                 for (const [category, cat] of Object.entries(changeSet)) {
                     const c = cat as any;
-                    if (c.drifted.length > 0 && actionType === 'install') {
+                    if (c.drifted.length > 0 && syncType === 'sync') {
                         skippedDrifted.push(...c.drifted.map((item: string) => `${category}/${item}`));
                     }
                 }

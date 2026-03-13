@@ -1,13 +1,16 @@
 #!/usr/bin/env node
 // beads-stop-gate — Claude Code Stop hook
-// Blocks the agent from stopping when in_progress beads issues remain.
+// Blocks the agent from stopping when this session has an unclosed claim in bd kv.
+// Falls back to global in_progress check when session_id is unavailable.
 // Exit 0: allow stop  |  Exit 2: block stop (stderr shown to Claude)
 //
 // Installed by: xtrm install
 
-import { execSync } from 'node:child_process';
-import { readFileSync, existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
+import {
+  resolveCwd, isBeadsProject, getSessionClaim,
+  getInProgress, withSafeBdContext,
+} from './beads-gate-utils.mjs';
 
 let input;
 try {
@@ -16,37 +19,43 @@ try {
   process.exit(0);
 }
 
-const cwd = input.cwd ?? process.env.CLAUDE_PROJECT_DIR ?? process.cwd();
-if (!existsSync(join(cwd, '.beads'))) process.exit(0);
+const CLOSE_PROTOCOL =
+  '  3. bd close <id1> <id2> ...               close all in_progress issues\n' +
+  '  4. git add <files> && git commit -m "..."  commit your changes\n' +
+  '  5. git push -u origin <feature-branch>     push feature branch\n' +
+  '  6. gh pr create --fill                     create PR\n' +
+  '  7. gh pr merge --squash                    merge PR\n' +
+  '  8. git checkout master && git reset --hard origin/master\n';
 
-let inProgress = 0;
-let summary = '';
-try {
-  const output = execSync('bd list --status=in_progress', {
-    encoding: 'utf8',
-    cwd,
-    stdio: ['pipe', 'pipe', 'pipe'],
-    timeout: 8000,
-  });
-  inProgress = (output.match(/in_progress/g) ?? []).length;
-  summary = output.trim();
-} catch {
-  process.exit(0);
-}
+withSafeBdContext(() => {
+  const cwd = resolveCwd(input);
+  if (!isBeadsProject(cwd)) process.exit(0);
 
-if (inProgress > 0) {
-  process.stderr.write(
-    '🚫 BEADS STOP GATE: Unresolved issues — complete the session close protocol.\n\n' +
-    `Open issues:\n${summary}\n\n` +
-    'Session close protocol:\n' +
-    '  3. bd close <id1> <id2> ...               close all in_progress issues\n' +
-    '  4. git add <files> && git commit -m "..."  commit your changes\n' +
-    '  5. git push -u origin <feature-branch>     push feature branch\n' +
-    '  6. gh pr create --fill                     create PR\n' +
-    '  7. gh pr merge --squash                    merge PR\n' +
-    '  8. git checkout master && git reset --hard origin/master\n'
-  );
-  process.exit(2);
-}
+  const sessionId = input.session_id;
 
-process.exit(0);
+  if (sessionId) {
+    const claimed = getSessionClaim(sessionId, cwd);
+    if (claimed === null) process.exit(0); // bd kv unavailable — fail open
+    if (!claimed) process.exit(0);         // no active claim for this session
+
+    const ip = getInProgress(cwd);
+    const summary = ip?.summary ?? `  Claimed: ${claimed}`;
+
+    process.stderr.write(
+      '🚫 BEADS STOP GATE: Unresolved issues — complete the session close protocol.\n\n' +
+      `Open issues:\n${summary}\n\n` +
+      'Session close protocol:\n' + CLOSE_PROTOCOL
+    );
+    process.exit(2);
+  } else {
+    const ip = getInProgress(cwd);
+    if (ip === null || ip.count === 0) process.exit(0);
+
+    process.stderr.write(
+      '🚫 BEADS STOP GATE: Unresolved issues — complete the session close protocol.\n\n' +
+      `Open issues:\n${ip.summary}\n\n` +
+      'Session close protocol:\n' + CLOSE_PROTOCOL
+    );
+    process.exit(2);
+  }
+});

@@ -1,0 +1,84 @@
+# MCP Module
+
+This document explains how MCP server configuration is defined and operated in this repository.
+
+## What This Module Is
+
+MCP server definitions are kept as canonical JSON under `config/` and then synced by `xtrm` into user environments.
+
+Goal:
+- one source of truth for server definitions
+- predictable installs across machines
+- explicit split between required and optional servers
+
+## Canonical Sources
+
+| File | Purpose |
+|---|---|
+| `config/mcp_servers.json` | Core servers installed by default |
+| `config/mcp_servers_optional.json` | Optional servers chosen during install/sync |
+| `docs/mcp-servers-config.md` | Detailed behavior and format notes |
+
+## Server Inventory
+
+### Core Servers (default)
+
+| Server | Why It Exists | Prerequisite |
+|---|---|---|
+| `serena` | semantic code navigation and edits | `uvx` |
+| `context7` | live docs lookup | `CONTEXT7_API_KEY` |
+| `github-grep` | code search | none |
+| `deepwiki` | technical knowledge lookup | none |
+
+### Optional Servers
+
+| Server | Why It Exists | Prerequisite |
+|---|---|---|
+| `unitAI` | multi-agent orchestration | `npx` |
+| `omni-search-engine` | local SSE search backend | service on `127.0.0.1:8765` |
+| `gitnexus` | code graph intelligence | `npm install -g gitnexus` + per-project indexing |
+
+## Operational Workflow
+
+1. Install via `xtrm install all` or `xtrm install basic` (with MCP enabled).
+2. CLI reads canonical config JSON.
+3. Optional servers are selected interactively (or by non-interactive flags).
+4. Environment-specific MCP registrations are applied.
+5. Missing prerequisites are reported; some can be auto-installed.
+
+## Post-Install Expectations
+
+- `context7` fails without `CONTEXT7_API_KEY`.
+- `gitnexus` requires project-level index build:
+
+```bash
+npx gitnexus analyze
+```
+
+- Optional local services must be reachable before their MCP is useful.
+
+## Troubleshooting
+
+- Server not appearing:
+  - check MCP was not skipped via `--no-mcp`
+  - verify required binaries exist (`uvx`, `npx`, etc.)
+- Server appears but fails at runtime:
+  - validate API keys and env var interpolation
+  - validate local endpoint is reachable for SSE/HTTP local services
+- GitNexus tools unavailable in a project:
+  - run `npx gitnexus analyze` in that repository
+
+## Related Docs
+
+- Root overview: `README.md`
+- Global skills: `skills.md`
+- Hooks: `hooks.md`
+- Project skills: `project-skills.md`
+
+## Verified Completed Issues (2026-03-13)
+
+No direct MCP schema/server-list changes were closed in the latest issue batch.  
+Canonical sources remain:
+
+- `config/mcp_servers.json`
+- `config/mcp_servers_optional.json`

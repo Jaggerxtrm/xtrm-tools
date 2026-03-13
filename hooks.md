@@ -1,0 +1,106 @@
+# Hooks Module
+
+This document explains the global `hooks/` module: which guardrails run, when they run, and how they interact.
+
+## What This Module Is
+
+`hooks/` contains event-driven scripts for Claude Code that enforce safety and workflow policies.
+
+Primary outcomes:
+- prevent risky branch operations
+- enforce issue-claim workflow with beads gates
+- improve context quality at session start
+- suggest relevant skills before wasted work
+
+## Event Model
+
+Common events used in this repo:
+- `SessionStart`: initialize context/rules
+- `UserPromptSubmit`: pre-response prompt inspection
+- `PreToolUse`: allow/deny a tool call before execution
+- `PostToolUse`: react after tools run (validation/reminders)
+- `Stop`: prevent exiting with unfinished claimed work
+
+## Hook Groups
+
+### 1) Workflow and Safety Guards
+
+| Hook | Core Behavior |
+|---|---|
+| `main-guard.mjs` | Blocks direct edits and risky Bash/git actions on protected branches |
+| `beads-edit-gate.mjs` | Blocks writes when current session has no claimed issue |
+| `beads-commit-gate.mjs` | Blocks `git commit` with unresolved session claim |
+| `beads-stop-gate.mjs` | Blocks session stop while claim remains open |
+| `beads-close-memory-prompt.mjs` | Clears claim and prompts memory handoff after `bd close` |
+| `beads-gate-utils.mjs` | Shared claim/work-count logic for all beads gates |
+
+### 2) Skill and Context Hooks
+
+| Hook | Core Behavior |
+|---|---|
+| `skill-discovery.py` | Injects available local skill catalog at session start |
+| `skill-suggestion.py` | Suggests likely skills from prompt intent |
+| `serena-workflow-reminder.py` | Nudges semantic-tool workflow for editing/navigation |
+| `gitnexus/gitnexus-hook.cjs` | Adds graph-aware guidance for grep/glob/bash operations |
+
+### 3) Policy/Utility Hooks
+
+| Hook | Core Behavior |
+|---|---|
+| `type-safety-enforcement.py` | Type-safety checks around relevant write/bash flows |
+| `agent_context.py` | Session context helper utilities |
+
+## Install Profiles and Hook Coverage
+
+- `xtrm install basic`:
+  - installs general/global hooks
+  - excludes beads gates that depend on `bd` + `dolt`
+- `xtrm install all`:
+  - installs everything in `basic`
+  - plus beads workflow gates
+
+Use `all` for strict issue-driven workflow. Use `basic` where beads is not available.
+
+## Operational Workflow (Beads + Hooks)
+
+```bash
+bd update <issue-id> --status=in_progress
+bd kv set "claimed:<session_id>" "<issue-id>"
+# ...perform edits...
+bd close <issue-id>
+```
+
+Behavior:
+- without a claim, edits are blocked when open work exists
+- closing an issue triggers claim cleanup via hook
+- stopping or committing with unresolved claim is blocked
+
+## Troubleshooting
+
+- Edits blocked unexpectedly:
+  - check active branch; protected branches enforce `main-guard`
+  - check session claim key: `bd kv get "claimed:<session_id>"`
+- Beads hooks not running:
+  - confirm `xtrm install all` was used
+  - verify `bd` and `dolt` are installed and usable in project
+- Hook mismatch with docs:
+  - compare `hooks/README.md` and effective `.claude/settings.json`
+
+## Related Docs
+
+- Root overview: `README.md`
+- Global skills: `skills.md`
+- Project skills: `project-skills.md`
+- MCP servers: `mcp.md`
+
+## Verified Completed Issues (2026-03-13)
+
+- `jaggers-agent-tools-ojt`: migrated canonical `main-guard.mjs` into `hooks/`
+- `jaggers-agent-tools-zed`: migrated beads gate hooks into `hooks/` as source of truth
+- `jaggers-agent-tools-pxy`: fixed post-migration regressions (session-scoped logic, env support, utils imports)
+- `jaggers-agent-tools-ccm`: fixed total-work counting and added hook-test CI coverage
+- `jaggers-agent-tools-nj0`: removed legacy `project-skills/main-guard/` in favor of global hook ownership
+- `jaggers-agent-tools-moa`: completed main-guard v2 workflow enforcement epic
+- `jaggers-agent-tools-jnz`: added default-deny Bash allowlist behavior on protected branches
+- `jaggers-agent-tools-7o1`: enforced `git pull.ff only` via SessionStart
+- `jaggers-agent-tools-xmy`: tightened allowlist to block mutating `git checkout` forms

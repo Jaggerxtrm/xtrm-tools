@@ -22,6 +22,8 @@ interface DiffCtx {
     allChanges: TargetChanges[];
 }
 
+import type { ChangeSet } from '../types/config.js';
+
 function renderPlanTable(allChanges: TargetChanges[]): void {
     const Table = require('cli-table3');
 
@@ -76,6 +78,183 @@ async function renderSummaryCard(
         borderStyle: 'round',
         borderColor: hasDrift ? 'yellow' : 'green',
     }) + '\n');
+}
+
+import { execSync } from 'child_process';
+
+const BEADS_HOOK_PATTERN = /^beads-/;
+
+function filterBeadsFromChangeSet(changeSet: ChangeSet): ChangeSet {
+    return {
+        ...changeSet,
+        hooks: {
+            ...changeSet.hooks,
+            missing: changeSet.hooks.missing.filter(h => !BEADS_HOOK_PATTERN.test(h)),
+            outdated: changeSet.hooks.outdated.filter(h => !BEADS_HOOK_PATTERN.test(h)),
+            drifted: changeSet.hooks.drifted.filter(h => !BEADS_HOOK_PATTERN.test(h)),
+            total: changeSet.hooks.total,
+        },
+    };
+}
+
+async function isBeadsInstalled(): Promise<boolean> {
+    try {
+        execSync('bd --version', { stdio: 'ignore' });
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+interface GlobalInstallFlags {
+    dryRun: boolean;
+    yes: boolean;
+    noMcp: boolean;
+    force: boolean;
+}
+
+async function runGlobalInstall(
+    flags: GlobalInstallFlags,
+    installOpts: { excludeBeads?: boolean; checkBeads?: boolean } = {},
+): Promise<void> {
+    const { dryRun, yes, noMcp, force } = flags;
+    const repoRoot = await findRepoRoot();
+    const ctx = await getContext({ selector: 'all', createMissingDirs: !dryRun });
+    const { targets, syncMode } = ctx;
+
+    let skipBeads = installOpts.excludeBeads ?? false;
+
+    if (installOpts.checkBeads && !skipBeads) {
+        const beadsOk = await isBeadsInstalled();
+        if (!beadsOk) {
+            if (yes) {
+                console.log(t.muted('  ℹ beads not found — skipping beads gate hooks (re-run after installing beads+dolt)\n'));
+                skipBeads = true;
+            } else {
+                const { installBeads } = await prompts({
+                    type: 'confirm',
+                    name: 'installBeads',
+                    message: 'Install beads+dolt? Required for workflow enforcement hooks',
+                    initial: false,
+                });
+                if (!installBeads) {
+                    console.log(t.muted('  ℹ Skipping beads gate hooks. Re-run xtrm install all after installing beads+dolt.\n'));
+                    skipBeads = true;
+                }
+            }
+        }
+    }
+
+    const diffTasks = new Listr<DiffCtx>(
+        targets.map(target => ({
+            title: path.basename(target),
+            task: async (listCtx, task) => {
+                try {
+                    let changeSet = await calculateDiff(repoRoot, target, false);
+                    if (skipBeads) {
+                        changeSet = filterBeadsFromChangeSet(changeSet);
+                    }
+                    const totalChanges = Object.values(changeSet).reduce(
+                        (sum, c: any) => sum + c.missing.length + c.outdated.length + c.drifted.length, 0,
+                    );
+                    task.title = `${path.basename(target)}${t.muted(` — ${totalChanges} change${totalChanges !== 1 ? 's' : ''}`)}`;
+                    if (totalChanges > 0) {
+                        listCtx.allChanges.push({ target, changeSet, totalChanges, skippedDrifted: [] });
+                    }
+                } catch (err) {
+                    if (err instanceof PruneModeReadError) {
+                        task.title = `${path.basename(target)} ${kleur.red('(skipped — cannot read in prune mode)')}`;
+                    } else {
+                        throw err;
+                    }
+                }
+            },
+        })),
+        { concurrent: true, exitOnError: false },
+    );
+
+    const diffCtx = await diffTasks.run({ allChanges: [] });
+    const allChanges = diffCtx.allChanges;
+
+    if (allChanges.length === 0) {
+        console.log('\n' + t.boldGreen('✓ Files are up-to-date') + '\n');
+        return;
+    }
+
+    renderPlanTable(allChanges);
+
+    if (dryRun) {
+        console.log(t.accent('💡 Dry run — no changes written\n'));
+        return;
+    }
+
+    if (!yes) {
+        const totalChangesCount = allChanges.reduce((s, c) => s + c.totalChanges, 0);
+        const { confirm } = await prompts({
+            type: 'confirm',
+            name: 'confirm',
+            message: `Proceed with install (${totalChangesCount} total changes)?`,
+            initial: true,
+        });
+        if (!confirm) {
+            console.log(t.muted('  Install cancelled.\n'));
+            return;
+        }
+    }
+
+    let totalCount = 0;
+
+    for (const { target, changeSet, skippedDrifted } of allChanges) {
+        console.log(t.bold(`\n  ${sym.arrow} ${path.basename(target)}`));
+
+        const count = await executeSync(repoRoot, target, changeSet, syncMode, 'sync', dryRun, undefined, {
+            skipMcp: noMcp,
+            force,
+        });
+        totalCount += count;
+
+        for (const [category, cat] of Object.entries(changeSet)) {
+            const c = cat as any;
+            if (c.drifted.length > 0 && !force) {
+                skippedDrifted.push(...c.drifted.map((item: string) => `${category}/${item}`));
+            }
+        }
+
+        console.log(t.success(`  ${sym.ok} ${count} item${count !== 1 ? 's' : ''} installed`));
+    }
+
+    const allSkipped = allChanges.flatMap(c => c.skippedDrifted);
+    await renderSummaryCard(allChanges, totalCount, allSkipped, dryRun);
+}
+
+export function createInstallAllCommand(): Command {
+    return new Command('all')
+        .description('Install everything: skills, all hooks (including beads gates), and MCP servers')
+        .option('--dry-run', 'Preview changes without making any modifications', false)
+        .option('-y, --yes', 'Skip confirmation prompts', false)
+        .option('--no-mcp', 'Skip MCP server registration', false)
+        .option('--force', 'Overwrite locally drifted files', false)
+        .action(async (opts) => {
+            await runGlobalInstall(
+                { dryRun: opts.dryRun, yes: opts.yes, noMcp: opts.mcp === false, force: opts.force },
+                { checkBeads: true },
+            );
+        });
+}
+
+export function createInstallBasicCommand(): Command {
+    return new Command('basic')
+        .description('Install skills, general hooks, and MCP servers (no beads gate hooks)')
+        .option('--dry-run', 'Preview changes without making any modifications', false)
+        .option('-y, --yes', 'Skip confirmation prompts', false)
+        .option('--no-mcp', 'Skip MCP server registration', false)
+        .option('--force', 'Overwrite locally drifted files', false)
+        .action(async (opts) => {
+            await runGlobalInstall(
+                { dryRun: opts.dryRun, yes: opts.yes, noMcp: opts.mcp === false, force: opts.force },
+                { excludeBeads: true },
+            );
+        });
 }
 
 export function createInstallCommand(): Command {
@@ -193,6 +372,8 @@ export function createInstallCommand(): Command {
         });
 
     // Add subcommands
+    installCmd.addCommand(createInstallAllCommand());
+    installCmd.addCommand(createInstallBasicCommand());
     installCmd.addCommand(createInstallProjectCommand());
 
     return installCmd;

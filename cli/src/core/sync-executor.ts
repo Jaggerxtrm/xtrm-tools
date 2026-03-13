@@ -20,7 +20,8 @@ export async function executeSync(
     mode: 'copy' | 'symlink' | 'prune',
     actionType: 'sync' | 'backport',
     isDryRun: boolean = false,
-    selectedMcpServers?: string[]
+    selectedMcpServers?: string[],
+    options?: { skipMcp?: boolean; force?: boolean },
 ): Promise<number> {
     const normalizedRoot = path.normalize(systemRoot).replace(/\\/g, '/');
     const isAgentsSkills = normalizedRoot.includes('.agents/skills');
@@ -44,7 +45,7 @@ export async function executeSync(
         // Only sync MCP once per unique agent type per process run.
         // Without this guard, selecting multiple Claude config directories causes
         // syncMcpServersWithCli to fire 3 times with identical output.
-        if (agent && actionType === 'sync' && !syncedMcpAgents.has(agent)) {
+        if (agent && actionType === 'sync' && !syncedMcpAgents.has(agent) && !options?.skipMcp) {
             const coreConfig = loadCanonicalMcpConfig(repoRoot);
 
             // Build MCP config: core servers always + any pre-selected optionals
@@ -75,6 +76,10 @@ export async function executeSync(
                 const cat = changeSet[category] as any;
                 itemsToProcess.push(...cat.missing);
                 itemsToProcess.push(...cat.outdated);
+
+                if (options?.force) {
+                    itemsToProcess.push(...cat.drifted);
+                }
 
                 if (mode === 'prune') {
                     for (const itemToDelete of cat.drifted || []) {

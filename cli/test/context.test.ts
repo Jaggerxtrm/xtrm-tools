@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { getCandidatePaths, resolveTargets } from '../src/core/context.js';
 
+describe('getCandidatePaths', () => {
+    it('returns only Claude Code targets', () => {
+        const candidates = getCandidatePaths();
+        expect(candidates.every(candidate => !candidate.path.includes('.gemini'))).toBe(true);
+        expect(candidates.every(candidate => !candidate.path.includes('.qwen'))).toBe(true);
+        expect(candidates.every(candidate => !candidate.path.includes('.agents'))).toBe(true);
+    });
+});
+
 describe('resolveTargets', () => {
     it('returns all candidate paths for the "*" selector', () => {
         const candidates = getCandidatePaths();

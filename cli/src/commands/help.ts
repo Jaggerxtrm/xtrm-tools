@@ -24,10 +24,10 @@ ${kleur.cyan('COMMANDS:')}
     
     Examples:
       xtrm install              # Interactive install with confirmation
-      xtrm install all          # Install to all configured targets without prompting
+      xtrm install all          # Install to all Claude Code targets without prompting
       xtrm install '*'          # Same as above; quote to avoid shell expansion
       xtrm install --dry-run    # Preview what would be installed
-      xtrm install all --dry-run -y  # CI-friendly preview across all targets
+      xtrm install all --dry-run -y  # CI-friendly preview across all Claude targets
       xtrm install -y           # Non-interactive install
 
   ${kleur.bold('install project')} <tool-name>
@@ -39,6 +39,8 @@ ${kleur.cyan('COMMANDS:')}
     Examples:
       xtrm install project tdd-guard       # Install TDD Guard
       xtrm install project ts-quality-gate # Install TypeScript Quality Gate
+      xtrm install project all             # Install every available project skill
+      xtrm install project '*'             # Same as above; quote to avoid shell expansion
 
   ${kleur.bold('install project list')}
     List all available project skills with descriptions and usage examples.
@@ -72,6 +74,12 @@ ${kleur.cyan('PROJECT SKILLS:')}
   • ${kleur.white('ts-quality-gate')} — TypeScript/ESLint/Prettier quality gate (PostToolUse)
   • ${kleur.white('py-quality-gate')} — Python ruff/mypy quality gate (PostToolUse)
   • ${kleur.white('main-guard')} — Git branch protection (PreToolUse)
+
+${kleur.cyan('INSTALL TARGETS:')}
+
+  xtrm-tools v2.0.0 installs into Claude Code targets only:
+  • ~/.claude
+  • %APPDATA%/Claude on Windows
 
 ${kleur.cyan('ARCHITECTURE:')}
 

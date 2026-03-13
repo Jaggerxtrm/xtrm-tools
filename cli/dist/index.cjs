@@ -37026,22 +37026,24 @@ var Conf = class {
 
 // src/core/context.ts
 var import_prompts = __toESM(require_prompts3(), 1);
-var config = new Conf({
-  projectName: "jaggers-config-manager",
-  defaults: {
-    syncMode: "copy"
+var config = null;
+function getConfig() {
+  if (!config) {
+    config = new Conf({
+      projectName: "xtrm-cli",
+      defaults: {
+        syncMode: "copy"
+      }
+    });
   }
-});
+  return config;
+}
 function getCandidatePaths() {
   const home = import_os2.default.homedir();
   const appData = process.env.APPDATA;
   const isWindows3 = process.platform === "win32";
   const paths = [
-    { label: ".claude", path: import_path.default.join(home, ".claude") },
-    { label: ".gemini", path: import_path.default.join(home, ".gemini") },
-    { label: ".qwen", path: import_path.default.join(home, ".qwen") },
-    { label: "~/.gemini/antigravity", path: import_path.default.join(home, ".gemini", "antigravity") },
-    { label: "~/.agents/skills", path: import_path.default.join(home, ".agents", "skills") }
+    { label: ".claude", path: import_path.default.join(home, ".claude") }
   ];
   if (isWindows3 && appData) {
     paths.push({ label: "Claude (AppData)", path: import_path.default.join(appData, "Claude") });
@@ -37062,6 +37064,7 @@ async function getContext(options = {}) {
   const candidates = getCandidatePaths();
   const directTargets = resolveTargets(selector, candidates);
   if (directTargets) {
+    const activeConfig2 = getConfig();
     if (createMissingDirs) {
       for (const target of directTargets) {
         await import_fs_extra.default.ensureDir(target);
@@ -37069,10 +37072,11 @@ async function getContext(options = {}) {
     }
     return {
       targets: directTargets,
-      syncMode: config.get("syncMode"),
-      config
+      syncMode: activeConfig2.get("syncMode"),
+      config: activeConfig2
     };
   }
+  const activeConfig = getConfig();
   for (const c of candidates) {
     const exists = await import_fs_extra.default.pathExists(c.path);
     const icon = exists ? kleur_default.green("\u25CF") : kleur_default.gray("\u25CB");
@@ -37108,12 +37112,12 @@ async function getContext(options = {}) {
   }
   return {
     targets: response.targets,
-    syncMode: config.get("syncMode"),
-    config
+    syncMode: activeConfig.get("syncMode"),
+    config: activeConfig
   };
 }
 function resetContext() {
-  config.clear();
+  getConfig().clear();
   console.log(kleur_default.yellow("Configuration cleared."));
 }
 
@@ -40671,6 +40675,21 @@ function resolvePkgRoot() {
 }
 var PKG_ROOT = resolvePkgRoot();
 var PROJECT_SKILLS_DIR = import_path10.default.join(PKG_ROOT, "project-skills");
+async function getAvailableProjectSkills() {
+  if (!await import_fs_extra10.default.pathExists(PROJECT_SKILLS_DIR)) {
+    return [];
+  }
+  const entries = await import_fs_extra10.default.readdir(PROJECT_SKILLS_DIR);
+  const skills = [];
+  for (const entry of entries) {
+    const entryPath = import_path10.default.join(PROJECT_SKILLS_DIR, entry);
+    const stat = await import_fs_extra10.default.stat(entryPath);
+    if (stat.isDirectory()) {
+      skills.push(entry);
+    }
+  }
+  return skills.sort();
+}
 function deepMergeHooks(existing, incoming) {
   const result = { ...existing };
   if (!result.hooks) result.hooks = {};
@@ -40789,18 +40808,33 @@ async function installProjectSkill(toolName, projectRootOverride) {
   }
   console.log(kleur_default.green("  \u2713 Installation complete!\n"));
 }
-async function listProjectSkills() {
-  if (!await import_fs_extra10.default.pathExists(PROJECT_SKILLS_DIR)) {
+async function installAllProjectSkills(projectRootOverride) {
+  const skills = await getAvailableProjectSkills();
+  if (skills.length === 0) {
     console.log(kleur_default.dim("  No project skills available.\n"));
     return;
   }
-  const entries = await import_fs_extra10.default.readdir(PROJECT_SKILLS_DIR);
+  const projectRoot = projectRootOverride ?? getProjectRoot();
+  console.log(kleur_default.bold(`
+Installing ${skills.length} project skills:
+`));
+  for (const skill of skills) {
+    console.log(kleur_default.dim(`  \u2022 ${skill}`));
+  }
+  console.log("");
+  for (const skill of skills) {
+    await installProjectSkill(skill, projectRoot);
+  }
+}
+async function listProjectSkills() {
+  const entries = await getAvailableProjectSkills();
+  if (entries.length === 0) {
+    console.log(kleur_default.dim("  No project skills available.\n"));
+    return;
+  }
   const skills = [];
   for (const entry of entries) {
-    const entryPath = import_path10.default.join(PROJECT_SKILLS_DIR, entry);
-    const stat = await import_fs_extra10.default.stat(entryPath);
-    if (!stat.isDirectory()) continue;
-    const readmePath = import_path10.default.join(entryPath, "README.md");
+    const readmePath = import_path10.default.join(PROJECT_SKILLS_DIR, entry, "README.md");
     let description = "No description available";
     if (await import_fs_extra10.default.pathExists(readmePath)) {
       const readmeContent = await import_fs_extra10.default.readFile(readmePath, "utf8");
@@ -40825,6 +40859,7 @@ async function listProjectSkills() {
   console.log(table.toString());
   console.log(kleur_default.bold("\n\nUsage:\n"));
   console.log(kleur_default.dim("  xtrm install project <skill-name>   Install a project skill"));
+  console.log(kleur_default.dim("  xtrm install project all            Install all project skills"));
   console.log(kleur_default.dim("  xtrm install project list           List available skills\n"));
   console.log(kleur_default.bold("Example:\n"));
   console.log(kleur_default.dim("  xtrm install project tdd-guard\n"));
@@ -40843,6 +40878,10 @@ function createInstallProjectCommand() {
   const installProjectCmd = new Command("project").description("Install a project-specific skill package");
   installProjectCmd.argument("<tool-name>", "Name of the project skill to install").action(async (toolName) => {
     try {
+      if (toolName === "all" || toolName === "*") {
+        await installAllProjectSkills();
+        return;
+      }
       await installProjectSkill(toolName);
     } catch (err) {
       console.error(kleur_default.red(`
@@ -54958,10 +54997,10 @@ ${kleur_default.cyan("COMMANDS:")}
     
     Examples:
       xtrm install              # Interactive install with confirmation
-      xtrm install all          # Install to all configured targets without prompting
+      xtrm install all          # Install to all Claude Code targets without prompting
       xtrm install '*'          # Same as above; quote to avoid shell expansion
       xtrm install --dry-run    # Preview what would be installed
-      xtrm install all --dry-run -y  # CI-friendly preview across all targets
+      xtrm install all --dry-run -y  # CI-friendly preview across all Claude targets
       xtrm install -y           # Non-interactive install
 
   ${kleur_default.bold("install project")} <tool-name>
@@ -54973,6 +55012,8 @@ ${kleur_default.cyan("COMMANDS:")}
     Examples:
       xtrm install project tdd-guard       # Install TDD Guard
       xtrm install project ts-quality-gate # Install TypeScript Quality Gate
+      xtrm install project all             # Install every available project skill
+      xtrm install project '*'             # Same as above; quote to avoid shell expansion
 
   ${kleur_default.bold("install project list")}
     List all available project skills with descriptions and usage examples.
@@ -55006,6 +55047,12 @@ ${kleur_default.cyan("PROJECT SKILLS:")}
   \u2022 ${kleur_default.white("ts-quality-gate")} \u2014 TypeScript/ESLint/Prettier quality gate (PostToolUse)
   \u2022 ${kleur_default.white("py-quality-gate")} \u2014 Python ruff/mypy quality gate (PostToolUse)
   \u2022 ${kleur_default.white("main-guard")} \u2014 Git branch protection (PreToolUse)
+
+${kleur_default.cyan("INSTALL TARGETS:")}
+
+  xtrm-tools v2.0.0 installs into Claude Code targets only:
+  \u2022 ~/.claude
+  \u2022 %APPDATA%/Claude on Windows
 
 ${kleur_default.cyan("ARCHITECTURE:")}
 

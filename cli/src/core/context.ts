@@ -20,13 +20,20 @@ export interface GetContextOptions {
     createMissingDirs?: boolean;
 }
 
-// Initialize configuration (persists sync mode preference only)
-const config = new Conf({
-    projectName: 'jaggers-config-manager',
-    defaults: {
-        syncMode: 'copy',
-    },
-});
+let config: Conf | null = null;
+
+function getConfig(): Conf {
+    if (!config) {
+        config = new Conf({
+            projectName: 'xtrm-cli',
+            defaults: {
+                syncMode: 'copy',
+            },
+        });
+    }
+
+    return config;
+}
 
 export function getCandidatePaths(): Array<{ label: string; path: string }> {
     const home = os.homedir();
@@ -35,10 +42,6 @@ export function getCandidatePaths(): Array<{ label: string; path: string }> {
 
     const paths = [
         { label: '.claude', path: path.join(home, '.claude') },
-        { label: '.gemini', path: path.join(home, '.gemini') },
-        { label: '.qwen', path: path.join(home, '.qwen') },
-        { label: '~/.gemini/antigravity', path: path.join(home, '.gemini', 'antigravity') },
-        { label: '~/.agents/skills', path: path.join(home, '.agents', 'skills') },
     ];
 
     if (isWindows && appData) {
@@ -69,6 +72,7 @@ export async function getContext(options: GetContextOptions = {}): Promise<Conte
     const directTargets = resolveTargets(selector, candidates);
 
     if (directTargets) {
+        const activeConfig = getConfig();
         if (createMissingDirs) {
             for (const target of directTargets) {
                 await fs.ensureDir(target);
@@ -77,10 +81,12 @@ export async function getContext(options: GetContextOptions = {}): Promise<Conte
 
         return {
             targets: directTargets,
-            syncMode: config.get('syncMode') as SyncMode,
-            config,
+            syncMode: activeConfig.get('syncMode') as SyncMode,
+            config: activeConfig,
         };
     }
+
+    const activeConfig = getConfig();
 
     for (const c of candidates) {
         const exists = await fs.pathExists(c.path);
@@ -122,13 +128,13 @@ export async function getContext(options: GetContextOptions = {}): Promise<Conte
 
     return {
         targets: response.targets,
-        syncMode: config.get('syncMode') as SyncMode,
-        config,
+        syncMode: activeConfig.get('syncMode') as SyncMode,
+        config: activeConfig,
     };
 
 }
 
 export function resetContext(): void {
-    config.clear();
+    getConfig().clear();
     console.log(kleur.yellow('Configuration cleared.'));
 }

@@ -21,6 +21,25 @@ function resolvePkgRoot(): string {
 const PKG_ROOT = resolvePkgRoot();
 const PROJECT_SKILLS_DIR = path.join(PKG_ROOT, 'project-skills');
 
+export async function getAvailableProjectSkills(): Promise<string[]> {
+    if (!await fs.pathExists(PROJECT_SKILLS_DIR)) {
+        return [];
+    }
+
+    const entries = await fs.readdir(PROJECT_SKILLS_DIR);
+    const skills: string[] = [];
+
+    for (const entry of entries) {
+        const entryPath = path.join(PROJECT_SKILLS_DIR, entry);
+        const stat = await fs.stat(entryPath);
+        if (stat.isDirectory()) {
+            skills.push(entry);
+        }
+    }
+
+    return skills.sort();
+}
+
 /**
  * Deep merge settings.json hooks without overwriting existing user hooks.
  * Appends new hooks to existing events intelligently.
@@ -185,24 +204,41 @@ export async function installProjectSkill(toolName: string, projectRootOverride?
     console.log(kleur.green('  ✓ Installation complete!\n'));
 }
 
-/**
- * List available project skills.
- */
-async function listProjectSkills(): Promise<void> {
-    if (!await fs.pathExists(PROJECT_SKILLS_DIR)) {
+export async function installAllProjectSkills(projectRootOverride?: string): Promise<void> {
+    const skills = await getAvailableProjectSkills();
+
+    if (skills.length === 0) {
         console.log(kleur.dim('  No project skills available.\n'));
         return;
     }
 
-    const entries = await fs.readdir(PROJECT_SKILLS_DIR);
+    const projectRoot = projectRootOverride ?? getProjectRoot();
+
+    console.log(kleur.bold(`\nInstalling ${skills.length} project skills:\n`));
+    for (const skill of skills) {
+        console.log(kleur.dim(`  • ${skill}`));
+    }
+    console.log('');
+
+    for (const skill of skills) {
+        await installProjectSkill(skill, projectRoot);
+    }
+}
+
+/**
+ * List available project skills.
+ */
+async function listProjectSkills(): Promise<void> {
+    const entries = await getAvailableProjectSkills();
+    if (entries.length === 0) {
+        console.log(kleur.dim('  No project skills available.\n'));
+        return;
+    }
+
     const skills: Array<{ name: string; description: string }> = [];
 
     for (const entry of entries) {
-        const entryPath = path.join(PROJECT_SKILLS_DIR, entry);
-        const stat = await fs.stat(entryPath);
-        if (!stat.isDirectory()) continue;
-
-        const readmePath = path.join(entryPath, 'README.md');
+        const readmePath = path.join(PROJECT_SKILLS_DIR, entry, 'README.md');
         let description = 'No description available';
 
         if (await fs.pathExists(readmePath)) {
@@ -236,6 +272,7 @@ async function listProjectSkills(): Promise<void> {
 
     console.log(kleur.bold('\n\nUsage:\n'));
     console.log(kleur.dim('  xtrm install project <skill-name>   Install a project skill'));
+    console.log(kleur.dim('  xtrm install project all            Install all project skills'));
     console.log(kleur.dim('  xtrm install project list           List available skills\n'));
 
     console.log(kleur.bold('Example:\n'));
@@ -262,6 +299,10 @@ export function createInstallProjectCommand(): Command {
         .argument('<tool-name>', 'Name of the project skill to install')
         .action(async (toolName: string) => {
             try {
+                if (toolName === 'all' || toolName === '*') {
+                    await installAllProjectSkills();
+                    return;
+                }
                 await installProjectSkill(toolName);
             } catch (err: any) {
                 console.error(kleur.red(`\n✗ ${err.message}\n`));

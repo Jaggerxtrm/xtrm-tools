@@ -1,3 +1,8 @@
+---
+name: using-py-quality-gate
+description: Python quality gate skill that runs ruff and mypy automatically after file edits. Use this skill when the quality gate blocks or reports errors, when configuring ruff or mypy for a project, when troubleshooting why quality-check.py ran or failed, or when adjusting Python linting and type checking rules.
+---
+
 # Using PY Quality Gate
 
 **PY Quality Gate** enforces Python code quality with ruff (linting/formatting) and mypy (type checking). Runs automatically on every file edit.
@@ -14,8 +19,8 @@
 
 When you edit a Python file:
 
-1. PostToolUse hook fires after Write/Edit/MultiEdit
-2. Runs `quality-check.py` with the file path
+1. PostToolUse hook fires after Write/Edit/MultiEdit on any file
+2. Runs `quality-check.py` — which filters internally to Python files
 3. Checks ruff lint, ruff format, mypy types
 4. Auto-fixes issues if configured
 5. Returns exit code 2 if blocking errors found
@@ -74,7 +79,8 @@ Create `mypy.ini` or `pyproject.toml`:
 python_version = 3.8
 warn_return_any = True
 warn_unused_configs = True
-disallow_untyped_defs = False
+disallow_untyped_defs = True
+ignore_missing_imports = True
 ```
 
 ## Exit Codes

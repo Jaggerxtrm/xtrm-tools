@@ -1,3 +1,8 @@
+---
+name: using-ts-quality-gate
+description: TypeScript/ESLint/Prettier quality gate skill that runs automatically after file edits. Use this skill when the quality gate blocks a commit or reports errors, when configuring TypeScript, ESLint, or Prettier checks, when troubleshooting why quality-check.cjs ran or failed, or when adjusting quality gate rules for a project.
+---
+
 # Using TS Quality Gate
 
 **TS Quality Gate** enforces TypeScript, ESLint, and Prettier quality checks on every file edit. It provides immediate feedback and auto-fixes issues when possible.
@@ -14,8 +19,8 @@
 
 When you edit a TypeScript/JavaScript file:
 
-1. PostToolUse hook fires after Write/Edit/MultiEdit
-2. Runs `quality-check.js` with the file path
+1. PostToolUse hook fires after Write/Edit/MultiEdit on any file
+2. Runs `quality-check.cjs` — which filters internally to TypeScript/JavaScript files
 3. Checks TypeScript compilation, ESLint, Prettier
 4. Auto-fixes issues if configured
 5. Returns exit code 2 if blocking errors found

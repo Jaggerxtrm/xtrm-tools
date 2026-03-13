@@ -1,10 +1,11 @@
 ---
 name: using-service-skills
 description: >-
-  Service catalog discovery and expert persona activation.
-  At session start, a catalog of registered expert personas is injected
-  automatically. Use this skill to discover, understand, and activate
-  the right expert for any task.
+  Service catalog discovery and expert persona activation. Use this skill
+  to find which registered service owns a file or task, discover available
+  expert personas, and activate the right expert. Consult when you're unsure
+  which service a file belongs to, when no catalog was injected at session
+  start, when no expert matches, or when you need to browse registered skills.
 allowed-tools: Read, Glob
 ---
 

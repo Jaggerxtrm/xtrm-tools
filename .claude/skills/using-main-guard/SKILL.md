@@ -1,3 +1,8 @@
+---
+name: using-main-guard
+description: Git branch protection skill that blocks direct edits to protected branches (main, master, develop). Use this skill when working with git branches, when an edit is blocked due to branch protection, when troubleshooting why a write was denied, or when you need to understand the branch workflow for a project.
+---
+
 # Using Main Guard
 
 **Main Guard** enforces Git branch protection by blocking direct edits to protected branches (main, master, develop).
@@ -14,7 +19,7 @@
 When you attempt to write or edit files:
 
 1. PreToolUse hook fires before Write/Edit
-2. Runs `main-guard.js` to check current branch
+2. Runs `main-guard.cjs` to check current branch
 3. If on protected branch: **blocks the action**
 4. If on feature branch: **allows the action**
 
@@ -82,38 +87,6 @@ export MAIN_GUARD_PROTECTED_BRANCHES="main,master,release/*,hotfix/*"
 | 0 | Allowed (not on protected branch) |
 | 1 | Fatal error |
 | 2 | Blocked (on protected branch) |
-
-## Workflow
-
-### Recommended Git Flow
-
-```bash
-# Start new feature
-git checkout main
-git pull origin main
-git checkout -b feat/my-feature
-
-# Make changes (main-guard allows this)
-# ... edit files ...
-
-# Commit and push
-git add .
-git commit -m "feat: add my feature"
-git push -u origin feat/my-feature
-
-# Create PR on GitHub/GitLab
-```
-
-### Hotfix Flow
-
-```bash
-# Emergency fix
-git checkout main
-git checkout -b hotfix/urgent-fix
-
-# Make changes, commit, push
-# Create PR with expedited review
-```
 
 ## Troubleshooting
 

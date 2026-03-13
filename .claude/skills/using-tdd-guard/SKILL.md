@@ -1,3 +1,8 @@
+---
+name: using-tdd-guard
+description: TDD Guard enforcement skill that blocks implementation code until a failing test exists. Use this skill when TDD Guard blocks a write, when you need to understand why an edit was denied, when setting up test reporters (Vitest, Jest, pytest, PHPUnit, Go, Rust), or when troubleshooting TDD workflow issues. Also consult this skill when asked about the TDD cycle, red-green-refactor, or test-first development.
+---
+
 # Using TDD Guard
 
 **TDD Guard** enforces Test-Driven Development workflow in Claude Code. It blocks implementation code until failing tests are written.

@@ -2,11 +2,11 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Write|Edit|MultiEdit",
+        "matcher": "Write|Edit|MultiEdit|Bash",
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/main-guard.cjs\"",
+            "command": "node \"$CLAUDE_PROJECT_DIR/hooks/main-guard.mjs\"",
             "timeout": 5
           }
         ]
@@ -77,6 +77,15 @@
           {
             "type": "command",
             "command": "tdd-guard --session-init",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "git config pull.ff only",
             "timeout": 5
           }
         ]

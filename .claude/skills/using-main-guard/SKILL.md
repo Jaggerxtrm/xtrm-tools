@@ -1,135 +1,87 @@
 # Using Main Guard
 
-**Main Guard** enforces Git branch protection by blocking direct edits to protected branches (main, master, develop).
+**Main Guard v2** enforces a PR-only workflow on protected branches. It blocks direct file edits, dangerous git operations, and arbitrary Bash execution on `main`/`master` — forcing all work through feature branches and pull requests.
 
-## What It Does
+## What It Protects
 
-- **Blocks direct edits** to protected branches
-- **Enforces feature branch workflow**
-- **Suggests branch names** based on your task
-- **Prevents accidental commits** to main/master
+| Tool | Protected? | Notes |
+|------|-----------|-------|
+| Write / Edit / MultiEdit | Always blocked | Never edit files on main directly |
+| `git commit` (Bash) | Blocked | Use a feature branch |
+| `git push` to main (Bash) | Blocked | Use `gh pr merge` |
+| Arbitrary Bash | Blocked by default | See allowlist below |
 
-## How It Works
+## Bash Allowlist (safe on protected branches)
 
-When you attempt to write or edit files:
+These commands are always permitted:
 
-1. PreToolUse hook fires before Write/Edit
-2. Runs `main-guard.js` to check current branch
-3. If on protected branch: **blocks the action**
-4. If on feature branch: **allows the action**
-
-## Protected Branches
-
-By default, these branches are protected:
-- `main`
-- `master`
-- `develop`
-
-Customize via environment variable:
-```bash
-export MAIN_GUARD_PROTECTED_BRANCHES="main,master,develop,production"
+```
+git status / log / diff / branch / show / fetch / pull / stash
+git checkout -b <name>    ← create feature branch (primary exit path)
+git switch -c <name>      ← same
+git worktree / config
+gh <any>                  GitHub CLI (pr create, pr merge, etc.)
+bd <any>                  beads issue tracking
 ```
 
-## Installation
+## Emergency Override
 
 ```bash
-# Install project skill
-xtrm install project main-guard
+MAIN_GUARD_ALLOW_BASH=1 <command>   # bypass for one command — use sparingly
 ```
 
-## Usage
+## Full PR Workflow
 
-### When Blocked
+```bash
+# 1. Start from main (read-only ops allowed here)
+git status
+git pull
 
-If you try to edit files on a protected branch, you'll see:
+# 2. Create a feature branch
+git checkout -b feature/<name>
 
+# 3. Track your work in beads
+bd create --title="..." --type=task
+bd update <id> --status=in_progress
+
+# 4. Do your work (Edit/Write/Bash now fully available)
+# ... edit files, write code ...
+
+# 5. Commit and close
+bd close <id>
+git add <files>
+git commit -m "feat: ..."
+git push -u origin feature/<name>
+
+# 6. PR workflow
+gh pr create --fill
+gh pr merge --squash
+
+# 7. Sync master
+git checkout master
+git reset --hard origin/master
 ```
-🛑 BLOCKED: Direct edits to protected branches
-
-  Current branch: main
-
-  You cannot edit files directly on a protected branch.
-
-  📋 To proceed:
-     1. Create a feature branch: git checkout -b feat/task-name
-     2. Make your changes on that branch
-     3. Push and create a pull request
-```
-
-### Branch Name Suggestions
-
-The hook suggests branch names based on your task:
-- `feat/issue-123` - For feature requests
-- `fix/bug-456` - For bug fixes
-- `feat/description` - For general features
 
 ## Configuration
 
-### Environment Variables
+```bash
+# Override protected branches
+export MAIN_GUARD_PROTECTED_BRANCHES="main,master,develop"
+```
+
+## SessionStart: pull.ff only
+
+At session start, main-guard enforces fast-forward only pulls:
 
 ```bash
-# Custom protected branches
-export MAIN_GUARD_PROTECTED_BRANCHES="main,master,develop,staging"
-
-# Support wildcards
-export MAIN_GUARD_PROTECTED_BRANCHES="main,master,release/*,hotfix/*"
+git config pull.ff only
 ```
+
+This ensures `git pull` fails loudly if main has diverged, rather than silently creating a merge commit. If pull fails, investigate the divergence before proceeding.
 
 ## Exit Codes
 
 | Code | Meaning |
 |------|---------|
-| 0 | Allowed (not on protected branch) |
-| 1 | Fatal error |
-| 2 | Blocked (on protected branch) |
-
-## Workflow
-
-### Recommended Git Flow
-
-```bash
-# Start new feature
-git checkout main
-git pull origin main
-git checkout -b feat/my-feature
-
-# Make changes (main-guard allows this)
-# ... edit files ...
-
-# Commit and push
-git add .
-git commit -m "feat: add my feature"
-git push -u origin feat/my-feature
-
-# Create PR on GitHub/GitLab
-```
-
-### Hotfix Flow
-
-```bash
-# Emergency fix
-git checkout main
-git checkout -b hotfix/urgent-fix
-
-# Make changes, commit, push
-# Create PR with expedited review
-```
-
-## Troubleshooting
-
-**"Not in a git repository"**
-- Hook skips gracefully when not in git repo
-- No protection applied outside git projects
-
-**"Could not determine git branch"**
-- Ensure git is installed and working
-- Check if `.git` folder exists
-
-**Hook not running**
-- Verify PreToolUse hook in `.claude/settings.json`
-- Check Node.js is installed
-
-## See Also
-
-- Full documentation: `.claude/docs/main-guard-readme.md`
-- Git flow: https://nvie.com/posts/a-successful-git-branching-model/
+| 0 | Allowed |
+| 2 | Blocked — follow the guidance in the error message |

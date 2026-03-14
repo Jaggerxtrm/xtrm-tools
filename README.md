@@ -198,19 +198,23 @@ Task intake and service routing for Docker service projects.
 
 ### Standalone Hooks
 
-**pip-venv-guard.py**
-- Trigger: PreToolUse (Bash)
-- Purpose: Prevent `pip install` outside virtual environments
+**main-guard.mjs**
+- Trigger: PreToolUse (Write|Edit|MultiEdit)
+- Purpose: Blocks direct edits on protected branches with structured deny output
 
 **type-safety-enforcement.py**
 - Trigger: PreToolUse (Bash|Edit|Write)
 - Purpose: Enforce type safety in Python code
 
-**statusline.js**
-- Trigger: StatusLine
-- Purpose: Display custom status line information
+**agent_context.py**
+- Trigger: Support module used by Python hooks
+- Purpose: Shared hook input/output helper
 
-**NOTE** certain skills are third-party utilities, i believe they can be useful.
+**beads gate hooks** (installed with `xtrm install all`, or included when beads+dolt is available):
+- `beads-edit-gate.mjs` (PreToolUse)
+- `beads-commit-gate.mjs` (PreToolUse)
+- `beads-stop-gate.mjs` (Stop)
+- `beads-close-memory-prompt.mjs` (PostToolUse)
 
 ## Project Skills
 
@@ -301,11 +305,12 @@ npm link          # registers `xtrm` globally
 xtrm <command> [options]
 ```
 
-| Command  | Description                       |
-| -------- | --------------------------------- |
-| `sync`   | Sync tools to target environments |
-| `status` | Show diff without making changes  |
-| `reset`  | Clear saved preferences           |
+| Command   | Description                      |
+| --------- | -------------------------------- |
+| `install` | Install/update tools             |
+| `status`  | Show diff without making changes |
+| `reset`   | Clear saved preferences          |
+| `help`    | Show command/component overview  |
 
 ---
 
@@ -329,7 +334,7 @@ xtrm install --backport     # reverse direction: copy drifted local edits → re
 - **cli-table3 plan table**: Formatted table showing Target / + New / ↑ Update / ! Drift / Total
 - **boxen summary card**: Completion summary with green/yellow border based on drift
 - **Themed output**: Semantic colors (success, error, warning, muted, accent) via `theme.ts`
-- **Interactive consent**: Multiselect for MCP servers (space to toggle, all pre-selected)
+- **beads+dolt prerequisite flow**: `xtrm install` / `xtrm install all` check workflow backend and can install missing deps
 - **Auto-detection**: Scans Claude Code targets automatically (`~/.claude`, `%APPDATA%/Claude` on Windows) plus the `.agents/skills` cache for skills-only sync
 - **Inline sync**: `status` command offers to apply sync immediately after showing changes
 - **Single confirmation**: See full plan across all targets, confirm once
@@ -395,8 +400,8 @@ xtrm reset
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/Jaggerxtrm/jaggers-agent-tools.git
-   cd jaggers-agent-tools
+   git clone https://github.com/Jaggerxtrm/xtrm-tools.git
+   cd xtrm-tools
    ```
 
 2. Copy skills to Claude Code:
@@ -457,9 +462,9 @@ If you use Gemini CLI or Qwen CLI, you can still use xtrm-tools skills and hooks
 
 ## Configuration
 
-### MCP Servers (v1.7.0 Unified System)
+### MCP Servers (Unified CLI Sync)
 
-MCP servers are configured from canonical sources with automatic format adaptation for each agent.
+MCP servers are configured from canonical sources and synced via official CLI commands.
 
 **Core Servers** (installed by default):
 - **serena**: Code analysis (requires `uvx`, auto project detection)
@@ -484,22 +489,24 @@ MCP servers are configured from canonical sources with automatic format adaptati
 - **Persistence:** Values preserved across syncs; never overwritten
 - Edit `~/.config/xtrm-tools/.env` to add your API keys manually
 
-**Unified MCP CLI Sync (v1.7.0)**:
-- Uses official `mcp add`/`mcp remove`/`mcp list` commands for all agents
+**Unified MCP CLI Sync**:
+- Uses official `claude mcp add` / `claude mcp list` commands
 - **Idempotent:** Re-running is always safe — skips already-installed servers
 - **Deduplication:** Prevents same server from syncing N times when multiple dirs selected
-- **Interactive consent:** Multiselect prompt (space to toggle, all pre-selected)
 - **Prerequisite auto-install:** Runs `npm install -g gitnexus` automatically when selected
 - **Post-install guidance:** Shows required next steps (e.g., `npx gitnexus analyze`)
 - **Timeout protection:** 10s timeout on CLI calls to prevent hangs
 - **Clean errors:** User-friendly messages (no stack traces)
 
-**Supported Agents**:
-- Claude Code (`~/.claude.json` via `mcp add` CLI)
-- Antigravity (`~/.gemini/antigravity/mcp_config.json` via `mcp add` CLI)
+**Scopes**:
+- Global installs (`xtrm install`, `xtrm install all`, `xtrm install basic`) sync MCP into Claude global config
+- Project installs (`xtrm install project <name|all>`) sync core MCP at project scope (`-s project`)
 
-**Deprecated (v1.7.0)**:
-- JSON file sync for Claude/Gemini/Qwen MCP — superseded by official `mcp` CLI method
+**Supported Agent**:
+- Claude Code
+
+**Deprecated**:
+- JSON file MCP sync (superseded by official CLI method)
 - Repo `.env` files — use centralized `~/.config/xtrm-tools/.env`
 
 **Documentation**: See [docs/mcp-servers-config.md](docs/mcp-servers-config.md) for complete setup guide.
@@ -526,7 +533,7 @@ Adjust hook execution timeouts in `settings.json`:
   "hooks": {
     "UserPromptSubmit": [{
       "hooks": [{
-        "timeout": 5000  // Timeout in milliseconds (5000ms = 5 seconds) for both Claude and Gemini
+        "timeout": 5000  // Timeout in milliseconds (5000ms = 5 seconds)
       }]
     }]
   }
@@ -574,7 +581,7 @@ Project-specific operational knowledge system for Docker service projects. Gives
 
 ```bash
 cd ~/projects/my-project
-python3 /path/to/jaggers-agent-tools/project-skills/service-skills-set/install-service-skills.py
+python3 /path/to/xtrm-tools/project-skills/service-skills-set/install-service-skills.py
 ```
 
 - Idempotent — safe to re-run after updates
@@ -657,7 +664,7 @@ See [CHANGELOG.md](CHANGELOG.md) for complete version history.
 ## Repository Structure
 
 ```
-jaggers-agent-tools/
+xtrm-tools/
 ├── README.md                    # This file
 ├── CHANGELOG.md                 # Version history
 ├── ROADMAP.md                   # Future plans
@@ -667,7 +674,7 @@ jaggers-agent-tools/
 ├── cli/                         # Config Manager CLI (TypeScript)
 │   ├── src/
 │   │   ├── index.ts             # Entry point (Commander program)
-│   │   ├── commands/            # sync.ts, status.ts, reset.ts
+│   │   ├── commands/            # install.ts, install-project.ts, status.ts, reset.ts, help.ts
 │   │   ├── adapters/            # base, claude, gemini, qwen, registry
 │   │   ├── core/                # context, diff, sync-executor, manifest, rollback
 │   │   ├── utils/               # hash, atomic-config, config-adapter, env-manager, theme…
@@ -708,7 +715,7 @@ jaggers-agent-tools/
 │   ├── type-safety-enforcement.py # Type safety
 │   ├── gitnexus/
 │   │   └── gitnexus-hook.cjs    # PreToolUse knowledge graph enrichment
-│   └── statusline.js            # Status line display
+│   └── main-guard.mjs           # Protected-branch edit guard
 │
 ├── config/                      # Canonical configuration
 │   ├── mcp_servers.json         # Core MCP servers

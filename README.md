@@ -289,11 +289,17 @@ npm install -g github:Jaggerxtrm/xtrm-tools@latest
 
 ```bash
 git clone https://github.com/Jaggerxtrm/xtrm-tools.git
-cd xtrm-tools/cli
-npm install       # installs dependencies
-npm run build     # compiles TypeScript to dist/
+cd xtrm-tools
+npm install       # installs root + cli workspace dependencies
+npm run build     # compiles CLI TypeScript to cli/dist/
 npm link          # registers `xtrm` globally
 ```
+
+Root package is the single entrypoint for dev/publish:
+- `npm install` (root) installs everything, including `cli/`
+- `npm run build` (root) builds the CLI bundle
+- `npm test` (root) runs CLI tests
+- `npm publish` (root) runs `prepublishOnly` build, then publishes
 
 ---
 

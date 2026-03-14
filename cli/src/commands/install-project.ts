@@ -155,6 +155,11 @@ export function deepMergeHooks(existing: Record<string, any>, incoming: Record<s
             const incomingEventHooks = Array.isArray(incomingHooks) ? incomingHooks : [incomingHooks];
 
             const getCommand = (h: any) => h.command || h.hooks?.[0]?.command;
+            const getCommandKey = (cmd?: string): string | null => {
+                if (!cmd || typeof cmd !== 'string') return null;
+                const m = cmd.match(/([A-Za-z0-9._-]+\.(?:py|cjs|mjs|js))(?!.*[A-Za-z0-9._-]+\.(?:py|cjs|mjs|js))/);
+                return m?.[1] ?? null;
+            };
             const mergeMatcher = (existingMatcher: string, incomingMatcher: string): string => {
                 const existingParts = existingMatcher.split('|').map((s: string) => s.trim()).filter(Boolean);
                 const incomingParts = incomingMatcher.split('|').map((s: string) => s.trim()).filter(Boolean);
@@ -173,7 +178,13 @@ export function deepMergeHooks(existing: Record<string, any>, incoming: Record<s
                     continue;
                 }
 
-                const existingIndex = mergedEventHooks.findIndex((h: any) => getCommand(h) === incomingCmd);
+                const incomingKey = getCommandKey(incomingCmd);
+                const existingIndex = mergedEventHooks.findIndex((h: any) => {
+                    const existingCmd = getCommand(h);
+                    if (existingCmd === incomingCmd) return true;
+                    if (!incomingKey) return false;
+                    return getCommandKey(existingCmd) === incomingKey;
+                });
                 if (existingIndex === -1) {
                     mergedEventHooks.push(incomingHook);
                     continue;

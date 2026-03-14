@@ -86,6 +86,34 @@ describe('deepMergeHooks', () => {
         expect(matcher).toContain('mcp__serena__insert_after_symbol');
         expect(matcher).toContain('mcp__serena__insert_before_symbol');
     });
+
+    it('upgrades matcher when command path differs but hook script is the same', () => {
+        const existing = {
+            hooks: {
+                PostToolUse: [{
+                    matcher: 'Write|Edit|MultiEdit',
+                    hooks: [{ command: 'python3 "$CLAUDE_PROJECT_DIR/hooks/quality-check.py"' }],
+                }],
+            },
+        };
+
+        const incoming = {
+            hooks: {
+                PostToolUse: [{
+                    matcher: 'Write|Edit|MultiEdit|mcp__serena__rename_symbol|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol',
+                    hooks: [{ command: 'python3 "$CLAUDE_PROJECT_DIR/.claude/hooks/quality-check.py"' }],
+                }],
+            },
+        };
+
+        const merged = deepMergeHooks(existing, incoming);
+        expect(merged.hooks.PostToolUse).toHaveLength(1);
+        const matcher = merged.hooks.PostToolUse[0].matcher as string;
+        expect(matcher).toContain('mcp__serena__rename_symbol');
+        expect(matcher).toContain('mcp__serena__replace_symbol_body');
+        expect(matcher).toContain('mcp__serena__insert_after_symbol');
+        expect(matcher).toContain('mcp__serena__insert_before_symbol');
+    });
 });
 
 describe('extractReadmeDescription', () => {

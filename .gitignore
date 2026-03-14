@@ -17,3 +17,6 @@ cli/node_modules
 # Dolt database files (added by bd init)
 .dolt/
 *.db
+
+# TDD Guard runtime data
+.claude/tdd-guard/data/

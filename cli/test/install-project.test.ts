@@ -59,6 +59,33 @@ describe('deepMergeHooks', () => {
         expect(merged.hooks.CustomEvent).toEqual([{ command: 'echo keep-me' }]);
         expect(merged.hooks.PostToolUse).toEqual([{ command: 'echo new-post' }]);
     });
+
+    it('upgrades existing same-command matcher to include incoming Serena tools', () => {
+        const existing = {
+            hooks: {
+                PostToolUse: [{
+                    matcher: 'Write|Edit|MultiEdit',
+                    hooks: [{ command: 'node "$CLAUDE_PROJECT_DIR/.claude/hooks/quality-check.cjs"' }],
+                }],
+            },
+        };
+
+        const incoming = {
+            hooks: {
+                PostToolUse: [{
+                    matcher: 'Write|Edit|MultiEdit|mcp__serena__rename_symbol|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol',
+                    hooks: [{ command: 'node "$CLAUDE_PROJECT_DIR/.claude/hooks/quality-check.cjs"' }],
+                }],
+            },
+        };
+
+        const merged = deepMergeHooks(existing, incoming);
+        const matcher = merged.hooks.PostToolUse[0].matcher as string;
+        expect(matcher).toContain('mcp__serena__rename_symbol');
+        expect(matcher).toContain('mcp__serena__replace_symbol_body');
+        expect(matcher).toContain('mcp__serena__insert_after_symbol');
+        expect(matcher).toContain('mcp__serena__insert_before_symbol');
+    });
 });
 
 describe('extractReadmeDescription', () => {
@@ -148,6 +175,16 @@ describe('installProjectSkill', () => {
         const settings = await fsExtra.readJson(path.join(tmpDir, '.claude', 'settings.json'));
         const postToolUseCommand = settings.hooks.PostToolUse[0].hooks[0].command;
         expect(postToolUseCommand).toContain('quality-check.cjs');
+    });
+
+    it('installs service-skills git hooks when service-skills-set is installed', async () => {
+        await fsExtra.ensureDir(path.join(tmpDir, '.git', 'hooks'));
+        await installProjectSkill('service-skills-set', tmpDir);
+
+        expect(await fsExtra.pathExists(path.join(tmpDir, '.githooks', 'pre-commit'))).toBe(true);
+        expect(await fsExtra.pathExists(path.join(tmpDir, '.githooks', 'pre-push'))).toBe(true);
+        expect(await fsExtra.pathExists(path.join(tmpDir, '.git', 'hooks', 'pre-commit'))).toBe(true);
+        expect(await fsExtra.pathExists(path.join(tmpDir, '.git', 'hooks', 'pre-push'))).toBe(true);
     });
 });
 

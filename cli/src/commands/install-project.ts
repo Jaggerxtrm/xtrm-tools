@@ -3,6 +3,7 @@ import kleur from 'kleur';
 import path from 'path';
 import fs from 'fs-extra';
 import { spawnSync } from 'child_process';
+import { installGitHooks as installServiceGitHooks } from './install-service-skills.js';
 
 declare const __dirname: string;
 function resolvePkgRoot(): string {
@@ -153,17 +154,38 @@ export function deepMergeHooks(existing: Record<string, any>, incoming: Record<s
             const existingEventHooks = Array.isArray(result.hooks[event]) ? result.hooks[event] : [result.hooks[event]];
             const incomingEventHooks = Array.isArray(incomingHooks) ? incomingHooks : [incomingHooks];
 
-            // Merge by comparing command strings to avoid duplicates
-            const existingCommands = new Set(
-                existingEventHooks.map((h: any) => h.command || h.hooks?.[0]?.command).filter(Boolean)
-            );
+            const getCommand = (h: any) => h.command || h.hooks?.[0]?.command;
+            const mergeMatcher = (existingMatcher: string, incomingMatcher: string): string => {
+                const existingParts = existingMatcher.split('|').map((s: string) => s.trim()).filter(Boolean);
+                const incomingParts = incomingMatcher.split('|').map((s: string) => s.trim()).filter(Boolean);
+                const merged = [...existingParts];
+                for (const part of incomingParts) {
+                    if (!merged.includes(part)) merged.push(part);
+                }
+                return merged.join('|');
+            };
 
-            const newHooks = incomingEventHooks.filter((h: any) => {
-                const cmd = h.command || h.hooks?.[0]?.command;
-                return !cmd || !existingCommands.has(cmd);
-            });
+            const mergedEventHooks = [...existingEventHooks];
+            for (const incomingHook of incomingEventHooks) {
+                const incomingCmd = getCommand(incomingHook);
+                if (!incomingCmd) {
+                    mergedEventHooks.push(incomingHook);
+                    continue;
+                }
 
-            result.hooks[event] = [...existingEventHooks, ...newHooks];
+                const existingIndex = mergedEventHooks.findIndex((h: any) => getCommand(h) === incomingCmd);
+                if (existingIndex === -1) {
+                    mergedEventHooks.push(incomingHook);
+                    continue;
+                }
+
+                const existingHook = mergedEventHooks[existingIndex];
+                if (typeof existingHook.matcher === 'string' && typeof incomingHook.matcher === 'string') {
+                    existingHook.matcher = mergeMatcher(existingHook.matcher, incomingHook.matcher);
+                }
+            }
+
+            result.hooks[event] = mergedEventHooks;
         }
     }
 
@@ -287,6 +309,15 @@ export async function installProjectSkill(toolName: string, projectRootOverride?
     }
 
     // Step 4: Post-Install Guidance
+    if (toolName === 'service-skills-set') {
+        console.log(kleur.bold('\n── Installing Git Hooks ─────────────────'));
+        await installServiceGitHooks(projectRoot, skillClaudeDir);
+        console.log(`${kleur.green('  ✓')} .githooks/pre-commit`);
+        console.log(`${kleur.green('  ✓')} .githooks/pre-push`);
+        console.log(`${kleur.green('  ✓')} activated in .git/hooks/`);
+    }
+
+    // Step 5: Post-Install Guidance
     console.log(kleur.bold('\n── Post-Install Steps ────────────────────'));
     console.log(kleur.yellow('\n  ⚠ IMPORTANT: Manual setup required!\n'));
     console.log(kleur.white(`  ${toolName} requires additional configuration.`));

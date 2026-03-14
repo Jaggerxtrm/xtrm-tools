@@ -264,3 +264,29 @@ exit 1
     }
   });
 });
+
+
+// ── tdd-guard-pretool-bridge.cjs ─────────────────────────────────────────────
+
+const TDD_BRIDGE_DIR = path.join(__dirname, '../../project-skills/tdd-guard/.claude/hooks');
+
+describe('tdd-guard-pretool-bridge.cjs', () => {
+  it('does not forward tdd-guard stderr when stdout already contains the message', () => {
+    const fakeDir = mkdtempSync(path.join(os.tmpdir(), 'xtrm-fake-tddguard-'));
+    const fakeBin = path.join(fakeDir, 'tdd-guard');
+    // Simulate tdd-guard writing the same message to both stdout and stderr (the bug)
+    writeFileSync(fakeBin, `#!/usr/bin/env bash\nMSG='{"reason":"Premature implementation"}'\necho "$MSG"\necho "$MSG" >&2\nexit 2\n`, { encoding: 'utf8' });
+    chmodSync(fakeBin, 0o755);
+
+    try {
+      const r = spawnSync('node', [path.join(TDD_BRIDGE_DIR, 'tdd-guard-pretool-bridge.cjs')], {
+        input: JSON.stringify({ tool_name: 'Write', tool_input: { file_path: 'test.ts' } }),
+        encoding: 'utf8',
+        env: { ...process.env, PATH: `${fakeDir}:${process.env.PATH ?? ''}` },
+      });
+      expect(r.stderr).toBe('');
+    } finally {
+      rmSync(fakeDir, { recursive: true, force: true });
+    }
+  });
+});

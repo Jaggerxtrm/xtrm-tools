@@ -40942,6 +40942,42 @@ Installing ${skills.length} project skills:
     await installProjectSkill(skill, projectRoot);
   }
 }
+function buildProjectInitGuide() {
+  const lines = [
+    kleur_default.bold("\nProject Init \u2014 Recommended baseline\n"),
+    `${kleur_default.cyan("1) Install a quality gate skill (or equivalent checks):")}`,
+    kleur_default.dim("   - TypeScript projects: xtrm install project ts-quality-gate"),
+    kleur_default.dim("   - Python projects:     xtrm install project py-quality-gate"),
+    kleur_default.dim("   - TDD workflow:        xtrm install project tdd-guard"),
+    "",
+    `${kleur_default.cyan("2) Ensure your checks are actually configured in this repo:")}`,
+    kleur_default.dim("   - Testing: commands should run and fail when behavior regresses"),
+    kleur_default.dim("   - Linting/formatting: ESLint+Prettier (TS) or ruff (Python)"),
+    kleur_default.dim("   - Type checks: tsc (TS) or mypy/pyright (Python)"),
+    kleur_default.dim("   - Hooks only enforce what your project config defines"),
+    "",
+    `${kleur_default.cyan("3) Optional: Service Skills Set (service-skills-set)")}`,
+    kleur_default.dim("   - For multi-service/Docker repos with repeated operational workflows"),
+    kleur_default.dim("   - Adds project hooks + skills that route Claude to service-specific context"),
+    kleur_default.dim("   - Helps keep architecture knowledge persistent across sessions"),
+    "",
+    kleur_default.bold("Quick start commands:"),
+    kleur_default.dim("   xtrm install project list"),
+    kleur_default.dim("   xtrm install project ts-quality-gate   # or py-quality-gate / tdd-guard"),
+    ""
+  ];
+  return lines.join("\n");
+}
+async function printProjectInitGuide() {
+  console.log(buildProjectInitGuide());
+}
+async function installProjectByName(toolName) {
+  if (toolName === "all" || toolName === "*") {
+    await installAllProjectSkills();
+    return;
+  }
+  await installProjectSkill(toolName);
+}
 async function listProjectSkills() {
   const entries = await getAvailableProjectSkills();
   if (entries.length === 0) {
@@ -40994,11 +41030,7 @@ function createInstallProjectCommand() {
   const installProjectCmd = new Command("project").description("Install a project-specific skill package");
   installProjectCmd.argument("<tool-name>", "Name of the project skill to install").action(async (toolName) => {
     try {
-      if (toolName === "all" || toolName === "*") {
-        await installAllProjectSkills();
-        return;
-      }
-      await installProjectSkill(toolName);
+      await installProjectByName(toolName);
     } catch (err) {
       console.error(kleur_default.red(`
 \u2717 ${err.message}
@@ -41009,8 +41041,32 @@ function createInstallProjectCommand() {
   const listCmd = new Command("list").description("List available project skills").action(async () => {
     await listProjectSkills();
   });
+  const initCmd = new Command("init").description("Show project onboarding guidance (quality gates + service skills)").action(async () => {
+    await printProjectInitGuide();
+  });
   installProjectCmd.addCommand(listCmd);
+  installProjectCmd.addCommand(initCmd);
   return installProjectCmd;
+}
+function createProjectCommand() {
+  const projectCmd = new Command("project").description("Project skill onboarding and installation helpers");
+  projectCmd.command("init").description("Show project onboarding guidance (quality gates + service skills)").action(async () => {
+    await printProjectInitGuide();
+  });
+  projectCmd.command("list").description("List available project skills").action(async () => {
+    await listProjectSkills();
+  });
+  projectCmd.command("install").argument("<tool-name>", "Name of the project skill to install").description("Alias for xtrm install project <tool-name>").action(async (toolName) => {
+    try {
+      await installProjectByName(toolName);
+    } catch (err) {
+      console.error(kleur_default.red(`
+\u2717 ${err.message}
+`));
+      process.exit(1);
+    }
+  });
+  return projectCmd;
 }
 
 // src/commands/install.ts
@@ -55703,6 +55759,7 @@ program2.exitOverride((err) => {
   process.exit(1);
 });
 program2.addCommand(createInstallCommand());
+program2.addCommand(createProjectCommand());
 program2.addCommand(createStatusCommand());
 program2.addCommand(createResetCommand());
 program2.addCommand(createHelpCommand());

@@ -321,6 +321,46 @@ export async function installAllProjectSkills(projectRootOverride?: string): Pro
     }
 }
 
+export function buildProjectInitGuide(): string {
+    const lines = [
+        kleur.bold('\nProject Init — Recommended baseline\n'),
+        `${kleur.cyan('1) Install a quality gate skill (or equivalent checks):')}`,
+        kleur.dim('   - TypeScript projects: xtrm install project ts-quality-gate'),
+        kleur.dim('   - Python projects:     xtrm install project py-quality-gate'),
+        kleur.dim('   - TDD workflow:        xtrm install project tdd-guard'),
+        '',
+        `${kleur.cyan('2) Ensure your checks are actually configured in this repo:')}`,
+        kleur.dim('   - Testing: commands should run and fail when behavior regresses'),
+        kleur.dim('   - Linting/formatting: ESLint+Prettier (TS) or ruff (Python)'),
+        kleur.dim('   - Type checks: tsc (TS) or mypy/pyright (Python)'),
+        kleur.dim('   - Hooks only enforce what your project config defines'),
+        '',
+        `${kleur.cyan('3) Optional: Service Skills Set (service-skills-set)')}`,
+        kleur.dim('   - For multi-service/Docker repos with repeated operational workflows'),
+        kleur.dim('   - Adds project hooks + skills that route Claude to service-specific context'),
+        kleur.dim('   - Helps keep architecture knowledge persistent across sessions'),
+        '',
+        kleur.bold('Quick start commands:'),
+        kleur.dim('   xtrm install project list'),
+        kleur.dim('   xtrm install project ts-quality-gate   # or py-quality-gate / tdd-guard'),
+        '',
+    ];
+
+    return lines.join('\n');
+}
+
+async function printProjectInitGuide(): Promise<void> {
+    console.log(buildProjectInitGuide());
+}
+
+async function installProjectByName(toolName: string): Promise<void> {
+    if (toolName === 'all' || toolName === '*') {
+        await installAllProjectSkills();
+        return;
+    }
+    await installProjectSkill(toolName);
+}
+
 /**
  * List available project skills.
  */
@@ -395,11 +435,7 @@ export function createInstallProjectCommand(): Command {
         .argument('<tool-name>', 'Name of the project skill to install')
         .action(async (toolName: string) => {
             try {
-                if (toolName === 'all' || toolName === '*') {
-                    await installAllProjectSkills();
-                    return;
-                }
-                await installProjectSkill(toolName);
+                await installProjectByName(toolName);
             } catch (err: any) {
                 console.error(kleur.red(`\n✗ ${err.message}\n`));
                 process.exit(1);
@@ -413,7 +449,48 @@ export function createInstallProjectCommand(): Command {
             await listProjectSkills();
         });
 
+    const initCmd = new Command('init')
+        .description('Show project onboarding guidance (quality gates + service skills)')
+        .action(async () => {
+            await printProjectInitGuide();
+        });
+
     installProjectCmd.addCommand(listCmd);
+    installProjectCmd.addCommand(initCmd);
 
     return installProjectCmd;
+}
+
+export function createProjectCommand(): Command {
+    const projectCmd = new Command('project')
+        .description('Project skill onboarding and installation helpers');
+
+    projectCmd
+        .command('init')
+        .description('Show project onboarding guidance (quality gates + service skills)')
+        .action(async () => {
+            await printProjectInitGuide();
+        });
+
+    projectCmd
+        .command('list')
+        .description('List available project skills')
+        .action(async () => {
+            await listProjectSkills();
+        });
+
+    projectCmd
+        .command('install')
+        .argument('<tool-name>', 'Name of the project skill to install')
+        .description('Alias for xtrm install project <tool-name>')
+        .action(async (toolName: string) => {
+            try {
+                await installProjectByName(toolName);
+            } catch (err: any) {
+                console.error(kleur.red(`\n✗ ${err.message}\n`));
+                process.exit(1);
+            }
+        });
+
+    return projectCmd;
 }

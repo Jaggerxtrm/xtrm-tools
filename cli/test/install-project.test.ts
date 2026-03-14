@@ -5,12 +5,34 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import fsExtra from 'fs-extra';
 import {
+    buildProjectInitGuide,
+    createProjectCommand,
     deepMergeHooks,
     extractReadmeDescription,
     getAvailableProjectSkills,
     installAllProjectSkills,
     installProjectSkill,
 } from '../src/commands/install-project.js';
+
+describe('buildProjectInitGuide', () => {
+    it('includes recommended quality-gate skills and required config checks', () => {
+        const guide = buildProjectInitGuide();
+        expect(guide).toContain('ts-quality-gate');
+        expect(guide).toContain('py-quality-gate');
+        expect(guide).toContain('tdd-guard');
+        expect(guide.toLowerCase()).toContain('lint');
+        expect(guide.toLowerCase()).toContain('mypy');
+        expect(guide.toLowerCase()).toContain('service-skills-set');
+    });
+});
+
+describe('createProjectCommand', () => {
+    it('exposes init/list/install subcommands', () => {
+        const cmd = createProjectCommand();
+        const names = cmd.commands.map(c => c.name());
+        expect(names).toEqual(expect.arrayContaining(['init', 'list', 'install']));
+    });
+});
 
 describe('deepMergeHooks', () => {
     it('appends new hook entries without overwriting existing events', () => {

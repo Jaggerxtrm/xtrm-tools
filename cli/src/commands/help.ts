@@ -8,6 +8,7 @@ declare const __dirname: string;
 
 const HOOK_CATALOG: Array<{ file: string; event: string; desc: string; beads?: true }> = [
     { file: 'main-guard.mjs',               event: 'PreToolUse',       desc: 'Blocks direct edits on protected branches' },
+    { file: 'main-guard-post-push.mjs',     event: 'PostToolUse',      desc: 'After feature-branch push, reminds PR/merge/sync steps' },
     { file: 'skill-suggestion.py',           event: 'UserPromptSubmit', desc: 'Suggests relevant skills based on user prompt' },
     { file: 'serena-workflow-reminder.py',   event: 'SessionStart',     desc: 'Injects Serena semantic editing workflow reminder' },
     { file: 'type-safety-enforcement.py',    event: 'PreToolUse',       desc: 'Prevents risky Bash and enforces safe edit patterns' },

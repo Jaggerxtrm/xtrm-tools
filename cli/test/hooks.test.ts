@@ -20,11 +20,13 @@ function runHook(
   hookFile: string,
   input: Record<string, unknown>,
   env: Record<string, string> = {},
+  cwd?: string,
 ) {
   return spawnSync('node', [path.join(HOOKS_DIR, hookFile)], {
     input: JSON.stringify(input),
     encoding: 'utf8',
     env: { ...process.env, ...env },
+    cwd,
   });
 }
 
@@ -136,6 +138,75 @@ describe('main-guard.mjs — MAIN_GUARD_PROTECTED_BRANCHES', () => {
     expect(r.status).toBe(2);
     const out = parseHookJson(r.stdout);
     expect(out?.systemMessage).toContain('feature branch');
+  });
+});
+
+// ── main-guard-post-push.mjs ────────────────────────────────────────────────
+
+describe('main-guard-post-push.mjs', () => {
+  function createTempGitRepo(branch: string): string {
+    const repoDir = mkdtempSync(path.join(os.tmpdir(), 'xtrm-post-push-'));
+    spawnSync('git', ['init'], { cwd: repoDir, stdio: 'pipe' });
+    spawnSync('git', ['config', 'user.email', 'test@example.com'], { cwd: repoDir, stdio: 'pipe' });
+    spawnSync('git', ['config', 'user.name', 'Test User'], { cwd: repoDir, stdio: 'pipe' });
+    writeFileSync(path.join(repoDir, 'README.md'), '# test\n', 'utf8');
+    spawnSync('git', ['add', 'README.md'], { cwd: repoDir, stdio: 'pipe' });
+    spawnSync('git', ['commit', '-m', 'init'], { cwd: repoDir, stdio: 'pipe' });
+    const current = spawnSync('git', ['branch', '--show-current'], { cwd: repoDir, encoding: 'utf8', stdio: 'pipe' }).stdout.trim();
+    if (current !== branch) {
+      spawnSync('git', ['checkout', '-B', branch], { cwd: repoDir, stdio: 'pipe' });
+    }
+    return repoDir;
+  }
+
+  it('injects PR workflow reminder after successful feature-branch push command', () => {
+    const repoDir = createTempGitRepo('feature/test-push');
+    try {
+      const r = runHook(
+        'main-guard-post-push.mjs',
+        { tool_name: 'Bash', tool_input: { command: 'git push -u origin feature/test-push' }, cwd: repoDir },
+        { MAIN_GUARD_PROTECTED_BRANCHES: 'main,master' },
+        repoDir,
+      );
+      expect(r.status).toBe(0);
+      const out = parseHookJson(r.stdout);
+      expect(out?.systemMessage).toContain('gh pr create --fill');
+      expect(out?.systemMessage).toContain('gh pr merge --squash');
+    } finally {
+      rmSync(repoDir, { recursive: true, force: true });
+    }
+  });
+
+  it('does not emit reminder for non-push Bash commands', () => {
+    const repoDir = createTempGitRepo('feature/test-nopush');
+    try {
+      const r = runHook(
+        'main-guard-post-push.mjs',
+        { tool_name: 'Bash', tool_input: { command: 'git status' }, cwd: repoDir },
+        { MAIN_GUARD_PROTECTED_BRANCHES: 'main,master' },
+        repoDir,
+      );
+      expect(r.status).toBe(0);
+      expect(r.stdout.trim()).toBe('');
+    } finally {
+      rmSync(repoDir, { recursive: true, force: true });
+    }
+  });
+
+  it('does not emit reminder when current branch is protected', () => {
+    const repoDir = createTempGitRepo('main');
+    try {
+      const r = runHook(
+        'main-guard-post-push.mjs',
+        { tool_name: 'Bash', tool_input: { command: 'git push -u origin main' }, cwd: repoDir },
+        { MAIN_GUARD_PROTECTED_BRANCHES: 'main,master' },
+        repoDir,
+      );
+      expect(r.status).toBe(0);
+      expect(r.stdout.trim()).toBe('');
+    } finally {
+      rmSync(repoDir, { recursive: true, force: true });
+    }
   });
 });
 

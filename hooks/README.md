@@ -168,6 +168,25 @@ Installed globally to `~/.claude/hooks/` by `xtrm install`. Require Node.js.
 
 ---
 
+### main-guard-post-push.mjs
+
+**Purpose**: After a successful `git push` from a non-protected branch, injects a reminder for the next PR workflow steps.
+
+**Trigger**: PostToolUse (`Bash`) — only fires when command matches `git push` and appears successful.
+
+**Behavior**:
+- No blocking (informational only)
+- Skips protected branches (`main`/`master`)
+- Skips explicit pushes targeting protected branches
+
+**Guidance injected**:
+- `gh pr create --fill`
+- `gh pr merge --squash`
+- `git checkout main && git pull --ff-only`
+- Reminder to keep beads issue state updated
+
+---
+
 ### beads-gate-utils.mjs
 
 **Purpose**: Shared utility module imported by all beads gate hooks. Not registered as a hook itself.

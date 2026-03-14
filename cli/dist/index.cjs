@@ -41031,7 +41031,7 @@ function renderPlanTable(allChanges) {
     const missing = Object.values(changeSet).reduce((s, c) => s + c.missing.length, 0);
     const outdated = Object.values(changeSet).reduce((s, c) => s + c.outdated.length, 0);
     table.push([
-      kleur_default.white(import_path11.default.basename(target)),
+      kleur_default.white(formatTargetLabel(target)),
       missing > 0 ? kleur_default.green(String(missing)) : t.label("\u2014"),
       outdated > 0 ? kleur_default.yellow(String(outdated)) : t.label("\u2014"),
       kleur_default.bold().white(String(totalChanges))
@@ -41060,6 +41060,12 @@ async function renderSummaryCard(allChanges, totalCount, allSkipped, isDryRun) {
   }) + "\n");
 }
 var BEADS_HOOK_PATTERN = /^beads-/;
+function formatTargetLabel(target) {
+  const normalized = target.replace(/\\/g, "/").toLowerCase();
+  if (normalized.endsWith("/.agents/skills") || normalized.includes("/.agents/skills/")) return "~/.agents/skills";
+  if (normalized.endsWith("/.claude") || normalized.includes("/.claude/")) return "~/.claude";
+  return import_path11.default.basename(target);
+}
 function filterBeadsFromChangeSet(changeSet) {
   return {
     ...changeSet,
@@ -41164,7 +41170,7 @@ async function runGlobalInstall(flags, installOpts = {}) {
   }
   const diffTasks = new Listr(
     targets.map((target) => ({
-      title: import_path11.default.basename(target),
+      title: formatTargetLabel(target),
       task: async (listCtx, task) => {
         try {
           let changeSet = await calculateDiff(repoRoot, target, false);
@@ -41179,13 +41185,13 @@ async function runGlobalInstall(flags, installOpts = {}) {
             (sum, c) => sum + c.missing.length + c.outdated.length + c.drifted.length,
             0
           );
-          task.title = `${import_path11.default.basename(target)}${t.muted(` \u2014 ${totalChanges} change${totalChanges !== 1 ? "s" : ""}`)}`;
+          task.title = `${formatTargetLabel(target)}${t.muted(` \u2014 ${totalChanges} change${totalChanges !== 1 ? "s" : ""}`)}`;
           if (totalChanges > 0) {
             listCtx.allChanges.push({ target, changeSet, totalChanges, skippedDrifted: [] });
           }
         } catch (err) {
           if (err instanceof PruneModeReadError) {
-            task.title = `${import_path11.default.basename(target)} ${kleur_default.red("(skipped \u2014 cannot read in prune mode)")}`;
+            task.title = `${formatTargetLabel(target)} ${kleur_default.red("(skipped \u2014 cannot read in prune mode)")}`;
           } else {
             throw err;
           }
@@ -41221,7 +41227,7 @@ async function runGlobalInstall(flags, installOpts = {}) {
   let totalCount = 0;
   for (const { target, changeSet, skippedDrifted } of allChanges) {
     console.log(t.bold(`
-  ${sym.arrow} ${import_path11.default.basename(target)}`));
+  ${sym.arrow} ${formatTargetLabel(target)}`));
     const count = await executeSync(repoRoot, target, changeSet, syncMode, "sync", dryRun, void 0, {
       skipMcp: noMcp,
       force
@@ -41315,7 +41321,7 @@ function createInstallCommand() {
     }
     const diffTasks = new Listr(
       targets.map((target) => ({
-        title: import_path11.default.basename(target),
+        title: formatTargetLabel(target),
         task: async (listCtx, task) => {
           try {
             let changeSet = await calculateDiff(repoRoot, target, prune);
@@ -41332,13 +41338,13 @@ function createInstallCommand() {
               (sum, c) => sum + c.missing.length + c.outdated.length + c.drifted.length,
               0
             );
-            task.title = `${import_path11.default.basename(target)}${t.muted(` \u2014 ${totalChanges} change${totalChanges !== 1 ? "s" : ""}`)}`;
+            task.title = `${formatTargetLabel(target)}${t.muted(` \u2014 ${totalChanges} change${totalChanges !== 1 ? "s" : ""}`)}`;
             if (totalChanges > 0) {
               listCtx.allChanges.push({ target, changeSet, totalChanges, skippedDrifted: [] });
             }
           } catch (err) {
             if (err instanceof PruneModeReadError) {
-              task.title = `${import_path11.default.basename(target)} ${kleur_default.red("(skipped \u2014 cannot read in prune mode)")}`;
+              task.title = `${formatTargetLabel(target)} ${kleur_default.red("(skipped \u2014 cannot read in prune mode)")}`;
             } else {
               throw err;
             }
@@ -41360,7 +41366,7 @@ function createInstallCommand() {
       };
       for (const target of targets) {
         console.log(t.bold(`
-  ${sym.arrow} ${import_path11.default.basename(target)}`));
+  ${sym.arrow} ${formatTargetLabel(target)}`));
         await executeSync(repoRoot, target, emptyChangeSet, syncMode, "sync", false);
       }
     }
@@ -41389,7 +41395,7 @@ function createInstallCommand() {
     let totalCount = 0;
     for (const { target, changeSet, skippedDrifted } of allChanges) {
       console.log(t.bold(`
-  ${sym.arrow} ${import_path11.default.basename(target)}`));
+  ${sym.arrow} ${formatTargetLabel(target)}`));
       const count = await executeSync(repoRoot, target, changeSet, syncMode, syncType, dryRun);
       totalCount += count;
       for (const [category, cat] of Object.entries(changeSet)) {
@@ -55230,6 +55236,12 @@ function getManifestPath(projectDir) {
 // src/commands/status.ts
 var import_fs_extra12 = __toESM(require_lib2(), 1);
 var import_path13 = __toESM(require("path"), 1);
+function formatTargetLabel2(target) {
+  const normalized = target.replace(/\\/g, "/").toLowerCase();
+  if (normalized.endsWith("/.agents/skills") || normalized.includes("/.agents/skills/")) return "~/.agents/skills";
+  if (normalized.endsWith("/.claude") || normalized.includes("/.claude/")) return "~/.claude";
+  return import_path13.default.basename(target);
+}
 function formatRelativeTime(timestamp) {
   const now = Date.now();
   const diff = now - timestamp;
@@ -55270,7 +55282,7 @@ function createStatusCommand() {
         (sum, c) => sum + c.missing.length + c.outdated.length + c.drifted.length,
         0
       );
-      results.push({ path: target, name: import_path13.default.basename(target), lastSync, changes: changeSet, totalChanges });
+      results.push({ path: target, name: formatTargetLabel2(target), lastSync, changes: changeSet, totalChanges });
     }
     if (json2) {
       console.log(JSON.stringify({ targets: results }, null, 2));
@@ -55380,6 +55392,32 @@ async function readSkillsFromDir(dir) {
   }
   return skills;
 }
+async function readProjectSkillsFromDir(dir) {
+  if (!await import_fs_extra13.default.pathExists(dir)) return [];
+  const entries = await import_fs_extra13.default.readdir(dir);
+  const skills = [];
+  for (const name of entries.sort()) {
+    const readme = import_path14.default.join(dir, name, "README.md");
+    if (!await import_fs_extra13.default.pathExists(readme)) continue;
+    const content = await import_fs_extra13.default.readFile(readme, "utf8");
+    const descLine = content.split("\n").find((line) => {
+      const trimmed = line.trim();
+      return Boolean(trimmed) && !trimmed.startsWith("#") && !trimmed.startsWith("[") && !trimmed.startsWith("<");
+    }) || "";
+    skills.push({ name, desc: descLine.replace(/[*_`]/g, "").trim() });
+  }
+  return skills;
+}
+function resolvePkgRootFallback() {
+  const candidates = [
+    import_path14.default.resolve(__dirname, "../.."),
+    import_path14.default.resolve(__dirname, "../../..")
+  ];
+  const match = candidates.find(
+    (candidate) => import_fs_extra13.default.existsSync(import_path14.default.join(candidate, "skills")) || import_fs_extra13.default.existsSync(import_path14.default.join(candidate, "project-skills"))
+  );
+  return match || null;
+}
 function col(s, width) {
   return s.length >= width ? s.slice(0, width - 1) + "\u2026" : s.padEnd(width);
 }
@@ -55391,8 +55429,11 @@ function createHelpCommand() {
     } catch {
       repoRoot = "";
     }
-    const skills = repoRoot ? await readSkillsFromDir(import_path14.default.join(repoRoot, "skills")) : [];
-    const projectSkills = repoRoot ? await readSkillsFromDir(import_path14.default.join(repoRoot, "project-skills")) : [];
+    const pkgRoot = resolvePkgRootFallback();
+    const skillsRoot = repoRoot || pkgRoot || "";
+    const projectSkillsRoot = repoRoot || pkgRoot || "";
+    const skills = skillsRoot ? await readSkillsFromDir(import_path14.default.join(skillsRoot, "skills")) : [];
+    const projectSkills = projectSkillsRoot ? await readProjectSkillsFromDir(import_path14.default.join(projectSkillsRoot, "project-skills")) : [];
     const W = 80;
     const hr = kleur_default.dim("-".repeat(W));
     const section = (title) => `
@@ -55448,11 +55489,12 @@ ${hr}`;
       (s) => `  ${kleur_default.white(col(s.name, 30))}${kleur_default.dim(s.desc)}`
     ).join("\n");
     const psSection = [
-      section("PROJECT SKILLS"),
+      section("PROJECT SKILLS + HOOKS"),
       "",
-      projectSkills.length ? psRows : kleur_default.dim("  (none found)"),
+      projectSkills.length ? psRows : kleur_default.dim("  (none found in package)"),
       "",
-      `  ${kleur_default.dim("Install: xtrm install project <name>  |  xtrm install project list")}`
+      `  ${kleur_default.dim("Install: xtrm install project <name>  |  xtrm install project list")}`,
+      `  ${kleur_default.dim("Each project skill can install .claude/skills plus project hooks/settings.")}`
     ].join("\n");
     const otherSection = [
       section("OTHER COMMANDS"),

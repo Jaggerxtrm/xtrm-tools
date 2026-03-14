@@ -43,7 +43,7 @@ function renderPlanTable(allChanges: TargetChanges[]): void {
         const outdated = Object.values(changeSet).reduce((s: number, c: any) => s + c.outdated.length, 0) as number;
 
         table.push([
-            kleur.white(path.basename(target)),
+            kleur.white(formatTargetLabel(target)),
             missing > 0 ? kleur.green(String(missing)) : t.label('—'),
             outdated > 0 ? kleur.yellow(String(outdated)) : t.label('—'),
             kleur.bold().white(String(totalChanges)),
@@ -85,6 +85,13 @@ import { execSync } from 'child_process';
 
 import { spawnSync } from 'child_process';
 const BEADS_HOOK_PATTERN = /^beads-/;
+
+function formatTargetLabel(target: string): string {
+    const normalized = target.replace(/\\/g, '/').toLowerCase();
+    if (normalized.endsWith('/.agents/skills') || normalized.includes('/.agents/skills/')) return '~/.agents/skills';
+    if (normalized.endsWith('/.claude') || normalized.includes('/.claude/')) return '~/.claude';
+    return path.basename(target);
+}
 
 function filterBeadsFromChangeSet(changeSet: ChangeSet): ChangeSet {
     return {
@@ -215,7 +222,7 @@ async function runGlobalInstall(
 
     const diffTasks = new Listr<DiffCtx>(
         targets.map(target => ({
-            title: path.basename(target),
+            title: formatTargetLabel(target),
             task: async (listCtx, task) => {
                 try {
                     let changeSet = await calculateDiff(repoRoot, target, false);
@@ -235,13 +242,13 @@ async function runGlobalInstall(
                     const totalChanges = Object.values(changeSet).reduce(
                         (sum, c: any) => sum + c.missing.length + c.outdated.length + c.drifted.length, 0,
                     );
-                    task.title = `${path.basename(target)}${t.muted(` — ${totalChanges} change${totalChanges !== 1 ? 's' : ''}`)}`;
+                    task.title = `${formatTargetLabel(target)}${t.muted(` — ${totalChanges} change${totalChanges !== 1 ? 's' : ''}`)}`;
                     if (totalChanges > 0) {
                         listCtx.allChanges.push({ target, changeSet, totalChanges, skippedDrifted: [] });
                     }
                 } catch (err) {
                     if (err instanceof PruneModeReadError) {
-                        task.title = `${path.basename(target)} ${kleur.red('(skipped — cannot read in prune mode)')}`;
+                        task.title = `${formatTargetLabel(target)} ${kleur.red('(skipped — cannot read in prune mode)')}`;
                     } else {
                         throw err;
                     }
@@ -283,7 +290,7 @@ async function runGlobalInstall(
     let totalCount = 0;
 
     for (const { target, changeSet, skippedDrifted } of allChanges) {
-        console.log(t.bold(`\n  ${sym.arrow} ${path.basename(target)}`));
+        console.log(t.bold(`\n  ${sym.arrow} ${formatTargetLabel(target)}`));
 
         const count = await executeSync(repoRoot, target, changeSet, syncMode, 'sync', dryRun, undefined, {
             skipMcp: noMcp,
@@ -409,7 +416,7 @@ export function createInstallCommand(): Command {
             // Phase 1: Diff (concurrent via listr2)
             const diffTasks = new Listr<DiffCtx>(
                 targets.map(target => ({
-                    title: path.basename(target),
+                    title: formatTargetLabel(target),
                     task: async (listCtx, task) => {
                         try {
                             let changeSet = await calculateDiff(repoRoot, target, prune);
@@ -431,13 +438,13 @@ export function createInstallCommand(): Command {
                             const totalChanges = Object.values(changeSet).reduce(
                                 (sum, c: any) => sum + c.missing.length + c.outdated.length + c.drifted.length, 0,
                             );
-                            task.title = `${path.basename(target)}${t.muted(` — ${totalChanges} change${totalChanges !== 1 ? 's' : ''}`)}`;
+                            task.title = `${formatTargetLabel(target)}${t.muted(` — ${totalChanges} change${totalChanges !== 1 ? 's' : ''}`)}`;
                             if (totalChanges > 0) {
                                 listCtx.allChanges.push({ target, changeSet, totalChanges, skippedDrifted: [] });
                             }
                         } catch (err) {
                             if (err instanceof PruneModeReadError) {
-                                task.title = `${path.basename(target)} ${kleur.red('(skipped — cannot read in prune mode)')}`;
+                                task.title = `${formatTargetLabel(target)} ${kleur.red('(skipped — cannot read in prune mode)')}`;
                             } else {
                                 throw err;
                             }
@@ -461,7 +468,7 @@ export function createInstallCommand(): Command {
                     'antigravity-workflows': { missing: [] as string[], outdated: [] as string[], drifted: [] as string[], total: 0 },
                 };
                 for (const target of targets) {
-                    console.log(t.bold(`\n  ${sym.arrow} ${path.basename(target)}`));
+                    console.log(t.bold(`\n  ${sym.arrow} ${formatTargetLabel(target)}`));
                     await executeSync(repoRoot, target, emptyChangeSet, syncMode, 'sync', false);
                 }
             }
@@ -498,7 +505,7 @@ export function createInstallCommand(): Command {
             let totalCount = 0;
 
             for (const { target, changeSet, skippedDrifted } of allChanges) {
-                console.log(t.bold(`\n  ${sym.arrow} ${path.basename(target)}`));
+                console.log(t.bold(`\n  ${sym.arrow} ${formatTargetLabel(target)}`));
 
                 const count = await executeSync(repoRoot, target, changeSet, syncMode, syncType, dryRun);
                 totalCount += count;

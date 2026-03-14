@@ -4,6 +4,7 @@ import kleur from 'kleur';
 import path from 'path';
 import fs from 'fs-extra';
 import { findRepoRoot } from '../utils/repo-root.js';
+declare const __dirname: string;
 
 const HOOK_CATALOG: Array<{ file: string; event: string; desc: string; beads?: true }> = [
     { file: 'main-guard.mjs',               event: 'PreToolUse',       desc: 'Blocks direct edits on protected branches' },
@@ -33,6 +34,34 @@ async function readSkillsFromDir(dir: string): Promise<Array<{ name: string; des
     return skills;
 }
 
+async function readProjectSkillsFromDir(dir: string): Promise<Array<{ name: string; desc: string }>> {
+    if (!(await fs.pathExists(dir))) return [];
+    const entries = await fs.readdir(dir);
+    const skills: Array<{ name: string; desc: string }> = [];
+    for (const name of entries.sort()) {
+        const readme = path.join(dir, name, 'README.md');
+        if (!(await fs.pathExists(readme))) continue;
+        const content = await fs.readFile(readme, 'utf8');
+        const descLine = content.split('\n').find(line => {
+            const trimmed = line.trim();
+            return Boolean(trimmed) && !trimmed.startsWith('#') && !trimmed.startsWith('[') && !trimmed.startsWith('<');
+        }) || '';
+        skills.push({ name, desc: descLine.replace(/[*_`]/g, '').trim() });
+    }
+    return skills;
+}
+
+function resolvePkgRootFallback(): string | null {
+    const candidates = [
+        path.resolve(__dirname, '../..'),
+        path.resolve(__dirname, '../../..'),
+    ];
+    const match = candidates.find(candidate =>
+        fs.existsSync(path.join(candidate, 'skills')) || fs.existsSync(path.join(candidate, 'project-skills'))
+    );
+    return match || null;
+}
+
 function col(s: string, width: number): string {
     return s.length >= width ? s.slice(0, width - 1) + '\u2026' : s.padEnd(width);
 }
@@ -43,9 +72,12 @@ export function createHelpCommand(): Command {
         .action(async () => {
             let repoRoot: string;
             try { repoRoot = await findRepoRoot(); } catch { repoRoot = ''; }
+            const pkgRoot = resolvePkgRootFallback();
 
-            const skills = repoRoot ? await readSkillsFromDir(path.join(repoRoot, 'skills')) : [];
-            const projectSkills = repoRoot ? await readSkillsFromDir(path.join(repoRoot, 'project-skills')) : [];
+            const skillsRoot = repoRoot || pkgRoot || '';
+            const projectSkillsRoot = repoRoot || pkgRoot || '';
+            const skills = skillsRoot ? await readSkillsFromDir(path.join(skillsRoot, 'skills')) : [];
+            const projectSkills = projectSkillsRoot ? await readProjectSkillsFromDir(path.join(projectSkillsRoot, 'project-skills')) : [];
 
             const W = 80;
             const hr = kleur.dim('-'.repeat(W));
@@ -108,11 +140,12 @@ export function createHelpCommand(): Command {
             ).join('\n');
 
             const psSection = [
-                section('PROJECT SKILLS'),
+                section('PROJECT SKILLS + HOOKS'),
                 '',
-                projectSkills.length ? psRows : kleur.dim('  (none found)'),
+                projectSkills.length ? psRows : kleur.dim('  (none found in package)'),
                 '',
                 `  ${kleur.dim('Install: xtrm install project <name>  |  xtrm install project list')}`,
+                `  ${kleur.dim('Each project skill can install .claude/skills plus project hooks/settings.')}`,
             ].join('\n');
 
             const otherSection = [

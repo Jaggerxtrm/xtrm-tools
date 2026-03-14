@@ -12,6 +12,13 @@ import path from 'path';
 // @ts-ignore
 import Conf from 'conf';
 
+function formatTargetLabel(target: string): string {
+    const normalized = target.replace(/\\/g, '/').toLowerCase();
+    if (normalized.endsWith('/.agents/skills') || normalized.includes('/.agents/skills/')) return '~/.agents/skills';
+    if (normalized.endsWith('/.claude') || normalized.includes('/.claude/')) return '~/.claude';
+    return path.basename(target);
+}
+
 function formatRelativeTime(timestamp: number): string {
     const now = Date.now();
     const diff = now - timestamp;
@@ -71,7 +78,7 @@ export function createStatusCommand(): Command {
                     (sum: number, c: any) => sum + c.missing.length + c.outdated.length + c.drifted.length, 0,
                 ) as number;
 
-                results.push({ path: target, name: path.basename(target), lastSync, changes: changeSet as any, totalChanges });
+                results.push({ path: target, name: formatTargetLabel(target), lastSync, changes: changeSet as any, totalChanges });
             }
 
             // ── JSON output ──────────────────────────────────────────────────

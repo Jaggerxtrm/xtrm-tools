@@ -38,14 +38,9 @@ const hookEventName = input.hook_event_name ?? 'PreToolUse';
 function deny(reason) {
   process.stdout.write(JSON.stringify({
     systemMessage: reason,
-    hookSpecificOutput: {
-      hookEventName,
-      permissionDecision: 'deny',
-      permissionDecisionReason: reason,
-    },
   }));
   process.stdout.write('\n');
-  process.exit(0);
+  process.exit(2);
 }
 
 const WRITE_TOOLS = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit']);

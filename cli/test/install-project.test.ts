@@ -123,6 +123,7 @@ describe('installProjectSkill', () => {
         const settings = await fsExtra.readJson(path.join(tmpDir, '.claude', 'settings.json'));
         expect(settings.hooks.PreToolUse).toHaveLength(2);
         expect(settings.hooks.CustomEvent).toEqual([{ command: 'echo keep-me' }]);
+        expect(await fsExtra.pathExists(path.join(tmpDir, '.claude', 'hooks', 'tdd-guard-pretool-bridge.cjs'))).toBe(true);
     });
 
     it('installs Node hook files that execute inside type-module projects', async () => {

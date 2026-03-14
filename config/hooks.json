@@ -13,12 +13,12 @@
     ],
     "PreToolUse": [
       {
-        "matcher": "Write|Edit|MultiEdit",
+        "matcher": "Write|Edit|MultiEdit|mcp__serena__rename_symbol|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol",
         "script": "main-guard.mjs",
         "timeout": 5000
       },
       {
-        "matcher": "Read|Edit",
+        "matcher": "Read|Edit|mcp__serena__rename_symbol|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol",
         "script": "serena-workflow-reminder.py"
       },
       {
@@ -27,7 +27,7 @@
         "timeout": 30000
       },
       {
-        "matcher": "Edit|Write",
+        "matcher": "Edit|Write|mcp__serena__rename_symbol|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol",
         "script": "type-safety-enforcement.py"
       },
       {
@@ -36,7 +36,7 @@
         "timeout": 8000
       },
       {
-        "matcher": "Edit|Write|MultiEdit|NotebookEdit|mcp__serena__*",
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit|mcp__serena__rename_symbol|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol",
         "script": "beads-edit-gate.mjs",
         "timeout": 5000
       },

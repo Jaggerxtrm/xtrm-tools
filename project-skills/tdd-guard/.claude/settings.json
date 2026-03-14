@@ -2,11 +2,11 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Write|Edit|MultiEdit|TodoWrite",
+        "matcher": "Write|Edit|MultiEdit|TodoWrite|mcp__serena__rename_symbol|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol",
         "hooks": [
           {
             "type": "command",
-            "command": "tdd-guard",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/tdd-guard-pretool-bridge.cjs\"",
             "timeout": 30
           }
         ]

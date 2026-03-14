@@ -39,7 +39,7 @@ const SETTINGS_HOOKS: Record<string, unknown[]> = {
     ],
     PreToolUse: [
         {
-            matcher: 'Read|Write|Edit|Glob|Grep|Bash',
+            matcher: 'Read|Write|Edit|Glob|Grep|Bash|mcp__serena__rename_symbol|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol',
             hooks: [{
                 type: 'command',
                 command: 'python3 "$CLAUDE_PROJECT_DIR/.claude/skills/using-service-skills/scripts/skill_activator.py"',
@@ -48,7 +48,7 @@ const SETTINGS_HOOKS: Record<string, unknown[]> = {
     ],
     PostToolUse: [
         {
-            matcher: 'Write|Edit',
+            matcher: 'Write|Edit|mcp__serena__rename_symbol|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol',
             hooks: [{
                 type: 'command',
                 command: 'python3 "$CLAUDE_PROJECT_DIR/.claude/skills/updating-service-skills/scripts/drift_detector.py" check-hook',

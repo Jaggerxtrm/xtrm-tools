@@ -182,7 +182,7 @@ Installed globally to `~/.claude/hooks/` by `xtrm install`. Require Node.js.
 
 **Purpose**: Blocks file edits when the current session has not claimed a beads issue via `bd kv`. Prevents free-riding in multi-agent and multi-session scenarios.
 
-**Trigger**: PreToolUse (`Edit|Write|MultiEdit|NotebookEdit|mcp__serena__*`)
+**Trigger**: PreToolUse (`Edit|Write|MultiEdit|NotebookEdit|mcp__serena__rename_symbol|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol`)
 
 **Behavior**:
 - Session has claim (`bd kv get "claimed:<session_id>"`) → allow

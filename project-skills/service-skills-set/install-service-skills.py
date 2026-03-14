@@ -55,6 +55,7 @@ SETTINGS_HOOKS = {
 
 MARKER_DOC       = "# [jaggers] doc-reminder"
 MARKER_STALENESS = "# [jaggers] skill-staleness"
+MARKER_CHAIN     = "# [jaggers] chain-githooks"
 
 
 def get_project_root() -> Path:
@@ -126,25 +127,54 @@ def install_git_hooks(project_root: Path) -> None:
          f"\n{MARKER_STALENESS}\nif command -v python3 &>/dev/null && [ -f \"{staleness_script}\" ]; then\n    python3 \"{staleness_script}\" || true\nfi\n"),
     ]
 
-    changed = False
     for hook_path, marker, snippet in snippets:
         content = hook_path.read_text(encoding="utf-8")
         if marker not in content:
             hook_path.write_text(content + snippet, encoding="utf-8")
             print(f"{GREEN}  ✓{NC} {hook_path.relative_to(project_root)}")
-            changed = True
         else:
             print(f"{YELLOW}  ○{NC} already installed: {hook_path.name}")
 
-    if changed:
-        git_dir = project_root / ".git" / "hooks"
-        git_dir.mkdir(parents=True, exist_ok=True)
-        for src, name in ((pre_commit, "pre-commit"), (pre_push, "pre-push")):
-            if src.exists():
-                dest = git_dir / name
-                shutil.copy2(src, dest)
-                dest.chmod(0o755)
-        print(f"{GREEN}  ✓{NC} activated in .git/hooks/")
+    hooks_path = ""
+    try:
+        r = subprocess.run(
+            ["git", "config", "--get", "core.hooksPath"],
+            cwd=project_root,
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+        if r.returncode == 0:
+            hooks_path = r.stdout.strip()
+    except Exception:
+        hooks_path = ""
+
+    active_hooks_dir = (Path(hooks_path) if Path(hooks_path).is_absolute() else project_root / hooks_path) if hooks_path else (project_root / ".git" / "hooks")
+    activation_targets = {project_root / ".git" / "hooks", active_hooks_dir}
+
+    for hooks_dir in activation_targets:
+        hooks_dir.mkdir(parents=True, exist_ok=True)
+        for name, source_hook in (("pre-commit", pre_commit), ("pre-push", pre_push)):
+            target_hook = hooks_dir / name
+            if not target_hook.exists():
+                target_hook.write_text("#!/usr/bin/env bash\n", encoding="utf-8")
+            target_hook.chmod(0o755)
+
+            if target_hook.resolve() == source_hook.resolve():
+                continue
+
+            chain_snippet = (
+                f"\n{MARKER_CHAIN}\n"
+                f"if [ -x \"{source_hook}\" ]; then\n"
+                f"    \"{source_hook}\" \"$@\"\n"
+                "fi\n"
+            )
+            target_content = target_hook.read_text(encoding="utf-8")
+            if MARKER_CHAIN not in target_content:
+                target_hook.write_text(target_content + chain_snippet, encoding="utf-8")
+
+    print(f"{GREEN}  ✓{NC} activated in .git/hooks/")
 
 
 def main() -> None:

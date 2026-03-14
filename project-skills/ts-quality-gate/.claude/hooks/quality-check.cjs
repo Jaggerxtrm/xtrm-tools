@@ -861,6 +861,26 @@ class QualityChecker {
         });
       }
 
+      // Check for debugger statements
+      const debuggerRule = config._fileConfig.rules?.debugger || {};
+      if (debuggerRule.enabled !== false) {
+        lines.forEach((line, index) => {
+          if (/\bdebugger\b/.test(line)) {
+            const severity = debuggerRule.severity || 'error';
+            const message =
+              debuggerRule.message || 'Remove debugger statements before committing';
+
+            if (severity === 'error') {
+              this.errors.push(`Found debugger statement in ${this.filePath} - ${message}`);
+              console.error(`  Line ${index + 1}: ${line.trim()}`);
+              foundIssues = true;
+            } else {
+              log.warning(`Debugger statement at line ${index + 1}: ${message}`);
+            }
+          }
+        });
+      }
+
       // Check for TODO/FIXME comments
       lines.forEach((line, index) => {
         if (/TODO|FIXME/.test(line)) {
@@ -1054,7 +1074,21 @@ function extractFilePath(input) {
     return null;
   }
 
-  return tool_input.file_path || tool_input.path || tool_input.notebook_path || null;
+  const filePath =
+    tool_input.file_path ||
+    tool_input.path ||
+    tool_input.notebook_path ||
+    tool_input.relative_path ||
+    null;
+  if (!filePath) {
+    return null;
+  }
+
+  if (path.isAbsolute(filePath)) {
+    return filePath;
+  }
+
+  return path.join(projectRoot, filePath);
 }
 
 /**
@@ -1178,6 +1212,7 @@ async function main() {
       e.includes('ESLint found issues') ||
       e.includes('Prettier formatting issues') ||
       e.includes('console statements') ||
+      e.includes('debugger statement') ||
       e.includes("'as any' usage") ||
       e.includes('were auto-fixed'),
   );

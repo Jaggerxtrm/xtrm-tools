@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdtemp, rm } from 'node:fs/promises';
+import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import fsExtra from 'fs-extra';
@@ -107,5 +108,24 @@ describe('installGitHooks', () => {
         const content = await fsExtra.readFile(path.join(tmpDir, '.githooks', 'pre-commit'), 'utf8');
         const count = (content.match(/# \[jaggers\] doc-reminder/g) ?? []).length;
         expect(count).toBe(1);
+    });
+
+    it('chains hooks into configured core.hooksPath when beads owns hooks path', async () => {
+        spawnSync('git', ['init'], { cwd: tmpDir, stdio: 'pipe' });
+        spawnSync('git', ['config', 'core.hooksPath', '.beads/hooks'], { cwd: tmpDir, stdio: 'pipe' });
+
+        await installGitHooks(tmpDir, ACTUAL_CLAUDE_SRC);
+
+        const beadsPreCommit = path.join(tmpDir, '.beads', 'hooks', 'pre-commit');
+        const beadsPrePush = path.join(tmpDir, '.beads', 'hooks', 'pre-push');
+        expect(await fsExtra.pathExists(beadsPreCommit)).toBe(true);
+        expect(await fsExtra.pathExists(beadsPrePush)).toBe(true);
+
+        const preCommitContent = await fsExtra.readFile(beadsPreCommit, 'utf8');
+        const prePushContent = await fsExtra.readFile(beadsPrePush, 'utf8');
+        expect(preCommitContent).toContain('# [jaggers] chain-githooks');
+        expect(prePushContent).toContain('# [jaggers] chain-githooks');
+        expect(preCommitContent).toContain(path.join(tmpDir, '.githooks', 'pre-commit'));
+        expect(prePushContent).toContain(path.join(tmpDir, '.githooks', 'pre-push'));
     });
 });

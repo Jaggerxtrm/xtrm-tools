@@ -60,6 +60,7 @@ const SETTINGS_HOOKS: Record<string, unknown[]> = {
 
 const MARKER_DOC = '# [jaggers] doc-reminder';
 const MARKER_STALENESS = '# [jaggers] skill-staleness';
+const MARKER_CHAIN = '# [jaggers] chain-githooks';
 
 // ─── Pure functions (exported for testing) ───────────────────────────────────
 
@@ -139,7 +140,6 @@ export async function installGitHooks(projectRoot: string, skillsSrc: string = S
     ];
 
     const hookFiles: { name: string; status: 'added' | 'already-present' }[] = [];
-    let anyAdded = false;
 
     for (const [hookPath, marker, snippet] of snippets) {
         const content = await fs.readFile(hookPath, 'utf8');
@@ -147,20 +147,47 @@ export async function installGitHooks(projectRoot: string, skillsSrc: string = S
         if (!content.includes(marker)) {
             await fs.writeFile(hookPath, content + snippet);
             hookFiles.push({ name, status: 'added' });
-            anyAdded = true;
         } else {
             hookFiles.push({ name, status: 'already-present' });
         }
     }
 
-    if (anyAdded) {
-        const gitHooksDir = path.join(projectRoot, '.git', 'hooks');
-        await fs.mkdirp(gitHooksDir);
-        for (const [src, name] of [[preCommit, 'pre-commit'], [prePush, 'pre-push']] as const) {
-            if (await fs.pathExists(src)) {
-                const dest = path.join(gitHooksDir, name);
-                await fs.copy(src, dest, { overwrite: true });
-                await fs.chmod(dest, 0o755);
+    const hooksPathResult = spawnSync('git', ['config', '--get', 'core.hooksPath'], {
+        cwd: projectRoot,
+        encoding: 'utf8',
+        timeout: 5000,
+    });
+    const configuredHooksPath = hooksPathResult.status === 0 ? hooksPathResult.stdout.trim() : '';
+    const activeHooksDir = configuredHooksPath
+        ? (path.isAbsolute(configuredHooksPath)
+            ? configuredHooksPath
+            : path.join(projectRoot, configuredHooksPath))
+        : path.join(projectRoot, '.git', 'hooks');
+
+    const activationTargets = new Set([path.join(projectRoot, '.git', 'hooks'), activeHooksDir]);
+    for (const hooksDir of activationTargets) {
+        await fs.mkdirp(hooksDir);
+
+        for (const [name, sourceHook] of [['pre-commit', preCommit], ['pre-push', prePush]] as const) {
+            const targetHook = path.join(hooksDir, name);
+            if (!await fs.pathExists(targetHook)) {
+                await fs.writeFile(targetHook, '#!/usr/bin/env bash\n', { mode: 0o755 });
+            } else {
+                await fs.chmod(targetHook, 0o755);
+            }
+
+            if (path.resolve(targetHook) === path.resolve(sourceHook)) {
+                continue;
+            }
+
+            const chainSnippet =
+                `\n${MARKER_CHAIN}\n` +
+                `if [ -x "${sourceHook}" ]; then\n` +
+                `    "${sourceHook}" "$@"\n` +
+                'fi\n';
+            const targetContent = await fs.readFile(targetHook, 'utf8');
+            if (!targetContent.includes(MARKER_CHAIN)) {
+                await fs.writeFile(targetHook, targetContent + chainSnippet);
             }
         }
     }

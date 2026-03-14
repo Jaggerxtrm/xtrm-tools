@@ -40728,11 +40728,12 @@ var import_path12 = __toESM(require("path"), 1);
 // src/commands/install-project.ts
 var import_path11 = __toESM(require("path"), 1);
 var import_fs_extra11 = __toESM(require_lib2(), 1);
-var import_child_process2 = require("child_process");
+var import_child_process3 = require("child_process");
 
 // src/commands/install-service-skills.ts
 var import_path10 = __toESM(require("path"), 1);
 var import_fs_extra10 = __toESM(require_lib2(), 1);
+var import_child_process2 = require("child_process");
 function resolvePkgRoot() {
   const candidates = [
     import_path10.default.resolve(__dirname, "../.."),
@@ -40748,6 +40749,7 @@ var PKG_ROOT = resolvePkgRoot();
 var SKILLS_SRC = import_path10.default.join(PKG_ROOT, "project-skills", "service-skills-set", ".claude");
 var MARKER_DOC = "# [jaggers] doc-reminder";
 var MARKER_STALENESS = "# [jaggers] skill-staleness";
+var MARKER_CHAIN = "# [jaggers] chain-githooks";
 async function installGitHooks(projectRoot, skillsSrc = SKILLS_SRC) {
   const gitHooksSrc = import_path10.default.join(skillsSrc, "git-hooks");
   const gitHooksDest = import_path10.default.join(projectRoot, ".claude", "git-hooks");
@@ -40785,26 +40787,45 @@ fi
     ]
   ];
   const hookFiles = [];
-  let anyAdded = false;
   for (const [hookPath, marker, snippet] of snippets) {
     const content = await import_fs_extra10.default.readFile(hookPath, "utf8");
     const name = import_path10.default.basename(hookPath);
     if (!content.includes(marker)) {
       await import_fs_extra10.default.writeFile(hookPath, content + snippet);
       hookFiles.push({ name, status: "added" });
-      anyAdded = true;
     } else {
       hookFiles.push({ name, status: "already-present" });
     }
   }
-  if (anyAdded) {
-    const gitHooksDir = import_path10.default.join(projectRoot, ".git", "hooks");
-    await import_fs_extra10.default.mkdirp(gitHooksDir);
-    for (const [src, name] of [[preCommit, "pre-commit"], [prePush, "pre-push"]]) {
-      if (await import_fs_extra10.default.pathExists(src)) {
-        const dest = import_path10.default.join(gitHooksDir, name);
-        await import_fs_extra10.default.copy(src, dest, { overwrite: true });
-        await import_fs_extra10.default.chmod(dest, 493);
+  const hooksPathResult = (0, import_child_process2.spawnSync)("git", ["config", "--get", "core.hooksPath"], {
+    cwd: projectRoot,
+    encoding: "utf8",
+    timeout: 5e3
+  });
+  const configuredHooksPath = hooksPathResult.status === 0 ? hooksPathResult.stdout.trim() : "";
+  const activeHooksDir = configuredHooksPath ? import_path10.default.isAbsolute(configuredHooksPath) ? configuredHooksPath : import_path10.default.join(projectRoot, configuredHooksPath) : import_path10.default.join(projectRoot, ".git", "hooks");
+  const activationTargets = /* @__PURE__ */ new Set([import_path10.default.join(projectRoot, ".git", "hooks"), activeHooksDir]);
+  for (const hooksDir of activationTargets) {
+    await import_fs_extra10.default.mkdirp(hooksDir);
+    for (const [name, sourceHook] of [["pre-commit", preCommit], ["pre-push", prePush]]) {
+      const targetHook = import_path10.default.join(hooksDir, name);
+      if (!await import_fs_extra10.default.pathExists(targetHook)) {
+        await import_fs_extra10.default.writeFile(targetHook, "#!/usr/bin/env bash\n", { mode: 493 });
+      } else {
+        await import_fs_extra10.default.chmod(targetHook, 493);
+      }
+      if (import_path10.default.resolve(targetHook) === import_path10.default.resolve(sourceHook)) {
+        continue;
+      }
+      const chainSnippet = `
+${MARKER_CHAIN}
+if [ -x "${sourceHook}" ]; then
+    "${sourceHook}" "$@"
+fi
+`;
+      const targetContent = await import_fs_extra10.default.readFile(targetHook, "utf8");
+      if (!targetContent.includes(MARKER_CHAIN)) {
+        await import_fs_extra10.default.writeFile(targetHook, targetContent + chainSnippet);
       }
     }
   }
@@ -40832,7 +40853,7 @@ function resolveEnvVars(value) {
   return value.replace(/\$\{([A-Z0-9_]+)\}/g, (_m, name) => process.env[name] || "");
 }
 function hasClaudeCli() {
-  const r = (0, import_child_process2.spawnSync)("claude", ["--version"], { stdio: "pipe" });
+  const r = (0, import_child_process3.spawnSync)("claude", ["--version"], { stdio: "pipe" });
   return r.status === 0;
 }
 function buildProjectMcpArgs(name, server) {
@@ -40880,7 +40901,7 @@ async function syncProjectMcpServers(projectRoot) {
   for (const [name, server] of servers) {
     const args = buildProjectMcpArgs(name, server);
     if (!args) continue;
-    const r = (0, import_child_process2.spawnSync)("claude", args, {
+    const r = (0, import_child_process3.spawnSync)("claude", args, {
       cwd: projectRoot,
       encoding: "utf8",
       stdio: ["pipe", "pipe", "pipe"]
@@ -41139,7 +41160,7 @@ async function runBdInitForProject() {
     return;
   }
   console.log(kleur_default.bold("Running beads initialization (bd init)..."));
-  const result = (0, import_child_process2.spawnSync)("bd", ["init"], {
+  const result = (0, import_child_process3.spawnSync)("bd", ["init"], {
     cwd: projectRoot,
     encoding: "utf8",
     timeout: 15e3
@@ -41202,7 +41223,7 @@ async function listProjectSkills() {
   console.log(kleur_default.dim("  xtrm install project tdd-guard\n"));
 }
 function getProjectRoot() {
-  const result = (0, import_child_process2.spawnSync)("git", ["rev-parse", "--show-toplevel"], {
+  const result = (0, import_child_process3.spawnSync)("git", ["rev-parse", "--show-toplevel"], {
     encoding: "utf8",
     timeout: 5e3
   });
@@ -41255,8 +41276,8 @@ function createProjectCommand() {
 }
 
 // src/commands/install.ts
-var import_child_process3 = require("child_process");
 var import_child_process4 = require("child_process");
+var import_child_process5 = require("child_process");
 function renderPlanTable(allChanges) {
   const Table = require_cli_table3();
   const table = new Table({
@@ -41321,7 +41342,7 @@ function filterBeadsFromChangeSet(changeSet) {
 }
 function isBeadsInstalled() {
   try {
-    (0, import_child_process3.execSync)("bd --version", { stdio: "ignore" });
+    (0, import_child_process4.execSync)("bd --version", { stdio: "ignore" });
     return true;
   } catch {
     return false;
@@ -41329,7 +41350,7 @@ function isBeadsInstalled() {
 }
 function isDoltInstalled() {
   try {
-    (0, import_child_process3.execSync)("dolt version", { stdio: "ignore" });
+    (0, import_child_process4.execSync)("dolt version", { stdio: "ignore" });
     return true;
   } catch {
     return false;
@@ -41386,15 +41407,15 @@ async function runGlobalInstall(flags, installOpts = {}) {
       if (doInstall) {
         if (!beadsOk) {
           console.log(t.muted("\n  Installing @beads/bd..."));
-          (0, import_child_process4.spawnSync)("npm", ["install", "-g", "@beads/bd"], { stdio: "inherit" });
+          (0, import_child_process5.spawnSync)("npm", ["install", "-g", "@beads/bd"], { stdio: "inherit" });
           console.log(t.success("  \u2713 bd installed"));
         }
         if (!doltOk) {
           console.log(t.muted("\n  Installing dolt..."));
           if (process.platform === "darwin") {
-            (0, import_child_process4.spawnSync)("brew", ["install", "dolt"], { stdio: "inherit" });
+            (0, import_child_process5.spawnSync)("brew", ["install", "dolt"], { stdio: "inherit" });
           } else {
-            (0, import_child_process4.spawnSync)("sudo", [
+            (0, import_child_process5.spawnSync)("sudo", [
               "bash",
               "-c",
               "curl -L https://github.com/dolthub/dolt/releases/latest/download/install.sh | bash"
@@ -41537,15 +41558,15 @@ function createInstallCommand() {
         if (doInstall) {
           if (!beadsOk) {
             console.log(t.muted("\n  Installing @beads/bd..."));
-            (0, import_child_process4.spawnSync)("npm", ["install", "-g", "@beads/bd"], { stdio: "inherit" });
+            (0, import_child_process5.spawnSync)("npm", ["install", "-g", "@beads/bd"], { stdio: "inherit" });
             console.log(t.success("  \u2713 bd installed"));
           }
           if (!doltOk) {
             console.log(t.muted("\n  Installing dolt..."));
             if (process.platform === "darwin") {
-              (0, import_child_process4.spawnSync)("brew", ["install", "dolt"], { stdio: "inherit" });
+              (0, import_child_process5.spawnSync)("brew", ["install", "dolt"], { stdio: "inherit" });
             } else {
-              (0, import_child_process4.spawnSync)("sudo", [
+              (0, import_child_process5.spawnSync)("sudo", [
                 "bash",
                 "-c",
                 "curl -L https://github.com/dolthub/dolt/releases/latest/download/install.sh | bash"

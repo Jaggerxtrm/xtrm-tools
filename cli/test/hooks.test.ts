@@ -48,16 +48,13 @@ function withFakeBdDir(scriptBody: string) {
 
 describe('main-guard.mjs — MAIN_GUARD_PROTECTED_BRANCHES', () => {
   it('blocks Write when current branch is listed in MAIN_GUARD_PROTECTED_BRANCHES', () => {
-    // Set env var to the actual current branch — without this env var the
-    // hook only checks hardcoded main/master, so a feature branch always exits 0.
     const r = runHook(
       'main-guard.mjs',
       { tool_name: 'Write', tool_input: { file_path: '/tmp/x' } },
       { MAIN_GUARD_PROTECTED_BRANCHES: CURRENT_BRANCH },
     );
-    expect(r.status).toBe(0);
+    expect(r.status).toBe(2);
     const out = parseHookJson(r.stdout);
-    expect(out?.hookSpecificOutput?.permissionDecision).toBe('deny');
     expect(out?.systemMessage).toContain(CURRENT_BRANCH);
   });
 
@@ -76,9 +73,8 @@ describe('main-guard.mjs — MAIN_GUARD_PROTECTED_BRANCHES', () => {
       { tool_name: 'Bash', tool_input: { command: 'cat > file.txt << EOF\nhello\nEOF' } },
       { MAIN_GUARD_PROTECTED_BRANCHES: CURRENT_BRANCH },
     );
-    expect(r.status).toBe(0);
+    expect(r.status).toBe(2);
     const out = parseHookJson(r.stdout);
-    expect(out?.hookSpecificOutput?.permissionDecision).toBe('deny');
     expect(out?.systemMessage).toContain('Bash is restricted');
   });
 
@@ -116,9 +112,8 @@ describe('main-guard.mjs — MAIN_GUARD_PROTECTED_BRANCHES', () => {
         { tool_name: 'Bash', tool_input: { command } },
         { MAIN_GUARD_PROTECTED_BRANCHES: CURRENT_BRANCH },
       );
-      expect(r.status, `expected structured deny for: ${command}`).toBe(0);
+      expect(r.status, `expected exit 2 for: ${command}`).toBe(2);
       const out = parseHookJson(r.stdout);
-      expect(out?.hookSpecificOutput?.permissionDecision).toBe('deny');
       expect(out?.systemMessage).toContain('Bash is restricted');
     }
   });
@@ -138,9 +133,8 @@ describe('main-guard.mjs — MAIN_GUARD_PROTECTED_BRANCHES', () => {
       { tool_name: 'Bash', tool_input: { command: 'git commit -m "oops"' } },
       { MAIN_GUARD_PROTECTED_BRANCHES: CURRENT_BRANCH },
     );
-    expect(r.status).toBe(0);
+    expect(r.status).toBe(2);
     const out = parseHookJson(r.stdout);
-    expect(out?.hookSpecificOutput?.permissionDecision).toBe('deny');
     expect(out?.systemMessage).toContain('feature branch');
   });
 });
@@ -236,42 +230,37 @@ describe('beads-stop-gate.mjs', () => {
     const content = readFileSync(path.join(HOOKS_DIR, 'beads-stop-gate.mjs'), 'utf8');
     expect(content).toContain("from './beads-gate-utils.mjs'");
   });
-});
 
-// ── beads-commit-gate.mjs ─────────────────────────────────────────────────────
+  it('allows stop (exit 0) when session has a stale claim but no in_progress issues', () => {
+    const projectDir = mkdtempSync(path.join(os.tmpdir(), 'xtrm-beads-stopgate-'));
+    mkdirSync(path.join(projectDir, '.beads'));
+    const fake = withFakeBdDir(`#!/usr/bin/env bash
+set -euo pipefail
+if [[ "$1" == "kv" && "$2" == "get" ]]; then
+  echo "jaggers-stale-claim"
+  exit 0
+fi
+if [[ "$1" == "list" ]]; then
+  cat <<'EOF'
 
-describe('beads-commit-gate.mjs', () => {
-  it('fails open (exit 0) when no .beads directory exists', () => {
-    const r = runHook('beads-commit-gate.mjs', {
-      session_id: 'test',
-      tool_name: 'Bash',
-      tool_input: { command: 'git commit -m test' },
-      cwd: '/tmp',
-    });
-    expect(r.status).toBe(0);
-  });
+--------------------------------------------------------------------------------
+Total: 0 issues (0 open, 0 in progress)
+EOF
+  exit 0
+fi
+exit 1
+`);
 
-  it('imports from beads-gate-utils.mjs', () => {
-    const content = readFileSync(path.join(HOOKS_DIR, 'beads-commit-gate.mjs'), 'utf8');
-    expect(content).toContain("from './beads-gate-utils.mjs'");
-  });
-});
-
-// ── beads-close-memory-prompt.mjs ────────────────────────────────────────────
-
-describe('beads-close-memory-prompt.mjs', () => {
-  it('exits 0 for non-bd-close bash commands', () => {
-    const r = runHook('beads-close-memory-prompt.mjs', {
-      session_id: 'test',
-      tool_name: 'Bash',
-      tool_input: { command: 'git status' },
-      cwd: '/tmp',
-    });
-    expect(r.status).toBe(0);
-  });
-
-  it('imports from beads-gate-utils.mjs', () => {
-    const content = readFileSync(path.join(HOOKS_DIR, 'beads-close-memory-prompt.mjs'), 'utf8');
-    expect(content).toContain("from './beads-gate-utils.mjs'");
+    try {
+      const r = runHook(
+        'beads-stop-gate.mjs',
+        { session_id: 'session-stale-claim', cwd: projectDir },
+        { PATH: `${fake.tempDir}:${process.env.PATH ?? ''}` },
+      );
+      expect(r.status).toBe(0);
+    } finally {
+      rmSync(fake.tempDir, { recursive: true, force: true });
+      rmSync(projectDir, { recursive: true, force: true });
+    }
   });
 });

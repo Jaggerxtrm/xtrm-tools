@@ -39,6 +39,7 @@ withSafeBdContext(() => {
     if (!claimed) process.exit(0);         // no active claim for this session
 
     const ip = getInProgress(cwd);
+    if (ip === null || ip.count === 0) process.exit(0); // claim is stale — allow stop
     const summary = ip?.summary ?? `  Claimed: ${claimed}`;
 
     process.stderr.write(

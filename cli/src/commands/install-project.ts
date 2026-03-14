@@ -351,6 +351,7 @@ export function buildProjectInitGuide(): string {
 
 async function printProjectInitGuide(): Promise<void> {
     console.log(buildProjectInitGuide());
+    await runBdInitForProject();
 }
 
 async function installProjectByName(toolName: string): Promise<void> {
@@ -359,6 +360,44 @@ async function installProjectByName(toolName: string): Promise<void> {
         return;
     }
     await installProjectSkill(toolName);
+}
+
+async function runBdInitForProject(): Promise<void> {
+    let projectRoot: string;
+    try {
+        projectRoot = getProjectRoot();
+    } catch (err: any) {
+        console.log(kleur.yellow(`\n  ⚠ Skipping bd init: ${err.message}\n`));
+        return;
+    }
+
+    console.log(kleur.bold('Running beads initialization (bd init)...'));
+
+    const result = spawnSync('bd', ['init'], {
+        cwd: projectRoot,
+        encoding: 'utf8',
+        timeout: 15000,
+    });
+
+    if (result.error) {
+        console.log(kleur.yellow(`  ⚠ Could not run bd init (${result.error.message})`));
+        return;
+    }
+
+    if (result.status !== 0) {
+        const text = `${result.stdout || ''}\n${result.stderr || ''}`.toLowerCase();
+        if (text.includes('already initialized')) {
+            console.log(kleur.dim('  ✓ beads workspace already initialized'));
+            return;
+        }
+        if (result.stdout) process.stdout.write(result.stdout);
+        if (result.stderr) process.stderr.write(result.stderr);
+        console.log(kleur.yellow(`  ⚠ bd init exited with code ${result.status}`));
+        return;
+    }
+
+    if (result.stdout) process.stdout.write(result.stdout);
+    if (result.stderr) process.stderr.write(result.stderr);
 }
 
 /**

@@ -53,7 +53,7 @@ export interface PreflightPlan {
 function getCandidatePaths(): Array<{ label: string; path: string }> {
     const home = os.homedir();
     return [
-        { label: '.claude', path: path.join(home, '.claude') },
+        { label: '~/.claude (hooks + skills)', path: path.join(home, '.claude') },
         { label: '.qwen', path: path.join(home, '.qwen') },
         { label: '~/.agents/skills', path: path.join(home, '.agents', 'skills') },
     ];

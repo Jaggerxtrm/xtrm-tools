@@ -41,8 +41,8 @@ export function getCandidatePaths(): Array<{ label: string; path: string }> {
     const isWindows = process.platform === 'win32';
 
     const paths = [
-        { label: '.claude', path: path.join(home, '.claude') },
-        { label: '.agents/skills', path: path.join(home, '.agents', 'skills') },
+        { label: '~/.claude (hooks + skills)', path: path.join(home, '.claude') },
+        { label: '~/.agents/skills', path: path.join(home, '.agents', 'skills') },
     ];
 
     if (isWindows && appData) {

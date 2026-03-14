@@ -2,6 +2,7 @@ import { Command } from 'commander';
 import kleur from 'kleur';
 import prompts from 'prompts';
 import { Listr } from 'listr2';
+import fs from 'fs-extra';
 import { getContext } from '../core/context.js';
 import { calculateDiff, PruneModeReadError } from '../core/diff.js';
 import { executeSync } from '../core/sync-executor.js';
@@ -123,11 +124,40 @@ interface GlobalInstallFlags {
     force: boolean;
 }
 
+async function needsSettingsSync(repoRoot: string, target: string): Promise<boolean> {
+    const normalizedTarget = target.replace(/\\/g, '/').toLowerCase();
+    if (normalizedTarget.includes('.agents/skills')) return false;
+
+    const hooksTemplatePath = path.join(repoRoot, 'config', 'hooks.json');
+    if (!await fs.pathExists(hooksTemplatePath)) return false;
+
+    const requiredEvents = Object.keys((await fs.readJson(hooksTemplatePath)).hooks ?? {});
+    if (requiredEvents.length === 0) return false;
+
+    const targetSettingsPath = path.join(target, 'settings.json');
+    if (!await fs.pathExists(targetSettingsPath)) return true;
+
+    let settings: any = {};
+    try {
+        settings = await fs.readJson(targetSettingsPath);
+    } catch {
+        return true;
+    }
+
+    const targetHooks = settings?.hooks;
+    if (!targetHooks || typeof targetHooks !== 'object' || Object.keys(targetHooks).length === 0) {
+        return true;
+    }
+
+    return requiredEvents.some((event) => !(event in targetHooks));
+}
+
 async function runGlobalInstall(
     flags: GlobalInstallFlags,
     installOpts: { excludeBeads?: boolean; checkBeads?: boolean } = {},
 ): Promise<void> {
     const { dryRun, yes, noMcp, force } = flags;
+    const effectiveYes = yes || process.argv.includes('--yes') || process.argv.includes('-y');
     const repoRoot = await findRepoRoot();
     const ctx = await getContext({ selector: 'all', createMissingDirs: !dryRun });
     const { targets, syncMode } = ctx;
@@ -147,8 +177,8 @@ async function runGlobalInstall(
         } else {
             const missing = [!beadsOk && 'bd', !doltOk && 'dolt'].filter(Boolean).join(', ');
 
-            let doInstall = yes;
-            if (!yes) {
+            let doInstall = effectiveYes;
+            if (!effectiveYes) {
                 const { install } = await prompts({
                     type: 'confirm',
                     name: 'install',
@@ -192,6 +222,16 @@ async function runGlobalInstall(
                     if (skipBeads) {
                         changeSet = filterBeadsFromChangeSet(changeSet);
                     }
+
+                    const hasSettingsDiff =
+                        changeSet.config.missing.includes('settings.json') ||
+                        changeSet.config.outdated.includes('settings.json') ||
+                        changeSet.config.drifted.includes('settings.json');
+
+                    if (!hasSettingsDiff && await needsSettingsSync(repoRoot, target)) {
+                        changeSet.config.outdated.push('settings.json');
+                    }
+
                     const totalChanges = Object.values(changeSet).reduce(
                         (sum, c: any) => sum + c.missing.length + c.outdated.length + c.drifted.length, 0,
                     );
@@ -226,7 +266,7 @@ async function runGlobalInstall(
         return;
     }
 
-    if (!yes) {
+    if (!effectiveYes) {
         const totalChangesCount = allChanges.reduce((s, c) => s + c.totalChanges, 0);
         const { confirm } = await prompts({
             type: 'confirm',
@@ -305,6 +345,7 @@ export function createInstallCommand(): Command {
         .option('--backport', 'Backport drifted local changes back to the repository', false)
         .action(async (targetSelector, opts) => {
             const { dryRun, yes, prune, backport } = opts;
+            const effectiveYes = yes || process.argv.includes('--yes') || process.argv.includes('-y');
             const syncType: 'sync' | 'backport' = backport ? 'backport' : 'sync';
             const actionLabel = backport ? 'backport' : 'install';
 
@@ -314,6 +355,56 @@ export function createInstallCommand(): Command {
                 createMissingDirs: !dryRun,
             });
             const { targets, syncMode } = ctx;
+            let skipBeads = false;
+
+            if (!backport) {
+                console.log(t.bold('\n  ⚙  beads + dolt  (workflow enforcement backend)'));
+                console.log(t.muted('  beads is a git-backed issue tracker; dolt is its SQL+git storage backend.'));
+                console.log(t.muted('  Without them the gate hooks install but provide no enforcement.\n'));
+
+                const beadsOk = isBeadsInstalled();
+                const doltOk = isDoltInstalled();
+
+                if (beadsOk && doltOk) {
+                    console.log(t.success('  ✓ beads + dolt already installed\n'));
+                } else {
+                    const missing = [!beadsOk && 'bd', !doltOk && 'dolt'].filter(Boolean).join(', ');
+
+                    let doInstall = effectiveYes;
+                    if (!effectiveYes) {
+                        const { install } = await prompts({
+                            type: 'confirm',
+                            name: 'install',
+                            message: `Install beads + dolt? (${missing} not found) — required for workflow enforcement hooks`,
+                            initial: true,
+                        });
+                        doInstall = install;
+                    }
+
+                    if (doInstall) {
+                        if (!beadsOk) {
+                            console.log(t.muted('\n  Installing @beads/bd...'));
+                            spawnSync('npm', ['install', '-g', '@beads/bd'], { stdio: 'inherit' });
+                            console.log(t.success('  ✓ bd installed'));
+                        }
+                        if (!doltOk) {
+                            console.log(t.muted('\n  Installing dolt...'));
+                            if (process.platform === 'darwin') {
+                                spawnSync('brew', ['install', 'dolt'], { stdio: 'inherit' });
+                            } else {
+                                spawnSync('sudo', ['bash', '-c',
+                                    'curl -L https://github.com/dolthub/dolt/releases/latest/download/install.sh | bash',
+                                ], { stdio: 'inherit' });
+                            }
+                            console.log(t.success('  ✓ dolt installed'));
+                        }
+                        console.log('');
+                    } else {
+                        console.log(t.muted('  ℹ Skipping beads gate hooks for this install run.\n'));
+                        skipBeads = true;
+                    }
+                }
+            }
 
             // Phase 1: Diff (concurrent via listr2)
             const diffTasks = new Listr<DiffCtx>(
@@ -321,7 +412,22 @@ export function createInstallCommand(): Command {
                     title: path.basename(target),
                     task: async (listCtx, task) => {
                         try {
-                            const changeSet = await calculateDiff(repoRoot, target, prune);
+                            let changeSet = await calculateDiff(repoRoot, target, prune);
+                            if (skipBeads) {
+                                changeSet = filterBeadsFromChangeSet(changeSet);
+                            }
+
+                            if (syncType === 'sync' && !prune) {
+                                const hasSettingsDiff =
+                                    changeSet.config.missing.includes('settings.json') ||
+                                    changeSet.config.outdated.includes('settings.json') ||
+                                    changeSet.config.drifted.includes('settings.json');
+
+                                if (!hasSettingsDiff && await needsSettingsSync(repoRoot, target)) {
+                                    changeSet.config.outdated.push('settings.json');
+                                }
+                            }
+
                             const totalChanges = Object.values(changeSet).reduce(
                                 (sum, c: any) => sum + c.missing.length + c.outdated.length + c.drifted.length, 0,
                             );
@@ -374,7 +480,7 @@ export function createInstallCommand(): Command {
             }
 
             // Phase 3: Confirmation
-            if (!yes) {
+            if (!effectiveYes) {
                 const totalChangesCount = allChanges.reduce((s, c) => s + c.totalChanges, 0);
                 const { confirm } = await prompts({
                     type: 'confirm',

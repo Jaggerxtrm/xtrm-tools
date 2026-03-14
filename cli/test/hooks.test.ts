@@ -28,6 +28,14 @@ function runHook(
   });
 }
 
+function parseHookJson(stdout: string) {
+  try {
+    return JSON.parse(stdout);
+  } catch {
+    return null;
+  }
+}
+
 function withFakeBdDir(scriptBody: string) {
   const tempDir = mkdtempSync(path.join(os.tmpdir(), 'xtrm-fakebd-'));
   const fakeBdPath = path.join(tempDir, 'bd');
@@ -47,8 +55,10 @@ describe('main-guard.mjs — MAIN_GUARD_PROTECTED_BRANCHES', () => {
       { tool_name: 'Write', tool_input: { file_path: '/tmp/x' } },
       { MAIN_GUARD_PROTECTED_BRANCHES: CURRENT_BRANCH },
     );
-    expect(r.status).toBe(2);
-    expect(r.stderr).toContain(CURRENT_BRANCH);
+    expect(r.status).toBe(0);
+    const out = parseHookJson(r.stdout);
+    expect(out?.hookSpecificOutput?.permissionDecision).toBe('deny');
+    expect(out?.systemMessage).toContain(CURRENT_BRANCH);
   });
 
   it('allows Write when current branch is NOT in MAIN_GUARD_PROTECTED_BRANCHES', () => {
@@ -66,8 +76,10 @@ describe('main-guard.mjs — MAIN_GUARD_PROTECTED_BRANCHES', () => {
       { tool_name: 'Bash', tool_input: { command: 'cat > file.txt << EOF\nhello\nEOF' } },
       { MAIN_GUARD_PROTECTED_BRANCHES: CURRENT_BRANCH },
     );
-    expect(r.status).toBe(2);
-    expect(r.stderr).toContain('Bash is restricted');
+    expect(r.status).toBe(0);
+    const out = parseHookJson(r.stdout);
+    expect(out?.hookSpecificOutput?.permissionDecision).toBe('deny');
+    expect(out?.systemMessage).toContain('Bash is restricted');
   });
 
   it('allows safe Bash commands on protected branch', () => {
@@ -104,8 +116,10 @@ describe('main-guard.mjs — MAIN_GUARD_PROTECTED_BRANCHES', () => {
         { tool_name: 'Bash', tool_input: { command } },
         { MAIN_GUARD_PROTECTED_BRANCHES: CURRENT_BRANCH },
       );
-      expect(r.status, `expected exit 2 for: ${command}`).toBe(2);
-      expect(r.stderr).toContain('Bash is restricted');
+      expect(r.status, `expected structured deny for: ${command}`).toBe(0);
+      const out = parseHookJson(r.stdout);
+      expect(out?.hookSpecificOutput?.permissionDecision).toBe('deny');
+      expect(out?.systemMessage).toContain('Bash is restricted');
     }
   });
 
@@ -124,8 +138,10 @@ describe('main-guard.mjs — MAIN_GUARD_PROTECTED_BRANCHES', () => {
       { tool_name: 'Bash', tool_input: { command: 'git commit -m "oops"' } },
       { MAIN_GUARD_PROTECTED_BRANCHES: CURRENT_BRANCH },
     );
-    expect(r.status).toBe(2);
-    expect(r.stderr).toContain('feature branch');
+    expect(r.status).toBe(0);
+    const out = parseHookJson(r.stdout);
+    expect(out?.hookSpecificOutput?.permissionDecision).toBe('deny');
+    expect(out?.systemMessage).toContain('feature branch');
   });
 });
 

@@ -6,12 +6,13 @@ import fs from 'fs-extra';
 import { findRepoRoot } from '../utils/repo-root.js';
 
 const HOOK_CATALOG: Array<{ file: string; event: string; desc: string; beads?: true }> = [
-    { file: 'main-guard.mjs',               event: 'PreToolUse',       desc: 'Blocks edits and commits on main/master branch' },
+    { file: 'main-guard.mjs',               event: 'PreToolUse',       desc: 'Blocks direct edits on protected branches' },
     { file: 'skill-suggestion.py',           event: 'UserPromptSubmit', desc: 'Suggests relevant skills based on user prompt' },
-    { file: 'serena-workflow-reminder.py',   event: 'UserPromptSubmit', desc: 'Reminds agent to use Serena LSP semantic tools' },
-    { file: 'type-safety-enforcement.py',    event: 'PostToolUse',      desc: 'Enforces type safety checks after file edits' },
+    { file: 'serena-workflow-reminder.py',   event: 'SessionStart',     desc: 'Injects Serena semantic editing workflow reminder' },
+    { file: 'type-safety-enforcement.py',    event: 'PreToolUse',       desc: 'Prevents risky Bash and enforces safe edit patterns' },
+    { file: 'gitnexus/gitnexus-hook.cjs',    event: 'PreToolUse',       desc: 'Adds GitNexus context for Grep/Glob/Bash searches' },
     { file: 'skill-discovery.py',            event: 'UserPromptSubmit', desc: 'Discovers available skills for user requests' },
-    { file: 'agent_context.py',              event: 'SessionStart',     desc: 'Injects project agent context at session start' },
+    { file: 'agent_context.py',              event: 'Support module',   desc: 'Shared hook I/O helper used by Python hook scripts' },
     { file: 'beads-edit-gate.mjs',           event: 'PreToolUse',       desc: 'Blocks file edits if no beads issue is claimed',      beads: true },
     { file: 'beads-commit-gate.mjs',         event: 'PreToolUse',       desc: 'Blocks commits when no beads issue is in progress',   beads: true },
     { file: 'beads-stop-gate.mjs',           event: 'Stop',             desc: 'Blocks session stop with an unclosed beads claim',    beads: true },
@@ -65,7 +66,12 @@ export function createHelpCommand(): Command {
                 `    ${kleur.dim('Project-scoped install into .claude/ of current git root.')}`,
                 `    ${kleur.dim('Run xtrm install project list to see available project skills.')}`,
                 '',
-                `  ${kleur.dim('Flags (all profiles): --dry-run  --yes / -y  --no-mcp  --force')}`,
+                `  ${kleur.dim('Default target directories:')}`,
+                `    ${kleur.dim('~/.claude/hooks     (global hook scripts)')}`,
+                `    ${kleur.dim('~/.claude/skills    (global Claude skills)')}`,
+                `    ${kleur.dim('~/.agents/skills    (agents skills cache mirror)')}`,
+                '',
+                `  ${kleur.dim('Flags (all profiles): --dry-run  --yes / -y  --no-mcp  --force  --prune  --backport')}`,
             ].join('\n');
 
             const general = HOOK_CATALOG.filter(h => !h.beads);

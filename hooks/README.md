@@ -154,13 +154,13 @@ Installed globally to `~/.claude/hooks/` by `xtrm install`. Require Node.js.
 - `git commit` directly on protected branches
 - `git push` to protected branches
 
-**Configuration** (injected into `~/.claude/settings.json`):
+**Configuration** (global Claude config):
 ```json
 {
   "hooks": {
     "PreToolUse": [{
       "matcher": "Edit|Write|MultiEdit|NotebookEdit|Bash",
-      "hooks": [{ "type": "command", "command": "~/.claude/hooks/main-guard.mjs", "timeout": 5000 }]
+      "hooks": [{ "type": "command", "command": "node \"~/.claude/hooks/main-guard.mjs\"", "timeout": 5000 }]
     }]
   }
 }

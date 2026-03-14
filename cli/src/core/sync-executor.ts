@@ -13,6 +13,53 @@ import type { ChangeSet } from '../types/config.js';
 // Track which MCP agents have been synced in this process run to prevent duplicate syncs
 const syncedMcpAgents = new Set<string>();
 
+function extractHookCommandPath(command: string): string | null {
+    const quoted = command.match(/"([^"]+)"/);
+    if (quoted?.[1]) return quoted[1];
+
+    const singleQuoted = command.match(/'([^']+)'/);
+    if (singleQuoted?.[1]) return singleQuoted[1];
+
+    const bare = command.trim().split(/\s+/).slice(1).join(' ').trim();
+    return bare || null;
+}
+
+async function filterHooksByInstalledScripts(hooksConfig: any): Promise<any> {
+    if (!hooksConfig || typeof hooksConfig !== 'object' || !hooksConfig.hooks) {
+        return hooksConfig;
+    }
+
+    for (const [event, wrappers] of Object.entries(hooksConfig.hooks)) {
+        if (!Array.isArray(wrappers)) continue;
+
+        const keptWrappers: any[] = [];
+        for (const wrapper of wrappers) {
+            if (!wrapper || !Array.isArray(wrapper.hooks)) continue;
+
+            const keptInner: any[] = [];
+            for (const inner of wrapper.hooks) {
+                const command = inner?.command;
+                if (typeof command !== 'string' || !command.trim()) continue;
+
+                const scriptPath = extractHookCommandPath(command);
+                if (!scriptPath) continue;
+
+                if (await fs.pathExists(scriptPath)) {
+                    keptInner.push(inner);
+                }
+            }
+
+            if (keptInner.length > 0) {
+                keptWrappers.push({ ...wrapper, hooks: keptInner });
+            }
+        }
+
+        hooksConfig.hooks[event] = keptWrappers;
+    }
+
+    return hooksConfig;
+}
+
 export async function executeSync(
     repoRoot: string,
     systemRoot: string,
@@ -107,9 +154,6 @@ export async function executeSync(
                     dest = path.join(systemRoot, 'settings.json');
 
                     const agent = detectAgent(systemRoot);
-                    if (agent) {
-                        continue;
-                    }
 
                     console.log(kleur.gray(`  --> config/settings.json`));
 
@@ -130,7 +174,7 @@ export async function executeSync(
                     const hooksSrc = path.join(repoRoot, 'config', 'hooks.json');
                     if (await fs.pathExists(hooksSrc)) {
                         const hooksRaw = await fs.readJson(hooksSrc);
-                        const hooksAdapted = adapter.adaptHooksConfig(hooksRaw);
+                        const hooksAdapted = await filterHooksByInstalledScripts(adapter.adaptHooksConfig(hooksRaw));
                         if (hooksAdapted.hooks) {
                             // hooks.json is the canonical source — replace template hooks entirely
                             // to avoid Claude event names leaking into Gemini/Qwen configs

@@ -13,6 +13,11 @@
     ],
     "PreToolUse": [
       {
+        "matcher": "Write|Edit|MultiEdit",
+        "script": "main-guard.mjs",
+        "timeout": 5000
+      },
+      {
         "matcher": "Read|Edit",
         "script": "serena-workflow-reminder.py"
       },
@@ -24,6 +29,34 @@
       {
         "matcher": "Edit|Write",
         "script": "type-safety-enforcement.py"
+      },
+      {
+        "matcher": "Grep|Glob|Bash",
+        "script": "gitnexus/gitnexus-hook.cjs",
+        "timeout": 8000
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit|mcp__serena__*",
+        "script": "beads-edit-gate.mjs",
+        "timeout": 5000
+      },
+      {
+        "matcher": "Bash",
+        "script": "beads-commit-gate.mjs",
+        "timeout": 5000
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "script": "beads-close-memory-prompt.mjs",
+        "timeout": 5000
+      }
+    ],
+    "Stop": [
+      {
+        "script": "beads-stop-gate.mjs",
+        "timeout": 5000
       }
     ]
   },

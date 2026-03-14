@@ -20,6 +20,100 @@ function resolvePkgRoot(): string {
 
 const PKG_ROOT = resolvePkgRoot();
 const PROJECT_SKILLS_DIR = path.join(PKG_ROOT, 'project-skills');
+const MCP_CORE_CONFIG_PATH = path.join(PKG_ROOT, 'config', 'mcp_servers.json');
+const syncedProjectMcpRoots = new Set<string>();
+
+function resolveEnvVars(value: string): string {
+    if (typeof value !== 'string') return value;
+    return value.replace(/\$\{([A-Z0-9_]+)\}/g, (_m, name) => process.env[name] || '');
+}
+
+function hasClaudeCli(): boolean {
+    const r = spawnSync('claude', ['--version'], { stdio: 'pipe' });
+    return r.status === 0;
+}
+
+function buildProjectMcpArgs(name: string, server: any): string[] | null {
+    const transport = server.type || (server.url?.includes('/sse') ? 'sse' : 'http');
+
+    if (server.command) {
+        const args = ['mcp', 'add', '-s', 'project'];
+        if (server.env && typeof server.env === 'object') {
+            for (const [k, v] of Object.entries(server.env)) {
+                args.push('-e', `${k}=${resolveEnvVars(String(v))}`);
+            }
+        }
+        args.push(name, '--', server.command, ...((server.args || []) as string[]));
+        return args;
+    }
+
+    if (server.url || server.serverUrl) {
+        const url = server.url || server.serverUrl;
+        const args = ['mcp', 'add', '-s', 'project', '--transport', transport, name, url];
+        if (server.headers && typeof server.headers === 'object') {
+            for (const [k, v] of Object.entries(server.headers)) {
+                args.push('--header', `${k}: ${resolveEnvVars(String(v))}`);
+            }
+        }
+        return args;
+    }
+
+    return null;
+}
+
+async function syncProjectMcpServers(projectRoot: string): Promise<void> {
+    if (syncedProjectMcpRoots.has(projectRoot)) return;
+    syncedProjectMcpRoots.add(projectRoot);
+
+    if (!await fs.pathExists(MCP_CORE_CONFIG_PATH)) return;
+
+    console.log(kleur.bold('\n── Installing MCP (project scope) ─────────'));
+
+    if (!hasClaudeCli()) {
+        console.log(kleur.yellow('  ⚠ Claude CLI not found; skipping project-scope MCP registration.'));
+        return;
+    }
+
+    const mcpConfig = await fs.readJson(MCP_CORE_CONFIG_PATH);
+    const servers = Object.entries(mcpConfig?.mcpServers ?? {}) as Array<[string, any]>;
+    if (servers.length === 0) {
+        console.log(kleur.dim('  ℹ No core MCP servers configured.'));
+        return;
+    }
+
+    let added = 0;
+    let existing = 0;
+    let failed = 0;
+
+    for (const [name, server] of servers) {
+        const args = buildProjectMcpArgs(name, server);
+        if (!args) continue;
+
+        const r = spawnSync('claude', args, {
+            cwd: projectRoot,
+            encoding: 'utf8',
+            stdio: ['pipe', 'pipe', 'pipe'],
+        });
+
+        if (r.status === 0) {
+            added++;
+            console.log(`${kleur.green('  ✓')} ${name}`);
+            continue;
+        }
+
+        const stderr = `${r.stderr || ''}`.toLowerCase();
+        if (stderr.includes('already exists') || stderr.includes('already configured')) {
+            existing++;
+            console.log(kleur.dim(`  ✓ ${name} (already configured)`));
+            continue;
+        }
+
+        failed++;
+        console.log(kleur.red(`  ✗ ${name} (${(r.stderr || r.stdout || 'failed').toString().trim()})`));
+    }
+
+    console.log(kleur.dim(`  ↳ MCP project-scope result: ${added} added, ${existing} existing, ${failed} failed`));
+}
 
 export async function getAvailableProjectSkills(): Promise<string[]> {
     if (!await fs.pathExists(PROJECT_SKILLS_DIR)) {
@@ -144,6 +238,8 @@ export async function installProjectSkill(toolName: string, projectRootOverride?
         await fs.writeFile(targetSettingsPath, JSON.stringify(mergedSettings, null, 2) + '\n');
         console.log(`${kleur.green('  ✓')} settings.json (hooks merged)`);
     }
+
+    await syncProjectMcpServers(projectRoot);
 
     // Step 2: Skill Copy
     if (await fs.pathExists(skillSkillsDir)) {

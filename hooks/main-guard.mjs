@@ -33,11 +33,25 @@ try {
 }
 
 const tool = input.tool_name ?? '';
+const hookEventName = input.hook_event_name ?? 'PreToolUse';
+
+function deny(reason) {
+  process.stdout.write(JSON.stringify({
+    systemMessage: reason,
+    hookSpecificOutput: {
+      hookEventName,
+      permissionDecision: 'deny',
+      permissionDecisionReason: reason,
+    },
+  }));
+  process.stdout.write('\n');
+  process.exit(0);
+}
 
 const WRITE_TOOLS = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit']);
 
 if (WRITE_TOOLS.has(tool)) {
-  process.stderr.write(
+  deny(
     `⛔ You are on '${branch}' — never edit files directly on master.\n\n` +
     'Full workflow:\n' +
     '  1. git checkout -b feature/<name>         ← start here\n' +
@@ -48,7 +62,6 @@ if (WRITE_TOOLS.has(tool)) {
     '  6. gh pr create --fill && gh pr merge --squash\n' +
     '  7. git checkout master && git reset --hard origin/master\n'
   );
-  process.exit(2);
 }
 
 const WORKFLOW =
@@ -89,11 +102,10 @@ if (tool === 'Bash') {
 
   // Specific messages for common blocked operations
   if (/^git\s+commit\b/.test(cmd)) {
-    process.stderr.write(
+    deny(
       `\u26D4 Don't commit directly to '${branch}' \u2014 use a feature branch.\n\n` +
       WORKFLOW
     );
-    process.exit(2);
   }
 
   if (/^git\s+push\b/.test(cmd)) {
@@ -102,7 +114,7 @@ if (tool === 'Bash') {
     const explicitProtected = protectedBranches.some(b => lastToken === b || lastToken.endsWith(`:${b}`));
     const impliedProtected = tokens.length <= 3 && protectedBranches.includes(branch);
     if (explicitProtected || impliedProtected) {
-      process.stderr.write(
+      deny(
         `\u26D4 Don't push directly to '${branch}' \u2014 use the PR workflow.\n\n` +
         'Next steps:\n' +
         '  5. git push -u origin <feature-branch>     \u2190 push your branch\n' +
@@ -113,14 +125,13 @@ if (tool === 'Bash') {
         "If you're not on a feature branch yet:\n" +
         '  git checkout -b feature/<name>    (then re-commit and push)\n'
       );
-      process.exit(2);
     }
     // Pushing to a feature branch — allow
     process.exit(0);
   }
 
   // Default deny — block everything else on protected branches
-  process.stderr.write(
+  deny(
     `\u26D4 Bash is restricted on '${branch}' \u2014 use a feature branch for file writes and script execution.\n\n` +
     'Allowed on protected branches:\n' +
     '  git status / log / diff / branch / fetch / pull / stash\n' +
@@ -133,7 +144,6 @@ if (tool === 'Bash') {
     '  1. git checkout -b feature/<name>   \u2190 move to a feature branch, or\n' +
     '  2. MAIN_GUARD_ALLOW_BASH=1 <command>  (escape hatch, use sparingly)\n'
   );
-  process.exit(2);
 }
 
 process.exit(0);

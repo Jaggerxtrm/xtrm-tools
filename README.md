@@ -199,7 +199,7 @@ Task intake and service routing for Docker service projects.
 ### Standalone Hooks
 
 **main-guard.mjs**
-- Trigger: PreToolUse (Write|Edit|MultiEdit)
+- Trigger: PreToolUse (Write|Edit|MultiEdit|mcp__serena__rename_symbol|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol)
 - Purpose: Blocks direct edits on protected branches with structured deny output
 
 **type-safety-enforcement.py**

@@ -42,7 +42,7 @@ The refactoring support helps by:
    1. Type `/hooks` in Claude Code
    2. Select `PostToolUse - After tool execution`
    3. Choose `+ Add new matcher...`
-   4. Enter: `Write|Edit|MultiEdit`
+   4. Enter: `Write|Edit|MultiEdit|mcp__serena__rename_symbol|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol`
    5. Select `+ Add new hook...`
    6. Enter command: `tdd-guard`
    7. Choose where to save
@@ -56,7 +56,7 @@ The refactoring support helps by:
      "hooks": {
        "PostToolUse": [
          {
-           "matcher": "Write|Edit|MultiEdit",
+           "matcher": "Write|Edit|MultiEdit|mcp__serena__rename_symbol|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol",
            "hooks": [
              {
                "type": "command",

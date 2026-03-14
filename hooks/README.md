@@ -147,7 +147,7 @@ Installed globally to `~/.claude/hooks/` by `xtrm install`. Require Node.js.
 
 **Purpose**: Blocks direct file edits and dangerous git operations on protected branches (`main`/`master`). Enforces the feature-branch → PR workflow.
 
-**Trigger**: PreToolUse (`Edit|Write|MultiEdit|NotebookEdit|Bash`)
+**Trigger**: PreToolUse (`Edit|Write|MultiEdit|NotebookEdit|mcp__serena__rename_symbol|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol|Bash`)
 
 **Blocks**:
 - Write/Edit/MultiEdit/NotebookEdit on protected branches
@@ -159,7 +159,7 @@ Installed globally to `~/.claude/hooks/` by `xtrm install`. Require Node.js.
 {
   "hooks": {
     "PreToolUse": [{
-      "matcher": "Edit|Write|MultiEdit|NotebookEdit|Bash",
+      "matcher": "Edit|Write|MultiEdit|NotebookEdit|mcp__serena__rename_symbol|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol|Bash",
       "hooks": [{ "type": "command", "command": "node \"~/.claude/hooks/main-guard.mjs\"", "timeout": 5000 }]
     }]
   }

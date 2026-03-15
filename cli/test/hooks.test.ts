@@ -586,3 +586,121 @@ describe('gitnexus-impact-reminder.py', () => {
     expect(r.stdout.trim()).toBe('');
   });
 });
+
+
+// ── beads-gate-core.mjs — decision functions ──────────────────────────────────
+
+describe('beads-gate-core.mjs — decision functions', () => {
+  const corePath = path.join(HOOKS_DIR, 'beads-gate-core.mjs');
+
+  it('exports all required decision functions', () => {
+    const r = spawnSync('node', ['--input-type=module'], {
+      input: `
+import {
+  readHookInput,
+  resolveSessionContext,
+  resolveClaimAndWorkState,
+  decideEditGate,
+  decideCommitGate,
+  decideStopGate,
+} from '${corePath}';
+const ok = [readHookInput, resolveSessionContext, resolveClaimAndWorkState,
+            decideEditGate, decideCommitGate, decideStopGate]
+  .every(fn => typeof fn === 'function');
+process.exit(ok ? 0 : 1);
+`,
+      encoding: 'utf8',
+    });
+    expect(r.status).toBe(0);
+  });
+
+  describe('decideEditGate', () => {
+    it('allows when not a beads project', async () => {
+      const { decideEditGate } = await import(corePath);
+      const decision = decideEditGate(
+        { isBeadsProject: false },
+        { claimed: false, claimId: null, totalWork: 0, inProgress: null }
+      );
+      expect(decision.allow).toBe(true);
+    });
+
+    it('allows when session has a claim', async () => {
+      const { decideEditGate } = await import(corePath);
+      const decision = decideEditGate(
+        { isBeadsProject: true, sessionId: 'test-session' },
+        { claimed: true, claimId: 'issue-123', totalWork: 5, inProgress: null }
+      );
+      expect(decision.allow).toBe(true);
+    });
+
+    it('allows when no trackable work exists', async () => {
+      const { decideEditGate } = await import(corePath);
+      const decision = decideEditGate(
+        { isBeadsProject: true, sessionId: 'test-session' },
+        { claimed: false, claimId: null, totalWork: 0, inProgress: null }
+      );
+      expect(decision.allow).toBe(true);
+    });
+
+    it('blocks when no claim but work exists', async () => {
+      const { decideEditGate } = await import(corePath);
+      const decision = decideEditGate(
+        { isBeadsProject: true, sessionId: 'test-session' },
+        { claimed: false, claimId: null, totalWork: 3, inProgress: null }
+      );
+      expect(decision.allow).toBe(false);
+      expect(decision.reason).toBe('no_claim_with_work');
+    });
+
+    it('fails open when bd unavailable (state is null)', async () => {
+      const { decideEditGate } = await import(corePath);
+      const decision = decideEditGate(
+        { isBeadsProject: true, sessionId: 'test-session' },
+        null
+      );
+      expect(decision.allow).toBe(true);
+    });
+  });
+
+  describe('decideCommitGate', () => {
+    it('allows when no active claim', async () => {
+      const { decideCommitGate } = await import(corePath);
+      const decision = decideCommitGate(
+        { isBeadsProject: true, sessionId: 'test-session' },
+        { claimed: false, claimId: null, totalWork: 3, inProgress: { count: 1, summary: 'test' } }
+      );
+      expect(decision.allow).toBe(true);
+    });
+
+    it('blocks when session has unclosed claim', async () => {
+      const { decideCommitGate } = await import(corePath);
+      const decision = decideCommitGate(
+        { isBeadsProject: true, sessionId: 'test-session' },
+        { claimed: true, claimId: 'issue-123', totalWork: 3, inProgress: { count: 1, summary: 'test' } }
+      );
+      expect(decision.allow).toBe(false);
+      expect(decision.reason).toBe('unclosed_claim');
+    });
+  });
+
+  describe('decideStopGate', () => {
+    it('allows when claim is stale (no in_progress issues)', async () => {
+      const { decideStopGate } = await import(corePath);
+      const decision = decideStopGate(
+        { isBeadsProject: true, sessionId: 'test-session' },
+        { claimed: true, claimId: 'issue-123', totalWork: 3, inProgress: { count: 0, summary: '' } }
+      );
+      expect(decision.allow).toBe(true);
+    });
+
+    it('blocks when claim exists and in_progress issues remain', async () => {
+      const { decideStopGate } = await import(corePath);
+      const decision = decideStopGate(
+        { isBeadsProject: true, sessionId: 'test-session' },
+        { claimed: true, claimId: 'issue-123', totalWork: 3, inProgress: { count: 2, summary: 'test' } }
+      );
+      expect(decision.allow).toBe(false);
+      expect(decision.reason).toBe('unclosed_claim');
+    });
+  });
+});

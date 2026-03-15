@@ -8,18 +8,17 @@
 // Installed by: xtrm install
 
 import { execSync } from 'node:child_process';
-import { readFileSync, existsSync, unlinkSync } from 'node:fs';
+import { existsSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
+import { readHookInput } from './beads-gate-core.mjs';
+import { resolveCwd, isBeadsProject } from './beads-gate-utils.mjs';
+import { memoryPromptMessage } from './beads-gate-messages.mjs';
 
-let input;
-try {
-  input = JSON.parse(readFileSync(0, 'utf8'));
-} catch {
-  process.exit(0);
-}
+const input = readHookInput();
+if (!input) process.exit(0);
 
-const cwd = input.cwd ?? process.env.CLAUDE_PROJECT_DIR ?? process.cwd();
-if (!existsSync(join(cwd, '.beads'))) process.exit(0);
+const cwd = resolveCwd(input);
+if (!cwd || !isBeadsProject(cwd)) process.exit(0);
 
 // Agent signals evaluation complete by touching this marker, then stops again
 const marker = join(cwd, '.beads', '.memory-gate-done');
@@ -44,13 +43,5 @@ try {
 
 if (!hasClosed) process.exit(0);
 
-process.stderr.write(
-  '🧠 MEMORY GATE: Before ending the session, evaluate this session\'s work.\n\n' +
-  'For each issue you worked on and closed, ask:\n' +
-  '  Is this a stable pattern, key decision, or solution I\'ll encounter again?\n\n' +
-  '  YES → bd remember "<precise, durable insight>"\n' +
-  '  NO  → explicitly note "nothing worth persisting" and continue\n\n' +
-  'When done, signal completion and stop again:\n' +
-  '  touch .beads/.memory-gate-done\n'
-);
+process.stderr.write(memoryPromptMessage());
 process.exit(2);

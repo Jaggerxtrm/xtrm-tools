@@ -7,66 +7,32 @@
 //
 // Installed by: xtrm install
 
-import { readFileSync } from 'node:fs';
 import {
-  resolveCwd, isBeadsProject, getSessionClaim,
-  getTotalWork, getInProgress, withSafeBdContext,
-} from './beads-gate-utils.mjs';
+  readHookInput,
+  resolveSessionContext,
+  resolveClaimAndWorkState,
+  decideEditGate,
+} from './beads-gate-core.mjs';
+import { withSafeBdContext } from './beads-gate-utils.mjs';
+import { editBlockMessage, editBlockFallbackMessage } from './beads-gate-messages.mjs';
 
-let input;
-try {
-  input = JSON.parse(readFileSync(0, 'utf8'));
-} catch {
-  process.exit(0);
-}
+const input = readHookInput();
+if (!input) process.exit(0);
 
 withSafeBdContext(() => {
-  const cwd = resolveCwd(input);
-  if (!isBeadsProject(cwd)) process.exit(0);
+  const ctx = resolveSessionContext(input);
+  if (!ctx || !ctx.isBeadsProject) process.exit(0);
 
-  const sessionId = input.session_id;
+  const state = resolveClaimAndWorkState(ctx);
+  const decision = decideEditGate(ctx, state);
 
-  if (sessionId) {
-    const claimed = getSessionClaim(sessionId, cwd);
-    if (claimed === null) process.exit(0); // bd kv unavailable — fail open
-    if (claimed) process.exit(0);          // this session has an active claim
+  if (decision.allow) process.exit(0);
 
-    const totalWork = getTotalWork(cwd);
-    if (totalWork === null) process.exit(0); // can't determine — fail open
-    if (totalWork === 0) process.exit(0);    // nothing to track — clean-start state
-
-    process.stderr.write(
-      '🚫 BEADS GATE: This session has no active claim — claim an issue before editing files.\n\n' +
-      '  bd update <id> --status=in_progress\n' +
-      `  bd kv set "claimed:${sessionId}" "<id>"\n\n` +
-      'Or create a new issue:\n' +
-      '  bd create --title="<what you\'re doing>" --type=task --priority=2\n' +
-      '  bd update <id> --status=in_progress\n' +
-      `  bd kv set "claimed:${sessionId}" "<id>"\n`
-    );
-    process.exit(2);
+  // Block with appropriate message
+  if (decision.reason === 'no_claim_with_work') {
+    process.stderr.write(editBlockMessage(decision.sessionId));
   } else {
-    // Fallback: global in_progress check (non-Claude environments / no session_id).
-    const ip = getInProgress(cwd);
-    if (ip === null) process.exit(0);
-    if (ip.count > 0) process.exit(0);
-
-    const totalWork = getTotalWork(cwd);
-    if (totalWork === null || totalWork === 0) process.exit(0);
-
-    process.stderr.write(
-      '🚫 BEADS GATE: No active issue — create one before editing files.\n\n' +
-      '  bd create --title="<what you\'re doing>" --type=task --priority=2\n' +
-      '  bd update <id> --status=in_progress\n\n' +
-      'Full workflow (do this every session):\n' +
-      '  1. bd create + bd update in_progress   ← you are here\n' +
-      '  2. Edit files / write code\n' +
-      '  3. bd close <id>                        close when done\n' +
-      '  4. git add <files> && git commit\n' +
-      '  5. git push -u origin <feature-branch>\n' +
-      '  6. gh pr create --fill && gh pr merge --squash\n' +
-      '  7. git checkout master && git reset --hard origin/master\n'
-    );
-    process.exit(2);
+    process.stderr.write(editBlockFallbackMessage());
   }
+  process.exit(2);
 });

@@ -4,10 +4,6 @@
       {
         "script": "skill-suggestion.py",
         "timeout": 5000
-      },
-      {
-        "script": "gitnexus-impact-reminder.py",
-        "timeout": 5000
       }
     ],
     "SessionStart": [

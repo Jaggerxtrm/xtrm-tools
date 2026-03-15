@@ -51,17 +51,16 @@
         "matcher": "Bash",
         "script": "main-guard-post-push.mjs",
         "timeout": 5000
-      },
-      {
-        "matcher": "Bash",
-        "script": "beads-close-memory-prompt.mjs",
-        "timeout": 5000
       }
     ],
     "Stop": [
       {
         "script": "beads-stop-gate.mjs",
         "timeout": 5000
+      },
+      {
+        "script": "beads-memory-gate.mjs",
+        "timeout": 8000
       }
     ]
   },

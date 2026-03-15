@@ -26,6 +26,12 @@ export function readExistingPiValues(piAgentDir: string): Record<string, string>
         if (auth?.dashscope?.key) values['DASHSCOPE_API_KEY'] = auth.dashscope.key;
         if (auth?.zai?.key) values['ZAI_API_KEY'] = auth.zai.key;
     } catch { /* file doesn't exist or invalid */ }
+    try {
+        const models = JSON.parse(require('fs').readFileSync(path.join(piAgentDir, 'models.json'), 'utf8'));
+        if (!values['DASHSCOPE_API_KEY'] && models?.providers?.dashscope?.apiKey) {
+            values['DASHSCOPE_API_KEY'] = models.providers.dashscope.apiKey;
+        }
+    } catch { /* file doesn't exist or invalid */ }
     return values;
 }
 

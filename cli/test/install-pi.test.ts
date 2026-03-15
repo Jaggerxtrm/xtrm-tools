@@ -107,4 +107,13 @@ describe('createInstallPiCommand', () => {
         const { readExistingPiValues } = await import('../src/commands/install-pi.js?t=' + Date.now());
         expect(readExistingPiValues('/nonexistent/path')).toEqual({});
     });
+
+    it('readExistingPiValues extracts DASHSCOPE_API_KEY from models.json when auth.json missing', async () => {
+        const { readExistingPiValues } = await import('../src/commands/install-pi.js?t=models' + Date.now());
+        const tmpDir = require('node:fs').mkdtempSync(require('node:path').join(require('node:os').tmpdir(), 'pi-test-'));
+        require('node:fs').writeFileSync(require('node:path').join(tmpDir, 'models.json'), JSON.stringify({ providers: { dashscope: { apiKey: 'sk-from-models-789' } } }));
+        const result = readExistingPiValues(tmpDir);
+        require('node:fs').rmSync(tmpDir, { recursive: true });
+        expect(result['DASHSCOPE_API_KEY']).toBe('sk-from-models-789');
+    });
 });

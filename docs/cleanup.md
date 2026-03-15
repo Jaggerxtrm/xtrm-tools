@@ -1,0 +1,438 @@
+# XTRM-Tools Cleanup Guide for Remote Agents
+
+This document provides cleanup instructions for agents on other machines to remove old/stale hooks and skills, maintaining only those installed by this repository.
+
+## Overview
+
+The xtrm-tools repository manages three categories of installable components:
+
+| Category | Source Directory | Target Location |
+|----------|------------------|-----------------|
+| **Global Hooks** | `hooks/` | `~/.claude/hooks/` |
+| **Global Skills** | `skills/` | `~/.agents/skills/` |
+| **Project Skills** | `project-skills/` | `<project>/.claude/` |
+
+---
+
+## 1. Global Hooks (`~/.claude/hooks/`)
+
+These hooks are installed by `xtrm install` to `~/.claude/hooks/`. Remove any files NOT in the canonical list below.
+
+### Canonical Hook Files (maintain these only)
+
+#### Core Hooks
+| File | Event | Purpose |
+|------|-------|---------|
+| `agent_context.py` | — | Shared context module for other hooks |
+| `serena-workflow-reminder.py` | SessionStart, PreToolUse | Enforces Serena LSP workflow |
+
+#### Main Branch Protection
+| File | Event | Purpose |
+|------|-------|---------|
+| `main-guard.mjs` | PreToolUse | Blocks direct edits on main/master |
+| `main-guard-post-push.mjs` | PostToolUse | PR workflow reminders after push |
+
+#### Beads Workflow Gates (require `bd` + `dolt`)
+| File | Event | Purpose |
+|------|-------|---------|
+| `beads-gate-core.mjs` | — | Pure decision functions (imported by gates) |
+| `beads-gate-utils.mjs` | — | bd CLI adapters (imported by gates) |
+| `beads-gate-messages.mjs` | — | Message templates |
+| `beads-edit-gate.mjs` | PreToolUse | Blocks edits without claimed issue |
+| `beads-commit-gate.mjs` | PreToolUse | Blocks commit without closed claim |
+| `beads-stop-gate.mjs` | Stop | Blocks stop with unclosed claim |
+| `beads-memory-gate.mjs` | Stop | Prompts memory capture before stop |
+| `beads-compact-save.mjs` | PreCompact | Saves session state before compact |
+| `beads-compact-restore.mjs` | SessionStart | Restores session state on start |
+
+#### GitNexus Integration
+| File | Event | Purpose |
+|------|-------|---------|
+| `gitnexus/gitnexus-hook.cjs` | PostToolUse | Enriches context with graph data |
+
+### Cleanup Command
+
+```bash
+# List current hooks
+ls -la ~/.claude/hooks/
+
+# Remove any files NOT in the canonical list above
+# Example: rm ~/.claude/hooks/old-hook.py
+```
+
+---
+
+## 2. Global Skills (`~/.agents/skills/`)
+
+These skills are installed by `xtrm install` to `~/.agents/skills/`. Remove any directories NOT in the canonical list.
+
+### Canonical Skill Directories (maintain these only)
+
+| Directory | Purpose |
+|-----------|---------|
+| `clean-code/` | Pragmatic coding standards |
+| `delegating/` | Task delegation to cost-optimized agents |
+| `docker-expert/` | Docker containerization expertise |
+| `documenting/` | SSOT documentation with drift detection |
+| `find-skills/` | Discover and install agent skills |
+| `gitnexus-debugging/` | Debug with knowledge graph |
+| `gitnexus-exploring/` | Navigate code with knowledge graph |
+| `gitnexus-impact-analysis/` | Blast radius analysis |
+| `gitnexus-refactoring/` | Safe refactor planning |
+| `hook-development/` | Claude Code plugin hooks |
+| `obsidian-cli/` | Obsidian vault CLI integration |
+| `orchestrating-agents/` | Multi-model agent orchestration |
+| `prompt-improving/` | Claude XML prompt optimization |
+| `python-testing/` | Pytest strategies and TDD |
+| `senior-backend/` | Backend development expertise |
+| `senior-data-scientist/` | Data science and analytics |
+| `senior-devops/` | DevOps and infrastructure |
+| `senior-security/` | Security engineering |
+| `skill-creator/` | Create and evaluate skills |
+| `using-serena-lsp/` | Serena LSP workflow guide |
+| `using-TDD/` | TDD workflow enforcement |
+| `using-xtrm/` | XTRM stack operating manual |
+
+### Cleanup Command
+
+```bash
+# List current skills
+ls -la ~/.agents/skills/
+
+# Remove any directories NOT in the canonical list above
+# Example: rm -rf ~/.agents/skills/old-skill/
+```
+
+---
+
+## 3. Project Skills (`project-skills/`)
+
+Project skills are installed per-project via `xtrm install project <skill-name>`. They install into `<project>/.claude/`.
+
+### Available Project Skills
+
+| Skill Name | Description | Hooks Installed |
+|------------|-------------|-----------------|
+| `quality-gates` | TypeScript + Python quality checks | `quality-check.cjs`, `quality-check.py` |
+| `tdd-guard` | Test-driven development enforcement | `tdd-guard-pretool-bridge.cjs` |
+| `service-skills-set` | Service skill trinity + git hooks | Skills + `.githooks/` scripts |
+
+### Project Skill Hook Files
+
+After installing a project skill, these hooks appear in `<project>/.claude/hooks/`:
+
+#### quality-gates
+```
+.claude/hooks/quality-check.cjs    # TypeScript/ESLint checks
+.claude/hooks/quality-check.py     # Python/ruff/mypy checks
+.claude/hooks/hook-config.json     # Configuration
+```
+
+#### tdd-guard
+```
+.claude/hooks/tdd-guard-pretool-bridge.cjs  # PreToolUse TDD gate
+```
+
+#### service-skills-set
+```
+.claude/git-hooks/doc_reminder.py      # Pre-commit doc check
+.claude/git-hooks/skill_staleness.py   # Pre-push staleness check
+.claude/skills/creating-service-skills/
+.claude/skills/using-service-skills/
+.claude/skills/updating-service-skills/
+.claude/skills/scoping-service-skills/
+```
+
+### Cleanup Command
+
+```bash
+# In each project, check installed project skills
+ls -la .claude/hooks/
+ls -la .claude/skills/
+ls -la .claude/git-hooks/
+
+# Remove any hooks/skills NOT from canonical project skills above
+```
+
+---
+
+## 4. settings.json Hook Configuration
+
+The installer writes hook configurations to two locations:
+
+### Global: `~/.claude/settings.json`
+
+Hooks from `config/hooks.json` are merged into the global settings. The installer:
+1. Reads `config/hooks.json` from the repository
+2. Transforms hook paths to match target environment
+3. Deep-merges with existing settings (preserves user hooks)
+4. Writes merged configuration
+
+### Project: `<project>/.claude/settings.json`
+
+Project skills merge their own hooks via `deepMergeHooks()` in `cli/src/commands/install-project.ts`.
+
+### Canonical Hook Events (from `config/hooks.json`)
+
+| Event | Hooks | Matcher |
+|-------|-------|---------|
+| `SessionStart` | `beads-compact-restore.mjs`, `serena-workflow-reminder.py` | — |
+| `PreToolUse` | `main-guard.mjs`, `beads-edit-gate.mjs`, `beads-commit-gate.mjs`, `serena-workflow-reminder.py` | Various |
+| `PostToolUse` | `main-guard-post-push.mjs`, `gitnexus/gitnexus-hook.cjs` | Various |
+| `Stop` | `beads-stop-gate.mjs`, `beads-memory-gate.mjs` | — |
+| `PreCompact` | `beads-compact-save.mjs` | — |
+
+### Cleanup: Remove Orphaned Hook Entries
+
+```bash
+# Check for hooks referencing deleted files
+cat ~/.claude/settings.json | jq '.hooks'
+
+# Remove entries where the command references a non-existent file
+# The installer's filterHooksByInstalledScripts() does this automatically
+# But for manual cleanup, edit settings.json and remove orphaned entries
+```
+
+---
+
+## 5. Complete Cleanup Procedure
+
+Run this procedure on each machine to ensure a clean state:
+
+### Step 1: Backup Current State
+
+```bash
+# Backup existing configurations
+cp -r ~/.claude ~/.claude.backup.$(date +%Y%m%d)
+cp -r ~/.agents/skills ~/.agents/skills.backup.$(date +%Y%m%d)
+```
+
+### Step 2: Remove Non-Canonical Hooks
+
+```bash
+# Define canonical hooks
+CANONICAL_HOOKS=(
+    "agent_context.py"
+    "serena-workflow-reminder.py"
+    "main-guard.mjs"
+    "main-guard-post-push.mjs"
+    "beads-gate-core.mjs"
+    "beads-gate-utils.mjs"
+    "beads-gate-messages.mjs"
+    "beads-edit-gate.mjs"
+    "beads-commit-gate.mjs"
+    "beads-stop-gate.mjs"
+    "beads-memory-gate.mjs"
+    "beads-compact-save.mjs"
+    "beads-compact-restore.mjs"
+    "gitnexus"
+)
+
+# Remove non-canonical hooks
+cd ~/.claude/hooks
+for f in *.py *.mjs *.cjs; do
+    if [[ ! " ${CANONICAL_HOOKS[@]} " =~ " ${f} " ]]; then
+        echo "Removing: $f"
+        rm -f "$f"
+    fi
+done
+
+# Keep gitnexus directory
+```
+
+### Step 3: Remove Non-Canonical Skills
+
+```bash
+# Define canonical skills
+CANONICAL_SKILLS=(
+    "clean-code"
+    "delegating"
+    "docker-expert"
+    "documenting"
+    "find-skills"
+    "gitnexus-debugging"
+    "gitnexus-exploring"
+    "gitnexus-impact-analysis"
+    "gitnexus-refactoring"
+    "hook-development"
+    "obsidian-cli"
+    "orchestrating-agents"
+    "prompt-improving"
+    "python-testing"
+    "senior-backend"
+    "senior-data-scientist"
+    "senior-devops"
+    "senior-security"
+    "skill-creator"
+    "using-serena-lsp"
+    "using-TDD"
+    "using-xtrm"
+)
+
+# Remove non-canonical skills
+cd ~/.agents/skills
+for d in */; do
+    d=${d%/}
+    if [[ ! " ${CANONICAL_SKILLS[@]} " =~ " ${d} " ]]; then
+        echo "Removing: $d"
+        rm -rf "$d"
+    fi
+done
+```
+
+### Step 4: Clean settings.json
+
+```bash
+# The installer provides a filter for orphaned hooks
+# Run this to verify hooks reference existing files:
+node -e "
+const fs = require('fs');
+const settings = JSON.parse(fs.readFileSync(process.env.HOME + '/.claude/settings.json'));
+const hooks = settings.hooks || {};
+for (const [event, wrappers] of Object.entries(hooks)) {
+    for (const wrapper of wrappers) {
+        for (const hook of (wrapper.hooks || [])) {
+            const cmd = hook.command || '';
+            const match = cmd.match(/\"([^\"]+\.(py|mjs|cjs))\"/);
+            if (match) {
+                const path = match[1].replace(/\$HOME/g, process.env.HOME);
+                if (!fs.existsSync(path)) {
+                    console.log('ORPHAN:', event, '->', path);
+                }
+            }
+        }
+    }
+}
+"
+```
+
+### Step 5: Reinstall from Repository
+
+```bash
+# Pull latest from repository
+cd /path/to/xtrm-tools
+git pull origin main
+
+# Run full reinstall
+xtrm install all -y
+```
+
+---
+
+## 6. Verification
+
+After cleanup, verify the installation:
+
+```bash
+# Check hooks count
+ls ~/.claude/hooks/*.py ~/.claude/hooks/*.mjs 2>/dev/null | wc -l
+# Expected: 13 hook files
+
+# Check skills count
+ls -d ~/.agents/skills/*/ 2>/dev/null | wc -l
+# Expected: 22 skill directories
+
+# Check gitnexus hook
+ls ~/.claude/hooks/gitnexus/gitnexus-hook.cjs
+# Expected: file exists
+
+# Verify settings.json is valid JSON
+cat ~/.claude/settings.json | jq . > /dev/null && echo "Valid JSON"
+
+# Run installer in dry-run to verify no drift
+xtrm install --dry-run
+```
+
+---
+
+## 7. Project-Specific Cleanup
+
+For each project using xtrm-tools:
+
+```bash
+cd /path/to/project
+
+# List installed project skills
+ls .claude/hooks/ 2>/dev/null
+ls .claude/skills/ 2>/dev/null
+
+# Compare against canonical project skills:
+# - quality-gates: quality-check.cjs, quality-check.py
+# - tdd-guard: tdd-guard-pretool-bridge.cjs
+# - service-skills-set: git-hooks/, skills/{creating,using,updating,scoping}-service-skills/
+
+# Remove any non-canonical files
+# Reinstall project skills if needed:
+xtrm install project list
+xtrm install project <skill-name>
+```
+
+---
+
+## 8. Automation Script
+
+Save this as `cleanup-xtrm.sh` for automated cleanup:
+
+```bash
+#!/bin/bash
+set -e
+
+echo "=== XTRM-Tools Cleanup Script ==="
+
+# Canonical lists
+CANONICAL_HOOKS=(
+    "agent_context.py" "serena-workflow-reminder.py"
+    "main-guard.mjs" "main-guard-post-push.mjs"
+    "beads-gate-core.mjs" "beads-gate-utils.mjs" "beads-gate-messages.mjs"
+    "beads-edit-gate.mjs" "beads-commit-gate.mjs" "beads-stop-gate.mjs"
+    "beads-memory-gate.mjs" "beads-compact-save.mjs" "beads-compact-restore.mjs"
+    "gitnexus"
+)
+
+CANONICAL_SKILLS=(
+    "clean-code" "delegating" "docker-expert" "documenting" "find-skills"
+    "gitnexus-debugging" "gitnexus-exploring" "gitnexus-impact-analysis"
+    "gitnexus-refactoring" "hook-development" "obsidian-cli"
+    "orchestrating-agents" "prompt-improving" "python-testing"
+    "senior-backend" "senior-data-scientist" "senior-devops" "senior-security"
+    "skill-creator" "using-serena-lsp" "using-TDD" "using-xtrm"
+)
+
+# Cleanup hooks
+echo "Cleaning hooks..."
+cd ~/.claude/hooks 2>/dev/null || exit 0
+for f in *.py *.mjs *.cjs 2>/dev/null; do
+    [ -f "$f" ] || continue
+    if [[ ! " ${CANONICAL_HOOKS[@]} " =~ " ${f} " ]]; then
+        echo "  Removing hook: $f"
+        rm -f "$f"
+    fi
+done
+
+# Cleanup skills
+echo "Cleaning skills..."
+cd ~/.agents/skills 2>/dev/null || exit 0
+for d in */; do
+    d=${d%/}
+    if [[ ! " ${CANONICAL_SKILLS[@]} " =~ " ${d} " ]]; then
+        echo "  Removing skill: $d"
+        rm -rf "$d"
+    fi
+done
+
+echo "=== Cleanup complete ==="
+echo "Run 'xtrm install all -y' to reinstall canonical components"
+```
+
+---
+
+## Summary
+
+| Component | Location | Count | Cleanup Method |
+|-----------|----------|-------|----------------|
+| Global Hooks | `~/.claude/hooks/` | 13 files + gitnexus/ | Remove non-canonical files |
+| Global Skills | `~/.agents/skills/` | 22 directories | Remove non-canonical directories |
+| Project Skills | `<project>/.claude/` | Varies | Per-project cleanup |
+| settings.json | `~/.claude/settings.json` | — | Remove orphaned hook entries |
+
+After cleanup, run `xtrm install all -y` to reinstall all canonical components from the repository.

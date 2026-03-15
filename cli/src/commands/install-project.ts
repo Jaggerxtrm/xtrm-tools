@@ -335,8 +335,30 @@ export async function installProjectSkill(toolName: string, projectRootOverride?
     console.log(kleur.white(`  Please read: ${kleur.cyan('.claude/docs/' + toolName + '-readme.md')}\n`));
 
     if (toolName === 'tdd-guard') {
-        console.log(kleur.white('  Example for Vitest:'));
-        console.log(kleur.dim('    npm install --save-dev tdd-guard-vitest\n'));
+        // Check if tdd-guard CLI is installed globally
+        const tddGuardCheck = spawnSync('tdd-guard', ['--version'], { stdio: 'pipe' });
+        if (tddGuardCheck.status !== 0) {
+            console.log(kleur.red('  ✗ tdd-guard CLI not found globally!\n'));
+            console.log(kleur.white('  Install the global CLI:'));
+            console.log(kleur.cyan('    npm install -g tdd-guard\n'));
+        } else {
+            console.log(kleur.green('  ✓ tdd-guard CLI found globally'));
+        }
+        console.log(kleur.white('\n  Install a test reporter (choose one):'));
+        console.log(kleur.dim('    npm install --save-dev tdd-guard-vitest    # Vitest'));
+        console.log(kleur.dim('    npm install --save-dev tdd-guard-jest      # Jest'));
+        console.log(kleur.dim('    pip install tdd-guard-pytest               # pytest\n'));
+    }
+
+    if (toolName === 'quality-gates') {
+        console.log(kleur.white('  Install language dependencies:\n'));
+        console.log(kleur.white('  TypeScript:'));
+        console.log(kleur.dim('    npm install --save-dev typescript eslint prettier'));
+        console.log(kleur.white('\n  Python:'));
+        console.log(kleur.dim('    pip install ruff mypy'));
+        console.log(kleur.white('\n  For TDD (test-first) enforcement, install separately:'));
+        console.log(kleur.dim('    npm install -g tdd-guard'));
+        console.log(kleur.dim('    xtrm install project tdd-guard\n'));
     }
 
     console.log(kleur.green('  ✓ Installation complete!\n'));

@@ -84,4 +84,27 @@ describe('createInstallPiCommand', () => {
         expect(fs.existsSync(p.join(base, 'index.ts'))).toBe(true);
         expect(fs.existsSync(p.join(base, 'package.json'))).toBe(true);
     });
+
+    it('readExistingPiValues extracts DASHSCOPE_API_KEY from existing auth.json', async () => {
+        const { readExistingPiValues } = await import('../src/commands/install-pi.js?t=' + Date.now());
+        const tmpDir = require('node:fs').mkdtempSync(require('node:path').join(require('node:os').tmpdir(), 'pi-test-'));
+        require('node:fs').writeFileSync(require('node:path').join(tmpDir, 'auth.json'), JSON.stringify({ dashscope: { type: 'api_key', key: 'sk-existing-123' } }));
+        const result = readExistingPiValues(tmpDir);
+        require('node:fs').rmSync(tmpDir, { recursive: true });
+        expect(result['DASHSCOPE_API_KEY']).toBe('sk-existing-123');
+    });
+
+    it('readExistingPiValues extracts ZAI_API_KEY from existing auth.json', async () => {
+        const { readExistingPiValues } = await import('../src/commands/install-pi.js?t=' + Date.now());
+        const tmpDir = require('node:fs').mkdtempSync(require('node:path').join(require('node:os').tmpdir(), 'pi-test-'));
+        require('node:fs').writeFileSync(require('node:path').join(tmpDir, 'auth.json'), JSON.stringify({ zai: { type: 'api_key', key: 'zai-existing-456' } }));
+        const result = readExistingPiValues(tmpDir);
+        require('node:fs').rmSync(tmpDir, { recursive: true });
+        expect(result['ZAI_API_KEY']).toBe('zai-existing-456');
+    });
+
+    it('readExistingPiValues returns empty object when auth.json missing', async () => {
+        const { readExistingPiValues } = await import('../src/commands/install-pi.js?t=' + Date.now());
+        expect(readExistingPiValues('/nonexistent/path')).toEqual({});
+    });
 });

@@ -18,6 +18,17 @@ export function fillTemplate(template: string, values: Record<string, string>): 
     return template.replace(/\{\{(\w+)\}\}/g, (_, key) => values[key] ?? '');
 }
 
+
+export function readExistingPiValues(piAgentDir: string): Record<string, string> {
+    const values: Record<string, string> = {};
+    try {
+        const auth = JSON.parse(require('fs').readFileSync(path.join(piAgentDir, 'auth.json'), 'utf8'));
+        if (auth?.dashscope?.key) values['DASHSCOPE_API_KEY'] = auth.dashscope.key;
+        if (auth?.zai?.key) values['ZAI_API_KEY'] = auth.zai.key;
+    } catch { /* file doesn't exist or invalid */ }
+    return values;
+}
+
 function isPiInstalled(): boolean {
     return spawnSync('pi', ['--version'], { encoding: 'utf8' }).status === 0;
 }
@@ -48,10 +59,15 @@ export function createInstallPiCommand(): Command {
             }
 
             const schema: InstallSchema = await fs.readJson(path.join(piConfigDir, 'install-schema.json'));
-            const values: Record<string, string> = {};
+            const existing = readExistingPiValues(PI_AGENT_DIR);
+            const values: Record<string, string> = { ...existing };
 
             console.log(t.bold('  API Keys\n'));
             for (const field of schema.fields) {
+                if (existing[field.key]) {
+                    console.log(t.success(`    ${sym.ok} ${field.label} [already set]`));
+                    continue;
+                }
                 if (!field.required && !yes) {
                     const { include } = await prompts({ type: 'confirm', name: 'include', message: `  Configure ${field.label}? (optional)`, initial: false });
                     if (!include) continue;

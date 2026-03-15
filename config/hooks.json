@@ -2,6 +2,10 @@
   "hooks": {
     "SessionStart": [
       {
+        "script": "beads-compact-restore.mjs",
+        "timeout": 5000
+      },
+      {
         "script": "serena-workflow-reminder.py"
       }
     ],
@@ -51,6 +55,12 @@
       {
         "script": "beads-memory-gate.mjs",
         "timeout": 8000
+      }
+    ],
+    "PreCompact": [
+      {
+        "script": "beads-compact-save.mjs",
+        "timeout": 5000
       }
     ]
   },

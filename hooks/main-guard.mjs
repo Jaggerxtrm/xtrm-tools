@@ -96,6 +96,8 @@ if (tool === 'Bash') {
     /^git\s+worktree\b/,
     /^git\s+checkout\s+-b\s+\S+/,
     /^git\s+switch\s+-c\s+\S+/,
+    // Allow post-merge sync to protected branch only (not arbitrary origin refs)
+    ...protectedBranches.map(b => new RegExp(`^git\\s+reset\\s+--hard\\s+origin/${b}\\b`)),
     /^gh\s+/,
     /^bd\s+/,
   ];

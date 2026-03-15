@@ -64,7 +64,7 @@ process.stdout.write(JSON.stringify({
     `✅ Pushed '${branch}'. Next workflow steps:\n\n` +
     '  1. gh pr create --fill\n' +
     '  2. gh pr merge --squash\n' +
-    '  3. git checkout main && git pull --ff-only\n\n' +
+    '  3. git checkout main && git reset --hard origin/main\n\n' +
     'Before/after merge, ensure beads state is updated (e.g. bd close <id>).',
 }));
 process.stdout.write('\n');

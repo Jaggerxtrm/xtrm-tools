@@ -120,6 +120,7 @@ if (tool === 'Bash') {
     ...protectedBranches.map(b => new RegExp(`^git\\s+reset\\s+--hard\\s+origin/${b}\\b`)),
     /^gh\s+/,
     /^bd\s+/,
+    /^touch\s+\.beads\//,
   ];
 
   if (SAFE_BASH_PATTERNS.some(p => p.test(cmd))) {

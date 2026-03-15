@@ -1155,9 +1155,7 @@ function printSummary(errors, autofixes) {
 async function main() {
   // Show header with version
   const hookVersion = config._fileConfig.version || '1.0.0';
-  console.error('');
-  console.error(`📦 Node.js Quality Check v${hookVersion} - Starting...`);
-  console.error('────────────────────────────────────────────');
+  log.debug(`📦 Node.js Quality Check v${hookVersion} - Starting...`);
 
   // Debug: show loaded configuration
   log.debug(`Loaded config: ${JSON.stringify(config, null, 2)}`);
@@ -1193,10 +1191,7 @@ async function main() {
   }
 
   // Update header with file name
-  console.error('');
-  console.error(`🔍 Validating: ${path.basename(filePath)}`);
-  console.error('────────────────────────────────────────────');
-  log.info(`Checking: ${filePath}`);
+  log.debug(`Checking: ${filePath}`);
 
   // Run quality checks
   const checker = new QualityChecker(filePath);
@@ -1222,18 +1217,12 @@ async function main() {
   // Exit with appropriate code
   if (editedFileErrors.length > 0) {
     // Critical - blocks immediately
-    console.error(`\n${colors.red}🛑 FAILED - Fix issues in your edited file! 🛑${colors.reset}`);
-    console.error(`${colors.cyan}💡 CLAUDE.md CHECK:${colors.reset}`);
-    console.error(
-      `${colors.cyan}  → What CLAUDE.md pattern would have prevented this?${colors.reset}`,
-    );
-    console.error(`${colors.cyan}  → Are you following JSDoc batching strategy?${colors.reset}`);
-    console.error(`${colors.yellow}📋 NEXT STEPS:${colors.reset}`);
-    console.error(`${colors.yellow}  1. Fix the issues listed above${colors.reset}`);
-    console.error(`${colors.yellow}  2. The hook will run again automatically${colors.reset}`);
-    console.error(
-      `${colors.yellow}  3. Continue with your original task once all checks pass${colors.reset}`,
-    );
+    process.stdout.write(JSON.stringify({
+      hookSpecificOutput: {
+        hookEventName: 'PostToolUse',
+        additionalContext: `Quality check FAILED for ${filePath}:\n` + editedFileErrors.join('\n'),
+      },
+    }) + '\n');
     process.exit(2);
   } else if (dependencyWarnings.length > 0) {
     // Warning - shows but doesn't block
@@ -1241,34 +1230,8 @@ async function main() {
     console.error(
       `${colors.yellow}These won't block your progress but should be addressed${colors.reset}`,
     );
-    console.error(
-      `\n${colors.green}✅ Quality check passed for ${path.basename(filePath)}${colors.reset}`,
-    );
-
-    if (autofixes.length > 0 && config.autofixSilent) {
-      console.error(
-        `\n${colors.yellow}👉 File quality verified. Auto-fixes applied. Continue with your task.${colors.reset}`,
-      );
-    } else {
-      console.error(
-        `\n${colors.yellow}👉 File quality verified. Continue with your task.${colors.reset}`,
-      );
-    }
-    process.exit(0); // Don't block on dependency issues
+    process.exit(0);
   } else {
-    console.error(
-      `\n${colors.green}✅ Quality check passed for ${path.basename(filePath)}${colors.reset}`,
-    );
-
-    if (autofixes.length > 0 && config.autofixSilent) {
-      console.error(
-        `\n${colors.yellow}👉 File quality verified. Auto-fixes applied. Continue with your task.${colors.reset}`,
-      );
-    } else {
-      console.error(
-        `\n${colors.yellow}👉 File quality verified. Continue with your task.${colors.reset}`,
-      );
-    }
     process.exit(0);
   }
 }

@@ -121,6 +121,15 @@ describe('main-guard.mjs — MAIN_GUARD_PROTECTED_BRANCHES', () => {
     }
   });
 
+  it('allows touch .beads/.memory-gate-done on protected branch', () => {
+    const r = runHook(
+      'main-guard.mjs',
+      { tool_name: 'Bash', tool_input: { command: 'touch .beads/.memory-gate-done' } },
+      { MAIN_GUARD_PROTECTED_BRANCHES: CURRENT_BRANCH },
+    );
+    expect(r.status).toBe(0);
+  });
+
   it('allows Bash when MAIN_GUARD_ALLOW_BASH=1 is set', () => {
     const r = runHook(
       'main-guard.mjs',
@@ -187,9 +196,11 @@ describe('main-guard-post-push.mjs', () => {
         repoDir,
       );
       expect(r.status).toBe(0);
-      const out = parseHookJson(r.stdout);
-      expect(out?.systemMessage).toContain('gh pr create --fill');
-      expect(out?.systemMessage).toContain('gh pr merge --squash');
+      expect(r.stdout).toContain('gh pr create --fill');
+      expect(r.stdout).toContain('gh pr merge --squash');
+      // output must be plain text (agent-only), not a JSON systemMessage banner
+      expect(parseHookJson(r.stdout)).toBeNull();
+
     } finally {
       rmSync(repoDir, { recursive: true, force: true });
     }

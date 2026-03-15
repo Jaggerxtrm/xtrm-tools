@@ -141,12 +141,22 @@ describe('main-guard.mjs — MAIN_GUARD_PROTECTED_BRANCHES', () => {
     expect(out?.systemMessage).toContain('feature branch');
   });
 
-
   it('post-push hook sync guidance uses reset --hard, consistent with main-guard', () => {
     const postPush = readFileSync(path.join(HOOKS_DIR, 'main-guard-post-push.mjs'), 'utf8');
     expect(postPush).toContain('reset --hard');
     expect(postPush).not.toContain('pull --ff-only');
   });
+
+  it('hooks.json wires Bash to main-guard so git commit protection fires', () => {
+    const hooksJson = JSON.parse(readFileSync(path.join(__dirname, '../../config/hooks.json'), 'utf8'));
+    const mainGuardEntries = hooksJson.hooks.PreToolUse.filter(
+      (h: { script: string }) => h.script === 'main-guard.mjs',
+    );
+    const matchers: string[] = mainGuardEntries.map((h: { matcher: string }) => h.matcher ?? '');
+    const coversBash = matchers.some((m: string) => m.split('|').includes('Bash'));
+    expect(coversBash, 'main-guard.mjs must have a PreToolUse entry with Bash in its matcher').toBe(true);
+  });
+
 });
 
 // ── main-guard-post-push.mjs ────────────────────────────────────────────────

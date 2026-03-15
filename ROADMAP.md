@@ -2,10 +2,18 @@
 
 Planned improvements and feature additions for Claude Code skills.
 
+---
+
+## Completed in v2.1.9 (2026-03-15)
+
+- ✅ Unified `quality-gates` project skill (replaced separate py/ts-quality-gate)
+- ✅ Added `main-guard-post-push.mjs` hook for post-push workflow reminders
+- ✅ GitNexus impact analysis reminder hook for UserPromptSubmit
+- ✅ Documentation audit and updates (README.md, testing.md)
+- ✅ Removed obsolete `vault-pattern-implementation.md`
 
 ---
-## New documenting skill version
-Currently the CHANGELOG.md is updated via direct read>edit. Include a script that let's the agent run it and pass the changelog entry as an argument.
+
 ## `install-service-skills` — Include `AGENTS.md` in Installation
 
 ### Current State
@@ -353,33 +361,34 @@ Suggest roadmap items by creating issues in:
 
 ## CLI Architecture Improvements
 
-**Source:** Multi-agent orchestration session (Gemini ↔ Qwen collaboration, 2026-02-03)
+**Status:** Major refactor completed in v2.0.0 (2026-03-12)
 
-### Current Architecture Assessment
+### Current Architecture (v2.1.9)
 
-**Components Identified:**
-
-- CLI (Node.js sync orchestrator)
-- Skills (SKILL.md → .toml transformation)
-- Hooks (event-driven Python/JS)
-- Documentation (SSOT pattern in `.serena/memories/`)
+**Components:**
+- CLI (TypeScript, tsup bundle)
+- Skills (SKILL.md with YAML frontmatter)
+- Hooks (event-driven Python/JS scripts)
+- Documentation (SSOT pattern in `.serena/memories/` and root .md files)
+- Project Skills (modular, plug-and-play packages)
 
 **Strengths:**
-
-- Zero-cloning install via `npx github:Jaggerxtrm/jaggers-agent-tools`
-- Vault Protection (atomic merge with PROTECTED_KEYS)
-- Cross-agent compatibility (Claude ↔ Gemini)
+- Zero-cloning install via `npx github:Jaggerxtrm/xtrm-tools`
+- Claude Code exclusive focus (no fragile cross-agent translation)
+- Transactional sync with rollback protection
+- Manifest tracking for drift detection
 - Token efficiency (75-80% via serena-lsp)
+- Professional UX (spinners, themed output, clean errors)
 
-**Critical Weaknesses Identified:**
-
-1. **Atomic Inconsistency**: Linear sync iteration can fail mid-process, leaving environment in "Frankenstein" state
-2. **Conflict Blindness**: No version manifest for detecting drift during backports
-3. **Namespace Collision**: Generic skill names can collide with MCP servers or internal commands
+**Architecture Decision (v2.0.0):**
+Removed multi-agent hook translation for Gemini/Qwen due to:
+- Fragile, undocumented hook ecosystems
+- Technical debt from maintaining translations
+- Focus on robust, well-tested Claude Code support
 
 ---
 
-### Phase 1: Universal Configuration Hub & Format Adaptation (COMPLETED v1.5.0)
+### Phase 1: Universal Configuration Hub (COMPLETED v1.5.0)
 
 **Goal:** Centralize MCP and Hooks into a Single Source of Truth with multi-tool compilation.
 

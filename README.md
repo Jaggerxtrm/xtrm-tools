@@ -174,7 +174,7 @@ Task intake and service routing for Docker service projects.
 ### Skill-Associated Hooks
 
 **skill-suggestion.py**
-- Skills: `prompt-improving`, `delegating`
+- Skills: `prompt-improving`, `delegating`, `using-quality-gates`
 - Trigger: UserPromptSubmit
 - Purpose: Proactive skill suggestions based on prompt analysis
 - Config: `settings.json` → `skillSuggestions.enabled: true`
@@ -196,11 +196,20 @@ Task intake and service routing for Docker service projects.
 - Purpose: Enriches tool calls with knowledge graph context via `gitnexus augment`
 - Config: Auto-wired in `settings.json`
 
+**gitnexus-impact-reminder.py**
+- Trigger: UserPromptSubmit
+- Purpose: Reminds to run impact analysis before editing code symbols
+- Config: Auto-wired in `settings.json`
+
 ### Standalone Hooks
 
 **main-guard.mjs**
-- Trigger: PreToolUse (Write|Edit|MultiEdit|mcp__serena__rename_symbol|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol)
-- Purpose: Blocks direct edits on protected branches with structured deny output
+- Trigger: PreToolUse (Write|Edit|MultiEdit|Serena edit tools)
+- Purpose: Blocks direct edits on protected branches (main/master) with structured deny output
+
+**main-guard-post-push.mjs**
+- Trigger: PostToolUse (Bash: git push)
+- Purpose: After pushing feature branch, reminds to open PR, merge, and sync local
 
 **type-safety-enforcement.py**
 - Trigger: PreToolUse (Bash|Edit|Write)
@@ -211,10 +220,13 @@ Task intake and service routing for Docker service projects.
 - Purpose: Shared hook input/output helper
 
 **beads gate hooks** (installed with `xtrm install all`, or included when beads+dolt is available):
-- `beads-edit-gate.mjs` (PreToolUse)
-- `beads-commit-gate.mjs` (PreToolUse)
-- `beads-stop-gate.mjs` (Stop)
-- `beads-close-memory-prompt.mjs` (PostToolUse)
+- `beads-edit-gate.mjs` (PreToolUse) — Blocks writes without active issue claim
+- `beads-commit-gate.mjs` (PreToolUse) — Blocks commits with unresolved session claim
+- `beads-stop-gate.mjs` (Stop) — Blocks session stop while claim remains open
+- `beads-close-memory-prompt.mjs` (PostToolUse) — Prompts memory handoff after `bd close`
+
+### PostToolUse Hooks
+- `main-guard-post-push.mjs` — After feature-branch push, reminds PR/merge/sync steps
 
 ## Project Skills
 
@@ -224,10 +236,9 @@ Task intake and service routing for Docker service projects.
 
 | Skill | Description | Hook Type |
 |-------|-------------|-----------|
+| `quality-gates` | Unified PostToolUse code quality hooks — runs linting, type checking, and formatting on every edit | PostToolUse |
 | `service-skills-set` | Docker service expertise — gives Claude persistent knowledge about your services | SessionStart, PreToolUse, PostToolUse |
 | `tdd-guard` | Enforce Test-Driven Development — blocks implementation until failing tests exist | SessionStart, PreToolUse, UserPromptSubmit |
-| `ts-quality-gate` | TypeScript/ESLint/Prettier quality gate — runs on every edit, auto-fixes issues | PostToolUse |
-| `py-quality-gate` | Python ruff/mypy quality gate — linting, formatting, and type checking | PostToolUse |
 
 ### Installing Project Skills
 
@@ -237,12 +248,11 @@ xtrm install project list
 
 # Install a specific skill into your current project
 cd my-project
-xtrm install project service-skills-set  # Docker service expertise
-xtrm install project tdd-guard           # TDD enforcement
-xtrm install project ts-quality-gate     # TypeScript quality
-xtrm install project py-quality-gate     # Python quality
-xtrm install project all                 # Install every available project skill
-xtrm install project '*'                 # Same as above; quote to avoid shell expansion
+xtrm install project quality-gates      # Unified quality gates (Python + TypeScript)
+xtrm install project service-skills-set # Docker service expertise
+xtrm install project tdd-guard          # TDD enforcement
+xtrm install project all                # Install every available project skill
+xtrm install project '*'                # Same as above; quote to avoid shell expansion
 ```
 
 **Note:** Project skills install Claude hooks and skills into your project's `.claude/` directory. Some skills require additional manual setup (e.g., installing npm packages or Python dependencies). Always read the documentation at `.claude/docs/<skill>-readme.md` after installation.
@@ -628,10 +638,16 @@ Once registered, skills activate automatically when Claude:
 ## Documentation
 
 ### Core Documentation
+- [README.md](README.md) - Main documentation and quick start
 - [CHANGELOG.md](CHANGELOG.md) - Version history and breaking changes
 - [ROADMAP.md](ROADMAP.md) - Future enhancements and planned features
-- [AGENTS.md](AGENTS.md) - GitNexus quick reference for this project
+- [AGENTS.md](AGENTS.md) - GitNexus + bd (beads) quick reference
 - [CLAUDE.md](CLAUDE.md) - Claude Code development guide
+- [hooks.md](hooks.md) - Global hooks module reference
+- [skills.md](skills.md) - Global skills catalog
+- [project-skills.md](project-skills.md) - Project-local skills reference
+- [mcp.md](mcp.md) - MCP servers configuration
+- [testing.md](testing.md) - Production live testing checklist
 
 ### Skill Documentation
 - [skills/prompt-improving/README.md](skills/prompt-improving/README.md) - Prompt improvement skill
@@ -653,6 +669,10 @@ Once registered, skills activate automatically when Claude:
 
 | Version | Date       | Highlights                                         |
 | ------- | ---------- | -------------------------------------------------- |
+| 2.1.9   | 2026-03-15 | Main-guard post-push hook, quality-gates unified, gitnexus impact enforcement |
+| 2.1.8   | 2026-03-13 | Beads gate hooks hardening, service skills trinity updates |
+| 2.1.7   | 2026-03-12 | GitNexus impact analysis hook, onboarding improvements |
+| 2.1.0   | 2026-03-12 | Project skills engine, Claude Code-only focus, CLI rebrand |
 | 1.7.0   | 2026-02-25 | GitNexus integration, unified 3-phase sync, MCP CLI sync, env management |
 | 1.6.0   | 2026-02-24 | Documenting skill hardening (drift detection, INDEX blocks) |
 | 1.5.0   | 2026-02-23 | Service Skills Set (Trinity), git hooks, auto-activation |

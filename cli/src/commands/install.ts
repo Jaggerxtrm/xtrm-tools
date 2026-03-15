@@ -10,6 +10,7 @@ import { findRepoRoot } from '../utils/repo-root.js';
 import { t, sym } from '../utils/theme.js';
 import path from 'path';
 import { createInstallProjectCommand } from './install-project.js';
+import { createInstallPiCommand } from './install-pi.js';
 
 interface TargetChanges {
     target: string;
@@ -529,6 +530,7 @@ export function createInstallCommand(): Command {
     installCmd.addCommand(createInstallAllCommand());
     installCmd.addCommand(createInstallBasicCommand());
     installCmd.addCommand(createInstallProjectCommand());
+    installCmd.addCommand(createInstallPiCommand());
 
     return installCmd;
 }

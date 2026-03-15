@@ -358,6 +358,84 @@ exit 1
 });
 
 
+describe('beads-memory-gate.mjs', () => {
+  it('fails open (exit 0) when no .beads directory exists', () => {
+    const r = runHook('beads-memory-gate.mjs', { session_id: 'test', cwd: '/tmp' });
+    expect(r.status).toBe(0);
+  });
+
+  it('allows stop (exit 0) when marker file exists', () => {
+    const projectDir = mkdtempSync(path.join(os.tmpdir(), 'xtrm-memgate-'));
+    mkdirSync(path.join(projectDir, '.beads'));
+    writeFileSync(path.join(projectDir, '.beads', '.memory-gate-done'), '');
+    try {
+      const r = runHook('beads-memory-gate.mjs', { session_id: 'test', cwd: projectDir });
+      expect(r.status).toBe(0);
+    } finally {
+      rmSync(projectDir, { recursive: true, force: true });
+    }
+  });
+
+  it('allows stop (exit 0) when no closed issues exist', () => {
+    const projectDir = mkdtempSync(path.join(os.tmpdir(), 'xtrm-memgate-'));
+    mkdirSync(path.join(projectDir, '.beads'));
+    const fake = withFakeBdDir(`#!/usr/bin/env bash
+set -euo pipefail
+if [[ "$1" == "list" ]]; then
+  cat <<'EOF'
+
+--------------------------------------------------------------------------------
+Total: 0 issues (0 open, 0 in progress)
+EOF
+  exit 0
+fi
+exit 1
+`);
+    try {
+      const r = runHook(
+        'beads-memory-gate.mjs',
+        { session_id: 'test', cwd: projectDir },
+        { PATH: `${fake.tempDir}:${process.env.PATH ?? ''}` },
+      );
+      expect(r.status).toBe(0);
+    } finally {
+      rmSync(fake.tempDir, { recursive: true, force: true });
+      rmSync(projectDir, { recursive: true, force: true });
+    }
+  });
+
+  it('blocks stop (exit 2) when closed issues exist and no marker', () => {
+    const projectDir = mkdtempSync(path.join(os.tmpdir(), 'xtrm-memgate-'));
+    mkdirSync(path.join(projectDir, '.beads'));
+    const fake = withFakeBdDir(`#!/usr/bin/env bash
+set -euo pipefail
+if [[ "$1" == "list" ]]; then
+  cat <<'EOF'
+✓ issue-abc P2 Fix the thing
+
+--------------------------------------------------------------------------------
+Total: 1 issues (0 open, 0 in progress, 1 closed)
+EOF
+  exit 0
+fi
+exit 1
+`);
+    try {
+      const r = runHook(
+        'beads-memory-gate.mjs',
+        { session_id: 'test', cwd: projectDir },
+        { PATH: `${fake.tempDir}:${process.env.PATH ?? ''}` },
+      );
+      expect(r.status).toBe(2);
+      expect(r.stderr).toContain('MEMORY GATE');
+    } finally {
+      rmSync(fake.tempDir, { recursive: true, force: true });
+      rmSync(projectDir, { recursive: true, force: true });
+    }
+  });
+});
+
+
 // ── tdd-guard-pretool-bridge.cjs ─────────────────────────────────────────────
 
 const TDD_BRIDGE_DIR = path.join(__dirname, '../../project-skills/tdd-guard/.claude/hooks');

@@ -41430,6 +41430,16 @@ var PI_AGENT_DIR = import_path12.default.join((0, import_node_os4.homedir)(), ".
 function fillTemplate(template, values) {
   return template.replace(/\{\{(\w+)\}\}/g, (_, key) => values[key] ?? "");
 }
+function readExistingPiValues(piAgentDir) {
+  const values = {};
+  try {
+    const auth = JSON.parse(require("fs").readFileSync(import_path12.default.join(piAgentDir, "auth.json"), "utf8"));
+    if (auth?.dashscope?.key) values["DASHSCOPE_API_KEY"] = auth.dashscope.key;
+    if (auth?.zai?.key) values["ZAI_API_KEY"] = auth.zai.key;
+  } catch {
+  }
+  return values;
+}
 function isPiInstalled() {
   return (0, import_node_child_process.spawnSync)("pi", ["--version"], { encoding: "utf8" }).status === 0;
 }
@@ -41454,9 +41464,14 @@ function createInstallPiCommand() {
 `));
     }
     const schema = await import_fs_extra12.default.readJson(import_path12.default.join(piConfigDir, "install-schema.json"));
-    const values = {};
+    const existing = readExistingPiValues(PI_AGENT_DIR);
+    const values = { ...existing };
     console.log(t.bold("  API Keys\n"));
     for (const field of schema.fields) {
+      if (existing[field.key]) {
+        console.log(t.success(`    ${sym.ok} ${field.label} [already set]`));
+        continue;
+      }
       if (!field.required && !yes) {
         const { include } = await (0, import_prompts2.default)({ type: "confirm", name: "include", message: `  Configure ${field.label}? (optional)`, initial: false });
         if (!include) continue;

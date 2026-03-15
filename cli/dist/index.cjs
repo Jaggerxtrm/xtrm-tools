@@ -41264,6 +41264,7 @@ async function bootstrapProjectInit() {
   }
   await runBdInitForProject(projectRoot);
   await runGitNexusInitForProject(projectRoot);
+  await syncProjectMcpServers(projectRoot);
 }
 async function runBdInitForProject(projectRoot) {
   console.log(kleur_default.bold("Running beads initialization (bd init)..."));
@@ -41436,6 +41437,13 @@ function readExistingPiValues(piAgentDir) {
     const auth = JSON.parse(require("fs").readFileSync(import_path12.default.join(piAgentDir, "auth.json"), "utf8"));
     if (auth?.dashscope?.key) values["DASHSCOPE_API_KEY"] = auth.dashscope.key;
     if (auth?.zai?.key) values["ZAI_API_KEY"] = auth.zai.key;
+  } catch {
+  }
+  try {
+    const models = JSON.parse(require("fs").readFileSync(import_path12.default.join(piAgentDir, "models.json"), "utf8"));
+    if (!values["DASHSCOPE_API_KEY"] && models?.providers?.dashscope?.apiKey) {
+      values["DASHSCOPE_API_KEY"] = models.providers.dashscope.apiKey;
+    }
   } catch {
   }
   return values;

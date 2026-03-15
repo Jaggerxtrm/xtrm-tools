@@ -140,7 +140,17 @@ def check_mypy(file_path: str, project_root: str) -> tuple[bool, list[str]]:
     
     log_info('Running Mypy type checking...')
     
-    cmd = ['mypy', '--pretty', file_path]
+    # Build mypy command with strictness flags
+    # Default: --disallow-untyped-defs catches untyped function parameters
+    # Opt-in: CLAUDE_HOOKS_MYPY_STRICT=true enables full --strict mode
+    mypy_strict = os.environ.get('CLAUDE_HOOKS_MYPY_STRICT', 'false').lower() == 'true'
+    
+    if mypy_strict:
+        cmd = ['mypy', '--strict', '--pretty', file_path]
+        log_debug('Running mypy with --strict (full strictness)')
+    else:
+        cmd = ['mypy', '--disallow-untyped-defs', '--pretty', file_path]
+        log_debug('Running mypy with --disallow-untyped-defs (baseline strictness)')
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, cwd=project_root)
         

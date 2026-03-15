@@ -276,3 +276,75 @@ Use `xtrm install` to deploy all hooks automatically. For manual setup:
 3. Merge hook entries into `~/.claude/settings.json`.
 
 4. Restart Claude Code.
+
+---
+
+## Beads Hooks Architecture
+
+The beads gate hooks are organized into three layers:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        HOOK ENTRYPOINTS                         │
+│  (thin wrappers - just parse, call core, emit, exit)           │
+├──────────────────┬──────────────────┬──────────────────────────┤
+│ beads-edit-gate  │ beads-commit-gate│ beads-stop-gate         │
+│ beads-memory-gate│                  │                          │
+└────────┬─────────┴────────┬─────────┴─────────────┬────────────┘
+         │                  │                       │
+         ▼                  ▼                       ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    beads-gate-core.mjs                          │
+│  Pure decision functions - no I/O, return {allow, reason}      │
+├─────────────────────────────────────────────────────────────────┤
+│ • readHookInput()          → parsed input or null              │
+│ • resolveSessionContext()  → {cwd, sessionId, isBeadsProject}  │
+│ • resolveClaimAndWorkState() → {claimed, claimId, work}        │
+│ • decideEditGate()         → {allow: bool, reason?: string}    │
+│ • decideCommitGate()       → {allow: bool, reason?: string}    │
+│ • decideStopGate()         → {allow: bool, reason?: string}    │
+└─────────────────────────────────────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                  beads-gate-messages.mjs                        │
+│  Centralized message templates                                  │
+├─────────────────────────────────────────────────────────────────┤
+│ • WORKFLOW_STEPS          - full 7-step workflow                │
+│ • SESSION_CLOSE_PROTOCOL  - stop gate steps                     │
+│ • editBlockMessage(sessionId)                                   │
+│ • commitBlockMessage(summary, claimed)                          │
+│ • stopBlockMessage(summary, claimed)                            │
+│ • memoryPromptMessage()                                         │
+└─────────────────────────────────────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    beads-gate-utils.mjs                         │
+│  Low-level adapters - bd CLI, shell, fs operations             │
+├─────────────────────────────────────────────────────────────────┤
+│ • resolveCwd(input)                                             │
+│ • isBeadsProject(cwd)                                           │
+│ • getSessionClaim(sessionId, cwd)                               │
+│ • getTotalWork(cwd), getInProgress(cwd)                        │
+│ • clearSessionClaim(sessionId, cwd)                             │
+│ • withSafeBdContext(fn)                                         │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Where to Make Changes
+
+| Change type | File to edit |
+|-------------|--------------|
+| Policy logic (when to block/allow) | `beads-gate-core.mjs` |
+| User-facing messages | `beads-gate-messages.mjs` |
+| bd CLI integration | `beads-gate-utils.mjs` |
+| Hook registration/wiring | Entrypoints (rarely needed) |
+
+### Exit Semantics
+
+All hooks follow strict exit semantics:
+- `exit 0` — Allow the operation
+- `exit 2` — Block with message shown to Claude
+
+The core functions are pure and never call `process.exit()`. Entrypoints are responsible for side effects.

@@ -1,11 +1,5 @@
 {
   "hooks": {
-    "UserPromptSubmit": [
-      {
-        "script": "skill-suggestion.py",
-        "timeout": 5000
-      }
-    ],
     "SessionStart": [
       {
         "script": "serena-workflow-reminder.py"
@@ -68,9 +62,6 @@
         "timeout": 8000
       }
     ]
-  },
-  "skillSuggestions": {
-    "enabled": true
   },
   "statusLine": {
     "script": "statusline-starship.sh"

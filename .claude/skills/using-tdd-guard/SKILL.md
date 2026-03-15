@@ -4,7 +4,7 @@
 
 ## What It Does
 
-- **Blocks Write/Edit/MultiEdit/TodoWrite** when no failing test exists
+- **Blocks Write/Edit** when no failing test exists
 - **Prevents over-implementation** beyond test requirements
 - **Integrates with test reporters** for real-time test status
 
@@ -12,7 +12,7 @@
 
 When you attempt to write implementation code:
 
-1. TDD Guard intercepts the Write/Edit/MultiEdit/TodoWrite tool call
+1. TDD Guard intercepts the Write/Edit tool call
 2. Checks if a failing test exists (via test reporter JSON)
 3. If no failing test: **blocks the action** with guidance
 4. If failing test exists: **allows** the implementation
@@ -51,16 +51,6 @@ export default defineConfig({
   },
 })
 ```
-
-## Hook Coverage
-
-TDD Guard wires three hook events:
-
-| Event | Matcher | Command |
-|-------|---------|---------|
-| `PreToolUse` | `Write\|Edit\|MultiEdit\|TodoWrite` | `tdd-guard` — blocks without failing test |
-| `UserPromptSubmit` | `*` | `tdd-guard --prompt-check` — checks prompt intent |
-| `SessionStart` | `*` | `tdd-guard --session-init` — initializes session state |
 
 ## Commands
 

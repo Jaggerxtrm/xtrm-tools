@@ -6,6 +6,19 @@
 
 ---
 
+## Table of Contents
+
+- [Mandatory DB Connection Pattern](#mandatory-db-connection-pattern)
+- [Schema Verification Before Writing Any SQL](#schema-verification-before-writing-any-sql)
+- [Makefile Standard](#makefile-standard)
+- [Design Principles](#design-principles)
+- [health_probe.py Standards](#health_probepy-standards)
+- [log_hunter.py Standards](#log_hunterpy-standards)
+- [Specialist Script Standards](#specialist-script-standards)
+- [Common Pitfalls](#common-pitfalls)
+
+---
+
 ## Mandatory DB Connection Pattern
 
 **Every script that touches the database MUST use this exact pattern.** No exceptions.

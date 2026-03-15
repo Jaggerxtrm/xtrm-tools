@@ -276,8 +276,8 @@ Type `/hooks` in Claude Code to open the hooks menu, then configure each hook. U
 **PreToolUse Hook**
 
 1. Select `PreToolUse - Before tool execution`
-2. Choose `+ Add new matcher...` and enter: `Write|Edit|MultiEdit|TodoWrite`
-3. Select `+ Add new hook...` and enter: `tdd-guard`
+2. Choose `+ Add new matcher...` and enter: `Write|Edit|MultiEdit|TodoWrite|mcp__serena__rename_symbol|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol`
+3. Select `+ Add new hook...` and enter: `node "$CLAUDE_PROJECT_DIR/.claude/hooks/tdd-guard-pretool-bridge.cjs"`
 4. Choose where to save
 
 **UserPromptSubmit Hook**
@@ -305,11 +305,11 @@ If you prefer to edit settings files directly, add all three hooks to your chose
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Write|Edit|MultiEdit|TodoWrite",
+        "matcher": "Write|Edit|MultiEdit|TodoWrite|mcp__serena__rename_symbol|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol",
         "hooks": [
           {
             "type": "command",
-            "command": "tdd-guard"
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/tdd-guard-pretool-bridge.cjs\""
           }
         ]
       }
@@ -340,6 +340,8 @@ If you prefer to edit settings files directly, add all three hooks to your chose
 ```
 
 </details>
+
+**Note**: The pretool bridge skips non-code files (for example `.md`) and forwards code edits to `tdd-guard`, which avoids false positives on documentation-only changes.
 
 ## Additional Configuration
 

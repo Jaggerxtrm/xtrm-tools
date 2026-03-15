@@ -218,9 +218,22 @@ def parse_json_input() -> dict:
         sys.exit(1)
 
 def extract_file_path(input_data: dict) -> str | None:
-    """Extract file path from tool input"""
+    """Extract file path from tool input, including Serena relative_path."""
     tool_input = input_data.get('tool_input', {})
-    return tool_input.get('file_path') or tool_input.get('path')
+    file_path = (
+        tool_input.get('file_path')
+        or tool_input.get('path')
+        or tool_input.get('relative_path')
+    )
+    if not file_path:
+        return None
+
+    # Serena tools pass relative_path relative to the project root.
+    if not os.path.isabs(file_path):
+        project_root = os.environ.get('CLAUDE_PROJECT_DIR') or os.getcwd()
+        return str(Path(project_root) / file_path)
+
+    return file_path
 
 def main():
     """Main entry point"""

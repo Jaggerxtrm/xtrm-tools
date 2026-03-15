@@ -41,6 +41,82 @@ export function isValueProtected(keyPath: string): boolean {
     );
 }
 
+function extractHookCommands(wrapper: any): string[] {
+    if (!wrapper || !Array.isArray(wrapper.hooks)) return [];
+    return wrapper.hooks
+        .map((h: any) => h?.command)
+        .filter((c: any): c is string => typeof c === 'string' && c.trim().length > 0);
+}
+
+function commandKey(command: string): string {
+    const m = command.match(/([A-Za-z0-9._-]+\.(?:py|cjs|mjs|js))(?!.*[A-Za-z0-9._-]+\.(?:py|cjs|mjs|js))/);
+    return m?.[1] || command.trim();
+}
+
+function mergeMatcher(existingMatcher: string, incomingMatcher: string): string {
+    const parts = [
+        ...existingMatcher.split('|').map((s: string) => s.trim()),
+        ...incomingMatcher.split('|').map((s: string) => s.trim()),
+    ].filter(Boolean);
+    return Array.from(new Set(parts)).join('|');
+}
+
+function mergeHookWrappers(existing: any[], incoming: any[]): any[] {
+    const merged = existing.map((w: any) => ({ ...w }));
+
+    for (const incomingWrapper of incoming) {
+        const incomingCommands = extractHookCommands(incomingWrapper);
+        if (incomingCommands.length === 0) {
+            merged.push(incomingWrapper);
+            continue;
+        }
+
+        const incomingKeys = new Set(incomingCommands.map(commandKey));
+        const existingIndex = merged.findIndex((existingWrapper: any) => {
+            const existingCommands = extractHookCommands(existingWrapper);
+            return existingCommands.some((c: string) => incomingKeys.has(commandKey(c)));
+        });
+
+        if (existingIndex === -1) {
+            merged.push(incomingWrapper);
+            continue;
+        }
+
+        const existingWrapper = merged[existingIndex];
+        if (
+            typeof existingWrapper.matcher === 'string' &&
+            typeof incomingWrapper.matcher === 'string'
+        ) {
+            existingWrapper.matcher = mergeMatcher(existingWrapper.matcher, incomingWrapper.matcher);
+        }
+
+        if (Array.isArray(existingWrapper.hooks) && Array.isArray(incomingWrapper.hooks)) {
+            const existingByKey = new Set(existingWrapper.hooks
+                .map((h: any) => h?.command)
+                .filter((c: any): c is string => typeof c === 'string')
+                .map(commandKey));
+            for (const hook of incomingWrapper.hooks) {
+                const cmd = hook?.command;
+                if (typeof cmd !== 'string' || !existingByKey.has(commandKey(cmd))) {
+                    existingWrapper.hooks.push(hook);
+                }
+            }
+        }
+    }
+
+    return merged;
+}
+
+function mergeHooksObject(existingHooks: any, incomingHooks: any): any {
+    const result = { ...(existingHooks || {}) };
+    for (const [event, incomingWrappers] of Object.entries(incomingHooks || {})) {
+        const existingWrappers = Array.isArray(result[event]) ? result[event] : [];
+        const incomingArray = Array.isArray(incomingWrappers) ? incomingWrappers : [];
+        result[event] = mergeHookWrappers(existingWrappers, incomingArray);
+    }
+    return result;
+}
+
 /**
  * Deep merge two objects, preserving protected values from the original
  */
@@ -49,6 +125,19 @@ export function deepMergeWithProtection(original: any, updates: any, currentPath
 
     for (const [key, value] of Object.entries(updates)) {
         const keyPath = currentPath ? `${currentPath}.${key}` : key;
+
+        // Hooks are canonical but should still preserve local custom entries.
+        // Merge by command identity and upgrade matchers for overlapping hooks.
+        if (
+            key === 'hooks' &&
+            typeof value === 'object' &&
+            value !== null &&
+            typeof original[key] === 'object' &&
+            original[key] !== null
+        ) {
+            result[key] = mergeHooksObject(original[key], value);
+            continue;
+        }
 
         // If this specific value is protected and exists locally, skip it
         if (isValueProtected(keyPath) && original.hasOwnProperty(key)) {

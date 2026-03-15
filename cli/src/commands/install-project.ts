@@ -366,10 +366,8 @@ export async function installAllProjectSkills(projectRootOverride?: string): Pro
 export function buildProjectInitGuide(): string {
     const lines = [
         kleur.bold('\nProject Init — Recommended baseline\n'),
-        `${kleur.cyan('1) Install a quality gate skill (or equivalent checks):')}`,
-        kleur.dim('   - TypeScript projects: xtrm install project ts-quality-gate'),
-        kleur.dim('   - Python projects:     xtrm install project py-quality-gate'),
-        kleur.dim('   - TDD workflow:        xtrm install project tdd-guard'),
+        `${kleur.cyan('1) Install quality gates (unified TDD + lint + typecheck workflow):')}`,
+        kleur.dim('   xtrm install project quality-gates'),
         '',
         `${kleur.cyan('2) Ensure your checks are actually configured in this repo:')}`,
         kleur.dim('   - Testing: commands should run and fail when behavior regresses'),
@@ -377,14 +375,18 @@ export function buildProjectInitGuide(): string {
         kleur.dim('   - Type checks: tsc (TS) or mypy/pyright (Python)'),
         kleur.dim('   - Hooks only enforce what your project config defines'),
         '',
-        `${kleur.cyan('3) Optional: Service Skills Set (service-skills-set)')}`,
+        `${kleur.cyan('3) Optional: TDD Guard (standalone, for test-first enforcement)')}`,
+        kleur.dim('   xtrm install project tdd-guard'),
+        kleur.dim('   - Requires language-specific test reporter (tdd-guard-vitest, tdd-guard-pytest, etc.)'),
+        '',
+        `${kleur.cyan('4) Optional: Service Skills Set (service-skills-set)')}`,
         kleur.dim('   - For multi-service/Docker repos with repeated operational workflows'),
         kleur.dim('   - Adds project hooks + skills that route Claude to service-specific context'),
         kleur.dim('   - Helps keep architecture knowledge persistent across sessions'),
         '',
         kleur.bold('Quick start commands:'),
         kleur.dim('   xtrm install project list'),
-        kleur.dim('   xtrm install project ts-quality-gate   # or py-quality-gate / tdd-guard'),
+        kleur.dim('   xtrm install project quality-gates'),
         '',
     ];
 

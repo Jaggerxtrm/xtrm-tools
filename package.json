@@ -1,6 +1,6 @@
 {
   "name": "xtrm-tools",
-  "version": "2.1.6",
+  "version": "2.1.7",
   "description": "Claude Code tools installer (skills, hooks, MCP servers)",
   "license": "MIT",
   "type": "module",
@@ -18,7 +18,11 @@
     "config",
     "hooks",
     "skills",
-    "project-skills"
+    "project-skills",
+    "!**/__pycache__/**",
+    "!**/*.pyc",
+    "!project-skills/service-skills-set/.claude/skills/using-service-skills/scripts/test_*.py",
+    "!skills/documenting/tests/**"
   ],
   "publishConfig": {
     "access": "public"
@@ -43,7 +47,7 @@
     "prepublishOnly": "npm run sync:cli-version && npm run build"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
   },
   "dependencies": {
     "comment-json": "^4.2.3",

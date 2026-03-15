@@ -208,6 +208,27 @@ describe('main-guard-post-push.mjs', () => {
       rmSync(repoDir, { recursive: true, force: true });
     }
   });
+
+  it('does not emit reminder when push command reports failure', () => {
+    const repoDir = createTempGitRepo('feature/test-failed-push');
+    try {
+      const r = runHook(
+        'main-guard-post-push.mjs',
+        {
+          tool_name: 'Bash',
+          tool_input: { command: 'git push -u origin feature/test-failed-push' },
+          tool_response: { exit_code: 1, stderr: 'remote rejected' },
+          cwd: repoDir,
+        },
+        { MAIN_GUARD_PROTECTED_BRANCHES: 'main,master' },
+        repoDir,
+      );
+      expect(r.status).toBe(0);
+      expect(r.stdout.trim()).toBe('');
+    } finally {
+      rmSync(repoDir, { recursive: true, force: true });
+    }
+  });
 });
 
 // ── beads-gate-utils.mjs ─────────────────────────────────────────────────────

@@ -1,0 +1,5 @@
+**/__pycache__/
+**/*.pyc
+**/.pytest_cache/
+project-skills/service-skills-set/.claude/skills/using-service-skills/scripts/test_*.py
+skills/documenting/tests/

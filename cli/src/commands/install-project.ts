@@ -459,6 +459,7 @@ async function bootstrapProjectInit(): Promise<void> {
 
     await runBdInitForProject(projectRoot);
     await runGitNexusInitForProject(projectRoot);
+    await syncProjectMcpServers(projectRoot);
 }
 
 async function runBdInitForProject(projectRoot: string): Promise<void> {

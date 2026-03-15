@@ -41,6 +41,17 @@
     "deepwiki": {
       "type": "http",
       "url": "https://mcp.deepwiki.com/mcp"
+    },
+    "gitnexus": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "gitnexus", "mcp"],
+      "env": {},
+      "_notes": {
+        "description": "Code intelligence MCP - provides graph queries for impact analysis, execution flows, symbol context",
+        "prerequisite": "Run 'gitnexus analyze' in the project first to build the index",
+        "auto_index": "xtrm project init runs gitnexus analyze automatically"
+      }
     }
   }
 }

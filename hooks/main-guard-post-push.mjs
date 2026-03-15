@@ -59,13 +59,11 @@ const explicitlyProtectedTarget = protectedBranches
   .some((b) => lastToken === b || lastToken.endsWith(`:${b}`));
 if (explicitlyProtectedTarget) process.exit(0);
 
-process.stdout.write(JSON.stringify({
-  systemMessage:
-    `✅ Pushed '${branch}'. Next workflow steps:\n\n` +
-    '  1. gh pr create --fill\n' +
-    '  2. gh pr merge --squash\n' +
-    '  3. git checkout main && git reset --hard origin/main\n\n' +
-    'Before/after merge, ensure beads state is updated (e.g. bd close <id>).',
-}));
-process.stdout.write('\n');
+process.stdout.write(
+  `✅ Pushed '${branch}'. Next workflow steps:\n\n` +
+  '  1. gh pr create --fill\n' +
+  '  2. gh pr merge --squash\n' +
+  '  3. git checkout main && git reset --hard origin/main\n\n' +
+  'Before/after merge, ensure beads state is updated (e.g. bd close <id>).\n',
+);
 process.exit(0);

@@ -26,16 +26,19 @@ class Colors:
     RESET = '\x1b[0m'
 
 def log_info(msg: str):
-    print(f"{Colors.BLUE}[INFO]{Colors.RESET} {msg}", file=sys.stderr)
+    if os.environ.get('CLAUDE_HOOKS_DEBUG', 'false').lower() == 'true':
+        print(f"{Colors.BLUE}[INFO]{Colors.RESET} {msg}", file=sys.stderr)
 
 def log_error(msg: str):
     print(f"{Colors.RED}[ERROR]{Colors.RESET} {msg}", file=sys.stderr)
 
 def log_success(msg: str):
-    print(f"{Colors.GREEN}[OK]{Colors.RESET} {msg}", file=sys.stderr)
+    if os.environ.get('CLAUDE_HOOKS_DEBUG', 'false').lower() == 'true':
+        print(f"{Colors.GREEN}[OK]{Colors.RESET} {msg}", file=sys.stderr)
 
 def log_warning(msg: str):
-    print(f"{Colors.YELLOW}[WARN]{Colors.RESET} {msg}", file=sys.stderr)
+    if os.environ.get('CLAUDE_HOOKS_DEBUG', 'false').lower() == 'true':
+        print(f"{Colors.YELLOW}[WARN]{Colors.RESET} {msg}", file=sys.stderr)
 
 def log_debug(msg: str):
     if os.environ.get('CLAUDE_HOOKS_DEBUG', 'false').lower() == 'true':
@@ -237,9 +240,7 @@ def extract_file_path(input_data: dict) -> str | None:
 
 def main():
     """Main entry point"""
-    print('', file=sys.stderr)
-    print(f'📦 Python Quality Check - Starting...', file=sys.stderr)
-    print('─────────────────────────────────────', file=sys.stderr)
+    pass  # banner suppressed
     
     # Parse input
     input_data = parse_json_input()
@@ -263,9 +264,6 @@ def main():
         sys.exit(0)
     
     # Update header
-    print('', file=sys.stderr)
-    print(f'🔍 Validating: {os.path.basename(file_path)}', file=sys.stderr)
-    print('─────────────────────────────────────', file=sys.stderr)
     log_info(f'Checking: {file_path}')
     
     # Find project root
@@ -303,17 +301,16 @@ def main():
         print(f'{Colors.YELLOW}  1. Fix the issues listed above{Colors.RESET}', file=sys.stderr)
         print(f'{Colors.YELLOW}  2. The hook will run again automatically{Colors.RESET}', file=sys.stderr)
         print(f'{Colors.YELLOW}  3. Continue once all checks pass{Colors.RESET}', file=sys.stderr)
+        print(json.dumps({
+            "hookSpecificOutput": {
+                "hookEventName": "PostToolUse",
+                "additionalContext": f"Quality check FAILED for {file_path}:\n" + "\n".join(all_errors)
+            }
+        }))
         sys.exit(2)
     else:
-        print(f'\n{Colors.GREEN}✅ Quality check passed for {os.path.basename(file_path)}{Colors.RESET}', file=sys.stderr)
-        if all_autofixes:
-            print(f'\n{Colors.YELLOW}👉 File quality verified. Auto-fixes applied. Continue with your task.{Colors.RESET}', file=sys.stderr)
-        else:
-            print(f'\n{Colors.YELLOW}👉 File quality verified. Continue with your task.{Colors.RESET}', file=sys.stderr)
-        
-        # Suggest tests
-        check_pytest_suggestions(file_path, project_root)
-        
+        if os.environ.get('CLAUDE_HOOKS_DEBUG', 'false').lower() == 'true':
+            print(f'✅ quality-check.py: {os.path.basename(file_path)}', file=sys.stderr)
         sys.exit(0)
 
 if __name__ == '__main__':

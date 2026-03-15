@@ -387,28 +387,48 @@ export async function installAllProjectSkills(projectRootOverride?: string): Pro
 
 export function buildProjectInitGuide(): string {
     const lines = [
-        kleur.bold('\nProject Init — Recommended baseline\n'),
-        `${kleur.cyan('1) Install quality gates (unified TDD + lint + typecheck workflow):')}`,
+        kleur.bold('\nProject Init — Production baseline\n'),
+        kleur.dim('This command prints a complete setup checklist and then bootstraps beads + GitNexus for this repo.\n'),
+        `${kleur.cyan('1) Install core project enforcement (quality-gates):')}`,
         kleur.dim('   xtrm install project quality-gates'),
+        kleur.dim('   - Installs TypeScript + Python PostToolUse quality hooks'),
+        kleur.dim('   - Includes Serena matcher coverage for edit-equivalent tools'),
+        kleur.dim('   - Enforces linting/type-checking based on your repo config'),
         '',
-        `${kleur.cyan('2) Ensure your checks are actually configured in this repo:')}`,
-        kleur.dim('   - Testing: commands should run and fail when behavior regresses'),
-        kleur.dim('   - Linting/formatting: ESLint+Prettier (TS) or ruff (Python)'),
-        kleur.dim('   - Type checks: tsc (TS) or mypy/pyright (Python)'),
-        kleur.dim('   - Hooks only enforce what your project config defines'),
-        '',
-        `${kleur.cyan('3) Optional: TDD Guard (standalone, for test-first enforcement)')}`,
+        `${kleur.cyan('2) Optional installs depending on workflow:')}`,
         kleur.dim('   xtrm install project tdd-guard'),
-        kleur.dim('   - Requires language-specific test reporter (tdd-guard-vitest, tdd-guard-pytest, etc.)'),
+        kleur.dim('   - Strong test-first enforcement (PreToolUse + prompt/session checks)'),
+        kleur.dim('   xtrm install project service-skills-set'),
+        kleur.dim('   - Service-aware skill routing + drift checks + git hook reminders'),
         '',
-        `${kleur.cyan('4) Optional: Service Skills Set (service-skills-set)')}`,
-        kleur.dim('   - For multi-service/Docker repos with repeated operational workflows'),
-        kleur.dim('   - Adds project hooks + skills that route Claude to service-specific context'),
-        kleur.dim('   - Helps keep architecture knowledge persistent across sessions'),
+        `${kleur.cyan('3) Configure repo checks (hooks only enforce what your repo defines):')}`,
+        kleur.dim('   - Tests: should fail on regressions (required for TDD workflows)'),
+        kleur.dim('   - TS: eslint + prettier + tsc'),
+        kleur.dim('   - PY: ruff + mypy/pyright'),
+        '',
+        `${kleur.cyan('4) Beads workflow (required for gated edit/commit flow):')}`,
+        kleur.dim('   - Claim work:   bd ready --json  ->  bd update <id> --claim --json'),
+        kleur.dim('   - During work:  keep issue status current; create discovered follow-ups'),
+        kleur.dim('   - Finish work:  bd close <id> --reason "Done" --json'),
+        '',
+        `${kleur.cyan('5) Git workflow (main-guard expected path):')}`,
+        kleur.dim('   - git checkout -b feature/<name>'),
+        kleur.dim('   - commit on feature branch only'),
+        kleur.dim('   - git push -u origin feature/<name>'),
+        kleur.dim('   - gh pr create --fill && gh pr merge --squash'),
+        kleur.dim('   - git checkout main && git pull --ff-only'),
+        '',
+        `${kleur.cyan('6) Hooks and startup automation:')}`,
+        kleur.dim('   - PreToolUse: safety gates (main/beads/TDD/type-safety/etc.)'),
+        kleur.dim('   - PostToolUse: quality checks + reminders'),
+        kleur.dim('   - Stop: beads stop-gate prevents unresolved session claims'),
+        kleur.dim('   - SessionStart: workflow context reminders'),
         '',
         kleur.bold('Quick start commands:'),
         kleur.dim('   xtrm install project list'),
         kleur.dim('   xtrm install project quality-gates'),
+        kleur.dim('   xtrm install project tdd-guard'),
+        kleur.dim('   xtrm install project service-skills-set'),
         '',
     ];
 
@@ -417,7 +437,7 @@ export function buildProjectInitGuide(): string {
 
 async function printProjectInitGuide(): Promise<void> {
     console.log(buildProjectInitGuide());
-    await runBdInitForProject();
+    await bootstrapProjectInit();
 }
 
 async function installProjectByName(toolName: string): Promise<void> {
@@ -428,14 +448,20 @@ async function installProjectByName(toolName: string): Promise<void> {
     await installProjectSkill(toolName);
 }
 
-async function runBdInitForProject(): Promise<void> {
+async function bootstrapProjectInit(): Promise<void> {
     let projectRoot: string;
     try {
         projectRoot = getProjectRoot();
     } catch (err: any) {
-        console.log(kleur.yellow(`\n  ⚠ Skipping bd init: ${err.message}\n`));
+        console.log(kleur.yellow(`\n  ⚠ Skipping project bootstrap: ${err.message}\n`));
         return;
     }
+
+    await runBdInitForProject(projectRoot);
+    await runGitNexusInitForProject(projectRoot);
+}
+
+async function runBdInitForProject(projectRoot: string): Promise<void> {
 
     console.log(kleur.bold('Running beads initialization (bd init)...'));
 
@@ -464,6 +490,55 @@ async function runBdInitForProject(): Promise<void> {
 
     if (result.stdout) process.stdout.write(result.stdout);
     if (result.stderr) process.stderr.write(result.stderr);
+}
+
+async function runGitNexusInitForProject(projectRoot: string): Promise<void> {
+    const gitnexusCheck = spawnSync('gitnexus', ['--version'], {
+        cwd: projectRoot,
+        encoding: 'utf8',
+        timeout: 5000,
+    });
+
+    if (gitnexusCheck.status !== 0) {
+        console.log(kleur.yellow('  ⚠ gitnexus not found; skipping index bootstrap'));
+        console.log(kleur.dim('    Install with: npm install -g gitnexus'));
+        return;
+    }
+
+    console.log(kleur.bold('Checking GitNexus index status...'));
+
+    const status = spawnSync('gitnexus', ['status'], {
+        cwd: projectRoot,
+        encoding: 'utf8',
+        timeout: 10000,
+    });
+
+    const statusText = `${status.stdout || ''}\n${status.stderr || ''}`.toLowerCase();
+    const needsAnalyze = status.status !== 0 ||
+        statusText.includes('stale') ||
+        statusText.includes('not indexed') ||
+        statusText.includes('missing');
+
+    if (!needsAnalyze) {
+        console.log(kleur.dim('  ✓ GitNexus index is ready'));
+        return;
+    }
+
+    console.log(kleur.bold('Running GitNexus indexing (gitnexus analyze)...'));
+    const analyze = spawnSync('gitnexus', ['analyze'], {
+        cwd: projectRoot,
+        encoding: 'utf8',
+        timeout: 120000,
+    });
+
+    if (analyze.status === 0) {
+        console.log(kleur.green('  ✓ GitNexus index updated'));
+        return;
+    }
+
+    if (analyze.stdout) process.stdout.write(analyze.stdout);
+    if (analyze.stderr) process.stderr.write(analyze.stderr);
+    console.log(kleur.yellow(`  ⚠ gitnexus analyze exited with code ${analyze.status}`));
 }
 
 /**
@@ -555,7 +630,7 @@ export function createInstallProjectCommand(): Command {
         });
 
     const initCmd = new Command('init')
-        .description('Show project onboarding guidance (quality gates + service skills)')
+        .description('Show full onboarding guidance and bootstrap beads + GitNexus')
         .action(async () => {
             await printProjectInitGuide();
         });
@@ -572,7 +647,7 @@ export function createProjectCommand(): Command {
 
     projectCmd
         .command('init')
-        .description('Show project onboarding guidance (quality gates + service skills)')
+        .description('Show full onboarding guidance and bootstrap beads + GitNexus')
         .action(async () => {
             await printProjectInitGuide();
         });

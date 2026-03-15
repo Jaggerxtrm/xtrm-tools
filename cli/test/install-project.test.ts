@@ -15,13 +15,14 @@ import {
 } from '../src/commands/install-project.js';
 
 describe('buildProjectInitGuide', () => {
-    it('includes recommended quality-gate skills and required config checks', () => {
+    it('includes complete onboarding guidance (quality gates, beads workflow, and git workflow)', () => {
         const guide = buildProjectInitGuide();
-        expect(guide).toContain('ts-quality-gate');
-        expect(guide).toContain('py-quality-gate');
+        expect(guide).toContain('quality-gates');
         expect(guide).toContain('tdd-guard');
-        expect(guide.toLowerCase()).toContain('lint');
-        expect(guide.toLowerCase()).toContain('mypy');
+        expect(guide).toContain('service-skills-set');
+        expect(guide.toLowerCase()).toContain('beads workflow');
+        expect(guide).toContain('bd ready --json');
+        expect(guide).toContain('gh pr create --fill');
         expect(guide.toLowerCase()).toContain('service-skills-set');
     });
 });

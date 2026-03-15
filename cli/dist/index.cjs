@@ -41134,35 +41134,55 @@ Installing ${skills.length} project skills:
 }
 function buildProjectInitGuide() {
   const lines = [
-    kleur_default.bold("\nProject Init \u2014 Recommended baseline\n"),
-    `${kleur_default.cyan("1) Install quality gates (unified TDD + lint + typecheck workflow):")}`,
+    kleur_default.bold("\nProject Init \u2014 Production baseline\n"),
+    kleur_default.dim("This command prints a complete setup checklist and then bootstraps beads + GitNexus for this repo.\n"),
+    `${kleur_default.cyan("1) Install core project enforcement (quality-gates):")}`,
     kleur_default.dim("   xtrm install project quality-gates"),
+    kleur_default.dim("   - Installs TypeScript + Python PostToolUse quality hooks"),
+    kleur_default.dim("   - Includes Serena matcher coverage for edit-equivalent tools"),
+    kleur_default.dim("   - Enforces linting/type-checking based on your repo config"),
     "",
-    `${kleur_default.cyan("2) Ensure your checks are actually configured in this repo:")}`,
-    kleur_default.dim("   - Testing: commands should run and fail when behavior regresses"),
-    kleur_default.dim("   - Linting/formatting: ESLint+Prettier (TS) or ruff (Python)"),
-    kleur_default.dim("   - Type checks: tsc (TS) or mypy/pyright (Python)"),
-    kleur_default.dim("   - Hooks only enforce what your project config defines"),
-    "",
-    `${kleur_default.cyan("3) Optional: TDD Guard (standalone, for test-first enforcement)")}`,
+    `${kleur_default.cyan("2) Optional installs depending on workflow:")}`,
     kleur_default.dim("   xtrm install project tdd-guard"),
-    kleur_default.dim("   - Requires language-specific test reporter (tdd-guard-vitest, tdd-guard-pytest, etc.)"),
+    kleur_default.dim("   - Strong test-first enforcement (PreToolUse + prompt/session checks)"),
+    kleur_default.dim("   xtrm install project service-skills-set"),
+    kleur_default.dim("   - Service-aware skill routing + drift checks + git hook reminders"),
     "",
-    `${kleur_default.cyan("4) Optional: Service Skills Set (service-skills-set)")}`,
-    kleur_default.dim("   - For multi-service/Docker repos with repeated operational workflows"),
-    kleur_default.dim("   - Adds project hooks + skills that route Claude to service-specific context"),
-    kleur_default.dim("   - Helps keep architecture knowledge persistent across sessions"),
+    `${kleur_default.cyan("3) Configure repo checks (hooks only enforce what your repo defines):")}`,
+    kleur_default.dim("   - Tests: should fail on regressions (required for TDD workflows)"),
+    kleur_default.dim("   - TS: eslint + prettier + tsc"),
+    kleur_default.dim("   - PY: ruff + mypy/pyright"),
+    "",
+    `${kleur_default.cyan("4) Beads workflow (required for gated edit/commit flow):")}`,
+    kleur_default.dim("   - Claim work:   bd ready --json  ->  bd update <id> --claim --json"),
+    kleur_default.dim("   - During work:  keep issue status current; create discovered follow-ups"),
+    kleur_default.dim('   - Finish work:  bd close <id> --reason "Done" --json'),
+    "",
+    `${kleur_default.cyan("5) Git workflow (main-guard expected path):")}`,
+    kleur_default.dim("   - git checkout -b feature/<name>"),
+    kleur_default.dim("   - commit on feature branch only"),
+    kleur_default.dim("   - git push -u origin feature/<name>"),
+    kleur_default.dim("   - gh pr create --fill && gh pr merge --squash"),
+    kleur_default.dim("   - git checkout main && git pull --ff-only"),
+    "",
+    `${kleur_default.cyan("6) Hooks and startup automation:")}`,
+    kleur_default.dim("   - PreToolUse: safety gates (main/beads/TDD/type-safety/etc.)"),
+    kleur_default.dim("   - PostToolUse: quality checks + reminders"),
+    kleur_default.dim("   - Stop: beads stop-gate prevents unresolved session claims"),
+    kleur_default.dim("   - SessionStart: workflow context reminders"),
     "",
     kleur_default.bold("Quick start commands:"),
     kleur_default.dim("   xtrm install project list"),
     kleur_default.dim("   xtrm install project quality-gates"),
+    kleur_default.dim("   xtrm install project tdd-guard"),
+    kleur_default.dim("   xtrm install project service-skills-set"),
     ""
   ];
   return lines.join("\n");
 }
 async function printProjectInitGuide() {
   console.log(buildProjectInitGuide());
-  await runBdInitForProject();
+  await bootstrapProjectInit();
 }
 async function installProjectByName(toolName) {
   if (toolName === "all" || toolName === "*") {
@@ -41171,16 +41191,20 @@ async function installProjectByName(toolName) {
   }
   await installProjectSkill(toolName);
 }
-async function runBdInitForProject() {
+async function bootstrapProjectInit() {
   let projectRoot;
   try {
     projectRoot = getProjectRoot();
   } catch (err) {
     console.log(kleur_default.yellow(`
-  \u26A0 Skipping bd init: ${err.message}
+  \u26A0 Skipping project bootstrap: ${err.message}
 `));
     return;
   }
+  await runBdInitForProject(projectRoot);
+  await runGitNexusInitForProject(projectRoot);
+}
+async function runBdInitForProject(projectRoot) {
   console.log(kleur_default.bold("Running beads initialization (bd init)..."));
   const result = (0, import_child_process3.spawnSync)("bd", ["init"], {
     cwd: projectRoot,
@@ -41205,6 +41229,44 @@ ${result.stderr || ""}`.toLowerCase();
   }
   if (result.stdout) process.stdout.write(result.stdout);
   if (result.stderr) process.stderr.write(result.stderr);
+}
+async function runGitNexusInitForProject(projectRoot) {
+  const gitnexusCheck = (0, import_child_process3.spawnSync)("gitnexus", ["--version"], {
+    cwd: projectRoot,
+    encoding: "utf8",
+    timeout: 5e3
+  });
+  if (gitnexusCheck.status !== 0) {
+    console.log(kleur_default.yellow("  \u26A0 gitnexus not found; skipping index bootstrap"));
+    console.log(kleur_default.dim("    Install with: npm install -g gitnexus"));
+    return;
+  }
+  console.log(kleur_default.bold("Checking GitNexus index status..."));
+  const status = (0, import_child_process3.spawnSync)("gitnexus", ["status"], {
+    cwd: projectRoot,
+    encoding: "utf8",
+    timeout: 1e4
+  });
+  const statusText = `${status.stdout || ""}
+${status.stderr || ""}`.toLowerCase();
+  const needsAnalyze = status.status !== 0 || statusText.includes("stale") || statusText.includes("not indexed") || statusText.includes("missing");
+  if (!needsAnalyze) {
+    console.log(kleur_default.dim("  \u2713 GitNexus index is ready"));
+    return;
+  }
+  console.log(kleur_default.bold("Running GitNexus indexing (gitnexus analyze)..."));
+  const analyze = (0, import_child_process3.spawnSync)("gitnexus", ["analyze"], {
+    cwd: projectRoot,
+    encoding: "utf8",
+    timeout: 12e4
+  });
+  if (analyze.status === 0) {
+    console.log(kleur_default.green("  \u2713 GitNexus index updated"));
+    return;
+  }
+  if (analyze.stdout) process.stdout.write(analyze.stdout);
+  if (analyze.stderr) process.stderr.write(analyze.stderr);
+  console.log(kleur_default.yellow(`  \u26A0 gitnexus analyze exited with code ${analyze.status}`));
 }
 async function listProjectSkills() {
   const entries = await getAvailableProjectSkills();
@@ -41269,7 +41331,7 @@ function createInstallProjectCommand() {
   const listCmd = new Command("list").description("List available project skills").action(async () => {
     await listProjectSkills();
   });
-  const initCmd = new Command("init").description("Show project onboarding guidance (quality gates + service skills)").action(async () => {
+  const initCmd = new Command("init").description("Show full onboarding guidance and bootstrap beads + GitNexus").action(async () => {
     await printProjectInitGuide();
   });
   installProjectCmd.addCommand(listCmd);
@@ -41278,7 +41340,7 @@ function createInstallProjectCommand() {
 }
 function createProjectCommand() {
   const projectCmd = new Command("project").description("Project skill onboarding and installation helpers");
-  projectCmd.command("init").description("Show project onboarding guidance (quality gates + service skills)").action(async () => {
+  projectCmd.command("init").description("Show full onboarding guidance and bootstrap beads + GitNexus").action(async () => {
     await printProjectInitGuide();
   });
   projectCmd.command("list").description("List available project skills").action(async () => {

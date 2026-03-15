@@ -4,6 +4,10 @@
       {
         "script": "skill-suggestion.py",
         "timeout": 5000
+      },
+      {
+        "script": "gitnexus-impact-reminder.py",
+        "timeout": 5000
       }
     ],
     "SessionStart": [
@@ -36,11 +40,6 @@
         "script": "type-safety-enforcement.py"
       },
       {
-        "matcher": "Grep|Glob|Bash",
-        "script": "gitnexus/gitnexus-hook.cjs",
-        "timeout": 8000
-      },
-      {
         "matcher": "Edit|Write|MultiEdit|NotebookEdit|mcp__serena__rename_symbol|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol",
         "script": "beads-edit-gate.mjs",
         "timeout": 5000
@@ -56,6 +55,11 @@
         "matcher": "Bash",
         "script": "main-guard-post-push.mjs",
         "timeout": 5000
+      },
+      {
+        "matcher": "Read|Grep|Glob|Bash|mcp__serena__find_symbol|mcp__serena__get_symbols_overview|mcp__serena__search_for_pattern|mcp__serena__find_referencing_symbols|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol|mcp__serena__rename_symbol",
+        "script": "gitnexus/gitnexus-hook.cjs",
+        "timeout": 10000
       }
     ],
     "Stop": [

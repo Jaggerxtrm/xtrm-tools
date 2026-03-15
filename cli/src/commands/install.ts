@@ -125,6 +125,15 @@ function isDoltInstalled(): boolean {
     }
 }
 
+function isGitnexusInstalled(): boolean {
+    try {
+        execSync('gitnexus --version', { stdio: 'ignore' });
+        return true;
+    } catch {
+        return false;
+    }
+}
+
 interface GlobalInstallFlags {
     dryRun: boolean;
     yes: boolean;
@@ -218,6 +227,34 @@ async function runGlobalInstall(
                 console.log(t.muted('  ℹ Skipping beads gate hooks. Re-run xtrm install all after installing beads+dolt.\n'));
                 skipBeads = true;
             }
+        }
+    }
+
+    // Gitnexus global install (for MCP server + CLI tools)
+    console.log(t.bold('\n  ⚙  gitnexus  (code intelligence)'));
+    console.log(t.muted('  GitNexus provides knowledge graph queries for impact analysis, execution flows, and symbol context.'));
+
+    const gitnexusOk = isGitnexusInstalled();
+    if (gitnexusOk) {
+        console.log(t.success('  ✓ gitnexus already installed\n'));
+    } else {
+        let doInstallGitnexus = effectiveYes;
+        if (!effectiveYes) {
+            const { install } = await prompts({
+                type: 'confirm',
+                name: 'install',
+                message: 'Install gitnexus globally? (recommended for MCP server and CLI tools)',
+                initial: true,
+            });
+            doInstallGitnexus = install;
+        }
+
+        if (doInstallGitnexus) {
+            console.log(t.muted('\n  Installing gitnexus...'));
+            spawnSync('npm', ['install', '-g', 'gitnexus'], { stdio: 'inherit' });
+            console.log(t.success('  ✓ gitnexus installed\n'));
+        } else {
+            console.log(t.muted('  ℹ Skipped. Install later with: npm install -g gitnexus\n'));
         }
     }
 

@@ -41601,6 +41601,14 @@ function isDoltInstalled() {
     return false;
   }
 }
+function isGitnexusInstalled() {
+  try {
+    (0, import_child_process4.execSync)("gitnexus --version", { stdio: "ignore" });
+    return true;
+  } catch {
+    return false;
+  }
+}
 async function needsSettingsSync(repoRoot, target) {
   const normalizedTarget = target.replace(/\\/g, "/").toLowerCase();
   if (normalizedTarget.includes(".agents/skills")) return false;
@@ -41673,6 +41681,30 @@ async function runGlobalInstall(flags, installOpts = {}) {
         console.log(t.muted("  \u2139 Skipping beads gate hooks. Re-run xtrm install all after installing beads+dolt.\n"));
         skipBeads = true;
       }
+    }
+  }
+  console.log(t.bold("\n  \u2699  gitnexus  (code intelligence)"));
+  console.log(t.muted("  GitNexus provides knowledge graph queries for impact analysis, execution flows, and symbol context."));
+  const gitnexusOk = isGitnexusInstalled();
+  if (gitnexusOk) {
+    console.log(t.success("  \u2713 gitnexus already installed\n"));
+  } else {
+    let doInstallGitnexus = effectiveYes;
+    if (!effectiveYes) {
+      const { install } = await (0, import_prompts3.default)({
+        type: "confirm",
+        name: "install",
+        message: "Install gitnexus globally? (recommended for MCP server and CLI tools)",
+        initial: true
+      });
+      doInstallGitnexus = install;
+    }
+    if (doInstallGitnexus) {
+      console.log(t.muted("\n  Installing gitnexus..."));
+      (0, import_child_process5.spawnSync)("npm", ["install", "-g", "gitnexus"], { stdio: "inherit" });
+      console.log(t.success("  \u2713 gitnexus installed\n"));
+    } else {
+      console.log(t.muted("  \u2139 Skipped. Install later with: npm install -g gitnexus\n"));
     }
   }
   const diffTasks = new Listr(

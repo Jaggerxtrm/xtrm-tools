@@ -86,6 +86,26 @@ if (tool === 'Bash') {
     process.exit(0);
   }
 
+  // Enforce squash-only PR merges for linear history
+  // Must check BEFORE the gh allowlist pattern
+  if (/^gh\s+pr\s+merge\b/.test(cmd)) {
+    if (!/--squash\b/.test(cmd)) {
+      deny(
+        `\u26D4 Only squash merges are allowed — use 'gh pr merge --squash'\n\n` +
+        'Why squash?\n' +
+        '  - Keeps history linear and easy to read\n' +
+        '  - One commit per PR = easy to revert\n' +
+        '  - Matches the workflow documented in AGENTS.md\n\n' +
+        'Correct usage:\n' +
+        '  gh pr merge --squash\n\n' +
+        'If you really need a merge commit, use:\n' +
+        '  MAIN_GUARD_ALLOW_BASH=1 gh pr merge --merge\n'
+      );
+    }
+    // --squash present — allow
+    process.exit(0);
+  }
+
   // Safe allowlist — non-mutating commands + explicit branch-exit paths.
   // Important: do not allow generic checkout/switch forms, which include
   // mutating variants such as `git checkout -- <path>`.

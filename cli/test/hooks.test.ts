@@ -91,6 +91,7 @@ describe('main-guard.mjs — MAIN_GUARD_PROTECTED_BRANCHES', () => {
       'git pull',
       'gh pr list',
       'bd list',
+      `git reset --hard origin/${CURRENT_BRANCH}`,
     ];
     for (const command of safeCommands) {
       const r = runHook(
@@ -138,6 +139,13 @@ describe('main-guard.mjs — MAIN_GUARD_PROTECTED_BRANCHES', () => {
     expect(r.status).toBe(2);
     const out = parseHookJson(r.stdout);
     expect(out?.systemMessage).toContain('feature branch');
+  });
+
+
+  it('post-push hook sync guidance uses reset --hard, consistent with main-guard', () => {
+    const postPush = readFileSync(path.join(HOOKS_DIR, 'main-guard-post-push.mjs'), 'utf8');
+    expect(postPush).toContain('reset --hard');
+    expect(postPush).not.toContain('pull --ff-only');
   });
 });
 

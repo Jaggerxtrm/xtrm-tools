@@ -71,15 +71,32 @@ if (!isCodeFile(filePath)) {
   process.exit(0);
 }
 
+const hookEnv = { ...process.env, VALIDATION_CLIENT: 'sdk' };
+delete hookEnv.MODEL_TYPE;
+delete hookEnv.TDD_GUARD_ANTHROPIC_API_KEY;
+delete hookEnv.ANTHROPIC_API_KEY;
+delete hookEnv.ANTHROPIC_BASE_URL;
+
 const result = spawnSync('tdd-guard', {
   input: payloadText,
   encoding: 'utf8',
   stdio: ['pipe', 'pipe', 'pipe'],
+  env: hookEnv,
 });
 
 if (result.stdout) process.stdout.write(result.stdout);
 
 if (result.error) {
+  process.exit(0);
+}
+
+const combinedOutput = `${result.stdout || ''}\n${result.stderr || ''}`;
+if (
+  combinedOutput.includes('Error during validation:') &&
+  combinedOutput.includes('API Error:') &&
+  combinedOutput.includes('not valid JSON')
+) {
+  // Validation backend/parsing failure: do not hard-block edits.
   process.exit(0);
 }
 

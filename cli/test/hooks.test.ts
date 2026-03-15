@@ -381,6 +381,68 @@ describe('tdd-guard-pretool-bridge.cjs', () => {
       rmSync(fakeDir, { recursive: true, force: true });
     }
   });
+
+  it('forces sdk validation client and strips api-mode env vars', () => {
+    const fakeDir = mkdtempSync(path.join(os.tmpdir(), 'xtrm-fake-tddguard-env-'));
+    const fakeBin = path.join(fakeDir, 'tdd-guard');
+    writeFileSync(
+      fakeBin,
+      `#!/usr/bin/env bash
+if [[ "$VALIDATION_CLIENT" != "sdk" ]]; then exit 12; fi
+if [[ -n "\${MODEL_TYPE:-}" ]]; then exit 13; fi
+if [[ -n "\${TDD_GUARD_ANTHROPIC_API_KEY:-}" ]]; then exit 14; fi
+if [[ -n "\${ANTHROPIC_API_KEY:-}" ]]; then exit 15; fi
+if [[ -n "\${ANTHROPIC_BASE_URL:-}" ]]; then exit 16; fi
+exit 0
+`,
+      { encoding: 'utf8' },
+    );
+    chmodSync(fakeBin, 0o755);
+
+    try {
+      const r = spawnSync('node', [path.join(TDD_BRIDGE_DIR, 'tdd-guard-pretool-bridge.cjs')], {
+        input: JSON.stringify({ tool_name: 'Write', tool_input: { file_path: 'test.py' } }),
+        encoding: 'utf8',
+        env: {
+          ...process.env,
+          PATH: `${fakeDir}:${process.env.PATH ?? ''}`,
+          VALIDATION_CLIENT: 'api',
+          MODEL_TYPE: 'anthropic_api',
+          TDD_GUARD_ANTHROPIC_API_KEY: 'x',
+          ANTHROPIC_API_KEY: 'y',
+          ANTHROPIC_BASE_URL: 'https://example.invalid',
+        },
+      });
+      expect(r.status).toBe(0);
+    } finally {
+      rmSync(fakeDir, { recursive: true, force: true });
+    }
+  });
+
+  it('fails open for known API response JSON-parse errors', () => {
+    const fakeDir = mkdtempSync(path.join(os.tmpdir(), 'xtrm-fake-tddguard-apierr-'));
+    const fakeBin = path.join(fakeDir, 'tdd-guard');
+    writeFileSync(
+      fakeBin,
+      `#!/usr/bin/env bash
+echo 'Error during validation: Unexpected token '\\''A'\\'', "API Error:"... is not valid JSON'
+exit 2
+`,
+      { encoding: 'utf8' },
+    );
+    chmodSync(fakeBin, 0o755);
+
+    try {
+      const r = spawnSync('node', [path.join(TDD_BRIDGE_DIR, 'tdd-guard-pretool-bridge.cjs')], {
+        input: JSON.stringify({ tool_name: 'Write', tool_input: { file_path: 'test.py' } }),
+        encoding: 'utf8',
+        env: { ...process.env, PATH: `${fakeDir}:${process.env.PATH ?? ''}` },
+      });
+      expect(r.status).toBe(0);
+    } finally {
+      rmSync(fakeDir, { recursive: true, force: true });
+    }
+  });
 });
 
 

@@ -5,126 +5,111 @@ description: 'Quality Gates workflow for Claude Code. Use when editing code in p
 
 # Using Quality Gates
 
-**Quality Gates** enforces a complete code quality workflow in Claude Code. It coordinates three enforcement layers:
+**Quality Gates** provides automated code quality enforcement through PostToolUse hooks:
 
-1. **TDD Guard** (PreToolUse) — Blocks implementation until failing test exists
-2. **TypeScript Quality Gate** (PostToolUse) — Auto-lints, type-checks, formats TS/JS
-3. **Python Quality Gate** (PostToolUse) — Auto-lints, type-checks, formats Python
+1. **TypeScript Quality Gate** — Runs after TS/JS edits: TypeScript + ESLint + Prettier
+2. **Python Quality Gate** — Runs after Python edits: Ruff + Mypy
 
-## The Quality Pipeline
+**Separate Installation Required for TDD:**
+- **TDD Guard** is a separate tool (not included) — See "TDD Guard Setup" below
+
+## Architecture Overview
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  1. USER REQUEST: "Add feature X"                               │
+│  QUALITY GATES (this skill)                                     │
+│  ─────────────────────────────                                  │
+│  PostToolUse Hooks (installed by this skill):                   │
+│  • .claude/hooks/quality-check.cjs  → TS/JS files              │
+│  • .claude/hooks/quality-check.py   → Python files             │
+│  • .claude/settings.json            → Hook registration        │
 └─────────────────────────────────────────────────────────────────┘
-                              ↓
+
 ┌─────────────────────────────────────────────────────────────────┐
-│  2. TDD GUARD (PreToolUse)                                      │
-│     - Intercepts Write/Edit attempts                            │
-│     - Checks: Is there a failing test?                          │
-│     - NO → BLOCK with guidance: "Write a failing test first"    │
-│     - YES → Allow implementation                                │
-└─────────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────────┐
-│  3. IMPLEMENT (Write/Edit tool succeeds)                        │
-└─────────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────────┐
-│  4. QUALITY GATE (PostToolUse)                                  │
-│     - TypeScript projects: ts-quality-gate fires                │
-│       • TypeScript compilation check                            │
-│       • ESLint validation + auto-fix                            │
-│       • Prettier formatting + auto-fix                          │
-│     - Python projects: py-quality-gate fires                    │
-│       • Ruff linting + auto-fix                                 │
-│       • Ruff formatting + auto-fix                              │
-│       • Mypy type checking                                      │
-│     - Exit code 2 → BLOCK, Claude must fix issues               │
-│     - Exit code 0 → Success, continue                           │
-└─────────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────────┐
-│  5. COMMIT (bd commit + git push)                               │
+│  TDD GUARD (separate installation)                              │
+│  ───────────────────────────────────                            │
+│  PreToolUse Hook (requires xtrm install project tdd-guard):    │
+│  • Global CLI: npm install -g tdd-guard                        │
+│  • Test reporter: tdd-guard-vitest / tdd-guard-pytest / etc.   │
+│  • Hook: .claude/hooks/tdd-guard-pretool-bridge.cjs            │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-## When This Skill Activates
+## Installation
 
-**Triggers:**
-- You attempt to write/edit code files
-- Quality gate reports errors (linting, types, formatting)
-- User asks about testing, linting, or quality workflow
-- Session starts in a project with quality gates installed
+### Step 1: Install This Skill
 
-**Does NOT trigger:**
-- Documentation edits (.md, .txt files)
-- Configuration files (unless they contain code)
-- Projects without quality gates installed
+```bash
+xtrm install project quality-gates
+```
 
-## Response Modes
+This installs:
+- `.claude/hooks/quality-check.cjs` — TypeScript/JavaScript checks
+- `.claude/hooks/quality-check.py` — Python checks
+- `.claude/settings.json` — PostToolUse hook registration
+- `.claude/skills/using-quality-gates/` — This documentation
 
-Adjust your response based on the context:
+### Step 2: Install Language Dependencies
 
-**Full Workflow Mode** — Use when:
-- User explicitly mentions tests, TDD, linting, or quality gates
-- User is blocked by TDD Guard ("No failing test found")
-- User is blocked by quality gate errors (type/lint issues)
-- Feature work or refactoring in an established codebase
+**TypeScript Projects:**
+```bash
+npm install --save-dev typescript eslint prettier
+```
 
-Provide the complete workflow: test-first reasoning, implementation guidance, quality gate validation steps.
+**Python Projects:**
+```bash
+pip install ruff mypy
+```
 
-**Minimal Mode** — Use when:
-- General coding tasks ("write a script to X", "create a utility that Y")
-- One-off scripts without existing test infrastructure
-- User doesn't mention quality/testing context
+### Step 3: (Optional) Install TDD Guard
 
-Response pattern:
-1. Complete the task directly
-2. Brief note at the end: "Consider adding tests for this. If you have TDD Guard installed, write a failing test first."
-3. Don't explain the full quality gate workflow unless asked
+For test-first enforcement, install TDD Guard separately:
 
-**Why this matters:** Over-explaining TDD for simple scripts creates friction. Match the response depth to the task complexity.
+```bash
+# 1. Install global CLI
+npm install -g tdd-guard
 
-## How Each Gate Works
+# 2. Install project-skill for hook wiring
+xtrm install project tdd-guard
 
-### TDD Guard (PreToolUse)
+# 3. Install test reporter (choose one)
+npm install --save-dev tdd-guard-vitest    # Vitest
+npm install --save-dev tdd-guard-jest      # Jest
+pip install tdd-guard-pytest               # pytest
+```
 
-**Purpose:** Enforce test-driven development
+**Configure test reporter** (see https://github.com/nizos/tdd-guard):
 
-**Intercepts:** `Write`, `Edit`, `MultiEdit`, `TodoWrite`, Serena edit tools
+**Vitest:**
+```typescript
+// vitest.config.ts
+import { defineConfig } from 'vitest/config'
+import { VitestReporter } from 'tdd-guard-vitest'
 
-**Behavior:**
-1. Checks test reporter JSON for failing tests
-2. If NO failing test → blocks with message:
-   ```
-   TDD Guard: No failing test found.
-   Write a test that fails first, then implement.
-   ```
-3. If failing test exists → allows the edit
+export default defineConfig({
+  test: {
+    reporters: ['default', new VitestReporter('/path/to/project')],
+  },
+})
+```
 
-**Test Reporters Required:**
-| Language | Package | Setup |
-|----------|---------|-------|
-| TypeScript (Vitest) | `tdd-guard-vitest` | Add to `vitest.config.ts` |
-| TypeScript (Jest) | `tdd-guard-jest` | Add to `jest.config.ts` |
-| Python (pytest) | `tdd-guard-pytest` | Add to `conftest.py` |
-| PHP (PHPUnit) | `tdd-guard-phpunit` | Add to `phpunit.xml` |
-| Go | `tdd-guard-go` | Pipe `go test -json` output |
-| Rust | `tdd-guard-rust` | Pipe `cargo nextest` output |
+**pytest:**
+```toml
+# pyproject.toml
+[tool.pytest.ini_options]
+tdd_guard_project_root = "/path/to/project"
+```
+
+## How Quality Gates Work
 
 ### TypeScript Quality Gate (PostToolUse)
 
-**Purpose:** Enforce TypeScript, ESLint, Prettier standards
-
-**Runs after:** Every TS/JS file edit
+**Runs after:** Every `.ts`, `.tsx`, `.js`, `.jsx` file edit
 
 **Checks:**
 1. TypeScript compilation (type errors)
 2. ESLint validation (style, best practices)
 3. Prettier formatting (consistency)
-
-**Auto-fix:** Enabled by default for ESLint and Prettier
 
 **Configuration** (`.claude/hooks/hook-config.json`):
 ```json
@@ -136,23 +121,14 @@ Response pattern:
 }
 ```
 
-**Exit Codes:**
-- `0` — All checks passed
-- `1` — Fatal error (missing dependencies)
-- `2` — Blocking errors (Claude must fix)
-
 ### Python Quality Gate (PostToolUse)
 
-**Purpose:** Enforce Python code quality
-
-**Runs after:** Every Python file edit
+**Runs after:** Every `.py` file edit
 
 **Checks:**
 1. Ruff linting (errors, style, best practices)
 2. Ruff formatting (Black-compatible)
 3. Mypy type checking (static types)
-
-**Auto-fix:** Enabled for Ruff lint/format
 
 **Configuration** (environment variables):
 ```bash
@@ -161,90 +137,118 @@ CLAUDE_HOOKS_MYPY_ENABLED=true
 CLAUDE_HOOKS_AUTOFIX=true
 ```
 
-**Exit Codes:**
-- `0` — All checks passed
-- `1` — Fatal error
-- `2` — Blocking errors (Claude must fix)
+## Exit Codes
+
+| Code | Meaning | Action |
+|------|---------|--------|
+| 0 | All checks passed | Continue |
+| 1 | Fatal error (missing deps) | Install missing tool |
+| 2 | Blocking errors | Claude must fix |
 
 ## Handling Quality Gate Errors
 
-When a quality gate blocks with exit code 2:
+When blocked with exit code 2:
 
-1. **Read the error output** — It shows specific issues
-2. **Apply auto-fix if available** — ESLint/Prettier/Ruff can auto-fix many issues
-3. **Manually fix remaining issues** — Type errors, complex lint violations
-4. **Re-run the gate** — Usually fires automatically on next edit
+1. **Read the error output** — Specific issues listed
+2. **Auto-fix applies automatically** — ESLint/Prettier/Ruff fix what they can
+3. **Fix remaining issues manually** — Type errors, complex violations
+4. **Gate re-runs on next edit** — No manual trigger needed
 
-**Example error flow:**
+**Example:**
 ```
 [ERROR] TypeScript compilation failed:
   src/auth.ts:42:5 - error TS2322: Type 'string' is not assignable to type 'number'
 
-[ERROR] ESLint found 2 issues:
-  src/auth.ts:15:10 - 'unusedVar' is defined but never used
-  src/auth.ts:28:3 - Missing return type
-
-[WARN] Auto-fix applied: 1 issue fixed
-[BLOCK] 3 issues remain - fix before continuing
+[WARN] Auto-fix applied: 2 issues fixed
+[BLOCK] 1 issue remains - fix before continuing
 ```
 
-## Partial Installs
+## TDD Guard Integration
 
-Not all projects have all three gates. The workflow adapts:
+When TDD Guard is installed alongside Quality Gates:
 
-| Project Type | Active Gates |
-|--------------|--------------|
-| TypeScript + tests | TDD Guard + TS Quality Gate |
-| Python + tests | TDD Guard + PY Quality Gate |
-| TypeScript only | TS Quality Gate only |
-| Python only | PY Quality Gate only |
-| Tests only | TDD Guard only |
-
-The skill detects which gates are installed and adjusts guidance accordingly.
+```
+User Request: "Add feature X"
+        ↓
+┌───────────────────────────────────┐
+│ TDD Guard (PreToolUse)            │
+│ Checks: Failing test exists?      │
+│ • NO → BLOCK: "Write test first"  │
+│ • YES → Allow implementation      │
+└───────────────────────────────────┘
+        ↓
+Implementation (Write/Edit)
+        ↓
+┌───────────────────────────────────┐
+│ Quality Gates (PostToolUse)       │
+│ Runs: Lint + Typecheck + Format   │
+│ • Errors → BLOCK, fix issues      │
+│ • Pass → Continue                 │
+└───────────────────────────────────┘
+        ↓
+Tests pass → Commit
+```
 
 ## Troubleshooting
 
-**"TDD Guard: No failing test found"**
-- Write a test that fails first
-- Verify test reporter is installed and configured
-- Run tests manually to confirm reporter JSON is generated
-
 **"ESLint not found" / "Prettier not found"**
-- Install: `npm install --save-dev eslint prettier`
-- Or disable in `hook-config.json`
-
-**"Ruff not found" / "Mypy not found"**
-- Install: `pip install ruff mypy`
-- Or set `CLAUDE_HOOKS_RUFF_ENABLED=false`
-
-**Hook not running**
-- Verify hooks in `.claude/settings.json`
-- Check hook script paths are correct
-
-## Installation
-
 ```bash
-# Install quality gates project skill
-xtrm install project quality-gates
-
-# For TypeScript projects
-npm install --save-dev typescript eslint prettier
-
-# For Python projects
-pip install ruff mypy
-
-# For TDD Guard (choose your test framework)
-npm install --save-dev tdd-guard-vitest    # Vitest
-npm install --save-dev tdd-guard-jest     # Jest
-pip install tdd-guard-pytest              # pytest
+npm install --save-dev eslint prettier
 ```
 
-See `.claude/docs/quality-gates-readme.md` for full setup instructions.
+**"Ruff not found" / "Mypy not found"**
+```bash
+pip install ruff mypy
+```
 
-## Related Skills
+**"tdd-guard: command not found"**
+```bash
+npm install -g tdd-guard
+```
 
-- **using-tdd-guard** — TDD enforcement only (legacy, kept for partial installs)
-- **using-ts-quality-gate** — TypeScript linting only (legacy)
-- **using-py-quality-gate** — Python linting only (legacy)
+**"TDD Guard: No failing test found"**
+- Write a failing test first
+- Ensure test reporter is configured
+- Run tests to generate reporter JSON
 
-**Note:** `using-quality-gates` unifies all three. New projects should install this single skill.
+**Hook not running**
+- Verify `.claude/settings.json` exists
+- Check hook script paths are correct
+- Ensure file extension matches (`.ts`/`.py`)
+
+## When This Skill Activates
+
+**Triggers:**
+- Quality gate reports errors
+- User asks about linting, type checking, or quality workflow
+- Session starts in a project with quality gates installed
+
+**Response Modes:**
+
+**Full Workflow Mode** (user mentions quality/testing, blocked by gate errors):
+- Explain complete quality pipeline
+- Provide troubleshooting guidance
+
+**Minimal Mode** (general coding tasks without quality context):
+- Complete the task directly
+- Brief note: "Consider adding tests. If TDD Guard is installed, write failing test first."
+
+## Files Installed
+
+```
+.claude/
+├── settings.json              # PostToolUse hook registration
+├── hooks/
+│   ├── quality-check.cjs      # TypeScript/JavaScript checks
+│   ├── quality-check.py       # Python checks
+│   └── hook-config.json       # TS hook configuration
+├── skills/
+│   └── using-quality-gates/   # This skill
+└── docs/
+    └── quality-gates-readme.md
+```
+
+## Related
+
+- **TDD Guard**: https://github.com/nizos/tdd-guard
+- **xtrm install project tdd-guard**: Install TDD Guard hooks

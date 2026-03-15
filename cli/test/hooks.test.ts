@@ -715,3 +715,141 @@ process.exit(ok ? 0 : 1);
     });
   });
 });
+
+
+// ── beads-compact-save.mjs ───────────────────────────────────────────────────
+describe('beads-compact-save.mjs', () => {
+  it('exits 0 silently when no .beads directory exists', () => {
+    const r = runHook('beads-compact-save.mjs', { hook_event_name: 'PreCompact', cwd: '/tmp' });
+    expect(r.status).toBe(0);
+    expect(r.stdout).toBe('');
+  });
+
+  it('exits 0 silently and writes no file when no in_progress issues', () => {
+    const projectDir = mkdtempSync(path.join(os.tmpdir(), 'xtrm-compact-save-'));
+    mkdirSync(path.join(projectDir, '.beads'));
+    const fake = withFakeBdDir(`#!/usr/bin/env bash
+if [[ "$1" == "list" ]]; then
+  echo ""
+  echo "--------------------------------------------------------------------------------"
+  echo "Total: 2 issues (2 open, 0 in progress)"
+  exit 0
+fi
+exit 1
+`);
+    try {
+      const r = runHook(
+        'beads-compact-save.mjs',
+        { hook_event_name: 'PreCompact', cwd: projectDir },
+        { PATH: `${fake.tempDir}:${process.env.PATH ?? ''}` },
+      );
+      expect(r.status).toBe(0);
+      const { existsSync } = require('node:fs');
+      expect(existsSync(path.join(projectDir, '.beads', '.last_active'))).toBe(false);
+    } finally {
+      rmSync(fake.tempDir, { recursive: true, force: true });
+      rmSync(projectDir, { recursive: true, force: true });
+    }
+  });
+
+  it('writes .beads/.last_active with in_progress issue IDs', () => {
+    const projectDir = mkdtempSync(path.join(os.tmpdir(), 'xtrm-compact-save-'));
+    mkdirSync(path.join(projectDir, '.beads'));
+    const fake = withFakeBdDir(`#!/usr/bin/env bash
+if [[ "$1" == "list" ]]; then
+  cat <<'EOF'
+◐ proj-abc123 ● P1 First in_progress issue
+◐ proj-def456 ● P2 Second in_progress issue
+
+--------------------------------------------------------------------------------
+Total: 2 issues (0 open, 2 in progress)
+EOF
+  exit 0
+fi
+exit 1
+`);
+    try {
+      const r = runHook(
+        'beads-compact-save.mjs',
+        { hook_event_name: 'PreCompact', cwd: projectDir },
+        { PATH: `${fake.tempDir}:${process.env.PATH ?? ''}` },
+      );
+      expect(r.status).toBe(0);
+      const { readFileSync: rfs } = require('node:fs');
+      const saved = rfs(path.join(projectDir, '.beads', '.last_active'), 'utf8').trim().split('\n');
+      expect(saved).toContain('proj-abc123');
+      expect(saved).toContain('proj-def456');
+    } finally {
+      rmSync(fake.tempDir, { recursive: true, force: true });
+      rmSync(projectDir, { recursive: true, force: true });
+    }
+  });
+});
+
+// ── beads-compact-restore.mjs ────────────────────────────────────────────────
+describe('beads-compact-restore.mjs', () => {
+  it('exits 0 silently when no .beads/.last_active file exists', () => {
+    const projectDir = mkdtempSync(path.join(os.tmpdir(), 'xtrm-compact-restore-'));
+    mkdirSync(path.join(projectDir, '.beads'));
+    try {
+      const r = runHook(
+        'beads-compact-restore.mjs',
+        { hook_event_name: 'SessionStart', cwd: projectDir },
+      );
+      expect(r.status).toBe(0);
+      expect(r.stdout).toBe('');
+    } finally {
+      rmSync(projectDir, { recursive: true, force: true });
+    }
+  });
+
+  it('restores in_progress status, deletes .last_active, and injects additionalSystemPrompt', () => {
+    const projectDir = mkdtempSync(path.join(os.tmpdir(), 'xtrm-compact-restore-'));
+    mkdirSync(path.join(projectDir, '.beads'));
+    const { writeFileSync: wfs } = require('node:fs');
+    wfs(path.join(projectDir, '.beads', '.last_active'), 'proj-abc123\nproj-def456\n', 'utf8');
+
+    const callLog = path.join(projectDir, 'bd-calls.log');
+    const fake = withFakeBdDir(`#!/usr/bin/env bash
+echo "$@" >> "${callLog}"
+exit 0
+`);
+    try {
+      const r = runHook(
+        'beads-compact-restore.mjs',
+        { hook_event_name: 'SessionStart', cwd: projectDir },
+        { PATH: `${fake.tempDir}:${process.env.PATH ?? ''}` },
+      );
+      expect(r.status).toBe(0);
+      // .last_active must be deleted
+      const { existsSync: exs, readFileSync: rfs } = require('node:fs');
+      expect(exs(path.join(projectDir, '.beads', '.last_active'))).toBe(false);
+      // bd update called for each ID
+      const calls = rfs(callLog, 'utf8');
+      expect(calls).toContain('proj-abc123');
+      expect(calls).toContain('proj-def456');
+      // additionalSystemPrompt injected for agent
+      const out = parseHookJson(r.stdout);
+      expect(out?.hookSpecificOutput?.additionalSystemPrompt).toMatch(/Restored 2 in_progress issue/);
+    } finally {
+      rmSync(fake.tempDir, { recursive: true, force: true });
+      rmSync(projectDir, { recursive: true, force: true });
+    }
+  });
+});
+
+
+// ── hooks.json wiring ────────────────────────────────────────────────────────
+describe('hooks.json — beads-compact hooks wiring', () => {
+  it('wires beads-compact-save.mjs to PreCompact event', () => {
+    const cfg = JSON.parse(readFileSync(path.join(__dirname, '../../config/hooks.json'), 'utf8'));
+    const preCompact: Array<{ script: string }> = cfg.hooks.PreCompact ?? [];
+    expect(preCompact.some((h) => h.script === 'beads-compact-save.mjs')).toBe(true);
+  });
+
+  it('wires beads-compact-restore.mjs to SessionStart event', () => {
+    const cfg = JSON.parse(readFileSync(path.join(__dirname, '../../config/hooks.json'), 'utf8'));
+    const sessionStart: Array<{ script: string }> = cfg.hooks.SessionStart ?? [];
+    expect(sessionStart.some((h) => h.script === 'beads-compact-restore.mjs')).toBe(true);
+  });
+});

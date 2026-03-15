@@ -37306,10 +37306,71 @@ function isValueProtected(keyPath) {
     (protectedPath) => keyPath === protectedPath || keyPath.startsWith(protectedPath + ".")
   );
 }
+function extractHookCommands(wrapper) {
+  if (!wrapper || !Array.isArray(wrapper.hooks)) return [];
+  return wrapper.hooks.map((h) => h?.command).filter((c) => typeof c === "string" && c.trim().length > 0);
+}
+function commandKey(command) {
+  const m = command.match(/([A-Za-z0-9._-]+\.(?:py|cjs|mjs|js))(?!.*[A-Za-z0-9._-]+\.(?:py|cjs|mjs|js))/);
+  return m?.[1] || command.trim();
+}
+function mergeMatcher(existingMatcher, incomingMatcher) {
+  const parts = [
+    ...existingMatcher.split("|").map((s) => s.trim()),
+    ...incomingMatcher.split("|").map((s) => s.trim())
+  ].filter(Boolean);
+  return Array.from(new Set(parts)).join("|");
+}
+function mergeHookWrappers(existing, incoming) {
+  const merged = existing.map((w) => ({ ...w }));
+  for (const incomingWrapper of incoming) {
+    const incomingCommands = extractHookCommands(incomingWrapper);
+    if (incomingCommands.length === 0) {
+      merged.push(incomingWrapper);
+      continue;
+    }
+    const incomingKeys = new Set(incomingCommands.map(commandKey));
+    const existingIndex = merged.findIndex((existingWrapper2) => {
+      const existingCommands = extractHookCommands(existingWrapper2);
+      return existingCommands.some((c) => incomingKeys.has(commandKey(c)));
+    });
+    if (existingIndex === -1) {
+      merged.push(incomingWrapper);
+      continue;
+    }
+    const existingWrapper = merged[existingIndex];
+    if (typeof existingWrapper.matcher === "string" && typeof incomingWrapper.matcher === "string") {
+      existingWrapper.matcher = mergeMatcher(existingWrapper.matcher, incomingWrapper.matcher);
+    }
+    if (Array.isArray(existingWrapper.hooks) && Array.isArray(incomingWrapper.hooks)) {
+      const existingByKey = new Set(existingWrapper.hooks.map((h) => h?.command).filter((c) => typeof c === "string").map(commandKey));
+      for (const hook of incomingWrapper.hooks) {
+        const cmd = hook?.command;
+        if (typeof cmd !== "string" || !existingByKey.has(commandKey(cmd))) {
+          existingWrapper.hooks.push(hook);
+        }
+      }
+    }
+  }
+  return merged;
+}
+function mergeHooksObject(existingHooks, incomingHooks) {
+  const result = { ...existingHooks || {} };
+  for (const [event, incomingWrappers] of Object.entries(incomingHooks || {})) {
+    const existingWrappers = Array.isArray(result[event]) ? result[event] : [];
+    const incomingArray = Array.isArray(incomingWrappers) ? incomingWrappers : [];
+    result[event] = mergeHookWrappers(existingWrappers, incomingArray);
+  }
+  return result;
+}
 function deepMergeWithProtection(original, updates, currentPath = "") {
   const result = { ...original };
   for (const [key, value] of Object.entries(updates)) {
     const keyPath = currentPath ? `${currentPath}.${key}` : key;
+    if (key === "hooks" && typeof value === "object" && value !== null && typeof original[key] === "object" && original[key] !== null) {
+      result[key] = mergeHooksObject(original[key], value);
+      continue;
+    }
     if (isValueProtected(keyPath) && original.hasOwnProperty(key)) {
       continue;
     }
@@ -40953,7 +41014,7 @@ function deepMergeHooks(existing, incoming) {
         const m = cmd.match(/([A-Za-z0-9._-]+\.(?:py|cjs|mjs|js))(?!.*[A-Za-z0-9._-]+\.(?:py|cjs|mjs|js))/);
         return m?.[1] ?? null;
       };
-      const mergeMatcher = (existingMatcher, incomingMatcher) => {
+      const mergeMatcher2 = (existingMatcher, incomingMatcher) => {
         const existingParts = existingMatcher.split("|").map((s) => s.trim()).filter(Boolean);
         const incomingParts = incomingMatcher.split("|").map((s) => s.trim()).filter(Boolean);
         const merged = [...existingParts];
@@ -40982,7 +41043,7 @@ function deepMergeHooks(existing, incoming) {
         }
         const existingHook = mergedEventHooks[existingIndex];
         if (typeof existingHook.matcher === "string" && typeof incomingHook.matcher === "string") {
-          existingHook.matcher = mergeMatcher(existingHook.matcher, incomingHook.matcher);
+          existingHook.matcher = mergeMatcher2(existingHook.matcher, incomingHook.matcher);
         }
       }
       result.hooks[event] = mergedEventHooks;

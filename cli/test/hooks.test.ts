@@ -382,3 +382,49 @@ describe('tdd-guard-pretool-bridge.cjs', () => {
     }
   });
 });
+
+
+// ── gitnexus-impact-reminder.py ──────────────────────────────────────────────
+
+function runPythonHook(
+  hookFile: string,
+  input: Record<string, unknown>,
+) {
+  return spawnSync('python3', [path.join(HOOKS_DIR, hookFile)], {
+    input: JSON.stringify(input),
+    encoding: 'utf8',
+    env: { ...process.env },
+  });
+}
+
+describe('gitnexus-impact-reminder.py', () => {
+  it('injects additionalContext when prompt contains an edit-intent keyword', () => {
+    const r = runPythonHook('gitnexus-impact-reminder.py', {
+      hook_event_name: 'UserPromptSubmit',
+      prompt: 'fix the broken auth logic in login.ts',
+    });
+    expect(r.status).toBe(0);
+    const out = parseHookJson(r.stdout);
+    expect(out?.hookSpecificOutput?.additionalContext).toContain('gitnexus impact');
+  });
+
+  it('does nothing (no output) when prompt has no edit-intent keywords', () => {
+    const r = runPythonHook('gitnexus-impact-reminder.py', {
+      hook_event_name: 'UserPromptSubmit',
+      prompt: 'explain how the beads gate works',
+    });
+    expect(r.status).toBe(0);
+    expect(r.stdout.trim()).toBe('');
+  });
+
+  it('does nothing for non-UserPromptSubmit events', () => {
+    const r = runPythonHook('gitnexus-impact-reminder.py', {
+      hook_event_name: 'PreToolUse',
+      tool_name: 'Edit',
+      tool_input: { file_path: 'foo.ts' },
+      prompt: 'fix something',
+    });
+    expect(r.status).toBe(0);
+    expect(r.stdout.trim()).toBe('');
+  });
+});

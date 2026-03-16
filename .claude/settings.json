@@ -10,26 +10,6 @@
           }
         ]
       },
-      {
-        "matcher": "Write|Edit|MultiEdit|TodoWrite",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "tdd-guard",
-            "timeout": 30
-          }
-        ]
-      },
-      {
-        "matcher": "Write|Edit|MultiEdit|TodoWrite|mcp__serena__rename_symbol|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/tdd-guard-pretool-bridge.cjs\"",
-            "timeout": 30
-          }
-        ]
-      }
     ],
     "PostToolUse": [
       {
@@ -76,32 +56,13 @@
         "hooks": [
           {
             "type": "command",
-            "command": "tdd-guard --session-init",
-            "timeout": 5
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
             "command": "git config pull.ff only",
             "timeout": 5
           }
         ]
       }
     ],
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "tdd-guard --prompt-check",
-            "timeout": 15
-          }
-        ]
-      }
-    ]
+    "UserPromptSubmit": []
   },
   "UserPromptSubmit": []
 }

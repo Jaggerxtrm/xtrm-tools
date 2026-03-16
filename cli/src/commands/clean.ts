@@ -4,6 +4,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import { homedir } from 'os';
 import { t, sym } from '../utils/theme.js';
+import { findRepoRoot } from '../utils/repo-root.js';
 
 // Canonical hooks (files in ~/.claude/hooks/)
 const CANONICAL_HOOKS = new Set([
@@ -150,7 +151,7 @@ async function cleanSkills(dryRun: boolean): Promise<string[]> {
     return removed;
 }
 
-async function cleanOrphanedHookEntries(dryRun: boolean): Promise<string[]> {
+async function cleanOrphanedHookEntries(dryRun: boolean, repoRoot: string | null): Promise<string[]> {
     const settingsPath = path.join(homedir(), '.claude', 'settings.json');
     const removed: string[] = [];
 
@@ -176,8 +177,28 @@ async function cleanOrphanedHookEntries(dryRun: boolean): Promise<string[]> {
             canonicalScripts.add(hook);
         }
     }
-    // Add gitnexus hook
     canonicalScripts.add('gitnexus/gitnexus-hook.cjs');
+
+    // Build canonical wiring map from config/hooks.json: script -> Set<"event:::matcher|NONE">
+    // Used to detect canonical scripts wired to wrong events or with stale matchers.
+    const canonicalWiringKeys = new Map<string, Set<string>>();
+    if (repoRoot) {
+        const hooksJsonPath = path.join(repoRoot, 'config', 'hooks.json');
+        try {
+            if (await fs.pathExists(hooksJsonPath)) {
+                const hooksJson = await fs.readJson(hooksJsonPath);
+                for (const [event, entries] of Object.entries(hooksJson.hooks ?? {})) {
+                    for (const entry of entries as any[]) {
+                        const script: string = entry.script;
+                        if (!script) continue;
+                        const key = `${event}:::${entry.matcher ?? 'NONE'}`;
+                        if (!canonicalWiringKeys.has(script)) canonicalWiringKeys.set(script, new Set());
+                        canonicalWiringKeys.get(script)!.add(key);
+                    }
+                }
+            }
+        } catch { /* ignore, fall back to script-only check */ }
+    }
 
     // Check each hook entry
     let modified = false;
@@ -191,7 +212,6 @@ async function cleanOrphanedHookEntries(dryRun: boolean): Promise<string[]> {
 
             for (const hook of innerHooks) {
                 const cmd = hook?.command || '';
-                // Extract script filename
                 const m = cmd.match(/\/hooks\/([A-Za-z0-9_/-]+\.(?:py|cjs|mjs|js))/);
                 const script = m?.[1];
 
@@ -204,6 +224,23 @@ async function cleanOrphanedHookEntries(dryRun: boolean): Promise<string[]> {
             }
 
             if (keptInner.length > 0) {
+                // Validate canonical wiring: check that this (event, matcher) combo exists in canonical source
+                if (canonicalWiringKeys.size > 0) {
+                    const firstCmd: string = keptInner[0]?.command || '';
+                    const sm = firstCmd.match(/\/hooks\/([A-Za-z0-9_/-]+\.(?:py|cjs|mjs|js))/);
+                    const script = sm?.[1];
+
+                    if (script && canonicalScripts.has(script)) {
+                        const validKeys = canonicalWiringKeys.get(script);
+                        const wiringKey = `${event}:::${(wrapper.matcher as string | undefined) ?? 'NONE'}`;
+                        if (validKeys && !validKeys.has(wiringKey)) {
+                            removed.push(`${event}:${script} (stale wiring)`);
+                            modified = true;
+                            continue; // drop this wrapper
+                        }
+                    }
+                }
+
                 if (wrapper.hooks) {
                     keptWrappers.push({ ...wrapper, hooks: keptInner });
                 } else if (keptInner.length === 1) {
@@ -270,7 +307,9 @@ export function createCleanCommand(): Command {
 
                 // Clean orphaned hook entries in settings.json
                 console.log(kleur.bold('\n  Scanning settings.json for orphaned hook entries...'));
-                const orphanedEntries = await cleanOrphanedHookEntries(dryRun);
+                let repoRoot: string | null = null;
+                try { repoRoot = await findRepoRoot(); } catch { /* not in repo context */ }
+                const orphanedEntries = await cleanOrphanedHookEntries(dryRun, repoRoot);
                 if (orphanedEntries.length > 0) {
                     for (const entry of orphanedEntries) {
                         console.log(kleur.red(`    ✗ ${entry}`));

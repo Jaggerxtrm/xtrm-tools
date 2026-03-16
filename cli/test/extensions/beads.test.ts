@@ -111,4 +111,30 @@ describe("Beads Extension", () => {
 		expect(result.content).toHaveLength(2);
 		expect(result.content[1].text).toContain("Beads Insight");
 	});
+
+	it("should auto-claim session on bd update --claim", async () => {
+		const kvSetCalls: string[][] = [];
+		(SubprocessRunner.run as any).mockImplementation(async (cmd: string, args: string[]) => {
+			if (args[0] === "kv" && args[1] === "set") {
+				kvSetCalls.push(args);
+				return { code: 0, stdout: "", stderr: "" };
+			}
+			return { code: 0, stdout: "", stderr: "" };
+		});
+
+		beadsExtension(harness.pi);
+
+		const result = await harness.emit("tool_result", {
+			toolName: "bash",
+			input: { command: "bd update issue-456 --claim" },
+			content: [{ type: "text", text: "Updated issue: issue-456" }],
+			isError: false,
+		});
+
+		expect(kvSetCalls.length).toBe(1);
+		expect(kvSetCalls[0][2]).toBe("claimed:mock-session-123");
+		expect(kvSetCalls[0][3]).toBe("issue-456");
+		expect(result.content[1].text).toContain("claimed issue");
+		expect(result.content[1].text).toContain("issue-456");
+	});
 });

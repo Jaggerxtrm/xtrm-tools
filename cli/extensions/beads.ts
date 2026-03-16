@@ -43,9 +43,9 @@ export default function (pi: ExtensionAPI) {
 			        if (ctx.hasUI) {
 				        ctx.ui.notify("Beads: Edit blocked. Claim an issue first.", "warning");
 			        }
-			        return { 
-                        block: true, 
-                        reason: "No active issue claim for this session. Use `/claim <id>` to track your work." 
+			        return {
+                        block: true,
+                        reason: `No active issue claim for this session (${sessionId}).\n  bd update <id> --claim\n  bd kv set "claimed:${sessionId}" "<id>"`,
                     };
                 }
             }
@@ -56,9 +56,9 @@ export default function (pi: ExtensionAPI) {
 			if (command && /\bgit\s+commit\b/.test(command)) {
                 const claim = await getSessionClaim(sessionId, cwd);
 				if (claim) {
-					return { 
-                        block: true, 
-                        reason: `Resolve open claim [${claim}] before committing.` 
+					return {
+                        block: true,
+                        reason: `Resolve open claim [${claim}] before committing.`,
                     };
 				}
 			}
@@ -70,6 +70,19 @@ export default function (pi: ExtensionAPI) {
 	pi.on("tool_result", async (event, ctx) => {
 		if (isBashToolResult(event)) {
 			const command = event.input.command;
+
+			if (command && /\bbd\s+update\b/.test(command) && /--claim\b/.test(command) && !event.isError) {
+				const issueMatch = command.match(/\bbd\s+update\s+(\S+)/);
+				if (issueMatch) {
+					const issueId = issueMatch[1];
+					const cwd = getCwd(ctx);
+					const sessionId = ctx.sessionManager.sessionId;
+					await SubprocessRunner.run("bd", ["kv", "set", `claimed:${sessionId}`, issueId], { cwd });
+					const claimNotice = `\n\n✅ **Beads**: Session \`${sessionId}\` claimed issue \`${issueId}\`. File edits are now unblocked.`;
+					return { content: [...event.content, { type: "text", text: claimNotice }] };
+				}
+			}
+
 			if (command && /\bbd\s+close\b/.test(command) && !event.isError) {
 				const reminder = "\n\n**Beads Insight**: Work completed. Consider if this session produced insights worth persisting via `bd remember`.";
 				const newContent = [...event.content, { type: "text", text: reminder }];

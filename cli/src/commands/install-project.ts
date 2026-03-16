@@ -228,20 +228,23 @@ export function pruneStaleHooks(
         return { result, removed };
     }
 
-    // Collect all canonical script filenames
+    // Collect canonical script paths + basenames for this skill only.
+    // We only prune hooks that look like stale variants of this skill's own scripts.
     const canonicalScripts = new Set<string>();
-    for (const [event, hooks] of Object.entries(canonical.hooks)) {
+    const canonicalBasenames = new Set<string>();
+    for (const hooks of Object.values(canonical.hooks)) {
         const hookList = Array.isArray(hooks) ? hooks : [hooks];
         for (const wrapper of hookList) {
             const innerHooks = wrapper.hooks || [wrapper];
             for (const hook of innerHooks) {
                 const script = getScriptFilename(hook);
-                if (script) canonicalScripts.add(script);
+                if (!script) continue;
+                canonicalScripts.add(script);
+                canonicalBasenames.add(path.basename(script));
             }
         }
     }
 
-    // Prune existing hooks not in canonical
     for (const [event, hooks] of Object.entries(result.hooks)) {
         if (!Array.isArray(hooks)) continue;
 
@@ -252,12 +255,24 @@ export function pruneStaleHooks(
 
             for (const hook of innerHooks) {
                 const script = getScriptFilename(hook);
-                // Keep if: no script (not a file-based hook) OR script is canonical
-                if (!script || canonicalScripts.has(script)) {
+                if (!script) {
                     keptInner.push(hook);
-                } else {
-                    removed.push(`${event}:${script}`);
+                    continue;
                 }
+
+                if (canonicalScripts.has(script)) {
+                    keptInner.push(hook);
+                    continue;
+                }
+
+                const sameSkillFamily = canonicalBasenames.has(path.basename(script));
+                if (sameSkillFamily) {
+                    removed.push(`${event}:${script}`);
+                    continue;
+                }
+
+                // Foreign/non-related hook — preserve it.
+                keptInner.push(hook);
             }
 
             if (keptInner.length > 0) {
@@ -434,7 +449,10 @@ export async function installProjectSkill(toolName: string, projectRootOverride?
             const src = path.join(skillSkillsDir, entry);
             const dest = path.join(targetSkillsDir, entry);
             await fs.copy(src, dest, {
-                filter: (src: string) => !src.includes('.Zone.Identifier'),
+                filter: (src: string) => !src.includes('.Zone.Identifier')
+                && !src.includes('__pycache__')
+                && !src.includes('.pytest_cache')
+                && !src.endsWith('.pyc'),
             });
             console.log(`${kleur.green('  ✓')} .claude/skills/${entry}/`);
         }
@@ -452,7 +470,10 @@ export async function installProjectSkill(toolName: string, projectRootOverride?
             const src = path.join(skillClaudeDir, entry);
             const dest = path.join(claudeDir, entry);
             await fs.copy(src, dest, {
-                filter: (src: string) => !src.includes('.Zone.Identifier'),
+                filter: (src: string) => !src.includes('.Zone.Identifier')
+                && !src.includes('__pycache__')
+                && !src.includes('.pytest_cache')
+                && !src.endsWith('.pyc'),
             });
             console.log(`${kleur.green('  ✓')} .claude/${entry}/`);
         }

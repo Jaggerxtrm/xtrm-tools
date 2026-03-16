@@ -1,6 +1,5 @@
-import type { ExtensionAPI, ToolCallEvent, ToolResultEvent } from "@mariozechner/pi-coding-agent";
+import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import { isToolCallEventType, isBashToolResult } from "@mariozechner/pi-coding-agent";
-import * as path from "node:path";
 import { SubprocessRunner, EventAdapter, Logger } from "./core/lib";
 
 const logger = new Logger({ namespace: "beads" });
@@ -115,24 +114,42 @@ export default function (pi: ExtensionAPI) {
 		return undefined;
 	});
 
-	// Dual safety net: notify about unclosed claims when session ends
-	const notifySessionEnd = async (ctx: any) => {
+	// Dual safety net: warn (and in UI mode, require explicit confirmation) about unclosed claims
+	const handleSessionEnd = async (ctx: any, phase: "agent_end" | "session_shutdown"): Promise<boolean> => {
 		const cwd = getCwd(ctx);
-		if (!EventAdapter.isBeadsProject(cwd)) return;
+		if (!EventAdapter.isBeadsProject(cwd)) return true;
 		const sessionId = getSessionId(ctx);
 		const claim = await getSessionClaim(sessionId, cwd);
-		if (claim && ctx.hasUI) {
-			ctx.ui.notify(`Beads: Session ending with active claim [${claim}]`, "warning");
+		if (!claim) return true;
+
+		const message = `Beads: session ending with active claim [${claim}]`;
+		if (!ctx.hasUI) {
+			logger.warn(message);
+			return phase === "agent_end";
 		}
+
+		ctx.ui.notify(message, "warning");
+		if (phase === "session_shutdown") {
+			const ok = await ctx.ui.confirm("Beads Stop Gate", `You still have an active claim (${claim}). Stop session anyway?`);
+			if (!ok) {
+				ctx.ui.notify("Stop cancelled — close the claim or finish workflow first.", "warning");
+				return false;
+			}
+		}
+
+		return true;
 	};
 
 	pi.on("agent_end", async (_event, ctx) => {
-		await notifySessionEnd(ctx);
+		await handleSessionEnd(ctx, "agent_end");
 		return undefined;
 	});
 
 	pi.on("session_shutdown", async (_event, ctx) => {
-		await notifySessionEnd(ctx);
+		const allowStop = await handleSessionEnd(ctx, "session_shutdown");
+		if (!allowStop) {
+			throw new Error("Blocked by beads stop gate: active claim still open");
+		}
 		return undefined;
 	});
 }

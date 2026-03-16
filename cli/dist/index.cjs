@@ -41111,13 +41111,16 @@ function pruneStaleHooks(existing, canonical) {
     return { result, removed };
   }
   const canonicalScripts = /* @__PURE__ */ new Set();
-  for (const [event, hooks] of Object.entries(canonical.hooks)) {
+  const canonicalBasenames = /* @__PURE__ */ new Set();
+  for (const hooks of Object.values(canonical.hooks)) {
     const hookList = Array.isArray(hooks) ? hooks : [hooks];
     for (const wrapper of hookList) {
       const innerHooks = wrapper.hooks || [wrapper];
       for (const hook of innerHooks) {
         const script = getScriptFilename(hook);
-        if (script) canonicalScripts.add(script);
+        if (!script) continue;
+        canonicalScripts.add(script);
+        canonicalBasenames.add(import_path11.default.basename(script));
       }
     }
   }
@@ -41129,11 +41132,20 @@ function pruneStaleHooks(existing, canonical) {
       const keptInner = [];
       for (const hook of innerHooks) {
         const script = getScriptFilename(hook);
-        if (!script || canonicalScripts.has(script)) {
+        if (!script) {
           keptInner.push(hook);
-        } else {
-          removed.push(`${event}:${script}`);
+          continue;
         }
+        if (canonicalScripts.has(script)) {
+          keptInner.push(hook);
+          continue;
+        }
+        const sameSkillFamily = canonicalBasenames.has(import_path11.default.basename(script));
+        if (sameSkillFamily) {
+          removed.push(`${event}:${script}`);
+          continue;
+        }
+        keptInner.push(hook);
       }
       if (keptInner.length > 0) {
         if (wrapper.hooks) {
@@ -41269,7 +41281,7 @@ async function installProjectSkill(toolName, projectRootOverride) {
       const src = import_path11.default.join(skillSkillsDir, entry);
       const dest = import_path11.default.join(targetSkillsDir, entry);
       await import_fs_extra11.default.copy(src, dest, {
-        filter: (src2) => !src2.includes(".Zone.Identifier")
+        filter: (src2) => !src2.includes(".Zone.Identifier") && !src2.includes("__pycache__") && !src2.includes(".pytest_cache") && !src2.endsWith(".pyc")
       });
       console.log(`${kleur_default.green("  \u2713")} .claude/skills/${entry}/`);
     }
@@ -41283,7 +41295,7 @@ async function installProjectSkill(toolName, projectRootOverride) {
       const src = import_path11.default.join(skillClaudeDir, entry);
       const dest = import_path11.default.join(claudeDir, entry);
       await import_fs_extra11.default.copy(src, dest, {
-        filter: (src2) => !src2.includes(".Zone.Identifier")
+        filter: (src2) => !src2.includes(".Zone.Identifier") && !src2.includes("__pycache__") && !src2.includes(".pytest_cache") && !src2.endsWith(".pyc")
       });
       console.log(`${kleur_default.green("  \u2713")} .claude/${entry}/`);
     }

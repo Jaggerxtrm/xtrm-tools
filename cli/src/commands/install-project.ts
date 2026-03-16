@@ -127,7 +127,7 @@ export async function getAvailableProjectSkills(): Promise<string[]> {
     for (const entry of entries) {
         const entryPath = path.join(PROJECT_SKILLS_DIR, entry);
         const stat = await fs.stat(entryPath);
-        if (stat.isDirectory()) {
+        if (stat.isDirectory() && await fs.pathExists(path.join(entryPath, '.claude'))) {
             skills.push(entry);
         }
     }

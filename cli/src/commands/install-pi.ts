@@ -14,6 +14,18 @@ interface SchemaField { key: string; label: string; hint: string; secret: boolea
 interface OAuthProvider { key: string; instruction: string; }
 interface InstallSchema { fields: SchemaField[]; oauth_providers: OAuthProvider[]; packages: string[]; }
 
+export const EXTRA_PI_CONFIGS = ['pi-worktrees-settings.json'];
+
+export async function copyExtraConfigs(srcDir: string, destDir: string): Promise<void> {
+    for (const name of EXTRA_PI_CONFIGS) {
+        const src = path.join(srcDir, name);
+        const dest = path.join(destDir, name);
+        if (await fs.pathExists(src) && !await fs.pathExists(dest)) {
+            await fs.copy(src, dest);
+        }
+    }
+}
+
 export function fillTemplate(template: string, values: Record<string, string>): string {
     return template.replace(/\{\{(\w+)\}\}/g, (_, key) => values[key] ?? '');
 }

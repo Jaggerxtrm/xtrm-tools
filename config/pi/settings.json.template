@@ -7,7 +7,8 @@
   "packages": [
     "npm:@aliou/pi-guardrails",
     "npm:pi-gitnexus",
-    "npm:pi-serena-tools"
+    "npm:pi-serena-tools",
+    "npm:@zenobius/pi-worktrees"
   ],
   "steeringMode": "all",
   "followUpMode": "all",

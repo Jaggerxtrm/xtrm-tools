@@ -10,10 +10,12 @@ export default function (pi: ExtensionAPI) {
 	const getCwd = (ctx: any) => ctx.cwd || process.cwd();
 	const isBeadsProject = (cwd: string) => fs.existsSync(path.join(cwd, ".beads"));
 
-	// Pin session to PID — stable for the life of the Pi process, consistent across all extension handlers
-	const sessionId = process.pid.toString();
+	// Get session ID from sessionManager (UUID, consistent with hooks)
+	const getSessionId = (ctx: any): string => {
+		return ctx.sessionManager?.getSessionId?.() ?? process.pid.toString();
+	};
 
-	const getSessionClaim = async (cwd: string): Promise<string | null> => {
+	const getSessionClaim = async (sessionId: string, cwd: string): Promise<string | null> => {
 		const result = await SubprocessRunner.run("bd", ["kv", "get", `claimed:${sessionId}`], { cwd });
 		if (result.code === 0) return result.stdout.trim();
 		return null;
@@ -36,8 +38,10 @@ export default function (pi: ExtensionAPI) {
 		const cwd = getCwd(ctx);
 		if (!isBeadsProject(cwd)) return undefined;
 
+		const sessionId = getSessionId(ctx);
+
 		if (EventAdapter.isMutatingFileTool(event)) {
-			const claim = await getSessionClaim(cwd);
+			const claim = await getSessionClaim(sessionId, cwd);
 			if (!claim) {
 			    const hasWork = await hasTrackableWork(cwd);
 			    if (hasWork) {
@@ -46,7 +50,7 @@ export default function (pi: ExtensionAPI) {
 			        }
 			        return {
                         block: true,
-                        reason: `No active issue claim for this session (pid:${sessionId}).\n  bd update <id> --claim\n  bd kv set "claimed:${sessionId}" "<id>"`,
+                        reason: `No active issue claim for this session (${sessionId}).\n  bd update <id> --claim`,
                     };
                 }
             }
@@ -55,7 +59,7 @@ export default function (pi: ExtensionAPI) {
 		if (isToolCallEventType("bash", event)) {
 			const command = event.input.command;
 			if (command && /\bgit\s+commit\b/.test(command)) {
-                const claim = await getSessionClaim(cwd);
+                const claim = await getSessionClaim(sessionId, cwd);
 				if (claim) {
 					return {
                         block: true,
@@ -71,16 +75,15 @@ export default function (pi: ExtensionAPI) {
 	pi.on("tool_result", async (event, ctx) => {
 		if (isBashToolResult(event)) {
 			const command = event.input.command;
+			const sessionId = getSessionId(ctx);
 
-			// Auto-claim on bd update --claim regardless of exit code.
-			// bd returns exit 1 with "already in_progress" when status unchanged — still a valid claim intent.
 			if (command && /\bbd\s+update\b/.test(command) && /--claim\b/.test(command)) {
 				const issueMatch = command.match(/\bbd\s+update\s+(\S+)/);
 				if (issueMatch) {
 					const issueId = issueMatch[1];
 					const cwd = getCwd(ctx);
 					await SubprocessRunner.run("bd", ["kv", "set", `claimed:${sessionId}`, issueId], { cwd });
-					const claimNotice = `\n\n✅ **Beads**: Session \`pid:${sessionId}\` claimed issue \`${issueId}\`. File edits are now unblocked.`;
+					const claimNotice = `\n\n✅ **Beads**: Session \`${sessionId}\` claimed issue \`${issueId}\`. File edits are now unblocked.`;
 					return { content: [...event.content, { type: "text", text: claimNotice }] };
 				}
 			}

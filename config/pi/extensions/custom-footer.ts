@@ -1,7 +1,7 @@
 /**
  * XTRM Custom Footer Extension
  *
- * Displays: XTRM brand, Turn count, Model, Context%, CWD, Git branch
+ * Displays: XTRM brand, Model, Context%, CWD, Git branch, Beads chip
  */
 
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
@@ -12,9 +12,6 @@ import * as fs from "node:fs";
 import { SubprocessRunner } from "./core/lib";
 
 export default function (pi: ExtensionAPI) {
-	// Pin session to PID — stable for the life of the Pi process, matches beads.ts
-	const SESSION_KEY = process.pid.toString();
-
 	interface BeadState {
 		claimId: string | null;
 		shortId: string | null;
@@ -36,6 +33,7 @@ export default function (pi: ExtensionAPI) {
 	};
 
 	let capturedCtx: any = null;
+	let sessionId: string = "";
 	let beadState: BeadState = { claimId: null, shortId: null, status: null, openCount: 0, lastFetch: 0 };
 	let refreshing = false;
 	let requestRender: (() => void) | null = null;
@@ -49,9 +47,10 @@ export default function (pi: ExtensionAPI) {
 		if (refreshing || Date.now() - beadState.lastFetch < CACHE_TTL) return;
 		const cwd = getCwd();
 		if (!isBeadsProject(cwd)) return;
+		if (!sessionId) return;
 		refreshing = true;
 		try {
-			const claimResult = await SubprocessRunner.run("bd", ["kv", "get", `claimed:${SESSION_KEY}`], { cwd });
+			const claimResult = await SubprocessRunner.run("bd", ["kv", "get", `claimed:${sessionId}`], { cwd });
 			const claimId = claimResult.code === 0 ? claimResult.stdout.trim() || null : null;
 
 			let status: string | null = null;
@@ -61,7 +60,7 @@ export default function (pi: ExtensionAPI) {
 					try { status = JSON.parse(showResult.stdout)[0]?.status ?? null; } catch {}
 				}
 				if (status === "closed") {
-					await SubprocessRunner.run("bd", ["kv", "clear", `claimed:${SESSION_KEY}`], { cwd });
+					await SubprocessRunner.run("bd", ["kv", "clear", `claimed:${sessionId}`], { cwd });
 					beadState = { claimId: null, shortId: null, status: null, openCount: beadState.openCount, lastFetch: Date.now() };
 					requestRender?.();
 					return;
@@ -96,6 +95,8 @@ export default function (pi: ExtensionAPI) {
 
 	pi.on("session_start", async (_event, ctx) => {
 		capturedCtx = ctx;
+		// Get session ID from sessionManager (UUID, consistent with hooks)
+		sessionId = ctx.sessionManager?.getSessionId?.() ?? process.pid.toString();
 
 		ctx.ui.setFooter((tui, theme, footerData) => {
 			requestRender = () => tui.requestRender();
@@ -122,13 +123,10 @@ export default function (pi: ExtensionAPI) {
 					const branchStr = branch ? theme.fg("accent", `⎇ ${branch}`) : "";
 
 					const modelId = ctx.model?.id || "no-model";
-					const modelStr = theme.fg("accent", modelId);
+					const modelChip = `\x1b[48;5;238m\x1b[38;5;15m ${modelId} \x1b[0m`;
 
 					const sep = theme.fg("dim", " | ");
 
-					// XTRM+model together, then sep, usage, sep, cwd, sep, branch+beads together
-					// Model with same styling as unclaimed issue chip (gray bg, white text)
-					const modelChip = `\x1b[48;5;238m\x1b[38;5;15m ${modelId} \x1b[0m`;
 					const brandModel = `${brand} ${modelChip}`;
 					const leftParts = [brandModel, usageStr, cwdStr];
 					
@@ -143,7 +141,7 @@ export default function (pi: ExtensionAPI) {
 		});
 	});
 
-	// Bust the bead cache immediately after any bd write so the chip reflects the new state
+	// Bust the bead cache immediately after any bd write
 	pi.on("tool_result", async (event: any) => {
 		const cmd = event?.input?.command;
 		if (cmd && /\bbd\s+(close|update|create|claim)\b/.test(cmd)) {

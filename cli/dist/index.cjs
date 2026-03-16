@@ -41069,7 +41069,7 @@ async function getAvailableProjectSkills() {
   for (const entry of entries) {
     const entryPath = import_path11.default.join(PROJECT_SKILLS_DIR, entry);
     const stat = await import_fs_extra11.default.stat(entryPath);
-    if (stat.isDirectory()) {
+    if (stat.isDirectory() && await import_fs_extra11.default.pathExists(import_path11.default.join(entryPath, ".claude"))) {
       skills.push(entry);
     }
   }

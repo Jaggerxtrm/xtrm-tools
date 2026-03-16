@@ -51,6 +51,44 @@ describe('createInstallPiCommand', () => {
         expect(settings.packages).toContain('npm:pi-serena-tools');
     });
 
+    it('settings.json.template includes @zenobius/pi-worktrees package', () => {
+        const fs = require('node:fs');
+        const p = require('node:path');
+        const settings = JSON.parse(fs.readFileSync(p.resolve(__dirname, '..', '..', 'config', 'pi', 'settings.json.template'), 'utf8'));
+        expect(settings.packages).toContain('npm:@zenobius/pi-worktrees');
+    });
+
+    it('copyExtraConfigs copies missing files and skips existing ones', async () => {
+        const { copyExtraConfigs, EXTRA_PI_CONFIGS } = await import('../src/commands/install-pi.js?t=copy' + Date.now());
+        const os = require('node:os');
+        const nodePath = require('node:path');
+        const nodeFs = require('node:fs');
+        const srcDir = nodeFs.mkdtempSync(nodePath.join(os.tmpdir(), 'pi-src-'));
+        const destDir = nodeFs.mkdtempSync(nodePath.join(os.tmpdir(), 'pi-dest-'));
+        // Create src file
+        nodeFs.writeFileSync(nodePath.join(srcDir, 'pi-worktrees-settings.json'), '{"worktree":{}}');
+        await copyExtraConfigs(srcDir, destDir);
+        // Should have been copied
+        expect(nodeFs.existsSync(nodePath.join(destDir, 'pi-worktrees-settings.json'))).toBe(true);
+        // Second call should skip (not throw)
+        await copyExtraConfigs(srcDir, destDir);
+        nodeFs.rmSync(srcDir, { recursive: true });
+        nodeFs.rmSync(destDir, { recursive: true });
+    });
+
+    it('EXTRA_PI_CONFIGS includes pi-worktrees-settings.json', async () => {
+        const { EXTRA_PI_CONFIGS } = await import('../src/commands/install-pi.js?t=extra' + Date.now());
+        expect(EXTRA_PI_CONFIGS).toContain('pi-worktrees-settings.json');
+    });
+
+    it('pi-worktrees-settings.json exists in config/pi with worktree.parentDir defined', () => {
+        const fs = require('node:fs');
+        const p = require('node:path');
+        const cfg = JSON.parse(fs.readFileSync(p.resolve(__dirname, '..', '..', 'config', 'pi', 'pi-worktrees-settings.json'), 'utf8'));
+        expect(cfg.worktree).toBeDefined();
+        expect(cfg.worktree.parentDir).toBeDefined();
+    });
+
     it('install-schema.json defines DASHSCOPE_API_KEY and ZAI_API_KEY fields', () => {
         const fs = require('node:fs');
         const p = require('node:path');
@@ -73,7 +111,7 @@ describe('createInstallPiCommand', () => {
         const fs = require('node:fs');
         const p = require('node:path');
         const extDir = p.resolve(__dirname, '..', '..', 'config', 'pi', 'extensions');
-        const files = ['auto-session-name.ts','auto-update.ts','bg-process.ts','compact-header.ts','custom-footer.ts','git-checkpoint.ts','git-guard.ts','safe-guard.ts','todo.ts'];
+        const files = ['auto-session-name.ts','auto-update.ts','bg-process.ts','compact-header.ts','custom-footer.ts','git-checkpoint.ts','todo.ts'];
         for (const f of files) expect(fs.existsSync(p.join(extDir, f))).toBe(true);
     });
 

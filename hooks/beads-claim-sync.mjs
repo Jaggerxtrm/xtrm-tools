@@ -1,11 +1,9 @@
 #!/usr/bin/env node
 // beads-claim-sync — PostToolUse hook
-// Auto-sets bd kv claim when bd update --claim is detected in Bash output.
-// This ensures the claim is always synced, even if Pi extension events don't fire.
-//
-// Exit 0: always (non-blocking)
+// Auto-sets bd kv claim when bd update --claim is detected.
+// Uses session_id from hook input (UUID, matches Pi's sessionManager.getSessionId())
 
-import { execSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -19,11 +17,6 @@ function readInput() {
 
 function isBeadsProject(cwd) {
   return existsSync(join(cwd, '.beads'));
-}
-
-function getSessionId(input) {
-  // Use project path as session key (consistent across Pi and hooks)
-  return input.cwd || process.cwd();
 }
 
 function main() {
@@ -44,21 +37,25 @@ function main() {
   if (!match) process.exit(0);
 
   const issueId = match[1];
-  const sessionId = getSessionId(input);
+  // Use session_id from hook input (UUID from Pi/Claude Code)
+  const sessionId = input.session_id;
+
+  if (!sessionId) {
+    process.stderr.write('Beads claim sync: no session_id in hook input\n');
+    process.exit(0);
+  }
 
   try {
-    execSync(`bd kv set "claimed:${sessionId}" "${issueId}"`, {
+    spawnSync('bd', ['kv', 'set', `claimed:${sessionId}`, issueId], {
       cwd,
       stdio: ['pipe', 'pipe', 'pipe'],
       timeout: 5000,
     });
-    // Inject success message into context
     process.stdout.write(JSON.stringify({
-      additionalContext: `\n✅ **Beads**: Session \`${sessionId}\` claimed issue \`${issueId}\`. File edits are now unblocked.`,
+      additionalContext: `\n✅ **Beads**: Session \`${sessionId}\` claimed issue \`${issueId}\`.`,
     }));
     process.stdout.write('\n');
   } catch (err) {
-    // Non-fatal — claim intent was there
     process.stderr.write(`Beads claim sync warning: ${err.message}\n`);
   }
 

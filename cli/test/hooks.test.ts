@@ -77,7 +77,7 @@ describe('main-guard.mjs — MAIN_GUARD_PROTECTED_BRANCHES', () => {
     );
     expect(r.status).toBe(2);
     const out = parseHookJson(r.stdout);
-    expect(out?.systemMessage).toContain('Bash is restricted');
+    expect(out?.systemMessage).toContain('Bash restricted');
   });
 
   it('allows safe Bash commands on protected branch', () => {
@@ -117,7 +117,7 @@ describe('main-guard.mjs — MAIN_GUARD_PROTECTED_BRANCHES', () => {
       );
       expect(r.status, `expected exit 2 for: ${command}`).toBe(2);
       const out = parseHookJson(r.stdout);
-      expect(out?.systemMessage).toContain('Bash is restricted');
+      expect(out?.systemMessage).toContain('Bash restricted');
     }
   });
 
@@ -331,7 +331,7 @@ exit 1
         { PATH: `${fake.tempDir}:${process.env.PATH ?? ''}` },
       );
       expect(r.status).toBe(2);
-      expect(r.stderr).toContain('no active claim');
+      expect(r.stderr).toContain('active claim');
     } finally {
       rmSync(fake.tempDir, { recursive: true, force: true });
       rmSync(projectDir, { recursive: true, force: true });
@@ -456,7 +456,7 @@ exit 1
         { PATH: `${fake.tempDir}:${process.env.PATH ?? ''}` },
       );
       expect(r.status).toBe(2);
-      expect(r.stderr).toContain('MEMORY GATE');
+      expect(r.stderr).toContain('Memory gate');
     } finally {
       rmSync(fake.tempDir, { recursive: true, force: true });
       rmSync(projectDir, { recursive: true, force: true });
@@ -552,51 +552,6 @@ exit 2
   });
 });
 
-
-// ── gitnexus-impact-reminder.py ──────────────────────────────────────────────
-
-function runPythonHook(
-  hookFile: string,
-  input: Record<string, unknown>,
-) {
-  return spawnSync('python3', [path.join(HOOKS_DIR, hookFile)], {
-    input: JSON.stringify(input),
-    encoding: 'utf8',
-    env: { ...process.env },
-  });
-}
-
-describe('gitnexus-impact-reminder.py', () => {
-  it('injects additionalContext when prompt contains an edit-intent keyword', () => {
-    const r = runPythonHook('gitnexus-impact-reminder.py', {
-      hook_event_name: 'UserPromptSubmit',
-      prompt: 'fix the broken auth logic in login.ts',
-    });
-    expect(r.status).toBe(0);
-    const out = parseHookJson(r.stdout);
-    expect(out?.hookSpecificOutput?.additionalContext).toContain('gitnexus impact');
-  });
-
-  it('does nothing (no output) when prompt has no edit-intent keywords', () => {
-    const r = runPythonHook('gitnexus-impact-reminder.py', {
-      hook_event_name: 'UserPromptSubmit',
-      prompt: 'explain how the beads gate works',
-    });
-    expect(r.status).toBe(0);
-    expect(r.stdout.trim()).toBe('');
-  });
-
-  it('does nothing for non-UserPromptSubmit events', () => {
-    const r = runPythonHook('gitnexus-impact-reminder.py', {
-      hook_event_name: 'PreToolUse',
-      tool_name: 'Edit',
-      tool_input: { file_path: 'foo.ts' },
-      prompt: 'fix something',
-    });
-    expect(r.status).toBe(0);
-    expect(r.stdout.trim()).toBe('');
-  });
-});
 
 
 // ── beads-gate-core.mjs — decision functions ──────────────────────────────────

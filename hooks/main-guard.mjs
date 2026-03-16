@@ -55,28 +55,16 @@ const WRITE_TOOLS = new Set([
 ]);
 
 if (WRITE_TOOLS.has(tool)) {
-  deny(
-    `⛔ You are on '${branch}' — never edit files directly on master.\n\n` +
-    'Full workflow:\n' +
-    '  1. git checkout -b feature/<name>         ← start here\n' +
-    '  2. bd create + bd update in_progress      track your work\n' +
-    '  3. Edit files / write code\n' +
-    '  4. bd close <id> && git add && git commit\n' +
-    '  5. git push -u origin feature/<name>\n' +
-    '  6. gh pr create --fill && gh pr merge --squash\n' +
-    '  7. git checkout master && git reset --hard origin/master\n'
-  );
+  deny(`⛔ On '${branch}' — checkout a feature branch first.\n`
+    + '  git checkout -b feature/<name>\n');
 }
 
 const WORKFLOW =
-  'Full workflow:\n' +
-  '  1. git checkout -b feature/<name>         \u2190 start here\n' +
-  '  2. bd create + bd update in_progress      track your work\n' +
-  '  3. Edit files / write code\n' +
-  '  4. bd close <id> && git add && git commit\n' +
-  '  5. git push -u origin feature/<name>\n' +
-  '  6. gh pr create --fill && gh pr merge --squash\n' +
-  '  7. git checkout master && git reset --hard origin/master\n';
+  '  1. git checkout -b feature/<name>\n'
+  + '  2. bd create + bd update in_progress\n'
+  + '  3. bd close <id> && git add && git commit\n'
+  + '  4. git push -u origin feature/<name>\n'
+  + '  5. gh pr create --fill && gh pr merge --squash\n';
 
 if (tool === 'Bash') {
   const cmd = (input.tool_input?.command ?? '').trim().replace(/\s+/g, ' ');
@@ -90,17 +78,8 @@ if (tool === 'Bash') {
   // Must check BEFORE the gh allowlist pattern
   if (/^gh\s+pr\s+merge\b/.test(cmd)) {
     if (!/--squash\b/.test(cmd)) {
-      deny(
-        `\u26D4 Only squash merges are allowed — use 'gh pr merge --squash'\n\n` +
-        'Why squash?\n' +
-        '  - Keeps history linear and easy to read\n' +
-        '  - One commit per PR = easy to revert\n' +
-        '  - Matches the workflow documented in AGENTS.md\n\n' +
-        'Correct usage:\n' +
-        '  gh pr merge --squash\n\n' +
-        'If you really need a merge commit, use:\n' +
-        '  MAIN_GUARD_ALLOW_BASH=1 gh pr merge --merge\n'
-      );
+      deny('⛔ Squash only: gh pr merge --squash\n'
+        + '  (override: MAIN_GUARD_ALLOW_BASH=1 gh pr merge --merge)\n');
     }
     // --squash present — allow
     process.exit(0);
@@ -129,10 +108,8 @@ if (tool === 'Bash') {
 
   // Specific messages for common blocked operations
   if (/^git\s+commit\b/.test(cmd)) {
-    deny(
-      `\u26D4 Don't commit directly to '${branch}' \u2014 use a feature branch.\n\n` +
-      WORKFLOW
-    );
+    deny(`⛔ No commits on '${branch}' — use a feature branch.\n`
+      + '  git checkout -b feature/<name>\n');
   }
 
   if (/^git\s+push\b/.test(cmd)) {
@@ -141,36 +118,17 @@ if (tool === 'Bash') {
     const explicitProtected = protectedBranches.some(b => lastToken === b || lastToken.endsWith(`:${b}`));
     const impliedProtected = tokens.length <= 3 && protectedBranches.includes(branch);
     if (explicitProtected || impliedProtected) {
-      deny(
-        `\u26D4 Don't push directly to '${branch}' \u2014 use the PR workflow.\n\n` +
-        'Next steps:\n' +
-        '  5. git push -u origin <feature-branch>     \u2190 push your branch\n' +
-        '  6. gh pr create --fill                      create PR\n' +
-        '     gh pr merge --squash                     merge it\n' +
-        '  7. git checkout master                      sync master\n' +
-        '     git reset --hard origin/master\n\n' +
-        "If you're not on a feature branch yet:\n" +
-        '  git checkout -b feature/<name>    (then re-commit and push)\n'
-      );
+      deny(`⛔ No direct push to '${branch}' — push a feature branch and open a PR.\n`
+        + '  git push -u origin <feature-branch> && gh pr create --fill\n');
     }
     // Pushing to a feature branch — allow
     process.exit(0);
   }
 
   // Default deny — block everything else on protected branches
-  deny(
-    `\u26D4 Bash is restricted on '${branch}' \u2014 use a feature branch for file writes and script execution.\n\n` +
-    'Allowed on protected branches:\n' +
-    '  git status / log / diff / branch / fetch / pull / stash\n' +
-    '  git checkout -b <name>   (create feature branch \u2014 the exit path)\n' +
-    '  git switch -c <name>     (same)\n' +
-    '  git worktree / config\n' +
-    '  gh <any>                 (GitHub CLI)\n' +
-    '  bd <any>                 (beads issue tracking)\n\n' +
-    'To run arbitrary commands:\n' +
-    '  1. git checkout -b feature/<name>   \u2190 move to a feature branch, or\n' +
-    '  2. MAIN_GUARD_ALLOW_BASH=1 <command>  (escape hatch, use sparingly)\n'
-  );
+  deny(`⛔ Bash restricted on '${branch}'. Allowed: git status/log/diff/pull/stash, gh, bd.\n`
+    + '  Exit: git checkout -b feature/<name>\n'
+    + '  Override: MAIN_GUARD_ALLOW_BASH=1 <cmd>\n');
 }
 
 process.exit(0);

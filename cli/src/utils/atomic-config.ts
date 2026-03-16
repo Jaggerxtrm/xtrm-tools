@@ -53,6 +53,89 @@ function commandKey(command: string): string {
     return m?.[1] || command.trim();
 }
 
+/**
+ * Extract script filename from a hook command for pruning purposes.
+ */
+function scriptKey(command: string): string | null {
+    // Match the script path relative to hooks directory
+    // Pattern: /hooks/<optional-subdir>/<filename>.<ext>
+    const m = command.match(/\/hooks\/([A-Za-z0-9_/-]+\.(?:py|cjs|mjs|js))/);
+    if (m) return m[1];
+
+    // Fallback: match just the filename if no /hooks/ path
+    const m2 = command.match(/([A-Za-z0-9_-]+\.(?:py|cjs|mjs|js))(?!.*[A-Za-z0-9._-]+\.(?:py|cjs|mjs|js))/);
+    return m2?.[1] || null;
+}
+
+/**
+ * Collect all canonical script filenames from incoming hooks.
+ */
+function collectCanonicalScripts(incomingHooks: any): Set<string> {
+    const scripts = new Set<string>();
+    if (!incomingHooks || typeof incomingHooks !== 'object') return scripts;
+
+    for (const wrappers of Object.values(incomingHooks)) {
+        if (!Array.isArray(wrappers)) continue;
+        for (const wrapper of wrappers) {
+            const commands = extractHookCommands(wrapper);
+            for (const cmd of commands) {
+                const script = scriptKey(cmd);
+                if (script) scripts.add(script);
+            }
+        }
+    }
+    return scripts;
+}
+
+/**
+ * Prune existing hook wrappers that reference scripts NOT in canonical set.
+ * Returns { pruned: wrappers[], removed: string[] }
+ */
+function pruneStaleWrappers(existing: any[], canonicalScripts: Set<string>): { pruned: any[]; removed: string[] } {
+    if (canonicalScripts.size === 0) {
+        return { pruned: existing, removed: [] };
+    }
+
+    const removed: string[] = [];
+    const pruned: any[] = [];
+
+    for (const wrapper of existing) {
+        if (!Array.isArray(wrapper.hooks)) {
+            pruned.push(wrapper);
+            continue;
+        }
+
+        const keptHooks: any[] = [];
+        for (const hook of wrapper.hooks) {
+            const cmd = hook?.command;
+            if (typeof cmd !== 'string') {
+                keptHooks.push(hook);
+                continue;
+            }
+            // Only prune hooks that are clearly xtrm-managed (have /hooks/ in their path)
+            // User-local hooks from other directories are always preserved
+            const isXtrmManaged = /\/hooks\//.test(cmd);
+            if (!isXtrmManaged) {
+                keptHooks.push(hook);
+                continue;
+            }
+            const script = scriptKey(cmd);
+            // Keep if: no script (not a file-based hook) OR script is in canonical set
+            if (!script || canonicalScripts.has(script)) {
+                keptHooks.push(hook);
+            } else {
+                removed.push(script);
+            }
+        }
+
+        if (keptHooks.length > 0) {
+            pruned.push({ ...wrapper, hooks: keptHooks });
+        }
+    }
+
+    return { pruned, removed };
+}
+
 function mergeMatcher(existingMatcher: string, incomingMatcher: string): string {
     const parts = [
         ...existingMatcher.split('|').map((s: string) => s.trim()),
@@ -130,7 +213,23 @@ function mergeHookWrappers(existing: any[], incoming: any[]): any[] {
 }
 
 function mergeHooksObject(existingHooks: any, incomingHooks: any): any {
-    const result = { ...(existingHooks || {}) };
+    // Step 1: Collect canonical script filenames from incoming hooks
+    const canonicalScripts = collectCanonicalScripts(incomingHooks);
+
+    // Step 2: Prune existing hooks that reference non-canonical scripts
+    const result: any = {};
+    for (const [event, existingWrappers] of Object.entries(existingHooks || {})) {
+        if (!Array.isArray(existingWrappers)) {
+            result[event] = existingWrappers;
+            continue;
+        }
+        const { pruned } = pruneStaleWrappers(existingWrappers, canonicalScripts);
+        if (pruned.length > 0) {
+            result[event] = pruned;
+        }
+    }
+
+    // Step 3: Merge incoming hooks with pruned existing hooks
     for (const [event, incomingWrappers] of Object.entries(incomingHooks || {})) {
         const existingWrappers = Array.isArray(result[event]) ? result[event] : [];
         const incomingArray = Array.isArray(incomingWrappers) ? incomingWrappers : [];

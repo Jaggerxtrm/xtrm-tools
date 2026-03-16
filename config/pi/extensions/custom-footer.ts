@@ -7,9 +7,7 @@
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import { truncateToWidth } from "@mariozechner/pi-tui";
 
-import * as path from "node:path";
-import * as fs from "node:fs";
-import { SubprocessRunner } from "./core/lib";
+import { SubprocessRunner, EventAdapter } from "./core/lib";
 
 export default function (pi: ExtensionAPI) {
 	interface BeadState {
@@ -49,13 +47,12 @@ export default function (pi: ExtensionAPI) {
 	const CACHE_TTL = 5000;
 
 	const getCwd = () => capturedCtx?.cwd || process.cwd();
-	const isBeadsProject = (cwd: string) => fs.existsSync(path.join(cwd, ".beads"));
 	const getShortId = (id: string) => id.split("-").pop() ?? id;
 
 	const refreshBeadState = async () => {
 		if (refreshing || Date.now() - beadState.lastFetch < CACHE_TTL) return;
 		const cwd = getCwd();
-		if (!isBeadsProject(cwd)) return;
+		if (!EventAdapter.isBeadsProject(cwd)) return;
 		if (!sessionId) return;
 		refreshing = true;
 		try {

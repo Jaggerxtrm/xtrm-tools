@@ -1,14 +1,12 @@
 import type { ExtensionAPI, ToolCallEvent, ToolResultEvent } from "@mariozechner/pi-coding-agent";
 import { isToolCallEventType, isBashToolResult } from "@mariozechner/pi-coding-agent";
 import * as path from "node:path";
-import * as fs from "node:fs";
 import { SubprocessRunner, EventAdapter, Logger } from "./core/lib";
 
 const logger = new Logger({ namespace: "beads" });
 
 export default function (pi: ExtensionAPI) {
 	const getCwd = (ctx: any) => ctx.cwd || process.cwd();
-	const isBeadsProject = (cwd: string) => fs.existsSync(path.join(cwd, ".beads"));
 
 	let cachedSessionId: string | null = null;
 
@@ -29,13 +27,9 @@ export default function (pi: ExtensionAPI) {
 
 	const hasTrackableWork = async (cwd: string): Promise<boolean> => {
 		const result = await SubprocessRunner.run("bd", ["list"], { cwd });
-		if (result.code === 0 && result.stdout.includes("Total:")) {
-			const m = result.stdout.match(/Total:\s*\d+\s+issues?\s*\((\d+)\s+open,\s*(\d+)\s+in progress\)/);
-			if (m) {
-				const open = parseInt(m[1], 10);
-				const inProgress = parseInt(m[2], 10);
-				return (open + inProgress) > 0;
-			}
+		if (result.code === 0) {
+			const counts = EventAdapter.parseBdCounts(result.stdout);
+			if (counts) return (counts.open + counts.inProgress) > 0;
 		}
 		return false;
 	};
@@ -56,7 +50,7 @@ export default function (pi: ExtensionAPI) {
 
 	pi.on("tool_call", async (event, ctx) => {
 		const cwd = getCwd(ctx);
-		if (!isBeadsProject(cwd)) return undefined;
+		if (!EventAdapter.isBeadsProject(cwd)) return undefined;
 		const sessionId = getSessionId(ctx);
 
 		if (EventAdapter.isMutatingFileTool(event)) {

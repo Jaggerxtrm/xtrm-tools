@@ -813,19 +813,69 @@ describe('hooks.json — beads-compact hooks wiring', () => {
   });
 });
 
-// ── beads.ts Pi extension — commit gate logic ────────────────────────
-describe('beads.ts Pi extension — commit gate logic', () => {
-  it('commit gate checks for in_progress issues, not just any claim', () => {
+// ── service-skills.ts — no tool_call territory activation ─────────────────
+describe('service-skills.ts — no tool_call territory activation', () => {
+  it('does not register a tool_call handler (fires Python on every tool)', () => {
     const src = readFileSync(
-      path.join(__dirname, '../../config/pi/extensions/beads.ts'),
+      path.join(__dirname, '../../config/pi/extensions/service-skills.ts'),
       'utf8',
     );
-    // Must define hasInProgressWork helper
-    expect(src, 'beads.ts must define hasInProgressWork').toContain('hasInProgressWork');
-    // The commit gate must call hasInProgressWork before blocking
     expect(
       src,
-      'Pi commit gate must call hasInProgressWork before blocking on claim',
-    ).toMatch(/getSessionClaim[\s\S]{0,80}hasInProgressWork/);
+      'service-skills.ts must not use pi.on("tool_call") — fires Python on every tool invocation',
+    ).not.toContain('pi.on("tool_call"');
+  });
+});
+
+// ── beads-claim-sync.mjs — bd close auto-clears kv claim ───────────────
+describe('beads-claim-sync.mjs — bd close auto-clears kv claim', () => {
+  it('clears the session kv claim when bd close runs successfully', () => {
+    const projectDir = mkdtempSync(path.join(os.tmpdir(), 'xtrm-claimsync-close-'));
+    mkdirSync(path.join(projectDir, '.beads'));
+    const fake = withFakeBdDir('#!/usr/bin/env bash\nset -euo pipefail\nexit 0\n');
+    try {
+      const r = runHook(
+        'beads-claim-sync.mjs',
+        {
+          hook_event_name: 'PostToolUse',
+          tool_name: 'Bash',
+          tool_input: { command: 'bd close jaggers-test-001' },
+          session_id: 'close-test-session',
+          cwd: projectDir,
+        },
+        { PATH: fake.tempDir + ':' + (process.env.PATH || '') },
+      );
+      expect(r.status).toBe(0);
+      const out = parseHookJson(r.stdout);
+      expect(out?.additionalContext).toMatch(/claim.*clear|clear.*claim|released|cleared/i);
+    } finally {
+      rmSync(fake.tempDir, { recursive: true, force: true });
+      rmSync(projectDir, { recursive: true, force: true });
+    }
+  });
+});
+
+// ── branch-state.mjs — UserPromptSubmit hook ─────────────────────
+describe('branch-state.mjs — UserPromptSubmit', () => {
+  it('exits 0 silently when not in a git repo', () => {
+    const r = runHook('branch-state.mjs', { hook_event_name: 'UserPromptSubmit', cwd: '/tmp' });
+    expect(r.status).toBe(0);
+    expect(r.stdout.trim()).toBe('');
+  });
+
+  it('injects branch into additionalSystemPrompt', () => {
+    const r = runHook(
+      'branch-state.mjs',
+      { hook_event_name: 'UserPromptSubmit', session_id: 'test-session' },
+    );
+    expect(r.status).toBe(0);
+    const out = parseHookJson(r.stdout);
+    expect(out?.hookSpecificOutput?.additionalSystemPrompt).toMatch(/branch=/);
+  });
+
+  it('is wired to UserPromptSubmit in hooks.json', () => {
+    const cfg = JSON.parse(readFileSync(path.join(__dirname, '../../config/hooks.json'), 'utf8'));
+    const ups: Array<{ script?: string }> = cfg.hooks.UserPromptSubmit ?? [];
+    expect(ups.some((h) => h.script === 'branch-state.mjs')).toBe(true);
   });
 });

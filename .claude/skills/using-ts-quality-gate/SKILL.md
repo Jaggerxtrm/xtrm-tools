@@ -1,3 +1,8 @@
+---
+name: using-ts-quality-gate
+description: TS Quality Gate enforces TypeScript, ESLint, and Prettier quality checks on every file edit. Provides immediate feedback and auto-fixes issues when possible.
+---
+
 # Using TS Quality Gate
 
 **TS Quality Gate** enforces TypeScript, ESLint, and Prettier quality checks on every file edit. It provides immediate feedback and auto-fixes issues when possible.

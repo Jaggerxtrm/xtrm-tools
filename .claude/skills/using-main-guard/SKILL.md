@@ -1,3 +1,8 @@
+---
+name: using-main-guard
+description: Main Guard v2 enforces a PR-only workflow on protected branches. Blocks direct edits, dangerous git operations, and arbitrary Bash on main/master — forcing all work through feature branches and pull requests.
+---
+
 # Using Main Guard
 
 **Main Guard v2** enforces a PR-only workflow on protected branches. It blocks direct file edits, dangerous git operations, and arbitrary Bash execution on `main`/`master` — forcing all work through feature branches and pull requests.

@@ -1,0 +1,323 @@
+import { Command } from 'commander';
+import kleur from 'kleur';
+import fs from 'fs-extra';
+import path from 'path';
+import { homedir } from 'os';
+import { t, sym } from '../utils/theme.js';
+
+// Canonical hooks (files in ~/.claude/hooks/)
+const CANONICAL_HOOKS = new Set([
+    'agent_context.py',
+    'serena-workflow-reminder.py',
+    'main-guard.mjs',
+    'main-guard-post-push.mjs',
+    'beads-gate-core.mjs',
+    'beads-gate-utils.mjs',
+    'beads-gate-messages.mjs',
+    'beads-edit-gate.mjs',
+    'beads-commit-gate.mjs',
+    'beads-stop-gate.mjs',
+    'beads-memory-gate.mjs',
+    'beads-compact-save.mjs',
+    'beads-compact-restore.mjs',
+    'gitnexus',  // directory
+    'statusline-starship.sh',
+    'README.md',
+]);
+
+// Canonical skills (directories in ~/.agents/skills/)
+const CANONICAL_SKILLS = new Set([
+    'clean-code',
+    'delegating',
+    'docker-expert',
+    'documenting',
+    'find-skills',
+    'gitnexus-debugging',
+    'gitnexus-exploring',
+    'gitnexus-impact-analysis',
+    'gitnexus-refactoring',
+    'hook-development',
+    'obsidian-cli',
+    'orchestrating-agents',
+    'prompt-improving',
+    'python-testing',
+    'senior-backend',
+    'senior-data-scientist',
+    'senior-devops',
+    'senior-security',
+    'skill-creator',
+    'using-serena-lsp',
+    'using-TDD',
+    'using-xtrm',
+]);
+
+// Directories/files to always ignore
+const IGNORED_ITEMS = new Set([
+    '__pycache__',
+    '.DS_Store',
+    'Thumbs.db',
+    '.gitkeep',
+    'node_modules',
+]);
+
+interface CleanResult {
+    hooksRemoved: string[];
+    skillsRemoved: string[];
+    cacheRemoved: string[];
+}
+
+async function cleanHooks(dryRun: boolean): Promise<{ removed: string[]; cache: string[] }> {
+    const hooksDir = path.join(homedir(), '.claude', 'hooks');
+    const removed: string[] = [];
+    const cache: string[] = [];
+
+    if (!await fs.pathExists(hooksDir)) {
+        return { removed, cache };
+    }
+
+    const entries = await fs.readdir(hooksDir);
+
+    for (const entry of entries) {
+        // Skip ignored items but track them for cache cleanup
+        if (IGNORED_ITEMS.has(entry)) {
+            if (!dryRun) {
+                const fullPath = path.join(hooksDir, entry);
+                await fs.remove(fullPath);
+            }
+            cache.push(entry);
+            continue;
+        }
+
+        // Check if it's canonical
+        if (CANONICAL_HOOKS.has(entry)) {
+            continue;
+        }
+
+        // Check if it's a file we should remove
+        const fullPath = path.join(hooksDir, entry);
+        const stat = await fs.stat(fullPath);
+
+        // Only remove files, not arbitrary directories (except cache dirs)
+        if (stat.isFile() || (stat.isDirectory() && IGNORED_ITEMS.has(entry))) {
+            if (!dryRun) {
+                await fs.remove(fullPath);
+            }
+            removed.push(entry);
+        }
+    }
+
+    return { removed, cache };
+}
+
+async function cleanSkills(dryRun: boolean): Promise<string[]> {
+    const skillsDir = path.join(homedir(), '.agents', 'skills');
+    const removed: string[] = [];
+
+    if (!await fs.pathExists(skillsDir)) {
+        return removed;
+    }
+
+    const entries = await fs.readdir(skillsDir);
+
+    for (const entry of entries) {
+        // Skip ignored items
+        if (IGNORED_ITEMS.has(entry)) {
+            continue;
+        }
+
+        // Skip README.txt
+        if (entry === 'README.txt') {
+            continue;
+        }
+
+        // Check if it's canonical
+        if (CANONICAL_SKILLS.has(entry)) {
+            continue;
+        }
+
+        // Remove non-canonical directory
+        const fullPath = path.join(skillsDir, entry);
+        const stat = await fs.stat(fullPath);
+
+        if (stat.isDirectory()) {
+            if (!dryRun) {
+                await fs.remove(fullPath);
+            }
+            removed.push(entry);
+        }
+    }
+
+    return removed;
+}
+
+async function cleanOrphanedHookEntries(dryRun: boolean): Promise<string[]> {
+    const settingsPath = path.join(homedir(), '.claude', 'settings.json');
+    const removed: string[] = [];
+
+    if (!await fs.pathExists(settingsPath)) {
+        return removed;
+    }
+
+    let settings: any = {};
+    try {
+        settings = await fs.readJson(settingsPath);
+    } catch {
+        return removed;
+    }
+
+    if (!settings.hooks || typeof settings.hooks !== 'object') {
+        return removed;
+    }
+
+    // Collect canonical script names from CANONICAL_HOOKS
+    const canonicalScripts = new Set<string>();
+    for (const hook of CANONICAL_HOOKS) {
+        if (hook.endsWith('.py') || hook.endsWith('.mjs') || hook.endsWith('.cjs') || hook.endsWith('.js')) {
+            canonicalScripts.add(hook);
+        }
+    }
+    // Add gitnexus hook
+    canonicalScripts.add('gitnexus/gitnexus-hook.cjs');
+
+    // Check each hook entry
+    let modified = false;
+    for (const [event, wrappers] of Object.entries(settings.hooks)) {
+        if (!Array.isArray(wrappers)) continue;
+
+        const keptWrappers: any[] = [];
+        for (const wrapper of wrappers) {
+            const innerHooks = wrapper.hooks || [wrapper];
+            const keptInner: any[] = [];
+
+            for (const hook of innerHooks) {
+                const cmd = hook?.command || '';
+                // Extract script filename
+                const m = cmd.match(/\/hooks\/([A-Za-z0-9_/-]+\.(?:py|cjs|mjs|js))/);
+                const script = m?.[1];
+
+                if (!script || canonicalScripts.has(script)) {
+                    keptInner.push(hook);
+                } else {
+                    removed.push(`${event}:${script}`);
+                    modified = true;
+                }
+            }
+
+            if (keptInner.length > 0) {
+                if (wrapper.hooks) {
+                    keptWrappers.push({ ...wrapper, hooks: keptInner });
+                } else if (keptInner.length === 1) {
+                    keptWrappers.push(keptInner[0]);
+                }
+            }
+        }
+
+        if (keptWrappers.length > 0) {
+            settings.hooks[event] = keptWrappers;
+        } else {
+            delete settings.hooks[event];
+            modified = true;
+        }
+    }
+
+    if (modified && !dryRun) {
+        await fs.writeJson(settingsPath, settings, { spaces: 2 });
+    }
+
+    return removed;
+}
+
+export function createCleanCommand(): Command {
+    return new Command('clean')
+        .description('Remove orphaned hooks and skills not in the canonical repository')
+        .option('--dry-run', 'Preview what would be removed without making changes', false)
+        .option('--hooks-only', 'Only clean hooks, skip skills', false)
+        .option('--skills-only', 'Only clean skills, skip hooks', false)
+        .option('-y, --yes', 'Skip confirmation prompt', false)
+        .action(async (opts) => {
+            const { dryRun, hooksOnly, skillsOnly, yes } = opts;
+
+            console.log(t.bold('\n  XTRM Clean — Remove Orphaned Components\n'));
+
+            if (dryRun) {
+                console.log(kleur.yellow('  DRY RUN — No changes will be made\n'));
+            }
+
+            const result: CleanResult = {
+                hooksRemoved: [],
+                skillsRemoved: [],
+                cacheRemoved: [],
+            };
+
+            // Clean hooks
+            if (!skillsOnly) {
+                console.log(kleur.bold('  Scanning ~/.claude/hooks/...'));
+                const { removed, cache } = await cleanHooks(dryRun);
+                result.hooksRemoved = removed;
+                result.cacheRemoved = cache;
+
+                if (removed.length > 0) {
+                    for (const f of removed) {
+                        console.log(kleur.red(`    ✗ ${f}`));
+                    }
+                } else {
+                    console.log(kleur.dim('    ✓ No orphaned hooks found'));
+                }
+
+                if (cache.length > 0) {
+                    console.log(kleur.dim(`    ↳ Cleaned ${cache.length} cache directory(ies)`));
+                }
+
+                // Clean orphaned hook entries in settings.json
+                console.log(kleur.bold('\n  Scanning settings.json for orphaned hook entries...'));
+                const orphanedEntries = await cleanOrphanedHookEntries(dryRun);
+                if (orphanedEntries.length > 0) {
+                    for (const entry of orphanedEntries) {
+                        console.log(kleur.red(`    ✗ ${entry}`));
+                    }
+                } else {
+                    console.log(kleur.dim('    ✓ No orphaned hook entries found'));
+                }
+            }
+
+            // Clean skills
+            if (!hooksOnly) {
+                console.log(kleur.bold('\n  Scanning ~/.agents/skills/...'));
+                result.skillsRemoved = await cleanSkills(dryRun);
+
+                if (result.skillsRemoved.length > 0) {
+                    for (const d of result.skillsRemoved) {
+                        console.log(kleur.red(`    ✗ ${d}/`));
+                    }
+                } else {
+                    console.log(kleur.dim('    ✓ No orphaned skills found'));
+                }
+            }
+
+            // Summary
+            const totalRemoved = result.hooksRemoved.length + result.skillsRemoved.length + result.cacheRemoved.length;
+
+            if (totalRemoved === 0) {
+                console.log(t.boldGreen('\n  ✓ All components are canonical — nothing to clean\n'));
+                return;
+            }
+
+            console.log(kleur.bold('\n  Summary:'));
+            if (result.hooksRemoved.length > 0) {
+                console.log(kleur.red(`    ${result.hooksRemoved.length} orphaned hook(s)`));
+            }
+            if (result.skillsRemoved.length > 0) {
+                console.log(kleur.red(`    ${result.skillsRemoved.length} orphaned skill(s)`));
+            }
+            if (result.cacheRemoved.length > 0) {
+                console.log(kleur.dim(`    ${result.cacheRemoved.length} cache director(y/ies)`));
+            }
+
+            if (!dryRun) {
+                console.log(t.boldGreen('\n  ✓ Cleanup complete\n'));
+                console.log(kleur.dim('  Run `xtrm install all -y` to reinstall canonical components\n'));
+            } else {
+                console.log(kleur.yellow('\n  ℹ Dry run — run without --dry-run to apply changes\n'));
+            }
+        });
+}

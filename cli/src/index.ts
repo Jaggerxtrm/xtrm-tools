@@ -13,6 +13,7 @@ import { createProjectCommand } from './commands/install-project.js';
 import { createStatusCommand } from './commands/status.js';
 import { createResetCommand } from './commands/reset.js';
 import { createHelpCommand } from './commands/help.js';
+import { createCleanCommand } from './commands/clean.js';
 import { printBanner } from './utils/banner.js';
 
 const program = new Command();
@@ -36,6 +37,7 @@ program.addCommand(createInstallCommand());
 program.addCommand(createProjectCommand());
 program.addCommand(createStatusCommand());
 program.addCommand(createResetCommand());
+program.addCommand(createCleanCommand());
 program.addCommand(createHelpCommand());
 
 // Default action: show help

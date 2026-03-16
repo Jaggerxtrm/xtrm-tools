@@ -139,6 +139,94 @@ export async function getAvailableProjectSkills(): Promise<string[]> {
  * Deep merge settings.json hooks without overwriting existing user hooks.
  * Appends new hooks to existing events intelligently.
  */
+/**
+ * Extract script filename from a hook command.
+ */
+function getScriptFilename(hook: any): string | null {
+    const cmd = hook.command || hook.hooks?.[0]?.command || '';
+    if (typeof cmd !== 'string') return null;
+    // Match script filename including subdirectory (e.g., "gitnexus/gitnexus-hook.cjs")
+    const m = cmd.match(/\/hooks\/([A-Za-z0-9_/-]+\.(?:py|cjs|mjs|js))/);
+    if (m) return m[1];
+    const m2 = cmd.match(/([A-Za-z0-9_-]+\.(?:py|cjs|mjs|js))(?!.*[A-Za-z0-9._-]+\.(?:py|cjs|mjs|js))/);
+    return m2?.[1] ?? null;
+}
+
+/**
+ * Prune hooks from settings.json that are NOT in the canonical config.
+ * This removes stale entries from old versions before merging new ones.
+ * 
+ * @param existing Current settings.json hooks
+ * @param canonical Canonical hooks config from hooks.json
+ * @returns Pruned settings with stale hooks removed
+ */
+export function pruneStaleHooks(
+    existing: Record<string, any>,
+    canonical: Record<string, any>,
+): { result: Record<string, any>; removed: string[] } {
+    const result = { ...existing };
+    const removed: string[] = [];
+
+    if (!result.hooks || typeof result.hooks !== 'object') {
+        return { result, removed };
+    }
+    if (!canonical.hooks || typeof canonical.hooks !== 'object') {
+        return { result, removed };
+    }
+
+    // Collect all canonical script filenames
+    const canonicalScripts = new Set<string>();
+    for (const [event, hooks] of Object.entries(canonical.hooks)) {
+        const hookList = Array.isArray(hooks) ? hooks : [hooks];
+        for (const wrapper of hookList) {
+            const innerHooks = wrapper.hooks || [wrapper];
+            for (const hook of innerHooks) {
+                const script = getScriptFilename(hook);
+                if (script) canonicalScripts.add(script);
+            }
+        }
+    }
+
+    // Prune existing hooks not in canonical
+    for (const [event, hooks] of Object.entries(result.hooks)) {
+        if (!Array.isArray(hooks)) continue;
+
+        const prunedWrappers: any[] = [];
+        for (const wrapper of hooks) {
+            const innerHooks = wrapper.hooks || [wrapper];
+            const keptInner: any[] = [];
+
+            for (const hook of innerHooks) {
+                const script = getScriptFilename(hook);
+                // Keep if: no script (not a file-based hook) OR script is canonical
+                if (!script || canonicalScripts.has(script)) {
+                    keptInner.push(hook);
+                } else {
+                    removed.push(`${event}:${script}`);
+                }
+            }
+
+            if (keptInner.length > 0) {
+                if (wrapper.hooks) {
+                    prunedWrappers.push({ ...wrapper, hooks: keptInner });
+                } else if (keptInner.length === 1) {
+                    prunedWrappers.push(keptInner[0]);
+                } else {
+                    prunedWrappers.push({ ...wrapper, hooks: keptInner });
+                }
+            }
+        }
+
+        if (prunedWrappers.length > 0) {
+            result.hooks[event] = prunedWrappers;
+        } else {
+            delete result.hooks[event];
+        }
+    }
+
+    return { result, removed };
+}
+
 export function deepMergeHooks(existing: Record<string, any>, incoming: Record<string, any>): Record<string, any> {
     const result = { ...existing };
 
@@ -266,7 +354,15 @@ export async function installProjectSkill(toolName: string, projectRootOverride?
         }
 
         const incomingSettings = JSON.parse(await fs.readFile(skillSettingsPath, 'utf8'));
-        const mergedSettings = deepMergeHooks(existingSettings, incomingSettings);
+        
+        // First prune stale hooks not in canonical config
+        const { result: prunedSettings, removed } = pruneStaleHooks(existingSettings, incomingSettings);
+        if (removed.length > 0) {
+            console.log(kleur.yellow(`  ↳ Pruned ${removed.length} stale hook(s): ${removed.join(', ')}`));
+        }
+        
+        // Then merge canonical hooks
+        const mergedSettings = deepMergeHooks(prunedSettings, incomingSettings);
 
         await fs.writeFile(targetSettingsPath, JSON.stringify(mergedSettings, null, 2) + '\n');
         console.log(`${kleur.green('  ✓')} settings.json (hooks merged)`);

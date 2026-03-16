@@ -41078,8 +41078,10 @@ async function getAvailableProjectSkills() {
 function getScriptFilename(hook) {
   const cmd = hook.command || hook.hooks?.[0]?.command || "";
   if (typeof cmd !== "string") return null;
-  const m = cmd.match(/([A-Za-z0-9._/-]+\.(?:py|cjs|mjs|js))(?!.*[A-Za-z0-9._/-]+\.(?:py|cjs|mjs|js))/);
-  return m?.[1] ?? null;
+  const m = cmd.match(/\/hooks\/([A-Za-z0-9_/-]+\.(?:py|cjs|mjs|js))/);
+  if (m) return m[1];
+  const m2 = cmd.match(/([A-Za-z0-9_-]+\.(?:py|cjs|mjs|js))(?!.*[A-Za-z0-9._-]+\.(?:py|cjs|mjs|js))/);
+  return m2?.[1] ?? null;
 }
 function pruneStaleHooks(existing, canonical) {
   const result = { ...existing };

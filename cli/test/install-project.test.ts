@@ -12,6 +12,7 @@ import {
     getAvailableProjectSkills,
     installAllProjectSkills,
     installProjectSkill,
+    upsertManagedBlock,
 } from '../src/commands/install-project.js';
 
 describe('buildProjectInitGuide', () => {
@@ -114,6 +115,45 @@ describe('deepMergeHooks', () => {
         expect(matcher).toContain('mcp__serena__replace_symbol_body');
         expect(matcher).toContain('mcp__serena__insert_after_symbol');
         expect(matcher).toContain('mcp__serena__insert_before_symbol');
+    });
+});
+
+
+describe('upsertManagedBlock', () => {
+    it('prepends managed block when no block exists', () => {
+        const input = `# Existing
+
+content`;
+        const result = upsertManagedBlock(input, '# Header');
+
+        expect(result).toContain('<!-- xtrm:start -->');
+        expect(result).toContain('# Header');
+        expect(result).toContain('<!-- xtrm:end -->');
+        expect(result.endsWith('content')).toBe(true);
+    });
+
+    it('replaces existing managed block in place', () => {
+        const input = [
+            '<!-- xtrm:start -->',
+            'old',
+            '<!-- xtrm:end -->',
+            '',
+            '# Existing',
+        ].join('\n');
+
+        const result = upsertManagedBlock(input, '# New Header');
+
+        expect(result).toContain('# New Header');
+        expect(result).not.toContain('\nold\n');
+        expect(result).toContain('# Existing');
+        expect((result.match(/<!-- xtrm:start -->/g) || []).length).toBe(1);
+    });
+
+    it('is idempotent for identical content', () => {
+        const input = '# Existing\n';
+        const first = upsertManagedBlock(input, '# Header');
+        const second = upsertManagedBlock(first, '# Header');
+        expect(second).toBe(first);
     });
 });
 

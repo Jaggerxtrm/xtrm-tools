@@ -29,10 +29,10 @@ withSafeBdContext(() => {
   if (decision.allow) process.exit(0);
 
   // Block with appropriate message
-  if (decision.reason === 'no_claim_with_work') {
-    process.stderr.write(editBlockMessage(decision.sessionId));
-  } else {
-    process.stderr.write(editBlockFallbackMessage());
-  }
-  process.exit(2);
+  const reason = decision.reason === 'no_claim_with_work'
+    ? editBlockMessage(decision.sessionId)
+    : editBlockFallbackMessage();
+  process.stdout.write(JSON.stringify({ decision: 'block', reason }));
+  process.stdout.write('\n');
+  process.exit(0);
 });

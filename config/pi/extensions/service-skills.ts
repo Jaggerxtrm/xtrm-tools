@@ -26,38 +26,6 @@ export default function (pi: ExtensionAPI) {
 		return undefined;
 	});
 
-	// 2. Territory Activation
-	pi.on("tool_call", async (event, ctx) => {
-		const cwd = getCwd(ctx);
-		const activatorPath = path.join(cwd, ".claude", "skills", "using-service-skills", "scripts", "skill_activator.py");
-		if (!fs.existsSync(activatorPath)) return undefined;
-
-		const hookInput = JSON.stringify({
-			tool_name: event.toolName === "bash" ? "Bash" : event.toolName,
-			tool_input: event.input,
-			cwd: cwd
-		});
-
-		const result = await SubprocessRunner.run("python3", [activatorPath], {
-			cwd,
-			input: hookInput,
-			env: { ...process.env, CLAUDE_PROJECT_DIR: cwd },
-			timeoutMs: 5000
-		});
-
-		if (result.code === 0 && result.stdout.trim()) {
-			try {
-				const parsed = JSON.parse(result.stdout.trim());
-				const context = parsed.hookSpecificOutput?.additionalContext;
-				if (context && ctx.hasUI) {
-					ctx.ui.notify(context, "info");
-				}
-			} catch (e) {
-				logger.error("Failed to parse skill_activator output", e);
-			}
-		}
-		return undefined;
-	});
 
 	// 3. Drift Detection
 	pi.on("tool_result", async (event, ctx) => {

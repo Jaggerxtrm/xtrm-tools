@@ -9,6 +9,12 @@
         "script": "serena-workflow-reminder.py"
       }
     ],
+    "UserPromptSubmit": [
+      {
+        "script": "branch-state.mjs",
+        "timeout": 3000
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "Write|Edit|MultiEdit|mcp__serena__rename_symbol|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol",
@@ -43,7 +49,7 @@
         "timeout": 5000
       },
       {
-        "matcher": "Read|Grep|Glob|Bash|mcp__serena__find_symbol|mcp__serena__get_symbols_overview|mcp__serena__search_for_pattern|mcp__serena__find_referencing_symbols|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol|mcp__serena__rename_symbol",
+        "matcher": "Bash|mcp__serena__find_symbol|mcp__serena__get_symbols_overview|mcp__serena__search_for_pattern|mcp__serena__find_referencing_symbols|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol|mcp__serena__rename_symbol",
         "script": "gitnexus/gitnexus-hook.cjs",
         "timeout": 10000
       }

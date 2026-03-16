@@ -1,3 +1,6 @@
+import * as fs from "node:fs";
+import * as nodePath from "node:path";
+
 import type { ExtensionAPI, ToolCallEvent } from "@mariozechner/pi-coding-agent";
 
 export class EventAdapter {
@@ -41,5 +44,21 @@ export class EventAdapter {
 	 */
 	static formatBlockReason(prefix: string, details: string): string {
 		return `${prefix}: ${details}`;
+	}
+	/**
+	 * Returns true if the given directory is a beads project (has a .beads directory).
+	 */
+	static isBeadsProject(cwd: string): boolean {
+		return fs.existsSync(nodePath.join(cwd, ".beads"));
+	}
+
+	/**
+	 * Parses the summary line from `bd list` output.
+	 * Returns { open, inProgress } or null if the line is absent.
+	 */
+	static parseBdCounts(output: string): { open: number; inProgress: number } | null {
+		const m = output.match(/Total:\s*\d+\s+issues?\s*\((\d+)\s+open,\s*(\d+)\s+in progress\)/);
+		if (!m) return null;
+		return { open: parseInt(m[1], 10), inProgress: parseInt(m[2], 10) };
 	}
 }

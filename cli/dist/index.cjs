@@ -40985,6 +40985,9 @@ function resolvePkgRoot2() {
 var PKG_ROOT2 = resolvePkgRoot2();
 var PROJECT_SKILLS_DIR = import_path11.default.join(PKG_ROOT2, "project-skills");
 var MCP_CORE_CONFIG_PATH = import_path11.default.join(PKG_ROOT2, "config", "mcp_servers.json");
+var INSTRUCTIONS_DIR = import_path11.default.join(PKG_ROOT2, "config", "instructions");
+var XTRM_BLOCK_START = "<!-- xtrm:start -->";
+var XTRM_BLOCK_END = "<!-- xtrm:end -->";
 var syncedProjectMcpRoots = /* @__PURE__ */ new Set();
 function resolveEnvVars(value) {
   if (typeof value !== "string") return value;
@@ -41059,6 +41062,49 @@ async function syncProjectMcpServers(projectRoot) {
     console.log(kleur_default.red(`  \u2717 ${name} (${(r.stderr || r.stdout || "failed").toString().trim()})`));
   }
   console.log(kleur_default.dim(`  \u21B3 MCP project-scope result: ${added} added, ${existing} existing, ${failed} failed`));
+}
+function upsertManagedBlock(fileContent, blockBody, startMarker = XTRM_BLOCK_START, endMarker = XTRM_BLOCK_END) {
+  const normalizedBody = blockBody.trim();
+  const managedBlock = `${startMarker}
+${normalizedBody}
+${endMarker}`;
+  const escapedStart = startMarker.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&");
+  const escapedEnd = endMarker.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&");
+  const existingBlockPattern = new RegExp(`${escapedStart}[\\s\\S]*?${escapedEnd}`, "m");
+  if (existingBlockPattern.test(fileContent)) {
+    return fileContent.replace(existingBlockPattern, managedBlock);
+  }
+  const trimmed = fileContent.trimStart();
+  if (!trimmed) return `${managedBlock}
+`;
+  return `${managedBlock}
+
+${trimmed}`;
+}
+async function injectProjectInstructionHeaders(projectRoot) {
+  const targets = [
+    { output: "AGENTS.md", template: "agents-top.md" },
+    { output: "CLAUDE.md", template: "claude-top.md" }
+  ];
+  console.log(kleur_default.bold("Injecting xtrm agent instruction headers..."));
+  for (const target of targets) {
+    const templatePath = import_path11.default.join(INSTRUCTIONS_DIR, target.template);
+    if (!await import_fs_extra11.default.pathExists(templatePath)) {
+      console.log(kleur_default.yellow(`  \u26A0 Missing template: ${target.template}`));
+      continue;
+    }
+    const template = await import_fs_extra11.default.readFile(templatePath, "utf8");
+    const outputPath = import_path11.default.join(projectRoot, target.output);
+    const existing = await import_fs_extra11.default.pathExists(outputPath) ? await import_fs_extra11.default.readFile(outputPath, "utf8") : "";
+    const next = upsertManagedBlock(existing, template);
+    if (next === existing) {
+      console.log(kleur_default.dim(`  \u2713 ${target.output} already up to date`));
+      continue;
+    }
+    await import_fs_extra11.default.writeFile(outputPath, next.endsWith("\n") ? next : `${next}
+`, "utf8");
+    console.log(`${kleur_default.green("  \u2713")} updated ${target.output}`);
+  }
 }
 async function getAvailableProjectSkills() {
   if (!await import_fs_extra11.default.pathExists(PROJECT_SKILLS_DIR)) {
@@ -41270,6 +41316,38 @@ async function installProjectSkill(toolName, projectRootOverride) {
       console.log(`${kleur_default.green("  \u2713")} .claude/${entry}/`);
     }
   }
+  const claudeSkillsDir = import_path11.default.join(claudeDir, "skills");
+  if (await import_fs_extra11.default.pathExists(claudeSkillsDir)) {
+    const agentsDir = import_path11.default.join(projectRoot, ".agents");
+    const agentsSkillsLink = import_path11.default.join(agentsDir, "skills");
+    const symlinkTarget = import_path11.default.join("..", ".claude", "skills");
+    let needsSymlink = true;
+    if (await import_fs_extra11.default.pathExists(agentsSkillsLink)) {
+      try {
+        const stat = await import_fs_extra11.default.lstat(agentsSkillsLink);
+        if (stat.isSymbolicLink()) {
+          const current = await import_fs_extra11.default.readlink(agentsSkillsLink);
+          if (current === symlinkTarget) {
+            needsSymlink = false;
+          } else {
+            await import_fs_extra11.default.remove(agentsSkillsLink);
+          }
+        } else {
+          console.log(kleur_default.yellow("  \u26A0 .agents/skills/ is a real directory \u2014 skipping Pi symlink"));
+          needsSymlink = false;
+        }
+      } catch {
+        needsSymlink = true;
+      }
+    }
+    if (needsSymlink) {
+      await import_fs_extra11.default.mkdirp(agentsDir);
+      await import_fs_extra11.default.symlink(symlinkTarget, agentsSkillsLink);
+      console.log(`${kleur_default.green("  \u2713")} .agents/skills \u2192 ../.claude/skills`);
+    } else {
+      console.log(kleur_default.dim("  \u2713 .agents/skills symlink already in place"));
+    }
+  }
   if (await import_fs_extra11.default.pathExists(skillReadmePath)) {
     console.log(kleur_default.bold("\n\u2500\u2500 Installing Documentation \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
     const docsDir = import_path11.default.join(claudeDir, "docs");
@@ -41404,6 +41482,7 @@ async function bootstrapProjectInit() {
     return;
   }
   await runBdInitForProject(projectRoot);
+  await injectProjectInstructionHeaders(projectRoot);
   await runGitNexusInitForProject(projectRoot);
   await syncProjectMcpServers(projectRoot);
 }

@@ -58,7 +58,7 @@ export default function (pi: ExtensionAPI) {
 			if (claimId) {
 				const showResult = await SubprocessRunner.run("bd", ["show", claimId, "--json"], { cwd });
 				if (showResult.code === 0) {
-					try { status = JSON.parse(showResult.stdout).status ?? null; } catch {}
+					try { status = JSON.parse(showResult.stdout)[0]?.status ?? null; } catch {}
 				}
 				if (status === "closed") {
 					await SubprocessRunner.run("bd", ["kv", "clear", `claimed:${SESSION_KEY}`], { cwd });

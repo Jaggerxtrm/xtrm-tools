@@ -69,3 +69,7 @@ Adjust hook execution timeouts in `settings.json` if commands take longer than e
 To create new project-specific hooks, use the `hook-development` global skill. Follow the canonical structure defined in the `xtrm-tools` core libraries.
 
 For debugging orphaned hooks, use `xtrm clean`.
+
+## Pi Extensions Migration
+
+Core workflow hooks have been migrated to native Pi Extensions for better performance and integration. See the [Pi Extensions Migration Guide](../docs/pi-extensions-migration.md) for details.

@@ -1,0 +1,56 @@
+# Pi Extensions Migration Guide
+
+This document outlines the transition from Claude Code hooks to native Pi Coding Agent extensions within the `xtrm-tools` ecosystem.
+
+## Overview
+
+Starting with v2.1.20+, `xtrm-tools` has officially migrated its core workflow enforcement logic to **Pi Extensions**. While legacy Claude Code hooks (MJS/PY) are still provided for backward compatibility with the official Claude CLI, the Pi Agent now uses a more flexible, event-driven architecture that offers deeper integration and improved performance.
+
+## Key Changes
+
+| Feature | Claude Code Hook | Pi Extension | Benefit |
+|---------|------------------|--------------|---------|
+| **Issue Tracking** | `beads-*-gate.mjs` | `beads.ts` | Integrated `/claim` command; persistent state across compactions. |
+| **Branch Protection** | `main-guard.mjs` | `main-guard.ts` | Native tool-call blocking; integrated `rm -rf` safety confirmation. |
+| **Quality Gates** | `quality-check.cjs/py` | `quality-gates.ts` | Clean result modification; linter errors injected directly into LLM context. |
+| **Project Context** | `skill-discovery.py` | `xtrm-loader.ts` | System prompt mutation (higher token efficiency); auto-discovery of `.claude/skills`. |
+| **Status Bar** | N/A | `custom-footer.ts` | Bold XTRM branding and Turn counter in the TUI. |
+
+## Installation
+
+### For Pi Users (Authoritative)
+
+The new extensions are integrated into the unified Pi installer:
+
+```bash
+xtrm install pi
+```
+
+This command will:
+1. Deploy the new `.ts` extensions to `~/.pi/agent/extensions/`.
+2. Configure `models.json`, `auth.json`, and `settings.json` using optimized templates.
+3. Install required npm packages for the Pi environment.
+
+### For Claude Code Users
+
+Legacy hooks continue to be supported and installed via:
+
+```bash
+xtrm install all
+```
+
+## Migration Paths for Project Skills
+
+If you have existing project skills (`quality-gates`, `service-skills-set`, `tdd-guard`) installed, the new Pi extensions are designed to be **Hybrid**:
+
+*   **Global Logic**: The Pi extensions (e.g., `quality-gates.ts`) are installed globally.
+*   **Local Execution**: They automatically detect and execute the project-local scripts (e.g., `.claude/hooks/quality-check.py`) when you edit files in those repositories.
+
+**Action Required**: If you are using Pi, simply run `xtrm install pi` to upgrade your global environment. No changes are needed to your individual project repositories.
+
+## Troubleshooting
+
+If an extension is not firing:
+1. Check the logs in `~/.pi/agent/logs/`.
+2. Ensure you have run `xtrm install pi` to get the latest `SubprocessRunner` primitives in `~/.pi/agent/extensions/core/`.
+3. Use `xtrm clean` to remove any orphaned legacy hooks that might conflict with the new system.

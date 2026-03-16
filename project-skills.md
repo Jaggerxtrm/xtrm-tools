@@ -72,3 +72,7 @@ What install does:
 - Root overview: `README.md`
 - Global skills: `skills.md`
 - Global hooks: `hooks.md`
+
+## Pi Extensions Migration
+
+For users of the Pi Coding Agent, project skills are now managed via native Pi Extensions. See the [Pi Extensions Migration Guide](docs/pi-extensions-migration.md) for details.

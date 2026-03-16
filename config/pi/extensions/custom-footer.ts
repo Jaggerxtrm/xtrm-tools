@@ -12,89 +12,97 @@ import * as fs from "node:fs";
 import { SubprocessRunner } from "./core/lib";
 
 export default function (pi: ExtensionAPI) {
-	pi.on("session_start", async (_event, ctx) => {
-		const getCwd = () => (ctx as any).cwd || process.cwd();
-		const isBeadsProject = (cwd: string) => fs.existsSync(path.join(cwd, ".beads"));
-		const getShortId = (id: string) => id.split("-").pop() ?? id;
+	// Pin session to PID — stable for the life of the Pi process, matches beads.ts
+	const SESSION_KEY = process.pid.toString();
 
-		const STATUS_ICONS: Record<string, string> = {
-			open: "○",
-			in_progress: "◐",
-			blocked: "●",
-			closed: "✓",
-		};
-		const STATUS_BG: Record<string, string> = {
-			open: "\x1b[48;5;238m",
-			in_progress: "\x1b[48;5;28m",
-			blocked: "\x1b[48;5;88m",
-		};
+	interface BeadState {
+		claimId: string | null;
+		shortId: string | null;
+		status: string | null;
+		openCount: number;
+		lastFetch: number;
+	}
 
-		interface BeadState {
-			claimId: string | null;
-			shortId: string | null;
-			status: string | null;
-			openCount: number;
-			lastFetch: number;
+	const STATUS_ICONS: Record<string, string> = {
+		open: "○",
+		in_progress: "◐",
+		blocked: "●",
+		closed: "✓",
+	};
+	const STATUS_BG: Record<string, string> = {
+		open: "\x1b[48;5;238m",
+		in_progress: "\x1b[48;5;28m",
+		blocked: "\x1b[48;5;88m",
+	};
+
+	let capturedCtx: any = null;
+	let beadState: BeadState = { claimId: null, shortId: null, status: null, openCount: 0, lastFetch: 0 };
+	let refreshing = false;
+	let requestRender: (() => void) | null = null;
+	const CACHE_TTL = 5000;
+
+	const getCwd = () => capturedCtx?.cwd || process.cwd();
+	const isBeadsProject = (cwd: string) => fs.existsSync(path.join(cwd, ".beads"));
+	const getShortId = (id: string) => id.split("-").pop() ?? id;
+
+	const refreshBeadState = async () => {
+		if (refreshing || Date.now() - beadState.lastFetch < CACHE_TTL) return;
+		const cwd = getCwd();
+		if (!isBeadsProject(cwd)) return;
+		refreshing = true;
+		try {
+			const claimResult = await SubprocessRunner.run("bd", ["kv", "get", `claimed:${SESSION_KEY}`], { cwd });
+			const claimId = claimResult.code === 0 ? claimResult.stdout.trim() || null : null;
+
+			let status: string | null = null;
+			if (claimId) {
+				const showResult = await SubprocessRunner.run("bd", ["show", claimId, "--json"], { cwd });
+				if (showResult.code === 0) {
+					try { status = JSON.parse(showResult.stdout).status ?? null; } catch {}
+				}
+				if (status === "closed") {
+					await SubprocessRunner.run("bd", ["kv", "clear", `claimed:${SESSION_KEY}`], { cwd });
+					beadState = { claimId: null, shortId: null, status: null, openCount: beadState.openCount, lastFetch: Date.now() };
+					requestRender?.();
+					return;
+				}
+			}
+
+			let openCount = 0;
+			const listResult = await SubprocessRunner.run("bd", ["list"], { cwd });
+			if (listResult.code === 0) {
+				const m = listResult.stdout.match(/\((\d+)\s+open/);
+				if (m) openCount = parseInt(m[1], 10);
+			}
+
+			beadState = { claimId, shortId: claimId ? getShortId(claimId) : null, status, openCount, lastFetch: Date.now() };
+			requestRender?.();
+		} catch {}
+		finally { refreshing = false; }
+	};
+
+	const buildBeadChip = (): string => {
+		const { claimId, shortId, status, openCount } = beadState;
+		if (claimId && shortId && status) {
+			const icon = STATUS_ICONS[status] ?? "?";
+			const bg = STATUS_BG[status] ?? "\x1b[48;5;238m";
+			return `${bg}\x1b[38;5;15m bd:${shortId}${icon} \x1b[0m`;
 		}
+		if (openCount > 0) {
+			return `\x1b[48;5;238m\x1b[38;5;15m bd:${openCount}${STATUS_ICONS.open} \x1b[0m`;
+		}
+		return "";
+	};
 
-		let beadState: BeadState = { claimId: null, shortId: null, status: null, openCount: 0, lastFetch: 0 };
-		let refreshing = false;
-		const CACHE_TTL = 5000;
-
-		const refreshBeadState = async () => {
-			if (refreshing || Date.now() - beadState.lastFetch < CACHE_TTL) return;
-			const cwd = getCwd();
-			if (!isBeadsProject(cwd)) return;
-			refreshing = true;
-			try {
-				const sessionId = ctx.sessionManager.sessionId;
-
-				const claimResult = await SubprocessRunner.run("bd", ["kv", "get", `claimed:${sessionId}`], { cwd });
-				const claimId = claimResult.code === 0 ? claimResult.stdout.trim() || null : null;
-
-				let status: string | null = null;
-				if (claimId) {
-					const showResult = await SubprocessRunner.run("bd", ["show", claimId, "--json"], { cwd });
-					if (showResult.code === 0) {
-						try { status = JSON.parse(showResult.stdout).status ?? null; } catch {}
-					}
-					if (status === "closed") {
-						await SubprocessRunner.run("bd", ["kv", "clear", `claimed:${sessionId}`], { cwd });
-						beadState = { claimId: null, shortId: null, status: null, openCount: beadState.openCount, lastFetch: Date.now() };
-						return;
-					}
-				}
-
-				let openCount = 0;
-				const listResult = await SubprocessRunner.run("bd", ["list"], { cwd });
-				if (listResult.code === 0) {
-					const m = listResult.stdout.match(/\((\d+)\s+open/);
-					if (m) openCount = parseInt(m[1], 10);
-				}
-
-				beadState = { claimId, shortId: claimId ? getShortId(claimId) : null, status, openCount, lastFetch: Date.now() };
-			} catch {}
-			finally { refreshing = false; }
-		};
-
-		const buildBeadChip = (): string => {
-			const { claimId, shortId, status, openCount } = beadState;
-			if (claimId && shortId && status) {
-				const icon = STATUS_ICONS[status] ?? "?";
-				const bg = STATUS_BG[status] ?? "\x1b[48;5;238m";
-				return `${bg}\x1b[38;5;15m bd:${shortId}${icon} \x1b[0m`;
-			}
-			if (openCount > 0) {
-				return `\x1b[48;5;238m\x1b[38;5;15m bd:${openCount}${STATUS_ICONS.open} \x1b[0m`;
-			}
-			return "";
-		};
+	pi.on("session_start", async (_event, ctx) => {
+		capturedCtx = ctx;
 
 		ctx.ui.setFooter((tui, theme, footerData) => {
+			requestRender = () => tui.requestRender();
 			const unsub = footerData.onBranchChange(() => tui.requestRender());
 
 			return {
-				dispose() { unsub(); },
+				dispose() { unsub(); requestRender = null; },
 				invalidate() {},
 				render(width: number): string[] {
 					refreshBeadState().catch(() => {});
@@ -118,7 +126,6 @@ export default function (pi: ExtensionAPI) {
 
 					const sep = theme.fg("dim", " | ");
 
-					// Layout: XTRM | model | 10% | ⌂ dir | ⎇ branch | bd:xxx◐
 					const leftParts = [brand, modelStr, usageStr, cwdStr];
 					if (branchStr) leftParts.push(branchStr);
 
@@ -130,5 +137,15 @@ export default function (pi: ExtensionAPI) {
 				},
 			};
 		});
+	});
+
+	// Bust the bead cache immediately after any bd write so the chip reflects the new state
+	pi.on("tool_result", async (event: any) => {
+		const cmd = event?.input?.command;
+		if (cmd && /\bbd\s+(close|update|create|claim)\b/.test(cmd)) {
+			beadState.lastFetch = 0;
+			setTimeout(() => refreshBeadState().catch(() => {}), 200);
+		}
+		return undefined;
 	});
 }

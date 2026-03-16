@@ -132,7 +132,7 @@ describe("Beads Extension", () => {
 		});
 
 		expect(kvSetCalls.length).toBe(1);
-		expect(kvSetCalls[0][2]).toBe("claimed:mock-session-123");
+		expect(kvSetCalls[0][2]).toBe(`claimed:${process.pid}`);
 		expect(kvSetCalls[0][3]).toBe("issue-456");
 		expect(result.content[1].text).toContain("claimed issue");
 		expect(result.content[1].text).toContain("issue-456");
@@ -159,7 +159,7 @@ describe("Beads Extension", () => {
 		});
 
 		expect(kvSetCalls.length).toBe(1);
-		expect(kvSetCalls[0][2]).toBe("claimed:mock-session-123");
+		expect(kvSetCalls[0][2]).toBe(`claimed:${process.pid}`);
 		expect(kvSetCalls[0][3]).toBe("issue-789");
 		expect(result.content[1].text).toContain("issue-789");
 	});

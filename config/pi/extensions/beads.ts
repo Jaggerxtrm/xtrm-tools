@@ -40,6 +40,15 @@ export default function (pi: ExtensionAPI) {
 		return false;
 	};
 
+	const hasInProgressWork = async (cwd: string): Promise<boolean> => {
+		const result = await SubprocessRunner.run("bd", ["list"], { cwd });
+		if (result.code === 0 && result.stdout.includes("Total:")) {
+			const m = result.stdout.match(/Total:\s*\d+\s+issues?\s*\((\d+)\s+open,\s*(\d+)\s+in progress\)/);
+			if (m) return parseInt(m[2], 10) > 0;
+		}
+		return false;
+	};
+
 	pi.on("session_start", async (_event, ctx) => {
 		cachedSessionId = ctx?.sessionManager?.getSessionId?.() ?? ctx?.sessionId ?? ctx?.session_id ?? cachedSessionId;
 		return undefined;
@@ -69,12 +78,15 @@ export default function (pi: ExtensionAPI) {
 		if (isToolCallEventType("bash", event)) {
 			const command = event.input.command;
 			if (command && /\bgit\s+commit\b/.test(command)) {
-                const claim = await getSessionClaim(sessionId, cwd);
+				const claim = await getSessionClaim(sessionId, cwd);
 				if (claim) {
-					return {
-                        block: true,
-                        reason: `Active claim [${claim}] — close it first.\n  bd close ${claim}\n  git push -u origin <feature-branch>\n  gh pr create --fill && gh pr merge --squash\n`,
-                    };
+					const inProgress = await hasInProgressWork(cwd);
+					if (inProgress) {
+						return {
+							block: true,
+							reason: `Active claim [${claim}] — close it first.\n  bd close ${claim}\n  git push -u origin <feature-branch>\n  gh pr create --fill && gh pr merge --squash\n`,
+						};
+					}
 				}
 			}
 		}

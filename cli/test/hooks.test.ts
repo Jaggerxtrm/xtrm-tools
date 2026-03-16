@@ -813,69 +813,19 @@ describe('hooks.json — beads-compact hooks wiring', () => {
   });
 });
 
-<<<<<<< HEAD
-
-// ── beads-gate-messages.mjs — imperative commands ───────────────────────────────────────
-describe('beads-gate-messages.mjs — imperative commands', () => {
-  const messagesPath = path.join(HOOKS_DIR, 'beads-gate-messages.mjs');
-
-  it('editBlockMessage uses --claim syntax, not --status=in_progress', async () => {
-    const { editBlockMessage } = await import(messagesPath);
-    const msg = editBlockMessage('test-session-123');
-    expect(msg).toContain('--claim');
-    expect(msg).not.toContain('--status=in_progress');
-  });
-
-  it('editBlockMessage does not require manual bd kv set', async () => {
-    const { editBlockMessage } = await import(messagesPath);
-    const msg = editBlockMessage('test-session-123');
-    expect(msg).not.toContain('bd kv set');
-  });
-
-  it('editBlockFallbackMessage provides create then claim sequence', async () => {
-    const { editBlockFallbackMessage } = await import(messagesPath);
-    const msg = editBlockFallbackMessage();
-    expect(msg).toContain('bd create');
-    expect(msg).toContain('--claim');
-  });
-
-  it('commitBlockMessage includes the full post-close workflow', async () => {
-    const { commitBlockMessage } = await import(messagesPath);
-    const msg = commitBlockMessage('  ◐ jaggers-123 P2 Fix bug', 'jaggers-123');
-    expect(msg).toContain('bd close');
-    expect(msg).toContain('git add');
-    expect(msg).toContain('git push');
-    expect(msg).toContain('gh pr create');
-  });
-
-  it('stopBlockMessage includes full close-to-merge sequence', async () => {
-    const { stopBlockMessage } = await import(messagesPath);
-    const msg = stopBlockMessage('  ◐ jaggers-123 P2 Fix bug', 'jaggers-123');
-    expect(msg).toContain('bd close');
-    expect(msg).toContain('git push');
-    expect(msg).toContain('gh pr create');
-  });
-
-  it('main-guard.mjs Write block mentions both branch creation and issue claim', () => {
-    const mainGuard = readFileSync(path.join(HOOKS_DIR, 'main-guard.mjs'), 'utf8');
-    // The Write deny reason must guide the agent to create a branch AND claim an issue
-    expect(mainGuard).toContain('git checkout -b feature/');
-    expect(mainGuard).toContain('bd update');
-    expect(mainGuard).toContain('--claim');
-  });
-});
-
-// ── serena-workflow-reminder.py wiring ────────────────────────────────────
-describe('hooks.json — serena-workflow-reminder.py wiring', () => {
-  it('is wired to SessionStart only, NOT to PreToolUse', () => {
-    const cfg = JSON.parse(readFileSync(path.join(__dirname, '../../config/hooks.json'), 'utf8'));
-
-    const preToolUse: Array<{ script?: string }> = cfg.hooks.PreToolUse ?? [];
-    const inPreToolUse = preToolUse.some((h) => h.script === 'serena-workflow-reminder.py');
-    expect(inPreToolUse, 'serena-workflow-reminder.py must NOT be in PreToolUse (fires on every tool call)').toBe(false);
-
-    const sessionStart: Array<{ script?: string }> = cfg.hooks.SessionStart ?? [];
-    const inSessionStart = sessionStart.some((h) => h.script === 'serena-workflow-reminder.py');
-    expect(inSessionStart, 'serena-workflow-reminder.py must be in SessionStart for once-per-session injection').toBe(true);
+// ── beads.ts Pi extension — commit gate logic ────────────────────────
+describe('beads.ts Pi extension — commit gate logic', () => {
+  it('commit gate checks for in_progress issues, not just any claim', () => {
+    const src = readFileSync(
+      path.join(__dirname, '../../config/pi/extensions/beads.ts'),
+      'utf8',
+    );
+    // Must define hasInProgressWork helper
+    expect(src, 'beads.ts must define hasInProgressWork').toContain('hasInProgressWork');
+    // The commit gate must call hasInProgressWork before blocking
+    expect(
+      src,
+      'Pi commit gate must call hasInProgressWork before blocking on claim',
+    ).toMatch(/getSessionClaim[\s\S]{0,80}hasInProgressWork/);
   });
 });

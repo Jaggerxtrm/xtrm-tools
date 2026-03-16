@@ -813,6 +813,7 @@ describe('hooks.json — beads-compact hooks wiring', () => {
   });
 });
 
+<<<<<<< HEAD
 
 // ── beads-gate-messages.mjs — imperative commands ───────────────────────────────────────
 describe('beads-gate-messages.mjs — imperative commands', () => {
@@ -861,5 +862,20 @@ describe('beads-gate-messages.mjs — imperative commands', () => {
     expect(mainGuard).toContain('git checkout -b feature/');
     expect(mainGuard).toContain('bd update');
     expect(mainGuard).toContain('--claim');
+  });
+});
+
+// ── serena-workflow-reminder.py wiring ────────────────────────────────────
+describe('hooks.json — serena-workflow-reminder.py wiring', () => {
+  it('is wired to SessionStart only, NOT to PreToolUse', () => {
+    const cfg = JSON.parse(readFileSync(path.join(__dirname, '../../config/hooks.json'), 'utf8'));
+
+    const preToolUse: Array<{ script?: string }> = cfg.hooks.PreToolUse ?? [];
+    const inPreToolUse = preToolUse.some((h) => h.script === 'serena-workflow-reminder.py');
+    expect(inPreToolUse, 'serena-workflow-reminder.py must NOT be in PreToolUse (fires on every tool call)').toBe(false);
+
+    const sessionStart: Array<{ script?: string }> = cfg.hooks.SessionStart ?? [];
+    const inSessionStart = sessionStart.some((h) => h.script === 'serena-workflow-reminder.py');
+    expect(inSessionStart, 'serena-workflow-reminder.py must be in SessionStart for once-per-session injection').toBe(true);
   });
 });

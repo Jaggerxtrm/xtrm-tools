@@ -10,7 +10,10 @@ export default function (pi: ExtensionAPI) {
 	const getCwd = (ctx: any) => ctx.cwd || process.cwd();
 	const isBeadsProject = (cwd: string) => fs.existsSync(path.join(cwd, ".beads"));
 
-	const getSessionClaim = async (sessionId: string, cwd: string): Promise<string | null> => {
+	// Pin session to PID — stable for the life of the Pi process, consistent across all extension handlers
+	const sessionId = process.pid.toString();
+
+	const getSessionClaim = async (cwd: string): Promise<string | null> => {
 		const result = await SubprocessRunner.run("bd", ["kv", "get", `claimed:${sessionId}`], { cwd });
 		if (result.code === 0) return result.stdout.trim();
 		return null;
@@ -33,10 +36,8 @@ export default function (pi: ExtensionAPI) {
 		const cwd = getCwd(ctx);
 		if (!isBeadsProject(cwd)) return undefined;
 
-		const sessionId = ctx.sessionManager.sessionId;
-
 		if (EventAdapter.isMutatingFileTool(event)) {
-			const claim = await getSessionClaim(sessionId, cwd);
+			const claim = await getSessionClaim(cwd);
 			if (!claim) {
 			    const hasWork = await hasTrackableWork(cwd);
 			    if (hasWork) {
@@ -45,7 +46,7 @@ export default function (pi: ExtensionAPI) {
 			        }
 			        return {
                         block: true,
-                        reason: `No active issue claim for this session (${sessionId}).\n  bd update <id> --claim\n  bd kv set "claimed:${sessionId}" "<id>"`,
+                        reason: `No active issue claim for this session (pid:${sessionId}).\n  bd update <id> --claim\n  bd kv set "claimed:${sessionId}" "<id>"`,
                     };
                 }
             }
@@ -54,7 +55,7 @@ export default function (pi: ExtensionAPI) {
 		if (isToolCallEventType("bash", event)) {
 			const command = event.input.command;
 			if (command && /\bgit\s+commit\b/.test(command)) {
-                const claim = await getSessionClaim(sessionId, cwd);
+                const claim = await getSessionClaim(cwd);
 				if (claim) {
 					return {
                         block: true,
@@ -78,9 +79,8 @@ export default function (pi: ExtensionAPI) {
 				if (issueMatch) {
 					const issueId = issueMatch[1];
 					const cwd = getCwd(ctx);
-					const sessionId = ctx.sessionManager.sessionId;
 					await SubprocessRunner.run("bd", ["kv", "set", `claimed:${sessionId}`, issueId], { cwd });
-					const claimNotice = `\n\n✅ **Beads**: Session \`${sessionId}\` claimed issue \`${issueId}\`. File edits are now unblocked.`;
+					const claimNotice = `\n\n✅ **Beads**: Session \`pid:${sessionId}\` claimed issue \`${issueId}\`. File edits are now unblocked.`;
 					return { content: [...event.content, { type: "text", text: claimNotice }] };
 				}
 			}

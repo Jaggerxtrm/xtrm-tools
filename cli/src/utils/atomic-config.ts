@@ -72,9 +72,31 @@ function mergeHookWrappers(existing: any[], incoming: any[]): any[] {
         }
 
         const incomingKeys = new Set(incomingCommands.map(commandKey));
+        const incomingTokens = new Set(
+            typeof incomingWrapper.matcher === 'string'
+                ? incomingWrapper.matcher.split('|').map((s: string) => s.trim()).filter(Boolean)
+                : [],
+        );
+
         const existingIndex = merged.findIndex((existingWrapper: any) => {
             const existingCommands = extractHookCommands(existingWrapper);
-            return existingCommands.some((c: string) => incomingKeys.has(commandKey(c)));
+            if (!existingCommands.some((c: string) => incomingKeys.has(commandKey(c)))) return false;
+
+            // Only merge with entries whose matchers overlap (share at least one token).
+            // Disjoint matchers (e.g. "Write|Edit" vs "Bash") intentionally serve
+            // different purposes and must remain as separate entries.
+            if (
+                typeof existingWrapper.matcher === 'string' &&
+                typeof incomingWrapper.matcher === 'string' &&
+                incomingTokens.size > 0
+            ) {
+                const existingTokens = existingWrapper.matcher
+                    .split('|').map((s: string) => s.trim()).filter(Boolean);
+                const hasOverlap = existingTokens.some((t: string) => incomingTokens.has(t));
+                if (!hasOverlap) return false;
+            }
+
+            return true;
         });
 
         if (existingIndex === -1) {

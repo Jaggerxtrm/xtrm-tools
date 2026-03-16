@@ -90,6 +90,30 @@ describe('xtrm clean — canonical wiring validation', () => {
     }
   });
 
+  it('keeps branch-state.mjs as canonical (not flagged as orphaned)', () => {
+    const tmpHome = mkdtempSync(path.join(os.tmpdir(), 'xtrm-clean-test-'));
+    const hooksDir = path.join(tmpHome, '.claude', 'hooks');
+    mkdirSync(path.join(tmpHome, '.claude'), { recursive: true });
+    mkdirSync(hooksDir, { recursive: true });
+    writeFileSync(path.join(hooksDir, 'branch-state.mjs'), '// stub');
+
+    writeFileSync(path.join(tmpHome, '.claude', 'settings.json'), JSON.stringify({
+      hooks: {
+        UserPromptSubmit: [
+          { hooks: [{ type: 'command', command: `node "${path.join(hooksDir, 'branch-state.mjs')}"`, timeout: 3000 }] },
+        ],
+      },
+    }, null, 2));
+
+    try {
+      const r = runClean(['--dry-run', '--hooks-only'], { HOME: tmpHome });
+      expect(r.stdout).toContain('No orphaned hook entries found');
+      expect(r.stdout).not.toContain('branch-state.mjs');
+    } finally {
+      rmSync(tmpHome, { recursive: true, force: true });
+    }
+  });
+
   it('keeps canonical entries that match config/hooks.json exactly', () => {
     const tmpHome = mkdtempSync(path.join(os.tmpdir(), 'xtrm-clean-test-'));
     const hooksDir = path.join(tmpHome, '.claude', 'hooks');

@@ -56267,6 +56267,7 @@ var CANONICAL_HOOKS = /* @__PURE__ */ new Set([
   "beads-memory-gate.mjs",
   "beads-compact-save.mjs",
   "beads-compact-restore.mjs",
+  "branch-state.mjs",
   "gitnexus",
   // directory
   "statusline-starship.sh",

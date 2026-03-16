@@ -59,16 +59,23 @@ export default function (pi: ExtensionAPI) {
 			}
 		}
 
-		// 3. Specialist Reminder
-		const specialistsDir = path.join(process.env.HOME || "", "projects", "specialists");
-		if (fs.existsSync(specialistsDir)) {
-			contextParts.push(`## Specialists Available\nExpert specialists are available in ${specialistsDir}. Use them for deep reasoning or complex sub-tasks.`);
+		// 3. Project Skills (.claude/skills)
+		const skillsDir = path.join(cwd, ".claude", "skills");
+		if (fs.existsSync(skillsDir)) {
+			const skillFiles = findMarkdownFiles(skillsDir);
+			if (skillFiles.length > 0) {
+				const skillsContent = skillFiles.map(f => {
+					// We only want to list the paths/names so the agent knows what it can read
+					return `- ${f} (Path: .claude/skills/${f})`;
+				}).join("\n");
+				contextParts.push(`## Available Project Skills\n\nExisting service skills and workflows found in .claude/skills/:\n\n${skillsContent}\n\nUse the read tool to load any of these skills if relevant to the current task.`);
+			}
 		}
 
 		projectContext = contextParts.join("\n\n---\n\n");
 		
 		if (projectContext && ctx.hasUI) {
-			ctx.ui.notify("XTRM-Loader: Project context injected into system prompt", "info");
+			ctx.ui.notify("XTRM-Loader: Project context and skills indexed", "info");
 		}
 	});
 

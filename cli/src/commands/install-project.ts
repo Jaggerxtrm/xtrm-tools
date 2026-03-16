@@ -22,6 +22,9 @@ function resolvePkgRoot(): string {
 const PKG_ROOT = resolvePkgRoot();
 const PROJECT_SKILLS_DIR = path.join(PKG_ROOT, 'project-skills');
 const MCP_CORE_CONFIG_PATH = path.join(PKG_ROOT, 'config', 'mcp_servers.json');
+const INSTRUCTIONS_DIR = path.join(PKG_ROOT, 'config', 'instructions');
+const XTRM_BLOCK_START = '<!-- xtrm:start -->';
+const XTRM_BLOCK_END = '<!-- xtrm:end -->';
 const syncedProjectMcpRoots = new Set<string>();
 
 function resolveEnvVars(value: string): string {
@@ -114,6 +117,57 @@ async function syncProjectMcpServers(projectRoot: string): Promise<void> {
     }
 
     console.log(kleur.dim(`  ↳ MCP project-scope result: ${added} added, ${existing} existing, ${failed} failed`));
+}
+
+export function upsertManagedBlock(
+    fileContent: string,
+    blockBody: string,
+    startMarker: string = XTRM_BLOCK_START,
+    endMarker: string = XTRM_BLOCK_END,
+): string {
+    const normalizedBody = blockBody.trim();
+    const managedBlock = `${startMarker}\n${normalizedBody}\n${endMarker}`;
+    const escapedStart = startMarker.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&');
+    const escapedEnd = endMarker.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&');
+    const existingBlockPattern = new RegExp(`${escapedStart}[\\s\\S]*?${escapedEnd}`, 'm');
+
+    if (existingBlockPattern.test(fileContent)) {
+        return fileContent.replace(existingBlockPattern, managedBlock);
+    }
+
+    const trimmed = fileContent.trimStart();
+    if (!trimmed) return `${managedBlock}\n`;
+    return `${managedBlock}\n\n${trimmed}`;
+}
+
+export async function injectProjectInstructionHeaders(projectRoot: string): Promise<void> {
+    const targets = [
+        { output: 'AGENTS.md', template: 'agents-top.md' },
+        { output: 'CLAUDE.md', template: 'claude-top.md' },
+    ];
+
+    console.log(kleur.bold('Injecting xtrm agent instruction headers...'));
+
+    for (const target of targets) {
+        const templatePath = path.join(INSTRUCTIONS_DIR, target.template);
+        if (!await fs.pathExists(templatePath)) {
+            console.log(kleur.yellow(`  ⚠ Missing template: ${target.template}`));
+            continue;
+        }
+
+        const template = await fs.readFile(templatePath, 'utf8');
+        const outputPath = path.join(projectRoot, target.output);
+        const existing = await fs.pathExists(outputPath) ? await fs.readFile(outputPath, 'utf8') : '';
+        const next = upsertManagedBlock(existing, template);
+
+        if (next === existing) {
+            console.log(kleur.dim(`  ✓ ${target.output} already up to date`));
+            continue;
+        }
+
+        await fs.writeFile(outputPath, next.endsWith('\n') ? next : `${next}\n`, 'utf8');
+        console.log(`${kleur.green('  ✓')} updated ${target.output}`);
+    }
 }
 
 export async function getAvailableProjectSkills(): Promise<string[]> {
@@ -554,6 +608,7 @@ async function bootstrapProjectInit(): Promise<void> {
     }
 
     await runBdInitForProject(projectRoot);
+    await injectProjectInstructionHeaders(projectRoot);
     await runGitNexusInitForProject(projectRoot);
     await syncProjectMcpServers(projectRoot);
 }

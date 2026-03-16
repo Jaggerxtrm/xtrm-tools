@@ -2,7 +2,7 @@
 
 **Claude Code tools installer** — skills, hooks, MCP servers, and project-specific extensions.
 
-> **ARCHITECTURAL DECISION (v2.0.0):** xtrm-tools now supports **Claude Code exclusively**. Hook translation for Gemini CLI and Qwen CLI was removed due to fragile, undocumented, and unofficially supported hook ecosystems. For Gemini/Qwen, users must manually configure their environments (see [Manual Setup for Gemini/Qwen](#manual-setup-for-geminiqwen)).
+> **ARCHITECTURAL DECISION (v2.0.0+):** xtrm-tools supports **Claude Code exclusively**. Hook translation for Gemini CLI and Qwen CLI was removed.
 
 This repository contains production-ready extensions to enhance Claude's capabilities with prompt improvement, task delegation, development workflow automation, and quality gates. The `xtrm` CLI provides a robust, modular "Plug & Play" installation engine for project-specific tools.
 
@@ -15,247 +15,78 @@ cd xtrm-tools/cli
 npm install && npm run build
 npm link
 
-# Install tools to your Claude Code environment
-xtrm install
+# Initialize a project and register gitnexus MCP
+xtrm project init
 ```
 
 ## Table of Contents
 
-- [Skills](#skills)
-- [Hooks](#hooks)
+- [Project Skills & Hooks](#project-skills--hooks)
+- [Global Skills](#global-skills)
 - [Installation](#installation)
-- [Project Skills](#project-skills)
+- [CLI User Guide](#cli-user-guide)
 - [Configuration](#configuration)
-- [Documentation](#documentation)
 - [Version History](#version-history)
 - [License](#license)
 
-## Skills
+---
 
-### prompt-improving
+## Project Skills & Hooks
 
-Automatically improves user prompts using Claude's XML best practices before execution.
+Project skills are modular, plug-and-play tool packages extending Claude's capabilities for specific workflows. They install into your project's `.claude/` directory and include specific hooks enforcing local workflow rules and quality gates.
 
-- **Invocation**: `/prompt [prompt]` or `/prompt-improving [prompt]`
-- **Purpose**: Applies semantic XML structure, multishot examples, and chain-of-thought patterns
-- **Hook**: `skill-suggestion.py`
-- **Version**: 5.1.0
+### using-xtrm (Session Operating Manual)
+**The foundational operating manual for an xtrm-equipped session.**
+- **Invocation**: Activates automatically at session start via hook.
+- **Purpose**: Orients the agent on how to work within the xtrm stack: applying prompt improvement, using the beads issue-tracking gate, enforcing PR workflows, and combining the full toolset (gitnexus, Serena, TDD guard, quality gates, delegation).
+- **Core Workflow**: Provides the authoritative guide on feature-branch usage, requiring PRs for merges (with `--squash`), and stopping dangerous git commands on protected branches.
 
-### delegating
+### TDD Guard & Quality Gates (`tdd-guard` & `using-quality-gates`)
+- **tdd-guard**: Enforces Test-Driven Development by blocking implementation until failing tests exist. Now covers **Serena edit tools** via bridge behavior.
+- **using-quality-gates**: Unified PostToolUse code quality hooks — runs linting, type checking, and formatting (Python + TypeScript with strict mypy/ruff rules) on every edit.
 
-Unified task delegation system supporting both CCS (cost-optimized) and unitAI (multi-agent workflows).
+### Service Skills Set (Trinity)
+Task intake and service routing for Docker service projects.
+- **Invocation**: `/scope "task description"` or automatic via SessionStart hook.
+- **Purpose**: Gives Claude persistent, service-specific expertise without re-explaining architecture. Emits structured scope plans and detects codebase drift via PostToolUse hooks.
 
-- **Invocation**: `/delegate [task]` or `/delegating [task]`
-- **Purpose**: Auto-selects optimal backend for task execution
-  - **CCS**: Simple tasks (tests, typos, docs) → GLM/Gemini/Qwen
-  - **unitAI**: Complex tasks (code review, feature dev, debugging) → Multi-agent workflows
-- **Hook**: `skill-suggestion.sh` (triggers on "delegate" keyword)
-- **Config**: `skills/delegation/config.yaml` (user-customizable patterns)
-- **Version**: 6.0.0
+### Core Project Hooks
 
-**Key Features**:
-- Configuration-driven pattern matching
-- Autonomous workflow selection for unitAI
-- Interactive 2-step menu (Delegate? → Backend?)
-- Auto-focus detection (security/performance/quality)
-- Override flags (`--glm`, `--unitai`, etc.)
+**Main Guard (`main-guard.mjs`)**
+- **Trigger**: PreToolUse (Write|Edit|MultiEdit|Serena edit tools|Bash)
+- **Purpose**: Enforces PR-only merge workflow with full git protection. Blocks direct commits and dangerous `git checkout` / `git push` commands on protected branches (`main/master`).
+- **Post-Push (`main-guard-post-push.mjs`)**: After pushing a feature branch, reminds to use `gh pr merge --squash` and sync local via `git reset --hard origin/main`.
 
-**Deprecates**: `/ccs-delegation` (v5.0.0) - use `/delegation` instead
+**GitNexus Graph Context (`gitnexus-hook.cjs`)**
+- **Trigger**: PostToolUse (with Serena support and dedup cache)
+- **Purpose**: Enriches tool output with knowledge graph context via `gitnexus augment`.
+- *Note: `gitnexus-impact-reminder` was removed as impact analysis enforcement is now native.*
 
-### orchestrating-agents
+**Beads Issue Tracking Gates**
+- **Trigger**: PreToolUse, PostToolUse, Stop, PreCompact, SessionStart
+- **Purpose**: Ensures all work is tracked to a `bd` issue. Blocks file edits without an active claim.
+- **Compaction**: Newly added `PreCompact` and `SessionStart` hooks preserve `in_progress` beads state across `/compact` events. Hook blocking messages are quieted and compacted to save tokens.
 
-Orchestrates task handoff and deep multi-turn "handshaking" sessions between Gemini and Qwen CLI agents.
+---
 
-- **Invocation**: `/orchestrate [workflow-type] [task]` (workflow-type optional)
-- **Purpose**: Facilitates multi-model collaboration, adversarial reviews, and deep troubleshooting.
-- **Workflows**:
-  - **Collaborative Design** (`collaborative`): Proposal -> Critique -> Refinement (for features).
-  - **Adversarial Review** (`adversarial`): Proposal -> Red Team Attack -> Defense (for security).
-  - **Troubleshoot Session** (`troubleshoot`): Multi-agent hypothesis testing (for emergencies).
-  - **Single Handshake** (`handshake`): Quick one-turn second opinion.
-- **Examples**:
-  - `/orchestrate adversarial "Review payment security"`
-  - `/orchestrate "Design auth system"` (interactive workflow selection)
-- **Hook**: None (Direct slash command)
-- **Version**: 1.2.0
+## Global Skills
 
-**Key Features**:
-- Parameter-based workflow selection for direct invocation
-- Interactive fallback when no workflow specified
-- Corrected resume flags for multi-turn sessions (Gemini: `-r latest`, Qwen: `-c`)
-
-### using-serena-lsp
-
-Master workflow combining Serena MCP semantic tools with LSP plugins for efficient code editing.
-
-- **Invocation**: Auto-suggested via hooks
-- **Purpose**: Surgical code editing with 75-80% token savings
-- **Hook**: `serena-workflow-reminder.py`
-- **Origin**: Serena MCP
+Global skills are reusable workflows installed to the user-level Claude environment (not tied to one repo). 
 
 ### documenting
+Maintains Single Source of Truth (SSOT) documentation system with drift detection.
+- **Invocation**: `/document [task]`
+- **Purpose**: Creates, updates, and validates SSOT documentation. Auto-generates INDEX blocks for rapid navigation. A Stop hook fires at session end to detect stale memories based on the `tracks:` frontmatter field.
 
-Maintains Single Source of Truth (SSOT) documentation system for projects.
+### delegating
+Proactively delegates tasks to cost-optimized agents before working in main session.
+- **Invocation**: `/delegate [task]` or `/delegating [task]`
+- **Purpose**: Routes simple deterministic tasks (tests, typos, formatting, docs) to GLM/Gemini/Qwen, and complex reasoning tasks to multi-agent orchestration. Interactive 2-step menu helps select the backend. Avoids main session token usage.
 
-- **Invocation**: `/document [task]` or skill commands
-- **Purpose**: Create, update, validate SSOT documentation
-- **Hook**: None
-- **Origin**: Serena MCP
-- **Version**: 2.0.0 (with drift detection and INDEX blocks)
-
-**Key Features**:
-- `tracks:` frontmatter field for automatic drift detection
-- Auto-generated INDEX tables for navigation without full reads
-- Stop hook fires at session end to detect stale memories
-- Decision table for when to update SSOT vs changelog only
-
-### obsidian-cli
-
-Interact with Obsidian vaults using the Obsidian CLI.
-
-- **Invocation**: Auto-loaded when working with Obsidian tasks
-- **Purpose**: Read, create, search, and manage notes, tasks, properties
-- **Hook**: None
-- **Version**: 1.0.0
-
-**Key Features**:
-- Full CLI command reference (create, read, search, daily notes, tasks)
-- Plugin development workflow (reload, error capture, screenshots, DOM inspection)
-- Vault targeting with `vault=<name>` parameter
-- File targeting with `file=` (wikilink-style) or `path=` (exact path)
-
-### gitnexus (4 skills)
-
-Knowledge graph-powered code intelligence skills.
-
-- **Invocation**: Auto-suggested via hooks for code operations
-- **Purpose**: Semantic code understanding with 75-80% token savings
-- **Hook**: `gitnexus-hook.cjs` (PreToolUse for Grep|Glob|Bash)
-- **Version**: 1.0.0
-
-**Skills**:
-- `gitnexus/exploring` — Architecture understanding ("How does X work?")
-- `gitnexus/debugging` — Bug tracing ("Why is X failing?")
-- `gitnexus/impact-analysis` — Blast radius ("What breaks if I change X?")
-- `gitnexus/refactoring` — Surgical refactors (rename, extract, split)
-
-**Tools**:
-- `query` — Process-grouped execution flows
-- `context` — 360-degree symbol view
-- `impact` — Blast radius analysis (depth 1/2/3)
-- `detect_changes` — Git-diff impact analysis
-- `rename` — Multi-file coordinated rename
-- `cypher` — Raw graph queries
-
-### scoping-service-skills (Trinity)
-
-Task intake and service routing for Docker service projects.
-
-- **Invocation**: `/scope "task description"`
-- **Purpose**: Detect intent, map to expert service skills, emit structured scope plan
-- **Hook**: None (invoked before investigation/feature/refactor tasks)
-- **Version**: 1.0.0
-
-**Intent Taxonomy**:
-- `investigation` — Errors, failures, issues (default when ambiguous)
-- `feature` — New functionality
-- `refactor` — Restructuring, cleanup
-- `config-change` — Configuration updates
-- `exploration` — Understanding, explanations
-
-**Workflow**:
-1. Read service registry
-2. Detect intent from keywords
-3. Map to registered services
-4. Emit XML scope block with diagnosis → fix → regression-test phases
-
-## Hooks
-
-### Skill-Associated Hooks
-
-**skill-suggestion.py**
-- Skills: `prompt-improving`, `delegating`, `using-quality-gates`
-- Trigger: UserPromptSubmit
-- Purpose: Proactive skill suggestions based on prompt analysis
-- Config: `settings.json` → `skillSuggestions.enabled: true`
-
-**skill-discovery.py**
-- Skills: All `skills/` directory skills
-- Trigger: SessionStart
-- Purpose: Injects summarized skill catalog at session start
-- Config: Auto-wired in `settings.json`
-
-**serena-workflow-reminder.py**
-- Skill: `using-serena-lsp`
-- Trigger: SessionStart, PreToolUse (Read|Edit)
-- Purpose: Enforces semantic Serena LSP workflow
-
-**gitnexus-hook.cjs**
-- Skills: `gitnexus/*` (4 skills)
-- Trigger: PreToolUse (Grep|Glob|Bash)
-- Purpose: Enriches tool calls with knowledge graph context via `gitnexus augment`
-- Config: Auto-wired in `settings.json`
-
-**gitnexus-impact-reminder.py**
-- Trigger: UserPromptSubmit
-- Purpose: Reminds to run impact analysis before editing code symbols
-- Config: Auto-wired in `settings.json`
-
-### Standalone Hooks
-
-**main-guard.mjs**
-- Trigger: PreToolUse (Write|Edit|MultiEdit|Serena edit tools)
-- Purpose: Blocks direct edits on protected branches (main/master) with structured deny output
-
-**main-guard-post-push.mjs**
-- Trigger: PostToolUse (Bash: git push)
-- Purpose: After pushing feature branch, reminds to open PR, merge, and sync local
-
-**type-safety-enforcement.py**
-- Trigger: PreToolUse (Bash|Edit|Write)
-- Purpose: Enforce type safety in Python code
-
-**agent_context.py**
-- Trigger: Support module used by Python hooks
-- Purpose: Shared hook input/output helper
-
-**beads gate hooks** (installed with `xtrm install all`, or included when beads+dolt is available):
-- `beads-edit-gate.mjs` (PreToolUse) — Blocks writes without active issue claim
-- `beads-commit-gate.mjs` (PreToolUse) — Blocks commits with unresolved session claim
-- `beads-stop-gate.mjs` (Stop) — Blocks session stop while claim remains open
-- `beads-close-memory-prompt.mjs` (PostToolUse) — Prompts memory handoff after `bd close`
-
-### PostToolUse Hooks
-- `main-guard-post-push.mjs` — After feature-branch push, reminds PR/merge/sync steps
-
-## Project Skills
-
-**Project Skills** are modular, plug-and-play tool packages that extend Claude's capabilities for specific workflows. Each skill includes pre-configured hooks, context skills, and documentation.
-
-### Available Project Skills
-
-| Skill | Description | Hook Type |
-|-------|-------------|-----------|
-| `quality-gates` | Unified PostToolUse code quality hooks — runs linting, type checking, and formatting on every edit | PostToolUse |
-| `service-skills-set` | Docker service expertise — gives Claude persistent knowledge about your services | SessionStart, PreToolUse, PostToolUse |
-| `tdd-guard` | Enforce Test-Driven Development — blocks implementation until failing tests exist | SessionStart, PreToolUse, UserPromptSubmit |
-
-### Installing Project Skills
-
-```bash
-# List available project skills
-xtrm install project list
-
-# Install a specific skill into your current project
-cd my-project
-xtrm install project quality-gates      # Unified quality gates (Python + TypeScript)
-xtrm install project service-skills-set # Docker service expertise
-xtrm install project tdd-guard          # TDD enforcement
-xtrm install project all                # Install every available project skill
-xtrm install project '*'                # Same as above; quote to avoid shell expansion
-```
-
-**Note:** Project skills install Claude hooks and skills into your project's `.claude/` directory. Some skills require additional manual setup (e.g., installing npm packages or Python dependencies). Always read the documentation at `.claude/docs/<skill>-readme.md` after installation.
+### orchestrating-agents
+Orchestrates task handoff and "handshaking" between Gemini and Qwen CLI agents.
+- **Invocation**: `/orchestrate [workflow-type] [task]`
+- **Purpose**: Facilitates multi-model collaboration, adversarial reviews, and deep cross-validation of complex logic. Workflows include collaborative design, adversarial security review, troubleshooting, and single handshakes.
 
 ---
 
@@ -263,530 +94,69 @@ xtrm install project '*'                # Same as above; quote to avoid shell ex
 
 ### 🚀 Quick One-Time Run
 
-Run the latest version directly from GitHub without installing:
-
 ```bash
-npx -y github:Jaggerxtrm/xtrm-tools install
+npx -y github:Jaggerxtrm/xtrm-tools install all
 ```
 
-This temporarily clones, builds, and runs the installation to your Claude Code environment.
+### 🛠️ Global Installation (Recommended)
 
----
-
-### 🛠️ Global Installation (Recommended for repeated use)
-
-Install globally from GitHub:
-
-```bash
-npm install -g github:Jaggerxtrm/xtrm-tools
-```
-
-Now you can run `xtrm` from anywhere:
-```bash
-xtrm install          # Install/update tools
-xtrm status           # Check for changes
-xtrm install project tdd-guard  # Install project skills
-```
-
-**To update later:**
 ```bash
 npm install -g github:Jaggerxtrm/xtrm-tools@latest
+
+xtrm install all            # Install to all global targets
+xtrm project init           # Setup current project (runs gitnexus analyze + bd init)
+xtrm install project all    # Install all project-specific skills
 ```
-
----
-
-### 🔧 Local Installation (for development)
-
-```bash
-git clone https://github.com/Jaggerxtrm/xtrm-tools.git
-cd xtrm-tools
-npm install       # installs root + cli workspace dependencies
-npm run build     # compiles CLI TypeScript to cli/dist/
-npm link          # registers `xtrm` globally
-```
-
-Root package is the single entrypoint for dev/publish:
-- `npm install` (root) installs everything, including `cli/`
-- `npm run build` (root) builds the CLI bundle
-- `npm test` (root) runs CLI tests
-- `npm publish` (root) runs `prepublishOnly` build, then publishes
 
 ---
 
 ## CLI User Guide
 
-### Synopsis
-
 ```
 xtrm <command> [options]
 ```
 
-| Command   | Description                      |
-| --------- | -------------------------------- |
-| `install` | Install/update tools             |
-| `status`  | Show diff without making changes |
-| `reset`   | Clear saved preferences          |
-| `help`    | Show command/component overview  |
-
----
-
-### `xtrm install`
-
-The main command. Detects your agent environments, calculates what's changed, and applies updates.
-
-```bash
-xtrm install                # interactive — prompts for targets and confirmation
-xtrm install all            # install to all Claude Code targets without target prompt
-xtrm install '*'            # same as above; quote * to avoid shell expansion
-xtrm install --dry-run      # preview what WOULD change, write nothing
-xtrm install all --dry-run -y  # non-interactive preview across all Claude targets
-xtrm install -y             # skip confirmation prompts (CI-friendly)
-xtrm install --prune        # also remove system items no longer in the repo
-xtrm install --backport     # reverse direction: copy drifted local edits → repo
-```
-
-**UX Features (v1.6.0+)**:
-- **Listr2 concurrent diff phase**: Parallel environment checks with per-target change counts
-- **cli-table3 plan table**: Formatted table showing Target / + New / ↑ Update / ! Drift / Total
-- **boxen summary card**: Completion summary with green/yellow border based on drift
-- **Themed output**: Semantic colors (success, error, warning, muted, accent) via `theme.ts`
-- **beads+dolt prerequisite flow**: `xtrm install` / `xtrm install all` check workflow backend and can install missing deps
-- **Auto-detection**: Scans Claude Code targets automatically (`~/.claude`, `%APPDATA%/Claude` on Windows) plus the `.agents/skills` cache for skills-only sync
-- **Inline sync**: `status` command offers to apply sync immediately after showing changes
-- **Single confirmation**: See full plan across all targets, confirm once
-- **Safety guards**: Prune mode aborts on read failures; clean errors (no stack traces)
-- **Startup banner**: Professional branding on CLI launch (skip with `--help`/`--version`)
-- **`--json` flag**: Machine-readable output for CI/CD pipelines
-
-**What it syncs per target environment:**
-
-| Item            | Claude Code (full)   | `~/.agents/skills` (skills-only) |
-| --------------- | -------------------- | --------------------------------- |
-| `skills/`       | ✅ copy/symlink       | ✅ direct copy                    |
-| `hooks/`        | ✅ copy/symlink       | ❌ skipped                        |
-| `settings.json` | ✅ safe merge         | ❌ skipped                        |
-| MCP servers     | `mcp add` CLI        | ❌ skipped                        |
-
-**Diff categories shown before sync:**
-
-- `+ missing` — item exists in repo but not in your system (will be added)
-- `↑ outdated` — repo is newer than your system (will be updated)
-- `✗ drifted` — your local copy is newer than the repo (skipped unless `--backport`)
-
-**Safe merge behaviour for `settings.json`:**  
-Protected keys (your local MCP servers, permissions, auth tokens, model preferences) are **never overwritten**. New keys from the repo are merged in non-destructively.
-
-**Sync modes** (saved between runs, prompted on first sync):
-- `copy` — default; plain file copy
-- `symlink` — live symlinks so edits to `skills/` immediately reflect system-wide *(Linux/macOS only; Windows falls back to copy automatically)*
-
----
-
-### `xtrm status`
-
-Read-only diff view with enhanced feedback — no files written:
-
-```bash
-xtrm status       # auto-detects all environments
-xtrm status --json # machine-readable output
-```
-
-**Output includes (v1.7.0+)**:
-- Auto-detected environments: Claude Code targets and the `~/.agents/skills` cache
-- cli-table3 formatted table with per-target change breakdown
-- Last synced time (relative: "3 hours ago")
-- Item counts from manifest (skills, hooks, config)
-- Per-target health: ✓ Up-to-date / ⚠ Pending changes
-- **Inline sync prompt**: "Apply sync now?" with multiselect target choice (Esc to skip)
-- No second diff pass needed — executes directly using pre-computed changeSets
-
----
-
-### `xtrm reset`
-
-Clears saved preferences (sync mode, etc.):
-
-```bash
-xtrm reset
-```
-
----
-
-### Manual Installation (without CLI)
-
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/Jaggerxtrm/xtrm-tools.git
-   cd xtrm-tools
-   ```
-
-2. Copy skills to Claude Code:
-   ```bash
-   cp -r skills/* ~/.claude/skills/
-   ```
-
-3. Copy hooks:
-   ```bash
-   cp hooks/* ~/.claude/hooks/
-   ```
-
----
-
-## Manual Setup for Gemini/Qwen
-
-**ARCHITECTURAL DECISION (v2.0.0):** xtrm-tools no longer provides automated hook translation for Gemini CLI or Qwen CLI. This decision was made because:
-
-1. **Fragile ecosystems:** Hook support in Gemini/Qwen is unofficial and undocumented
-2. **Technical debt:** Maintaining translations introduces breaking changes with upstream updates
-3. **Focus:** We prioritize robust, well-tested Claude Code support
-
-If you use Gemini CLI or Qwen CLI, you can still use xtrm-tools skills and hooks with manual setup:
-
-### For Gemini CLI Users
-
-1. **Copy skills:**
-   ```bash
-   cp -r skills/* ~/.gemini/skills/
-   ```
-
-2. **Configure hooks manually:** Gemini uses `BeforeAgent`, `BeforeTool`, `SessionStart` events. Map Claude hooks as follows:
-   - `UserPromptSubmit` → `BeforeAgent`
-   - `PreToolUse` → `BeforeTool` (translate tool names: `Read`→`read_file`, `Write`→`write_file`, etc.)
-   - `SessionStart` → `SessionStart`
-
-3. **Reference:** See [Gemini CLI documentation](https://github.com/google-gemini/gemini-cli) for hook format.
-
-### For Qwen CLI Users
-
-1. **Copy skills:**
-   ```bash
-   cp -r skills/* ~/.qwen/skills/
-   ```
-
-2. **Configure hooks manually:** Qwen uses similar event names to Claude. Copy hook scripts from `hooks/` and wire them in `~/.qwen/settings.json`.
-
-3. **Reference:** See [Qwen CLI documentation](https://github.com/QwenLM/qwen-cli) for configuration format.
-
-### Limitations
-
-- ❌ No automated sync/updates (must manually copy changes)
-- ❌ No MCP server auto-installation
-- ❌ No project skills support (Claude Code only)
-- ❌ No hook translation (must configure manually)
+| Command | Description |
+|---|---|
+| `install all` | Non-interactive global install to all detected targets (installs `gitnexus` globally) |
+| `install basic` | Interactive global installation |
+| `install project <name>` | Install specific project skills (e.g., `tdd-guard`, `service-skills-set`) |
+| `project init` | Onboarding: runs `gitnexus analyze`, registers MCP, and runs `bd init` |
+| `status` | Read-only diff view showing what would change (with inline sync prompt) |
+| `clean` | Removes orphaned hooks, stale wrappers, and dead skills from your system |
+| `reset` | Clear saved CLI preferences |
 
 ---
 
 ## Configuration
 
-### MCP Servers (Unified CLI Sync)
+### MCP Servers
 
-MCP servers are configured from canonical sources and synced via official CLI commands.
+Unified CLI sync configures core servers securely.
 
-**Core Servers** (installed by default):
-- **serena**: Code analysis (requires `uvx`, auto project detection)
-- **context7**: Documentation lookup (requires API key)
-- **github-grep**: Code search across GitHub
+**Core Servers**:
+- **serena**: Code analysis (requires `uvx`)
+- **context7**: Documentation lookup (requires `CONTEXT7_API_KEY`)
+- **github-grep**: Code search
 - **deepwiki**: Technical documentation
+- **gitnexus**: Knowledge graph code intelligence (registered during `xtrm project init`)
 
-**Optional Servers** (multiselect during sync):
-- **unitAI**: Multi-agent workflow orchestration (requires `npx`)
-- **omni-search-engine**: Local search engine (requires running service on port 8765)
-- **gitnexus**: Knowledge graph code intelligence (requires `npm install -g gitnexus` + `npx gitnexus analyze` per project)
+Configured via `~/.config/xtrm-tools/.env`. Run `xtrm install basic` to sync interactively.
 
-**Configuration Files**:
-- Core: [`config/mcp_servers.json`](config/mcp_servers.json)
-- Optional: [`config/mcp_servers_optional.json`](config/mcp_servers_optional.json)
-- Environment: [`~/.config/xtrm-tools/.env`](~/.config/xtrm-tools/.env) (auto-created)
-
-**Environment Variables**:
-- **Location:** `~/.config/xtrm-tools/.env` (created automatically on first sync)
-- **Required:** `CONTEXT7_API_KEY` for context7 server
-- **Validation:** Interactive prompts for missing API keys during sync
-- **Persistence:** Values preserved across syncs; never overwritten
-- Edit `~/.config/xtrm-tools/.env` to add your API keys manually
-
-**Unified MCP CLI Sync**:
-- Uses official `claude mcp add` / `claude mcp list` commands
-- **Idempotent:** Re-running is always safe — skips already-installed servers
-- **Deduplication:** Prevents same server from syncing N times when multiple dirs selected
-- **Prerequisite auto-install:** Runs `npm install -g gitnexus` automatically when selected
-- **Post-install guidance:** Shows required next steps (e.g., `npx gitnexus analyze`)
-- **Timeout protection:** 10s timeout on CLI calls to prevent hangs
-- **Clean errors:** User-friendly messages (no stack traces)
-
-**Scopes**:
-- Global installs (`xtrm install`, `xtrm install all`, `xtrm install basic`) sync MCP into Claude global config
-- Project installs (`xtrm install project <name|all>`) sync core MCP at project scope (`-s project`)
-
-**Supported Agent**:
-- Claude Code
-
-**Deprecated**:
-- JSON file MCP sync (superseded by official CLI method)
-- Repo `.env` files — use centralized `~/.config/xtrm-tools/.env`
-
-**Documentation**: See [docs/mcp-servers-config.md](docs/mcp-servers-config.md) for complete setup guide.
-
-### Skill Suggestions
-
-Enable/disable proactive skill suggestions:
-
-```json
-// ~/.claude/settings.json
-{
-  "skillSuggestions": {
-    "enabled": true  // Set to false to disable
-  }
-}
-```
-
-### Hook Timeouts
-
-Adjust hook execution timeouts in `settings.json`:
-
-```json
-{
-  "hooks": {
-    "UserPromptSubmit": [{
-      "hooks": [{
-        "timeout": 5000  // Timeout in milliseconds (5000ms = 5 seconds)
-      }]
-    }]
-  }
-}
-```
-
-### Service Skills Set (Trinity) — v1.5.0
-
-Project-specific operational knowledge system for Docker service projects. Gives Claude persistent, service-specific expertise without re-explaining architecture every session.
-
-**Three Workflow Skills (Trinity)**:
-
-| Skill | Role | Invocation |
-|---|---|---|
-| `creating-service-skills` | Builds new skill packages via 3-phase workflow | `/creating-service-skills` |
-| `using-service-skills` | Discovers and activates expert personas | Auto (SessionStart hook) |
-| `updating-service-skills` | Detects drift when code changes | Auto (PostToolUse hook) |
-
-**Five Hooks**:
-
-| Hook | Type | Trigger | Effect |
-|---|---|---|---|
-| `SessionStart` | Claude Code | Session opens | Injects ~150-token service catalog |
-| `PreToolUse` | Claude Code | Read/Write/Edit/Grep/Glob/Bash | Checks territory; injects skill load reminder |
-| `PostToolUse` | Claude Code | Write/Edit | Detects drift; notifies to sync docs |
-| `pre-commit` | Git | `git commit` | Warns if source changed without SSOT update (non-blocking) |
-| `pre-push` | Git | `git push` | Warns if service skills are stale (non-blocking) |
-
-**Generated Skill Package Structure**:
-
-```
-.claude/skills/<service-name>/
-├── SKILL.md                  — architecture, failure modes, common operations
-├── scripts/
-│   ├── health_probe.py       — container status + table freshness
-│   ├── log_hunter.py         — service-specific log analysis
-│   ├── data_explorer.py      — read-only DB inspection
-│   └── <specialist>.py       — service-type-specific inspector
-└── references/
-    ├── deep_dive.md          — Phase 2 research notes
-    └── architecture_ssot.md  — link to project SSOT
-```
-
-**Installation** (run from inside target project):
-
-```bash
-cd ~/projects/my-project
-python3 /path/to/xtrm-tools/project-skills/service-skills-set/install-service-skills.py
-```
-
-- Idempotent — safe to re-run after updates
-- Installs Trinity skills into `.claude/skills/`
-- Wires `settings.json` hooks (SessionStart, PreToolUse, PostToolUse)
-- Activates git hooks (`pre-commit`, `pre-push`)
-
-**Creating a Service Skill** (`/creating-service-skills`):
-
-**Phase 1 — Automated Skeleton**:
-```bash
-python3 scaffolder.py create <service-id> <territory-path> "<description>"
-```
-- Reads `docker-compose*.yml`, `Dockerfile`, dependency files
-- Produces `SKILL.md` with `[PENDING RESEARCH]` markers
-- Generates script stubs in `scripts/`
-- Auto-detects official docs from image tags and package files
-- Creates entry in `.claude/skills/service-registry.json`
-
-**Phase 2 — Agentic Deep Dive**:
-- Uses Serena LSP tools (not raw file reads) for 75-80% token savings
-- Fills every `[PENDING RESEARCH]` marker with actual codebase knowledge
-- Sources troubleshooting tables from real failure modes
-- All scripts support `--json` output
-
-**Phase 3 — Hook Registration**:
-- Verifies `PreToolUse` hook in `.claude/settings.json`
-- Confirms service territory globs in registry
-- Informs user: skill now auto-activates on territory file access and service-name commands
-
-**Auto-activation**:
-Once registered, skills activate automatically when Claude:
-- Operates on files matching territory globs (e.g., `src/auth/**/*.py`)
-- Runs Bash commands mentioning service/container name
-
-**Documentation**: See [project-skills/service-skills-set/service-skills-readme.md](project-skills/service-skills-set/service-skills-readme.md) for complete guide.
-
-## Documentation
-
-### Core Documentation
-- [README.md](README.md) - Main documentation and quick start
-- [CHANGELOG.md](CHANGELOG.md) - Version history and breaking changes
-- [ROADMAP.md](ROADMAP.md) - Future enhancements and planned features
-- [AGENTS.md](AGENTS.md) - GitNexus + bd (beads) quick reference
-- [CLAUDE.md](CLAUDE.md) - Claude Code development guide
-- [hooks.md](hooks.md) - Global hooks module reference
-- [skills.md](skills.md) - Global skills catalog
-- [project-skills.md](project-skills.md) - Project-local skills reference
-- [mcp.md](mcp.md) - MCP servers configuration
-- [testing.md](testing.md) - Production live testing checklist
-
-### Skill Documentation
-- [skills/prompt-improving/README.md](skills/prompt-improving/README.md) - Prompt improvement skill
-- [skills/delegating/SKILL.md](skills/delegating/SKILL.md) - Delegation workflow guide
-- [skills/obsidian-cli/SKILL.md](skills/obsidian-cli/SKILL.md) - Obsidian CLI reference
-- [hooks/README.md](hooks/README.md) - Complete hooks reference
-- [project-skills/service-skills-set/service-skills-readme.md](project-skills/service-skills-set/service-skills-readme.md) - Service Skills Set (Trinity) guide
-
-### MCP Configuration
-- [docs/mcp-servers-config.md](docs/mcp-servers-config.md) - MCP servers setup guide
-- [config/mcp_servers.json](config/mcp_servers.json) - Core MCP servers (canonical source)
-- [config/mcp_servers_optional.json](config/mcp_servers_optional.json) - Optional MCP servers
-
-### Implementation Plans
-- [docs/plans/](docs/plans/) - Design documents and implementation plans
-- [docs/plans/complete/](docs/plans/complete/) - Completed implementation plans
+---
 
 ## Version History
 
-| Version | Date       | Highlights                                         |
-| ------- | ---------- | -------------------------------------------------- |
-| 2.1.9   | 2026-03-15 | Main-guard post-push hook, quality-gates unified, gitnexus impact enforcement |
-| 2.1.8   | 2026-03-13 | Beads gate hooks hardening, service skills trinity updates |
-| 2.1.7   | 2026-03-12 | GitNexus impact analysis hook, onboarding improvements |
-| 2.1.0   | 2026-03-12 | Project skills engine, Claude Code-only focus, CLI rebrand |
-| 1.7.0   | 2026-02-25 | GitNexus integration, unified 3-phase sync, MCP CLI sync, env management |
-| 1.6.0   | 2026-02-24 | Documenting skill hardening (drift detection, INDEX blocks) |
-| 1.5.0   | 2026-02-23 | Service Skills Set (Trinity), git hooks, auto-activation |
-| 1.4.0   | 2026-02-23 | Delegating skill hardening, skill-suggestion hook enhancements |
-| 1.3.0   | 2026-02-22 | CLI UX improvements (spinners, safety, feedback)   |
-| 1.2.0   | 2026-02-21 | CLI rewritten in TypeScript, Commander.js sub-cmds |
-| 1.1.1   | 2026-02-03 | Dynamic path resolution in Sync logic              |
-| 1.1.0   | 2026-02-03 | Vault Sync, Orchestrating-agents loops             |
-| 5.1.0   | 2026-01-30 | Renamed `p` to `prompt-improving`                  |
-| 5.0.0   | 2026-01-30 | Major refactoring, 90% token reduction             |
-| 4.2.0   | Pre-2026   | Feature-rich baseline (155KB)                      |
+| Version | Date | Highlights |
+|---|---|---|
+| 2.1.20 | 2026-03-16 | `xtrm clean` command, compact hook messages, `pruneStaleWrappers` fixes |
+| 2.1.18 | 2026-03-16 | `PreCompact` / `SessionStart` hooks to preserve `in_progress` beads state |
+| 2.1.16 | 2026-03-15 | Removed deprecated skill-suggestion, gitnexus-impact-reminder hooks |
+| 2.1.14 | 2026-03-15 | Rewrote gitnexus-hook as PostToolUse with Serena; added `using-xtrm` skill |
+| 2.1.9 | 2026-03-15 | `main-guard` enforced PR-only workflow, `--squash` requirement, npm publish |
 
-See [CHANGELOG.md](CHANGELOG.md) for complete version history.
-
-## Repository Structure
-
-```
-xtrm-tools/
-├── README.md                    # This file
-├── CHANGELOG.md                 # Version history
-├── ROADMAP.md                   # Future plans
-├── AGENTS.md                    # GitNexus quick reference
-├── CLAUDE.md                    # Claude Code development guide
-│
-├── cli/                         # Config Manager CLI (TypeScript)
-│   ├── src/
-│   │   ├── index.ts             # Entry point (Commander program)
-│   │   ├── commands/            # install.ts, install-project.ts, status.ts, reset.ts, help.ts
-│   │   ├── adapters/            # base, claude, gemini, qwen, registry
-│   │   ├── core/                # context, diff, sync-executor, manifest, rollback
-│   │   ├── utils/               # hash, atomic-config, config-adapter, env-manager, theme…
-│   │   └── types/               # Zod schemas (config.ts) + shared interfaces (models.ts)
-│   ├── dist/                    # Compiled output (generated by `npm run build`)
-│   ├── tsconfig.json
-│   ├── tsup.config.ts
-│   └── package.json
-│
-├── skills/                      # Core agent skills
-│   ├── prompt-improving/        # Prompt improvement skill
-│   ├── delegating/              # Task delegation skill (CCS + unitAI)
-│   ├── orchestrating-agents/    # Multi-agent collaboration skill
-│   ├── using-serena-lsp/        # Serena LSP workflow
-│   ├── documenting/             # Serena SSOT system (with drift detection)
-│   ├── obsidian-cli/            # Obsidian CLI skill
-│   ├── gitnexus/                # GitNexus knowledge graph skills (4 skills)
-│   │   ├── exploring/           # Architecture understanding
-│   │   ├── debugging/           # Bug tracing
-│   │   ├── impact-analysis/     # Blast radius analysis
-│   │   └── refactoring/         # Surgical refactors
-│   ├── clean-code/              # Clean code principles
-│   ├── docker-expert/           # Docker containerization expert
-│   ├── python-testing/          # Python testing strategies
-│   ├── python-type-safety/      # Python type safety
-│   ├── senior-backend/          # Backend development expert
-│   ├── senior-data-scientist/   # Data science expert
-│   ├── senior-devops/           # DevOps expert
-│   ├── senior-security/         # Security engineering expert
-│   ├── skill-creator/           # Skill creation guide
-│   └── find-skills/             # Skill discovery helper
-│
-├── hooks/                       # Claude Code hooks
-│   ├── README.md                # Hooks documentation
-│   ├── skill-suggestion.py      # Skill auto-suggestion
-│   ├── skill-discovery.py       # SessionStart skill catalog injection
-│   ├── serena-workflow-reminder.py # Serena reminder
-│   ├── type-safety-enforcement.py # Type safety
-│   ├── gitnexus/
-│   │   └── gitnexus-hook.cjs    # PreToolUse knowledge graph enrichment
-│   └── main-guard.mjs           # Protected-branch edit guard
-│
-├── config/                      # Canonical configuration
-│   ├── mcp_servers.json         # Core MCP servers
-│   ├── mcp_servers_optional.json # Optional MCP servers (gitnexus, unitAI, omni-search)
-│   └── settings.json            # Base settings template
-│
-├── project-skills/              # Project-specific service skills
-│   └── service-skills-set/      # Trinity system for Docker service projects
-│       ├── install-service-skills.py  # Installer script
-│       ├── service-skills-readme.md   # Complete guide
-│       └── .claude/
-│           ├── settings.json    # Settings template with hooks
-│           ├── creating-service-skills/
-│           ├── using-service-skills/
-│           ├── updating-service-skills/
-│           ├── scoping-service-skills/
-│           └── git-hooks/
-│
-├── docs/                        # Documentation
-│   ├── mcp-servers-config.md    # MCP setup guide
-│   ├── todo.md                  # TODO list
-│   └── plans/                   # Implementation plans
-│       ├── complete/            # Completed plans
-│       └── *.md                 # Active design documents
-│
-└── .github/
-    └── workflows/
-        └── ci.yml               # CI/CD pipeline (lint, test, build)
-```
-
-## Contributing
-
-Contributions are welcome. Please:
-
-1. Follow existing code style
-2. Update documentation for any changes
-3. Test skills and hooks before submitting
-4. Update CHANGELOG.md for all changes
+See [CHANGELOG.md](CHANGELOG.md) for full history.
 
 ## License
 
 MIT License - See LICENSE file for details.
-
-## Credits
-
-- Developed by Dawid Jaggers
-- Serena skills and hooks courtesy of Serena MCP project
-- Built for Claude Code by Anthropic

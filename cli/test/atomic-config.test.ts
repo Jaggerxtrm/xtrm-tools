@@ -81,3 +81,58 @@ describe('deepMergeWithProtection (hooks merge behavior)', () => {
         expect(merged.hooks.SessionStart).toHaveLength(2);
     });
 });
+
+
+describe('deepMergeWithProtection (hooks merge behavior) — matcher dedup', () => {
+    it('keeps two same-script entries separate when their matchers are disjoint', () => {
+        // Simulates config/hooks.json having main-guard wired for write-tools
+        // AND separately for Bash — they must not be merged into one entry
+        const local = {
+            hooks: {
+                PreToolUse: [] as any[],
+            },
+        };
+        const incoming = {
+            hooks: {
+                PreToolUse: [
+                    {
+                        matcher: 'Write|Edit|MultiEdit',
+                        hooks: [{ command: 'node "/hooks/main-guard.mjs"', timeout: 5000 }],
+                    },
+                    {
+                        matcher: 'Bash',
+                        hooks: [{ command: 'node "/hooks/main-guard.mjs"', timeout: 5000 }],
+                    },
+                ],
+            },
+        };
+        const merged = deepMergeWithProtection(local, incoming);
+        const wrappers = merged.hooks.PreToolUse;
+        expect(wrappers).toHaveLength(2);
+        expect(wrappers[0].matcher).toBe('Write|Edit|MultiEdit');
+        expect(wrappers[1].matcher).toBe('Bash');
+    });
+
+    it('still upgrades matcher when entries share at least one common token', () => {
+        const local = {
+            hooks: {
+                PreToolUse: [{
+                    matcher: 'Write|Edit',
+                    hooks: [{ command: 'node "/hooks/main-guard.mjs"' }],
+                }],
+            },
+        };
+        const incoming = {
+            hooks: {
+                PreToolUse: [{
+                    matcher: 'Write|Edit|MultiEdit',
+                    hooks: [{ command: 'node "/hooks/main-guard.mjs"' }],
+                }],
+            },
+        };
+        const merged = deepMergeWithProtection(local, incoming);
+        const wrappers = merged.hooks.PreToolUse;
+        expect(wrappers).toHaveLength(1);
+        expect(wrappers[0].matcher).toContain('MultiEdit');
+    });
+});

@@ -1,4 +1,4 @@
-import { execFile } from "node:child_process";
+import { execFile, spawnSync } from "node:child_process";
 import { promisify } from "node:util";
 
 const execFileAsync = promisify(execFile);
@@ -7,6 +7,7 @@ export interface RunOptions {
 	timeoutMs?: number;
 	cwd?: string;
 	env?: Record<string, string>;
+	input?: string; // Standard input
 }
 
 export interface RunResult {
@@ -17,7 +18,7 @@ export interface RunResult {
 
 export class SubprocessRunner {
 	/**
-	 * Run a command deterministically with a timeout and full output capture.
+	 * Run a command deterministically with a timeout and optional stdin.
 	 */
 	static async run(
 		command: string,
@@ -28,12 +29,30 @@ export class SubprocessRunner {
 		const cwd = options.cwd ?? process.cwd();
 		const env = { ...process.env, ...options.env };
 
+		if (options.input !== undefined) {
+			// Use spawnSync for stdin support if input is provided
+			const result = spawnSync(command, args, {
+				cwd,
+				env,
+				input: options.input,
+				encoding: "utf8",
+				timeout,
+				maxBuffer: 1024 * 1024 * 10,
+			});
+
+			return {
+				code: result.status ?? 1,
+				stdout: (result.stdout ?? "").trim(),
+				stderr: (result.stderr ?? "").trim(),
+			};
+		}
+
 		try {
 			const result = await execFileAsync(command, args, {
 				timeout,
 				cwd,
 				env,
-				maxBuffer: 1024 * 1024 * 10, // 10MB limit
+				maxBuffer: 1024 * 1024 * 10,
 			});
 
 			return {
@@ -42,7 +61,6 @@ export class SubprocessRunner {
 				stderr: result.stderr.trim(),
 			};
 		} catch (error: any) {
-			// execFile throws on non-zero exit or timeout
 			return {
 				code: error.code ?? 1,
 				stdout: (error.stdout ?? "").trim(),

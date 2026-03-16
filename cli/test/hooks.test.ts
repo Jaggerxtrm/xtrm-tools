@@ -812,3 +812,54 @@ describe('hooks.json — beads-compact hooks wiring', () => {
     expect(sessionStart.some((h) => h.script === 'beads-compact-restore.mjs')).toBe(true);
   });
 });
+
+
+// ── beads-gate-messages.mjs — imperative commands ───────────────────────────────────────
+describe('beads-gate-messages.mjs — imperative commands', () => {
+  const messagesPath = path.join(HOOKS_DIR, 'beads-gate-messages.mjs');
+
+  it('editBlockMessage uses --claim syntax, not --status=in_progress', async () => {
+    const { editBlockMessage } = await import(messagesPath);
+    const msg = editBlockMessage('test-session-123');
+    expect(msg).toContain('--claim');
+    expect(msg).not.toContain('--status=in_progress');
+  });
+
+  it('editBlockMessage does not require manual bd kv set', async () => {
+    const { editBlockMessage } = await import(messagesPath);
+    const msg = editBlockMessage('test-session-123');
+    expect(msg).not.toContain('bd kv set');
+  });
+
+  it('editBlockFallbackMessage provides create then claim sequence', async () => {
+    const { editBlockFallbackMessage } = await import(messagesPath);
+    const msg = editBlockFallbackMessage();
+    expect(msg).toContain('bd create');
+    expect(msg).toContain('--claim');
+  });
+
+  it('commitBlockMessage includes the full post-close workflow', async () => {
+    const { commitBlockMessage } = await import(messagesPath);
+    const msg = commitBlockMessage('  ◐ jaggers-123 P2 Fix bug', 'jaggers-123');
+    expect(msg).toContain('bd close');
+    expect(msg).toContain('git add');
+    expect(msg).toContain('git push');
+    expect(msg).toContain('gh pr create');
+  });
+
+  it('stopBlockMessage includes full close-to-merge sequence', async () => {
+    const { stopBlockMessage } = await import(messagesPath);
+    const msg = stopBlockMessage('  ◐ jaggers-123 P2 Fix bug', 'jaggers-123');
+    expect(msg).toContain('bd close');
+    expect(msg).toContain('git push');
+    expect(msg).toContain('gh pr create');
+  });
+
+  it('main-guard.mjs Write block mentions both branch creation and issue claim', () => {
+    const mainGuard = readFileSync(path.join(HOOKS_DIR, 'main-guard.mjs'), 'utf8');
+    // The Write deny reason must guide the agent to create a branch AND claim an issue
+    expect(mainGuard).toContain('git checkout -b feature/');
+    expect(mainGuard).toContain('bd update');
+    expect(mainGuard).toContain('--claim');
+  });
+});

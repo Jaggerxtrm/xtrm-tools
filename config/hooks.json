@@ -37,7 +37,7 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "Bash",
+        "matcher": "Bash|execute_shell_command|bash",
         "script": "beads-claim-sync.mjs",
         "timeout": 5000
       },

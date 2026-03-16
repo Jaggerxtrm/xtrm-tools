@@ -9,10 +9,15 @@ const logger = new Logger({ namespace: "beads" });
 export default function (pi: ExtensionAPI) {
 	const getCwd = (ctx: any) => ctx.cwd || process.cwd();
 	const isBeadsProject = (cwd: string) => fs.existsSync(path.join(cwd, ".beads"));
+	let cachedSessionId: string | null = null;
 
-	// Get session ID from sessionManager (UUID, consistent with hooks)
+	// Resolve a stable session ID across event types.
 	const getSessionId = (ctx: any): string => {
-		return ctx.sessionManager?.getSessionId?.() ?? process.pid.toString();
+		const fromManager = ctx?.sessionManager?.getSessionId?.();
+		const fromContext = ctx?.sessionId ?? ctx?.session_id;
+		const resolved = fromManager || fromContext || cachedSessionId || process.pid.toString();
+		if (resolved && !cachedSessionId) cachedSessionId = resolved;
+		return resolved;
 	};
 
 	const getSessionClaim = async (sessionId: string, cwd: string): Promise<string | null> => {
@@ -33,6 +38,11 @@ export default function (pi: ExtensionAPI) {
 		}
 		return false;
 	};
+
+	pi.on("session_start", async (_event, ctx) => {
+		cachedSessionId = ctx?.sessionManager?.getSessionId?.() ?? ctx?.sessionId ?? ctx?.session_id ?? cachedSessionId;
+		return undefined;
+	});
 
 	pi.on("tool_call", async (event, ctx) => {
 		const cwd = getCwd(ctx);

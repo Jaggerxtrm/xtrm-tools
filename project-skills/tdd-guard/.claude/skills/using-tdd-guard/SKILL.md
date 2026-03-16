@@ -1,3 +1,8 @@
+---
+name: using-tdd-guard
+description: TDD Guard enforces Test-Driven Development workflow in Claude Code. Blocks implementation code until failing tests are written.
+---
+
 # Using TDD Guard
 
 **TDD Guard** enforces Test-Driven Development workflow in Claude Code. It blocks implementation code until failing tests are written.

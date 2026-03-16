@@ -95,8 +95,8 @@ export default function (pi: ExtensionAPI) {
 
 	pi.on("session_start", async (_event, ctx) => {
 		capturedCtx = ctx;
-		// Get session ID from sessionManager (UUID, consistent with hooks)
-		sessionId = ctx.sessionManager?.getSessionId?.() ?? process.pid.toString();
+		// Get session ID from sessionManager/context (prefer UUID, consistent with hooks)
+		sessionId = ctx.sessionManager?.getSessionId?.() ?? ctx.sessionId ?? ctx.session_id ?? process.pid.toString();
 
 		ctx.ui.setFooter((tui, theme, footerData) => {
 			requestRender = () => tui.requestRender();

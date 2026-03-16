@@ -108,4 +108,25 @@ export default function (pi: ExtensionAPI) {
 		}
 		return undefined;
 	});
+
+	// Dual safety net: notify about unclosed claims when session ends
+	const notifySessionEnd = async (ctx: any) => {
+		const cwd = getCwd(ctx);
+		if (!EventAdapter.isBeadsProject(cwd)) return;
+		const sessionId = getSessionId(ctx);
+		const claim = await getSessionClaim(sessionId, cwd);
+		if (claim && ctx.hasUI) {
+			ctx.ui.notify(`Beads: Session ending with active claim [${claim}]`, "warning");
+		}
+	};
+
+	pi.on("agent_end", async (_event, ctx) => {
+		await notifySessionEnd(ctx);
+		return undefined;
+	});
+
+	pi.on("session_shutdown", async (_event, ctx) => {
+		await notifySessionEnd(ctx);
+		return undefined;
+	});
 }

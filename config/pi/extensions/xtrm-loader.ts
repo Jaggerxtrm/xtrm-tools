@@ -40,7 +40,7 @@ export default function (pi: ExtensionAPI) {
 
 		for (const p of roadmapPaths) {
 			if (fs.existsSync(p)) {
-				const content = fs.readFileSync(p, "utf8");
+				const content = await fs.promises.readFile(p, "utf8");
 				contextParts.push(`## Project Roadmap & Architecture (${path.relative(cwd, p)})\n\n${content}`);
 				break; // Only load the first one found
 			}
@@ -51,10 +51,10 @@ export default function (pi: ExtensionAPI) {
 		if (fs.existsSync(rulesDir)) {
 			const ruleFiles = findMarkdownFiles(rulesDir);
 			if (ruleFiles.length > 0) {
-				const rulesContent = ruleFiles.map(f => {
-					const content = fs.readFileSync(path.join(rulesDir, f), "utf8");
+				const rulesContent = (await Promise.all(ruleFiles.map(async f => {
+					const content = await fs.promises.readFile(path.join(rulesDir, f), "utf8");
 					return `### Rule: ${f}\n${content}`;
-				}).join("\n\n");
+				}))).join("\n\n");
 				contextParts.push(`## Project Rules\n\n${rulesContent}`);
 			}
 		}

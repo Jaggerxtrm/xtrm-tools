@@ -26,10 +26,19 @@ export default function (pi: ExtensionAPI) {
 		blocked: "●",
 		closed: "✓",
 	};
+	// Chip background colours (raw ANSI — theme has no bg() API)
+	const CHIP_BG_NEUTRAL  = "\x1b[48;5;238m"; // dark gray
+	const CHIP_BG_ACTIVE   = "\x1b[48;5;39m";  // blue
+	const CHIP_BG_BLOCKED  = "\x1b[48;5;88m";  // red
+	const CHIP_FG          = "\x1b[38;5;15m";  // white
+	const CHIP_RESET       = "\x1b[0m";
+	const chip = (text: string, bg = CHIP_BG_NEUTRAL): string =>
+		`${bg}${CHIP_FG} ${text} ${CHIP_RESET}`;
+
 	const STATUS_BG: Record<string, string> = {
-		open: "\x1b[48;5;238m",
-		in_progress: "\x1b[48;5;39m",
-		blocked: "\x1b[48;5;88m",
+		open: CHIP_BG_NEUTRAL,
+		in_progress: CHIP_BG_ACTIVE,
+		blocked: CHIP_BG_BLOCKED,
 	};
 
 	let capturedCtx: any = null;
@@ -84,11 +93,11 @@ export default function (pi: ExtensionAPI) {
 		const { claimId, shortId, status, openCount } = beadState;
 		if (claimId && shortId && status) {
 			const icon = STATUS_ICONS[status] ?? "?";
-			const bg = STATUS_BG[status] ?? "\x1b[48;5;238m";
-			return `${bg}\x1b[38;5;15m bd:${shortId}${icon} \x1b[0m`;
+			const bg = STATUS_BG[status] ?? CHIP_BG_NEUTRAL;
+			return chip(`bd:${shortId}${icon}`, bg);
 		}
 		if (openCount > 0) {
-			return `\x1b[48;5;238m\x1b[38;5;15m bd:${openCount}${STATUS_ICONS.open} \x1b[0m`;
+			return chip(`bd:${openCount}${STATUS_ICONS.open}`);
 		}
 		return "";
 	};
@@ -108,7 +117,8 @@ export default function (pi: ExtensionAPI) {
 				render(width: number): string[] {
 					refreshBeadState().catch(() => {});
 
-					const brand = "\x1b[1m" + theme.fg("accent", "XTRM") + "\x1b[22m";
+					const BOLD = "\x1b[1m", BOLD_OFF = "\x1b[22m";
+					const brand = `${BOLD}${theme.fg("accent", "XTRM")}${BOLD_OFF}`;
 
 					const usage = ctx.getContextUsage();
 					const pct = usage?.percent ?? 0;
@@ -123,7 +133,7 @@ export default function (pi: ExtensionAPI) {
 					const branchStr = branch ? theme.fg("accent", `⎇ ${branch}`) : "";
 
 					const modelId = ctx.model?.id || "no-model";
-					const modelChip = `\x1b[48;5;238m\x1b[38;5;15m ${modelId} \x1b[0m`;
+					const modelChip = chip(modelId);
 
 					const sep = theme.fg("dim", " | ");
 

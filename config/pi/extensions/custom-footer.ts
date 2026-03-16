@@ -31,7 +31,7 @@ export default function (pi: ExtensionAPI) {
 	};
 	const STATUS_BG: Record<string, string> = {
 		open: "\x1b[48;5;238m",
-		in_progress: "\x1b[48;5;28m",
+		in_progress: "\x1b[48;5;39m",
 		blocked: "\x1b[48;5;88m",
 	};
 
@@ -126,11 +126,15 @@ export default function (pi: ExtensionAPI) {
 
 					const sep = theme.fg("dim", " | ");
 
-					const leftParts = [brand, modelStr, usageStr, cwdStr];
-					if (branchStr) leftParts.push(branchStr);
-
+					// XTRM+model together, then sep, usage, sep, cwd, sep, branch+beads together
+					// Model with same styling as unclaimed issue chip (gray bg, white text)
+					const modelChip = `\x1b[48;5;238m\x1b[38;5;15m ${modelId} \x1b[0m`;
+					const brandModel = `${brand} ${modelChip}`;
+					const leftParts = [brandModel, usageStr, cwdStr];
+					
 					const beadChip = buildBeadChip();
-					if (beadChip) leftParts.push(beadChip);
+					const branchWithChip = branchStr ? `${branchStr} ${beadChip}`.trim() : beadChip;
+					if (branchWithChip) leftParts.push(branchWithChip);
 
 					const left = leftParts.join(sep);
 					return [truncateToWidth(left, width)];

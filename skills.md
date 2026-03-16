@@ -14,35 +14,34 @@ Use this module when you need:
 ## Runtime Model
 
 1. `xtrm install all` or `xtrm install basic` syncs skill folders to Claude targets.
-2. At session start, `hooks/skill-discovery.py` scans installed skills.
+2. At session start, the `using-xtrm` operating manual provides context for the toolset.
 3. The agent gets a summarized skill catalog and can activate relevant skills by user intent.
-4. Some hooks (for example `skill-suggestion.py`) proactively suggest specific skills.
+4. *Note: As of v2.1.16, automatic skill discovery (`skill-discovery.py`) and proactive suggestion hooks (`skill-suggestion.py`) were removed in favor of explicit invocation.*
 
-## Skill Catalog (Current)
+## Core Global Skills
+
+The following skills are fundamental to the xtrm architecture and task execution:
 
 | Skill | Primary Use |
 |---|---|
-| `clean-code` | Coding standards and maintainability choices |
-| `delegating` | Route work to external specialist agents |
-| `docker-expert` | Dockerfile/compose/container optimization |
-| `documenting` | SSOT documentation lifecycle and drift checks |
-| `find-skills` | Discover/install missing skills |
-| `gitnexus-debugging` | Trace failures through call chains |
-| `gitnexus-exploring` | Explore unfamiliar architecture |
-| `gitnexus-impact-analysis` | Blast-radius analysis before edits |
-| `gitnexus-refactoring` | Safer symbol-level refactors |
-| `hook-development` | Build and wire Claude hooks |
+| **`documenting`** | Maintains Single Source of Truth (SSOT) documentation system with drift detection via `tracks:` frontmatter, and auto-generated INDEX tables. |
+| **`delegating`** | Routes work to external specialist agents (cost-optimized GLM/Gemini for simple tasks, multi-agent workflows for complex tasks) before working in the main session. |
+| **`orchestrating-agents`** | Multi-agent handoff and review loops (handshaking, adversarial reviews, collaborative design) between Gemini and Qwen CLI agents. |
+
+## Specialized Global Skills
+
+Additional workflows included in the `skills/` catalog (managed separately):
+
+| Skill | Primary Use |
+|---|---|
+| `gitnexus-*` | Knowledge graph skills (exploring, debugging, impact-analysis, refactoring) |
 | `obsidian-cli` | Obsidian vault operations from CLI |
-| `orchestrating-agents` | Multi-agent handoff and review loops |
 | `prompt-improving` | Improve prompts into structured specs |
-| `python-testing` | Pytest strategy and test architecture |
-| `senior-backend` | API/business-logic/backend patterns |
-| `senior-data-scientist` | Modeling, experiments, inference |
-| `senior-devops` | CI/CD, infra, deployment workflows |
-| `senior-security` | AppSec and threat-focused review |
+| `hook-development` | Build and wire Claude hooks |
 | `skill-creator` | Author and evolve skills systematically |
-| `using-TDD` | Test-first coding workflow |
-| `using-serena-lsp` | Semantic-edit workflow using Serena |
+| `find-skills` | Discover/install missing skills |
+
+*(Note: Domain-specific expert skills such as `docker-expert`, `senior-backend`, `senior-data-scientist`, `python-testing`, etc., are also available but serve as advisory personas rather than core workflow orchestrators).*
 
 ## Authoring Contract
 
@@ -67,16 +66,17 @@ Authoring rules:
 xtrm install basic
 xtrm install all
 xtrm status
+xtrm clean
 ```
 
 Use `xtrm status` after changes to ensure skill files are in sync.
+Use `xtrm clean` to remove orphaned skills or stale configuration wrappers.
 
 ## Troubleshooting
 
 - Skill not appearing in sessions:
   - verify folder contains `SKILL.md`
   - verify frontmatter has `name` and `description`
-  - confirm `skill-discovery.py` is installed and wired in Claude settings
 - Wrong skill being suggested:
   - tighten the first sentence of `description` to reduce ambiguity
   - check overlap with other skills' trigger language
@@ -87,8 +87,3 @@ Use `xtrm status` after changes to ensure skill files are in sync.
 - Hooks behavior: `hooks.md`
 - Project-local skills: `project-skills.md`
 - MCP layer: `mcp.md`
-
-## Verified Completed Issues (2026-03-13)
-
-- `jaggers-agent-tools-cgv`: aligned service-skills guidance with repository skill-creator baseline
-- `jaggers-agent-tools-93d`: style pass across remaining service-skills documentation

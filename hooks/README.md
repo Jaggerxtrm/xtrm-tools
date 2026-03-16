@@ -1,350 +1,71 @@
 # Hooks
 
-Claude Code hooks that extend agent behavior with automated checks, suggestions, and workflow enhancements.
+Claude Code hooks that extend agent behavior with automated checks, workflow enhancements, and safety guardrails.
 
 ## Overview
 
-Hooks intercept specific events in the Claude Code lifecycle to provide:
-- Proactive skill suggestions
-- Safety guardrails (venv enforcement, type checking)
-- Workflow reminders
-- Status information
+Hooks intercept specific events in the Claude Code lifecycle. Following architecture decisions in v2.0.0+, the hook ecosystem is designed exclusively for Claude Code.
 
-## Skill-Associated Hooks
+*Note: In v2.1.15+, several older hooks (`skill-suggestion.py`, `skill-discovery.py`, `gitnexus-impact-reminder.py`, and `type-safety-enforcement.py`) were removed or superseded by native capabilities, CLI commands, and consolidated quality gates.*
 
-### skill-suggestion.py
-
-**Purpose**: Proactively suggests `/prompt-improving` or `/delegating` based on prompt analysis.
-
-**Trigger**: UserPromptSubmit
-
-**Skills**: 
-- `prompt-improving` - Suggested for short/generic prompts
-- `delegating` - Suggested for simple tasks or explicit delegation requests
-
-**Configuration**:
-```json
-{
-  "hooks": {
-    "UserPromptSubmit": [{
-      "hooks": [{
-        "type": "command",
-        "command": "/home/user/.claude/hooks/skill-suggestion.py",
-        "timeout": 5000  // Claude: seconds (5000s), Gemini: milliseconds (5s)
-      }]
-    }]
-  },
-  "skillSuggestions": {
-    "enabled": true
-  }
-}
-```
-
-### skill-discovery.py
-
-**Purpose**: Scans the `@skills/` directory for `SKILL.md` files and injects a summarized list of all available local skills into the agent's context at the start of a session.
-
-**Trigger**: SessionStart
-
-**Skills**: All skills found in the repository's `skills/` directory.
-
-**Configuration**:
-```json
-{
-  "hooks": {
-    "SessionStart": [{
-      "hooks": [{
-        "type": "command",
-        "command": "/home/user/.claude/hooks/skill-discovery.py",
-        "timeout": 5000
-      }]
-    }]
-  }
-}
-```
-
-### serena-workflow-reminder.py
-
-**Purpose**: Enforces semantic workflow using "Using Serena LSP".
-
-**Triggers**: 
-- `SessionStart`: Injects skill context.
-- `PreToolUse` (Read|Edit): Blocks inefficient usage.
-
-**Skill**: `using-serena-lsp`
-
-**Configuration**:
-```json
-{
-  "hooks": {
-    "SessionStart": [{
-      "hooks": [{ "type": "command", "command": "/home/user/.claude/hooks/serena-workflow-reminder.py" }]
-    }],
-    "PreToolUse": [{
-      "matcher": "Read|Edit",
-      "hooks": [{ "type": "command", "command": "/home/user/.claude/hooks/serena-workflow-reminder.py" }]
-    }]
-  }
-}
-```
-
-## Standalone Hooks
-
-### pip-venv-guard.py
-
-**Purpose**: Prevents accidental `pip install` outside virtual environments.
-
-**Trigger**: PreToolUse (Bash)
-
-**Configuration**:
-```json
-{
-  "hooks": {
-    "PreToolUse": [{
-      "matcher": "Bash",
-      "hooks": [{
-        "type": "command",
-        "command": "/home/user/.claude/hooks/pip-venv-guard.py",
-        "timeout": 3000  // 3 seconds in milliseconds (both Claude & Gemini)
-      }]
-    }]
-  }
-}
-```
-
-### type-safety-enforcement.py
-
-**Purpose**: Enforces type safety checks in Python code before execution.
-
-**Trigger**: PreToolUse (Bash, Edit, Write)
-
-**Configuration**:
-```json
-{
-  "hooks": {
-    "PreToolUse": [{
-      "matcher": "Bash|Edit|Write",
-      "hooks": [{
-        "type": "command",
-        "command": "/home/user/.claude/hooks/type-safety-enforcement.py",
-        "timeout": 10000  // 10 seconds in milliseconds (both Claude & Gemini)
-      }]
-    }]
-  }
-}
-```
-
-### statusline.js
-
-**Purpose**: Displays custom status line information.
-**Trigger**: StatusLine
-
-## Workflow Enforcement Hooks (JavaScript)
-
-Installed globally to `~/.claude/hooks/` by `xtrm install`. Require Node.js.
+## Project Hooks
 
 ### main-guard.mjs
 
-**Purpose**: Blocks direct file edits and dangerous git operations on protected branches (`main`/`master`). Enforces the feature-branch → PR workflow.
+**Purpose**: Enforces PR-only merge workflow with full git protection. Blocks direct commits and dangerous `git checkout`, `git reset`, and file writes via Bash on protected branches (`main`/`master`).
 
-**Trigger**: PreToolUse (`Edit|Write|MultiEdit|NotebookEdit|mcp__serena__rename_symbol|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol|Bash`)
+**Trigger**: PreToolUse (Write|Edit|MultiEdit|Serena edit tools|Bash)
 
-**Blocks**:
-- Write/Edit/MultiEdit/NotebookEdit on protected branches
-- `git commit` directly on protected branches
-- `git push` to protected branches
+**Configuration**: Installed automatically to protect the main branch from unreviewed changes.
 
-**Configuration** (global Claude config):
+### main-guard-post-push.mjs
+
+**Purpose**: Workflow enforcement. After pushing a feature branch, reminds to open a PR, merge using `gh pr merge --squash`, and sync local via `git reset --hard origin/main`.
+
+**Trigger**: PostToolUse (Bash: git push)
+
+### gitnexus-hook.cjs
+
+**Purpose**: Enriches tool calls with knowledge graph context via `gitnexus augment`. Now supports Serena tools and uses a deduplication cache for efficiency.
+
+**Trigger**: PostToolUse (Grep|Glob|Bash|Serena edit tools)
+
+## Beads Issue Tracking Gates
+
+The beads gate hooks integrate the `bd` (beads) issue tracker directly into Claude's workflow, ensuring no code changes happen without an active ticket.
+
+**Installation**: Installed with `xtrm install all` or included when `beads`+`dolt` is available.
+
+### Core Gates
+- **`beads-edit-gate.mjs`** (PreToolUse) — Blocks writes/edits without an active issue claim.
+- **`beads-commit-gate.mjs`** (PreToolUse) — Blocks commits with an unresolved session claim.
+- **`beads-stop-gate.mjs`** (Stop) — Blocks session stop while a claim remains open.
+- **`beads-close-memory-prompt.mjs`** (PostToolUse) — Prompts memory handoff after `bd close`.
+
+### Compaction & State Preservation (v2.1.18+)
+- **`beads-pre-compact.mjs`** (PreCompact) — Saves the currently `in_progress` beads state before Claude clears context.
+- **`beads-session-start.mjs`** (SessionStart) — Restores the `in_progress` state when the session restarts after compaction.
+
+*Note: As of v2.1.18+, hook blocking messages are quieted and compacted to save tokens.*
+
+## Hook Timeouts
+
+Adjust hook execution timeouts in `settings.json` if commands take longer than expected:
+
 ```json
 {
   "hooks": {
-    "PreToolUse": [{
-      "matcher": "Edit|Write|MultiEdit|NotebookEdit|mcp__serena__rename_symbol|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol|Bash",
-      "hooks": [{ "type": "command", "command": "node \"~/.claude/hooks/main-guard.mjs\"", "timeout": 5000 }]
+    "PostToolUse": [{
+      "hooks": [{
+        "timeout": 5000  // Timeout in milliseconds (5000ms = 5 seconds)
+      }]
     }]
   }
 }
 ```
 
----
+## Creating Custom Hooks
 
-### main-guard-post-push.mjs
+To create new project-specific hooks, use the `hook-development` global skill. Follow the canonical structure defined in the `xtrm-tools` core libraries.
 
-**Purpose**: After a successful `git push` from a non-protected branch, injects a reminder for the next PR workflow steps.
-
-**Trigger**: PostToolUse (`Bash`) — only fires when command matches `git push` and appears successful.
-
-**Behavior**:
-- No blocking (informational only)
-- Skips protected branches (`main`/`master`)
-- Skips explicit pushes targeting protected branches
-
-**Guidance injected**:
-- `gh pr create --fill`
-- `gh pr merge --squash`
-- `git checkout main && git pull --ff-only`
-- Reminder to keep beads issue state updated
-
----
-
-### beads-gate-utils.mjs
-
-**Purpose**: Shared utility module imported by all beads gate hooks. Not registered as a hook itself.
-
-**Exports**: `resolveCwd`, `isBeadsProject`, `getSessionClaim`, `getTotalWork`, `getInProgress`, `clearSessionClaim`, `withSafeBdContext`
-
-**Requires**: `bd` (beads CLI), `dolt`
-
----
-
-### beads-edit-gate.mjs
-
-**Purpose**: Blocks file edits when the current session has not claimed a beads issue via `bd kv`. Prevents free-riding in multi-agent and multi-session scenarios.
-
-**Trigger**: PreToolUse (`Edit|Write|MultiEdit|NotebookEdit|mcp__serena__rename_symbol|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol`)
-
-**Behavior**:
-- Session has claim (`bd kv get "claimed:<session_id>"`) → allow
-- No claim + no trackable work → allow (clean-start state)
-- No claim + open/in_progress issues exist → block
-- Falls back to global in_progress check when `session_id` is absent
-
-**Requires**: `bd`, `dolt`
-
----
-
-### beads-commit-gate.mjs
-
-**Purpose**: Blocks `git commit` when the current session still has an unclosed beads claim.
-
-**Trigger**: PreToolUse (`Bash`) — only fires when command matches `git commit`
-
-**Requires**: `bd`, `dolt`
-
----
-
-### beads-stop-gate.mjs
-
-**Purpose**: Blocks the agent from stopping when the current session has an unclosed beads claim.
-
-**Trigger**: Stop
-
-**Requires**: `bd`, `dolt`
-
----
-
-### beads-close-memory-prompt.mjs
-
-**Purpose**: After `bd close`, clears the session's kv claim and injects a reminder to capture knowledge before moving on.
-
-**Trigger**: PostToolUse (`Bash`) — only fires when command matches `bd close`
-
-**Requires**: `bd`, `dolt`
-
----
-
-## Beads claim workflow
-
-```bash
-# Claim an issue before editing
-bd update <id> --status=in_progress
-bd kv set "claimed:<session_id>" "<id>"
-
-# Edit files freely
-# ...
-
-# Close when done — hook auto-clears the claim
-bd close <id>
-```
-
----
-
-## Installation
-
-Use `xtrm install` to deploy all hooks automatically. For manual setup:
-
-1. Copy hooks to the global Claude Code directory:
-   ```bash
-   cp hooks/*.mjs hooks/*.py ~/.claude/hooks/
-   ```
-
-2. Make scripts executable:
-   ```bash
-   chmod +x ~/.claude/hooks/*.mjs ~/.claude/hooks/*.py
-   ```
-
-3. Merge hook entries into `~/.claude/settings.json`.
-
-4. Restart Claude Code.
-
----
-
-## Beads Hooks Architecture
-
-The beads gate hooks are organized into three layers:
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        HOOK ENTRYPOINTS                         │
-│  (thin wrappers - just parse, call core, emit, exit)           │
-├──────────────────┬──────────────────┬──────────────────────────┤
-│ beads-edit-gate  │ beads-commit-gate│ beads-stop-gate         │
-│ beads-memory-gate│                  │                          │
-└────────┬─────────┴────────┬─────────┴─────────────┬────────────┘
-         │                  │                       │
-         ▼                  ▼                       ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    beads-gate-core.mjs                          │
-│  Pure decision functions - no I/O, return {allow, reason}      │
-├─────────────────────────────────────────────────────────────────┤
-│ • readHookInput()          → parsed input or null              │
-│ • resolveSessionContext()  → {cwd, sessionId, isBeadsProject}  │
-│ • resolveClaimAndWorkState() → {claimed, claimId, work}        │
-│ • decideEditGate()         → {allow: bool, reason?: string}    │
-│ • decideCommitGate()       → {allow: bool, reason?: string}    │
-│ • decideStopGate()         → {allow: bool, reason?: string}    │
-└─────────────────────────────────────────────────────────────────┘
-         │
-         ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                  beads-gate-messages.mjs                        │
-│  Centralized message templates                                  │
-├─────────────────────────────────────────────────────────────────┤
-│ • WORKFLOW_STEPS          - full 7-step workflow                │
-│ • SESSION_CLOSE_PROTOCOL  - stop gate steps                     │
-│ • editBlockMessage(sessionId)                                   │
-│ • commitBlockMessage(summary, claimed)                          │
-│ • stopBlockMessage(summary, claimed)                            │
-│ • memoryPromptMessage()                                         │
-└─────────────────────────────────────────────────────────────────┘
-         │
-         ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    beads-gate-utils.mjs                         │
-│  Low-level adapters - bd CLI, shell, fs operations             │
-├─────────────────────────────────────────────────────────────────┤
-│ • resolveCwd(input)                                             │
-│ • isBeadsProject(cwd)                                           │
-│ • getSessionClaim(sessionId, cwd)                               │
-│ • getTotalWork(cwd), getInProgress(cwd)                        │
-│ • clearSessionClaim(sessionId, cwd)                             │
-│ • withSafeBdContext(fn)                                         │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### Where to Make Changes
-
-| Change type | File to edit |
-|-------------|--------------|
-| Policy logic (when to block/allow) | `beads-gate-core.mjs` |
-| User-facing messages | `beads-gate-messages.mjs` |
-| bd CLI integration | `beads-gate-utils.mjs` |
-| Hook registration/wiring | Entrypoints (rarely needed) |
-
-### Exit Semantics
-
-All hooks follow strict exit semantics:
-- `exit 0` — Allow the operation
-- `exit 2` — Block with message shown to Claude
-
-The core functions are pure and never call `process.exit()`. Entrypoints are responsible for side effects.
+For debugging orphaned hooks, use `xtrm clean`.

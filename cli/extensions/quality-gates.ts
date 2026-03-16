@@ -1,5 +1,5 @@
 import type { ExtensionAPI, ToolResultEvent } from "@mariozechner/pi-coding-agent";
-import { SubprocessRunner, EventAdapter, Logger } from "./core";
+import { SubprocessRunner, EventAdapter, Logger } from "./core/lib";
 import * as path from "node:path";
 import * as fs from "node:fs";
 

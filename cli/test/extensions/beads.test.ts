@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ExtensionHarness } from "./extension-harness";
 import beadsExtension from "../../extensions/beads";
-import { SubprocessRunner } from "../../extensions/core";
+import { SubprocessRunner } from "../../extensions/core/lib";
 import * as fs from "node:fs";
 
-vi.mock("../../extensions/core", async () => {
+vi.mock("../../extensions/core/lib", async () => {
 	return {
 		SubprocessRunner: {
 			run: vi.fn(),

@@ -1,6 +1,6 @@
 import type { ExtensionAPI, ToolResultEvent } from "@mariozechner/pi-coding-agent";
 import { isBashToolResult } from "@mariozechner/pi-coding-agent";
-import { SubprocessRunner, Logger } from "./core";
+import { SubprocessRunner, Logger } from "./core/lib";
 
 const logger = new Logger({ namespace: "main-guard-post-push" });
 

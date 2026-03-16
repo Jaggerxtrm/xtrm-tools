@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ExtensionHarness } from "./extension-harness";
 import mainGuardExtension from "../../extensions/main-guard";
-import { SubprocessRunner } from "../../extensions/core";
+import { SubprocessRunner } from "../../extensions/core/lib";
 
-vi.mock("../../extensions/core", async () => {
+vi.mock("../../extensions/core/lib", async () => {
 	return {
 		SubprocessRunner: {
 			run: vi.fn(),

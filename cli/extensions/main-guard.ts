@@ -1,6 +1,6 @@
 import type { ExtensionAPI, ToolCallEvent } from "@mariozechner/pi-coding-agent";
 import { isToolCallEventType } from "@mariozechner/pi-coding-agent";
-import { SubprocessRunner, EventAdapter, Logger } from "./core";
+import { SubprocessRunner, EventAdapter, Logger } from "./core/lib";
 
 const logger = new Logger({ namespace: "main-guard" });
 

@@ -1,7 +1,7 @@
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { Logger } from "./core";
+import { Logger } from "./core/lib";
 
 const logger = new Logger({ namespace: "xtrm-loader" });
 

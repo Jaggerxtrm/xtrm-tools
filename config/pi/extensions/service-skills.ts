@@ -1,6 +1,6 @@
 import type { ExtensionAPI, ToolCallEvent, ToolResultEvent } from "@mariozechner/pi-coding-agent";
 import { isToolCallEventType, isBashToolResult } from "@mariozechner/pi-coding-agent";
-import { SubprocessRunner, Logger } from "./core";
+import { SubprocessRunner, Logger } from "./core/lib";
 import * as path from "node:path";
 import * as fs from "node:fs";
 

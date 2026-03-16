@@ -54,19 +54,30 @@ This specification defines the migration path from Claude Code hooks to Pi Codin
 
 ---
 
-## 4. `tdd-guard`
+## 4. `tdd-guard` (DEFERRED)
 
 ### Current Behavior Contract
-- **PreToolUse:** Blocks implementation edits (`Write`, `Edit`) if a failing test has not been executed yet in the session.
-- **UserPromptSubmit:** Listens for `tdd-guard on/off` commands.
-- **SessionStart:** Initializes state.
+- **PreToolUse:** Blocks implementation edits if a failing test has not been executed yet in the session.
+- **Status:** Deferred based on empirical research. TDD-guard will be refactored into a non-blocking reminder in the future. The migration of this specific hook is paused.
+
+---
+
+## 5. `beads-gates` (Issue Tracking Integration)
+
+### Current Behavior Contract
+- **PreToolUse:** Blocks file edits (`beads-edit-gate`) if no issue is currently claimed via `bd`. Blocks `git commit` (`beads-commit-gate`) if an issue claim is open.
+- **PostToolUse:** Reminds the user to capture memories after `bd close` (`beads-memory-gate`).
+- **Stop:** Blocks Claude Code from exiting if a claim is still open (`beads-stop-gate`).
+- **PreCompact / SessionStart:** Preserves `in_progress` beads state across LLM conversation compactions.
 
 ### Target Pi Mapping
 - **Pi Events:**
-  - **Commands:** Use Pi's `pi.registerCommand({ name: "tdd", ... })` instead of regex parsing `UserPromptSubmit`.
-  - **State Tracking:** Track failing tests by listening to `tool_result` on `bash` commands (looking for test runner output). Store this in a module-level variable or `sessionManager` context.
-  - **Enforcement:** `tool_call` (on `edit`/`write`). If state says "no failing test seen", return `{ block: true, reason: "TDD Guard: write a failing test first." }`.
-- **User Messaging:** `ctx.ui.notify("TDD Guard blocked implementation", "warning")`.
+  - **Edit Gate:** `tool_call` (on `write`, `edit`, `replace_content`, etc.). Returns `{ block: true, reason: "No active issue claim. Use \`bd claim <id>\` first." }` if the workspace has no claimed issue.
+  - **Commit Gate:** `tool_call` (on `bash` matching `git commit`). Returns `{ block: true, reason: "Resolve open claim before committing." }`.
+  - **Memory Gate:** `tool_result` (on `bash` matching `bd close`). Appends a reminder to the tool's result to document changes in memory.
+  - **Compaction Gates:** `session_before_compact` to save the active issue ID, and `session_start` to restore it. 
+  - **Stop Gate:** `session_shutdown`. Note: Pi's `session_shutdown` cannot block the process from exiting like Claude's `Stop` hook can. **Adaptation Strategy:** Use `session_shutdown` to *loudly warn* the user or auto-pause the issue state if they exit with an open claim, gracefully failing rather than hard-blocking exit.
+- **User Messaging:** Use `ctx.ui.notify()` heavily to reduce token cost of injecting synthetic status messages.
 
 ---
 

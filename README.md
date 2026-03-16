@@ -4,6 +4,8 @@
 
 > **ARCHITECTURAL DECISION (v2.0.0+):** xtrm-tools supports **Claude Code exclusively**. Hook translation for Gemini CLI and Qwen CLI was removed.
 
+> **MIGRATION NOTICE (v2.1.20+):** Core logic has moved to **Pi Extensions**. See the [Pi Extensions Migration Guide](docs/pi-extensions-migration.md).
+
 This repository contains production-ready extensions to enhance Claude's capabilities with prompt improvement, task delegation, development workflow automation, and quality gates. The `xtrm` CLI provides a robust, modular "Plug & Play" installation engine for project-specific tools.
 
 ## Quick Start

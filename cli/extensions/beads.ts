@@ -71,7 +71,9 @@ export default function (pi: ExtensionAPI) {
 		if (isBashToolResult(event)) {
 			const command = event.input.command;
 
-			if (command && /\bbd\s+update\b/.test(command) && /--claim\b/.test(command) && !event.isError) {
+			// Auto-claim on bd update --claim regardless of exit code.
+			// bd returns exit 1 with "already in_progress" when status unchanged — still a valid claim intent.
+			if (command && /\bbd\s+update\b/.test(command) && /--claim\b/.test(command)) {
 				const issueMatch = command.match(/\bbd\s+update\s+(\S+)/);
 				if (issueMatch) {
 					const issueId = issueMatch[1];

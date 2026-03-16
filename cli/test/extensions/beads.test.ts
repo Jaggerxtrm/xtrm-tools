@@ -137,4 +137,30 @@ describe("Beads Extension", () => {
 		expect(result.content[1].text).toContain("claimed issue");
 		expect(result.content[1].text).toContain("issue-456");
 	});
+
+
+	it("should auto-claim even when bd update --claim returns exit 1 (already in_progress)", async () => {
+		const kvSetCalls: string[][] = [];
+		(SubprocessRunner.run as any).mockImplementation(async (cmd: string, args: string[]) => {
+			if (args[0] === "kv" && args[1] === "set") {
+				kvSetCalls.push(args);
+				return { code: 0, stdout: "", stderr: "" };
+			}
+			return { code: 0, stdout: "", stderr: "" };
+		});
+
+		beadsExtension(harness.pi);
+
+		const result = await harness.emit("tool_result", {
+			toolName: "bash",
+			input: { command: "bd update issue-789 --claim" },
+			content: [{ type: "text", text: "already in_progress" }],
+			isError: true,
+		});
+
+		expect(kvSetCalls.length).toBe(1);
+		expect(kvSetCalls[0][2]).toBe("claimed:mock-session-123");
+		expect(kvSetCalls[0][3]).toBe("issue-789");
+		expect(result.content[1].text).toContain("issue-789");
+	});
 });

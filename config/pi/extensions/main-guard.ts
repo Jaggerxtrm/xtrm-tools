@@ -54,7 +54,7 @@ export default function (pi: ExtensionAPI) {
 		if (branch && protectedBranches.includes(branch)) {
 			// A. Mutating File Tools on Main
 			if (EventAdapter.isMutatingFileTool(event)) {
-				const reason = `On protected branch '${branch}'. Checkout a feature branch first: \`git checkout -b feature/<name>\``;
+				const reason = `On protected branch '${branch}' — start on a feature branch and claim an issue.\n  git checkout -b feature/<name>\n  bd update <id> --claim\n`;
 				if (ctx.hasUI) {
 					ctx.ui.notify(`Main-Guard: Blocked edit on ${branch}`, "error");
 				}
@@ -97,7 +97,7 @@ export default function (pi: ExtensionAPI) {
 
 				// Specific blocks
 				if (/\bgit\s+commit\b/.test(cmd)) {
-					return { block: true, reason: `No commits on '${branch}' — use a feature branch.` };
+					return { block: true, reason: `No commits on '${branch}' — use a feature branch.\n  git checkout -b feature/<name>\n  bd update <id> --claim\n` };
 				}
 
 				if (/\bgit\s+push\b/.test(cmd)) {
@@ -113,7 +113,7 @@ export default function (pi: ExtensionAPI) {
 				}
 
 				// Default deny
-				const reason = `Bash restricted on '${branch}'. Allowed: git status/log/diff/pull/stash, gh, bd.\n  Exit: git checkout -b feature/<name>`;
+				const reason = `Bash restricted on '${branch}'. Allowed: git status/log/diff/pull/stash, gh, bd.\n  Exit: git checkout -b feature/<name>\n  Then: bd update <id> --claim\n  Override: MAIN_GUARD_ALLOW_BASH=1 <cmd>\n`;
 				if (ctx.hasUI) {
 					ctx.ui.notify("Main-Guard: Command blocked", "error");
 				}

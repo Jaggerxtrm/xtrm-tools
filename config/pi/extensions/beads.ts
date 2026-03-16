@@ -60,7 +60,7 @@ export default function (pi: ExtensionAPI) {
 			        }
 			        return {
                         block: true,
-                        reason: `No active issue claim for this session (${sessionId}).\n  bd update <id> --claim\n  bd kv set "claimed:${sessionId}" "<id>"`,
+                        reason: `No active claim for session ${sessionId}.\n  bd update <id> --claim\n`,
                     };
                 }
             }
@@ -73,7 +73,7 @@ export default function (pi: ExtensionAPI) {
 				if (claim) {
 					return {
                         block: true,
-                        reason: `Resolve open claim [${claim}] before committing.`,
+                        reason: `Active claim [${claim}] — close it first.\n  bd close ${claim}\n  git push -u origin <feature-branch>\n  gh pr create --fill && gh pr merge --squash\n`,
                     };
 				}
 			}

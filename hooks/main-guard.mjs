@@ -56,8 +56,9 @@ const WRITE_TOOLS = new Set([
 ]);
 
 if (WRITE_TOOLS.has(tool)) {
-  deny(`⛔ On '${branch}' — checkout a feature branch first.\n`
-    + '  git checkout -b feature/<name>\n');
+  deny(`⛔ On '${branch}' — start on a feature branch and claim an issue.\n`
+    + '  git checkout -b feature/<name>\n'
+    + '  bd update <id> --claim\n');
 }
 
 const WORKFLOW =

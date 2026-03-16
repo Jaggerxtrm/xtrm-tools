@@ -55,9 +55,10 @@ describe('main-guard.mjs — MAIN_GUARD_PROTECTED_BRANCHES', () => {
       { tool_name: 'Write', tool_input: { file_path: '/tmp/x' } },
       { MAIN_GUARD_PROTECTED_BRANCHES: CURRENT_BRANCH },
     );
-    expect(r.status).toBe(2);
+    expect(r.status).toBe(0);
     const out = parseHookJson(r.stdout);
-    expect(out?.systemMessage).toContain(CURRENT_BRANCH);
+    expect(out?.decision).toBe('block');
+    expect(out?.reason).toContain(CURRENT_BRANCH);
   });
 
   it('allows Write when current branch is NOT in MAIN_GUARD_PROTECTED_BRANCHES', () => {
@@ -75,9 +76,10 @@ describe('main-guard.mjs — MAIN_GUARD_PROTECTED_BRANCHES', () => {
       { tool_name: 'Bash', tool_input: { command: 'cat > file.txt << EOF\nhello\nEOF' } },
       { MAIN_GUARD_PROTECTED_BRANCHES: CURRENT_BRANCH },
     );
-    expect(r.status).toBe(2);
+    expect(r.status).toBe(0);
     const out = parseHookJson(r.stdout);
-    expect(out?.systemMessage).toContain('Bash restricted');
+    expect(out?.decision).toBe('block');
+    expect(out?.reason).toContain('Bash restricted');
   });
 
   it('allows safe Bash commands on protected branch', () => {
@@ -115,9 +117,10 @@ describe('main-guard.mjs — MAIN_GUARD_PROTECTED_BRANCHES', () => {
         { tool_name: 'Bash', tool_input: { command } },
         { MAIN_GUARD_PROTECTED_BRANCHES: CURRENT_BRANCH },
       );
-      expect(r.status, `expected exit 2 for: ${command}`).toBe(2);
+      expect(r.status, `expected exit 0 for: ${command}`).toBe(0);
       const out = parseHookJson(r.stdout);
-      expect(out?.systemMessage).toContain('Bash restricted');
+      expect(out?.decision).toBe('block');
+      expect(out?.reason).toContain('Bash restricted');
     }
   });
 
@@ -145,9 +148,10 @@ describe('main-guard.mjs — MAIN_GUARD_PROTECTED_BRANCHES', () => {
       { tool_name: 'Bash', tool_input: { command: 'git commit -m "oops"' } },
       { MAIN_GUARD_PROTECTED_BRANCHES: CURRENT_BRANCH },
     );
-    expect(r.status).toBe(2);
+    expect(r.status).toBe(0);
     const out = parseHookJson(r.stdout);
-    expect(out?.systemMessage).toContain('feature branch');
+    expect(out?.decision).toBe('block');
+    expect(out?.reason).toContain('feature branch');
   });
 
   it('post-push hook sync guidance uses reset --hard, consistent with main-guard', () => {
@@ -196,11 +200,9 @@ describe('main-guard-post-push.mjs', () => {
         repoDir,
       );
       expect(r.status).toBe(0);
-      expect(r.stdout).toContain('gh pr create --fill');
-      expect(r.stdout).toContain('gh pr merge --squash');
-      // output must be plain text (agent-only), not a JSON systemMessage banner
-      expect(parseHookJson(r.stdout)).toBeNull();
-
+      const out = parseHookJson(r.stdout);
+      expect(out?.additionalContext).toContain('gh pr create --fill');
+      expect(out?.additionalContext).toContain('gh pr merge --squash');
     } finally {
       rmSync(repoDir, { recursive: true, force: true });
     }
@@ -330,8 +332,10 @@ exit 1
         },
         { PATH: `${fake.tempDir}:${process.env.PATH ?? ''}` },
       );
-      expect(r.status).toBe(2);
-      expect(r.stderr).toContain('active claim');
+      expect(r.status).toBe(0);
+      const out = parseHookJson(r.stdout);
+      expect(out?.decision).toBe('block');
+      expect(out?.reason).toContain('active claim');
     } finally {
       rmSync(fake.tempDir, { recursive: true, force: true });
       rmSync(projectDir, { recursive: true, force: true });

@@ -37,10 +37,11 @@ const hookEventName = input.hook_event_name ?? 'PreToolUse';
 
 function deny(reason) {
   process.stdout.write(JSON.stringify({
-    systemMessage: reason,
+    decision: 'block',
+    reason,
   }));
   process.stdout.write('\n');
-  process.exit(2);
+  process.exit(0);
 }
 
 const WRITE_TOOLS = new Set([

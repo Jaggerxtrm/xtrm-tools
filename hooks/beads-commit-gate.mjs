@@ -32,7 +32,9 @@ withSafeBdContext(() => {
 
   if (decision.allow) process.exit(0);
 
-  // Block with message
-  process.stderr.write(commitBlockMessage(decision.summary, decision.claimed));
-  process.exit(2);
+  // Block with structured decision
+  const reason = commitBlockMessage(decision.summary, decision.claimed);
+  process.stdout.write(JSON.stringify({ decision: 'block', reason }));
+  process.stdout.write('\n');
+  process.exit(0);
 });

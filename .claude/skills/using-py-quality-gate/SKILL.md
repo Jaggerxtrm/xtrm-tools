@@ -1,3 +1,8 @@
+---
+name: using-py-quality-gate
+description: PY Quality Gate enforces Python code quality with ruff (linting/formatting) and mypy (type checking). Runs automatically on every file edit with auto-fix support.
+---
+
 # Using PY Quality Gate
 
 **PY Quality Gate** enforces Python code quality with ruff (linting/formatting) and mypy (type checking). Runs automatically on every file edit.

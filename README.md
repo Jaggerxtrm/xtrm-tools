@@ -1,12 +1,10 @@
 # XTRM-Tools
 
-**Claude Code tools installer** — skills, hooks, MCP servers, and project-specific extensions.
+**Claude Code plugin** — workflow enforcement hooks, skills, MCP servers, and project-specific extensions.
 
-> **ARCHITECTURAL DECISION (v2.0.0+):** xtrm-tools supports **Claude Code exclusively**. Hook translation for Gemini CLI and Qwen CLI was removed.
+> **v2.3.0+:** xtrm-tools is now a **Claude Code plugin**. `xtrm install` registers the plugin directly — no hook or settings.json wiring needed. Skills are auto-discovered, MCP servers come from `.mcp.json`, hooks load from `hooks/hooks.json` via `${CLAUDE_PLUGIN_ROOT}`.
 
-> **MIGRATION NOTICE (v2.1.20+):** Core logic has moved to **Pi Extensions**. See the [Pi Extensions Migration Guide](docs/pi-extensions-migration.md).
-
-This repository contains production-ready extensions to enhance Claude's capabilities with prompt improvement, task delegation, development workflow automation, and quality gates. The `xtrm` CLI provides a robust, modular "Plug & Play" installation engine for project-specific tools.
+This repository contains production-ready extensions to enhance Claude's capabilities with prompt improvement, task delegation, development workflow automation, and quality gates. The `xtrm` CLI installs the plugin for Claude Code and syncs skills to `~/.agents/skills` for other runtimes.
 
 ## Quick Start
 
@@ -17,12 +15,20 @@ cd xtrm-tools/cli
 npm install && npm run build
 npm link
 
-# Initialize a project and register gitnexus MCP
+# Install the plugin + beads + gitnexus
+xtrm install all
+
+# Verify the plugin loaded
+claude plugin list
+# → xtrm-tools@xtrm-tools  Version: 2.3.0  Status: ✔ enabled
+
+# Initialize a project (runs gitnexus analyze + bd init)
 xtrm project init
 ```
 
 ## Table of Contents
 
+- [Plugin Structure](#plugin-structure)
 - [Project Skills & Hooks](#project-skills--hooks)
 - [Global Skills](#global-skills)
 - [Installation](#installation)
@@ -30,6 +36,28 @@ xtrm project init
 - [Configuration](#configuration)
 - [Version History](#version-history)
 - [License](#license)
+
+---
+
+## Plugin Structure
+
+xtrm-tools ships as a Claude Code plugin located at `plugins/xtrm-tools/`. Claude Code auto-discovers all components:
+
+```
+plugins/xtrm-tools/
+├── .claude-plugin/plugin.json   # Manifest (name: xtrm-tools, version: 2.3.0)
+├── hooks/ → ../../hooks         # Symlink — all hook scripts + hooks.json
+├── skills/ → ../../skills       # Symlink — all skills (auto-discovered)
+└── .mcp.json → ../../.mcp.json  # Symlink — MCP server definitions
+```
+
+The repo root `.claude-plugin/marketplace.json` registers this as a local marketplace, allowing `xtrm install` to call `claude plugin marketplace add` + `claude plugin install` without any manual setup.
+
+**To install manually:**
+```bash
+claude plugin marketplace add /path/to/xtrm-tools --scope user
+claude plugin install xtrm-tools@xtrm-tools --scope user
+```
 
 ---
 
@@ -57,7 +85,7 @@ Task intake and service routing for Docker service projects.
 - **Invocation**: `/scope "task description"` or automatic via SessionStart hook.
 - **Purpose**: Gives Claude persistent, service-specific expertise without re-explaining architecture. Emits structured scope plans and detects codebase drift via PostToolUse hooks.
 
-### Core Project Hooks
+### Core Hooks
 
 **Main Guard (`main-guard.mjs`)**
 - **Trigger**: PreToolUse (Write|Edit|MultiEdit|Serena edit tools|Bash)
@@ -67,19 +95,18 @@ Task intake and service routing for Docker service projects.
 **GitNexus Graph Context (`gitnexus-hook.cjs`)**
 - **Trigger**: PostToolUse (with Serena support and dedup cache)
 - **Purpose**: Enriches tool output with knowledge graph context via `gitnexus augment`.
-- *Note: `gitnexus-impact-reminder` was removed as impact analysis enforcement is now native.*
 
 **Beads Issue Tracking Gates**
 - **Trigger**: PreToolUse (edit/commit), PostToolUse (claim sync), Stop (memory + stop gate), PreCompact, SessionStart
 - **Purpose**: Ensures all work is tracked to a `bd` issue. Blocks file edits without an active claim.
 - **Claim sync (`beads-claim-sync.mjs`)**: PostToolUse hook that syncs claim state after `bd update --claim` shell commands.
-- **Compaction**: `PreCompact` and `SessionStart` hooks preserve `in_progress` beads state across `/compact` events. Hook blocking messages are quieted and compacted to save tokens.
+- **Compaction**: `PreCompact` and `SessionStart` hooks preserve `in_progress` beads state across `/compact` events.
 
 ---
 
 ## Global Skills
 
-Global skills are reusable workflows installed to the user-level Claude environment (not tied to one repo). 
+Global skills are reusable workflows installed to the user-level Claude environment (not tied to one repo).
 
 ### documenting
 Maintains Single Source of Truth (SSOT) documentation system with drift detection.
@@ -111,9 +138,19 @@ npx -y github:Jaggerxtrm/xtrm-tools install all
 ```bash
 npm install -g github:Jaggerxtrm/xtrm-tools@latest
 
-xtrm install all            # Install to all global targets
+xtrm install all            # Registers xtrm-tools plugin + installs beads/gitnexus
 xtrm project init           # Setup current project (runs gitnexus analyze + bd init)
 xtrm install project all    # Install all project-specific skills
+```
+
+### Verify
+
+```bash
+claude plugin list
+# → xtrm-tools@xtrm-tools  Version: 2.3.0  Status: ✔ enabled
+
+claude plugin validate /path/to/xtrm-tools/plugins/xtrm-tools
+# → ✔ Validation passed
 ```
 
 ---
@@ -126,7 +163,7 @@ xtrm <command> [options]
 
 | Command | Description |
 |---|---|
-| `install all` | Non-interactive global install to all detected targets (installs `gitnexus` globally) |
+| `install all` | Registers xtrm-tools plugin for Claude Code, installs beads + gitnexus globally |
 | `install basic` | Interactive global installation |
 | `install project <name>` | Install specific project skills (e.g., `tdd-guard`, `service-skills-set`) |
 | `project init` | Onboarding: runs `gitnexus analyze`, registers MCP, and runs `bd init` |
@@ -140,7 +177,7 @@ xtrm <command> [options]
 
 ### MCP Servers
 
-Unified CLI sync configures core servers securely.
+Defined in `.mcp.json` and loaded automatically by the plugin. No CLI sync needed for Claude Code.
 
 **Core Servers**:
 - **serena**: Code analysis (requires `uvx`)
@@ -149,20 +186,18 @@ Unified CLI sync configures core servers securely.
 - **deepwiki**: Technical documentation
 - **gitnexus**: Knowledge graph code intelligence (registered during `xtrm project init`)
 
-Configured via `~/.config/xtrm-tools/.env`. Run `xtrm install basic` to sync interactively.
-
 ---
 
 ## Version History
 
 | Version | Date | Highlights |
 |---|---|---|
+| 2.3.0 | 2026-03-17 | Claude Code plugin structure: `plugins/xtrm-tools/`, `hooks/hooks.json`, `.mcp.json`; `xtrm install` registers plugin via `claude plugin` CLI; settings.json hook wiring retired for Claude path |
 | 2.2.0 | 2026-03-17 | Pi extension parity: quality-gates, beads, service-skills, main-guard; `beads-claim-sync.mjs`; `xtrm clean` canonical wiring validation |
 | 2.1.20 | 2026-03-16 | `xtrm clean` command, compact hook messages, `pruneStaleWrappers` fixes |
 | 2.1.18 | 2026-03-16 | `PreCompact` / `SessionStart` hooks to preserve `in_progress` beads state |
 | 2.1.16 | 2026-03-15 | Removed deprecated skill-suggestion, gitnexus-impact-reminder hooks |
 | 2.1.14 | 2026-03-15 | Rewrote gitnexus-hook as PostToolUse with Serena; added `using-xtrm` skill |
-| 2.1.9 | 2026-03-15 | `main-guard` enforced PR-only workflow, `--squash` requirement, npm publish |
 
 See [CHANGELOG.md](CHANGELOG.md) for full history.
 

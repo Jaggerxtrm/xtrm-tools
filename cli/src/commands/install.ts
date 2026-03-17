@@ -85,6 +85,7 @@ async function renderSummaryCard(
 import { execSync } from 'child_process';
 
 import { spawnSync } from 'child_process';
+import { detectAgent } from '../utils/sync-mcp-cli.js';
 const BEADS_HOOK_PATTERN = /^beads-/;
 
 function formatTargetLabel(target: string): string {
@@ -169,6 +170,27 @@ async function needsSettingsSync(repoRoot: string, target: string): Promise<bool
     return requiredEvents.some((event) => !(event in targetHooks));
 }
 
+async function installPlugin(repoRoot: string, dryRun: boolean): Promise<void> {
+    console.log(t.bold('\n  ⚙  xtrm-tools  (Claude Code plugin)'));
+
+    if (dryRun) {
+        console.log(t.accent('  [DRY RUN] Would register xtrm-tools marketplace and install plugin\n'));
+        return;
+    }
+
+    // Register marketplace (re-register to pick up any path changes)
+    spawnSync('claude', ['plugin', 'marketplace', 'add', repoRoot, '--scope', 'user'], { stdio: 'pipe' });
+
+    // Always uninstall + reinstall to refresh the cached copy from the live repo
+    const listResult = spawnSync('claude', ['plugin', 'list'], { encoding: 'utf8', stdio: 'pipe' });
+    if (listResult.stdout?.includes('xtrm-tools@xtrm-tools')) {
+        spawnSync('claude', ['plugin', 'uninstall', 'xtrm-tools@xtrm-tools'], { stdio: 'inherit' });
+    }
+    spawnSync('claude', ['plugin', 'install', 'xtrm-tools@xtrm-tools', '--scope', 'user'], { stdio: 'inherit' });
+
+    console.log(t.success('  ✓ xtrm-tools plugin installed\n'));
+}
+
 async function runGlobalInstall(
     flags: GlobalInstallFlags,
     installOpts: { excludeBeads?: boolean; checkBeads?: boolean } = {},
@@ -178,6 +200,9 @@ async function runGlobalInstall(
     const repoRoot = await findRepoRoot();
     const ctx = await getContext({ selector: 'all', createMissingDirs: !dryRun });
     const { targets, syncMode } = ctx;
+
+    const claudeTargets = targets.filter(t => detectAgent(t) === 'claude');
+    const otherTargets = targets.filter(t => detectAgent(t) !== 'claude');
 
     let skipBeads = installOpts.excludeBeads ?? false;
 
@@ -258,23 +283,23 @@ async function runGlobalInstall(
         }
     }
 
+    // Claude Code: install via plugin (no hook/settings wiring needed)
+    for (const _claudeTarget of claudeTargets) {
+        await installPlugin(repoRoot, dryRun);
+    }
+
+    if (otherTargets.length === 0) {
+        return;
+    }
+
     const diffTasks = new Listr<DiffCtx>(
-        targets.map(target => ({
+        otherTargets.map(target => ({
             title: formatTargetLabel(target),
             task: async (listCtx, task) => {
                 try {
                     let changeSet = await calculateDiff(repoRoot, target, false);
                     if (skipBeads) {
                         changeSet = filterBeadsFromChangeSet(changeSet);
-                    }
-
-                    const hasSettingsDiff =
-                        changeSet.config.missing.includes('settings.json') ||
-                        changeSet.config.outdated.includes('settings.json') ||
-                        changeSet.config.drifted.includes('settings.json');
-
-                    if (!hasSettingsDiff && await needsSettingsSync(repoRoot, target)) {
-                        changeSet.config.outdated.push('settings.json');
                     }
 
                     const totalChanges = Object.values(changeSet).reduce(
@@ -400,6 +425,9 @@ export function createInstallCommand(): Command {
                 createMissingDirs: !dryRun,
             });
             const { targets, syncMode } = ctx;
+            const claudeTargets = targets.filter(t => detectAgent(t) === 'claude');
+            const otherTargets = targets.filter(t => detectAgent(t) !== 'claude');
+
             let skipBeads = false;
 
             if (!backport) {
@@ -451,9 +479,16 @@ export function createInstallCommand(): Command {
                 }
             }
 
+            // Claude Code: install via plugin (no hook/settings wiring needed)
+            if (!backport) {
+                for (const _claudeTarget of claudeTargets) {
+                    await installPlugin(repoRoot, dryRun);
+                }
+            }
+
             // Phase 1: Diff (concurrent via listr2)
             const diffTasks = new Listr<DiffCtx>(
-                targets.map(target => ({
+                otherTargets.map(target => ({
                     title: formatTargetLabel(target),
                     task: async (listCtx, task) => {
                         try {
@@ -505,7 +540,7 @@ export function createInstallCommand(): Command {
                     'qwen-commands': { missing: [] as string[], outdated: [] as string[], drifted: [] as string[], total: 0 },
                     'antigravity-workflows': { missing: [] as string[], outdated: [] as string[], drifted: [] as string[], total: 0 },
                 };
-                for (const target of targets) {
+                for (const target of otherTargets) {
                     console.log(t.bold(`\n  ${sym.arrow} ${formatTargetLabel(target)}`));
                     await executeSync(repoRoot, target, emptyChangeSet, syncMode, 'sync', false);
                 }

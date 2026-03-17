@@ -212,6 +212,38 @@ function mergeHookWrappers(existing: any[], incoming: any[]): any[] {
     return merged;
 }
 
+/**
+ * Prune mode: replace xtrm-managed wrappers wholesale with canonical ones.
+ * Wrappers whose commands do NOT reference ~/.claude/hooks/ (user-local) are always preserved.
+ */
+function replaceHooksObject(existingHooks: any, incomingHooks: any): any {
+    const result: any = {};
+    const canonicalScripts = collectCanonicalScripts(incomingHooks);
+
+    // Events only in existing: prune xtrm-managed entries, keep user-local
+    for (const [event, existingWrappers] of Object.entries(existingHooks || {})) {
+        if (!Array.isArray(existingWrappers)) { result[event] = existingWrappers; continue; }
+        if (event in (incomingHooks || {})) continue; // handled below
+        const { pruned } = pruneStaleWrappers(existingWrappers, canonicalScripts);
+        if (pruned.length > 0) result[event] = pruned;
+    }
+
+    // Events in incoming: use canonical wrappers + preserve user-local wrappers
+    for (const [event, incomingWrappers] of Object.entries(incomingHooks || {})) {
+        const existingWrappers: any[] = Array.isArray(existingHooks?.[event]) ? existingHooks[event] : [];
+        const userLocal = existingWrappers.filter((wrapper: any) => {
+            if (!Array.isArray(wrapper.hooks)) return true;
+            return wrapper.hooks.every((h: any) => {
+                const cmd = h?.command;
+                return typeof cmd !== 'string' || !/\/hooks\//.test(cmd);
+            });
+        });
+        result[event] = [...(Array.isArray(incomingWrappers) ? incomingWrappers : []), ...userLocal];
+    }
+
+    return result;
+}
+
 function mergeHooksObject(existingHooks: any, incomingHooks: any): any {
     // Step 1: Collect canonical script filenames from incoming hooks
     const canonicalScripts = collectCanonicalScripts(incomingHooks);
@@ -241,14 +273,13 @@ function mergeHooksObject(existingHooks: any, incomingHooks: any): any {
 /**
  * Deep merge two objects, preserving protected values from the original
  */
-export function deepMergeWithProtection(original: any, updates: any, currentPath: string = ''): any {
+export function deepMergeWithProtection(original: any, updates: any, currentPath: string = '', opts: { pruneHooks?: boolean } = {}): any {
     const result = { ...original };
 
     for (const [key, value] of Object.entries(updates)) {
         const keyPath = currentPath ? `${currentPath}.${key}` : key;
 
-        // Hooks are canonical but should still preserve local custom entries.
-        // Merge by command identity and upgrade matchers for overlapping hooks.
+        // Hooks: merge by command identity normally; in prune mode replace xtrm-managed wrappers wholesale.
         if (
             key === 'hooks' &&
             typeof value === 'object' &&
@@ -256,7 +287,9 @@ export function deepMergeWithProtection(original: any, updates: any, currentPath
             typeof original[key] === 'object' &&
             original[key] !== null
         ) {
-            result[key] = mergeHooksObject(original[key], value);
+            result[key] = opts.pruneHooks
+                ? replaceHooksObject(original[key], value)
+                : mergeHooksObject(original[key], value);
             continue;
         }
 
@@ -286,7 +319,7 @@ export function deepMergeWithProtection(original: any, updates: any, currentPath
             !Array.isArray(original[key])
         ) {
             // Recursively merge nested objects
-            result[key] = deepMergeWithProtection(original[key], value, keyPath);
+            result[key] = deepMergeWithProtection(original[key], value, keyPath, opts);
         } else {
             // Overwrite with new value for non-protected keys
             result[key] = value;
@@ -372,6 +405,7 @@ interface MergeOptions {
     backupOnSuccess?: boolean;
     dryRun?: boolean;
     resolvedLocalConfig?: any;
+    pruneHooks?: boolean;
 }
 
 export interface MergeResult {
@@ -387,7 +421,8 @@ export async function safeMergeConfig(localConfigPath: string, repoConfig: any, 
         preserveComments = true,
         backupOnSuccess = true,
         dryRun = false,
-        resolvedLocalConfig = null
+        resolvedLocalConfig = null,
+        pruneHooks = false,
     } = options;
 
     const localConfig = resolvedLocalConfig || await safeReadConfig(localConfigPath);
@@ -411,7 +446,7 @@ export async function safeMergeConfig(localConfigPath: string, repoConfig: any, 
         }
     }
 
-    const mergedConfig = deepMergeWithProtection(localConfig, repoConfig);
+    const mergedConfig = deepMergeWithProtection(localConfig, repoConfig, '', { pruneHooks });
     const configsAreEqual = JSON.stringify(localConfig) === JSON.stringify(mergedConfig);
 
     if (!configsAreEqual && !dryRun) {

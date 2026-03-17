@@ -145,6 +145,8 @@ interface GlobalInstallFlags {
 async function needsSettingsSync(repoRoot: string, target: string): Promise<boolean> {
     const normalizedTarget = target.replace(/\\/g, '/').toLowerCase();
     if (normalizedTarget.includes('.agents/skills')) return false;
+    // Claude Code: hooks and MCP are managed by the xtrm-tools plugin — no settings wiring needed
+    if (detectAgent(target) === 'claude') return false;
 
     const hooksTemplatePath = path.join(repoRoot, 'config', 'hooks.json');
     if (!await fs.pathExists(hooksTemplatePath)) return false;

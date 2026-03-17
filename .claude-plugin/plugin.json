@@ -1,0 +1,10 @@
+{
+  "name": "jaggers-agent-tools",
+  "version": "2.3.0",
+  "description": "xtrm-tools: hooks, skills, MCP servers, and beads for Claude Code",
+  "author": {
+    "name": "jaggers"
+  },
+  "hooks": "./hooks/hooks.json",
+  "mcpServers": "./.mcp.json"
+}

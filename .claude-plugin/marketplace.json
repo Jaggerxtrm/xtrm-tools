@@ -1,0 +1,19 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "jaggers-agent-tools",
+  "description": "xtrm-tools: hooks, skills, MCP servers, and beads for Claude Code",
+  "owner": {
+    "name": "jaggers"
+  },
+  "plugins": [
+    {
+      "name": "jaggers-agent-tools",
+      "description": "Workflow enforcement hooks (main-guard, beads gates), skills, and MCP server wiring for Claude Code",
+      "author": {
+        "name": "jaggers"
+      },
+      "source": ".",
+      "category": "productivity"
+    }
+  ]
+}

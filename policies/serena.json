@@ -1,0 +1,15 @@
+{
+  "id": "serena",
+  "description": "Inject Serena LSP workflow reminder at session start.",
+  "version": "1",
+  "runtime": "claude",
+  "order": 50,
+  "claude": {
+    "hooks": [
+      {
+        "event": "SessionStart",
+        "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/serena-workflow-reminder.py"
+      }
+    ]
+  }
+}

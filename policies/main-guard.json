@@ -1,0 +1,33 @@
+{
+  "id": "main-guard",
+  "description": "Block write operations and unsafe bash commands on protected branches (main/master). Enforces PR-only workflow.",
+  "version": "1",
+  "runtime": "both",
+  "order": 10,
+  "claude": {
+    "hooks": [
+      {
+        "event": "PreToolUse",
+        "matcher": "Write|Edit|MultiEdit|mcp__serena__rename_symbol|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol",
+        "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/main-guard.mjs",
+        "timeout": 5000
+      },
+      {
+        "event": "PreToolUse",
+        "matcher": "Bash",
+        "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/main-guard.mjs",
+        "timeout": 5000
+      },
+      {
+        "event": "PostToolUse",
+        "matcher": "Bash",
+        "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/main-guard-post-push.mjs",
+        "timeout": 5000
+      }
+    ]
+  },
+  "pi": {
+    "extension": "config/pi/extensions/main-guard.ts",
+    "events": ["tool_call", "tool_result"]
+  }
+}

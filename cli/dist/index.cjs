@@ -40608,6 +40608,11 @@ async function executeSync(repoRoot, systemRoot, changeSet, mode, actionType, is
           src = import_path8.default.join(repoRoot, "config", "settings.json");
           dest = import_path8.default.join(systemRoot, "settings.json");
           const agent2 = detectAgent(systemRoot);
+          if (agent2 === "claude") {
+            if (!isDryRun) console.log(kleur_default.dim(`      (settings.json skipped \u2014 managed by xtrm-tools plugin)`));
+            count++;
+            continue;
+          }
           console.log(kleur_default.gray(`  --> config/settings.json`));
           if (!isDryRun && await import_fs_extra8.default.pathExists(dest)) {
             backups.push(await createBackup(dest));
@@ -41846,6 +41851,7 @@ function isGitnexusInstalled() {
 async function needsSettingsSync(repoRoot, target) {
   const normalizedTarget = target.replace(/\\/g, "/").toLowerCase();
   if (normalizedTarget.includes(".agents/skills")) return false;
+  if (detectAgent(target) === "claude") return false;
   const hooksTemplatePath = import_path13.default.join(repoRoot, "config", "hooks.json");
   if (!await import_fs_extra13.default.pathExists(hooksTemplatePath)) return false;
   const requiredEvents = Object.keys((await import_fs_extra13.default.readJson(hooksTemplatePath)).hooks ?? {});

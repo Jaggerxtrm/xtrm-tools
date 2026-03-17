@@ -155,6 +155,13 @@ export async function executeSync(
 
                     const agent = detectAgent(systemRoot);
 
+                    // Claude Code: settings.json managed by xtrm-tools plugin — skip wiring
+                    if (agent === 'claude') {
+                        if (!isDryRun) console.log(kleur.dim(`      (settings.json skipped — managed by xtrm-tools plugin)`));
+                        count++;
+                        continue;
+                    }
+
                     console.log(kleur.gray(`  --> config/settings.json`));
 
                     if (!isDryRun && await fs.pathExists(dest)) {

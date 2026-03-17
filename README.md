@@ -40,12 +40,17 @@ Project skills are modular, plug-and-play tool packages extending Claude's capab
 ### using-xtrm (Session Operating Manual)
 **The foundational operating manual for an xtrm-equipped session.**
 - **Invocation**: Activates automatically at session start via hook.
-- **Purpose**: Orients the agent on how to work within the xtrm stack: applying prompt improvement, using the beads issue-tracking gate, enforcing PR workflows, and combining the full toolset (gitnexus, Serena, TDD guard, quality gates, delegation).
+- **Purpose**: Orients the agent on how to work within the xtrm stack: applying prompt improvement, using the beads issue-tracking gate, enforcing PR workflows, and combining the full toolset (gitnexus, Serena, quality gates, delegation).
 - **Core Workflow**: Provides the authoritative guide on feature-branch usage, requiring PRs for merges (with `--squash`), and stopping dangerous git commands on protected branches.
 
-### TDD Guard & Quality Gates (`tdd-guard` & `using-quality-gates`)
-- **tdd-guard**: Enforces Test-Driven Development by blocking implementation until failing tests exist. Now covers **Serena edit tools** via bridge behavior.
-- **using-quality-gates**: Unified PostToolUse code quality hooks — runs linting, type checking, and formatting (Python + TypeScript with strict mypy/ruff rules) on every edit.
+### Quality Gates (`using-quality-gates`)
+Code quality enforcement via the **Pi Extension** (`quality-gates.ts`), which fires on every mutating file tool result.
+- **TypeScript/JS**: delegates to project-local `.claude/hooks/quality-check.cjs` (ESLint + tsc)
+- **Python**: delegates to project-local `.claude/hooks/quality-check.py` (ruff + mypy)
+- Exit code 2 = blocking — Claude must fix before continuing.
+- No classic hook entry required; runs automatically when the Pi extension is loaded.
+
+> **Note:** `tdd-guard` is available as an installable project skill (`xtrm install project tdd-guard`) but is not enforced by default.
 
 ### Service Skills Set (Trinity)
 Task intake and service routing for Docker service projects.
@@ -65,9 +70,10 @@ Task intake and service routing for Docker service projects.
 - *Note: `gitnexus-impact-reminder` was removed as impact analysis enforcement is now native.*
 
 **Beads Issue Tracking Gates**
-- **Trigger**: PreToolUse, PostToolUse, Stop, PreCompact, SessionStart
+- **Trigger**: PreToolUse (edit/commit), PostToolUse (claim sync), Stop (memory + stop gate), PreCompact, SessionStart
 - **Purpose**: Ensures all work is tracked to a `bd` issue. Blocks file edits without an active claim.
-- **Compaction**: Newly added `PreCompact` and `SessionStart` hooks preserve `in_progress` beads state across `/compact` events. Hook blocking messages are quieted and compacted to save tokens.
+- **Claim sync (`beads-claim-sync.mjs`)**: PostToolUse hook that syncs claim state after `bd update --claim` shell commands.
+- **Compaction**: `PreCompact` and `SessionStart` hooks preserve `in_progress` beads state across `/compact` events. Hook blocking messages are quieted and compacted to save tokens.
 
 ---
 
@@ -151,6 +157,7 @@ Configured via `~/.config/xtrm-tools/.env`. Run `xtrm install basic` to sync int
 
 | Version | Date | Highlights |
 |---|---|---|
+| 2.2.0 | 2026-03-17 | Pi extension parity: quality-gates, beads, service-skills, main-guard; `beads-claim-sync.mjs`; `xtrm clean` canonical wiring validation |
 | 2.1.20 | 2026-03-16 | `xtrm clean` command, compact hook messages, `pruneStaleWrappers` fixes |
 | 2.1.18 | 2026-03-16 | `PreCompact` / `SessionStart` hooks to preserve `in_progress` beads state |
 | 2.1.16 | 2026-03-15 | Removed deprecated skill-suggestion, gitnexus-impact-reminder hooks |

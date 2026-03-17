@@ -19,6 +19,7 @@ const CANONICAL_HOOKS = new Set([
     'beads-commit-gate.mjs',
     'beads-stop-gate.mjs',
     'beads-memory-gate.mjs',
+    'beads-claim-sync.mjs',
     'beads-compact-save.mjs',
     'beads-compact-restore.mjs',
     'branch-state.mjs',

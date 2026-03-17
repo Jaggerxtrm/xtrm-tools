@@ -1,6 +1,5 @@
-import type { ExtensionAPI, ToolCallEvent, ToolResultEvent } from "@mariozechner/pi-coding-agent";
+import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import { isToolCallEventType, isBashToolResult } from "@mariozechner/pi-coding-agent";
-import * as path from "node:path";
 import { SubprocessRunner, EventAdapter, Logger } from "./core/lib";
 
 const logger = new Logger({ namespace: "beads" });
@@ -115,14 +114,19 @@ export default function (pi: ExtensionAPI) {
 		return undefined;
 	});
 
-	// Dual safety net: notify about unclosed claims when session ends
+	// Dual safety net: warn about unclosed claims when session ends (non-blocking)
 	const notifySessionEnd = async (ctx: any) => {
 		const cwd = getCwd(ctx);
 		if (!EventAdapter.isBeadsProject(cwd)) return;
 		const sessionId = getSessionId(ctx);
 		const claim = await getSessionClaim(sessionId, cwd);
-		if (claim && ctx.hasUI) {
-			ctx.ui.notify(`Beads: Session ending with active claim [${claim}]`, "warning");
+		if (!claim) return;
+
+		const message = `Beads: session ending with active claim [${claim}]`;
+		if (ctx.hasUI) {
+			ctx.ui.notify(message, "warning");
+		} else {
+			logger.warn(message);
 		}
 	};
 

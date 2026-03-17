@@ -98,7 +98,10 @@ export async function installSkills(projectRoot: string, skillsSrc: string = SKI
             await fs.remove(dest);
         }
         await fs.copy(src, dest, {
-            filter: (src: string) => !src.includes('.Zone.Identifier'),
+            filter: (src: string) => !src.includes('.Zone.Identifier')
+                && !src.includes('__pycache__')
+                && !src.includes('.pytest_cache')
+                && !src.endsWith('.pyc'),
         });
         results.push({ skill, status: existed ? 'updated' : 'installed' });
     }

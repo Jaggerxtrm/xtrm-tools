@@ -290,7 +290,8 @@ describe('installAllProjectSkills', () => {
         await installAllProjectSkills(tmpDir);
 
         const settings = await fsExtra.readJson(path.join(tmpDir, '.claude', 'settings.json'));
-        expect(settings.hooks.PreToolUse).toHaveLength(1);   // tdd-guard
+        // Both tdd-guard and service-skills PreToolUse hooks should coexist.
+        expect(settings.hooks.PreToolUse).toHaveLength(2);
 
         expect(await fsExtra.pathExists(path.join(tmpDir, '.claude', 'hooks', 'quality-check.cjs'))).toBe(true);
         expect(await fsExtra.pathExists(path.join(tmpDir, '.claude', 'git-hooks', 'doc_reminder.py'))).toBe(true);

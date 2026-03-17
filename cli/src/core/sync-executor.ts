@@ -202,11 +202,16 @@ export async function executeSync(
                             }
                         }
 
+                        if (mode === 'prune' && !isDryRun) {
+                            console.log(kleur.dim(`      (--prune: replacing canonical hook events wholesale)`));
+                        }
+
                         const mergeResult = await safeMergeConfig(dest, finalRepoConfig, {
                             backupOnSuccess: false,
                             preserveComments: true,
                             dryRun: isDryRun,
-                            resolvedLocalConfig: resolvedLocalConfig
+                            resolvedLocalConfig: resolvedLocalConfig,
+                            pruneHooks: mode === 'prune',
                         });
 
                         if (mergeResult.updated) {

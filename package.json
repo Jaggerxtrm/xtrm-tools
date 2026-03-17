@@ -37,6 +37,8 @@
   },
   "scripts": {
     "sync:cli-version": "node scripts/sync-cli-version.mjs",
+    "compile-policies": "node scripts/compile-policies.mjs",
+    "check-policies": "node scripts/compile-policies.mjs --check",
     "prebuild": "npm run sync:cli-version",
     "build": "npm run build --workspace cli",
     "typecheck": "npm run typecheck --workspace cli",

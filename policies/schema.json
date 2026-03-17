@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "xtrm-policy-schema-v1",
+  "title": "XTRM Policy",
+  "description": "Canonical enforcement policy definition. Compiled by scripts/compile-policies.mjs to hooks/hooks.json (Claude) and Pi extension registry.",
+  "type": "object",
+  "required": ["id", "description", "version"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique policy identifier (kebab-case)"
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable description of what this policy enforces"
+    },
+    "version": {
+      "type": "string",
+      "description": "Policy version (semver or integer string)"
+    },
+    "runtime": {
+      "enum": ["claude", "pi", "both"],
+      "description": "Which runtimes this policy targets. Default: both",
+      "default": "both"
+    },
+    "order": {
+      "type": "integer",
+      "description": "Relative ordering when multiple policies contribute hooks to the same event+matcher group. Lower runs first. Default: 50.",
+      "default": 50
+    },
+    "claude": {
+      "type": "object",
+      "description": "Claude Code hook wiring",
+      "additionalProperties": false,
+      "properties": {
+        "hooks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["event", "command"],
+            "additionalProperties": false,
+            "properties": {
+              "event": {
+                "type": "string",
+                "description": "Claude Code hook event name (e.g. PreToolUse, PostToolUse, Stop, SessionStart, UserPromptSubmit, PreCompact)"
+              },
+              "matcher": {
+                "type": "string",
+                "description": "Tool name pattern (pipe-separated). Omit for unconditional hooks."
+              },
+              "command": {
+                "type": "string",
+                "description": "Shell command to run. Use ${CLAUDE_PLUGIN_ROOT} for portable paths."
+              },
+              "timeout": {
+                "type": "integer",
+                "description": "Timeout in milliseconds"
+              }
+            }
+          }
+        }
+      }
+    },
+    "pi": {
+      "type": "object",
+      "description": "Pi coding agent extension metadata",
+      "additionalProperties": false,
+      "properties": {
+        "extension": {
+          "type": "string",
+          "description": "Path to the Pi extension TypeScript file (relative to repo root)"
+        },
+        "events": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Pi event names this extension handles (informational)"
+        }
+      }
+    }
+  }
+}

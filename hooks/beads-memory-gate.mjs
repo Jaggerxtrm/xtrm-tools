@@ -11,7 +11,7 @@ import { execSync } from 'node:child_process';
 import { existsSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { readHookInput } from './beads-gate-core.mjs';
-import { resolveCwd, isBeadsProject } from './beads-gate-utils.mjs';
+import { resolveCwd, isBeadsProject, getSessionClaim } from './beads-gate-utils.mjs';
 import { memoryPromptMessage } from './beads-gate-messages.mjs';
 
 const input = readHookInput();
@@ -27,8 +27,15 @@ if (existsSync(marker)) {
   process.exit(0);
 }
 
-// Only block if there are closed issues — don't fire on empty projects
-let hasClosed = false;
+// Only fire if this session had an active claim that is now closed
+const sessionId = input.session_id ?? null;
+if (!sessionId) process.exit(0);
+
+const claimId = getSessionClaim(sessionId, cwd);
+if (!claimId) process.exit(0); // no claim this session → no work to persist
+
+// Check if the claimed issue was closed this session
+let claimClosed = false;
 try {
   const out = execSync('bd list --status=closed', {
     encoding: 'utf8',
@@ -36,12 +43,12 @@ try {
     stdio: ['pipe', 'pipe', 'pipe'],
     timeout: 8000,
   });
-  hasClosed = /^✓/m.test(out);
+  claimClosed = out.includes(claimId);
 } catch {
   process.exit(0); // fail open
 }
 
-if (!hasClosed) process.exit(0);
+if (!claimClosed) process.exit(0);
 
 process.stderr.write(memoryPromptMessage());
 process.exit(2);

@@ -8,6 +8,7 @@ export default function (pi: ExtensionAPI) {
 	const getCwd = (ctx: any) => ctx.cwd || process.cwd();
 
 	let cachedSessionId: string | null = null;
+	let memoryGateFired = false;
 
 	// Resolve a stable session ID across event types.
 	const getSessionId = (ctx: any): string => {
@@ -130,8 +131,31 @@ export default function (pi: ExtensionAPI) {
 		}
 	};
 
+	// Memory gate: if the session's claimed issue was closed, prompt for insights.
+	// Uses sendUserMessage to trigger a new agent turn (Pi has no blocking stop hook).
+	// memoryGateFired prevents re-triggering on the follow-up agent_end.
+	const triggerMemoryGateIfNeeded = async (ctx: any) => {
+		if (memoryGateFired) return;
+		const cwd = getCwd(ctx);
+		if (!EventAdapter.isBeadsProject(cwd)) return;
+		const sessionId = getSessionId(ctx);
+		const claimId = await getSessionClaim(sessionId, cwd);
+		if (!claimId) return;
+
+		const result = await SubprocessRunner.run("bd", ["list", "--status=closed"], { cwd });
+		if (result.code !== 0 || !result.stdout.includes(claimId)) return;
+
+		memoryGateFired = true;
+		pi.sendUserMessage(
+			`🧠 Memory gate: claim \`${claimId}\` was closed this session.\n` +
+			`For each closed issue, worth persisting?\n` +
+			`  YES → \`bd remember "<insight>"\`   NO → note "nothing to persist"`,
+		);
+	};
+
 	pi.on("agent_end", async (_event, ctx) => {
 		await notifySessionEnd(ctx);
+		await triggerMemoryGateIfNeeded(ctx);
 		return undefined;
 	});
 

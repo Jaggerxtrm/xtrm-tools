@@ -114,42 +114,29 @@ export default function (pi: ExtensionAPI) {
 		return undefined;
 	});
 
-	// Dual safety net: warn (and in UI mode, require explicit confirmation) about unclosed claims
-	const handleSessionEnd = async (ctx: any, phase: "agent_end" | "session_shutdown"): Promise<boolean> => {
+	// Dual safety net: warn about unclosed claims when session ends (non-blocking)
+	const notifySessionEnd = async (ctx: any) => {
 		const cwd = getCwd(ctx);
-		if (!EventAdapter.isBeadsProject(cwd)) return true;
+		if (!EventAdapter.isBeadsProject(cwd)) return;
 		const sessionId = getSessionId(ctx);
 		const claim = await getSessionClaim(sessionId, cwd);
-		if (!claim) return true;
+		if (!claim) return;
 
 		const message = `Beads: session ending with active claim [${claim}]`;
-		if (!ctx.hasUI) {
+		if (ctx.hasUI) {
+			ctx.ui.notify(message, "warning");
+		} else {
 			logger.warn(message);
-			return phase === "agent_end";
 		}
-
-		ctx.ui.notify(message, "warning");
-		if (phase === "session_shutdown") {
-			const ok = await ctx.ui.confirm("Beads Stop Gate", `You still have an active claim (${claim}). Stop session anyway?`);
-			if (!ok) {
-				ctx.ui.notify("Stop cancelled — close the claim or finish workflow first.", "warning");
-				return false;
-			}
-		}
-
-		return true;
 	};
 
 	pi.on("agent_end", async (_event, ctx) => {
-		await handleSessionEnd(ctx, "agent_end");
+		await notifySessionEnd(ctx);
 		return undefined;
 	});
 
 	pi.on("session_shutdown", async (_event, ctx) => {
-		const allowStop = await handleSessionEnd(ctx, "session_shutdown");
-		if (!allowStop) {
-			throw new Error("Blocked by beads stop gate: active claim still open");
-		}
+		await notifySessionEnd(ctx);
 		return undefined;
 	});
 }

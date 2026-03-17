@@ -34,46 +34,28 @@ export default function (pi: ExtensionAPI) {
 		return toolName;
 	};
 
-	// 2. Skill Activation + 3. Drift Detection
+	// 2. Drift Detection (skill activation is before_agent_start only — not per-tool)
 	pi.on("tool_result", async (event, ctx) => {
 		const cwd = getCwd(ctx);
+		const driftDetectorPath = path.join(cwd, ".claude", "skills", "updating-service-skills", "scripts", "drift_detector.py");
+		if (!fs.existsSync(driftDetectorPath)) return undefined;
+
 		const hookInput = JSON.stringify({
 			tool_name: toClaudeToolName(event.toolName),
 			tool_input: event.input,
 			cwd,
 		});
 
-		const messages: string[] = [];
+		const result = await SubprocessRunner.run("python3", [driftDetectorPath], {
+			cwd,
+			input: hookInput,
+			env: { ...process.env, CLAUDE_PROJECT_DIR: cwd },
+			timeoutMs: 10000,
+		});
 
-		const activatorPath = path.join(cwd, ".claude", "skills", "using-service-skills", "scripts", "skill_activator.py");
-		if (fs.existsSync(activatorPath)) {
-			const activation = await SubprocessRunner.run("python3", [activatorPath], {
-				cwd,
-				input: hookInput,
-				env: { ...process.env, CLAUDE_PROJECT_DIR: cwd },
-				timeoutMs: 10000,
-			});
-			if (activation.code === 0 && activation.stdout.trim()) {
-				messages.push(activation.stdout.trim());
-			}
-		}
-
-		const driftDetectorPath = path.join(cwd, ".claude", "skills", "updating-service-skills", "scripts", "drift_detector.py");
-		if (fs.existsSync(driftDetectorPath)) {
-			const drift = await SubprocessRunner.run("python3", [driftDetectorPath], {
-				cwd,
-				input: hookInput,
-				env: { ...process.env, CLAUDE_PROJECT_DIR: cwd },
-				timeoutMs: 10000,
-			});
-			if (drift.code === 0 && drift.stdout.trim()) {
-				messages.push(drift.stdout.trim());
-			}
-		}
-
-		if (messages.length > 0) {
+		if (result.code === 0 && result.stdout.trim()) {
 			const newContent = [...event.content];
-			newContent.push({ type: "text", text: "\n\n" + messages.join("\n\n") });
+			newContent.push({ type: "text", text: "\n\n" + result.stdout.trim() });
 			return { content: newContent };
 		}
 

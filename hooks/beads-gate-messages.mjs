@@ -31,7 +31,7 @@ export const COMMIT_NEXT_STEPS =
 
 // ── Edit gate messages ───────────────────────────────────────────
 
-export function editBlockMessage(sessionId) {
+export function editBlockMessage(_sessionId) {
   return (
     '🚫 No active claim — claim an issue first.\n' +
     '  bd update <id> --claim\n'
@@ -65,6 +65,32 @@ export function stopBlockMessage(summary, claimed) {
     '🚫 Unresolved issues — close before stopping.\n\n' +
     `${issueSummary}\n\n` +
     'Next steps:\n' + SESSION_CLOSE_PROTOCOL
+  );
+}
+
+export function stopBlockWaitingMergeMessage(state) {
+  const pr = state.prNumber != null ? `#${state.prNumber}` : '(PR pending)';
+  const prUrl = state.prUrl ? `\nPR: ${state.prUrl}` : '';
+  return (
+    `🚫 PR ${pr} not yet merged. Run: xtrm finish\n` +
+    `${prUrl}\n` +
+    `Worktree: ${state.worktreePath}\n`
+  );
+}
+
+export function stopBlockConflictingMessage(state) {
+  const conflicts = Array.isArray(state.conflictFiles) && state.conflictFiles.length > 0
+    ? state.conflictFiles.join(', ')
+    : 'unknown files';
+  return (
+    `🚫 Merge conflicts in: ${conflicts}. Resolve, push, then: xtrm finish\n` +
+    `Worktree: ${state.worktreePath}\n`
+  );
+}
+
+export function stopWarnActiveWorktreeMessage(state) {
+  return (
+    `⚠ Session has an active worktree at ${state.worktreePath}. Consider running: xtrm finish\n`
   );
 }
 

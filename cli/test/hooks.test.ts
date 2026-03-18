@@ -388,6 +388,98 @@ exit 1
       rmSync(projectDir, { recursive: true, force: true });
     }
   });
+
+  it('blocks stop when session state phase is waiting-merge', () => {
+    const projectDir = mkdtempSync(path.join(os.tmpdir(), 'xtrm-beads-stopgate-state-'));
+    mkdirSync(path.join(projectDir, '.beads'));
+    writeFileSync(path.join(projectDir, '.xtrm-session-state.json'), JSON.stringify({
+      issueId: 'issue-123',
+      branch: 'feature/issue-123',
+      worktreePath: '/tmp/worktrees/issue-123',
+      prNumber: 77,
+      prUrl: 'https://example.invalid/pr/77',
+      phase: 'waiting-merge',
+      conflictFiles: [],
+      startedAt: new Date().toISOString(),
+      lastChecked: new Date().toISOString(),
+    }), 'utf8');
+
+    const fake = withFakeBdDir(`#!/usr/bin/env bash
+set -euo pipefail
+if [[ "$1" == "kv" && "$2" == "get" ]]; then
+  exit 1
+fi
+if [[ "$1" == "list" ]]; then
+  cat <<'EOF'
+
+--------------------------------------------------------------------------------
+Total: 0 issues (0 open, 0 in progress)
+EOF
+  exit 0
+fi
+exit 1
+`);
+
+    try {
+      const r = runHook(
+        'beads-stop-gate.mjs',
+        { session_id: 'session-waiting-merge', cwd: projectDir },
+        { PATH: `${fake.tempDir}:${process.env.PATH ?? ''}` },
+      );
+      expect(r.status).toBe(2);
+      expect(r.stderr).toContain('xtrm finish');
+      expect(r.stderr).toContain('#77');
+    } finally {
+      rmSync(fake.tempDir, { recursive: true, force: true });
+      rmSync(projectDir, { recursive: true, force: true });
+    }
+  });
+
+  it('blocks stop when session state phase is conflicting', () => {
+    const projectDir = mkdtempSync(path.join(os.tmpdir(), 'xtrm-beads-stopgate-state-'));
+    mkdirSync(path.join(projectDir, '.beads'));
+    writeFileSync(path.join(projectDir, '.xtrm-session-state.json'), JSON.stringify({
+      issueId: 'issue-123',
+      branch: 'feature/issue-123',
+      worktreePath: '/tmp/worktrees/issue-123',
+      prNumber: 77,
+      prUrl: 'https://example.invalid/pr/77',
+      phase: 'conflicting',
+      conflictFiles: ['src/a.ts', 'src/b.ts'],
+      startedAt: new Date().toISOString(),
+      lastChecked: new Date().toISOString(),
+    }), 'utf8');
+
+    const fake = withFakeBdDir(`#!/usr/bin/env bash
+set -euo pipefail
+if [[ "$1" == "kv" && "$2" == "get" ]]; then
+  exit 1
+fi
+if [[ "$1" == "list" ]]; then
+  cat <<'EOF'
+
+--------------------------------------------------------------------------------
+Total: 0 issues (0 open, 0 in progress)
+EOF
+  exit 0
+fi
+exit 1
+`);
+
+    try {
+      const r = runHook(
+        'beads-stop-gate.mjs',
+        { session_id: 'session-conflicting', cwd: projectDir },
+        { PATH: `${fake.tempDir}:${process.env.PATH ?? ''}` },
+      );
+      expect(r.status).toBe(2);
+      expect(r.stderr).toContain('src/a.ts');
+      expect(r.stderr).toContain('xtrm finish');
+    } finally {
+      rmSync(fake.tempDir, { recursive: true, force: true });
+      rmSync(projectDir, { recursive: true, force: true });
+    }
+  });
 });
 
 
@@ -748,7 +840,7 @@ exit 1
     }
   });
 
-  it('writes .beads/.last_active with in_progress issue IDs', () => {
+  it('writes .beads/.last_active JSON bundle with in_progress issue IDs', () => {
     const projectDir = mkdtempSync(path.join(os.tmpdir(), 'xtrm-compact-save-'));
     mkdirSync(path.join(projectDir, '.beads'));
     const fake = withFakeBdDir(`#!/usr/bin/env bash
@@ -772,9 +864,10 @@ exit 1
       );
       expect(r.status).toBe(0);
       const { readFileSync: rfs } = require('node:fs');
-      const saved = rfs(path.join(projectDir, '.beads', '.last_active'), 'utf8').trim().split('\n');
-      expect(saved).toContain('proj-abc123');
-      expect(saved).toContain('proj-def456');
+      const saved = JSON.parse(rfs(path.join(projectDir, '.beads', '.last_active'), 'utf8'));
+      expect(saved.ids).toContain('proj-abc123');
+      expect(saved.ids).toContain('proj-def456');
+      expect(saved.sessionState).toBeNull();
     } finally {
       rmSync(fake.tempDir, { recursive: true, force: true });
       rmSync(projectDir, { recursive: true, force: true });
@@ -799,11 +892,28 @@ describe('beads-compact-restore.mjs', () => {
     }
   });
 
-  it('restores in_progress status, deletes .last_active, and injects additionalSystemPrompt', () => {
+  it('restores in_progress status + session state bundle and injects additionalSystemPrompt', () => {
     const projectDir = mkdtempSync(path.join(os.tmpdir(), 'xtrm-compact-restore-'));
     mkdirSync(path.join(projectDir, '.beads'));
     const { writeFileSync: wfs } = require('node:fs');
-    wfs(path.join(projectDir, '.beads', '.last_active'), 'proj-abc123\nproj-def456\n', 'utf8');
+    wfs(
+      path.join(projectDir, '.beads', '.last_active'),
+      JSON.stringify({
+        ids: ['proj-abc123', 'proj-def456'],
+        sessionState: {
+          issueId: 'proj-abc123',
+          branch: 'feature/proj-abc123',
+          worktreePath: '/tmp/worktrees/proj-abc123',
+          prNumber: 42,
+          prUrl: 'https://github.com/example/repo/pull/42',
+          phase: 'waiting-merge',
+          conflictFiles: [],
+          startedAt: new Date().toISOString(),
+          lastChecked: new Date().toISOString(),
+        },
+      }),
+      'utf8',
+    );
 
     const callLog = path.join(projectDir, 'bd-calls.log');
     const fake = withFakeBdDir(`#!/usr/bin/env bash
@@ -824,9 +934,14 @@ exit 0
       const calls = rfs(callLog, 'utf8');
       expect(calls).toContain('proj-abc123');
       expect(calls).toContain('proj-def456');
+      // session state restored
+      const restoredState = JSON.parse(rfs(path.join(projectDir, '.xtrm-session-state.json'), 'utf8'));
+      expect(restoredState.phase).toBe('waiting-merge');
+      expect(restoredState.prNumber).toBe(42);
       // additionalSystemPrompt injected for agent
       const out = parseHookJson(r.stdout);
       expect(out?.hookSpecificOutput?.additionalSystemPrompt).toMatch(/Restored 2 in_progress issue/);
+      expect(out?.hookSpecificOutput?.additionalSystemPrompt).toMatch(/RESUME: Run xtrm finish/);
     } finally {
       rmSync(fake.tempDir, { recursive: true, force: true });
       rmSync(projectDir, { recursive: true, force: true });
@@ -864,8 +979,50 @@ describe('service-skills.ts — no tool_call territory activation', () => {
   });
 });
 
-// ── beads-claim-sync.mjs — bd close auto-clears kv claim ───────────────
-describe('beads-claim-sync.mjs — bd close auto-clears kv claim', () => {
+// ── beads-claim-sync.mjs — claim/close session lifecycle ───────────────
+describe('beads-claim-sync.mjs — claim/close session lifecycle', () => {
+  it('creates worktree and session state on bd claim', () => {
+    const projectDir = mkdtempSync(path.join(os.tmpdir(), 'xtrm-claimsync-claim-'));
+    mkdirSync(path.join(projectDir, '.beads'));
+
+    spawnSync('git', ['init'], { cwd: projectDir, stdio: 'pipe' });
+    spawnSync('git', ['config', 'user.email', 'test@example.com'], { cwd: projectDir, stdio: 'pipe' });
+    spawnSync('git', ['config', 'user.name', 'Test User'], { cwd: projectDir, stdio: 'pipe' });
+    writeFileSync(path.join(projectDir, 'README.md'), '# test\n', 'utf8');
+    spawnSync('git', ['add', 'README.md'], { cwd: projectDir, stdio: 'pipe' });
+    spawnSync('git', ['commit', '-m', 'init'], { cwd: projectDir, stdio: 'pipe' });
+
+    const fake = withFakeBdDir('#!/usr/bin/env bash\nset -euo pipefail\nif [[ "$1" == "kv" && "$2" == "set" ]]; then exit 0; fi\nif [[ "$1" == "kv" && "$2" == "clear" ]]; then exit 0; fi\nexit 0\n');
+    try {
+      const r = runHook(
+        'beads-claim-sync.mjs',
+        {
+          hook_event_name: 'PostToolUse',
+          tool_name: 'Bash',
+          tool_input: { command: 'bd update jaggers-test-001 --claim' },
+          session_id: 'claim-test-session',
+          cwd: projectDir,
+        },
+        { PATH: fake.tempDir + ':' + (process.env.PATH || '') },
+      );
+      expect(r.status).toBe(0);
+      const out = parseHookJson(r.stdout);
+      expect(out?.additionalContext).toContain('claimed issue');
+      expect(out?.additionalContext).toContain('Worktree');
+
+      const stateFile = path.join(projectDir, '.xtrm-session-state.json');
+      const state = JSON.parse(readFileSync(stateFile, 'utf8'));
+      expect(state.issueId).toBe('jaggers-test-001');
+      expect(state.branch).toBe('feature/jaggers-test-001');
+      expect(state.phase).toBe('claimed');
+      const { existsSync } = require('node:fs');
+      expect(existsSync(state.worktreePath)).toBe(true);
+    } finally {
+      rmSync(fake.tempDir, { recursive: true, force: true });
+      rmSync(projectDir, { recursive: true, force: true });
+    }
+  });
+
   it('clears the session kv claim when bd close runs successfully', () => {
     const projectDir = mkdtempSync(path.join(os.tmpdir(), 'xtrm-claimsync-close-'));
     mkdirSync(path.join(projectDir, '.beads'));

@@ -14,6 +14,7 @@ import { createStatusCommand } from './commands/status.js';
 import { createResetCommand } from './commands/reset.js';
 import { createHelpCommand } from './commands/help.js';
 import { createCleanCommand } from './commands/clean.js';
+import { createFinishCommand } from './commands/finish.js';
 import { printBanner } from './utils/banner.js';
 
 const program = new Command();
@@ -44,6 +45,7 @@ program
 program.addCommand(createStatusCommand());
 program.addCommand(createResetCommand());
 program.addCommand(createCleanCommand());
+program.addCommand(createFinishCommand());
 program.addCommand(createHelpCommand());
 
 // Default action: show help

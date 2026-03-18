@@ -24,17 +24,6 @@
         "timeout": 5000
       },
       {
-        "event": "PostToolUse",
-        "matcher": "Bash|execute_shell_command|bash",
-        "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/beads-claim-sync.mjs",
-        "timeout": 5000
-      },
-      {
-        "event": "Stop",
-        "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/beads-stop-gate.mjs",
-        "timeout": 5000
-      },
-      {
         "event": "Stop",
         "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/beads-memory-gate.mjs",
         "timeout": 8000

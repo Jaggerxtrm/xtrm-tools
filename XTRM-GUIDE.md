@@ -1,6 +1,6 @@
 # XTRM-Tools Complete Guide
 
-> **Version 2.3.0** | A comprehensive reference for the XTRM-Tools Claude Code plugin ecosystem.
+> **Version 2.4.0** | A comprehensive reference for the XTRM-Tools Claude Code plugin ecosystem.
 
 ---
 
@@ -153,7 +153,8 @@ Policies are the **single source of truth** for all enforcement rules.
 | Policy | Runtime | Order | Purpose |
 |--------|---------|-------|---------|
 | `main-guard.json` | both | 10 | PR-only workflow, branch protection |
-| `beads.json` | both | 20 | Issue tracking gates |
+| `beads.json` | both | 20 | Issue tracking gates (edit/commit/memory/compact) |
+| `session-flow.json` | both | 25 | Worktree-on-claim + xtrm finish closure enforcement |
 | `branch-state.json` | claude | 30 | Branch state injection |
 | `gitnexus.json` | claude | 40 | Knowledge graph enrichment |
 | `serena.json` | claude | 50 | Serena LSP workflow reminder at session start |
@@ -199,9 +200,15 @@ node scripts/compile-policies.mjs --check   # CI drift check
 |------|---------|
 | Edit Gate | Blocks edits without claimed issue |
 | Commit Gate | Ensures issues closed before commit |
-| Stop Gate | Blocks session end with unclosed issues |
 | Memory Gate | Prompts to persist insights |
 | Compact Save/Restore | Preserves claim state across `/compact` |
+
+### Session Flow Gates
+
+| Hook | Purpose |
+|------|---------|
+| Claim Sync | Creates worktree + `.xtrm-session-state.json` on `bd update <id> --claim` |
+| Stop Flow Gate | Blocks stop when phase is `waiting-merge`, `conflicting`, `pending-cleanup` |
 
 ### GitNexus Hook
 
@@ -216,6 +223,7 @@ Enriches tool output with knowledge graph context via `gitnexus augment`.
 | `main-guard.ts` | tool_call | Branch protection (blocks dangerous tool calls) |
 | `main-guard-post-push.ts` | tool_result | Post-push PR workflow reminders |
 | `beads.ts` | session_start, tool_call, tool_result, agent_end, session_shutdown | Issue tracking gates + memory gate |
+| `session-flow.ts` | tool_result, agent_end | Worktree claim flow + finish lifecycle reminders |
 | `quality-gates.ts` | tool_result | Linting/typechecking after file edits |
 | `service-skills.ts` | before_agent_start, tool_result | Territory-based skill activation |
 
@@ -271,6 +279,7 @@ Enriches tool output with knowledge graph context via `gitnexus augment`.
 | `project init` | Initialize project data for global hooks/skills |
 | `install project <name>` | **Deprecated** legacy project-skill installer |
 | `status` | Read-only diff view |
+| `finish` | Blocking session closure: phase1 + PR poll + cleanup |
 | `clean` | Remove orphaned hooks |
 | `reset` | Clear preferences |
 
@@ -345,6 +354,7 @@ bd status
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 2.4.0 | 2026-03-18 | Session-flow policy (runtime:both), worktree-first claim sync, `.xtrm-session-state.json`, `xtrm finish` command, stop-gate phase enforcement, compact save/restore continuity |
 | 2.3.0 | 2026-03-18 | Plugin structure, policy compiler, Pi extension parity, manifest hash drift detection, MCP sync refactor (`syncMcpForTargets`), commit gate stale-claim fix, context7 free stdio transport |
 | 2.2.0 | 2026-03-17 | Pi extensions: quality-gates, beads, main-guard |
 | 2.0.0 | 2026-03-12 | CLI rebrand, project skills engine |

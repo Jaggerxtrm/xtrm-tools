@@ -1,0 +1,26 @@
+{
+  "id": "session-flow",
+  "description": "Worktree auto-creation on claim and session closure enforcement via xtrm finish",
+  "version": "1",
+  "runtime": "both",
+  "order": 19,
+  "claude": {
+    "hooks": [
+      {
+        "event": "PostToolUse",
+        "matcher": "Bash|execute_shell_command|bash",
+        "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/beads-claim-sync.mjs",
+        "timeout": 5000
+      },
+      {
+        "event": "Stop",
+        "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/beads-stop-gate.mjs",
+        "timeout": 5000
+      }
+    ]
+  },
+  "pi": {
+    "extension": "config/pi/extensions/session-flow.ts",
+    "events": ["tool_result", "agent_end"]
+  }
+}

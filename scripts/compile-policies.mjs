@@ -12,6 +12,7 @@
 import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { WRITE_TOOLS } from '../hooks/guard-rules.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
@@ -21,6 +22,13 @@ const OUTPUT_FILE = join(ROOT, 'hooks', 'hooks.json');
 const args = process.argv.slice(2);
 const DRY_RUN = args.includes('--dry-run');
 const CHECK = args.includes('--check');
+
+const WRITE_TOOLS_MATCHER = WRITE_TOOLS.join('|');
+
+function resolveMatcherMacro(matcher) {
+  if (typeof matcher !== 'string') return matcher;
+  return matcher.replace(/\$WRITE_TOOLS\b/g, WRITE_TOOLS_MATCHER);
+}
 
 // ── Load and sort policy files ────────────────────────────────────────────────
 
@@ -55,7 +63,8 @@ for (const policy of policies) {
 
   const hooks = policy.claude?.hooks ?? [];
   for (const hook of hooks) {
-    const key = `${hook.event}\0${hook.matcher ?? ''}`;
+    const resolvedMatcher = resolveMatcherMacro(hook.matcher ?? '');
+    const key = `${hook.event}\0${resolvedMatcher}`;
     if (!eventGroups.has(key)) eventGroups.set(key, []);
     const entry = { type: 'command', command: hook.command };
     if (hook.timeout != null) entry.timeout = hook.timeout;

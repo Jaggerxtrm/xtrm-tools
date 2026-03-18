@@ -13,7 +13,7 @@
       },
       {
         "event": "PreToolUse",
-        "matcher": "Edit|Write|MultiEdit|NotebookEdit|mcp__serena__rename_symbol|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol",
+        "matcher": "$WRITE_TOOLS",
         "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/beads-edit-gate.mjs",
         "timeout": 5000
       },

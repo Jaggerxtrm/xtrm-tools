@@ -6,6 +6,7 @@
 
 import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
+import { WRITE_TOOLS, SAFE_BASH_PREFIXES } from './guard-rules.mjs';
 
 let branch = '';
 try {
@@ -44,18 +45,7 @@ function deny(reason) {
   process.exit(0);
 }
 
-const WRITE_TOOLS = new Set([
-  'Edit',
-  'Write',
-  'MultiEdit',
-  'NotebookEdit',
-  'mcp__serena__rename_symbol',
-  'mcp__serena__replace_symbol_body',
-  'mcp__serena__insert_after_symbol',
-  'mcp__serena__insert_before_symbol',
-]);
-
-if (WRITE_TOOLS.has(tool)) {
+if (WRITE_TOOLS.includes(tool)) {
   deny(`⛔ On '${branch}' — start on a feature branch and claim an issue.\n`
     + '  git checkout -b feature/<name>\n'
     + '  bd update <id> --claim\n');
@@ -91,17 +81,9 @@ if (tool === 'Bash') {
   // Important: do not allow generic checkout/switch forms, which include
   // mutating variants such as `git checkout -- <path>`.
   const SAFE_BASH_PATTERNS = [
-    /^git\s+(status|log|diff|branch|show|describe|fetch|remote|config)\b/,
-    /^git\s+pull\b/,
-    /^git\s+stash\b/,
-    /^git\s+worktree\b/,
-    /^git\s+checkout\s+-b\s+\S+/,
-    /^git\s+switch\s+-c\s+\S+/,
+    ...SAFE_BASH_PREFIXES.map(prefix => new RegExp(`^${prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`)),
     // Allow post-merge sync to protected branch only (not arbitrary origin refs)
     ...protectedBranches.map(b => new RegExp(`^git\\s+reset\\s+--hard\\s+origin/${b}\\b`)),
-    /^gh\s+/,
-    /^bd\s+/,
-    /^touch\s+\.beads\//,
   ];
 
   if (SAFE_BASH_PATTERNS.some(p => p.test(cmd))) {

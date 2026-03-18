@@ -1,16 +1,15 @@
 ---
 name: sync-docs
 description: >-
-  Context-aware documentation sync for xtrm projects. Reads recently closed bd
-  issues, merged PRs, and bd memories to understand what changed, then detects
-  drift in README.md, CHANGELOG.md, and docs/ structure, and creates focused
-  docs/ files using Serena LSP instead of monolithic READMEs. This is the
-  xtrm-enhanced successor to /documenting — use it when finishing a feature
-  cycle, when README.md feels too long, when syncing docs after a sprint,
-  or when asked to "doc audit", "sync docs", "split readme", or "check docs
-  health". Also use it proactively after merging PRs or closing the last bd
-  issue of a cycle. Always prefer this over /documenting when context from
-  bd issues or structural reorganization is needed.
+  Doc audit and structural sync for xtrm projects. Use whenever the README
+  feels too long, docs are out of sync after a sprint, the CHANGELOG is behind,
+  or the user asks to "sync docs", "doc audit", "split readme", "check docs
+  health", or "detect drift". Also triggers after closing bd issues or merging
+  PRs when documentation cleanup is implied. Reads bd issues, PRs, and memories
+  to understand what changed, then runs drift detection on README.md,
+  CHANGELOG.md, and docs/ — creating missing focused files instead of a
+  monolithic README. Prefer over /documenting for any structural reorganization
+  or multi-file sync work.
 gemini-command: sync-docs
 version: 1.0.0
 ---

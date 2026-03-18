@@ -16,6 +16,7 @@ export const PI_MUTATING_FILE_TOOLS = [
 ];
 
 export const SAFE_BASH_PREFIXES = [
+	// Git read-only
 	"git status",
 	"git log",
 	"git diff",
@@ -30,10 +31,40 @@ export const SAFE_BASH_PREFIXES = [
 	"git worktree",
 	"git checkout -b",
 	"git switch -c",
+	// Tools
 	"gh",
 	"bd",
-	"touch .beads/",
 	"npx gitnexus",
+	// Read-only filesystem
+	"cat",
+	"ls",
+	"head",
+	"tail",
+	"pwd",
+	"which",
+	"type",
+	"env",
+	"printenv",
+	"find",
+	"grep",
+	"rg",
+	"fd",
+	"wc",
+	"sort",
+	"uniq",
+	"cut",
+	"awk",
+	"jq",
+	"yq",
+	"bat",
+	"less",
+	"more",
+	"file",
+	"stat",
+	"du",
+	"tree",
+	// Allowed writes (specific paths)
+	"touch .beads/",
 ];
 
 export const DANGEROUS_BASH_PATTERNS = [

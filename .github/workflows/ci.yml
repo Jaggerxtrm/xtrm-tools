@@ -48,6 +48,16 @@ jobs:
         npx eslint . --ignore-pattern "**/node_modules/**" || echo "Eslint not configured yet"
         ruff check . || echo "Ruff not configured yet"
 
+    - name: Policy parity checks (Claude + Pi)
+      run: |
+        mkdir -p ~/.pi/agent/extensions
+        cp config/pi/extensions/beads.ts ~/.pi/agent/extensions/
+        cp config/pi/extensions/main-guard.ts ~/.pi/agent/extensions/
+        cp config/pi/extensions/quality-gates.ts ~/.pi/agent/extensions/
+        cp config/pi/extensions/service-skills.ts ~/.pi/agent/extensions/
+        node scripts/compile-policies.mjs --check
+        node scripts/compile-policies.mjs --check-pi
+
     - name: Run Tests
       run: |
         npm test || echo "npm test not configured yet"

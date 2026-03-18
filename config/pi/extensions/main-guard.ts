@@ -1,6 +1,7 @@
 import type { ExtensionAPI, ToolCallEvent } from "@mariozechner/pi-coding-agent";
 import { isToolCallEventType } from "@mariozechner/pi-coding-agent";
 import { SubprocessRunner, EventAdapter, Logger } from "./core/lib";
+import { SAFE_BASH_PREFIXES, DANGEROUS_BASH_PATTERNS } from "./core/guard-rules";
 
 const logger = new Logger({ namespace: "main-guard" });
 
@@ -37,12 +38,14 @@ export default function (pi: ExtensionAPI) {
 		// 2. Safety Check: Dangerous Commands (Global)
 		if (isToolCallEventType("bash", event)) {
 			const cmd = event.input.command.trim();
-			if (cmd.includes("rm -rf") && !cmd.includes("--help")) {
+			const dangerousRegexes = DANGEROUS_BASH_PATTERNS.map((pattern) => new RegExp(pattern));
+			const dangerousMatch = dangerousRegexes.some((rx) => rx.test(cmd));
+			if (dangerousMatch && !cmd.includes("--help")) {
 				if (ctx.hasUI) {
 					const ok = await ctx.ui.confirm("Dangerous Command", `Allow execution of: ${cmd}?`);
 					if (!ok) return { block: true, reason: "Blocked by user confirmation" };
 				} else {
-					return { block: true, reason: "Dangerous command 'rm -rf' blocked in non-interactive mode" };
+					return { block: true, reason: "Dangerous command blocked in non-interactive mode" };
 				}
 			}
 		}
@@ -78,18 +81,11 @@ export default function (pi: ExtensionAPI) {
 				}
 
 				// Safe allowlist
-				const SAFE_BASH_PATTERNS = [
-					/^git\s+(status|log|diff|branch|show|describe|fetch|remote|config)\b/,
-					/^git\s+pull\b/,
-					/^git\s+stash\b/,
-					/^git\s+worktree\b/,
-					/^git\s+checkout\s+-b\s+\S+/,
-					/^git\s+switch\s+-c\s+\S+/,
-					...protectedBranches.map(b => new RegExp(`^git\\s+reset\\s+--hard\\s+origin/${b}\\b`)),
-					/^gh\s+/,
-					/^bd\s+/,
-					/^touch\s+\.beads\//,
-				];
+				const safePrefixRegexes = SAFE_BASH_PREFIXES.map((prefix) =>
+					new RegExp(`^${prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`),
+				);
+				const safeResetRegexes = protectedBranches.map((b) => new RegExp(`^git\\s+reset\\s+--hard\\s+origin/${b}\\b`));
+				const SAFE_BASH_PATTERNS = [...safePrefixRegexes, ...safeResetRegexes];
 
 				if (SAFE_BASH_PATTERNS.some(p => p.test(cmd))) {
 					return undefined;

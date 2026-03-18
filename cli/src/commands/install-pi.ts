@@ -8,7 +8,13 @@ import { homedir } from 'node:os';
 import { findRepoRoot } from '../utils/repo-root.js';
 import { t, sym } from '../utils/theme.js';
 
-const PI_AGENT_DIR = path.join(homedir(), '.pi', 'agent');
+const PI_AGENT_DIR = process.env.PI_AGENT_DIR || path.join(homedir(), '.pi', 'agent');
+
+export interface PiExtensionDiff {
+    missing: string[];
+    stale: string[];
+    upToDate: string[];
+}
 
 interface SchemaField { key: string; label: string; hint: string; secret: boolean; required: boolean; }
 interface OAuthProvider { key: string; instruction: string; }
@@ -51,15 +57,103 @@ function isPiInstalled(): boolean {
     return spawnSync('pi', ['--version'], { encoding: 'utf8' }).status === 0;
 }
 
+async function listTsFilesRecursive(baseDir: string): Promise<string[]> {
+    if (!await fs.pathExists(baseDir)) return [];
+
+    const entries = await fs.readdir(baseDir, { withFileTypes: true });
+    const files: string[] = [];
+
+    for (const entry of entries) {
+        const abs = path.join(baseDir, entry.name);
+        if (entry.isDirectory()) {
+            files.push(...await listTsFilesRecursive(abs));
+            continue;
+        }
+        if (entry.isFile() && entry.name.endsWith('.ts')) {
+            files.push(abs);
+        }
+    }
+
+    return files;
+}
+
+async function fileSha256(filePath: string): Promise<string> {
+    const crypto = await import('node:crypto');
+    const content = await fs.readFile(filePath);
+    return crypto.createHash('sha256').update(content).digest('hex');
+}
+
+export async function diffPiExtensions(sourceDir: string, targetDir: string): Promise<PiExtensionDiff> {
+    const sourceAbs = path.resolve(sourceDir);
+    const targetAbs = path.resolve(targetDir);
+
+    const sourceFiles = (await listTsFilesRecursive(sourceAbs)).map((f) => path.relative(sourceAbs, f)).sort();
+    const missing: string[] = [];
+    const stale: string[] = [];
+    const upToDate: string[] = [];
+
+    for (const rel of sourceFiles) {
+        const src = path.join(sourceAbs, rel);
+        const dst = path.join(targetAbs, rel);
+        if (!await fs.pathExists(dst)) {
+            missing.push(rel);
+            continue;
+        }
+
+        const [srcHash, dstHash] = await Promise.all([fileSha256(src), fileSha256(dst)]);
+        if (srcHash !== dstHash) stale.push(rel);
+        else upToDate.push(rel);
+    }
+
+    return { missing, stale, upToDate };
+}
+
+function printPiCheckSummary(diff: PiExtensionDiff): void {
+    const totalDiff = diff.missing.length + diff.stale.length;
+
+    console.log(t.bold('\n  Pi extension drift check\n'));
+    console.log(t.muted(`  Up-to-date: ${diff.upToDate.length}`));
+    console.log(kleur.yellow(`  Missing:    ${diff.missing.length}`));
+    console.log(kleur.yellow(`  Stale:      ${diff.stale.length}`));
+
+    if (diff.missing.length > 0) {
+        console.log(kleur.yellow('\n  Missing files:'));
+        diff.missing.forEach((f) => console.log(kleur.yellow(`    - ${f}`)));
+    }
+
+    if (diff.stale.length > 0) {
+        console.log(kleur.yellow('\n  Stale files:'));
+        diff.stale.forEach((f) => console.log(kleur.yellow(`    - ${f}`)));
+    }
+
+    if (totalDiff === 0) {
+        console.log(t.success('\n  ✓ Pi extensions are in sync\n'));
+    }
+}
+
 export function createInstallPiCommand(): Command {
     const cmd = new Command('pi');
     cmd
         .description('Install Pi coding agent with providers, extensions, and npm packages')
         .option('-y, --yes', 'Skip confirmation prompts', false)
+        .option('--check', 'Check Pi extension deployment drift without writing changes', false)
         .action(async (opts) => {
-            const { yes } = opts;
+            const { yes, check } = opts;
             const repoRoot = await findRepoRoot();
             const piConfigDir = path.join(repoRoot, 'config', 'pi');
+
+            if (check) {
+                const sourceDir = path.join(piConfigDir, 'extensions');
+                const targetDir = path.join(PI_AGENT_DIR, 'extensions');
+                const diff = await diffPiExtensions(sourceDir, targetDir);
+                printPiCheckSummary(diff);
+
+                if (diff.missing.length > 0 || diff.stale.length > 0) {
+                    console.error(kleur.red('  ✗ Pi extension drift detected. Run `xtrm install pi` to sync.\n'));
+                    process.exit(1);
+                }
+                return;
+            }
 
             console.log(t.bold('\n  Pi Coding Agent Setup\n'));
 

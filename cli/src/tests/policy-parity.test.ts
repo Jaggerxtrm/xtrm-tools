@@ -9,8 +9,9 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { readFileSync, existsSync, readdirSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { readFileSync, existsSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { join, resolve, basename } from 'node:path';
+import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { WRITE_TOOLS } from '../../../hooks/guard-rules.mjs';
 
@@ -138,6 +139,20 @@ describe('referenced files exist', () => {
   });
 });
 
+describe('pi extension guard-rules imports', () => {
+  it('main-guard and adapter use shared guard-rules constants', () => {
+    const mainGuard = readFileSync(join(ROOT, 'config', 'pi', 'extensions', 'main-guard.ts'), 'utf8');
+    const adapter = readFileSync(join(ROOT, 'config', 'pi', 'extensions', 'core', 'adapter.ts'), 'utf8');
+
+    expect(mainGuard).toContain('from "./core/guard-rules"');
+    expect(adapter).toContain('from "./guard-rules"');
+
+    expect(mainGuard).not.toMatch(/^\s*const\s+SAFE_BASH_PREFIXES\s*=\s*\[/m);
+    expect(mainGuard).not.toMatch(/^\s*const\s+DANGEROUS_BASH_PATTERNS\s*=\s*\[/m);
+    expect(adapter).not.toMatch(/const\s+tools\s*=\s*\[/m);
+  });
+});
+
 // ── Compiler consistency ──────────────────────────────────────────────────────
 
 describe('compiler', () => {
@@ -151,6 +166,39 @@ describe('compiler', () => {
       result.status,
       `hooks.json drift detected — run: npm run compile-policies\n${result.stdout}${result.stderr}`,
     ).toBe(0);
+  });
+
+  it('--check-pi validates policy-declared extension deployment set', () => {
+    const tmpAgent = mkdtempSync(join(tmpdir(), 'xtrm-pi-agent-'));
+    const tmpExtDir = join(tmpAgent, 'extensions');
+    mkdirSync(tmpExtDir, { recursive: true });
+
+    try {
+      const declared = policies
+        .filter(({ policy }) => ['pi', 'both'].includes(policy.runtime ?? 'both'))
+        .map(({ policy }) => policy.pi?.extension)
+        .filter(Boolean) as string[];
+
+      for (const rel of declared) {
+        const src = join(ROOT, rel);
+        const dst = join(tmpExtDir, basename(rel));
+        writeFileSync(dst, readFileSync(src));
+      }
+
+      const result = spawnSync(
+        'node',
+        [join(ROOT, 'scripts', 'compile-policies.mjs'), '--check-pi'],
+        {
+          cwd: ROOT,
+          encoding: 'utf8',
+          env: { ...process.env, PI_AGENT_DIR: tmpAgent },
+        },
+      );
+
+      expect(result.status, `check-pi failed:\n${result.stdout}${result.stderr}`).toBe(0);
+    } finally {
+      rmSync(tmpAgent, { recursive: true, force: true });
+    }
   });
 
   it('all policy ids are unique', () => {

@@ -254,7 +254,6 @@ Enriches tool output with knowledge graph context via `gitnexus augment`.
 |-------|---------|
 | `quality-gates` | Code quality enforcement (TS + Python) |
 | `service-skills-set` | Docker service expertise with territory-based activation |
-| `tdd-guard` | Hard TDD gate (PreToolUse) |
 
 ---
 

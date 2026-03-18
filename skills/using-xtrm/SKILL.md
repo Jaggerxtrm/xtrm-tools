@@ -4,7 +4,7 @@ description: >
   Operating manual for an xtrm-equipped Claude Code session. Activates automatically at
   session start to orient the agent on how to work within the xtrm stack: when to apply
   prompt improvement, how the beads issue-tracking gate works, which hooks enforce workflows,
-  and how to compose the full toolset (gitnexus, Serena, TDD guard, quality gates, delegation).
+  and how to compose the full toolset (gitnexus, Serena, quality gates, delegation).
   Use this skill whenever a new session begins in an xtrm-tools-installed environment, or
   when the user asks how to work with the xtrm stack, what tools are available, or how any
   xtrm workflow operates.
@@ -24,7 +24,7 @@ within this stack. Read it at session start and refer back when uncertain about 
 |---|---|
 | **Skills** | Domain expertise loaded on demand |
 | **Hooks** | Automated lifecycle enforcement (gates, suggestions, reminders) |
-| **Project Skills** | Per-project quality enforcement (tdd-guard, quality-gates, service-skills-set) |
+| **Project Skills** | Per-project quality enforcement (quality-gates, service-skills-set) |
 | **MCP Servers** | Semantic tools: Serena (code), gitnexus (graph), context7 (docs), deepwiki |
 | **CLI** | `xtrm install / status / reset / help` — sync and install tooling |
 | **beads (bd)** | Git-backed issue tracker with session gate enforcement |
@@ -151,27 +151,6 @@ If index is stale: `npx gitnexus analyze` before using MCP tools.
 
 ---
 
-## TDD Guard — Test-First Enforcement
-
-This project enforces TDD via `tdd-guard`. It **blocks implementation** until a failing test exists.
-
-**The cycle:**
-1. Write a failing test first — use `sed` or `Bash` to append (not `Write`/`Edit`, which the guard intercepts)
-2. Run `npx vitest run <test-file>` to register the failure in `.claude/tdd-guard/data/test.json`
-3. Implement the minimum code to make it pass
-4. Run tests again — guard clears when tests pass
-
-Never skip the failing test step. Over-implementation is also flagged — write a stub first, then build up.
-
-> **Needs configuration**: tdd-guard is a project skill installed per-project:
-> ```bash
-> xtrm install project tdd-guard
-> ```
-> Requires vitest in the project. After install, verify `.claude/settings.json` includes the
-> PreToolUse and UserPromptSubmit hook entries for tdd-guard.
-
----
-
 ## Quality Gates — Automatic on Every Edit
 
 After each file edit, quality-gates hooks run automatically:
@@ -204,7 +183,7 @@ unless there is a genuine reason.
 | Changing a function | `gitnexus-impact-analysis` first, then Serena edit |
 | Safe rename/refactor | `gitnexus-refactoring` |
 | Docker service project | `using-service-skills` → activate expert persona |
-| Writing new feature | TDD cycle first, quality gates auto-run after |
+| Writing new feature | Write tests alongside, quality gates auto-run after |
 | Maintaining docs | `/documenting` (Serena SSOT drift detection) |
 | Building/improving a skill | `skill-creator` |
 
@@ -227,7 +206,7 @@ unless there is a genuine reason.
 `obsidian-cli`, `hook-development`, `claude-api`
 
 **Project Skills** (install per-project with `xtrm install project <name>`):
-`tdd-guard`, `quality-gates`, `service-skills-set`
+`quality-gates`, `service-skills-set`
 
 ---
 
@@ -244,7 +223,6 @@ These hooks run automatically — you cannot disable them mid-session:
 | `gitnexus-impact-reminder.py` | UserPromptSubmit (edit-intent keywords) | Injects impact analysis reminder |
 | `serena-workflow-reminder.py` | SessionStart + PreToolUse (Edit) | Enforces Serena LSP over raw Edit |
 | `skill-suggestion.py` | UserPromptSubmit | Suggests relevant skill if detected |
-| `tdd-guard` hooks | PreToolUse (Edit/Write) | Blocks implementation without failing test |
 | `quality-gates` hooks | PostToolUse (Edit/Write) | Runs lint + type checks automatically |
 
 ---
@@ -255,7 +233,7 @@ These hooks run automatically — you cannot disable them mid-session:
 |---|---|---|
 | `serena` | Semantic code reading/editing | Auto-detected; activate project per session |
 | `gitnexus` | Knowledge graph, impact analysis | `npm install -g gitnexus` + `npx gitnexus analyze` per project |
-| `context7` | Library documentation lookup | Requires `CONTEXT7_API_KEY` in `~/.config/xtrm-tools/.env` |
+| `context7` | Library documentation lookup | No setup needed (free stdio transport) |
 | `deepwiki` | Technical docs for GitHub repos | No setup needed |
 | `github-grep` | Code search across GitHub | No setup needed |
 

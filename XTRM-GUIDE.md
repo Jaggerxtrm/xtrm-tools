@@ -1,0 +1,333 @@
+# XTRM-Tools Complete Guide
+
+> **Version 2.3.0** | A comprehensive reference for the XTRM-Tools Claude Code plugin ecosystem.
+
+---
+
+## Table of Contents
+
+1. [Overview](#overview)
+2. [Architecture](#architecture)
+3. [Installation](#installation)
+4. [Plugin Structure](#plugin-structure)
+5. [Policy System](#policy-system)
+6. [Hooks Reference](#hooks-reference)
+7. [Pi Extensions](#pi-extensions)
+8. [Skills Catalog](#skills-catalog)
+9. [CLI Commands](#cli-commands)
+10. [MCP Servers](#mcp-servers)
+11. [Issue Tracking with Beads](#issue-tracking-with-beads)
+12. [Troubleshooting](#troubleshooting)
+
+---
+
+## Overview
+
+XTRM-Tools is a **Claude Code plugin** that provides workflow enforcement, code quality gates, issue tracking integration, and development automation.
+
+### Key Features
+
+| Feature | Description |
+|---------|-------------|
+| **Main Guard** | PR-only workflow enforcement, blocks direct edits on protected branches |
+| **Beads Gates** | Issue tracking gates — edit, commit, stop, memory gates |
+| **Quality Gates** | Automatic linting and type checking on file edits |
+| **GitNexus** | Knowledge graph context for code exploration and impact analysis |
+| **Service Skills** | Docker service expertise with territory-based skill activation |
+
+---
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                         Claude Code Session                         │
+├─────────────────────────────────────────────────────────────────────┤
+│  ┌─────────────┐    ┌─────────────┐    ┌─────────────────────────┐ │
+│  │   Plugin    │    │   Skills    │    │      MCP Servers        │ │
+│  │  (hooks/)   │    │  (skills/)  │    │  (.mcp.json)            │ │
+│  └──────┬──────┘    └──────┬──────┘    └─────────────┬───────────┘ │
+│         │                  │                         │             │
+│         ▼                  ▼                         ▼             │
+│  ┌─────────────────────────────────────────────────────────────┐  │
+│  │                    Policy Compiler                          │  │
+│  │            (policies/*.json → hooks.json)                   │  │
+│  └─────────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                        Pi Extensions                                │
+│   (quality-gates.ts, beads.ts, main-guard.ts, service-skills.ts)   │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Installation
+
+### Quick Start
+
+```bash
+# One-time global installation
+npm install -g github:Jaggerxtrm/xtrm-tools@latest
+
+# Install the plugin + dependencies
+xtrm install all
+
+# Verify installation
+claude plugin list
+# → xtrm-tools@xtrm-tools  Version: 2.3.0  Status: ✔ enabled
+```
+
+### One-Line Run
+
+```bash
+npx -y github:Jaggerxtrm/xtrm-tools install all
+```
+
+### Project Initialization
+
+```bash
+cd your-project
+xtrm project init
+```
+
+This runs:
+- `gitnexus analyze` — Indexes your codebase
+- `bd init` — Initializes beads issue tracking
+- MCP server registration for GitNexus
+
+---
+
+## Plugin Structure
+
+```
+plugins/xtrm-tools/
+├── .claude-plugin/plugin.json   # Manifest
+├── hooks → ../../hooks           # All hook scripts
+├── skills → ../../skills         # Auto-discovered skills
+└── .mcp.json → ../../.mcp.json   # MCP server definitions
+```
+
+### plugin.json
+
+```json
+{
+  "name": "xtrm-tools",
+  "version": "2.3.0",
+  "description": "xtrm-tools: workflow enforcement hooks, skills, and MCP servers",
+  "mcpServers": "./.mcp.json"
+}
+```
+
+---
+
+## Policy System
+
+Policies are the **single source of truth** for all enforcement rules.
+
+### Policy Schema
+
+```json
+{
+  "id": "policy-name",
+  "description": "Human-readable description",
+  "runtime": "both",           // "claude" | "pi" | "both"
+  "order": 10,                 // Execution priority
+  "claude": {
+    "hooks": [{ "event": "PreToolUse", "matcher": "Write|Edit", "command": "..." }]
+  },
+  "pi": {
+    "extension": "config/pi/extensions/policy-name.ts",
+    "events": ["tool_call", "tool_result"]
+  }
+}
+```
+
+### Policy Files
+
+| Policy | Runtime | Purpose |
+|--------|---------|---------|
+| `main-guard.json` | both | PR-only workflow, branch protection |
+| `beads.json` | both | Issue tracking gates |
+| `branch-state.json` | claude | Branch state injection |
+| `gitnexus.json` | claude | Knowledge graph enrichment |
+| `quality-gates.json` | pi | Linting/typechecking |
+| `service-skills.json` | pi | Territory-based skill activation |
+
+### Compiler
+
+```bash
+node scripts/compile-policies.mjs           # Write hooks.json
+node scripts/compile-policies.mjs --dry-run # Preview
+node scripts/compile-policies.mjs --check   # CI drift check
+```
+
+---
+
+## Hooks Reference
+
+### Event Types
+
+| Event | When It Fires |
+|-------|---------------|
+| `SessionStart` | Session begins |
+| `UserPromptSubmit` | After user submits prompt |
+| `PreToolUse` | Before tool invocation |
+| `PostToolUse` | After tool completes |
+| `Stop` | Session ends |
+| `PreCompact` | Before compaction |
+
+### Main Guard
+
+**Purpose**: Enforces PR-only workflow.
+
+| Event | Matcher | Action |
+|-------|---------|--------|
+| PreToolUse | Write\|Edit\|MultiEdit\|Serena | Block if on main/master |
+| PreToolUse | Bash | Block dangerous git commands |
+| PostToolUse | Bash | Remind to use `gh pr merge --squash` |
+
+### Beads Gates
+
+| Hook | Purpose |
+|------|---------|
+| Edit Gate | Blocks edits without claimed issue |
+| Commit Gate | Ensures issues closed before commit |
+| Stop Gate | Blocks session end with unclosed issues |
+| Memory Gate | Prompts to persist insights |
+| Compact Save/Restore | Preserves claim state across `/compact` |
+
+### GitNexus Hook
+
+Enriches tool output with knowledge graph context via `gitnexus augment`.
+
+---
+
+## Pi Extensions
+
+| Extension | Events | Purpose |
+|-----------|--------|---------|
+| `main-guard.ts` | tool_call, tool_result | Branch protection |
+| `beads.ts` | session_start, tool_call, tool_result, agent_end | Issue tracking |
+| `quality-gates.ts` | tool_result | Linting/typechecking |
+| `service-skills.ts` | session_start, tool_call, tool_result | Skill activation |
+
+---
+
+## Skills Catalog
+
+### Global Skills
+
+| Skill | Purpose |
+|-------|---------|
+| `documenting` | SSOT documentation with drift detection |
+| `delegating` | Task delegation to cost-optimized agents |
+| `orchestrating-agents` | Multi-model collaboration |
+
+### Project Skills
+
+| Skill | Purpose |
+|-------|---------|
+| `using-xtrm` | Session operating manual |
+| `quality-gates` | Code quality enforcement |
+| `service-skills-set` | Docker service expertise |
+
+---
+
+## CLI Commands
+
+| Command | Description |
+|---------|-------------|
+| `install all` | Full plugin + beads + gitnexus |
+| `install basic` | Plugin + skills (no beads) |
+| `install project <name>` | Install project skill |
+| `project init` | Initialize project |
+| `status` | Read-only diff view |
+| `clean` | Remove orphaned hooks |
+| `reset` | Clear preferences |
+
+### Flags
+
+| Flag | Description |
+|------|-------------|
+| `--yes`, `-y` | Non-interactive |
+| `--dry-run` | Preview only |
+| `--prune` | Force-replace hooks |
+| `--force` | Overwrite existing |
+
+---
+
+## MCP Servers
+
+| Server | Purpose |
+|--------|---------|
+| `serena` | Code analysis via LSP |
+| `context7` | Documentation lookup |
+| `github-grep` | Code search |
+| `deepwiki` | Technical documentation |
+| `gitnexus` | Knowledge graph |
+
+---
+
+## Issue Tracking with Beads
+
+```bash
+bd ready                    # Find unblocked work
+bd update <id> --claim      # Claim an issue
+bd close <id> --reason "Done"  # Close when done
+```
+
+### Issue Types
+
+| Type | Description |
+|------|-------------|
+| `bug` | Something broken |
+| `feature` | New functionality |
+| `task` | Work item |
+| `epic` | Large feature |
+| `chore` | Maintenance |
+
+---
+
+## Troubleshooting
+
+### Plugin Not Loading
+
+```bash
+claude plugin list
+claude plugin validate /path/to/xtrm-tools/plugins/xtrm-tools
+```
+
+### Hooks Not Firing
+
+```bash
+node scripts/compile-policies.mjs --check
+```
+
+### Beads Issues
+
+```bash
+which bd && which dolt
+bd status
+```
+
+---
+
+## Version History
+
+| Version | Date | Highlights |
+|---------|------|------------|
+| 2.3.0 | 2026-03-17 | Plugin structure, policy compiler, Pi extension parity |
+| 2.2.0 | 2026-03-17 | Pi extensions: quality-gates, beads, main-guard |
+| 2.0.0 | 2026-03-12 | CLI rebrand, project skills engine |
+| 1.7.0 | 2026-02-25 | GitNexus integration |
+
+See [CHANGELOG.md](CHANGELOG.md) for full history.
+
+---
+
+## License
+
+MIT License

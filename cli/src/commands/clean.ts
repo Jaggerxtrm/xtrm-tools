@@ -23,6 +23,8 @@ const CANONICAL_HOOKS = new Set([
     'beads-compact-save.mjs',
     'beads-compact-restore.mjs',
     'branch-state.mjs',
+    'quality-check.cjs',
+    'quality-check.py',
     'gitnexus',  // directory
     'statusline-starship.sh',
     'README.md',

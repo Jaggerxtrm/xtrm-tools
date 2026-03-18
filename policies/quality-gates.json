@@ -1,9 +1,25 @@
 {
   "id": "quality-gates",
-  "description": "Run project quality checks (lint/typecheck) after mutating file edits. Invokes .claude/hooks/quality-check.cjs (TS/JS) or quality-check.py (Python) via PostToolUse tool_result.",
+  "description": "Run project quality checks (lint/typecheck) after mutating file edits. Invokes quality-check hooks for TS/JS and Python files.",
   "version": "1",
-  "runtime": "pi",
+  "runtime": "both",
   "order": 30,
+  "claude": {
+    "hooks": [
+      {
+        "event": "PostToolUse",
+        "matcher": "Write|Edit|MultiEdit|mcp__serena__rename_symbol|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol",
+        "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/quality-check.cjs",
+        "timeout": 30000
+      },
+      {
+        "event": "PostToolUse",
+        "matcher": "Write|Edit|MultiEdit|mcp__serena__rename_symbol|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol",
+        "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/quality-check.py",
+        "timeout": 30000
+      }
+    ]
+  },
   "pi": {
     "extension": "config/pi/extensions/quality-gates.ts",
     "events": ["tool_result"]

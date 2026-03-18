@@ -197,20 +197,25 @@ function main() {
     }
   }
 
-  // Auto-clear: bd close <id> — remove the kv claim so commit gate unblocks
+  // On bd close: mark as closed-this-session for memory gate (don't clear claim yet)
+  // Memory gate will clear the claim after user acknowledges memory prompt
   if (/\bbd\s+close\b/.test(command) && commandSucceeded(input)) {
-    const result = spawnSync('bd', ['kv', 'clear', `claimed:${sessionId}`], {
-      cwd,
-      stdio: ['pipe', 'pipe', 'pipe'],
-      timeout: 5000,
-    });
-
-    if (result.status === 0) {
-      process.stdout.write(JSON.stringify({
-        additionalContext: `\n🔓 **Beads**: Session claim cleared. Ready to commit.`,
-      }));
-      process.stdout.write('\n');
+    const match = command.match(/\bbd\s+close\s+(\S+)/);
+    const closedIssueId = match?.[1];
+    
+    // Mark this issue as closed this session (memory gate reads this)
+    if (closedIssueId) {
+      spawnSync('bd', ['kv', 'set', `closed-this-session:${sessionId}`, closedIssueId], {
+        cwd,
+        stdio: ['pipe', 'pipe', 'pipe'],
+        timeout: 5000,
+      });
     }
+
+    process.stdout.write(JSON.stringify({
+      additionalContext: `\n🔓 **Beads**: Issue closed. Memory gate will prompt on session end.`,
+    }));
+    process.stdout.write('\n');
     process.exit(0);
   }
 

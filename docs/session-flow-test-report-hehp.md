@@ -17,141 +17,90 @@
 
 **Command/Event:** `bd update jaggers-agent-tools-hehp --claim`
 
-**Expected:**
-- Claim is recognized by Pi extension
-- Worktree created at `.worktrees/jaggers-agent-tools-hehp`
-- `.xtrm-session-state.json` written with phase=`claimed`
-- Extension appends guidance message to tool result
-
 **Observed:**
 - ✅ Claim detected by `session-flow.ts` via `tool_result` event handler
-- ✅ Worktree created at `/home/dawid/projects/xtrm-tools/.worktrees/jaggers-agent-tools-hehp`
-- ✅ Branch `feature/jaggers-agent-tools-hehp` created
-- ✅ Session state file written with correct structure
-- ✅ Guidance message appended: `🧭 Session Flow: Worktree created: ... Branch: ...`
+- ✅ Worktree created at `.worktrees/jaggers-agent-tools-hehp`
+- ✅ Session state written with `phase: claimed`
+- ✅ Guidance message appended
 
 **Pass/Fail:** ✅ PASS
 
 ---
 
-### B. Stop Gate Phase Behavior (Static Analysis)
+### B. Main Guard Behavior
 
-**Claude Stop Hook Phases:**
-- `waiting-merge` → block (exit 2)
-- `pending-cleanup` → block (exit 2)
-- `conflicting` → block (exit 2)
-- `cleanup-done` → allow (exit 0)
-- `claimed` / `phase1-done` → warn (exit 0, message shown)
+**Observed:**
+- ❌ Main-guard blocked `create_text_file` with wrong message
+- ❌ Message said "start on a feature branch" instead of referencing the worktree
+- ❌ Bash with `cat` blocked as "restricted" (read-only commands should be allowed)
 
-**Pi `agent_end` Handler Phases:**
-- `waiting-merge` / `pending-cleanup` → `sendUserMessage` with PR info + `xtrm finish` prompt
-- `conflicting` → `sendUserMessage` with conflict files + resolution prompt
-- `claimed` / `phase1-done` → `sendUserMessage` with worktree warning + `xtrm finish` suggestion
+**Pass/Fail:** ❌ FAIL
 
-**Pass/Fail:** ✅ PASS (semantic parity confirmed)
+**Bug filed:** jaggers-agent-tools-jhks (P0), jaggers-agent-tools-5f40 (P2)
 
 ---
 
-### C. Extension Interaction Order
+### C. Memory Stop Hook
 
-**Policy order (from `policies/*.json`):**
+**Observed:**
+- ❌ Memory stop hook did NOT fire
+- ❌ Root cause: `beads-claim-sync.mjs` clears the kv claim on `bd close`
+- ❌ Memory gate checks for claim, finds nothing, exits early
+
+**Pass/Fail:** ❌ FAIL (CRITICAL REGRESSION)
+
+**Bug filed:** jaggers-agent-tools-drxm (P0)
+
+---
+
+### D. Extension Interaction Order
+
+**Policy order:**
 ```
 main-guard.json:    order=10, runtime=both
 session-flow.json:  order=19, runtime=both
 beads.json:         order=20, runtime=both
 ```
 
-**hooks.json Stop event order:**
-1. `beads-stop-gate.mjs` (session-flow policy)
-2. `beads-memory-gate.mjs` (beads policy)
-
 **Pass/Fail:** ✅ PASS
 
 ---
 
-### D. Main Guard + Beads Gates Regression
+## 3) Defects Found
 
-**Evidence:** When attempting to create test report via `create_text_file` on main branch:
-```
-On protected branch 'main' — start on a feature branch and claim an issue.
-  git checkout -b feature/<name>
-  bd update <id> --claim
-```
+### Bug 1: Main-guard blocks read-only Bash commands
+- **ID:** jaggers-agent-tools-jhks
+- **Severity:** P1
+- **Repro:** Run `cat file.txt` on main branch
 
-**Pass/Fail:** ✅ PASS - Main-guard correctly blocked edit on protected branch
+### Bug 2: Wrong message - doesn't reference worktree
+- **ID:** jaggers-agent-tools-5f40
+- **Severity:** P2
+- **Repro:** Claim an issue, then try to edit on main
 
----
-
-### E. Runtime Parity: Claude vs Pi
-
-**Key Parity Findings:**
-1. ✅ Claim detection works identically
-2. ✅ Worktree creation via git subprocess
-3. ✅ Session state schema identical
-4. ⚠️ Pi cannot "block" agent_end like Claude blocks Stop
-
-**Parity Verdict:** ✅ Semantic parity achieved
+### Bug 3: Memory stop hook broken (CRITICAL)
+- **ID:** jaggers-agent-tools-drxm
+- **Severity:** P0
+- **Repro:** 
+  1. Claim an issue: `bd update <id> --claim`
+  2. Close it: `bd close <id>`
+  3. Stop the session
+  4. Memory gate never fires
 
 ---
 
-## 3) Hook/Event Firing Log
+## 4) Final Verdict
 
-### Claim Flow Trace:
-```
-[tool_result event]
-  → session-flow.ts:isBashToolResult(event) = true
-  → isClaimCommand("bd update jaggers-agent-tools-hehp --claim") = true
-  → ensureWorktreeSessionState(cwd, issueId)
-    → git worktree add .worktrees/jaggers-agent-tools-hehp -b feature/jaggers-agent-tools-hehp
-    → writeFileSync(.xtrm-session-state.json, {...})
-  → Return: appended guidance message
-```
+**Overall Result:** ❌ FAIL
 
-### Evidence:
-```bash
-$ git worktree list
-/home/dawid/projects/xtrm-tools/.worktrees/jaggers-agent-tools-hehp    e281670 [feature/jaggers-agent-tools-hehp]
-
-$ cat .xtrm-session-state.json
-{
-  "issueId": "jaggers-agent-tools-hehp",
-  "phase": "claimed",
-  ...
-}
-```
-
----
-
-## 4) Defects Found
-
-### Defect 1: Pi Cannot Block agent_end
-- **Severity:** Medium
-- **Suggestion:** Document as known limitation
-
-### Defect 2: CWD Not Switched to Worktree
-- **Severity:** Low
-- **Suggestion:** Document expected behavior
-
----
-
-## 5) Final Verdict
-
-**Overall Result:** ✅ PASS
+**Critical Issues:**
+1. Memory gate is completely broken (P0)
+2. Main-guard incorrectly blocks read-only commands (P1)
+3. Wrong messaging confuses users (P2)
 
 **Residual Risks:**
-1. Pi cannot block agent_end (semantic parity achieved, enforcement differs)
-2. CWD not switched to worktree (different UX model)
+- Memory capture workflow is non-functional
+- User experience is degraded
 
-**Recommended Next Action:** Close issue as PASS
-
----
-
-## 6) Test Suite Results
-
-```
-✓ session-flow-parity.test.ts (4 tests) 466ms
-Test Files  1 passed (1)
-Tests       4 passed (4)
-```
-
-**Policy Compilation Check:** `✓ hooks/hooks.json is up to date`
+**Recommended Next Action:** 
+Fix P0 issue jaggers-agent-tools-drxm before any other work.

@@ -154,14 +154,16 @@ export function decideCommitGate(ctx, state) {
     return { allow: true };
   }
 
-  // Has claim but check if there are still in_progress issues
-  const summary = state.inProgress?.summary ?? null;
+  // Has claim but no in_progress issues → allow (stale/already-closed claim)
+  if (!state.inProgress || state.inProgress.count === 0) {
+    return { allow: true };
+  }
 
-  // Session has claim → block (need to close first)
+  // Has claim + in_progress issues → block (need to close first)
   return {
     allow: false,
     reason: 'unclosed_claim',
-    summary,
+    summary: state.inProgress.summary,
     claimed: state.claimId,
   };
 }

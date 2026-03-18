@@ -20,3 +20,9 @@ cli/node_modules
 
 # TDD Guard runtime data
 .claude/tdd-guard/data/
+
+# Pi npm cache
+.pi/npm/
+
+# Nested repos
+overstory/

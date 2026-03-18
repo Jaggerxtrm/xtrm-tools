@@ -147,14 +147,15 @@ Policies are the **single source of truth** for all enforcement rules.
 
 ### Policy Files
 
-| Policy | Runtime | Purpose |
-|--------|---------|---------|
-| `main-guard.json` | both | PR-only workflow, branch protection |
-| `beads.json` | both | Issue tracking gates |
-| `branch-state.json` | claude | Branch state injection |
-| `gitnexus.json` | claude | Knowledge graph enrichment |
-| `quality-gates.json` | pi | Linting/typechecking |
-| `service-skills.json` | pi | Territory-based skill activation |
+| Policy | Runtime | Order | Purpose |
+|--------|---------|-------|---------|
+| `main-guard.json` | both | 10 | PR-only workflow, branch protection |
+| `beads.json` | both | 20 | Issue tracking gates |
+| `branch-state.json` | claude | 30 | Branch state injection |
+| `gitnexus.json` | claude | 40 | Knowledge graph enrichment |
+| `serena.json` | claude | 50 | Serena LSP workflow reminder at session start |
+| `quality-gates.json` | pi | 30 | Linting/typechecking |
+| `service-skills.json` | pi | 40 | Territory-based skill activation |
 
 ### Compiler
 
@@ -209,30 +210,51 @@ Enriches tool output with knowledge graph context via `gitnexus augment`.
 
 | Extension | Events | Purpose |
 |-----------|--------|---------|
-| `main-guard.ts` | tool_call, tool_result | Branch protection |
-| `beads.ts` | session_start, tool_call, tool_result, agent_end | Issue tracking |
-| `quality-gates.ts` | tool_result | Linting/typechecking |
-| `service-skills.ts` | session_start, tool_call, tool_result | Skill activation |
+| `main-guard.ts` | tool_call | Branch protection (blocks dangerous tool calls) |
+| `main-guard-post-push.ts` | tool_result | Post-push PR workflow reminders |
+| `beads.ts` | session_start, tool_call, tool_result, agent_end, session_shutdown | Issue tracking gates + memory gate |
+| `quality-gates.ts` | tool_result | Linting/typechecking after file edits |
+| `service-skills.ts` | before_agent_start, tool_result | Territory-based skill activation |
 
 ---
 
 ## Skills Catalog
 
-### Global Skills
+### Global Skills (`skills/` → `~/.agents/skills/`)
 
 | Skill | Purpose |
 |-------|---------|
+| `using-xtrm` | Session operating manual — read at session start |
+| `test-planning` | Plan test issues alongside implementation work |
 | `documenting` | SSOT documentation with drift detection |
 | `delegating` | Task delegation to cost-optimized agents |
-| `orchestrating-agents` | Multi-model collaboration |
+| `orchestrating-agents` | Multi-model collaboration (Gemini, Qwen) |
+| `clean-code` | Pragmatic coding standards |
+| `hook-development` | Claude Code plugin hook authoring |
+| `skill-creator` | Create and evaluate new skills |
+| `find-skills` | Discover and install skills |
+| `prompt-improving` | Claude XML prompt optimization |
+| `using-serena-lsp` | Serena LSP workflow guide |
+| `using-TDD` | TDD workflow enforcement |
+| `python-testing` | Pytest strategies and TDD |
+| `senior-backend` | Backend development expertise |
+| `senior-data-scientist` | Data science and analytics |
+| `senior-devops` | DevOps and infrastructure |
+| `senior-security` | Security engineering |
+| `docker-expert` | Docker containerization |
+| `obsidian-cli` | Obsidian vault CLI integration |
+| `gitnexus-debugging` | Debug with knowledge graph |
+| `gitnexus-exploring` | Navigate code with knowledge graph |
+| `gitnexus-impact-analysis` | Blast radius analysis |
+| `gitnexus-refactoring` | Safe refactor planning |
 
-### Project Skills
+### Project Skills (`project-skills/` → `<project>/.claude/`)
 
 | Skill | Purpose |
 |-------|---------|
-| `using-xtrm` | Session operating manual |
-| `quality-gates` | Code quality enforcement |
-| `service-skills-set` | Docker service expertise |
+| `quality-gates` | Code quality enforcement (TS + Python) |
+| `service-skills-set` | Docker service expertise with territory-based activation |
+| `tdd-guard` | Hard TDD gate (PreToolUse) |
 
 ---
 
@@ -319,7 +341,7 @@ bd status
 
 | Version | Date | Highlights |
 |---------|------|------------|
-| 2.3.0 | 2026-03-17 | Plugin structure, policy compiler, Pi extension parity |
+| 2.3.0 | 2026-03-18 | Plugin structure, policy compiler, Pi extension parity, manifest hash drift detection, MCP sync refactor (`syncMcpForTargets`), commit gate stale-claim fix, context7 free stdio transport |
 | 2.2.0 | 2026-03-17 | Pi extensions: quality-gates, beads, main-guard |
 | 2.0.0 | 2026-03-12 | CLI rebrand, project skills engine |
 | 1.7.0 | 2026-02-25 | GitNexus integration |

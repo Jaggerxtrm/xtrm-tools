@@ -9,11 +9,12 @@ let version = '0.0.0';
 try { version = JSON.parse(readFileSync(resolve(__dirname, '../package.json'), 'utf8')).version; } catch { /* fallback */ }
 
 import { createInstallCommand } from './commands/install.js';
-import { createProjectCommand } from './commands/install-project.js';
+import { createProjectCommand, runProjectInit } from './commands/install-project.js';
 import { createStatusCommand } from './commands/status.js';
 import { createResetCommand } from './commands/reset.js';
 import { createHelpCommand } from './commands/help.js';
 import { createCleanCommand } from './commands/clean.js';
+import { createFinishCommand } from './commands/finish.js';
 import { printBanner } from './utils/banner.js';
 
 const program = new Command();
@@ -35,9 +36,16 @@ program.exitOverride((err) => {
 // Main commands
 program.addCommand(createInstallCommand());
 program.addCommand(createProjectCommand());
+program
+    .command('init')
+    .description('Alias for xtrm project init')
+    .action(async () => {
+        await runProjectInit();
+    });
 program.addCommand(createStatusCommand());
 program.addCommand(createResetCommand());
 program.addCommand(createCleanCommand());
+program.addCommand(createFinishCommand());
 program.addCommand(createHelpCommand());
 
 // Default action: show help

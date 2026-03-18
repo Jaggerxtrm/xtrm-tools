@@ -26,3 +26,11 @@ cli/node_modules
 
 # Nested repos
 overstory/
+
+# Skill eval workspaces (local eval artifacts, not for review)
+skills/*-workspace/
+
+# Git worktrees (managed by Claude Code)
+.claude/worktrees/
+.worktrees/
+.xtrm-session-state.json

@@ -6,19 +6,22 @@ import fs from 'fs-extra';
 import { findRepoRoot } from '../utils/repo-root.js';
 declare const __dirname: string;
 
-const HOOK_CATALOG: Array<{ file: string; event: string; desc: string; beads?: true }> = [
-    { file: 'main-guard.mjs',               event: 'PreToolUse',       desc: 'Blocks direct edits on protected branches' },
+const HOOK_CATALOG: Array<{ file: string; event: string; desc: string; beads?: true; sessionFlow?: true }> = [
+    { file: 'main-guard.mjs',               event: 'PreToolUse',       desc: 'Blocks direct edits / unsafe Bash on protected branches' },
     { file: 'main-guard-post-push.mjs',     event: 'PostToolUse',      desc: 'After feature-branch push, reminds PR/merge/sync steps' },
-    { file: 'skill-suggestion.py',           event: 'UserPromptSubmit', desc: 'Suggests relevant skills based on user prompt' },
-    { file: 'serena-workflow-reminder.py',   event: 'SessionStart',     desc: 'Injects Serena semantic editing workflow reminder' },
-    { file: 'type-safety-enforcement.py',    event: 'PreToolUse',       desc: 'Prevents risky Bash and enforces safe edit patterns' },
-    { file: 'gitnexus/gitnexus-hook.cjs',    event: 'PreToolUse',       desc: 'Adds GitNexus context for Grep/Glob/Bash searches' },
-    { file: 'skill-discovery.py',            event: 'UserPromptSubmit', desc: 'Discovers available skills for user requests' },
-    { file: 'agent_context.py',              event: 'Support module',   desc: 'Shared hook I/O helper used by Python hook scripts' },
-    { file: 'beads-edit-gate.mjs',           event: 'PreToolUse',       desc: 'Blocks file edits if no beads issue is claimed',      beads: true },
-    { file: 'beads-commit-gate.mjs',         event: 'PreToolUse',       desc: 'Blocks commits when no beads issue is in progress',   beads: true },
-    { file: 'beads-stop-gate.mjs',           event: 'Stop',             desc: 'Blocks session stop with an unclosed beads claim',    beads: true },
-    { file: 'beads-close-memory-prompt.mjs', event: 'PostToolUse',      desc: 'Prompts memory save when closing a beads issue',      beads: true },
+    { file: 'serena-workflow-reminder.py',  event: 'SessionStart',     desc: 'Injects Serena semantic editing workflow reminder' },
+    { file: 'gitnexus/gitnexus-hook.cjs',   event: 'PostToolUse',      desc: 'Adds GitNexus context for search and Serena tooling' },
+    { file: 'agent_context.py',             event: 'Support module',   desc: 'Shared hook I/O helper used by Python hook scripts' },
+    { file: 'beads-edit-gate.mjs',          event: 'PreToolUse',       desc: 'Blocks file edits if no beads issue is claimed',      beads: true },
+    { file: 'beads-commit-gate.mjs',        event: 'PreToolUse',       desc: 'Blocks commits when no beads issue is in progress',   beads: true },
+    { file: 'beads-memory-gate.mjs',        event: 'Stop',             desc: 'Prompts memory save when claim was closed',           beads: true },
+    { file: 'beads-compact-save.mjs',       event: 'PreCompact',       desc: 'Saves in_progress issue + session-state bundle',      beads: true },
+    { file: 'beads-compact-restore.mjs',    event: 'SessionStart',     desc: 'Restores compacted issue + session-state bundle',     beads: true },
+    { file: 'beads-claim-sync.mjs',         event: 'PostToolUse',      desc: 'Auto-claim sync + worktree/session-state bootstrap',  sessionFlow: true },
+    { file: 'beads-stop-gate.mjs',          event: 'Stop',             desc: 'Blocks stop for waiting-merge/conflicting/pending-cleanup', sessionFlow: true },
+    { file: 'branch-state.mjs',             event: 'UserPromptSubmit', desc: 'Injects current git branch into prompt context' },
+    { file: 'quality-check.cjs',            event: 'PostToolUse',      desc: 'Runs JS/TS quality checks on mutating edits' },
+    { file: 'quality-check.py',             event: 'PostToolUse',      desc: 'Runs Python quality checks on mutating edits' },
 ];
 
 async function readSkillsFromDir(dir: string): Promise<Array<{ name: string; desc: string }>> {
@@ -107,8 +110,9 @@ export function createHelpCommand(): Command {
                 `  ${kleur.dim('Flags (all profiles): --dry-run  --yes / -y  --no-mcp  --force  --prune  --backport')}`,
             ].join('\n');
 
-            const general = HOOK_CATALOG.filter(h => !h.beads);
-            const beads   = HOOK_CATALOG.filter(h => h.beads);
+            const general = HOOK_CATALOG.filter(h => !h.beads && !h.sessionFlow);
+            const beads = HOOK_CATALOG.filter(h => h.beads);
+            const sessionFlow = HOOK_CATALOG.filter(h => h.sessionFlow);
             const hookRows = (hooks: typeof HOOK_CATALOG) =>
                 hooks.map(h =>
                     `  ${kleur.white(col(h.file, 34))}${kleur.yellow(col(h.event, 20))}${kleur.dim(h.desc)}`
@@ -123,6 +127,9 @@ export function createHelpCommand(): Command {
                 '',
                 `  ${kleur.dim('beads gate hooks (xtrm install all -- require beads+dolt):')}`,
                 hookRows(beads),
+                '',
+                `  ${kleur.dim('session-flow hooks (xtrm finish lifecycle):')}`,
+                hookRows(sessionFlow),
             ].join('\n');
 
             const skillRows = skills.map(s => {
@@ -153,6 +160,7 @@ export function createHelpCommand(): Command {
                 section('OTHER COMMANDS'),
                 '',
                 `  ${kleur.bold('xtrm status')}    ${kleur.dim('Show pending changes without applying them')}`,
+                `  ${kleur.bold('xtrm finish')}    ${kleur.dim('Run blocking session closure lifecycle (PR + cleanup)')}`,
                 `  ${kleur.bold('xtrm reset')}     ${kleur.dim('Clear saved preferences and start fresh')}`,
                 `  ${kleur.bold('xtrm help')}      ${kleur.dim('Show this overview')}`,
             ].join('\n');

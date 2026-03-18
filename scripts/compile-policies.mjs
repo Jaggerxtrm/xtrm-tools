@@ -2,16 +2,18 @@
 // compile-policies.mjs — generate hooks/hooks.json from policies/*.json
 //
 // Usage:
-//   node scripts/compile-policies.mjs           # write hooks/hooks.json
-//   node scripts/compile-policies.mjs --dry-run # print output, no write
-//   node scripts/compile-policies.mjs --check   # exit 1 if hooks.json would change
+//   node scripts/compile-policies.mjs             # write hooks/hooks.json
+//   node scripts/compile-policies.mjs --dry-run   # print output, no write
+//   node scripts/compile-policies.mjs --check     # exit 1 if hooks.json would change
+//   node scripts/compile-policies.mjs --check-pi  # verify deployed Pi extensions match policy declarations
 //
 // Policy files: policies/*.json (schema: policies/schema.json)
 // Output:       hooks/hooks.json
 
-import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, readdirSync, existsSync, statSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { WRITE_TOOLS } from '../hooks/guard-rules.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
@@ -21,6 +23,16 @@ const OUTPUT_FILE = join(ROOT, 'hooks', 'hooks.json');
 const args = process.argv.slice(2);
 const DRY_RUN = args.includes('--dry-run');
 const CHECK = args.includes('--check');
+const CHECK_PI = args.includes('--check-pi');
+
+const WRITE_TOOLS_MATCHER = WRITE_TOOLS.join('|');
+const PI_AGENT_DIR = process.env.PI_AGENT_DIR || join(process.env.HOME || '', '.pi', 'agent');
+const PI_DEPLOYED_EXT_DIR = join(PI_AGENT_DIR, 'extensions');
+
+function resolveMatcherMacro(matcher) {
+  if (typeof matcher !== 'string') return matcher;
+  return matcher.replace(/\$WRITE_TOOLS\b/g, WRITE_TOOLS_MATCHER);
+}
 
 // ── Load and sort policy files ────────────────────────────────────────────────
 
@@ -55,7 +67,8 @@ for (const policy of policies) {
 
   const hooks = policy.claude?.hooks ?? [];
   for (const hook of hooks) {
-    const key = `${hook.event}\0${hook.matcher ?? ''}`;
+    const resolvedMatcher = resolveMatcherMacro(hook.matcher ?? '');
+    const key = `${hook.event}\0${resolvedMatcher}`;
     if (!eventGroups.has(key)) eventGroups.set(key, []);
     const entry = { type: 'command', command: hook.command };
     if (hook.timeout != null) entry.timeout = hook.timeout;
@@ -74,11 +87,70 @@ for (const [key, hookEntries] of eventGroups) {
 
 const output = JSON.stringify({ hooks: hooksOutput }, null, 2) + '\n';
 
+function listTopLevelTsFiles(dir) {
+  if (!existsSync(dir) || !statSync(dir).isDirectory()) return [];
+  return readdirSync(dir)
+    .filter((name) => name.endsWith('.ts'))
+    .sort();
+}
+
+function runPiCheck(policiesData) {
+  const policyExtPaths = policiesData
+    .filter((policy) => ['pi', 'both'].includes(policy.runtime ?? 'both'))
+    .map((policy) => policy.pi?.extension)
+    .filter(Boolean)
+    .sort();
+
+  const missingSource = policyExtPaths.filter((relPath) => !existsSync(join(ROOT, relPath)));
+
+  if (missingSource.length > 0) {
+    console.error('✗ Missing Pi extension files referenced by policies:');
+    missingSource.forEach((file) => console.error(`  - ${file}`));
+    process.exit(1);
+  }
+
+  const expectedNames = policyExtPaths.map((p) => p.replace(/^config\/pi\/extensions\//, ''));
+  const expectedSet = new Set(expectedNames);
+
+  const deployedNames = listTopLevelTsFiles(PI_DEPLOYED_EXT_DIR);
+  const deployedSet = new Set(deployedNames);
+
+  const missingDeployed = expectedNames.filter((name) => !deployedSet.has(name));
+  const extraDeployed = deployedNames.filter((name) => !expectedSet.has(name));
+
+  if (missingDeployed.length > 0 || extraDeployed.length > 0) {
+    console.error('✗ Pi extension deployment drift detected');
+    console.error(`  Expected (from policies): ${expectedNames.length}`);
+    console.error(`  Deployed (~/.pi/agent/extensions): ${deployedNames.length}`);
+
+    if (missingDeployed.length > 0) {
+      console.error('  Missing deployed files:');
+      missingDeployed.forEach((file) => console.error(`    - ${file}`));
+    }
+
+    if (extraDeployed.length > 0) {
+      console.error('  Extra deployed files:');
+      extraDeployed.forEach((file) => console.error(`    - ${file}`));
+    }
+
+    process.exit(1);
+  }
+
+  console.log('✓ Pi extensions are in sync with policy declarations');
+}
+
 // ── Output ────────────────────────────────────────────────────────────────────
 
 if (DRY_RUN) {
   process.stdout.write(output);
   process.exit(0);
+}
+
+if (CHECK_PI) {
+  runPiCheck(policies);
+  if (!CHECK) {
+    process.exit(0);
+  }
 }
 
 if (CHECK) {

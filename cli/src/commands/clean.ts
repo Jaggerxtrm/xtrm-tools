@@ -20,9 +20,12 @@ const CANONICAL_HOOKS = new Set([
     'beads-stop-gate.mjs',
     'beads-memory-gate.mjs',
     'beads-claim-sync.mjs',
+    'session-state.mjs',
     'beads-compact-save.mjs',
     'beads-compact-restore.mjs',
     'branch-state.mjs',
+    'quality-check.cjs',
+    'quality-check.py',
     'gitnexus',  // directory
     'statusline-starship.sh',
     'README.md',
@@ -52,6 +55,11 @@ const CANONICAL_SKILLS = new Set([
     'using-serena-lsp',
     'using-TDD',
     'using-xtrm',
+    'using-quality-gates',
+    'using-service-skills',
+    'updating-service-skills',
+    'creating-service-skills',
+    'scoping-service-skills',
 ]);
 
 // Directories/files to always ignore

@@ -24,9 +24,9 @@ within this stack. Read it at session start and refer back when uncertain about 
 |---|---|
 | **Skills** | Domain expertise loaded on demand |
 | **Hooks** | Automated lifecycle enforcement (gates, suggestions, reminders) |
-| **Project Skills** | Per-project quality enforcement (quality-gates, service-skills-set) |
+| **Project Data (`xtrm init`)** | Per-repo bootstrap data (`.beads/`, `service-registry.json`, GitNexus index) |
 | **MCP Servers** | Semantic tools: Serena (code), gitnexus (graph), context7 (docs), deepwiki |
-| **CLI** | `xtrm install / status / reset / help` — sync and install tooling |
+| **CLI** | `xtrm install / status / finish / reset / help` — sync and closure tooling |
 | **beads (bd)** | Git-backed issue tracker with session gate enforcement |
 
 ---
@@ -70,36 +70,33 @@ proceeding. Don't ask about things you can reasonably infer.
 
 ---
 
-## Beads Gate — Session Protocol
+## Beads + Session Flow — Session Protocol
 
-This environment enforces a **beads session gate**. You cannot edit files or stop the session
-without an active issue claim. Follow this protocol exactly:
+This environment enforces a **beads session gate** plus **session-flow lifecycle gate**.
+You cannot edit files without a claim, and you cannot safely end a closure-in-progress session.
 
 ```bash
-# 1. Find or create an issue before any edit
-bd list --status=open           # see what exists
-bd create --title="..." --type=task --priority=2
-bd update <id> --status=in_progress
-bd kv set "claimed:<session_id>" "<id>"
+# 1. Claim before editing
+bd list --status=open
+bd update <id> --claim
+# hook auto-sets session claim + auto-creates worktree + writes .xtrm-session-state.json
 
-# 2. Work freely (hooks allow edits when claim is set)
+# 2. Work in the claimed branch/worktree
 
-# 3. Close when done — hook auto-clears claim
+# 3. Close issue when implementation is done
 bd close <id>
 
-# 4. Session close protocol
-git add <files> && git commit -m "..."
-git push -u origin <feature-branch>
-gh pr create --fill
-gh pr merge --squash
-git checkout main && git reset --hard origin/main
+# 4. Session close protocol (single command)
+xtrm finish
+# blocking: commit/push/pr-create/auto-merge poll/worktree cleanup
 ```
 
 **Key rules:**
 - One active claim per session
 - Always work on a **feature branch**, never directly on `main`/`master`
-- `main-guard.mjs` blocks all file edits on protected branches
-- `beads-stop-gate.mjs` blocks session end until the claim is closed
+- `main-guard.mjs` blocks edits on protected branches
+- `beads-stop-gate.mjs` blocks stop for closure phases: `waiting-merge`, `conflicting`, `pending-cleanup`
+- If blocked on stop: resolve state then re-run `xtrm finish`
 
 ---
 
@@ -161,12 +158,9 @@ You do not invoke these manually — they fire via PostToolUse hooks. If a gate 
 lint/type error before continuing. Do not suppress errors with `// eslint-disable` or `# type: ignore`
 unless there is a genuine reason.
 
-> **Needs configuration**: quality-gates is a project skill installed per-project:
-> ```bash
-> xtrm install project quality-gates
-> ```
-> After install, verify `.claude/settings.json` includes PostToolUse hooks, and that the project
-> has `eslint.config.*` (TS) or `pyproject.toml` / `ruff.toml` (Python) configured.
+> **Global-first behavior**: quality-gates hooks are global; no per-project install is needed.
+> Run `xtrm init` once per repository to bootstrap project data, then ensure the repo has
+> `eslint.config.*` (TS) or `pyproject.toml` / `ruff.toml` (Python) configured so checks can run.
 
 ---
 
@@ -205,8 +199,9 @@ unless there is a genuine reason.
 **Integrations:**
 `obsidian-cli`, `hook-development`, `claude-api`
 
-**Project Skills** (install per-project with `xtrm install project <name>`):
-`quality-gates`, `service-skills-set`
+**Global-first note:**
+`quality-gates` and `service-skills` workflows are globally available after `xtrm install all`.
+Use `xtrm init` to provision per-project data (beads + service-registry + GitNexus index).
 
 ---
 
@@ -216,14 +211,15 @@ These hooks run automatically — you cannot disable them mid-session:
 
 | Hook | Trigger | Effect |
 |---|---|---|
-| `main-guard.mjs` | PreToolUse (Edit/Write/Serena) | Blocks edits on `main`/`master` |
+| `main-guard.mjs` | PreToolUse (Edit/Write/Serena/Bash) | Blocks edits and unsafe Bash on protected branches |
 | `beads-edit-gate.mjs` | PreToolUse (Edit/Write/Serena) | Blocks edits without active claim |
 | `beads-commit-gate.mjs` | PreToolUse (Bash: git commit) | Blocks commit with unclosed claim |
-| `beads-stop-gate.mjs` | Stop | Blocks session end with open claim |
-| `gitnexus-impact-reminder.py` | UserPromptSubmit (edit-intent keywords) | Injects impact analysis reminder |
-| `serena-workflow-reminder.py` | SessionStart + PreToolUse (Edit) | Enforces Serena LSP over raw Edit |
-| `skill-suggestion.py` | UserPromptSubmit | Suggests relevant skill if detected |
-| `quality-gates` hooks | PostToolUse (Edit/Write) | Runs lint + type checks automatically |
+| `beads-claim-sync.mjs` | PostToolUse (Bash claim command) | Syncs claim + creates worktree + writes session state |
+| `beads-stop-gate.mjs` | Stop | Blocks stop for unresolved session-flow phases |
+| `beads-memory-gate.mjs` | Stop | Prompts for persistent insights after closure |
+| `beads-compact-save/restore.mjs` | PreCompact / SessionStart | Preserves claim + session state across compact |
+| `serena-workflow-reminder.py` | SessionStart | Reminds semantic editing workflow |
+| `quality-check.(cjs|py)` | PostToolUse (Edit/Write) | Runs lint + type checks automatically |
 
 ---
 
@@ -241,9 +237,9 @@ These hooks run automatically — you cannot disable them mid-session:
 
 ## Checklist Before Finishing Any Task
 
-1. `gitnexus_detect_changes({scope: "staged"})` — confirms only expected files changed
+1. `gitnexus_detect_changes(...)` — confirms only expected files/flows changed
 2. All d=1 dependents updated (if any signal from impact analysis)
-3. Tests pass: `npx vitest run`
+3. Tests pass (targeted + relevant integration)
 4. Beads issue closed: `bd close <id>`
-5. Feature branch pushed, PR created and merged
-6. Back on `main`: `git checkout main && git reset --hard origin/main`
+5. Run `xtrm finish` for blocking closure lifecycle
+6. Verify session state reached `cleanup-done` (or intentional re-entry state)

@@ -154,4 +154,32 @@ describe('createInstallPiCommand', () => {
         require('node:fs').rmSync(tmpDir, { recursive: true });
         expect(result['DASHSCOPE_API_KEY']).toBe('sk-from-models-789');
     });
+
+    it('diffPiExtensions reports missing and stale files', async () => {
+        const { diffPiExtensions } = await import('../src/commands/install-pi.js?t=diff' + Date.now());
+        const nodeFs = require('node:fs');
+        const nodePath = require('node:path');
+        const os = require('node:os');
+
+        const srcDir = nodeFs.mkdtempSync(nodePath.join(os.tmpdir(), 'pi-ext-src-'));
+        const dstDir = nodeFs.mkdtempSync(nodePath.join(os.tmpdir(), 'pi-ext-dst-'));
+
+        nodeFs.writeFileSync(nodePath.join(srcDir, 'a.ts'), 'export const a = 1;');
+        nodeFs.writeFileSync(nodePath.join(srcDir, 'b.ts'), 'export const b = 1;');
+        nodeFs.writeFileSync(nodePath.join(dstDir, 'a.ts'), 'export const a = 2;');
+
+        const diff = await diffPiExtensions(srcDir, dstDir);
+
+        expect(diff.missing).toContain('b.ts');
+        expect(diff.stale).toContain('a.ts');
+
+        nodeFs.rmSync(srcDir, { recursive: true });
+        nodeFs.rmSync(dstDir, { recursive: true });
+    });
+
+    it('createInstallPiCommand supports --check flag', () => {
+        const cmd = createInstallPiCommand();
+        const hasCheck = (cmd as any).options.some((opt: any) => opt.long === '--check');
+        expect(hasCheck).toBe(true);
+    });
 });

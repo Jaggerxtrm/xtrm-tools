@@ -27,6 +27,135 @@ const XTRM_BLOCK_START = '<!-- xtrm:start -->';
 const XTRM_BLOCK_END = '<!-- xtrm:end -->';
 const syncedProjectMcpRoots = new Set<string>();
 
+interface ProjectDetectionResult {
+    hasTypeScript: boolean;
+    hasPython: boolean;
+    dockerServices: string[];
+    generatedRegistry: boolean;
+    registryPath?: string;
+}
+
+function toServiceId(name: string): string {
+    return name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '') || 'service';
+}
+
+function parseComposeServices(content: string): string[] {
+    const lines = content.split('\n');
+    const services = new Set<string>();
+
+    let inServices = false;
+    for (const line of lines) {
+        const raw = line.replace(/\t/g, '    ');
+
+        if (!inServices) {
+            if (/^services:\s*$/.test(raw)) {
+                inServices = true;
+            }
+            continue;
+        }
+
+        if (/^[^\s#].*:\s*$/.test(raw) && !/^services:\s*$/.test(raw)) {
+            break;
+        }
+
+        const serviceMatch = raw.match(/^\s{2}([A-Za-z0-9._-]+):\s*(?:#.*)?$/);
+        if (serviceMatch) {
+            services.add(serviceMatch[1]);
+        }
+    }
+
+    return [...services];
+}
+
+export async function detectProjectFeatures(projectRoot: string): Promise<ProjectDetectionResult> {
+    const hasTypeScript = await fs.pathExists(path.join(projectRoot, 'tsconfig.json'));
+
+    const hasPython =
+        await fs.pathExists(path.join(projectRoot, 'pyproject.toml')) ||
+        await fs.pathExists(path.join(projectRoot, 'setup.py')) ||
+        await fs.pathExists(path.join(projectRoot, 'requirements.txt'));
+
+    const composeCandidates = [
+        'docker-compose.yml',
+        'docker-compose.yaml',
+        'compose.yml',
+        'compose.yaml',
+    ];
+
+    const dockerServices = new Set<string>();
+    for (const composeFile of composeCandidates) {
+        const composePath = path.join(projectRoot, composeFile);
+        if (!await fs.pathExists(composePath)) continue;
+
+        try {
+            const content = await fs.readFile(composePath, 'utf8');
+            for (const service of parseComposeServices(content)) {
+                dockerServices.add(service);
+            }
+        } catch {
+            // Ignore malformed compose file and continue
+        }
+    }
+
+    const hasDockerfile = await fs.pathExists(path.join(projectRoot, 'Dockerfile'));
+    if (hasDockerfile && dockerServices.size === 0) {
+        dockerServices.add(path.basename(projectRoot));
+    }
+
+    return {
+        hasTypeScript,
+        hasPython,
+        dockerServices: [...dockerServices],
+        generatedRegistry: false,
+    };
+}
+
+export async function ensureServiceRegistry(projectRoot: string, services: string[]): Promise<{ generated: boolean; registryPath: string }> {
+    const registryPath = path.join(projectRoot, 'service-registry.json');
+    if (services.length === 0) {
+        return { generated: false, registryPath };
+    }
+
+    const existedBefore = await fs.pathExists(registryPath);
+    const now = new Date().toISOString();
+    let registry: any = { version: '1.0.0', services: {} };
+
+    if (existedBefore) {
+        try {
+            registry = await fs.readJson(registryPath);
+            if (!registry.services || typeof registry.services !== 'object') {
+                registry.services = {};
+            }
+        } catch {
+            registry = { version: '1.0.0', services: {} };
+        }
+    }
+
+    let changed = false;
+    for (const serviceName of services) {
+        const serviceId = toServiceId(serviceName);
+        if (registry.services[serviceId]) continue;
+
+        registry.services[serviceId] = {
+            name: serviceName,
+            description: `Detected from Docker configuration (${serviceName}).`,
+            territory: [],
+            skill_path: `.claude/skills/${serviceId}/SKILL.md`,
+            last_sync: now,
+        };
+        changed = true;
+    }
+
+    if (changed || !existedBefore) {
+        await fs.writeJson(registryPath, registry, { spaces: 2 });
+    }
+
+    return { generated: changed || !existedBefore, registryPath };
+}
+
 function resolveEnvVars(value: string): string {
     if (typeof value !== 'string') return value;
     return value.replace(/\$\{([A-Z0-9_]+)\}/g, (_m, name) => process.env[name] || '');
@@ -594,24 +723,26 @@ export async function installAllProjectSkills(projectRootOverride?: string): Pro
 
 export function buildProjectInitGuide(): string {
     const lines = [
-        kleur.bold('\nProject Init — Production baseline\n'),
-        kleur.dim('This command prints a complete setup checklist and then bootstraps beads + GitNexus for this repo.\n'),
-        `${kleur.cyan('1) Install core project enforcement (quality-gates):')}`,
-        kleur.dim('   xtrm install project quality-gates'),
-        kleur.dim('   - Installs TypeScript + Python PostToolUse quality hooks'),
-        kleur.dim('   - Includes Serena matcher coverage for edit-equivalent tools'),
-        kleur.dim('   - Enforces linting/type-checking based on your repo config'),
+        kleur.bold('\nProject Init — Global-first baseline\n'),
+        kleur.dim('xtrm init bootstraps project data (beads, GitNexus, service registry) while hooks/skills stay global.\n'),
+        `${kleur.cyan('1) Run initialization once per repository:')}`,
+        kleur.dim('   xtrm init   (alias: xtrm project init)'),
+        kleur.dim('   - Initializes beads workspace (bd init)'),
+        kleur.dim('   - Refreshes GitNexus index if missing/stale'),
+        kleur.dim('   - Syncs project-scoped MCP entries'),
+        kleur.dim('   - Detects TS/Python/Docker project signals'),
+        kleur.dim('   - Scaffolds service-registry.json when Docker services are detected'),
         '',
-        `${kleur.cyan('2) Optional installs depending on workflow:')}`,
-        kleur.dim('   xtrm install project tdd-guard'),
-        kleur.dim('   - Strong test-first enforcement (PreToolUse + prompt/session checks)'),
-        kleur.dim('   xtrm install project service-skills-set'),
-        kleur.dim('   - Service-aware skill routing + drift checks + git hook reminders'),
+        `${kleur.cyan('2) What is already global (no per-project install needed):')}`,
+        kleur.dim('   - quality gates hooks (formerly installed via quality-gates)'),
+        kleur.dim('   - service-skills routing and drift checks (formerly service-skills-set)'),
+        kleur.dim('   - main-guard + beads workflow gates'),
+        kleur.dim('   - optional TDD strategy guidance (legacy name: tdd-guard)'),
         '',
-        `${kleur.cyan('3) Configure repo checks (hooks only enforce what your repo defines):')}`,
-        kleur.dim('   - Tests: should fail on regressions (required for TDD workflows)'),
+        `${kleur.cyan('3) Configure repo quality tools (hooks enforce what exists):')}`,
         kleur.dim('   - TS: eslint + prettier + tsc'),
         kleur.dim('   - PY: ruff + mypy/pyright'),
+        kleur.dim('   - tests: failing tests should block regressions'),
         '',
         `${kleur.cyan('4) Beads workflow (required for gated edit/commit flow):')}`,
         kleur.dim('   - Claim work:   bd ready --json  ->  bd update <id> --claim --json'),
@@ -625,29 +756,24 @@ export function buildProjectInitGuide(): string {
         kleur.dim('   - gh pr create --fill && gh pr merge --squash'),
         kleur.dim('   - git checkout main && git pull --ff-only'),
         '',
-        `${kleur.cyan('6) Hooks and startup automation:')}`,
-        kleur.dim('   - PreToolUse: safety gates (main/beads/TDD/type-safety/etc.)'),
-        kleur.dim('   - PostToolUse: quality checks + reminders'),
-        kleur.dim('   - Stop: beads stop-gate prevents unresolved session claims'),
-        kleur.dim('   - SessionStart: workflow context reminders'),
-        '',
-        kleur.bold('Quick start commands:'),
-        kleur.dim('   xtrm install project list'),
-        kleur.dim('   xtrm install project quality-gates'),
-        kleur.dim('   xtrm install project tdd-guard'),
-        kleur.dim('   xtrm install project service-skills-set'),
-        '',
     ];
 
     return lines.join('\n');
 }
 
-async function printProjectInitGuide(): Promise<void> {
+export async function runProjectInit(): Promise<void> {
     console.log(buildProjectInitGuide());
     await bootstrapProjectInit();
 }
 
+function printProjectInstallDeprecationWarning(): void {
+    console.log(kleur.yellow('⚠ Deprecated: `xtrm install project` is legacy and will be removed in a future release.'));
+    console.log(kleur.dim('  Use `xtrm init` (alias: `xtrm project init`) for project bootstrap.\n'));
+}
+
 async function installProjectByName(toolName: string): Promise<void> {
+    printProjectInstallDeprecationWarning();
+
     if (toolName === 'all' || toolName === '*') {
         await installAllProjectSkills();
         return;
@@ -664,10 +790,37 @@ async function bootstrapProjectInit(): Promise<void> {
         return;
     }
 
+    const detected = await detectProjectFeatures(projectRoot);
+
     await runBdInitForProject(projectRoot);
     await injectProjectInstructionHeaders(projectRoot);
     await runGitNexusInitForProject(projectRoot);
     await syncProjectMcpServers(projectRoot);
+
+    if (detected.dockerServices.length > 0) {
+        const { generated, registryPath } = await ensureServiceRegistry(projectRoot, detected.dockerServices);
+        detected.generatedRegistry = generated;
+        detected.registryPath = registryPath;
+        if (generated) {
+            console.log(`${kleur.green('  ✓')} service registry scaffolded at ${path.relative(projectRoot, registryPath)}`);
+        } else {
+            console.log(kleur.dim('  ✓ service-registry.json already includes detected services'));
+        }
+    }
+
+    const projectTypes: string[] = [];
+    if (detected.hasTypeScript) projectTypes.push('TypeScript');
+    if (detected.hasPython) projectTypes.push('Python');
+    if (detected.dockerServices.length > 0) projectTypes.push('Docker');
+
+    console.log(kleur.bold('\nProject initialized.'));
+    console.log(kleur.white(`  Quality gates active globally.`));
+    console.log(kleur.white(`  Project types: ${projectTypes.length > 0 ? projectTypes.join(', ') : 'none detected'}.`));
+    console.log(kleur.white(`  Services detected: ${detected.dockerServices.length > 0 ? detected.dockerServices.join(', ') : 'none'}.`));
+    if (detected.registryPath) {
+        console.log(kleur.dim(`  Service registry: ${detected.registryPath}`));
+    }
+    console.log('');
 }
 
 async function runBdInitForProject(projectRoot: string): Promise<void> {
@@ -754,6 +907,8 @@ async function runGitNexusInitForProject(projectRoot: string): Promise<void> {
  * List available project skills.
  */
 async function listProjectSkills(): Promise<void> {
+    printProjectInstallDeprecationWarning();
+
     const entries = await getAvailableProjectSkills();
     if (entries.length === 0) {
         console.log(kleur.dim('  No project skills available.\n'));
@@ -795,13 +950,13 @@ async function listProjectSkills(): Promise<void> {
 
     console.log(table.toString());
 
-    console.log(kleur.bold('\n\nUsage:\n'));
-    console.log(kleur.dim('  xtrm install project <skill-name>   Install a project skill'));
-    console.log(kleur.dim('  xtrm install project all            Install all project skills'));
-    console.log(kleur.dim('  xtrm install project list           List available skills\n'));
+    console.log(kleur.bold('\n\nUsage (legacy):\n'));
+    console.log(kleur.dim('  xtrm install project <skill-name>   Install a legacy project skill'));
+    console.log(kleur.dim('  xtrm install project all            Install all legacy project skills'));
+    console.log(kleur.dim('  xtrm install project list           List available legacy skills\n'));
 
-    console.log(kleur.bold('Example:\n'));
-    console.log(kleur.dim('  xtrm install project tdd-guard\n'));
+    console.log(kleur.bold('Preferred:\n'));
+    console.log(kleur.dim('  xtrm init                           Bootstrap project data for global hooks/skills\n'));
 }
 
 function getProjectRoot(): string {
@@ -817,7 +972,7 @@ function getProjectRoot(): string {
 
 export function createInstallProjectCommand(): Command {
     const installProjectCmd = new Command('project')
-        .description('Install a project-specific skill package');
+        .description('[DEPRECATED] Legacy project skill installer (use `xtrm init`)');
 
     // Subcommand: install project <tool-name>
     installProjectCmd
@@ -841,7 +996,7 @@ export function createInstallProjectCommand(): Command {
     const initCmd = new Command('init')
         .description('Show full onboarding guidance and bootstrap beads + GitNexus')
         .action(async () => {
-            await printProjectInitGuide();
+            await runProjectInit();
         });
 
     installProjectCmd.addCommand(listCmd);
@@ -852,13 +1007,13 @@ export function createInstallProjectCommand(): Command {
 
 export function createProjectCommand(): Command {
     const projectCmd = new Command('project')
-        .description('Project skill onboarding and installation helpers');
+        .description('Project onboarding helpers (`project install` is deprecated; use `xtrm init`)');
 
     projectCmd
         .command('init')
         .description('Show full onboarding guidance and bootstrap beads + GitNexus')
         .action(async () => {
-            await printProjectInitGuide();
+            await runProjectInit();
         });
 
     projectCmd
@@ -870,8 +1025,8 @@ export function createProjectCommand(): Command {
 
     projectCmd
         .command('install')
-        .argument('<tool-name>', 'Name of the project skill to install')
-        .description('Alias for xtrm install project <tool-name>')
+        .argument('<tool-name>', 'Name of the legacy project skill to install')
+        .description('[DEPRECATED] Alias for xtrm install project <tool-name>; prefer `xtrm init`')
         .action(async (toolName: string) => {
             try {
                 await installProjectByName(toolName);

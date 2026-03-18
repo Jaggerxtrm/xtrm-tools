@@ -2,7 +2,7 @@
 
 > **Claude Code plugin** — workflow enforcement, code quality gates, issue tracking, and development automation.
 
-**Version 2.3.0** | [Complete Guide](XTRM-GUIDE.md) | [Changelog](CHANGELOG.md)
+**Version 2.4.0** | [Complete Guide](XTRM-GUIDE.md) | [Changelog](CHANGELOG.md)
 
 ---
 
@@ -17,7 +17,7 @@ xtrm install all
 
 # Verify
 claude plugin list
-# → xtrm-tools@xtrm-tools  Version: 2.3.0  Status: ✔ enabled
+# → xtrm-tools@xtrm-tools  Version: 2.4.0  Status: ✔ enabled
 ```
 
 **One-line run:**
@@ -42,10 +42,15 @@ npx -y github:Jaggerxtrm/xtrm-tools install all
 
 | Skill | Type | Purpose |
 |-------|------|---------|
-| `using-xtrm` | Project | Session operating manual |
+| `using-xtrm` | Global | Session operating manual |
 | `documenting` | Global | SSOT documentation with drift detection |
 | `delegating` | Global | Task delegation to cost-optimized agents |
 | `orchestrating-agents` | Global | Multi-model collaboration |
+| `using-quality-gates` | Global | Quality gate configuration and usage guide |
+| `using-service-skills` | Global | Territory-based service skill activation |
+| `creating-service-skills` | Global | Scaffold new service skills via Serena LSP deep dive |
+| `scoping-service-skills` | Global | Define territory globs for service skill routing |
+| `updating-service-skills` | Global | Drift detection and sync for service skill definitions |
 
 ---
 
@@ -73,9 +78,11 @@ Policies are the **single source of truth** for all enforcement rules. Located i
 |--------|---------|---------|
 | `main-guard.json` | both | PR-only workflow |
 | `beads.json` | both | Issue tracking gates |
-| `quality-gates.json` | pi | Linting/typechecking |
 | `branch-state.json` | claude | Branch context injection |
 | `gitnexus.json` | claude | Knowledge graph enrichment |
+| `serena.json` | claude | Serena LSP workflow reminder |
+| `quality-gates.json` | pi | Linting/typechecking |
+| `service-skills.json` | pi | Territory-based skill activation |
 
 ### Compiler
 
@@ -96,8 +103,9 @@ xtrm <command> [options]
 |---------|-------------|
 | `install all` | Full plugin + beads + gitnexus |
 | `install basic` | Plugin + skills (no beads) |
-| `install project <name>` | Install project skill |
-| `project init` | Initialize project (gitnexus + bd) |
+| `init` | Initialize current project (alias for `project init`) |
+| `project init` | Initialize project data (bd, gitnexus, service-registry) |
+| `install project <name>` | **Deprecated** — use `xtrm init` instead |
 | `status` | Read-only diff view |
 | `clean` | Remove orphaned hooks |
 
@@ -180,6 +188,7 @@ bd close <id> --reason "Done"  # Close when done
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 2.4.0 | 2026-03-18 | Global-first architecture: quality gates + service skills as global hooks/skills, xtrm init project detection, guard-rules centralization, Pi drift checks |
 | 2.3.0 | 2026-03-17 | Plugin structure, policy compiler, Pi extension parity |
 | 2.2.0 | 2026-03-17 | Pi extensions: quality-gates, beads, main-guard |
 | 2.0.0 | 2026-03-12 | CLI rebrand, project skills engine |

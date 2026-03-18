@@ -2,26 +2,14 @@ import * as fs from "node:fs";
 import * as nodePath from "node:path";
 
 import type { ExtensionAPI, ToolCallEvent } from "@mariozechner/pi-coding-agent";
+import { PI_MUTATING_FILE_TOOLS } from "./guard-rules";
 
 export class EventAdapter {
 	/**
 	 * Checks if the tool event is a mutating file operation (write, edit, etc).
 	 */
 	static isMutatingFileTool(event: ToolCallEvent<any, any>): boolean {
-		const tools = [
-			"write",
-			"edit",
-			"replace_content",
-			"replace_lines",
-			"delete_lines",
-			"insert_at_line",
-			"create_text_file",
-			"rename_symbol",
-			"replace_symbol_body",
-			"insert_after_symbol",
-			"insert_before_symbol",
-		];
-		return tools.includes(event.toolName);
+		return PI_MUTATING_FILE_TOOLS.includes(event.toolName);
 	}
 
 	/**

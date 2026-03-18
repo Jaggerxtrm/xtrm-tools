@@ -197,23 +197,6 @@ function main() {
     }
   }
 
-  // Auto-clear: bd close <id> — remove the kv claim so commit gate unblocks
-  if (/\bbd\s+close\b/.test(command) && commandSucceeded(input)) {
-    const result = spawnSync('bd', ['kv', 'clear', `claimed:${sessionId}`], {
-      cwd,
-      stdio: ['pipe', 'pipe', 'pipe'],
-      timeout: 5000,
-    });
-
-    if (result.status === 0) {
-      process.stdout.write(JSON.stringify({
-        additionalContext: `\n🔓 **Beads**: Session claim cleared. Ready to commit.`,
-      }));
-      process.stdout.write('\n');
-    }
-    process.exit(0);
-  }
-
   process.exit(0);
 }
 

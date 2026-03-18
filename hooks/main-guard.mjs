@@ -6,7 +6,7 @@
 
 import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
-import { WRITE_TOOLS, SAFE_BASH_PREFIXES } from './guard-rules.mjs';
+import { WRITE_TOOLS, DANGEROUS_BASH_PATTERNS } from './guard-rules.mjs';
 
 let branch = '';
 try {
@@ -46,17 +46,9 @@ function deny(reason) {
 }
 
 if (WRITE_TOOLS.includes(tool)) {
-  deny(`⛔ On '${branch}' — start on a feature branch and claim an issue.\n`
-    + '  git checkout -b feature/<name>\n'
-    + '  bd update <id> --claim\n');
+  deny(`⛔ On '${branch}' — switch to your worktree for edits.\n`
+    + '  cd .worktrees/<id>   (or bd update <id> --claim to create one)\n');
 }
-
-const WORKFLOW =
-  '  1. git checkout -b feature/<name>\n'
-  + '  2. bd create + bd update in_progress\n'
-  + '  3. bd close <id> && git add && git commit\n'
-  + '  4. git push -u origin feature/<name>\n'
-  + '  5. gh pr create --fill && gh pr merge --squash\n';
 
 if (tool === 'Bash') {
   const cmd = (input.tool_input?.command ?? '').trim().replace(/\s+/g, ' ');
@@ -67,52 +59,46 @@ if (tool === 'Bash') {
   }
 
   // Enforce squash-only PR merges for linear history
-  // Must check BEFORE the gh allowlist pattern
   if (/^gh\s+pr\s+merge\b/.test(cmd)) {
     if (!/--squash\b/.test(cmd)) {
       deny('⛔ Squash only: gh pr merge --squash\n'
         + '  (override: MAIN_GUARD_ALLOW_BASH=1 gh pr merge --merge)\n');
     }
-    // --squash present — allow
     process.exit(0);
   }
 
-  // Safe allowlist — non-mutating commands + explicit branch-exit paths.
-  // Important: do not allow generic checkout/switch forms, which include
-  // mutating variants such as `git checkout -- <path>`.
-  const SAFE_BASH_PATTERNS = [
-    ...SAFE_BASH_PREFIXES.map(prefix => new RegExp(`^${prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`)),
-    // Allow post-merge sync to protected branch only (not arbitrary origin refs)
-    ...protectedBranches.map(b => new RegExp(`^git\\s+reset\\s+--hard\\s+origin/${b}\\b`)),
-  ];
+  // Always allow: branch creation and post-merge sync
+  if (/^git\s+checkout\s+-b\b/.test(cmd) || /^git\s+switch\s+-c\b/.test(cmd)) process.exit(0);
+  if (protectedBranches.some(b => new RegExp(`^git\\s+reset\\s+--hard\\s+origin/${b}\\b`).test(cmd))) process.exit(0);
 
-  if (SAFE_BASH_PATTERNS.some(p => p.test(cmd))) {
-    process.exit(0);
+  // Specific messages for common operations
+  if (/(?:^|\s)git\s+commit\b/.test(cmd)) {
+    deny(`⛔ No commits on '${branch}' — commit from your worktree.\n`
+      + '  cd .worktrees/<id>\n');
   }
 
-  // Specific messages for common blocked operations
-  if (/^git\s+commit\b/.test(cmd)) {
-    deny(`⛔ No commits on '${branch}' — use a feature branch.\n`
-      + '  git checkout -b feature/<name>\n');
-  }
-
-  if (/^git\s+push\b/.test(cmd)) {
+  if (/(?:^|\s)git\s+push\b/.test(cmd)) {
     const tokens = cmd.split(' ');
     const lastToken = tokens[tokens.length - 1];
     const explicitProtected = protectedBranches.some(b => lastToken === b || lastToken.endsWith(`:${b}`));
     const impliedProtected = tokens.length <= 3 && protectedBranches.includes(branch);
     if (explicitProtected || impliedProtected) {
-      deny(`⛔ No direct push to '${branch}' — push a feature branch and open a PR.\n`
-        + '  git push -u origin <feature-branch> && gh pr create --fill\n');
+      deny(`⛔ No direct push to '${branch}' — push from your worktree.\n`
+        + '  cd .worktrees/<id>\n');
     }
-    // Pushing to a feature branch — allow
     process.exit(0);
   }
 
-  // Default deny — block everything else on protected branches
-  deny(`⛔ Bash restricted on '${branch}'. Allowed: git status/log/diff/pull/stash, gh, bd.\n`
-    + '  Exit: git checkout -b feature/<name>\n'
-    + '  Override: MAIN_GUARD_ALLOW_BASH=1 <cmd>\n');
+  // Block dangerous mutating patterns (file edits, destructive ops)
+  const dangerousRe = DANGEROUS_BASH_PATTERNS.map(p => new RegExp(p));
+  if (dangerousRe.some(r => r.test(cmd))) {
+    deny(`⛔ Mutating operation restricted on '${branch}'. Use your worktree.\n`
+      + '  cd .worktrees/<id>\n'
+      + '  Override: MAIN_GUARD_ALLOW_BASH=1 <cmd>\n');
+  }
+
+  // Allow all other Bash (reads, scripts, inspections, etc.)
+  process.exit(0);
 }
 
 process.exit(0);

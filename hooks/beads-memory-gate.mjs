@@ -11,7 +11,7 @@ import { execSync } from 'node:child_process';
 import { existsSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { readHookInput } from './beads-gate-core.mjs';
-import { resolveCwd, isBeadsProject, getSessionClaim } from './beads-gate-utils.mjs';
+import { resolveCwd, isBeadsProject, getSessionClaim, clearSessionClaim } from './beads-gate-utils.mjs';
 import { memoryPromptMessage } from './beads-gate-messages.mjs';
 
 const input = readHookInput();
@@ -24,6 +24,7 @@ if (!cwd || !isBeadsProject(cwd)) process.exit(0);
 const marker = join(cwd, '.beads', '.memory-gate-done');
 if (existsSync(marker)) {
   try { unlinkSync(marker); } catch { /* ignore */ }
+  clearSessionClaim(sessionId, cwd);
   process.exit(0);
 }
 

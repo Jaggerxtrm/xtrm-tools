@@ -5,7 +5,8 @@
 // Installed by: xtrm install
 
 import { execSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { WRITE_TOOLS, SAFE_BASH_PREFIXES } from './guard-rules.mjs';
 
 let branch = '';
@@ -35,6 +36,7 @@ try {
 
 const tool = input.tool_name ?? '';
 const hookEventName = input.hook_event_name ?? 'PreToolUse';
+const cwd = input.cwd || process.cwd();
 
 function deny(reason) {
   process.stdout.write(JSON.stringify({
@@ -45,7 +47,23 @@ function deny(reason) {
   process.exit(0);
 }
 
+// Check for existing worktree/session state
+function getSessionState(cwd) {
+  const statePath = join(cwd, '.xtrm-session-state.json');
+  if (!existsSync(statePath)) return null;
+  try {
+    return JSON.parse(readFileSync(statePath, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
 if (WRITE_TOOLS.includes(tool)) {
+  const state = getSessionState(cwd);
+  if (state?.worktreePath) {
+    deny(`⛔ On '${branch}' — worktree already created.\n`
+      + `  cd ${state.worktreePath}\n`);
+  }
   deny(`⛔ On '${branch}' — start on a feature branch and claim an issue.\n`
     + '  git checkout -b feature/<name>\n'
     + '  bd update <id> --claim\n');

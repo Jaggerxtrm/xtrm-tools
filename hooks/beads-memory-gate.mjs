@@ -11,7 +11,7 @@ import { execSync } from 'node:child_process';
 import { existsSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { readHookInput } from './beads-gate-core.mjs';
-import { resolveCwd, isBeadsProject, getSessionClaim } from './beads-gate-utils.mjs';
+import { resolveCwd, isBeadsProject, getSessionClaim, clearSessionClaim } from './beads-gate-utils.mjs';
 import { memoryPromptMessage } from './beads-gate-messages.mjs';
 
 const input = readHookInput();
@@ -20,35 +20,43 @@ if (!input) process.exit(0);
 const cwd = resolveCwd(input);
 if (!cwd || !isBeadsProject(cwd)) process.exit(0);
 
+const sessionId = input.session_id ?? null;
+if (!sessionId) process.exit(0);
+
 // Agent signals evaluation complete by touching this marker, then stops again
 const marker = join(cwd, '.beads', '.memory-gate-done');
 if (existsSync(marker)) {
   try { unlinkSync(marker); } catch { /* ignore */ }
+  // Clear the claim and closed-this-session marker
+  clearSessionClaim(sessionId, cwd);
+  try {
+    execSync(`bd kv clear "closed-this-session:${sessionId}"`, {
+      cwd,
+      stdio: ['pipe', 'pipe', 'pipe'],
+      timeout: 5000,
+    });
+  } catch { /* ignore */ }
   process.exit(0);
 }
 
-// Only fire if this session had an active claim that is now closed
-const sessionId = input.session_id ?? null;
-if (!sessionId) process.exit(0);
-
-const claimId = getSessionClaim(sessionId, cwd);
-if (!claimId) process.exit(0); // no claim this session → no work to persist
-
-// Check if the claimed issue was closed this session
-let claimClosed = false;
+// Check if an issue was closed this session (set by beads-claim-sync on bd close)
+let closedIssueId = null;
 try {
-  const out = execSync('bd list --status=closed', {
+  closedIssueId = execSync(`bd kv get "closed-this-session:${sessionId}"`, {
     encoding: 'utf8',
     cwd,
     stdio: ['pipe', 'pipe', 'pipe'],
-    timeout: 8000,
-  });
-  claimClosed = out.includes(claimId);
-} catch {
+    timeout: 5000,
+  }).trim();
+} catch (err) {
+  if (err.status === 1) {
+    // No closed-this-session marker → nothing to prompt about
+    process.exit(0);
+  }
   process.exit(0); // fail open
 }
 
-if (!claimClosed) process.exit(0);
+if (!closedIssueId) process.exit(0);
 
 process.stderr.write(memoryPromptMessage());
 process.exit(2);

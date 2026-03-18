@@ -766,7 +766,14 @@ export async function runProjectInit(): Promise<void> {
     await bootstrapProjectInit();
 }
 
+function printProjectInstallDeprecationWarning(): void {
+    console.log(kleur.yellow('⚠ Deprecated: `xtrm install project` is legacy and will be removed in a future release.'));
+    console.log(kleur.dim('  Use `xtrm init` (alias: `xtrm project init`) for project bootstrap.\n'));
+}
+
 async function installProjectByName(toolName: string): Promise<void> {
+    printProjectInstallDeprecationWarning();
+
     if (toolName === 'all' || toolName === '*') {
         await installAllProjectSkills();
         return;
@@ -900,6 +907,8 @@ async function runGitNexusInitForProject(projectRoot: string): Promise<void> {
  * List available project skills.
  */
 async function listProjectSkills(): Promise<void> {
+    printProjectInstallDeprecationWarning();
+
     const entries = await getAvailableProjectSkills();
     if (entries.length === 0) {
         console.log(kleur.dim('  No project skills available.\n'));
@@ -941,13 +950,13 @@ async function listProjectSkills(): Promise<void> {
 
     console.log(table.toString());
 
-    console.log(kleur.bold('\n\nUsage:\n'));
-    console.log(kleur.dim('  xtrm install project <skill-name>   Install a project skill'));
-    console.log(kleur.dim('  xtrm install project all            Install all project skills'));
-    console.log(kleur.dim('  xtrm install project list           List available skills\n'));
+    console.log(kleur.bold('\n\nUsage (legacy):\n'));
+    console.log(kleur.dim('  xtrm install project <skill-name>   Install a legacy project skill'));
+    console.log(kleur.dim('  xtrm install project all            Install all legacy project skills'));
+    console.log(kleur.dim('  xtrm install project list           List available legacy skills\n'));
 
-    console.log(kleur.bold('Example:\n'));
-    console.log(kleur.dim('  xtrm install project tdd-guard\n'));
+    console.log(kleur.bold('Preferred:\n'));
+    console.log(kleur.dim('  xtrm init                           Bootstrap project data for global hooks/skills\n'));
 }
 
 function getProjectRoot(): string {
@@ -963,7 +972,7 @@ function getProjectRoot(): string {
 
 export function createInstallProjectCommand(): Command {
     const installProjectCmd = new Command('project')
-        .description('Install a project-specific skill package');
+        .description('[DEPRECATED] Legacy project skill installer (use `xtrm init`)');
 
     // Subcommand: install project <tool-name>
     installProjectCmd
@@ -998,7 +1007,7 @@ export function createInstallProjectCommand(): Command {
 
 export function createProjectCommand(): Command {
     const projectCmd = new Command('project')
-        .description('Project skill onboarding and installation helpers');
+        .description('Project onboarding helpers (`project install` is deprecated; use `xtrm init`)');
 
     projectCmd
         .command('init')
@@ -1016,8 +1025,8 @@ export function createProjectCommand(): Command {
 
     projectCmd
         .command('install')
-        .argument('<tool-name>', 'Name of the project skill to install')
-        .description('Alias for xtrm install project <tool-name>')
+        .argument('<tool-name>', 'Name of the legacy project skill to install')
+        .description('[DEPRECATED] Alias for xtrm install project <tool-name>; prefer `xtrm init`')
         .action(async (toolName: string) => {
             try {
                 await installProjectByName(toolName);

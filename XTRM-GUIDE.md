@@ -90,13 +90,16 @@ npx -y github:Jaggerxtrm/xtrm-tools install all
 
 ```bash
 cd your-project
-xtrm project init
+xtrm init
+# alias: xtrm project init
 ```
 
 This runs:
-- `gitnexus analyze` — Indexes your codebase
 - `bd init` — Initializes beads issue tracking
-- MCP server registration for GitNexus
+- `gitnexus analyze` (when needed) — indexes or refreshes code graph
+- Project MCP server sync for GitNexus
+- Project-type detection (TypeScript / Python / Docker)
+- `service-registry.json` scaffold/update when Docker services are detected
 
 ---
 
@@ -248,12 +251,13 @@ Enriches tool output with knowledge graph context via `gitnexus augment`.
 | `gitnexus-impact-analysis` | Blast radius analysis |
 | `gitnexus-refactoring` | Safe refactor planning |
 
-### Project Skills (`project-skills/` → `<project>/.claude/`)
+### Project Data (`xtrm init` provisions this per repository)
 
-| Skill | Purpose |
-|-------|---------|
-| `quality-gates` | Code quality enforcement (TS + Python) |
-| `service-skills-set` | Docker service expertise with territory-based activation |
+| Data | Purpose |
+|------|---------|
+| `.beads/` | Beads issue DB and claim-state backing store |
+| `service-registry.json` | Service metadata used by global service-skills routing |
+| GitNexus index | Project code graph for context/impact analysis |
 
 ---
 
@@ -263,8 +267,9 @@ Enriches tool output with knowledge graph context via `gitnexus augment`.
 |---------|-------------|
 | `install all` | Full plugin + beads + gitnexus |
 | `install basic` | Plugin + skills (no beads) |
-| `install project <name>` | Install project skill |
-| `project init` | Initialize project |
+| `init` | Initialize current project (alias for `project init`) |
+| `project init` | Initialize project data for global hooks/skills |
+| `install project <name>` | **Deprecated** legacy project-skill installer |
 | `status` | Read-only diff view |
 | `clean` | Remove orphaned hooks |
 | `reset` | Clear preferences |

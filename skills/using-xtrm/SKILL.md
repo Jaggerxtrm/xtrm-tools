@@ -24,7 +24,7 @@ within this stack. Read it at session start and refer back when uncertain about 
 |---|---|
 | **Skills** | Domain expertise loaded on demand |
 | **Hooks** | Automated lifecycle enforcement (gates, suggestions, reminders) |
-| **Project Skills** | Per-project quality enforcement (quality-gates, service-skills-set) |
+| **Project Data (`xtrm init`)** | Per-repo bootstrap data (`.beads/`, `service-registry.json`, GitNexus index) |
 | **MCP Servers** | Semantic tools: Serena (code), gitnexus (graph), context7 (docs), deepwiki |
 | **CLI** | `xtrm install / status / reset / help` — sync and install tooling |
 | **beads (bd)** | Git-backed issue tracker with session gate enforcement |
@@ -161,12 +161,9 @@ You do not invoke these manually — they fire via PostToolUse hooks. If a gate 
 lint/type error before continuing. Do not suppress errors with `// eslint-disable` or `# type: ignore`
 unless there is a genuine reason.
 
-> **Needs configuration**: quality-gates is a project skill installed per-project:
-> ```bash
-> xtrm install project quality-gates
-> ```
-> After install, verify `.claude/settings.json` includes PostToolUse hooks, and that the project
-> has `eslint.config.*` (TS) or `pyproject.toml` / `ruff.toml` (Python) configured.
+> **Global-first behavior**: quality-gates hooks are global; no per-project install is needed.
+> Run `xtrm init` once per repository to bootstrap project data, then ensure the repo has
+> `eslint.config.*` (TS) or `pyproject.toml` / `ruff.toml` (Python) configured so checks can run.
 
 ---
 
@@ -205,8 +202,9 @@ unless there is a genuine reason.
 **Integrations:**
 `obsidian-cli`, `hook-development`, `claude-api`
 
-**Project Skills** (install per-project with `xtrm install project <name>`):
-`quality-gates`, `service-skills-set`
+**Global-first note:**
+`quality-gates` and `service-skills` workflows are globally available after `xtrm install all`.
+Use `xtrm init` to provision per-project data (beads + service-registry + GitNexus index).
 
 ---
 

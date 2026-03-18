@@ -222,7 +222,7 @@ def analyze_changelog(root: Path) -> dict:
         except (ValueError, AttributeError):
             pass
 
-    return {
+    result: dict = {
         "status": status,
         "path": "CHANGELOG.md",
         "last_entry_date": last_entry,
@@ -231,6 +231,29 @@ def analyze_changelog(root: Path) -> dict:
         "latest_changelog_version": latest_changelog_version,
         "issues": issues,
     }
+
+    # When package.json is ahead of CHANGELOG, emit a ready-to-run fix command
+    if status == "STALE" and pkg_version and latest_changelog_version:
+        try:
+            def _semver(v: str) -> tuple[int, ...]:
+                return tuple(int(p) for p in v.split("."))
+            if _semver(pkg_version) > _semver(latest_changelog_version):
+                add_entry = next(
+                    (p for p in [
+                        Path.home() / ".claude/skills/documenting/scripts/changelog/add_entry.py",
+                        Path(__file__).parent.parent.parent / "documenting/scripts/changelog/add_entry.py",
+                    ] if p.exists()),
+                    None,
+                )
+                script = str(add_entry) if add_entry else "skills/documenting/scripts/changelog/add_entry.py"
+                result["fix_hint"] = (
+                    f"python3 {script} CHANGELOG.md Added "
+                    f'"v{pkg_version} — describe changes since v{latest_changelog_version}"'
+                )
+        except (ValueError, AttributeError):
+            pass
+
+    return result
 
 
 def analyze_docs_gaps(root: Path) -> list[dict]:

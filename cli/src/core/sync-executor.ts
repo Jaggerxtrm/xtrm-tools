@@ -4,14 +4,54 @@ import kleur from 'kleur';
 import { safeMergeConfig } from '../utils/atomic-config.js';
 import { ConfigAdapter } from '../utils/config-adapter.js';
 import { syncMcpServersWithCli, loadCanonicalMcpConfig, detectAgent } from '../utils/sync-mcp-cli.js';
+import { hashDirectory } from '../utils/hash.js';
 import { createBackup, restoreBackup, cleanupBackup, type BackupInfo } from './rollback.js';
 import type { ChangeSet } from '../types/config.js';
 
 /**
+ * Sync MCP servers for a list of targets, once per unique agent type.
+ * Call this explicitly before per-target file sync loops.
+ */
+export async function syncMcpForTargets(
+    repoRoot: string,
+    targets: string[],
+    isDryRun: boolean = false,
+    selectedMcpServers?: string[],
+): Promise<number> {
+    const synced = new Set<string>();
+    let count = 0;
+
+    for (const target of targets) {
+        const agent = detectAgent(target);
+        if (!agent || synced.has(agent)) continue;
+
+        const coreConfig = loadCanonicalMcpConfig(repoRoot);
+        const mcpToSync: any = { mcpServers: { ...coreConfig.mcpServers } };
+
+        if (selectedMcpServers && selectedMcpServers.length > 0) {
+            const optionalConfig = loadCanonicalMcpConfig(repoRoot, true);
+            for (const name of selectedMcpServers) {
+                if (optionalConfig.mcpServers[name]) {
+                    mcpToSync.mcpServers[name] = optionalConfig.mcpServers[name];
+                }
+            }
+        }
+
+        if (!isDryRun) {
+            await syncMcpServersWithCli(agent, mcpToSync, isDryRun, false);
+        } else {
+            console.log(kleur.cyan(`  [DRY RUN] MCP sync for ${agent}`));
+        }
+        synced.add(agent);
+        count++;
+    }
+
+    return count;
+}
+
+/**
  * Execute a sync plan based on changeset and mode
  */
-// Track which MCP agents have been synced in this process run to prevent duplicate syncs
-const syncedMcpAgents = new Set<string>();
 
 function extractHookCommandPath(command: string): string | null {
     const quoted = command.match(/"([^"]+)"/);
@@ -67,8 +107,7 @@ export async function executeSync(
     mode: 'copy' | 'symlink' | 'prune',
     actionType: 'sync' | 'backport',
     isDryRun: boolean = false,
-    selectedMcpServers?: string[],
-    options?: { skipMcp?: boolean; force?: boolean },
+    options?: { force?: boolean },
 ): Promise<number> {
     const normalizedRoot = path.normalize(systemRoot).replace(/\\/g, '/');
     const isAgentsSkills = normalizedRoot.includes('.agents/skills');
@@ -85,36 +124,12 @@ export async function executeSync(
     let count = 0;
     const adapter = new ConfigAdapter(systemRoot);
     const backups: BackupInfo[] = [];
+    const newHashes: Record<string, string> = {};
 
     try {
         const agent = detectAgent(systemRoot);
 
-        // Only sync MCP once per unique agent type per process run.
-        // Without this guard, selecting multiple Claude config directories causes
-        // syncMcpServersWithCli to fire 3 times with identical output.
-        if (agent && actionType === 'sync' && !syncedMcpAgents.has(agent) && !options?.skipMcp) {
-            const coreConfig = loadCanonicalMcpConfig(repoRoot);
 
-            // Build MCP config: core servers always + any pre-selected optionals
-            const mcpToSync: any = { mcpServers: { ...coreConfig.mcpServers } };
-
-            if (selectedMcpServers && selectedMcpServers.length > 0) {
-                const optionalConfig = loadCanonicalMcpConfig(repoRoot, true);
-                for (const name of selectedMcpServers) {
-                    if (optionalConfig.mcpServers[name]) {
-                        mcpToSync.mcpServers[name] = optionalConfig.mcpServers[name];
-                    }
-                }
-            }
-
-            if (!isDryRun) {
-                await syncMcpServersWithCli(agent, mcpToSync, isDryRun, false);
-            } else {
-                console.log(kleur.cyan(`  [DRY RUN] MCP sync for ${agent}`));
-            }
-            syncedMcpAgents.add(agent);
-            count++;
-        }
 
         for (const category of categories) {
             const itemsToProcess: string[] = [];
@@ -276,6 +291,12 @@ export async function executeSync(
                     }
                 }
 
+                // Record repo hash so future drift checks can distinguish
+                // "user modified" from "repo updated" without relying on mtime
+                if (!isDryRun && actionType === 'sync') {
+                    newHashes[`${category}/${item}`] = await hashDirectory(src);
+                }
+
                 count++;
             }
         }
@@ -289,7 +310,8 @@ export async function executeSync(
                 ...existing,
                 lastSync: new Date().toISOString(),
                 repoRoot,
-                items: count
+                items: count,
+                fileHashes: { ...(existing.fileHashes ?? {}), ...newHashes },
             }, { spaces: 2 });
         }
 

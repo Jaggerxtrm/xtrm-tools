@@ -31,6 +31,20 @@ export async function calculateDiff(repoRoot: string, systemRoot: string, pruneM
         'antigravity-workflows': { missing: [], outdated: [], drifted: [], total: 0 },
     };
 
+    // Load installed file hashes from manifest for precise drift classification
+    const manifestPath = join(systemRoot, '.jaggers-sync-manifest.json');
+    let installedHashes: Record<string, string> | null = null;
+    try {
+        if (await fs.pathExists(manifestPath)) {
+            const manifest = await fs.readJson(manifestPath);
+            if (manifest.fileHashes && typeof manifest.fileHashes === 'object') {
+                installedHashes = manifest.fileHashes;
+            }
+        }
+    } catch {
+        // Manifest unreadable — fall back to mtime heuristic
+    }
+
     // ~/.agents/skills: skills-only, mapped directly (repoRoot/skills/* → systemRoot/*)
     if (isAgentsSkills) {
         const repoPath = join(repoRoot, 'skills');
@@ -40,7 +54,7 @@ export async function calculateDiff(repoRoot: string, systemRoot: string, pruneM
         changeSet.skills.total = items.length;
 
         for (const item of items) {
-            await compareItem('skills', item, join(repoPath, item), join(systemRoot, item), changeSet, pruneMode);
+            await compareItem('skills', item, join(repoPath, item), join(systemRoot, item), changeSet, pruneMode, installedHashes);
         }
         return changeSet;
     }
@@ -74,7 +88,8 @@ export async function calculateDiff(repoRoot: string, systemRoot: string, pruneM
                 join(repoPath, item),
                 join(systemPath, item),
                 changeSet,
-                pruneMode
+                pruneMode,
+                installedHashes,
             );
         }
     }
@@ -93,7 +108,7 @@ export async function calculateDiff(repoRoot: string, systemRoot: string, pruneM
         const itemSystemPath = join(systemRoot, paths.sys);
 
         if (await fs.pathExists(itemRepoPath)) {
-            await compareItem('config', name, itemRepoPath, itemSystemPath, changeSet);
+            await compareItem('config', name, itemRepoPath, itemSystemPath, changeSet, false, installedHashes);
         }
     }
 
@@ -106,7 +121,8 @@ async function compareItem(
     repoPath: string,
     systemPath: string,
     changeSet: ChangeSet,
-    pruneMode: boolean = false
+    pruneMode: boolean = false,
+    installedHashes: Record<string, string> | null = null,
 ): Promise<void> {
     const cat = changeSet[category] as any;
 
@@ -116,7 +132,7 @@ async function compareItem(
     }
 
     const repoHash = await hashDirectory(repoPath);
-    
+
     // Wrap system-side hash read in try/catch for prune mode safety
     let systemHash: string;
     try {
@@ -131,13 +147,28 @@ async function compareItem(
     }
 
     if (repoHash !== systemHash) {
-        const repoMtime = await getNewestMtime(repoPath);
-        const systemMtime = await getNewestMtime(systemPath);
+        const manifestKey = `${category}/${item}`;
+        const installedHash = installedHashes?.[manifestKey];
 
-        if (systemMtime > repoMtime + 2000) {
-            cat.drifted.push(item);
+        if (installedHash !== undefined) {
+            // Manifest-based classification: compare system against installed snapshot
+            if (systemHash !== installedHash) {
+                // System was modified after last install → drifted (local changes)
+                cat.drifted.push(item);
+            } else {
+                // System matches install snapshot but repo changed → outdated
+                cat.outdated.push(item);
+            }
         } else {
-            cat.outdated.push(item);
+            // No manifest data: fall back to mtime heuristic
+            const repoMtime = await getNewestMtime(repoPath);
+            const systemMtime = await getNewestMtime(systemPath);
+
+            if (systemMtime > repoMtime + 2000) {
+                cat.drifted.push(item);
+            } else {
+                cat.outdated.push(item);
+            }
         }
     }
 }

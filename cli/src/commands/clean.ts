@@ -54,6 +54,11 @@ const CANONICAL_SKILLS = new Set([
     'using-serena-lsp',
     'using-TDD',
     'using-xtrm',
+    'using-quality-gates',
+    'using-service-skills',
+    'updating-service-skills',
+    'creating-service-skills',
+    'scoping-service-skills',
 ]);
 
 // Directories/files to always ignore

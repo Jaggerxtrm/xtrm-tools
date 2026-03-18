@@ -5,7 +5,7 @@ Bootstrap module for Service Skill Trinity.
 Provides root-discovery and registry CRUD operations shared across all
 service-skill workflow scripts. All scripts in the trinity import from here.
 
-Registry location: .claude/skills/service-registry.json
+Registry location: service-registry.json (preferred) or .claude/skills/service-registry.json (legacy)
 Skills location:   .claude/skills/<service-id>/
 """
 
@@ -93,13 +93,33 @@ def get_registry_path(project_root: str | None = None) -> Path:
     """
     Get the service-registry.json path.
 
+    Resolution order:
+      1. SERVICE_REGISTRY_PATH env var (explicit override)
+      2. <project-root>/service-registry.json (preferred)
+      3. <project-root>/.claude/skills/service-registry.json (legacy fallback)
+
     Args:
         project_root: Optional project root
 
     Returns:
-        Path to .claude/skills/service-registry.json
+        Path to service registry
     """
-    return get_skills_root(project_root) / "service-registry.json"
+    env_registry = os.environ.get("SERVICE_REGISTRY_PATH")
+    if env_registry:
+        return Path(env_registry)
+
+    if project_root is None:
+        env_root = os.environ.get("CLAUDE_PROJECT_DIR")
+        project_root = env_root or get_project_root()
+
+    root = Path(project_root)
+    preferred = root / "service-registry.json"
+    legacy = root / ".claude" / "skills" / "service-registry.json"
+
+    if preferred.exists() or not legacy.exists():
+        return preferred
+
+    return legacy
 
 
 def load_registry(project_root: str | None = None) -> dict[str, Any]:
@@ -141,9 +161,7 @@ def save_registry(data: dict[str, Any], project_root: str | None = None) -> None
         RegistryError: If registry cannot be saved
     """
     registry_path = get_registry_path(project_root)
-    skills_root = get_skills_root(project_root)
-
-    skills_root.mkdir(parents=True, exist_ok=True)
+    registry_path.parent.mkdir(parents=True, exist_ok=True)
 
     try:
         with open(registry_path, "w", encoding="utf-8") as f:

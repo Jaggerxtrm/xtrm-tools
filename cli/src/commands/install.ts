@@ -5,7 +5,7 @@ import { Listr } from 'listr2';
 import fs from 'fs-extra';
 import { getContext } from '../core/context.js';
 import { calculateDiff, PruneModeReadError } from '../core/diff.js';
-import { executeSync } from '../core/sync-executor.js';
+import { executeSync, syncMcpForTargets } from '../core/sync-executor.js';
 import { findRepoRoot } from '../utils/repo-root.js';
 import { t, sym } from '../utils/theme.js';
 import path from 'path';
@@ -354,11 +354,14 @@ async function runGlobalInstall(
 
     let totalCount = 0;
 
+    if (!noMcp) {
+        await syncMcpForTargets(repoRoot, otherTargets, dryRun);
+    }
+
     for (const { target, changeSet, skippedDrifted } of allChanges) {
         console.log(t.bold(`\n  ${sym.arrow} ${formatTargetLabel(target)}`));
 
-        const count = await executeSync(repoRoot, target, changeSet, syncMode, 'sync', dryRun, undefined, {
-            skipMcp: noMcp,
+        const count = await executeSync(repoRoot, target, changeSet, syncMode, 'sync', dryRun, {
             force,
         });
         totalCount += count;
@@ -533,19 +536,8 @@ export function createInstallCommand(): Command {
             const allChanges = diffCtx.allChanges;
 
             // MCP sync always runs regardless of file changes
-            if (!backport && !dryRun) {
-                const emptyChangeSet = {
-                    skills: { missing: [] as string[], outdated: [] as string[], drifted: [] as string[], total: 0 },
-                    hooks: { missing: [] as string[], outdated: [] as string[], drifted: [] as string[], total: 0 },
-                    config: { missing: [] as string[], outdated: [] as string[], drifted: [] as string[], total: 0 },
-                    commands: { missing: [] as string[], outdated: [] as string[], drifted: [] as string[], total: 0 },
-                    'qwen-commands': { missing: [] as string[], outdated: [] as string[], drifted: [] as string[], total: 0 },
-                    'antigravity-workflows': { missing: [] as string[], outdated: [] as string[], drifted: [] as string[], total: 0 },
-                };
-                for (const target of otherTargets) {
-                    console.log(t.bold(`\n  ${sym.arrow} ${formatTargetLabel(target)}`));
-                    await executeSync(repoRoot, target, emptyChangeSet, syncMode, 'sync', false);
-                }
+            if (!backport) {
+                await syncMcpForTargets(repoRoot, otherTargets, dryRun);
             }
 
             if (allChanges.length === 0) {

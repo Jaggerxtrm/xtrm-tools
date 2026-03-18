@@ -70,7 +70,7 @@ function parseComposeServices(content: string): string[] {
     return [...services];
 }
 
-async function detectProjectFeatures(projectRoot: string): Promise<ProjectDetectionResult> {
+export async function detectProjectFeatures(projectRoot: string): Promise<ProjectDetectionResult> {
     const hasTypeScript = await fs.pathExists(path.join(projectRoot, 'tsconfig.json'));
 
     const hasPython =
@@ -113,7 +113,7 @@ async function detectProjectFeatures(projectRoot: string): Promise<ProjectDetect
     };
 }
 
-async function ensureServiceRegistry(projectRoot: string, services: string[]): Promise<{ generated: boolean; registryPath: string }> {
+export async function ensureServiceRegistry(projectRoot: string, services: string[]): Promise<{ generated: boolean; registryPath: string }> {
     const registryPath = path.join(projectRoot, 'service-registry.json');
     if (services.length === 0) {
         return { generated: false, registryPath };

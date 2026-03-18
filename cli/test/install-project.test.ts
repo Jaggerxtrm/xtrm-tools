@@ -8,6 +8,8 @@ import {
     buildProjectInitGuide,
     createProjectCommand,
     deepMergeHooks,
+    detectProjectFeatures,
+    ensureServiceRegistry,
     extractReadmeDescription,
     getAvailableProjectSkills,
     installAllProjectSkills,
@@ -33,6 +35,74 @@ describe('createProjectCommand', () => {
         const cmd = createProjectCommand();
         const names = cmd.commands.map(c => c.name());
         expect(names).toEqual(expect.arrayContaining(['init', 'list', 'install']));
+    });
+});
+
+describe('detectProjectFeatures / ensureServiceRegistry', () => {
+    let tmpDir: string;
+
+    beforeEach(async () => {
+        tmpDir = await mkdtemp(path.join(tmpdir(), 'xtrm-init-detect-'));
+    });
+
+    afterEach(async () => {
+        await rm(tmpDir, { recursive: true, force: true });
+    });
+
+    it('detects TypeScript, Python, and Docker compose services', async () => {
+        await fsExtra.writeFile(path.join(tmpDir, 'tsconfig.json'), '{}');
+        await fsExtra.writeFile(path.join(tmpDir, 'pyproject.toml'), '[project]\nname = "demo"\n');
+        await fsExtra.writeFile(
+            path.join(tmpDir, 'docker-compose.yml'),
+            [
+                'services:',
+                '  api:',
+                '    image: api:latest',
+                '  worker:',
+                '    image: worker:latest',
+            ].join('\n'),
+        );
+
+        const detected = await detectProjectFeatures(tmpDir);
+
+        expect(detected.hasTypeScript).toBe(true);
+        expect(detected.hasPython).toBe(true);
+        expect(detected.dockerServices.sort()).toEqual(['api', 'worker']);
+    });
+
+    it('scaffolds service-registry.json with detected service entries', async () => {
+        const { generated, registryPath } = await ensureServiceRegistry(tmpDir, ['api-service']);
+
+        expect(generated).toBe(true);
+        expect(await fsExtra.pathExists(registryPath)).toBe(true);
+
+        const registry = await fsExtra.readJson(registryPath);
+        expect(registry.services['api-service']).toBeDefined();
+        expect(registry.services['api-service'].name).toBe('api-service');
+        expect(registry.services['api-service'].skill_path).toContain('.claude/skills/api-service/SKILL.md');
+    });
+
+    it('does not mutate registry when all detected services already exist', async () => {
+        const registryPath = path.join(tmpDir, 'service-registry.json');
+        await fsExtra.writeJson(registryPath, {
+            version: '1.0.0',
+            services: {
+                api: {
+                    name: 'api',
+                    description: 'existing',
+                    territory: [],
+                    skill_path: '.claude/skills/api/SKILL.md',
+                    last_sync: '2026-01-01T00:00:00Z',
+                },
+            },
+        }, { spaces: 2 });
+
+        const { generated } = await ensureServiceRegistry(tmpDir, ['api']);
+
+        expect(generated).toBe(false);
+        const registry = await fsExtra.readJson(registryPath);
+        expect(Object.keys(registry.services)).toEqual(['api']);
+        expect(registry.services.api.description).toBe('existing');
     });
 });
 

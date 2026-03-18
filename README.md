@@ -142,14 +142,19 @@ xtrm <command> [options]
 
 ## MCP Servers
 
-Configured in `.mcp.json`:
+Configured in `.mcp.json` (xtrm-managed only):
 
 | Server | Purpose |
 |--------|---------|
-| `serena` | Code analysis via LSP |
-| `context7` | Documentation lookup |
 | `gitnexus` | Knowledge graph |
 | `github-grep` | Code search |
+| `deepwiki` | DeepWiki docs search |
+
+Official Claude plugins are installed during `xtrm install all`:
+- `serena@claude-plugins-official`
+- `context7@claude-plugins-official`
+- `github@claude-plugins-official`
+- `ralph-loop@claude-plugins-official`
 
 ---
 

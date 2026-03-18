@@ -172,11 +172,54 @@ async function needsSettingsSync(repoRoot: string, target: string): Promise<bool
     return requiredEvents.some((event) => !(event in targetHooks));
 }
 
+const OFFICIAL_CLAUDE_MARKETPLACE = 'https://github.com/anthropics/claude-plugins-official';
+const OFFICIAL_CLAUDE_PLUGINS = [
+    'serena@claude-plugins-official',
+    'context7@claude-plugins-official',
+    'github@claude-plugins-official',
+    'ralph-loop@claude-plugins-official',
+] as const;
+
+async function installOfficialClaudePlugins(dryRun: boolean): Promise<void> {
+    console.log(t.bold('\n  ⚙  official Claude plugins  (serena/context7/github/ralph-loop)'));
+
+    if (dryRun) {
+        console.log(t.accent('  [DRY RUN] Would register claude-plugins-official marketplace and install official plugins\n'));
+        return;
+    }
+
+    // Ensure official marketplace is registered
+    spawnSync('claude', ['plugin', 'marketplace', 'add', OFFICIAL_CLAUDE_MARKETPLACE, '--scope', 'user'], { stdio: 'pipe' });
+
+    const listResult = spawnSync('claude', ['plugin', 'list'], { encoding: 'utf8', stdio: 'pipe' });
+    const installedOutput = listResult.stdout ?? '';
+
+    let installedCount = 0;
+    let alreadyInstalledCount = 0;
+
+    for (const pluginId of OFFICIAL_CLAUDE_PLUGINS) {
+        if (installedOutput.includes(pluginId)) {
+            alreadyInstalledCount += 1;
+            continue;
+        }
+
+        const result = spawnSync('claude', ['plugin', 'install', pluginId, '--scope', 'user'], { stdio: 'inherit' });
+        if (result.status === 0) {
+            installedCount += 1;
+        } else {
+            console.log(t.warning(`  ! Failed to install ${pluginId}. Install manually: claude plugin install ${pluginId} --scope user`));
+        }
+    }
+
+    console.log(t.success(`  ✓ Official plugins ready (${installedCount} installed, ${alreadyInstalledCount} already present)\n`));
+}
+
 async function installPlugin(repoRoot: string, dryRun: boolean): Promise<void> {
     console.log(t.bold('\n  ⚙  xtrm-tools  (Claude Code plugin)'));
 
     if (dryRun) {
         console.log(t.accent('  [DRY RUN] Would register xtrm-tools marketplace and install plugin\n'));
+        await installOfficialClaudePlugins(true);
         return;
     }
 
@@ -190,7 +233,9 @@ async function installPlugin(repoRoot: string, dryRun: boolean): Promise<void> {
     }
     spawnSync('claude', ['plugin', 'install', 'xtrm-tools@xtrm-tools', '--scope', 'user'], { stdio: 'inherit' });
 
-    console.log(t.success('  ✓ xtrm-tools plugin installed\n'));
+    console.log(t.success('  ✓ xtrm-tools plugin installed'));
+
+    await installOfficialClaudePlugins(false);
 }
 
 async function runGlobalInstall(

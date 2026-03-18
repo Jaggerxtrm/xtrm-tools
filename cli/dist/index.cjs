@@ -37236,13 +37236,24 @@ async function calculateDiff(repoRoot, systemRoot, pruneMode = false) {
     "qwen-commands": { missing: [], outdated: [], drifted: [], total: 0 },
     "antigravity-workflows": { missing: [], outdated: [], drifted: [], total: 0 }
   };
+  const manifestPath = (0, import_path4.join)(systemRoot, ".jaggers-sync-manifest.json");
+  let installedHashes = null;
+  try {
+    if (await import_fs_extra3.default.pathExists(manifestPath)) {
+      const manifest = await import_fs_extra3.default.readJson(manifestPath);
+      if (manifest.fileHashes && typeof manifest.fileHashes === "object") {
+        installedHashes = manifest.fileHashes;
+      }
+    }
+  } catch {
+  }
   if (isAgentsSkills) {
     const repoPath = (0, import_path4.join)(repoRoot, "skills");
     if (!await import_fs_extra3.default.pathExists(repoPath)) return changeSet;
     const items = (await import_fs_extra3.default.readdir(repoPath)).filter((i) => !IGNORED_ITEMS.has(i));
     changeSet.skills.total = items.length;
     for (const item of items) {
-      await compareItem("skills", item, (0, import_path4.join)(repoPath, item), (0, import_path4.join)(systemRoot, item), changeSet, pruneMode);
+      await compareItem("skills", item, (0, import_path4.join)(repoPath, item), (0, import_path4.join)(systemRoot, item), changeSet, pruneMode, installedHashes);
     }
     return changeSet;
   }
@@ -37269,7 +37280,8 @@ async function calculateDiff(repoRoot, systemRoot, pruneMode = false) {
         (0, import_path4.join)(repoPath, item),
         (0, import_path4.join)(systemPath, item),
         changeSet,
-        pruneMode
+        pruneMode,
+        installedHashes
       );
     }
   }
@@ -37281,12 +37293,12 @@ async function calculateDiff(repoRoot, systemRoot, pruneMode = false) {
     const itemRepoPath = (0, import_path4.join)(repoRoot, paths.repo);
     const itemSystemPath = (0, import_path4.join)(systemRoot, paths.sys);
     if (await import_fs_extra3.default.pathExists(itemRepoPath)) {
-      await compareItem("config", name, itemRepoPath, itemSystemPath, changeSet);
+      await compareItem("config", name, itemRepoPath, itemSystemPath, changeSet, false, installedHashes);
     }
   }
   return changeSet;
 }
-async function compareItem(category, item, repoPath, systemPath, changeSet, pruneMode = false) {
+async function compareItem(category, item, repoPath, systemPath, changeSet, pruneMode = false, installedHashes = null) {
   const cat = changeSet[category];
   if (!await import_fs_extra3.default.pathExists(systemPath)) {
     cat.missing.push(item);
@@ -37304,12 +37316,22 @@ async function compareItem(category, item, repoPath, systemPath, changeSet, prun
     return;
   }
   if (repoHash !== systemHash) {
-    const repoMtime = await getNewestMtime(repoPath);
-    const systemMtime = await getNewestMtime(systemPath);
-    if (systemMtime > repoMtime + 2e3) {
-      cat.drifted.push(item);
+    const manifestKey = `${category}/${item}`;
+    const installedHash = installedHashes?.[manifestKey];
+    if (installedHash !== void 0) {
+      if (systemHash !== installedHash) {
+        cat.drifted.push(item);
+      } else {
+        cat.outdated.push(item);
+      }
     } else {
-      cat.outdated.push(item);
+      const repoMtime = await getNewestMtime(repoPath);
+      const systemMtime = await getNewestMtime(systemPath);
+      if (systemMtime > repoMtime + 2e3) {
+        cat.drifted.push(item);
+      } else {
+        cat.outdated.push(item);
+      }
     }
   }
 }
@@ -40508,7 +40530,32 @@ async function cleanupBackup(backup) {
 }
 
 // src/core/sync-executor.ts
-var syncedMcpAgents = /* @__PURE__ */ new Set();
+async function syncMcpForTargets(repoRoot, targets, isDryRun = false, selectedMcpServers) {
+  const synced = /* @__PURE__ */ new Set();
+  let count = 0;
+  for (const target of targets) {
+    const agent = detectAgent(target);
+    if (!agent || synced.has(agent)) continue;
+    const coreConfig = loadCanonicalMcpConfig(repoRoot);
+    const mcpToSync = { mcpServers: { ...coreConfig.mcpServers } };
+    if (selectedMcpServers && selectedMcpServers.length > 0) {
+      const optionalConfig = loadCanonicalMcpConfig(repoRoot, true);
+      for (const name of selectedMcpServers) {
+        if (optionalConfig.mcpServers[name]) {
+          mcpToSync.mcpServers[name] = optionalConfig.mcpServers[name];
+        }
+      }
+    }
+    if (!isDryRun) {
+      await syncMcpServersWithCli(agent, mcpToSync, isDryRun, false);
+    } else {
+      console.log(kleur_default.cyan(`  [DRY RUN] MCP sync for ${agent}`));
+    }
+    synced.add(agent);
+    count++;
+  }
+  return count;
+}
 function extractHookCommandPath(command) {
   const quoted = command.match(/"([^"]+)"/);
   if (quoted?.[1]) return quoted[1];
@@ -40544,7 +40591,7 @@ async function filterHooksByInstalledScripts(hooksConfig) {
   }
   return hooksConfig;
 }
-async function executeSync(repoRoot, systemRoot, changeSet, mode, actionType, isDryRun = false, selectedMcpServers, options) {
+async function executeSync(repoRoot, systemRoot, changeSet, mode, actionType, isDryRun = false, options) {
   const normalizedRoot = import_path8.default.normalize(systemRoot).replace(/\\/g, "/");
   const isAgentsSkills = normalizedRoot.includes(".agents/skills");
   const isClaude = systemRoot.includes(".claude") || systemRoot.includes("Claude");
@@ -40555,27 +40602,9 @@ async function executeSync(repoRoot, systemRoot, changeSet, mode, actionType, is
   let count = 0;
   const adapter = new ConfigAdapter(systemRoot);
   const backups = [];
+  const newHashes = {};
   try {
     const agent = detectAgent(systemRoot);
-    if (agent && actionType === "sync" && !syncedMcpAgents.has(agent) && !options?.skipMcp) {
-      const coreConfig = loadCanonicalMcpConfig(repoRoot);
-      const mcpToSync = { mcpServers: { ...coreConfig.mcpServers } };
-      if (selectedMcpServers && selectedMcpServers.length > 0) {
-        const optionalConfig = loadCanonicalMcpConfig(repoRoot, true);
-        for (const name of selectedMcpServers) {
-          if (optionalConfig.mcpServers[name]) {
-            mcpToSync.mcpServers[name] = optionalConfig.mcpServers[name];
-          }
-        }
-      }
-      if (!isDryRun) {
-        await syncMcpServersWithCli(agent, mcpToSync, isDryRun, false);
-      } else {
-        console.log(kleur_default.cyan(`  [DRY RUN] MCP sync for ${agent}`));
-      }
-      syncedMcpAgents.add(agent);
-      count++;
-    }
     for (const category of categories) {
       const itemsToProcess = [];
       if (actionType === "sync") {
@@ -40702,6 +40731,9 @@ async function executeSync(repoRoot, systemRoot, changeSet, mode, actionType, is
             await import_fs_extra8.default.copy(src, dest);
           }
         }
+        if (!isDryRun && actionType === "sync") {
+          newHashes[`${category}/${item}`] = await hashDirectory(src);
+        }
         count++;
       }
     }
@@ -40712,7 +40744,8 @@ async function executeSync(repoRoot, systemRoot, changeSet, mode, actionType, is
         ...existing,
         lastSync: (/* @__PURE__ */ new Date()).toISOString(),
         repoRoot,
-        items: count
+        items: count,
+        fileHashes: { ...existing.fileHashes ?? {}, ...newHashes }
       }, { spaces: 2 });
     }
     for (const backup of backups) {
@@ -41870,10 +41903,44 @@ async function needsSettingsSync(repoRoot, target) {
   }
   return requiredEvents.some((event) => !(event in targetHooks));
 }
+var OFFICIAL_CLAUDE_MARKETPLACE = "https://github.com/anthropics/claude-plugins-official";
+var OFFICIAL_CLAUDE_PLUGINS = [
+  "serena@claude-plugins-official",
+  "context7@claude-plugins-official",
+  "github@claude-plugins-official",
+  "ralph-loop@claude-plugins-official"
+];
+async function installOfficialClaudePlugins(dryRun) {
+  console.log(t.bold("\n  \u2699  official Claude plugins  (serena/context7/github/ralph-loop)"));
+  if (dryRun) {
+    console.log(t.accent("  [DRY RUN] Would register claude-plugins-official marketplace and install official plugins\n"));
+    return;
+  }
+  (0, import_child_process5.spawnSync)("claude", ["plugin", "marketplace", "add", OFFICIAL_CLAUDE_MARKETPLACE, "--scope", "user"], { stdio: "pipe" });
+  const listResult = (0, import_child_process5.spawnSync)("claude", ["plugin", "list"], { encoding: "utf8", stdio: "pipe" });
+  const installedOutput = listResult.stdout ?? "";
+  let installedCount = 0;
+  let alreadyInstalledCount = 0;
+  for (const pluginId of OFFICIAL_CLAUDE_PLUGINS) {
+    if (installedOutput.includes(pluginId)) {
+      alreadyInstalledCount += 1;
+      continue;
+    }
+    const result = (0, import_child_process5.spawnSync)("claude", ["plugin", "install", pluginId, "--scope", "user"], { stdio: "inherit" });
+    if (result.status === 0) {
+      installedCount += 1;
+    } else {
+      console.log(t.warning(`  ! Failed to install ${pluginId}. Install manually: claude plugin install ${pluginId} --scope user`));
+    }
+  }
+  console.log(t.success(`  \u2713 Official plugins ready (${installedCount} installed, ${alreadyInstalledCount} already present)
+`));
+}
 async function installPlugin(repoRoot, dryRun) {
   console.log(t.bold("\n  \u2699  xtrm-tools  (Claude Code plugin)"));
   if (dryRun) {
     console.log(t.accent("  [DRY RUN] Would register xtrm-tools marketplace and install plugin\n"));
+    await installOfficialClaudePlugins(true);
     return;
   }
   (0, import_child_process5.spawnSync)("claude", ["plugin", "marketplace", "add", repoRoot, "--scope", "user"], { stdio: "pipe" });
@@ -41882,7 +41949,8 @@ async function installPlugin(repoRoot, dryRun) {
     (0, import_child_process5.spawnSync)("claude", ["plugin", "uninstall", "xtrm-tools@xtrm-tools"], { stdio: "inherit" });
   }
   (0, import_child_process5.spawnSync)("claude", ["plugin", "install", "xtrm-tools@xtrm-tools", "--scope", "user"], { stdio: "inherit" });
-  console.log(t.success("  \u2713 xtrm-tools plugin installed\n"));
+  console.log(t.success("  \u2713 xtrm-tools plugin installed"));
+  await installOfficialClaudePlugins(false);
 }
 async function runGlobalInstall(flags, installOpts = {}) {
   const { dryRun, yes, noMcp, force } = flags;
@@ -42022,11 +42090,13 @@ async function runGlobalInstall(flags, installOpts = {}) {
     }
   }
   let totalCount = 0;
+  if (!noMcp) {
+    await syncMcpForTargets(repoRoot, otherTargets, dryRun);
+  }
   for (const { target, changeSet, skippedDrifted } of allChanges) {
     console.log(t.bold(`
   ${sym.arrow} ${formatTargetLabel(target)}`));
-    const count = await executeSync(repoRoot, target, changeSet, syncMode, "sync", dryRun, void 0, {
-      skipMcp: noMcp,
+    const count = await executeSync(repoRoot, target, changeSet, syncMode, "sync", dryRun, {
       force
     });
     totalCount += count;
@@ -42159,20 +42229,8 @@ function createInstallCommand() {
     );
     const diffCtx = await diffTasks.run({ allChanges: [] });
     const allChanges = diffCtx.allChanges;
-    if (!backport && !dryRun) {
-      const emptyChangeSet = {
-        skills: { missing: [], outdated: [], drifted: [], total: 0 },
-        hooks: { missing: [], outdated: [], drifted: [], total: 0 },
-        config: { missing: [], outdated: [], drifted: [], total: 0 },
-        commands: { missing: [], outdated: [], drifted: [], total: 0 },
-        "qwen-commands": { missing: [], outdated: [], drifted: [], total: 0 },
-        "antigravity-workflows": { missing: [], outdated: [], drifted: [], total: 0 }
-      };
-      for (const target of otherTargets) {
-        console.log(t.bold(`
-  ${sym.arrow} ${formatTargetLabel(target)}`));
-        await executeSync(repoRoot, target, emptyChangeSet, syncMode, "sync", false);
-      }
+    if (!backport) {
+      await syncMcpForTargets(repoRoot, otherTargets, dryRun);
     }
     if (allChanges.length === 0) {
       console.log("\n" + t.boldGreen("\u2713 Files are up-to-date") + "\n");

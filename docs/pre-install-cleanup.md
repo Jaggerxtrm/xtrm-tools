@@ -41,7 +41,24 @@ The plugin injects hooks directly — settings.json no longer needs them.
 
 ---
 
-## Step 3 — Clear legacy Pi extensions
+## Step 3 — Remove MCP servers now provided by official Claude plugins
+
+These MCP endpoints are now provided through official Claude plugins
+(`serena@claude-plugins-official`, `context7@claude-plugins-official`,
+`github@claude-plugins-official`, `ralph-loop@claude-plugins-official`) and
+should be removed from legacy user MCP wiring.
+
+```bash
+# ignore errors if a server is not present
+claude mcp remove -s user serena || true
+claude mcp remove -s user context7 || true
+claude mcp remove -s user github || true
+claude mcp remove -s user ralph-loop || true
+```
+
+---
+
+## Step 4 — Clear legacy Pi extensions
 
 ```bash
 rm -f ~/.pi/agent/extensions/beads.ts
@@ -63,7 +80,7 @@ rm -rf ~/.pi/agent/extensions/custom-provider-qwen-cli/
 
 ---
 
-## Step 4 — Fresh install
+## Step 5 — Fresh install
 
 ```bash
 cd /path/to/xtrm-tools

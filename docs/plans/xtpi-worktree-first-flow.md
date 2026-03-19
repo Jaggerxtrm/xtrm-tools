@@ -111,7 +111,15 @@ Current default direction: support both; keep default behavior configurable and 
 
 ---
 
-## 8) Open Questions (still open)
+## 8) Known Bugs (tracked)
+
+- `jaggers-agent-tools-26cg` (P0 bug): **Pi main-guard/worktree workflow regression blocks sandbox flow**
+  - Current behavior can produce blocked/looping guidance around active worktree state.
+  - Until fixed, treat current worktree-first flow as unstable and prioritize guard/worktree repair before strict xtpi rollout.
+
+---
+
+## 9) Open Questions (still open)
 
 1. Naming decision: keep `xtrm` umbrella, add `xt` alias, or migrate to `xt`?
 2. Should campaign mode support an optional squash-at-publish helper?
@@ -120,7 +128,7 @@ Current default direction: support both; keep default behavior configurable and 
 
 ---
 
-## 9) Rollout Plan
+## 10) Rollout Plan
 
 Phase 1
 - Add `xtpi` launcher (create/open worktree + exec pi in worktree cwd)
@@ -140,7 +148,7 @@ Phase 3
 
 ---
 
-## 10) Success Criteria
+## 11) Success Criteria
 
 - Agents no longer start implementation sessions on root `main`
 - `bd close` remains canonical while commit text is reused automatically

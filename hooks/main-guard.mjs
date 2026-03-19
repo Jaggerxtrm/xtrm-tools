@@ -58,15 +58,8 @@ function normalizeGitCCommand(cmd) {
 }
 
 if (WRITE_TOOLS.includes(tool)) {
-  const state = getSessionState(cwd);
-  if (state?.worktreePath) {
-    deny(`⛔ On '${branch}' — active worktree session detected.\n`
-      + `  cd ${state.worktreePath}\n`
-      + '  Then run Claude/Pi from that worktree (sandboxed edits).\n');
-  }
-
   deny(`⛔ On '${branch}' — start on a feature branch and claim an issue.\n`
-    + '  git checkout -b feature/<name>\n'
+    + '  git checkout -b feature/<name>  (or: git switch -c feature/<name>)\n'
     + '  bd update <id> --claim\n');
 }
 
@@ -115,10 +108,10 @@ if (tool === 'Bash') {
   }
 
   const handoff = state?.worktreePath
-    ? `  Active worktree: ${state.worktreePath}\n  Use that worktree for edits, or run: xtrm finish\n`
-    : '  Exit: git checkout -b feature/<name>\n  Then: bd update <id> --claim\n';
+    ? `  Active worktree session recorded: ${state.worktreePath}\n  (Current workaround) use feature branch flow until worktree bug is fixed.\n`
+    : '  Exit: git checkout -b feature/<name>  (or: git switch -c feature/<name>)\n  Then: bd update <id> --claim\n';
 
-  deny(`⛔ Bash restricted on '${branch}'. Allowed: read-only commands, gh, bd, xtrm finish.\n`
+  deny(`⛔ Bash restricted on '${branch}'. Allowed: read-only commands, gh, bd, git checkout -b, git switch -c.\n`
     + handoff
     + '  Override: MAIN_GUARD_ALLOW_BASH=1 <cmd>\n');
 }

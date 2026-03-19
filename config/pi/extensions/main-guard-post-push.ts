@@ -26,11 +26,11 @@ export default function (pi: ExtensionAPI) {
 			return undefined;
 		}
 
-		// Success! Suggest PR workflow
-		const reminder = "\n\n**Main-Guard**: Push successful. Next steps:\n" +
-			"  1. `gh pr create --fill` (if not already open)\n" +
-			"  2. `gh pr merge --squash` (once approved)\n" +
-			"  3. `git checkout main && git reset --hard origin/main` (sync local)";
+		// Success! Suggest publish-only workflow
+		const reminder = "\n\n**Pi Workflow**: Push successful. Next steps:\n" +
+			"  1. Create/update PR (publish only)\n" +
+			"  2. Merge externally (human/landing agent)\n" +
+			"  3. Cleanup worktree/session after merge";
 
 		const newContent = [...event.content];
 		newContent.push({ type: "text", text: reminder });

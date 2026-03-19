@@ -78,7 +78,7 @@ export default function (pi: ExtensionAPI) {
 					if (inProgress) {
 						return {
 							block: true,
-							reason: `Active claim [${claim}] — close it first.\n  bd close ${claim}\n  git push -u origin <feature-branch>\n  gh pr create --fill && gh pr merge --squash\n`,
+							reason: `Active claim [${claim}] — close it first.\n  bd close ${claim}\n  (Pi workflow) publish/merge are external steps; do not rely on xtrm finish.\n`,
 						};
 					}
 				}

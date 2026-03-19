@@ -104,18 +104,27 @@ export default function (pi: ExtensionAPI) {
 		if (state.phase === "waiting-merge" || state.phase === "pending-cleanup") {
 			const pr = state.prNumber != null ? `#${state.prNumber}` : "(pending PR)";
 			const url = state.prUrl ? ` ${state.prUrl}` : "";
-			pi.sendUserMessage(`🚫 PR ${pr}${url} not yet merged. Run: xtrm finish`);
+			pi.sendUserMessage(
+				`⚠ PR ${pr}${url} is still pending. xtrm finish is deprecated for Pi workflow. ` +
+				"Use xtpi publish (when available) and external merge/cleanup steps.",
+			);
 			return undefined;
 		}
 
 		if (state.phase === "conflicting") {
 			const files = state.conflictFiles?.length ? state.conflictFiles.join(", ") : "unknown files";
-			pi.sendUserMessage(`🚫 Merge conflicts in: ${files}. Resolve, push, then: xtrm finish`);
+			pi.sendUserMessage(
+				`⚠ Conflicts in: ${files}. xtrm finish is deprecated for Pi workflow. ` +
+				"Resolve conflicts, then continue with publish-only flow.",
+			);
 			return undefined;
 		}
 
 		if (state.phase === "claimed" || state.phase === "phase1-done") {
-			pi.sendUserMessage(`⚠ Session has an active worktree at ${state.worktreePath}. Consider running: xtrm finish`);
+			pi.sendUserMessage(
+				`⚠ Session has an active worktree at ${state.worktreePath}. ` +
+				"Use publish-only workflow (no automatic push/PR/merge).",
+			);
 		}
 		return undefined;
 	});

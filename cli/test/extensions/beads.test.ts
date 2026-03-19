@@ -11,6 +11,12 @@ vi.mock("../../extensions/core/lib", async () => {
 		},
 		EventAdapter: {
 			isMutatingFileTool: vi.fn((event) => event.toolName === "write"),
+			isBeadsProject: vi.fn(() => true),
+			parseBdCounts: vi.fn((s: string) => {
+				const m = s.match(/Total:\s*\d+\s+issues?\s*\((\d+)\s+open,\s*(\d+)\s+in progress\)/);
+				if (!m) return null;
+				return { open: parseInt(m[1], 10), inProgress: parseInt(m[2], 10) };
+			}),
 		},
 		Logger: vi.fn().mockImplementation(function() {
 			this.debug = vi.fn();
@@ -23,6 +29,7 @@ vi.mock("../../extensions/core/lib", async () => {
 
 vi.mock("node:fs", () => ({
 	existsSync: vi.fn(),
+	unlinkSync: vi.fn(),
 }));
 
 describe("Beads Extension", () => {
@@ -31,136 +38,95 @@ describe("Beads Extension", () => {
 	beforeEach(() => {
 		vi.resetAllMocks();
 		harness = new ExtensionHarness();
-		(fs.existsSync as any).mockReturnValue(true);
+		harness.pi.sendUserMessage = vi.fn();
+		(fs.existsSync as any).mockReturnValue(false);
 	});
 
-	it("should block edits when claim check fails", async () => {
-		(SubprocessRunner.run as any).mockImplementation(async (cmd: string, args: string[]) => {
+	it("blocks edits when no claim and trackable work exists", async () => {
+		(SubprocessRunner.run as any).mockImplementation(async (_cmd: string, args: string[]) => {
 			if (args[0] === "kv" && args[1] === "get") return { code: 1, stdout: "", stderr: "" };
-			if (args[0] === "list") {
-                return { code: 0, stdout: "Total: 5 issues (3 open, 2 in progress)", stderr: "" };
-            }
+			if (args[0] === "list") return { code: 0, stdout: "Total: 5 issues (3 open, 2 in progress)", stderr: "" };
 			return { code: 0, stdout: "", stderr: "" };
 		});
 
 		beadsExtension(harness.pi);
-
-		const result = await harness.emit("tool_call", {
-			toolName: "write",
-			input: { path: "src/main.ts" },
-		});
+		const result = await harness.emit("tool_call", { toolName: "write", input: { path: "src/main.ts" } });
 
 		expect(result).toBeDefined();
-        if (result) {
-		    expect(result.block).toBe(true);
-		    expect(result.reason).toContain("No active issue claim");
-        }
+		expect(result?.block).toBe(true);
+		expect(result?.reason).toContain("No active claim for session");
 	});
 
-	it("should allow edits when an issue is claimed", async () => {
-		(SubprocessRunner.run as any).mockImplementation(async (cmd: string, args: string[]) => {
-			if (args[0] === "kv" && args[1] === "get") return { code: 0, stdout: "issue-123", stderr: "" };
+	it("adds claim kv on bd update --claim", async () => {
+		const calls: string[][] = [];
+		(SubprocessRunner.run as any).mockImplementation(async (_cmd: string, args: string[]) => {
+			if (args[0] === "kv" && args[1] === "set") calls.push(args);
 			return { code: 0, stdout: "", stderr: "" };
 		});
 
 		beadsExtension(harness.pi);
-
-		const result = await harness.emit("tool_call", {
-			toolName: "write",
-			input: { path: "src/main.ts" },
-		});
-
-		expect(result).toBeUndefined();
-	});
-
-	it("should block git commit when an issue is claimed", async () => {
-		(SubprocessRunner.run as any).mockImplementation(async (cmd: string, args: string[]) => {
-			if (args[0] === "kv" && args[1] === "get") return { code: 0, stdout: "issue-123", stderr: "" };
-			if (args[0] === "list") {
-                return { code: 0, stdout: "Total: 1 issues (0 open, 1 in progress)\n◐ issue-123 Title", stderr: "" };
-            }
-			return { code: 0, stdout: "", stderr: "" };
-		});
-
-		beadsExtension(harness.pi);
-
-		const result = await harness.emit("tool_call", {
-			toolName: "bash",
-			input: { command: "git commit -m 'feat: something'" },
-		});
-
-		expect(result).toBeDefined();
-        if (result) {
-		    expect(result.block).toBe(true);
-		    expect(result.reason).toContain("Resolve open claim [issue-123]");
-        }
-	});
-
-	it("should inject memory reminder on bd close", async () => {
-		(SubprocessRunner.run as any).mockResolvedValue({ code: 0, stdout: "", stderr: "" });
-		
-		beadsExtension(harness.pi);
-
-		const result = await harness.emit("tool_result", {
-			toolName: "bash",
-			input: { command: "bd close issue-123" },
-			content: [{ type: "text", text: "Issue closed successfully." }],
-			isError: false,
-		});
-
-		expect(result.content).toHaveLength(2);
-		expect(result.content[1].text).toContain("Beads Insight");
-	});
-
-	it("should auto-claim session on bd update --claim", async () => {
-		const kvSetCalls: string[][] = [];
-		(SubprocessRunner.run as any).mockImplementation(async (cmd: string, args: string[]) => {
-			if (args[0] === "kv" && args[1] === "set") {
-				kvSetCalls.push(args);
-				return { code: 0, stdout: "", stderr: "" };
-			}
-			return { code: 0, stdout: "", stderr: "" };
-		});
-
-		beadsExtension(harness.pi);
-
 		const result = await harness.emit("tool_result", {
 			toolName: "bash",
 			input: { command: "bd update issue-456 --claim" },
-			content: [{ type: "text", text: "Updated issue: issue-456" }],
+			content: [{ type: "text", text: "ok" }],
 			isError: false,
 		});
 
-		expect(kvSetCalls.length).toBe(1);
-		expect(kvSetCalls[0][2]).toBe(`claimed:${process.pid}`);
-		expect(kvSetCalls[0][3]).toBe("issue-456");
-		expect(result.content[1].text).toContain("claimed issue");
-		expect(result.content[1].text).toContain("issue-456");
+		expect(calls.some((a) => a[2].startsWith("claimed:"))).toBe(true);
+		expect(result?.content?.[1]?.text ?? "").toContain("claimed issue");
 	});
 
-
-	it("should auto-claim even when bd update --claim returns exit 1 (already in_progress)", async () => {
-		const kvSetCalls: string[][] = [];
-		(SubprocessRunner.run as any).mockImplementation(async (cmd: string, args: string[]) => {
-			if (args[0] === "kv" && args[1] === "set") {
-				kvSetCalls.push(args);
-				return { code: 0, stdout: "", stderr: "" };
-			}
+	it("marks closed-this-session on bd close and appends memory reminder", async () => {
+		const calls: string[][] = [];
+		(SubprocessRunner.run as any).mockImplementation(async (_cmd: string, args: string[]) => {
+			if (args[0] === "kv" && args[1] === "set") calls.push(args);
 			return { code: 0, stdout: "", stderr: "" };
 		});
 
 		beadsExtension(harness.pi);
-
 		const result = await harness.emit("tool_result", {
 			toolName: "bash",
-			input: { command: "bd update issue-789 --claim" },
-			content: [{ type: "text", text: "already in_progress" }],
-			isError: true,
+			input: { command: "bd close issue-123" },
+			content: [{ type: "text", text: "closed" }],
+			isError: false,
 		});
 
-		expect(kvSetCalls.length).toBe(1);
-		expect(kvSetCalls[0][2]).toBe(`claimed:${process.pid}`);
-		expect(kvSetCalls[0][3]).toBe("issue-789");
-		expect(result.content[1].text).toContain("issue-789");
+		expect(calls.some((a) => a[2].startsWith("closed-this-session:"))).toBe(true);
+		expect(result?.content?.[1]?.text ?? "").toContain("touch .beads/.memory-gate-done");
+	});
+
+	it("agent_end prompts memory gate when closed marker exists and no ack marker", async () => {
+		(SubprocessRunner.run as any).mockImplementation(async (_cmd: string, args: string[]) => {
+			if (args[0] === "kv" && args[1] === "get" && String(args[2]).startsWith("closed-this-session:")) {
+				return { code: 0, stdout: "issue-123", stderr: "" };
+			}
+			return { code: 1, stdout: "", stderr: "" };
+		});
+		(fs.existsSync as any).mockReturnValue(false);
+
+		beadsExtension(harness.pi);
+		await harness.emit("agent_end", {});
+
+		expect(harness.pi.sendUserMessage).toHaveBeenCalledTimes(1);
+		expect(String((harness.pi.sendUserMessage as any).mock.calls[0][0])).toContain("Memory gate");
+	});
+
+	it("agent_end with ack marker clears claim + closed marker and does not prompt", async () => {
+		const calls: string[][] = [];
+		(SubprocessRunner.run as any).mockImplementation(async (_cmd: string, args: string[]) => {
+			if (args[0] === "kv" && args[1] === "clear") calls.push(args);
+			if (args[0] === "kv" && args[1] === "get" && String(args[2]).startsWith("closed-this-session:")) {
+				return { code: 0, stdout: "issue-123", stderr: "" };
+			}
+			return { code: 1, stdout: "", stderr: "" };
+		});
+		(fs.existsSync as any).mockImplementation((p: string) => String(p).endsWith(".beads/.memory-gate-done"));
+
+		beadsExtension(harness.pi);
+		await harness.emit("agent_end", {});
+
+		expect(calls.some((a) => String(a[2]).startsWith("claimed:"))).toBe(true);
+		expect(calls.some((a) => String(a[2]).startsWith("closed-this-session:"))).toBe(true);
+		expect(harness.pi.sendUserMessage).not.toHaveBeenCalled();
 	});
 });

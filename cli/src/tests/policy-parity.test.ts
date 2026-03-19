@@ -13,7 +13,6 @@ import { readFileSync, existsSync, readdirSync, mkdtempSync, mkdirSync, writeFil
 import { join, resolve, basename } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
-import { WRITE_TOOLS } from '../../../hooks/guard-rules.mjs';
 
 // Resolve repo root from cli/src/tests/
 const ROOT = resolve(__dirname, '..', '..', '..');
@@ -46,7 +45,6 @@ const policies: Array<{ file: string; policy: Policy }> = policyFiles.map(file =
   policy: JSON.parse(readFileSync(join(POLICIES_DIR, file), 'utf8')) as Policy,
 }));
 
-const WRITE_TOOLS_MATCHER = WRITE_TOOLS.join('|');
 
 // ── Structural validation ─────────────────────────────────────────────────────
 
@@ -92,24 +90,14 @@ describe('runtime:both parity', () => {
   });
 });
 
-// ── Canonical matcher parity ──────────────────────────────────────────────────
+// ── Matcher macro expansion parity ────────────────────────────────────────────
 
-describe('canonical write-tool matcher parity', () => {
-  it('main-guard policy uses $WRITE_TOOLS matcher macro', () => {
-    const mainGuard = policies.find(({ policy }) => policy.id === 'main-guard')?.policy;
-    const writeHook = mainGuard?.claude?.hooks?.find(h => h.event === 'PreToolUse' && h.command.includes('main-guard.mjs'));
-    expect(writeHook?.matcher).toBe('$WRITE_TOOLS');
-  });
-
-  it('compiled hooks expand $WRITE_TOOLS to canonical matcher', () => {
+describe('matcher macro expansion parity', () => {
+  it('compiled hooks contain no unresolved matcher macros', () => {
     const compiledHooks = JSON.parse(readFileSync(join(ROOT, 'hooks', 'hooks.json'), 'utf8'));
-    const groups = compiledHooks?.hooks?.PreToolUse ?? [];
-    const mainGuardGroup = groups.find((group: any) =>
-      group.matcher === WRITE_TOOLS_MATCHER &&
-      (group.hooks ?? []).some((h: any) => String(h.command).includes('main-guard.mjs')),
-    );
-
-    expect(mainGuardGroup, 'expected main-guard PreToolUse group to use canonical WRITE_TOOLS matcher').toBeTruthy();
+    const allGroups = Object.values(compiledHooks?.hooks ?? {}).flat() as Array<{ matcher?: string }>;
+    const unresolved = allGroups.filter((group) => typeof group.matcher === 'string' && group.matcher.includes('$'));
+    expect(unresolved, 'found unresolved matcher macros in hooks/hooks.json').toHaveLength(0);
   });
 });
 

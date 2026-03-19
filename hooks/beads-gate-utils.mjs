@@ -13,6 +13,14 @@ export function resolveCwd(input) {
   return input.cwd ?? process.env.CLAUDE_PROJECT_DIR ?? process.cwd();
 }
 
+/**
+ * Resolve a stable session key for beads hooks.
+ * Priority: explicit hook session id -> cwd fallback.
+ */
+export function resolveSessionId(input) {
+  return input?.session_id ?? input?.sessionId ?? resolveCwd(input);
+}
+
 /** Return true if the directory contains a .beads project. */
 export function isBeadsProject(cwd) {
   return existsSync(join(cwd, '.beads'));

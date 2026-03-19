@@ -62,21 +62,11 @@ export default function (pi: ExtensionAPI) {
 		const sessionState = readSessionState(cwd);
 
 		if (EventAdapter.isMutatingFileTool(event)) {
-			if (sessionState?.worktreePath) {
-				return {
-					block: true,
-					reason:
-						`On protected branch '${branch}' — active worktree session detected.\n` +
-						`  cd ${sessionState.worktreePath}\n` +
-						"  Then run pi from that worktree (sandboxed edits).\n",
-				};
-			}
-
 			return {
 				block: true,
 				reason:
 					`On protected branch '${branch}' — start on a feature branch and claim an issue.\n` +
-					"  git checkout -b feature/<name>\n" +
+					"  git checkout -b feature/<name>  (or: git switch -c feature/<name>)\n" +
 					"  bd update <id> --claim\n",
 			};
 		}
@@ -136,13 +126,13 @@ export default function (pi: ExtensionAPI) {
 		}
 
 		const handoff = sessionState?.worktreePath
-			? `  Active worktree: ${sessionState.worktreePath}\n  Use that worktree for edits, or run: xtrm finish\n`
-			: "  Exit: git checkout -b feature/<name>\n  Then: bd update <id> --claim\n";
+			? `  Active worktree session recorded: ${sessionState.worktreePath}\n  (Current workaround) use feature branch flow until worktree bug is fixed.\n`
+			: "  Exit: git checkout -b feature/<name>  (or: git switch -c feature/<name>)\n  Then: bd update <id> --claim\n";
 
 		return {
 			block: true,
 			reason:
-				`Bash restricted on '${branch}'. Allowed: read-only commands, gh, bd, xtrm finish.\n` +
+				`Bash restricted on '${branch}'. Allowed: read-only commands, gh, bd, git checkout -b, git switch -c.\n` +
 				handoff +
 				"  Override: MAIN_GUARD_ALLOW_BASH=1 <cmd>\n",
 		};

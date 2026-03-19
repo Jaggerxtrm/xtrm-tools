@@ -1,73 +1,52 @@
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import { isBashToolResult } from "@mariozechner/pi-coding-agent";
-import fs from "node:fs";
-import path from "node:path";
 import { SubprocessRunner, EventAdapter } from "./core/lib";
-import { readSessionState } from "./core/session-state";
 
-function isClaimCommand(command: string): { isClaim: boolean; issueId: string | null } {
-	if (!/\bbd\s+update\b/.test(command) || !/--claim\b/.test(command)) {
-		return { isClaim: false, issueId: null };
-	}
-	const match = command.match(/\bbd\s+update\s+(\S+)/);
-	return { isClaim: true, issueId: match?.[1] ?? null };
+function parseClosedIssueId(command: string): string | null {
+	if (!/\bbd\s+close\b/.test(command)) return null;
+	const match = command.match(/\bbd\s+close\s+(\S+)/);
+	return match?.[1] ?? null;
 }
 
-function statePathFrom(startCwd: string): string {
-	let current = path.resolve(startCwd || process.cwd());
-	for (;;) {
-		const candidate = path.join(current, ".xtrm-session-state.json");
-		if (fs.existsSync(candidate)) return candidate;
-		const parent = path.dirname(current);
-		if (parent === current) return path.join(startCwd, ".xtrm-session-state.json");
-		current = parent;
+async function getCloseReason(cwd: string, issueId: string): Promise<string> {
+	const show = await SubprocessRunner.run("bd", ["show", issueId, "--json"], { cwd });
+	if (show.code !== 0 || !show.stdout) return `Close ${issueId}`;
+
+	try {
+		const parsed = JSON.parse(show.stdout);
+		const reason = parsed?.[0]?.close_reason;
+		if (typeof reason === "string" && reason.trim().length > 0) return reason.trim();
+	} catch {
+		// fall through
 	}
+	return `Close ${issueId}`;
 }
 
-async function ensureWorktreeSessionState(cwd: string, issueId: string): Promise<{ ok: boolean; message?: string }> {
-	const repoRootResult = await SubprocessRunner.run("git", ["rev-parse", "--show-toplevel"], { cwd });
-	if (repoRootResult.code !== 0 || !repoRootResult.stdout) return { ok: false, message: "not a git repo" };
-	const repoRoot = repoRootResult.stdout.trim();
+async function hasGitChanges(cwd: string): Promise<boolean> {
+	const status = await SubprocessRunner.run("git", ["status", "--porcelain"], { cwd });
+	if (status.code !== 0) return false;
+	return status.stdout.trim().length > 0;
+}
 
-	const gitDir = await SubprocessRunner.run("git", ["rev-parse", "--git-dir"], { cwd });
-	const commonDir = await SubprocessRunner.run("git", ["rev-parse", "--git-common-dir"], { cwd });
-	if (gitDir.code === 0 && commonDir.code === 0 && gitDir.stdout.trim() !== commonDir.stdout.trim()) {
-		return { ok: false, message: "already in linked worktree" };
+async function autoCommitFromClosedIssue(cwd: string, issueId: string): Promise<{ ok: boolean; message: string }> {
+	if (!(await hasGitChanges(cwd))) {
+		return { ok: true, message: "No changes detected — auto-commit skipped." };
 	}
 
-	const overstoryDir = path.join(repoRoot, ".overstory");
-	const worktreesBase = fs.existsSync(overstoryDir)
-		? path.join(overstoryDir, "worktrees")
-		: path.join(repoRoot, ".worktrees");
-	fs.mkdirSync(worktreesBase, { recursive: true });
+	const reason = await getCloseReason(cwd, issueId);
+	const commitMessage = `${reason} (${issueId})`;
 
-	const branch = `feature/${issueId}`;
-	const worktreePath = path.join(worktreesBase, issueId);
-	if (!fs.existsSync(worktreePath)) {
-		const branchExists = (await SubprocessRunner.run("git", ["show-ref", "--verify", "--quiet", `refs/heads/${branch}`], { cwd: repoRoot })).code === 0;
-		const addArgs = branchExists
-			? ["worktree", "add", worktreePath, branch]
-			: ["worktree", "add", worktreePath, "-b", branch];
-		const add = await SubprocessRunner.run("git", addArgs, { cwd: repoRoot, timeoutMs: 20000 });
-		if (add.code !== 0) {
-			return { ok: false, message: add.stderr || add.stdout || "worktree creation failed" };
-		}
+	const add = await SubprocessRunner.run("git", ["add", "-A"], { cwd });
+	if (add.code !== 0) {
+		return { ok: false, message: `git add failed: ${add.stderr || add.stdout || "unknown error"}` };
 	}
 
-	const statePath = statePathFrom(repoRoot);
-	const payload = {
-		issueId,
-		branch,
-		worktreePath,
-		prNumber: null,
-		prUrl: null,
-		phase: "claimed",
-		conflictFiles: [],
-		startedAt: new Date().toISOString(),
-		lastChecked: new Date().toISOString(),
-	};
-	fs.writeFileSync(statePath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
-	return { ok: true, message: `Worktree created: ${worktreePath} Branch: ${branch}` };
+	const commit = await SubprocessRunner.run("git", ["commit", "-m", commitMessage], { cwd });
+	if (commit.code !== 0) {
+		return { ok: false, message: `git commit failed: ${commit.stderr || commit.stdout || "unknown error"}` };
+	}
+
+	return { ok: true, message: `Auto-commit created from close reason: \`${commitMessage}\`` };
 }
 
 export default function (pi: ExtensionAPI) {
@@ -77,55 +56,23 @@ export default function (pi: ExtensionAPI) {
 		if (!isBashToolResult(event)) return undefined;
 		const cwd = getCwd(ctx);
 		if (!EventAdapter.isBeadsProject(cwd)) return undefined;
+		if (event.isError) return undefined;
 
 		const command = event.input.command || "";
-		const { isClaim, issueId } = isClaimCommand(command);
-		if (!isClaim || !issueId) return undefined;
+		if (!/\bbd\s+close\b/.test(command)) return undefined;
 
-		const ensured = await ensureWorktreeSessionState(cwd, issueId);
-		if (ensured.ok) {
-			const state = readSessionState(cwd);
-			const worktreePath = state?.worktreePath;
-			const nextStep = worktreePath
-				? `\nNext: cd ${worktreePath} && pi  (sandboxed session)`
-				: "";
-			const text = `\n\n🧭 Session Flow: ${ensured.message}${nextStep}`;
+		const issueId = parseClosedIssueId(command);
+		if (!issueId) {
+			const text = "\n\n🧭 Session Flow: bd close detected without explicit issue id — auto-commit skipped.";
 			return { content: [...event.content, { type: "text", text }] };
 		}
-		return undefined;
+
+		const result = await autoCommitFromClosedIssue(cwd, issueId);
+		const prefix = result.ok ? "✅" : "⚠";
+		const text = `\n\n${prefix} Session Flow: ${result.message}`;
+		return { content: [...event.content, { type: "text", text }] };
 	});
 
-	pi.on("agent_end", async (_event, ctx) => {
-		const cwd = getCwd(ctx);
-		if (!EventAdapter.isBeadsProject(cwd)) return undefined;
-		const state = readSessionState(cwd);
-		if (!state) return undefined;
-
-		if (state.phase === "waiting-merge" || state.phase === "pending-cleanup") {
-			const pr = state.prNumber != null ? `#${state.prNumber}` : "(pending PR)";
-			const url = state.prUrl ? ` ${state.prUrl}` : "";
-			pi.sendUserMessage(
-				`⚠ PR ${pr}${url} is still pending. xtrm finish is deprecated for Pi workflow. ` +
-				"Use xtpi publish (when available) and external merge/cleanup steps.",
-			);
-			return undefined;
-		}
-
-		if (state.phase === "conflicting") {
-			const files = state.conflictFiles?.length ? state.conflictFiles.join(", ") : "unknown files";
-			pi.sendUserMessage(
-				`⚠ Conflicts in: ${files}. xtrm finish is deprecated for Pi workflow. ` +
-				"Resolve conflicts, then continue with publish-only flow.",
-			);
-			return undefined;
-		}
-
-		if (state.phase === "claimed" || state.phase === "phase1-done") {
-			pi.sendUserMessage(
-				`⚠ Session has an active worktree at ${state.worktreePath}. ` +
-				"Use publish-only workflow (no automatic push/PR/merge).",
-			);
-		}
-		return undefined;
-	});
+	// Worktree lifecycle reminders are disabled in Pi while migrating to explicit xtpi flow.
+	pi.on("agent_end", async () => undefined);
 }

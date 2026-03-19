@@ -101,18 +101,16 @@ exit 1
     }
   });
 
-  it('Pi extension encodes same phase guards and claim detection semantics', () => {
+  it('Pi extension encodes bd close auto-commit and deprecates finish workflow guidance', () => {
     const src = readFileSync(path.join(ROOT, 'config', 'pi', 'extensions', 'session-flow.ts'), 'utf8');
 
-    // claim detection path
-    expect(src).toContain('bd\\s+update');
-    expect(src).toContain('--claim');
+    // close detection + commit automation path
+    expect(src).toContain('bd\\s+close');
+    expect(src).toContain('git", ["add", "-A"]');
+    expect(src).toContain('git", ["commit", "-m", commitMessage]');
 
-    // phase parity with Claude stop-gate
-    expect(src).toContain('waiting-merge');
-    expect(src).toContain('pending-cleanup');
-    expect(src).toContain('conflicting');
-    expect(src).toContain('phase1-done');
-    expect(src).toContain('xtrm finish');
+    // no xtrm finish orchestration path in Pi session-flow implementation
+    expect(src).not.toContain('Run: xtrm finish');
+    expect(src).toContain('pi.on("agent_end"');
   });
 });

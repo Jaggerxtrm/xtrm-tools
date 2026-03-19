@@ -5,7 +5,7 @@ Owner issue: `jaggers-agent-tools-xepd`
 
 ## 1) Goal
 
-Create an `xtpi` launcher workflow where agents never start on repo-root `main` for implementation work.
+Create an `xtpi` launcher workflow where agents never start on repo-root `main` for implementation work. 
 
 Target behavior:
 - `xtpi <issue-or-sandbox>` creates/opens a dedicated worktree
@@ -43,7 +43,7 @@ Target behavior:
 - From current sandbox worktree:
   - optional commit automation (from bd context)
   - push branch
-  - create/update one PR to `main`
+  - create/update one final (one pr per worktree, no continuous flow breaking pr) PR to `main`
 - **No merge**
 
 ## `xtpi cleanup`
@@ -92,7 +92,8 @@ Initial recommendation: support both, default to **single sandbox branch**, allo
 1. User/orchestrator: `xtpi jaggers-agent-tools-123`
 2. Pi opens in sandbox worktree
 3. Agent: `bd update jaggers-agent-tools-123 --claim`
-4. Agent works, commits as needed
+4. Agent works, `bd close` issue closing command triggers auto commits (and git pushes here as well) as needed (no push yet), commit message should copy the bd close message;
+5. 
 5. Agent: `xtpi publish` (opens/updates PR, no merge)
 6. Human/landing agent merges PR
 7. Agent/user: `xtpi cleanup`

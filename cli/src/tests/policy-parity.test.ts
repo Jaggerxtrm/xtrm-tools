@@ -128,15 +128,10 @@ describe('referenced files exist', () => {
 });
 
 describe('pi extension guard-rules imports', () => {
-  it('main-guard and adapter use shared guard-rules constants', () => {
-    const mainGuard = readFileSync(join(ROOT, 'config', 'pi', 'extensions', 'main-guard.ts'), 'utf8');
+  it('adapter uses shared guard-rules constants', () => {
     const adapter = readFileSync(join(ROOT, 'config', 'pi', 'extensions', 'core', 'adapter.ts'), 'utf8');
 
-    expect(mainGuard).toContain('from "./core/guard-rules"');
     expect(adapter).toContain('from "./guard-rules"');
-
-    expect(mainGuard).not.toMatch(/^\s*const\s+SAFE_BASH_PREFIXES\s*=\s*\[/m);
-    expect(mainGuard).not.toMatch(/^\s*const\s+DANGEROUS_BASH_PATTERNS\s*=\s*\[/m);
     expect(adapter).not.toMatch(/const\s+tools\s*=\s*\[/m);
   });
 });

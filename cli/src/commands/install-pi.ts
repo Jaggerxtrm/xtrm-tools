@@ -22,6 +22,12 @@ interface InstallSchema { fields: SchemaField[]; oauth_providers: OAuthProvider[
 
 export const EXTRA_PI_CONFIGS = ['pi-worktrees-settings.json'];
 
+// Pi-only deprecations: keep files in repo for reference/tests, but do not deploy them.
+const EXCLUDED_PI_EXTENSION_FILES = new Set([
+    'main-guard.ts',
+    'main-guard-post-push.ts',
+]);
+
 export async function copyExtraConfigs(srcDir: string, destDir: string): Promise<void> {
     for (const name of EXTRA_PI_CONFIGS) {
         const src = path.join(srcDir, name);
@@ -57,6 +63,10 @@ function isPiInstalled(): boolean {
     return spawnSync('pi', ['--version'], { encoding: 'utf8' }).status === 0;
 }
 
+function isExcludedPiExtensionRelPath(relPath: string): boolean {
+    return EXCLUDED_PI_EXTENSION_FILES.has(path.basename(relPath));
+}
+
 async function listTsFilesRecursive(baseDir: string): Promise<string[]> {
     if (!await fs.pathExists(baseDir)) return [];
 
@@ -70,7 +80,8 @@ async function listTsFilesRecursive(baseDir: string): Promise<string[]> {
             continue;
         }
         if (entry.isFile() && entry.name.endsWith('.ts')) {
-            files.push(abs);
+            const rel = path.relative(baseDir, abs);
+            if (!isExcludedPiExtensionRelPath(rel)) files.push(abs);
         }
     }
 
@@ -202,7 +213,14 @@ export function createInstallPiCommand(): Command {
                 console.log(t.success(`    ${sym.ok} ${name}`));
             }
 
-            await fs.copy(path.join(piConfigDir, 'extensions'), path.join(PI_AGENT_DIR, 'extensions'), { overwrite: true });
+            await fs.copy(path.join(piConfigDir, 'extensions'), path.join(PI_AGENT_DIR, 'extensions'), {
+                overwrite: true,
+                filter: (srcPath: string) => {
+                    const rel = path.relative(path.join(piConfigDir, 'extensions'), srcPath);
+                    if (!rel || rel === '.') return true;
+                    return !isExcludedPiExtensionRelPath(rel);
+                },
+            });
             console.log(t.success(`    ${sym.ok} extensions/`));
 
             console.log(t.bold('\n  npm Packages\n'));

@@ -210,6 +210,16 @@ node scripts/compile-policies.mjs --check   # CI drift check
 | Claim Sync | Creates worktree + `.xtrm-session-state.json` on `bd update <id> --claim` |
 | Stop Flow Gate | Blocks stop when phase is `waiting-merge`, `conflicting`, `pending-cleanup` |
 
+#### Intended Worktree-First Flow (Pi + Claude)
+
+1. `bd update <id> --claim` (worktree auto-created)
+2. Move your agent session to that worktree path and do all edits there (sandboxed)
+3. If you remain on `main`/`master`, `main-guard` blocks mutating tools and points to active worktree path
+4. Run `xtrm finish` to complete closure lifecycle (commit/push/pr/merge/cleanup)
+
+> `xtrm finish` is allowed on protected branches and resolves execution context from `.xtrm-session-state.json`.
+> If invoked from repo root, it executes git/gh phase steps in the claimed worktree path.
+
 ### GitNexus Hook
 
 Enriches tool output with knowledge graph context via `gitnexus augment`.

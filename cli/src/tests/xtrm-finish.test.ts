@@ -63,6 +63,53 @@ describe('runXtrmFinish', () => {
     }
   });
 
+  it('uses claimed worktree path for gh/git phase steps when run from repo root', async () => {
+    const dir = mkdtempSync(path.join(os.tmpdir(), 'xtrm-finish-worktree-cwd-'));
+    const fakeDir = path.join(dir, 'fakebin');
+    mkdirSync(fakeDir, { recursive: true });
+    initRepo(dir);
+
+    const worktreePath = path.join(dir, '.worktrees', 'jaggers-agent-tools-1xa2');
+    spawnSync('git', ['worktree', 'add', worktreePath, '-b', 'feature/jaggers-agent-tools-1xa2'], {
+      cwd: dir,
+      stdio: 'pipe',
+    });
+
+    writeFileSync(path.join(dir, '.xtrm-session-state.json'), JSON.stringify({
+      issueId: 'jaggers-agent-tools-1xa2',
+      branch: 'feature/jaggers-agent-tools-1xa2',
+      worktreePath,
+      prNumber: 77,
+      prUrl: 'https://example.invalid/pr/77',
+      phase: 'waiting-merge',
+      conflictFiles: [],
+      startedAt: new Date().toISOString(),
+      lastChecked: new Date().toISOString(),
+    }), 'utf8');
+
+    const markerPath = path.join(dir, 'gh-cwd.txt');
+    const ghPath = path.join(fakeDir, 'gh');
+    writeFileSync(
+      ghPath,
+      `#!/usr/bin/env bash\nset -euo pipefail\nif [[ "$1" == "pr" && "$2" == "view" ]]; then\n  pwd > "${markerPath}"\n  echo '{"state":"MERGED","mergeStateStatus":"CLEAN","mergeable":"MERGEABLE"}'\n  exit 0\nfi\nexit 1\n`,
+    );
+    chmodSync(ghPath, 0o755);
+
+    const oldPath = process.env.PATH;
+    process.env.PATH = `${fakeDir}:${oldPath ?? ''}`;
+    try {
+      const result = await runXtrmFinish({ cwd: dir, pollIntervalMs: 1, timeoutMs: 20 });
+      expect(result.ok).toBe(true);
+      expect(readFileSync(markerPath, 'utf8').trim()).toBe(worktreePath);
+      expect(spawnSync('git', ['worktree', 'list'], { cwd: dir, encoding: 'utf8' }).stdout).not.toContain(worktreePath);
+      const state = JSON.parse(readFileSync(path.join(dir, '.xtrm-session-state.json'), 'utf8'));
+      expect(state.phase).toBe('cleanup-done');
+    } finally {
+      process.env.PATH = oldPath;
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   it('sets pending-cleanup when PR is not merged before timeout', async () => {
     const dir = mkdtempSync(path.join(os.tmpdir(), 'xtrm-finish-timeout-'));
     const fakeDir = path.join(dir, 'fakebin');

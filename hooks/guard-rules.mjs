@@ -65,6 +65,7 @@ export const SAFE_BASH_PREFIXES = [
   'gh',
   'bd',
   'npx gitnexus',
+  'xtrm finish',
   // Read-only filesystem
   'cat',
   'ls',

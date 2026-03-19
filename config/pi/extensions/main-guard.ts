@@ -1,14 +1,19 @@
-import type { ExtensionAPI, ToolCallEvent } from "@mariozechner/pi-coding-agent";
+import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import { isToolCallEventType } from "@mariozechner/pi-coding-agent";
-import { SubprocessRunner, EventAdapter, Logger } from "./core/lib";
+import { SubprocessRunner, EventAdapter } from "./core/lib";
 import { SAFE_BASH_PREFIXES, DANGEROUS_BASH_PATTERNS } from "./core/guard-rules";
+import { readSessionState } from "./core/session-state";
 
-const logger = new Logger({ namespace: "main-guard" });
+function normalizeGitCCommand(cmd: string): string {
+	const gitC = cmd.match(/^git\s+-C\s+(?:"[^"]+"|'[^']+'|\S+)\s+(.+)$/);
+	if (gitC?.[1]) return `git ${gitC[1]}`;
+	return cmd;
+}
 
 export default function (pi: ExtensionAPI) {
 	const getProtectedBranches = (): string[] => {
 		const env = process.env.MAIN_GUARD_PROTECTED_BRANCHES;
-		if (env) return env.split(",").map(b => b.trim()).filter(Boolean);
+		if (env) return env.split(",").map((b) => b.trim()).filter(Boolean);
 		return ["main", "master"];
 	};
 
@@ -22,20 +27,19 @@ export default function (pi: ExtensionAPI) {
 
 	pi.on("tool_call", async (event, ctx) => {
 		const cwd = ctx.cwd || process.cwd();
-		
-		// 1. Safety Check: Protected Paths (Global)
+
+		// 1) Global protected path guard
 		if (EventAdapter.isMutatingFileTool(event)) {
 			const path = EventAdapter.extractPathFromToolInput(event, cwd);
 			if (path && protectedPaths.some((p) => path.includes(p))) {
-				const reason = `Path "${path}" is protected. Edits to sensitive system files are restricted.`;
-				if (ctx.hasUI) {
-					ctx.ui.notify(`Safety: Blocked edit to protected path`, "error");
-				}
-				return { block: true, reason };
+				return {
+					block: true,
+					reason: `Path \"${path}\" is protected. Edits to sensitive system files are restricted.`,
+				};
 			}
 		}
 
-		// 2. Safety Check: Dangerous Commands (Global)
+		// 2) Global dangerous bash confirmation
 		if (isToolCallEventType("bash", event)) {
 			const cmd = event.input.command.trim();
 			const dangerousRegexes = DANGEROUS_BASH_PATTERNS.map((pattern) => new RegExp(pattern));
@@ -50,73 +54,97 @@ export default function (pi: ExtensionAPI) {
 			}
 		}
 
-		// 3. Main-Guard: Branch Protection
+		// 3) Protected branch policy
 		const protectedBranches = getProtectedBranches();
 		const branch = await getCurrentBranch(cwd);
+		if (!branch || !protectedBranches.includes(branch)) return undefined;
 
-		if (branch && protectedBranches.includes(branch)) {
-			// A. Mutating File Tools on Main
-			if (EventAdapter.isMutatingFileTool(event)) {
-				const reason = `On protected branch '${branch}' — start on a feature branch and claim an issue.\n  git checkout -b feature/<name>\n  bd update <id> --claim\n`;
-				if (ctx.hasUI) {
-					ctx.ui.notify(`Main-Guard: Blocked edit on ${branch}`, "error");
-				}
-				return { block: true, reason };
+		const sessionState = readSessionState(cwd);
+
+		if (EventAdapter.isMutatingFileTool(event)) {
+			if (sessionState?.worktreePath) {
+				return {
+					block: true,
+					reason:
+						`On protected branch '${branch}' — active worktree session detected.\n` +
+						`  cd ${sessionState.worktreePath}\n` +
+						"  Then run pi from that worktree (sandboxed edits).\n",
+				};
 			}
 
-			// B. Bash Commands on Main
-			if (isToolCallEventType("bash", event)) {
-				const cmd = event.input.command.trim();
-
-				// Emergency override
-				if (process.env.MAIN_GUARD_ALLOW_BASH === "1") return undefined;
-
-				// Enforce squash-only PR merges
-				if (/^gh\s+pr\s+merge\b/.test(cmd)) {
-					if (!/--squash\b/.test(cmd)) {
-						const reason = "Squash only: use `gh pr merge --squash` (or MAIN_GUARD_ALLOW_BASH=1)";
-						return { block: true, reason };
-					}
-					return undefined;
-				}
-
-				// Safe allowlist
-				const safePrefixRegexes = SAFE_BASH_PREFIXES.map((prefix) =>
-					new RegExp(`^${prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`),
-				);
-				const safeResetRegexes = protectedBranches.map((b) => new RegExp(`^git\\s+reset\\s+--hard\\s+origin/${b}\\b`));
-				const SAFE_BASH_PATTERNS = [...safePrefixRegexes, ...safeResetRegexes];
-
-				if (SAFE_BASH_PATTERNS.some(p => p.test(cmd))) {
-					return undefined;
-				}
-
-				// Specific blocks
-				if (/\bgit\s+commit\b/.test(cmd)) {
-					return { block: true, reason: `No commits on '${branch}' — use a feature branch.\n  git checkout -b feature/<name>\n  bd update <id> --claim\n` };
-				}
-
-				if (/\bgit\s+push\b/.test(cmd)) {
-					const tokens = cmd.split(/\s+/);
-					const lastToken = tokens[tokens.length - 1];
-					const explicitProtected = protectedBranches.some(b => lastToken === b || lastToken.endsWith(`:${b}`));
-					const impliedProtected = tokens.length <= 3 && protectedBranches.includes(branch);
-					
-					if (explicitProtected || impliedProtected) {
-						return { block: true, reason: `No direct push to '${branch}' — push a feature branch and open a PR.` };
-					}
-					return undefined;
-				}
-
-				// Default deny
-				const reason = `Bash restricted on '${branch}'. Allowed: git status/log/diff/pull/stash, gh, bd.\n  Exit: git checkout -b feature/<name>\n  Then: bd update <id> --claim\n  Override: MAIN_GUARD_ALLOW_BASH=1 <cmd>\n`;
-				if (ctx.hasUI) {
-					ctx.ui.notify("Main-Guard: Command blocked", "error");
-				}
-				return { block: true, reason };
-			}
+			return {
+				block: true,
+				reason:
+					`On protected branch '${branch}' — start on a feature branch and claim an issue.\n` +
+					"  git checkout -b feature/<name>\n" +
+					"  bd update <id> --claim\n",
+			};
 		}
 
-		return undefined;
+		if (!isToolCallEventType("bash", event)) return undefined;
+
+		const cmd = event.input.command.trim();
+		const normalizedCmd = normalizeGitCCommand(cmd);
+
+		// Emergency override
+		if (process.env.MAIN_GUARD_ALLOW_BASH === "1") return undefined;
+
+		// Enforce squash-only PR merges
+		if (/^gh\s+pr\s+merge\b/.test(cmd)) {
+			if (!/--squash\b/.test(cmd)) {
+				return {
+					block: true,
+					reason: "Squash only: use `gh pr merge --squash` (or MAIN_GUARD_ALLOW_BASH=1)",
+				};
+			}
+			return undefined;
+		}
+
+		const safePrefixRegexes = SAFE_BASH_PREFIXES.map((prefix) =>
+			new RegExp(`^${prefix.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&")}\\b`),
+		);
+		const safeResetRegexes = protectedBranches.map((b) => new RegExp(`^git\\s+reset\\s+--hard\\s+origin/${b}\\b`));
+		const SAFE_BASH_PATTERNS = [...safePrefixRegexes, ...safeResetRegexes];
+
+		if (SAFE_BASH_PATTERNS.some((p) => p.test(cmd) || p.test(normalizedCmd))) {
+			return undefined;
+		}
+
+		if (/\bgit\s+commit\b/.test(normalizedCmd)) {
+			return {
+				block: true,
+				reason:
+					`No commits on '${branch}' — use a feature branch/worktree.\n` +
+					"  git checkout -b feature/<name>\n" +
+					"  bd update <id> --claim\n",
+			};
+		}
+
+		if (/\bgit\s+push\b/.test(normalizedCmd)) {
+			const tokens = normalizedCmd.split(/\s+/);
+			const lastToken = tokens[tokens.length - 1];
+			const explicitProtected = protectedBranches.some((b) => lastToken === b || lastToken.endsWith(`:${b}`));
+			const impliedProtected = tokens.length <= 3 && protectedBranches.includes(branch);
+
+			if (explicitProtected || impliedProtected) {
+				return {
+					block: true,
+					reason: `No direct push to '${branch}' — push a feature branch and open a PR.`,
+				};
+			}
+			return undefined;
+		}
+
+		const handoff = sessionState?.worktreePath
+			? `  Active worktree: ${sessionState.worktreePath}\n  Use that worktree for edits, or run: xtrm finish\n`
+			: "  Exit: git checkout -b feature/<name>\n  Then: bd update <id> --claim\n";
+
+		return {
+			block: true,
+			reason:
+				`Bash restricted on '${branch}'. Allowed: read-only commands, gh, bd, xtrm finish.\n` +
+				handoff +
+				"  Override: MAIN_GUARD_ALLOW_BASH=1 <cmd>\n",
+		};
 	});
 }

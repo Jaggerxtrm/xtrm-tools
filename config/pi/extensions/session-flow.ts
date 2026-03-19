@@ -84,7 +84,12 @@ export default function (pi: ExtensionAPI) {
 
 		const ensured = await ensureWorktreeSessionState(cwd, issueId);
 		if (ensured.ok) {
-			const text = `\n\n🧭 Session Flow: ${ensured.message}`;
+			const state = readSessionState(cwd);
+			const worktreePath = state?.worktreePath;
+			const nextStep = worktreePath
+				? `\nNext: cd ${worktreePath} && pi  (sandboxed session)`
+				: "";
+			const text = `\n\n🧭 Session Flow: ${ensured.message}${nextStep}`;
 			return { content: [...event.content, { type: "text", text }] };
 		}
 		return undefined;

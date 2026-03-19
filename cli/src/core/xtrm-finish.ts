@@ -39,6 +39,21 @@ function run(cmd: string, args: string[], cwd: string): CmdResult {
   };
 }
 
+function getControlRepoRoot(cwd: string): string {
+  const commonDir = run('git', ['rev-parse', '--path-format=absolute', '--git-common-dir'], cwd);
+  if (commonDir.code === 0 && commonDir.stdout) {
+    return commonDir.stdout.replace(/\/.git$/, '');
+  }
+  return cwd;
+}
+
+function resolveExecutionCwd(controlCwd: string, state: SessionState): string {
+  if (state.worktreePath && existsSync(state.worktreePath)) {
+    return state.worktreePath;
+  }
+  return controlCwd;
+}
+
 function parsePrCreate(stdout: string): { prNumber: number | null; prUrl: string | null } {
   const urlMatch = stdout.match(/https?:\/\/\S+\/pull\/(\d+)/);
   if (urlMatch) {
@@ -90,29 +105,29 @@ function handleRebaseAndPush(cwd: string): { ok: boolean; conflicts?: string[]; 
   return { ok: true };
 }
 
-function cleanupPhase(cwd: string, state: SessionState): FinishResult {
+function cleanupPhase(controlCwd: string, state: SessionState): FinishResult {
   if (existsSync(state.worktreePath)) {
-    const rm = run('git', ['worktree', 'remove', state.worktreePath, '--force'], cwd);
+    const rm = run('git', ['worktree', 'remove', state.worktreePath, '--force'], controlCwd);
     if (rm.code !== 0) {
       return { ok: false, message: rm.stderr || rm.stdout || `Failed to remove worktree ${state.worktreePath}` };
     }
   }
 
-  run('git', ['fetch', '--prune'], cwd);
-  ensureCleanPhaseTransition(cwd, 'cleanup-done');
+  run('git', ['fetch', '--prune'], controlCwd);
+  ensureCleanPhaseTransition(controlCwd, 'cleanup-done');
 
   const prLabel = state.prNumber != null ? `#${state.prNumber}` : '(unknown PR)';
   return { ok: true, message: `Done. PR ${prLabel} merged. Worktree removed.` };
 }
 
-async function pollUntilMerged(cwd: string, state: SessionState, opts: Required<FinishOptions>): Promise<FinishResult> {
+async function pollUntilMerged(controlCwd: string, executionCwd: string, state: SessionState, opts: Required<FinishOptions>): Promise<FinishResult> {
   if (state.prNumber == null) {
     return { ok: false, message: 'Session state missing prNumber. Re-run phase 1 before polling.' };
   }
 
   const started = Date.now();
   while ((Date.now() - started) < opts.timeoutMs) {
-    const view = run('gh', ['pr', 'view', String(state.prNumber), '--json', 'state,mergeStateStatus,mergeable'], cwd);
+    const view = run('gh', ['pr', 'view', String(state.prNumber), '--json', 'state,mergeStateStatus,mergeable'], executionCwd);
 
     if (view.code !== 0) {
       return { ok: false, message: view.stderr || view.stdout || `Failed to inspect PR #${state.prNumber}` };
@@ -125,33 +140,33 @@ async function pollUntilMerged(cwd: string, state: SessionState, opts: Required<
       return { ok: false, message: `Unable to parse gh pr view output for #${state.prNumber}` };
     }
 
-    ensureCleanPhaseTransition(cwd, 'waiting-merge');
+    ensureCleanPhaseTransition(controlCwd, 'waiting-merge');
 
     if (payload.state === 'MERGED') {
-      ensureCleanPhaseTransition(cwd, 'merged');
-      const latest = readSessionState(cwd) ?? state;
-      return cleanupPhase(cwd, latest);
+      ensureCleanPhaseTransition(controlCwd, 'merged');
+      const latest = readSessionState(controlCwd) ?? state;
+      return cleanupPhase(controlCwd, latest);
     }
 
     if (payload.mergeStateStatus === 'BEHIND') {
-      run('git', ['fetch', 'origin'], cwd);
-      run('git', ['push'], cwd);
+      run('git', ['fetch', 'origin'], executionCwd);
+      run('git', ['push'], executionCwd);
       await delay(opts.pollIntervalMs);
       continue;
     }
 
     if (payload.mergeable === 'CONFLICTING') {
-      const rebased = handleRebaseAndPush(cwd);
+      const rebased = handleRebaseAndPush(executionCwd);
       if (!rebased.ok) {
-        const conflictFiles = rebased.conflicts ?? getConflictFiles(cwd);
-        ensureCleanPhaseTransition(cwd, 'conflicting', { conflictFiles });
+        const conflictFiles = rebased.conflicts ?? getConflictFiles(executionCwd);
+        ensureCleanPhaseTransition(controlCwd, 'conflicting', { conflictFiles });
         return {
           ok: false,
           message: `Conflicts in: ${conflictFiles.join(', ') || 'unknown files'}. Resolve, push, then re-run xtrm finish.`,
         };
       }
 
-      ensureCleanPhaseTransition(cwd, 'waiting-merge', { conflictFiles: [] });
+      ensureCleanPhaseTransition(controlCwd, 'waiting-merge', { conflictFiles: [] });
       await delay(opts.pollIntervalMs);
       continue;
     }
@@ -159,7 +174,7 @@ async function pollUntilMerged(cwd: string, state: SessionState, opts: Required<
     await delay(opts.pollIntervalMs);
   }
 
-  ensureCleanPhaseTransition(cwd, 'pending-cleanup');
+  ensureCleanPhaseTransition(controlCwd, 'pending-cleanup');
   return {
     ok: false,
     message: `PR #${state.prNumber} not yet merged. Run xtrm finish when ready.`,
@@ -171,33 +186,33 @@ function isWorkingTreeDirty(cwd: string): boolean {
   return st.code === 0 && st.stdout.length > 0;
 }
 
-function runPhase1(cwd: string, state: SessionState): FinishResult {
-  if (isWorkingTreeDirty(cwd)) {
-    const add = run('git', ['add', '-A'], cwd);
+function runPhase1(controlCwd: string, executionCwd: string, state: SessionState): FinishResult {
+  if (isWorkingTreeDirty(executionCwd)) {
+    const add = run('git', ['add', '-A'], executionCwd);
     if (add.code !== 0) return { ok: false, message: add.stderr || add.stdout };
 
     const msg = `feat(${state.issueId}): ${state.branch}`;
-    const commit = run('git', ['commit', '-m', msg], cwd);
+    const commit = run('git', ['commit', '-m', msg], executionCwd);
     if (commit.code !== 0) {
       return { ok: false, message: commit.stderr || commit.stdout || 'git commit failed' };
     }
   }
 
-  const push = run('git', ['push', '-u', 'origin', state.branch], cwd);
+  const push = run('git', ['push', '-u', 'origin', state.branch], executionCwd);
   if (push.code !== 0) return { ok: false, message: push.stderr || push.stdout || 'git push failed' };
 
-  const create = run('gh', ['pr', 'create', '--fill'], cwd);
+  const create = run('gh', ['pr', 'create', '--fill'], executionCwd);
   if (create.code !== 0) return { ok: false, message: create.stderr || create.stdout || 'gh pr create failed' };
   const parsed = parsePrCreate(create.stdout);
 
-  const merge = run('gh', ['pr', 'merge', '--squash', '--auto'], cwd);
+  const merge = run('gh', ['pr', 'merge', '--squash', '--auto'], executionCwd);
   if (merge.code !== 0) return { ok: false, message: merge.stderr || merge.stdout || 'gh pr merge failed' };
 
-  ensureCleanPhaseTransition(cwd, 'phase1-done', {
+  ensureCleanPhaseTransition(controlCwd, 'phase1-done', {
     prNumber: parsed.prNumber,
     prUrl: parsed.prUrl,
   });
-  ensureCleanPhaseTransition(cwd, 'waiting-merge', {
+  ensureCleanPhaseTransition(controlCwd, 'waiting-merge', {
     prNumber: parsed.prNumber,
     prUrl: parsed.prUrl,
   });
@@ -207,13 +222,17 @@ function runPhase1(cwd: string, state: SessionState): FinishResult {
 
 export async function runXtrmFinish(options: FinishOptions = {}): Promise<FinishResult> {
   const cwd = options.cwd ?? process.cwd();
-  const state = readSessionState(cwd);
+  const controlCwd = getControlRepoRoot(cwd);
+
+  const state = readSessionState(controlCwd);
   if (!state) {
     return { ok: false, message: 'No .xtrm-session-state.json found. Claim an issue first (bd update <id> --claim).' };
   }
 
+  const executionCwd = resolveExecutionCwd(controlCwd, state);
+
   const opts: Required<FinishOptions> = {
-    cwd,
+    cwd: controlCwd,
     pollIntervalMs: options.pollIntervalMs ?? DEFAULT_POLL_INTERVAL_MS,
     timeoutMs: options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
   };
@@ -223,26 +242,26 @@ export async function runXtrmFinish(options: FinishOptions = {}): Promise<Finish
   }
 
   if (state.phase === 'conflicting') {
-    const resolved = handleRebaseAndPush(cwd);
+    const resolved = handleRebaseAndPush(executionCwd);
     if (!resolved.ok) {
-      const files = resolved.conflicts ?? getConflictFiles(cwd);
-      ensureCleanPhaseTransition(cwd, 'conflicting', { conflictFiles: files });
+      const files = resolved.conflicts ?? getConflictFiles(executionCwd);
+      ensureCleanPhaseTransition(controlCwd, 'conflicting', { conflictFiles: files });
       return { ok: false, message: `Conflicts in: ${files.join(', ') || 'unknown files'}. Resolve, push, then re-run xtrm finish.` };
     }
-    ensureCleanPhaseTransition(cwd, 'waiting-merge', { conflictFiles: [] });
-    const refreshed = readSessionState(cwd) ?? state;
-    return pollUntilMerged(cwd, refreshed, opts);
+    ensureCleanPhaseTransition(controlCwd, 'waiting-merge', { conflictFiles: [] });
+    const refreshed = readSessionState(controlCwd) ?? state;
+    return pollUntilMerged(controlCwd, executionCwd, refreshed, opts);
   }
 
   if (state.phase === 'waiting-merge' || state.phase === 'pending-cleanup' || state.phase === 'merged') {
-    const refreshed = readSessionState(cwd) ?? state;
-    if (refreshed.phase === 'merged') return cleanupPhase(cwd, refreshed);
-    return pollUntilMerged(cwd, refreshed, opts);
+    const refreshed = readSessionState(controlCwd) ?? state;
+    if (refreshed.phase === 'merged') return cleanupPhase(controlCwd, refreshed);
+    return pollUntilMerged(controlCwd, executionCwd, refreshed, opts);
   }
 
-  const phase1 = runPhase1(cwd, state);
+  const phase1 = runPhase1(controlCwd, executionCwd, state);
   if (!phase1.ok) return phase1;
 
-  const refreshed = readSessionState(cwd) ?? state;
-  return pollUntilMerged(cwd, refreshed, opts);
+  const refreshed = readSessionState(controlCwd) ?? state;
+  return pollUntilMerged(controlCwd, executionCwd, refreshed, opts);
 }

@@ -7,6 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { readFileSync, existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { writeSessionState } from './session-state.mjs';
+import { resolveSessionId } from './beads-gate-utils.mjs';
 
 function readInput() {
   try {
@@ -152,12 +153,7 @@ function main() {
   if (!isBeadsProject(cwd)) process.exit(0);
 
   const command = input.tool_input?.command || '';
-  const sessionId = input.session_id ?? input.sessionId;
-
-  if (!sessionId) {
-    process.stderr.write('Beads claim sync: no session_id in hook input\n');
-    process.exit(0);
-  }
+  const sessionId = resolveSessionId(input);
 
   // Auto-claim: bd update <id> --claim (fire regardless of exit code — bd returns 1 for "already in_progress")
   if (/\bbd\s+update\b/.test(command) && /--claim\b/.test(command)) {

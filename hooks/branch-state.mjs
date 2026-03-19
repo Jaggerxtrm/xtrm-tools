@@ -7,6 +7,7 @@
 import { execSync } from 'node:child_process';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { resolveSessionId } from './beads-gate-utils.mjs';
 
 function readInput() {
   try { return JSON.parse(readFileSync(0, 'utf-8')); } catch { return null; }
@@ -35,7 +36,7 @@ const input = readInput();
 if (!input) process.exit(0);
 
 const cwd = input.cwd || process.cwd();
-const sessionId = input.session_id ?? input.sessionId;
+const sessionId = resolveSessionId(input);
 const branch = getBranch(cwd);
 const isBeads = existsSync(join(cwd, '.beads'));
 const claim = isBeads && sessionId ? getSessionClaim(sessionId, cwd) : null;

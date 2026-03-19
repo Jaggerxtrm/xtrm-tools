@@ -11,7 +11,7 @@ import { execSync } from 'node:child_process';
 import { existsSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { readHookInput } from './beads-gate-core.mjs';
-import { resolveCwd, isBeadsProject, getSessionClaim, clearSessionClaim } from './beads-gate-utils.mjs';
+import { resolveCwd, resolveSessionId, isBeadsProject, getSessionClaim, clearSessionClaim } from './beads-gate-utils.mjs';
 import { memoryPromptMessage } from './beads-gate-messages.mjs';
 
 const input = readHookInput();
@@ -20,8 +20,7 @@ if (!input) process.exit(0);
 const cwd = resolveCwd(input);
 if (!cwd || !isBeadsProject(cwd)) process.exit(0);
 
-const sessionId = input.session_id ?? null;
-if (!sessionId) process.exit(0);
+const sessionId = resolveSessionId(input);
 
 // Agent signals evaluation complete by touching this marker, then stops again
 const marker = join(cwd, '.beads', '.memory-gate-done');

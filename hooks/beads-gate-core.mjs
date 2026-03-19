@@ -10,6 +10,7 @@
 import { readFileSync } from 'node:fs';
 import {
   resolveCwd,
+  resolveSessionId,
   isBeadsProject,
   getSessionClaim,
   getTotalWork,
@@ -41,7 +42,7 @@ export function resolveSessionContext(input) {
   if (!cwd) return null;
   return {
     cwd,
-    sessionId: input.session_id ?? null,
+    sessionId: resolveSessionId(input),
     isBeadsProject: isBeadsProject(cwd),
   };
 }

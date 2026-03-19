@@ -57,7 +57,7 @@ What install does:
 | `service-skills-set` | Service-aware operational context and drift checks (Trinity) | `SessionStart`, `PreToolUse`, `PostToolUse` |
 | `using-xtrm` | The fundamental operating manual for xtrm sessions | `SessionStart` |
 
-*Note: As of v2.1.20, legacy single-language quality gates (`py-quality-gate`, `ts-quality-gate`) were consolidated into `using-quality-gates`. `main-guard` is now managed globally as a canonical hook.*
+*Note: As of v2.1.20, legacy single-language quality gates (`py-quality-gate`, `ts-quality-gate`) were consolidated into `using-quality-gates`. Main-guard is deprecated/disabled from active policy wiring in the current workflow.*
 
 ## When To Use Which Skill
 

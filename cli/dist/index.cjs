@@ -41840,6 +41840,10 @@ var import_path12 = __toESM(require("path"), 1);
 var import_node_child_process = require("child_process");
 var import_node_os4 = require("os");
 var PI_AGENT_DIR = process.env.PI_AGENT_DIR || import_path12.default.join((0, import_node_os4.homedir)(), ".pi", "agent");
+var EXCLUDED_PI_EXTENSION_FILES = /* @__PURE__ */ new Set([
+  "main-guard.ts",
+  "main-guard-post-push.ts"
+]);
 function fillTemplate(template, values) {
   return template.replace(/\{\{(\w+)\}\}/g, (_, key) => values[key] ?? "");
 }
@@ -41863,6 +41867,9 @@ function readExistingPiValues(piAgentDir) {
 function isPiInstalled() {
   return (0, import_node_child_process.spawnSync)("pi", ["--version"], { encoding: "utf8" }).status === 0;
 }
+function isExcludedPiExtensionRelPath(relPath) {
+  return EXCLUDED_PI_EXTENSION_FILES.has(import_path12.default.basename(relPath));
+}
 async function listTsFilesRecursive(baseDir) {
   if (!await import_fs_extra12.default.pathExists(baseDir)) return [];
   const entries = await import_fs_extra12.default.readdir(baseDir, { withFileTypes: true });
@@ -41874,7 +41881,8 @@ async function listTsFilesRecursive(baseDir) {
       continue;
     }
     if (entry.isFile() && entry.name.endsWith(".ts")) {
-      files.push(abs);
+      const rel = import_path12.default.relative(baseDir, abs);
+      if (!isExcludedPiExtensionRelPath(rel)) files.push(abs);
     }
   }
   return files;
@@ -41985,7 +41993,14 @@ function createInstallPiCommand() {
       await import_fs_extra12.default.writeFile(destPath, fillTemplate(raw, values), "utf8");
       console.log(t.success(`    ${sym.ok} ${name}`));
     }
-    await import_fs_extra12.default.copy(import_path12.default.join(piConfigDir, "extensions"), import_path12.default.join(PI_AGENT_DIR, "extensions"), { overwrite: true });
+    await import_fs_extra12.default.copy(import_path12.default.join(piConfigDir, "extensions"), import_path12.default.join(PI_AGENT_DIR, "extensions"), {
+      overwrite: true,
+      filter: (srcPath) => {
+        const rel = import_path12.default.relative(import_path12.default.join(piConfigDir, "extensions"), srcPath);
+        if (!rel || rel === ".") return true;
+        return !isExcludedPiExtensionRelPath(rel);
+      }
+    });
     console.log(t.success(`    ${sym.ok} extensions/`));
     console.log(t.bold("\n  npm Packages\n"));
     for (const pkg of schema.packages) {

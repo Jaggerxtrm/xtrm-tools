@@ -1,11 +1,11 @@
 # xtpi Worktree-First Flow Plan
 
-Status: Draft (iteration 1)
+Status: Draft (iteration 2 — ready decisions only)
 Owner issue: `jaggers-agent-tools-xepd`
 
 ## 1) Goal
 
-Create an `xtpi` launcher workflow where agents never start on repo-root `main` for implementation work. 
+Create an `xtpi` launcher workflow where agents never start on repo-root `main` for implementation work.
 
 Target behavior:
 - `xtpi <issue-or-sandbox>` creates/opens a dedicated worktree
@@ -18,38 +18,40 @@ Target behavior:
 ## 2) Design Principles
 
 1. **Workspace lifecycle is separate from issue lifecycle**
-   - worktree management (`xtpi`) should not be hidden in `bd update --claim`
+   - Worktree management (`xtpi`) should not be hidden in `bd update --claim`
 2. **No accidental writes on `main`**
    - main-guard stays strict for mutating tools/commands
 3. **bd remains source of truth for task state**
-   - issue claim/close semantics stay clear
+   - issue claim/close semantics stay canonical
 4. **Publish and land are distinct**
    - publish PR from sandbox; merge is an explicit gate
 
 ---
 
-## 3) Proposed Commands
+## 3) Proposed Commands (target)
 
-## `xtpi <name-or-issue>`
+### `xtpi <name-or-issue>`
 - Resolve repo root + default naming
 - Ensure worktree exists (create if needed)
 - Ensure branch exists/attached (sandbox branch)
 - Start `pi` with cwd set to worktree path
 
-## `xtpi resume <name-or-issue>`
+### `xtpi resume <name-or-issue>`
 - Re-enter existing sandbox worktree and open `pi`
 
-## `xtpi publish`
+### `xtpi publish`
 - From current sandbox worktree:
-  - optional commit automation (from bd context)
-  - push branch
-  - create/update one final (one pr per worktree, no continuous flow breaking pr) PR to `main`
+  - verify clean/dirty state policy
+  - ensure branch is pushed
+  - create/update one final PR to `main`
 - **No merge**
 
-## `xtpi cleanup`
+### `xtpi cleanup`
 - Remove sandbox worktree after PR is merged (or force with explicit flag)
 
-> Note: `xtrm finish` can either be kept for merge-capable paths, or split/aliased to `xtpi publish` + `xtpi cleanup` in strict mode.
+### `xtrm finish` (deprecation target)
+- **Deprecated in xtpi strict workflow**
+- Replacement path is `xtpi publish` + external merge + `xtpi cleanup`
 
 ---
 
@@ -64,17 +66,26 @@ Target behavior:
 - relies on bd for per-issue traceability
 - larger review surface
 
-Initial recommendation: support both, default to **single sandbox branch**, allow multi-issue mode via explicit `--campaign`.
+Current default direction: support both; keep default behavior configurable and confirm after practical validation.
 
 ---
 
-## 5) bd Integration Model
+## 5) bd Integration Model (ready decision)
 
 - Keep canonical bd DB shared across worktrees (same repository backing)
 - `bd update <id> --claim` remains issue ownership, not workspace creation
-- Optional helper in `xtpi publish`:
-  - derive commit message from recently closed issue(s)
-  - enforce closed issue before publish
+- `bd close` stays the canonical issue-closing command (no workflow fork to `xtpi close`)
+- Add **post-close automation** triggered by successful `bd close`:
+  1. read closed issue id + `close_reason` (`bd show <id> --json`)
+  2. if sandbox branch has changes: `git add -A && git commit -m "<close_reason> (<id>)"`
+  3. if no changes: no-op (do not fail `bd close`)
+
+### Push policy
+- **Default: no push on close**
+  - keeps local iteration fast
+  - avoids noisy remote history while issue work is still evolving
+- Optional setting: `xtpi.autoPushOnClose=true` for immediate remote backup
+- `xtpi publish` is the canonical "push + create/update final PR" step
 
 ---
 
@@ -83,7 +94,7 @@ Initial recommendation: support both, default to **single sandbox branch**, allo
 1. On repo-root `main`: block edits and risky git ops (existing main-guard)
 2. In sandbox: allow normal dev flow
 3. If claim exists + user is on root: message should point to active sandbox path
-4. Prevent accidental merge-to-main in strict `xtpi` mode unless explicit land command/user action
+4. In xtpi strict workflow: disallow merge-to-main from development session commands
 
 ---
 
@@ -92,19 +103,20 @@ Initial recommendation: support both, default to **single sandbox branch**, allo
 1. User/orchestrator: `xtpi jaggers-agent-tools-123`
 2. Pi opens in sandbox worktree
 3. Agent: `bd update jaggers-agent-tools-123 --claim`
-4. Agent works, `bd close` issue closing command triggers auto commits (and git pushes here as well) as needed (no push yet), commit message should copy the bd close message;
-5. 
-5. Agent: `xtpi publish` (opens/updates PR, no merge)
-6. Human/landing agent merges PR
-7. Agent/user: `xtpi cleanup`
+4. Agent works and closes issues with `bd close --reason "..."`
+5. Post-close automation creates local commit message from `close_reason` (default: no push)
+6. Agent runs `xtpi publish` (push + create/update final PR, no merge)
+7. Human/landing agent merges PR
+8. Agent/user runs `xtpi cleanup`
 
 ---
 
-## 8) Open Questions
+## 8) Open Questions (still open)
 
-1. Should `xtrm finish` remain merge-capable, or become publish/cleanup only under `xtpi` strict mode?
-2. Should multi-issue sandbox mode auto-squash commits at publish time?
-3. Do we want a dedicated `xtpi land` command, or keep merge outside agent scope?
+1. Naming decision: keep `xtrm` umbrella, add `xt` alias, or migrate to `xt`?
+2. Should campaign mode support an optional squash-at-publish helper?
+3. Do we need a separate `land` command, or keep merge fully external?
+4. Should `bd remember` trigger behavior be restored/updated as part of xtpi rollout or tracked as a separate bugfix stream?
 
 ---
 
@@ -112,23 +124,26 @@ Initial recommendation: support both, default to **single sandbox branch**, allo
 
 Phase 1
 - Add `xtpi` launcher (create/open worktree + exec pi in worktree cwd)
-- Keep current claim behavior for compatibility
+- Keep current claim behavior for compatibility during transition
 
 Phase 2
 - Move worktree creation out of claim hook (feature-flagged)
 - Keep claim only as issue-state operation
+- Introduce `xtrm finish` deprecation messaging in strict xtpi mode
 
 Phase 3
-- Add strict mode defaults:
+- Enforce strict mode defaults:
   - publish-only from agent
   - merge gated externally
-  - cleanup command
+  - cleanup command required
+- Fully deprecate `xtrm finish` in xtpi-managed workflow docs
 
 ---
 
 ## 10) Success Criteria
 
 - Agents no longer start implementation sessions on root `main`
-- PR lifecycle is deterministic and explicit
+- `bd close` remains canonical while commit text is reused automatically
+- PR lifecycle is deterministic and explicit (publish vs merge vs cleanup)
 - bd issue state remains reliable across multiple sandboxes
 - Fewer guard conflicts and fewer "active worktree" dead-end messages

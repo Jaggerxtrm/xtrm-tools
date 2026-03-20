@@ -123,7 +123,12 @@ export function clearSessionClaim(sessionId, cwd) {
 export function withSafeBdContext(fn) {
   try {
     fn();
-  } catch {
+  } catch (err) {
+    // Only catch bd-related errors, re-throw programming errors
+    if (err instanceof TypeError || err instanceof ReferenceError || err instanceof SyntaxError) {
+      throw err; // Re-throw programming errors
+    }
+    // For other errors (likely bd command failures), fail open
     process.exit(0);
   }
 }

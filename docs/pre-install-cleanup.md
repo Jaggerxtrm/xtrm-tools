@@ -58,7 +58,9 @@ print('Removed events:', removed)
 "
 ```
 
-The plugin injects hooks directly — settings.json no longer needs them.
+Script-based hooks (beads-*, main-guard, etc.) move to the plugin — settings.json no
+longer needs them. Note: `xtrm install` still writes `bd prime` entries for
+`PreCompact`/`SessionStart` directly to settings.json — that is expected.
 
 ---
 
@@ -118,9 +120,15 @@ xtrm install pi -y   # for Pi coding agent users
 # ~/.claude/hooks/ should only contain your personal files (if any)
 ls ~/.claude/hooks/
 
-# settings.json should have no hooks key
-python3 -c "import json; d=json.load(open('$HOME/.claude/settings.json')); print('hooks' in d)"
-# → False
+# settings.json should have no legacy script-based hooks (only bd prime entries)
+python3 -c "
+import json
+d = json.load(open('$HOME/.claude/settings.json'))
+cmds = [h['command'] for e in d.get('hooks', {}).values() for entry in e for h in entry.get('hooks', [])]
+legacy = [c for c in cmds if '/.claude/hooks/' in c]
+print('legacy hooks:', legacy or 'none')
+"
+# → legacy hooks: none
 
 # Pi extensions reinstalled fresh
 ls ~/.pi/agent/extensions/*.ts | wc -l

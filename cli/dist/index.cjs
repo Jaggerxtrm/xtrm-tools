@@ -57269,7 +57269,7 @@ program2.exitOverride((err) => {
 `));
     process.exit(1);
   }
-  process.exit(1);
+  process.exit(err.exitCode ?? 1);
 });
 program2.addCommand(createInstallCommand());
 program2.addCommand(createClaudeCommand());

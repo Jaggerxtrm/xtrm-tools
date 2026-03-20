@@ -1,6 +1,0 @@
-{
-  "packages": [
-    "npm:@zenobius/pi-worktrees",
-    "../config/pi/extensions/plan-mode"
-  ]
-}

@@ -34,7 +34,8 @@ program.exitOverride((err) => {
         console.error(kleur.red(`\n✗ Unknown command. Run 'xtrm --help'\n`));
         process.exit(1);
     }
-    process.exit(1);
+    // Preserve exit code for help (0) and version (0); default to 1 for real errors
+    process.exit(err.exitCode ?? 1);
 });
 
 // Main commands

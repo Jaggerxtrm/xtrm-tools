@@ -13,10 +13,6 @@ function randomSlug(len: number = 4): string {
     return Math.random().toString(36).slice(2, 2 + len);
 }
 
-function shortDate(): string {
-    const d = new Date();
-    return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
-}
 
 /**
  * Launch a Claude or Pi session in a sandboxed git worktree.
@@ -31,13 +27,15 @@ export async function launchWorktreeSession(opts: WorktreeSessionOptions): Promi
     const repoRoot = await findRepoRoot();
     const cwdBasename = path.basename(cwd);
 
-    // Resolve worktree path (sibling to cwd)
-    const date = shortDate();
-    const worktreeName = `${cwdBasename}-xt-${runtime}-${date}`;
+    // Resolve slug — shared by both branch and worktree path so they're linked
+    const slug = name ?? randomSlug(4);
+
+    // Resolve worktree path (sibling to cwd) — use slug not date to avoid same-day collisions
+    const worktreeName = `${cwdBasename}-xt-${runtime}-${slug}`;
     const worktreePath = path.join(path.dirname(cwd), worktreeName);
 
     // Resolve branch name
-    const branchName = `xt/${name ?? randomSlug(4)}`;
+    const branchName = `xt/${slug}`;
 
     console.log(kleur.bold(`\n  Launching ${runtime} session`));
     console.log(kleur.dim(`  worktree: ${worktreePath}`));

@@ -566,8 +566,6 @@ export async function installProjectSkill(toolName: string, projectRootOverride?
         console.log(`${kleur.green('  ✓')} settings.json (hooks merged)`);
     }
 
-    await syncProjectMcpServers(projectRoot);
-
     // Step 2: Skill Copy
     if (await fs.pathExists(skillSkillsDir)) {
         console.log(kleur.bold('\n── Installing Skills ─────────────────────'));
@@ -781,8 +779,6 @@ async function bootstrapProjectInit(): Promise<void> {
     await runBdInitForProject(projectRoot);
     await injectProjectInstructionHeaders(projectRoot);
     await runGitNexusInitForProject(projectRoot);
-    await syncProjectMcpServers(projectRoot);
-
     if (detected.dockerServices.length > 0) {
         const { generated, registryPath } = await ensureServiceRegistry(projectRoot, detected.dockerServices);
         detected.generatedRegistry = generated;

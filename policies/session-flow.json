@@ -1,6 +1,6 @@
 {
   "id": "session-flow",
-  "description": "Worktree auto-creation on claim and session closure enforcement via xtrm finish",
+  "description": "Claim sync (auto-commit on bd close), stop gate (blocks agent stop with unclosed in_progress claim), xt end reminder when session ends in a worktree.",
   "version": "1",
   "runtime": "both",
   "order": 19,

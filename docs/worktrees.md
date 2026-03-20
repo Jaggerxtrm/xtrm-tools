@@ -1,0 +1,143 @@
+---
+title: xt Worktrees
+scope: worktrees
+category: reference
+version: 1.0.0
+updated: 2026-03-20
+source_of_truth_for:
+  - "cli/src/commands/worktree.ts"
+  - "cli/src/utils/worktree-session.ts"
+domain: [cli, worktrees, beads]
+---
+
+# xt Worktrees
+
+`xt claude` and `xt pi` create isolated git worktrees for parallel agent sessions,
+each on its own branch, all sharing the same beads database as the main checkout.
+
+## Quick Start
+
+```bash
+# From the main checkout — launch a new claude session in a fresh worktree
+xt claude
+
+# Launch a pi session instead
+xt pi
+
+# Give it a meaningful name (becomes the branch slug)
+xt claude --name my-feature
+```
+
+## What Happens on Launch
+
+```
+xt claude
+  1. Generate slug (4 random chars, or --name value)
+  2. git worktree add ../xtrm-tools-xt-claude-<slug> -b xt/<slug>
+  3. Find main's Dolt server port (.beads/dolt-server.port or bd dolt status)
+  4. Write port redirect → worktree/.beads/dolt-server.port  ← BEFORE any bd call
+  5. claude --dangerously-skip-permissions   (launched in worktree)
+```
+
+The port redirect in step 4 is written **before** `claude` launches, so `bd` never
+auto-spawns an isolated Dolt server. All `bd` commands in the worktree connect to
+main's running Dolt server and see the same issue database.
+
+## Naming Convention
+
+| Thing | Pattern | Example |
+|---|---|---|
+| Branch | `xt/<slug>` | `xt/ab3k` |
+| Worktree dir | `<project>-xt-<runtime>-<slug>` | `xtrm-tools-xt-claude-ab3k` |
+| Worktree path | sibling of main checkout | `../xtrm-tools-xt-claude-ab3k` |
+
+Branch and worktree always share the same slug, so they're trivially linked.
+Slug-based naming (not date) avoids same-day collisions when launching multiple sessions.
+
+## Managing Worktrees
+
+```bash
+# List all xt/* worktrees with merge status
+xt worktree list
+
+# Remove all worktrees whose branch has merged into main
+xt worktree clean
+
+# Skip confirmation prompt
+xt worktree clean --yes
+
+# Remove a specific worktree by branch name or path
+xt worktree remove ab3k
+xt worktree remove xt/ab3k
+```
+
+`xt worktree list` shows each worktree's path, branch, and whether it's `merged`
+(safe to remove) or `open` (still in progress).
+
+## Beads / Dolt Architecture
+
+xtrm-tools runs beads in **server mode** — a persistent Dolt server process handles
+all `bd` commands. Each `bd` client looks for `.beads/dolt-server.port` to know
+which port to connect to.
+
+```
+Main checkout (.beads/dolt-server.port = 13669)
+│
+└── Worktree (.beads/dolt-server.port = 13669)  ← redirect written by xt
+       │
+       └── bd list  →  connects to port 13669  →  same db as main ✓
+```
+
+Without the redirect, `bd` would auto-spawn a new Dolt server in the worktree
+with an empty database.
+
+> **Note:** beads also has built-in worktree detection for *embedded mode*
+> (no running server). xtrm-tools doesn't use embedded mode — the port file
+> redirect is required when a Dolt server is in use.
+
+## Constraints
+
+- **Always use `xt claude` / `xt pi`** to create worktrees — not `git worktree add`
+  directly or Claude Code's `EnterWorktree` tool. Only `xt` writes the Dolt redirect
+  before the session starts.
+- **Main's Dolt server must be running** before launching a worktree session.
+  If `bd dolt status` shows no server in the main checkout, run `bd dolt start` there first.
+- Worktrees are siblings of the main checkout (same parent directory), not children.
+
+## Troubleshooting
+
+### `database not found on Dolt server at 127.0.0.1:13333`
+
+`bd` connected to a spurious Dolt server instead of main's. This happens when
+a worktree was created without the port redirect (e.g., via `git worktree add` directly
+or an older `xt` version).
+
+Fix — from inside the worktree:
+```bash
+# Find main's port (run from main checkout)
+bd dolt status
+
+# Write the redirect in the worktree
+mkdir -p .beads
+echo <main_port> > .beads/dolt-server.port
+```
+
+### Port file missing in main checkout
+
+If main's `.beads/dolt-server.port` doesn't exist, `xt` falls back to
+`bd dolt status` to discover the live port and writes the port file automatically.
+If that also fails (no server running), the worktree session starts with an
+isolated empty database and displays:
+
+```
+beads: main Dolt server not running, worktree will use isolated db
+```
+
+Start the server in main first: `bd dolt start`.
+
+### Worktree branch already checked out
+
+```bash
+git worktree list               # find which worktree has the branch
+xt worktree remove <slug>       # remove it
+```

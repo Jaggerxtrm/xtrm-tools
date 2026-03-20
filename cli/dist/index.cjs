@@ -6053,7 +6053,7 @@ var require_dist = __commonJS({
         });
       };
     }
-    var prompts5 = require_prompts();
+    var prompts6 = require_prompts();
     var passOn = ["suggest", "format", "onState", "validate", "onRender", "type"];
     var noop = () => {
     };
@@ -6104,7 +6104,7 @@ var require_dist = __commonJS({
             var _question2 = question;
             name = _question2.name;
             type = _question2.type;
-            if (prompts5[type] === void 0) {
+            if (prompts6[type] === void 0) {
               throw new Error(`prompt type (${type}) is not defined`);
             }
             if (override2[question.name] !== void 0) {
@@ -6115,7 +6115,7 @@ var require_dist = __commonJS({
               }
             }
             try {
-              answer = prompt._injected ? getInjectedAnswer(prompt._injected, question.initial) : yield prompts5[type](question);
+              answer = prompt._injected ? getInjectedAnswer(prompt._injected, question.initial) : yield prompts6[type](question);
               answers[name] = answer = yield getFormattedAnswer(question, answer, true);
               quit = yield onSubmit(question, answer, answers);
             } catch (err) {
@@ -6147,7 +6147,7 @@ var require_dist = __commonJS({
     }
     module2.exports = Object.assign(prompt, {
       prompt,
-      prompts: prompts5,
+      prompts: prompts6,
       inject,
       override
     });
@@ -8234,7 +8234,7 @@ var require_prompts2 = __commonJS({
 var require_lib = __commonJS({
   "../node_modules/prompts/lib/index.js"(exports2, module2) {
     "use strict";
-    var prompts5 = require_prompts2();
+    var prompts6 = require_prompts2();
     var passOn = ["suggest", "format", "onState", "validate", "onRender", "type"];
     var noop = () => {
     };
@@ -8266,7 +8266,7 @@ var require_lib = __commonJS({
           throw new Error("prompt message is required");
         }
         ({ name, type } = question);
-        if (prompts5[type] === void 0) {
+        if (prompts6[type] === void 0) {
           throw new Error(`prompt type (${type}) is not defined`);
         }
         if (override2[question.name] !== void 0) {
@@ -8277,7 +8277,7 @@ var require_lib = __commonJS({
           }
         }
         try {
-          answer = prompt._injected ? getInjectedAnswer(prompt._injected, question.initial) : await prompts5[type](question);
+          answer = prompt._injected ? getInjectedAnswer(prompt._injected, question.initial) : await prompts6[type](question);
           answers[name] = answer = await getFormattedAnswer(question, answer, true);
           quit = await onSubmit(question, answer, answers);
         } catch (err) {
@@ -8300,7 +8300,7 @@ var require_lib = __commonJS({
     function override(answers) {
       prompt._override = Object.assign({}, answers);
     }
-    module2.exports = Object.assign(prompt, { prompt, prompts: prompts5, inject, override });
+    module2.exports = Object.assign(prompt, { prompt, prompts: prompts6, inject, override });
   }
 });
 
@@ -40170,7 +40170,7 @@ async function handleMissingEnvVars(missing) {
   if (missing.length === 0) {
     return true;
   }
-  const prompts5 = (await Promise.resolve().then(() => __toESM(require_prompts3(), 1))).default;
+  const prompts6 = (await Promise.resolve().then(() => __toESM(require_prompts3(), 1))).default;
   const answers = {};
   for (const key of missing) {
     const config3 = REQUIRED_ENV_VARS[key];
@@ -40182,7 +40182,7 @@ async function handleMissingEnvVars(missing) {
       console.log(kleur_default.yellow(`
   \u26A0\uFE0F  ${key} is required by a selected MCP server`));
     }
-    const { value } = await prompts5({
+    const { value } = await prompts6({
       type: "text",
       name: "value",
       message: `Enter ${key}:`,
@@ -40395,8 +40395,8 @@ async function syncMcpServersWithCli(agent, mcpConfig, dryRun = false, prune = f
   }
   let selectedNames = toAdd.map(([name]) => name);
   if (!dryRun) {
-    const prompts5 = await Promise.resolve().then(() => __toESM(require_prompts3(), 1));
-    const { selected } = await prompts5.default({
+    const prompts6 = await Promise.resolve().then(() => __toESM(require_prompts3(), 1));
+    const { selected } = await prompts6.default({
       type: "multiselect",
       name: "selected",
       message: `Select MCP servers to install via ${agent} CLI:`,
@@ -56743,6 +56743,194 @@ function createFinishCommand() {
   });
 }
 
+// src/commands/end.ts
+var import_prompts5 = __toESM(require_prompts3(), 1);
+var import_node_child_process8 = require("child_process");
+function git(args, cwd) {
+  const r = (0, import_node_child_process8.spawnSync)("git", args, { cwd, encoding: "utf8", stdio: "pipe" });
+  return { ok: r.status === 0, out: (r.stdout ?? "").trim(), err: (r.stderr ?? "").trim() };
+}
+function bd(args, cwd) {
+  const r = (0, import_node_child_process8.spawnSync)("bd", args, { cwd, encoding: "utf8", stdio: "pipe" });
+  return { ok: r.status === 0, out: (r.stdout ?? "").trim() };
+}
+function extractIssueIds(commitLog) {
+  const matches = commitLog.matchAll(/\(([a-z0-9]+-[a-z0-9]+-[a-z0-9]+)\)/g);
+  return [...new Set([...matches].map((m) => m[1]))];
+}
+function buildPrTitle(issues) {
+  if (issues.length === 0) return "session changes";
+  if (issues.length === 1) return issues[0].reason || issues[0].title;
+  return `${issues[0].reason || issues[0].title} (+${issues.length - 1} more)`;
+}
+function buildPrBody(issues, commitLog, diffStat, branch) {
+  const lines = [];
+  lines.push("## What");
+  if (issues.length > 0) {
+    for (const issue2 of issues) {
+      lines.push(`- **${issue2.id}**: ${issue2.title}`);
+      if (issue2.description) lines.push(`  ${issue2.description.split("\n")[0]}`);
+    }
+  } else {
+    lines.push(`Session branch: \`${branch}\``);
+  }
+  if (issues.some((i) => i.reason)) {
+    lines.push("", "## Why");
+    for (const issue2 of issues) {
+      if (issue2.reason) lines.push(`- ${issue2.id}: ${issue2.reason}`);
+    }
+  }
+  if (commitLog) {
+    lines.push("", "## Changes");
+    const commits = commitLog.split("\n").slice(0, 20);
+    lines.push(...commits.map((c) => `- ${c}`));
+    if (commitLog.split("\n").length > 20) lines.push("- *(and more...)*");
+  }
+  if (diffStat) {
+    lines.push("", "## Files changed");
+    lines.push("```");
+    lines.push(diffStat);
+    lines.push("```");
+  }
+  if (issues.length > 0) {
+    lines.push("", `Closes: ${issues.map((i) => i.id).join(" ")}`);
+  }
+  return lines.join("\n");
+}
+function createEndCommand() {
+  return new Command("end").description("Close session: rebase, push, open PR, link beads issues, clean up worktree").option("--draft", "Open PR as draft", false).option("--keep", "Keep worktree after PR creation (default: prompt)", false).option("-y, --yes", "Skip confirmation prompts", false).action(async (opts) => {
+    const cwd = process.cwd();
+    const branchResult = git(["rev-parse", "--abbrev-ref", "HEAD"], cwd);
+    const branch = branchResult.out;
+    if (!branch.startsWith("xt/")) {
+      console.error(kleur_default.red(
+        `
+  \u2717 Not in an xt worktree (current branch: ${branch})
+  xt end must be run from inside a worktree created by xt claude/pi
+`
+      ));
+      process.exit(1);
+    }
+    const statusResult = git(["status", "--porcelain"], cwd);
+    if (statusResult.out.length > 0) {
+      console.error(kleur_default.red(
+        "\n  \u2717 Uncommitted changes detected. Commit or stash before running xt end.\n"
+      ));
+      console.error(kleur_default.dim(statusResult.out));
+      process.exit(1);
+    }
+    console.log(t.bold(`
+  xt end \u2014 closing session on ${branch}
+`));
+    const logResult = git(["log", "origin/main..HEAD", "--oneline"], cwd);
+    const issueIds = extractIssueIds(logResult.out);
+    const issues = [];
+    for (const id of issueIds) {
+      const showResult = bd(["show", id, "--json"], cwd);
+      if (showResult.ok) {
+        try {
+          const data = JSON.parse(showResult.out);
+          issues.push({
+            id,
+            title: data.title ?? id,
+            description: data.description ?? "",
+            reason: data.close_reason ?? ""
+          });
+        } catch {
+          issues.push({ id, title: id, description: "", reason: "" });
+        }
+      }
+    }
+    if (issues.length > 0) {
+      console.log(t.success(`  \u2713 Found ${issues.length} closed issue(s): ${issueIds.join(", ")}`));
+    } else {
+      console.log(kleur_default.dim("  \u25CB No beads issues found in commit log"));
+    }
+    console.log(kleur_default.dim("  Fetching origin/main..."));
+    git(["fetch", "origin", "main"], cwd);
+    console.log(kleur_default.dim("  Rebasing onto origin/main..."));
+    const rebaseResult = git(["rebase", "origin/main"], cwd);
+    if (!rebaseResult.ok) {
+      const conflicts = git(["diff", "--name-only", "--diff-filter=U"], cwd).out;
+      console.error(kleur_default.red("\n  \u2717 Rebase conflicts detected:\n"));
+      if (conflicts) {
+        for (const f of conflicts.split("\n")) console.error(kleur_default.yellow(`    ${f}`));
+      }
+      console.error(kleur_default.dim(
+        "\n  Resolve conflicts, then:\n    git add <files> && git rebase --continue\n  Then re-run: xt end\n"
+      ));
+      process.exit(1);
+    }
+    console.log(t.success("  \u2713 Rebased onto origin/main"));
+    console.log(kleur_default.dim("  Pushing branch..."));
+    const pushResult = git(["push", "origin", branch, "--force-with-lease"], cwd);
+    if (!pushResult.ok) {
+      console.error(kleur_default.red(`
+  \u2717 Push failed:
+  ${pushResult.err}
+`));
+      process.exit(1);
+    }
+    console.log(t.success(`  \u2713 Pushed ${branch}`));
+    const fullLog = git(["log", "origin/main..HEAD", "--oneline"], cwd).out;
+    const diffStat = git(["diff", "origin/main", "--stat"], cwd).out;
+    const prTitle = buildPrTitle(issues);
+    const prBody = buildPrBody(issues, fullLog, diffStat, branch);
+    console.log(kleur_default.dim("  Creating PR..."));
+    const prArgs = ["pr", "create", "--title", prTitle, "--body", prBody];
+    if (opts.draft) prArgs.push("--draft");
+    const prResult = (0, import_node_child_process8.spawnSync)("gh", prArgs, { cwd, encoding: "utf8", stdio: "pipe" });
+    if (prResult.status !== 0) {
+      console.error(kleur_default.red(`
+  \u2717 PR creation failed:
+  ${prResult.stderr?.trim()}
+`));
+      process.exit(1);
+    }
+    const prUrl = prResult.stdout.trim();
+    console.log(t.success(`  \u2713 PR created: ${prUrl}`));
+    for (const issue2 of issues) {
+      bd(["update", issue2.id, "--notes", `PR: ${prUrl}`], cwd);
+    }
+    if (issues.length > 0) {
+      console.log(t.success(`  \u2713 Linked PR to ${issues.length} issue(s)`));
+    }
+    if (!opts.keep) {
+      let doRemove = opts.yes;
+      if (!opts.yes) {
+        const { remove } = await (0, import_prompts5.default)({
+          type: "confirm",
+          name: "remove",
+          message: `Remove local worktree at ${cwd}?`,
+          initial: false
+        });
+        doRemove = remove;
+      }
+      if (doRemove) {
+        try {
+          const repoRoot = git(["rev-parse", "--show-toplevel"], cwd).out;
+          const removeResult = (0, import_node_child_process8.spawnSync)(
+            "git",
+            ["worktree", "remove", cwd, "--force"],
+            { cwd: repoRoot, encoding: "utf8", stdio: "pipe" }
+          );
+          if (removeResult.status === 0) {
+            console.log(t.success("  \u2713 Worktree removed"));
+          } else {
+            console.log(kleur_default.yellow("  \u26A0 Could not remove worktree \u2014 remove manually:"));
+            console.log(kleur_default.dim(`    git worktree remove ${cwd} --force`));
+          }
+        } catch {
+          console.log(kleur_default.yellow("  \u26A0 Could not remove worktree automatically"));
+        }
+      }
+    }
+    console.log(t.boldGreen("\n  \u2713 Session closed\n"));
+    console.log(kleur_default.dim(`  PR: ${prUrl}`));
+    console.log(kleur_default.dim("  Merge: review and merge when CI is green\n"));
+  });
+}
+
 // src/utils/banner.ts
 var ART = [
   " \u2588\u2588\u2557  \u2588\u2588\u2557\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2557\u2588\u2588\u2588\u2588\u2588\u2588\u2557 \u2588\u2588\u2588\u2557   \u2588\u2588\u2588\u2557    \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2557 \u2588\u2588\u2588\u2588\u2588\u2588\u2557  \u2588\u2588\u2588\u2588\u2588\u2588\u2557 \u2588\u2588\u2557     \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2557",
@@ -56939,6 +57127,7 @@ program2.addCommand(createStatusCommand());
 program2.addCommand(createResetCommand());
 program2.addCommand(createCleanCommand());
 program2.addCommand(createFinishCommand());
+program2.addCommand(createEndCommand());
 program2.addCommand(createHelpCommand());
 program2.action(async () => {
   program2.help();

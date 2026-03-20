@@ -1,6 +1,6 @@
 # XTRM-Tools Complete Guide
 
-> **Version 0.5.5** | A comprehensive reference for the XTRM-Tools Claude Code plugin ecosystem.
+> **Version 0.5.10** | A comprehensive reference for the XTRM-Tools Claude Code plugin ecosystem.
 
 ---
 
@@ -29,7 +29,6 @@ XTRM-Tools is a **Claude Code plugin** that provides workflow enforcement, code 
 
 | Feature | Description |
 |---------|-------------|
-| **Main Guard** | PR-only workflow enforcement, blocks direct edits on protected branches |
 | **Beads Gates** | Issue tracking gates — edit, commit, stop, memory gates |
 | **Quality Gates** | Automatic linting and type checking on file edits |
 | **GitNexus** | Knowledge graph context for code exploration and impact analysis |
@@ -58,7 +57,7 @@ XTRM-Tools is a **Claude Code plugin** that provides workflow enforcement, code 
                               ▼
 ┌─────────────────────────────────────────────────────────────────────┐
 │                        Pi Extensions                                │
-│   (quality-gates.ts, beads.ts, main-guard.ts, service-skills.ts)   │
+│   (quality-gates.ts, beads.ts, session-flow.ts, service-skills.ts) │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -77,7 +76,7 @@ xtrm install all
 
 # Verify installation
 claude plugin list
-# → xtrm-tools@xtrm-tools  Version: 2.3.0  Status: ✔ enabled
+# → xtrm-tools@xtrm-tools  Version: 0.5.10  Status: ✔ enabled
 ```
 
 ### One-Line Run
@@ -118,7 +117,7 @@ plugins/xtrm-tools/
 ```json
 {
   "name": "xtrm-tools",
-  "version": "2.3.0",
+  "version": "0.5.10",
   "description": "xtrm-tools: workflow enforcement hooks, skills, and MCP servers",
   "mcpServers": "./.mcp.json"
 }
@@ -152,14 +151,13 @@ Policies are the **single source of truth** for all enforcement rules.
 
 | Policy | Runtime | Order | Purpose |
 |--------|---------|-------|---------|
-| `main-guard.json` | both | 10 | PR-only workflow, branch protection |
+| `session-flow.json` | both | 19 | Claim sync, stop gate (blocks with unclosed in_progress claim), `xt end` reminder in worktrees |
 | `beads.json` | both | 20 | Issue tracking gates (edit/commit/memory/compact) |
-| `session-flow.json` | both | 25 | Auto-commit on bd close (feature branches) + stop-gate when claim is in_progress |
 | `branch-state.json` | claude | 30 | Branch state injection |
+| `quality-gates.json` | both | 30 | Linting/typechecking |
 | `gitnexus.json` | claude | 40 | Knowledge graph enrichment |
-| `serena.json` | claude | 50 | Serena LSP workflow reminder at session start |
-| `quality-gates.json` | pi | 30 | Linting/typechecking |
 | `service-skills.json` | pi | 40 | Territory-based skill activation |
+| `serena.json` | claude | 50 | Serena LSP workflow reminder at session start |
 
 ### Compiler
 
@@ -184,16 +182,6 @@ node scripts/compile-policies.mjs --check   # CI drift check
 | `Stop` | Session ends |
 | `PreCompact` | Before compaction |
 
-### Main Guard
-
-**Purpose**: Enforces PR-only workflow.
-
-| Event | Matcher | Action |
-|-------|---------|--------|
-| PreToolUse | Write\|Edit\|MultiEdit\|Serena | Block if on main/master |
-| PreToolUse | Bash | Block dangerous git commands |
-| PostToolUse | Bash | Remind to use `gh pr merge --squash` |
-
 ### Beads Gates
 
 | Hook | Purpose |
@@ -207,15 +195,15 @@ node scripts/compile-policies.mjs --check   # CI drift check
 
 | Hook | Purpose |
 |------|---------|
-| Claim Sync | Runs auto-commit on bd close (feature branches only) |
-| Stop Flow Gate | Blocks stop when active in_progress claim exists |
+| Claim Sync | Notifies when `bd update --claim` runs; notes which issue is claimed |
+| Stop Gate | Blocks agent stop when there is an unclosed in_progress claim |
+| `xt end` Reminder | When session ends inside a worktree, prompts to run `xt end` |
 
 #### Intended Worktree-First Flow (Pi + Claude)
 
 1. `bd update <id> --claim` — claim the issue
-2. Work in the claimed branch/worktree (created manually or via `xt worktree`)
-3. If you remain on `main`/`master`, `main-guard` blocks mutating tools and points to active worktree path
-4. Run `xt end` from within the worktree to complete closure lifecycle (commit/push/pr/merge/cleanup)
+2. Work in the claimed branch/worktree (created manually or via `xt claude`/`xt pi`)
+3. Run `xt end` from within the worktree to complete closure lifecycle (commit/push/pr/merge/cleanup)
 
 ### GitNexus Hook
 
@@ -227,10 +215,8 @@ Enriches tool output with knowledge graph context via `gitnexus augment`.
 
 | Extension | Events | Purpose |
 |-----------|--------|---------|
-| `main-guard.ts` | tool_call | Branch protection (blocks dangerous tool calls) |
-| `main-guard-post-push.ts` | tool_result | Post-push PR workflow reminders |
 | `beads.ts` | session_start, tool_call, tool_result, agent_end, session_shutdown | Issue tracking gates + memory gate |
-| `session-flow.ts` | tool_result, agent_end | Auto-commit on bd close (feature branches) + stop-gate when claim is in_progress |
+| `session-flow.ts` | tool_result, agent_end | Claim sync, stop gate, `xt end` reminder in worktrees |
 | `quality-gates.ts` | tool_result | Linting/typechecking after file edits |
 | `service-skills.ts` | before_agent_start, tool_result | Territory-based skill activation |
 
@@ -366,12 +352,11 @@ bd status
 
 | Version | Date | Highlights |
 |---------|------|------------|
-| 0.5.x | 2026-03-20 | `xt` CLI commands (`xt claude`, `xt pi`, `xt worktree list/clean/remove`, `xt end`); plugin-only delivery for Claude; worktrees stored in `.xtrm/worktrees/`; deprecated `xtrm finish` and `.xtrm-session-state.json`; worktree auto-creation via `bd update --claim` removed |
-| 2.4.0 | 2026-03-18 | Session-flow policy (runtime:both), worktree-first claim sync, stop-gate phase enforcement, compact save/restore continuity |
-| 2.3.0 | 2026-03-18 | Plugin structure, policy compiler, Pi extension parity, manifest hash drift detection, MCP sync refactor (`syncMcpForTargets`), commit gate stale-claim fix, context7 free stdio transport |
-| 2.2.0 | 2026-03-17 | Pi extensions: quality-gates, beads, main-guard |
-| 2.0.0 | 2026-03-12 | CLI rebrand, project skills engine |
-| 1.7.0 | 2026-02-25 | GitNexus integration |
+| 0.5.10 | 2026-03-21 | Install cleanup: `cleanStalePrePluginFiles()` removes stale `~/.claude/hooks/` + `~/.claude/skills/` on install; Qwen/Gemini dead code removed |
+| 0.5.9 | 2026-03-20 | Worktrees moved inside repo under `.xtrm/worktrees/`; `.gitignore` entry added |
+| 0.5.8 | 2026-03-20 | session-flow rewrite: removed xtrm-finish/session-state dead code; claim sync + stop gate + `xt end` reminder |
+| 0.5.7 | 2026-03-20 | Dead hooks removed (`main-guard.mjs`, `guard-rules.mjs`, `agent_context.py`); dead CLI removed (`finish.ts`, `session-state.ts`) |
+| 0.5.6 | 2026-03-20 | `xt` CLI commands (`xt claude`, `xt pi`, `xt worktree list/clean/remove`, `xt end`); plugin-only delivery for Claude; deprecated `xtrm finish` and `.xtrm-session-state.json` |
 
 See [CHANGELOG.md](CHANGELOG.md) for full history.
 

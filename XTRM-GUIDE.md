@@ -154,7 +154,7 @@ Policies are the **single source of truth** for all enforcement rules.
 |--------|---------|-------|---------|
 | `main-guard.json` | both | 10 | PR-only workflow, branch protection |
 | `beads.json` | both | 20 | Issue tracking gates (edit/commit/memory/compact) |
-| `session-flow.json` | both | 25 | Worktree-on-claim + xtrm finish closure enforcement |
+| `session-flow.json` | both | 25 | Auto-commit on bd close (feature branches) + stop-gate when claim is in_progress |
 | `branch-state.json` | claude | 30 | Branch state injection |
 | `gitnexus.json` | claude | 40 | Knowledge graph enrichment |
 | `serena.json` | claude | 50 | Serena LSP workflow reminder at session start |

@@ -56,7 +56,7 @@ Common events used in this repo:
 |---|---|
 | `beads-edit-gate.mjs` | Blocks writes when current session has no claimed issue |
 | `beads-commit-gate.mjs` | Blocks `git commit` with unresolved session claim |
-| `beads-stop-gate.mjs` | Blocks session stop while claim remains open |
+| `beads-stop-gate.mjs` | Blocks stop when active in_progress claim exists |
 | `beads-close-memory-prompt.mjs` | Clears claim and prompts memory handoff after `bd close` |
 | `beads-gate-utils.mjs` | Shared claim/work-count logic for all beads gates |
 

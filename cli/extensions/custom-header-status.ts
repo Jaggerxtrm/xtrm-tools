@@ -1,14 +1,10 @@
 /**
  * XTRM Custom Header Status (draft)
  *
- * Moves stable session context to top header:
- * - XTRM brand
- * - active model
- * - context usage
- *
- * Optional commands:
- * - /header-status-on
- * - /header-status-off
+ * Single-line header with stable context:
+ * - XTRM
+ * - MODEL
+ * - USAGE
  */
 
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
@@ -16,13 +12,6 @@ import { truncateToWidth } from "@mariozechner/pi-tui";
 
 export default function (pi: ExtensionAPI) {
 	let enabled = true;
-	let lastCwd = process.cwd();
-
-	const shortCwd = (cwd: string): string => {
-		const parts = cwd.split("/").filter(Boolean);
-		if (parts.length <= 2) return cwd;
-		return `/${parts.slice(-2).join("/")}`;
-	};
 
 	const mountHeader = (ctx: any) => {
 		if (!ctx?.hasUI) return;
@@ -35,25 +24,21 @@ export default function (pi: ExtensionAPI) {
 				const usageColor = pct > 75 ? "error" : pct > 50 ? "warning" : "success";
 
 				const brand = theme.fg("accent", "XTRM");
-				const model = theme.fg("dim", ctx.model?.id || "no-model");
-				const usageText = theme.fg(usageColor, `${pct.toFixed(0)}%`);
-				const cwdText = theme.fg("muted", `⌂ ${shortCwd(lastCwd)}`);
+				const model = theme.fg("dim", `MODEL ${ctx.model?.id || "no-model"}`);
+				const usageText = theme.fg(usageColor, `USAGE ${pct.toFixed(0)}%`);
+				const sep = theme.fg("dim", " | ");
 
-				const line1 = truncateToWidth(`${brand}  ${model}`, width);
-				const line2 = truncateToWidth(`${usageText}  ${cwdText}`, width);
-				return [line1, line2];
+				return [truncateToWidth(`${brand}${sep}${model}${sep}${usageText}`, width)];
 			},
 		}));
 	};
 
 	pi.on("session_start", async (_event, ctx) => {
-		lastCwd = ctx?.cwd || process.cwd();
 		if (enabled) mountHeader(ctx);
 		return undefined;
 	});
 
 	pi.on("session_switch", async (_event, ctx) => {
-		lastCwd = ctx?.cwd || lastCwd;
 		if (enabled) mountHeader(ctx);
 		return undefined;
 	});

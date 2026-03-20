@@ -78,38 +78,72 @@ function ensureWorktreeForClaim(cwd, issueId) {
   const branch = `feature/${issueId}`;
   const worktreePath = join(worktreesBase, issueId);
 
-  if (existsSync(worktreePath)) {
-    // Already created previously — rewrite state file for continuity.
-    try {
-      const stateFile = writeSessionState({
-        issueId,
-        branch,
-        worktreePath,
-        prNumber: null,
-        prUrl: null,
-        phase: 'claimed',
-        conflictFiles: [],
-      }, { cwd: repoRoot });
-      return { created: false, reason: 'exists', repoRoot, branch, worktreePath, stateFile };
-    } catch {
-      return { created: false, reason: 'exists', repoRoot, branch, worktreePath };
-    }
-  }
-
+  // Check if worktree path exists - but handle TOCTOU race
+  const worktreeExists = existsSync(worktreePath);
   const branchExists = runGit(['show-ref', '--verify', '--quiet', `refs/heads/${branch}`], repoRoot).status === 0;
-  const addArgs = branchExists
-    ? ['worktree', 'add', worktreePath, branch]
-    : ['worktree', 'add', worktreePath, '-b', branch];
-
-  const addResult = runGit(addArgs, repoRoot, 20000);
-  if (addResult.status !== 0) {
+  
+  // If directory exists, verify it's actually a valid worktree
+  if (worktreeExists) {
+    const gitFile = join(worktreePath, '.git');
+    if (existsSync(gitFile)) {
+      // Valid worktree exists - just update state file
+      try {
+        const stateFile = writeSessionState({
+          issueId,
+          branch,
+          worktreePath,
+          prNumber: null,
+          prUrl: null,
+          phase: 'claimed',
+          conflictFiles: [],
+        }, { cwd: repoRoot });
+        return { created: false, reason: 'exists', repoRoot, branch, worktreePath, stateFile };
+      } catch {
+        return { created: false, reason: 'exists', repoRoot, branch, worktreePath };
+      }
+    }
+    // Directory exists but not a valid worktree
     return {
       created: false,
       reason: 'create-failed',
       repoRoot,
       branch,
       worktreePath,
-      error: (addResult.stderr || addResult.stdout || '').trim(),
+      error: `Directory ${worktreePath} exists but is not a valid worktree`,
+    };
+  }
+
+  const addArgs = branchExists
+    ? ['worktree', 'add', worktreePath, branch]
+    : ['worktree', 'add', worktreePath, '-b', branch];
+
+  const addResult = runGit(addArgs, repoRoot, 20000);
+  if (addResult.status !== 0) {
+    // Handle TOCTOU race: worktree might have been created by another process
+    const stderr = (addResult.stderr || addResult.stdout || '').trim();
+    if (stderr.includes('already exists') || existsSync(join(worktreePath, '.git'))) {
+      try {
+        const stateFile = writeSessionState({
+          issueId,
+          branch,
+          worktreePath,
+          prNumber: null,
+          prUrl: null,
+          phase: 'claimed',
+          conflictFiles: [],
+        }, { cwd: repoRoot });
+        return { created: false, reason: 'race-won', repoRoot, branch, worktreePath, stateFile };
+      } catch {
+        return { created: false, reason: 'race-won', repoRoot, branch, worktreePath };
+      }
+    }
+    return {
+      created: false,
+      reason: 'create-failed',
+      repoRoot,
+      branch,
+      worktreePath,
+      error: stderr,
     };
   }
 

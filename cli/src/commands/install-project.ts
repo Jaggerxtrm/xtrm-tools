@@ -766,20 +766,6 @@ export async function runProjectInit(): Promise<void> {
     await bootstrapProjectInit();
 }
 
-function printProjectInstallDeprecationWarning(): void {
-    console.log(kleur.yellow('⚠ Deprecated: `xtrm install project` is legacy and will be removed in a future release.'));
-    console.log(kleur.dim('  Use `xtrm init` (alias: `xtrm project init`) for project bootstrap.\n'));
-}
-
-async function installProjectByName(toolName: string): Promise<void> {
-    printProjectInstallDeprecationWarning();
-
-    if (toolName === 'all' || toolName === '*') {
-        await installAllProjectSkills();
-        return;
-    }
-    await installProjectSkill(toolName);
-}
 
 async function bootstrapProjectInit(): Promise<void> {
     let projectRoot: string;
@@ -970,71 +956,4 @@ function getProjectRoot(): string {
     return path.resolve(result.stdout.trim());
 }
 
-export function createInstallProjectCommand(): Command {
-    const installProjectCmd = new Command('project')
-        .description('[DEPRECATED] Legacy project skill installer (use `xtrm init`)');
 
-    // Subcommand: install project <tool-name>
-    installProjectCmd
-        .argument('<tool-name>', 'Name of the project skill to install')
-        .action(async (toolName: string) => {
-            try {
-                await installProjectByName(toolName);
-            } catch (err: any) {
-                console.error(kleur.red(`\n✗ ${err.message}\n`));
-                process.exit(1);
-            }
-        });
-
-    // Subcommand: install project list
-    const listCmd = new Command('list')
-        .description('List available project skills')
-        .action(async () => {
-            await listProjectSkills();
-        });
-
-    const initCmd = new Command('init')
-        .description('Show full onboarding guidance and bootstrap beads + GitNexus')
-        .action(async () => {
-            await runProjectInit();
-        });
-
-    installProjectCmd.addCommand(listCmd);
-    installProjectCmd.addCommand(initCmd);
-
-    return installProjectCmd;
-}
-
-export function createProjectCommand(): Command {
-    const projectCmd = new Command('project')
-        .description('Project onboarding helpers (`project install` is deprecated; use `xtrm init`)');
-
-    projectCmd
-        .command('init')
-        .description('Show full onboarding guidance and bootstrap beads + GitNexus')
-        .action(async () => {
-            await runProjectInit();
-        });
-
-    projectCmd
-        .command('list')
-        .description('List available project skills')
-        .action(async () => {
-            await listProjectSkills();
-        });
-
-    projectCmd
-        .command('install')
-        .argument('<tool-name>', 'Name of the legacy project skill to install')
-        .description('[DEPRECATED] Alias for xtrm install project <tool-name>; prefer `xtrm init`')
-        .action(async (toolName: string) => {
-            try {
-                await installProjectByName(toolName);
-            } catch (err: any) {
-                console.error(kleur.red(`\n✗ ${err.message}\n`));
-                process.exit(1);
-            }
-        });
-
-    return projectCmd;
-}

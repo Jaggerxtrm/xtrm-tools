@@ -9,7 +9,6 @@ import { executeSync, syncMcpForTargets } from '../core/sync-executor.js';
 import { findRepoRoot } from '../utils/repo-root.js';
 import { t, sym } from '../utils/theme.js';
 import path from 'path';
-import { createInstallProjectCommand } from './install-project.js';
 import { createInstallPiCommand } from './install-pi.js';
 
 interface TargetChanges {
@@ -422,7 +421,6 @@ export function createInstallCommand(): Command {
     // Add subcommands
     installCmd.addCommand(createInstallAllCommand());
     installCmd.addCommand(createInstallBasicCommand());
-    installCmd.addCommand(createInstallProjectCommand());
     installCmd.addCommand(createInstallPiCommand());
 
     return installCmd;

@@ -35746,7 +35746,7 @@ var Listr = class {
 };
 
 // src/commands/install.ts
-var import_fs_extra13 = __toESM(require_lib2(), 1);
+var import_fs_extra11 = __toESM(require_lib2(), 1);
 
 // src/core/context.ts
 var import_os2 = __toESM(require("os"), 1);
@@ -40853,930 +40853,28 @@ var sym = {
 };
 
 // src/commands/install.ts
-var import_path13 = __toESM(require("path"), 1);
-
-// src/commands/install-project.ts
 var import_path11 = __toESM(require("path"), 1);
-var import_fs_extra11 = __toESM(require_lib2(), 1);
-var import_child_process3 = require("child_process");
-
-// src/commands/install-service-skills.ts
-var import_path10 = __toESM(require("path"), 1);
-var import_fs_extra10 = __toESM(require_lib2(), 1);
-var import_child_process2 = require("child_process");
-function resolvePkgRoot() {
-  const candidates = [
-    import_path10.default.resolve(__dirname, "../.."),
-    import_path10.default.resolve(__dirname, "../../..")
-  ];
-  const match = candidates.find((candidate) => import_fs_extra10.default.existsSync(import_path10.default.join(candidate, "project-skills")));
-  if (!match) {
-    throw new Error("Unable to locate project-skills directory from CLI runtime.");
-  }
-  return match;
-}
-var PKG_ROOT = resolvePkgRoot();
-var SKILLS_SRC = import_path10.default.join(PKG_ROOT, "project-skills", "service-skills-set", ".claude");
-var MARKER_DOC = "# [jaggers] doc-reminder";
-var MARKER_STALENESS = "# [jaggers] skill-staleness";
-var MARKER_CHAIN = "# [jaggers] chain-githooks";
-async function installGitHooks(projectRoot, skillsSrc = SKILLS_SRC) {
-  const gitHooksSrc = import_path10.default.join(skillsSrc, "git-hooks");
-  const gitHooksDest = import_path10.default.join(projectRoot, ".claude", "git-hooks");
-  await import_fs_extra10.default.copy(gitHooksSrc, gitHooksDest, { overwrite: true });
-  const docScript = import_path10.default.join(projectRoot, ".claude", "git-hooks", "doc_reminder.py");
-  const stalenessScript = import_path10.default.join(projectRoot, ".claude", "git-hooks", "skill_staleness.py");
-  const preCommit = import_path10.default.join(projectRoot, ".githooks", "pre-commit");
-  const prePush = import_path10.default.join(projectRoot, ".githooks", "pre-push");
-  for (const hookPath of [preCommit, prePush]) {
-    if (!await import_fs_extra10.default.pathExists(hookPath)) {
-      await import_fs_extra10.default.mkdirp(import_path10.default.dirname(hookPath));
-      await import_fs_extra10.default.writeFile(hookPath, "#!/usr/bin/env bash\n", { mode: 493 });
-    }
-  }
-  const snippets = [
-    [
-      preCommit,
-      MARKER_DOC,
-      `
-${MARKER_DOC}
-if command -v python3 &>/dev/null && [ -f "${docScript}" ]; then
-    python3 "${docScript}" || true
-fi
-`
-    ],
-    [
-      prePush,
-      MARKER_STALENESS,
-      `
-${MARKER_STALENESS}
-if command -v python3 &>/dev/null && [ -f "${stalenessScript}" ]; then
-    python3 "${stalenessScript}" || true
-fi
-`
-    ]
-  ];
-  const hookFiles = [];
-  for (const [hookPath, marker, snippet] of snippets) {
-    const content = await import_fs_extra10.default.readFile(hookPath, "utf8");
-    const name = import_path10.default.basename(hookPath);
-    if (!content.includes(marker)) {
-      await import_fs_extra10.default.writeFile(hookPath, content + snippet);
-      hookFiles.push({ name, status: "added" });
-    } else {
-      hookFiles.push({ name, status: "already-present" });
-    }
-  }
-  const hooksPathResult = (0, import_child_process2.spawnSync)("git", ["config", "--get", "core.hooksPath"], {
-    cwd: projectRoot,
-    encoding: "utf8",
-    timeout: 5e3
-  });
-  const configuredHooksPath = hooksPathResult.status === 0 ? hooksPathResult.stdout.trim() : "";
-  const activeHooksDir = configuredHooksPath ? import_path10.default.isAbsolute(configuredHooksPath) ? configuredHooksPath : import_path10.default.join(projectRoot, configuredHooksPath) : import_path10.default.join(projectRoot, ".git", "hooks");
-  const activationTargets = /* @__PURE__ */ new Set([import_path10.default.join(projectRoot, ".git", "hooks"), activeHooksDir]);
-  for (const hooksDir of activationTargets) {
-    await import_fs_extra10.default.mkdirp(hooksDir);
-    for (const [name, sourceHook] of [["pre-commit", preCommit], ["pre-push", prePush]]) {
-      const targetHook = import_path10.default.join(hooksDir, name);
-      if (!await import_fs_extra10.default.pathExists(targetHook)) {
-        await import_fs_extra10.default.writeFile(targetHook, "#!/usr/bin/env bash\n", { mode: 493 });
-      } else {
-        await import_fs_extra10.default.chmod(targetHook, 493);
-      }
-      if (import_path10.default.resolve(targetHook) === import_path10.default.resolve(sourceHook)) {
-        continue;
-      }
-      const chainSnippet = `
-${MARKER_CHAIN}
-if [ -x "${sourceHook}" ]; then
-    "${sourceHook}" "$@"
-fi
-`;
-      const targetContent = await import_fs_extra10.default.readFile(targetHook, "utf8");
-      if (!targetContent.includes(MARKER_CHAIN)) {
-        await import_fs_extra10.default.writeFile(targetHook, targetContent + chainSnippet);
-      }
-    }
-  }
-  return { hookFiles };
-}
-
-// src/commands/install-project.ts
-function resolvePkgRoot2() {
-  const candidates = [
-    import_path11.default.resolve(__dirname, "../.."),
-    import_path11.default.resolve(__dirname, "../../..")
-  ];
-  const match = candidates.find((candidate) => import_fs_extra11.default.existsSync(import_path11.default.join(candidate, "project-skills")));
-  if (!match) {
-    throw new Error("Unable to locate project-skills directory from CLI runtime.");
-  }
-  return match;
-}
-var PKG_ROOT2 = resolvePkgRoot2();
-var PROJECT_SKILLS_DIR = import_path11.default.join(PKG_ROOT2, "project-skills");
-var MCP_CORE_CONFIG_PATH = import_path11.default.join(PKG_ROOT2, "config", "mcp_servers.json");
-var INSTRUCTIONS_DIR = import_path11.default.join(PKG_ROOT2, "config", "instructions");
-var XTRM_BLOCK_START = "<!-- xtrm:start -->";
-var XTRM_BLOCK_END = "<!-- xtrm:end -->";
-var syncedProjectMcpRoots = /* @__PURE__ */ new Set();
-function toServiceId(name) {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "service";
-}
-function parseComposeServices(content) {
-  const lines = content.split("\n");
-  const services = /* @__PURE__ */ new Set();
-  let inServices = false;
-  for (const line of lines) {
-    const raw = line.replace(/\t/g, "    ");
-    if (!inServices) {
-      if (/^services:\s*$/.test(raw)) {
-        inServices = true;
-      }
-      continue;
-    }
-    if (/^[^\s#].*:\s*$/.test(raw) && !/^services:\s*$/.test(raw)) {
-      break;
-    }
-    const serviceMatch = raw.match(/^\s{2}([A-Za-z0-9._-]+):\s*(?:#.*)?$/);
-    if (serviceMatch) {
-      services.add(serviceMatch[1]);
-    }
-  }
-  return [...services];
-}
-async function detectProjectFeatures(projectRoot) {
-  const hasTypeScript = await import_fs_extra11.default.pathExists(import_path11.default.join(projectRoot, "tsconfig.json"));
-  const hasPython = await import_fs_extra11.default.pathExists(import_path11.default.join(projectRoot, "pyproject.toml")) || await import_fs_extra11.default.pathExists(import_path11.default.join(projectRoot, "setup.py")) || await import_fs_extra11.default.pathExists(import_path11.default.join(projectRoot, "requirements.txt"));
-  const composeCandidates = [
-    "docker-compose.yml",
-    "docker-compose.yaml",
-    "compose.yml",
-    "compose.yaml"
-  ];
-  const dockerServices = /* @__PURE__ */ new Set();
-  for (const composeFile of composeCandidates) {
-    const composePath = import_path11.default.join(projectRoot, composeFile);
-    if (!await import_fs_extra11.default.pathExists(composePath)) continue;
-    try {
-      const content = await import_fs_extra11.default.readFile(composePath, "utf8");
-      for (const service of parseComposeServices(content)) {
-        dockerServices.add(service);
-      }
-    } catch {
-    }
-  }
-  const hasDockerfile = await import_fs_extra11.default.pathExists(import_path11.default.join(projectRoot, "Dockerfile"));
-  if (hasDockerfile && dockerServices.size === 0) {
-    dockerServices.add(import_path11.default.basename(projectRoot));
-  }
-  return {
-    hasTypeScript,
-    hasPython,
-    dockerServices: [...dockerServices],
-    generatedRegistry: false
-  };
-}
-async function ensureServiceRegistry(projectRoot, services) {
-  const registryPath = import_path11.default.join(projectRoot, "service-registry.json");
-  if (services.length === 0) {
-    return { generated: false, registryPath };
-  }
-  const existedBefore = await import_fs_extra11.default.pathExists(registryPath);
-  const now = (/* @__PURE__ */ new Date()).toISOString();
-  let registry2 = { version: "1.0.0", services: {} };
-  if (existedBefore) {
-    try {
-      registry2 = await import_fs_extra11.default.readJson(registryPath);
-      if (!registry2.services || typeof registry2.services !== "object") {
-        registry2.services = {};
-      }
-    } catch {
-      registry2 = { version: "1.0.0", services: {} };
-    }
-  }
-  let changed = false;
-  for (const serviceName of services) {
-    const serviceId = toServiceId(serviceName);
-    if (registry2.services[serviceId]) continue;
-    registry2.services[serviceId] = {
-      name: serviceName,
-      description: `Detected from Docker configuration (${serviceName}).`,
-      territory: [],
-      skill_path: `.claude/skills/${serviceId}/SKILL.md`,
-      last_sync: now
-    };
-    changed = true;
-  }
-  if (changed || !existedBefore) {
-    await import_fs_extra11.default.writeJson(registryPath, registry2, { spaces: 2 });
-  }
-  return { generated: changed || !existedBefore, registryPath };
-}
-function resolveEnvVars(value) {
-  if (typeof value !== "string") return value;
-  return value.replace(/\$\{([A-Z0-9_]+)\}/g, (_m, name) => process.env[name] || "");
-}
-function hasClaudeCli() {
-  const r = (0, import_child_process3.spawnSync)("claude", ["--version"], { stdio: "pipe" });
-  return r.status === 0;
-}
-function buildProjectMcpArgs(name, server) {
-  const transport = server.type || (server.url?.includes("/sse") ? "sse" : "http");
-  if (server.command) {
-    const args = ["mcp", "add", "-s", "project"];
-    if (server.env && typeof server.env === "object") {
-      for (const [k, v] of Object.entries(server.env)) {
-        args.push("-e", `${k}=${resolveEnvVars(String(v))}`);
-      }
-    }
-    args.push(name, "--", server.command, ...server.args || []);
-    return args;
-  }
-  if (server.url || server.serverUrl) {
-    const url2 = server.url || server.serverUrl;
-    const args = ["mcp", "add", "-s", "project", "--transport", transport, name, url2];
-    if (server.headers && typeof server.headers === "object") {
-      for (const [k, v] of Object.entries(server.headers)) {
-        args.push("--header", `${k}: ${resolveEnvVars(String(v))}`);
-      }
-    }
-    return args;
-  }
-  return null;
-}
-async function syncProjectMcpServers(projectRoot) {
-  if (syncedProjectMcpRoots.has(projectRoot)) return;
-  syncedProjectMcpRoots.add(projectRoot);
-  if (!await import_fs_extra11.default.pathExists(MCP_CORE_CONFIG_PATH)) return;
-  console.log(kleur_default.bold("\n\u2500\u2500 Installing MCP (project scope) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
-  if (!hasClaudeCli()) {
-    console.log(kleur_default.yellow("  \u26A0 Claude CLI not found; skipping project-scope MCP registration."));
-    return;
-  }
-  const mcpConfig = await import_fs_extra11.default.readJson(MCP_CORE_CONFIG_PATH);
-  const servers = Object.entries(mcpConfig?.mcpServers ?? {});
-  if (servers.length === 0) {
-    console.log(kleur_default.dim("  \u2139 No core MCP servers configured."));
-    return;
-  }
-  let added = 0;
-  let existing = 0;
-  let failed = 0;
-  for (const [name, server] of servers) {
-    const args = buildProjectMcpArgs(name, server);
-    if (!args) continue;
-    const r = (0, import_child_process3.spawnSync)("claude", args, {
-      cwd: projectRoot,
-      encoding: "utf8",
-      stdio: ["pipe", "pipe", "pipe"]
-    });
-    if (r.status === 0) {
-      added++;
-      console.log(`${kleur_default.green("  \u2713")} ${name}`);
-      continue;
-    }
-    const stderr = `${r.stderr || ""}`.toLowerCase();
-    if (stderr.includes("already exists") || stderr.includes("already configured")) {
-      existing++;
-      console.log(kleur_default.dim(`  \u2713 ${name} (already configured)`));
-      continue;
-    }
-    failed++;
-    console.log(kleur_default.red(`  \u2717 ${name} (${(r.stderr || r.stdout || "failed").toString().trim()})`));
-  }
-  console.log(kleur_default.dim(`  \u21B3 MCP project-scope result: ${added} added, ${existing} existing, ${failed} failed`));
-}
-function upsertManagedBlock(fileContent, blockBody, startMarker = XTRM_BLOCK_START, endMarker = XTRM_BLOCK_END) {
-  const normalizedBody = blockBody.trim();
-  const managedBlock = `${startMarker}
-${normalizedBody}
-${endMarker}`;
-  const escapedStart = startMarker.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&");
-  const escapedEnd = endMarker.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&");
-  const existingBlockPattern = new RegExp(`${escapedStart}[\\s\\S]*?${escapedEnd}`, "m");
-  if (existingBlockPattern.test(fileContent)) {
-    return fileContent.replace(existingBlockPattern, managedBlock);
-  }
-  const trimmed = fileContent.trimStart();
-  if (!trimmed) return `${managedBlock}
-`;
-  return `${managedBlock}
-
-${trimmed}`;
-}
-async function injectProjectInstructionHeaders(projectRoot) {
-  const targets = [
-    { output: "AGENTS.md", template: "agents-top.md" },
-    { output: "CLAUDE.md", template: "claude-top.md" }
-  ];
-  console.log(kleur_default.bold("Injecting xtrm agent instruction headers..."));
-  for (const target of targets) {
-    const templatePath = import_path11.default.join(INSTRUCTIONS_DIR, target.template);
-    if (!await import_fs_extra11.default.pathExists(templatePath)) {
-      console.log(kleur_default.yellow(`  \u26A0 Missing template: ${target.template}`));
-      continue;
-    }
-    const template = await import_fs_extra11.default.readFile(templatePath, "utf8");
-    const outputPath = import_path11.default.join(projectRoot, target.output);
-    const existing = await import_fs_extra11.default.pathExists(outputPath) ? await import_fs_extra11.default.readFile(outputPath, "utf8") : "";
-    const next = upsertManagedBlock(existing, template);
-    if (next === existing) {
-      console.log(kleur_default.dim(`  \u2713 ${target.output} already up to date`));
-      continue;
-    }
-    await import_fs_extra11.default.writeFile(outputPath, next.endsWith("\n") ? next : `${next}
-`, "utf8");
-    console.log(`${kleur_default.green("  \u2713")} updated ${target.output}`);
-  }
-}
-async function getAvailableProjectSkills() {
-  if (!await import_fs_extra11.default.pathExists(PROJECT_SKILLS_DIR)) {
-    return [];
-  }
-  const entries = await import_fs_extra11.default.readdir(PROJECT_SKILLS_DIR);
-  const skills = [];
-  for (const entry of entries) {
-    const entryPath = import_path11.default.join(PROJECT_SKILLS_DIR, entry);
-    const stat = await import_fs_extra11.default.stat(entryPath);
-    if (stat.isDirectory() && await import_fs_extra11.default.pathExists(import_path11.default.join(entryPath, ".claude"))) {
-      skills.push(entry);
-    }
-  }
-  return skills.sort();
-}
-function getScriptFilename(hook) {
-  const cmd = hook.command || hook.hooks?.[0]?.command || "";
-  if (typeof cmd !== "string") return null;
-  const m = cmd.match(/\/hooks\/([A-Za-z0-9_/-]+\.(?:py|cjs|mjs|js))/);
-  if (m) return m[1];
-  const m2 = cmd.match(/([A-Za-z0-9_-]+\.(?:py|cjs|mjs|js))(?!.*[A-Za-z0-9._-]+\.(?:py|cjs|mjs|js))/);
-  return m2?.[1] ?? null;
-}
-function pruneStaleHooks(existing, canonical) {
-  const result = { ...existing };
-  const removed = [];
-  if (!result.hooks || typeof result.hooks !== "object") {
-    return { result, removed };
-  }
-  if (!canonical.hooks || typeof canonical.hooks !== "object") {
-    return { result, removed };
-  }
-  const canonicalScripts = /* @__PURE__ */ new Set();
-  const canonicalBasenames = /* @__PURE__ */ new Set();
-  for (const hooks of Object.values(canonical.hooks)) {
-    const hookList = Array.isArray(hooks) ? hooks : [hooks];
-    for (const wrapper of hookList) {
-      const innerHooks = wrapper.hooks || [wrapper];
-      for (const hook of innerHooks) {
-        const script = getScriptFilename(hook);
-        if (!script) continue;
-        canonicalScripts.add(script);
-        canonicalBasenames.add(import_path11.default.basename(script));
-      }
-    }
-  }
-  for (const [event, hooks] of Object.entries(result.hooks)) {
-    if (!Array.isArray(hooks)) continue;
-    const prunedWrappers = [];
-    for (const wrapper of hooks) {
-      const innerHooks = wrapper.hooks || [wrapper];
-      const keptInner = [];
-      for (const hook of innerHooks) {
-        const script = getScriptFilename(hook);
-        if (!script) {
-          keptInner.push(hook);
-          continue;
-        }
-        if (canonicalScripts.has(script)) {
-          keptInner.push(hook);
-          continue;
-        }
-        const sameSkillFamily = canonicalBasenames.has(import_path11.default.basename(script));
-        if (sameSkillFamily) {
-          removed.push(`${event}:${script}`);
-          continue;
-        }
-        keptInner.push(hook);
-      }
-      if (keptInner.length > 0) {
-        if (wrapper.hooks) {
-          prunedWrappers.push({ ...wrapper, hooks: keptInner });
-        } else if (keptInner.length === 1) {
-          prunedWrappers.push(keptInner[0]);
-        } else {
-          prunedWrappers.push({ ...wrapper, hooks: keptInner });
-        }
-      }
-    }
-    if (prunedWrappers.length > 0) {
-      result.hooks[event] = prunedWrappers;
-    } else {
-      delete result.hooks[event];
-    }
-  }
-  return { result, removed };
-}
-function deepMergeHooks(existing, incoming) {
-  const result = { ...existing };
-  if (!result.hooks) result.hooks = {};
-  if (!incoming.hooks) return result;
-  for (const [event, incomingHooks] of Object.entries(incoming.hooks)) {
-    if (!result.hooks[event]) {
-      result.hooks[event] = incomingHooks;
-    } else {
-      const existingEventHooks = Array.isArray(result.hooks[event]) ? result.hooks[event] : [result.hooks[event]];
-      const incomingEventHooks = Array.isArray(incomingHooks) ? incomingHooks : [incomingHooks];
-      const getCommand = (h) => h.command || h.hooks?.[0]?.command;
-      const getCommandKey = (cmd) => {
-        if (!cmd || typeof cmd !== "string") return null;
-        const m = cmd.match(/([A-Za-z0-9._-]+\.(?:py|cjs|mjs|js))(?!.*[A-Za-z0-9._-]+\.(?:py|cjs|mjs|js))/);
-        return m?.[1] ?? null;
-      };
-      const mergeMatcher2 = (existingMatcher, incomingMatcher) => {
-        const existingParts = existingMatcher.split("|").map((s) => s.trim()).filter(Boolean);
-        const incomingParts = incomingMatcher.split("|").map((s) => s.trim()).filter(Boolean);
-        const merged = [...existingParts];
-        for (const part of incomingParts) {
-          if (!merged.includes(part)) merged.push(part);
-        }
-        return merged.join("|");
-      };
-      const mergedEventHooks = [...existingEventHooks];
-      for (const incomingHook of incomingEventHooks) {
-        const incomingCmd = getCommand(incomingHook);
-        if (!incomingCmd) {
-          mergedEventHooks.push(incomingHook);
-          continue;
-        }
-        const incomingKey = getCommandKey(incomingCmd);
-        const existingIndex = mergedEventHooks.findIndex((h) => {
-          const existingCmd = getCommand(h);
-          if (existingCmd === incomingCmd) return true;
-          if (!incomingKey) return false;
-          return getCommandKey(existingCmd) === incomingKey;
-        });
-        if (existingIndex === -1) {
-          mergedEventHooks.push(incomingHook);
-          continue;
-        }
-        const existingHook = mergedEventHooks[existingIndex];
-        if (typeof existingHook.matcher === "string" && typeof incomingHook.matcher === "string") {
-          existingHook.matcher = mergeMatcher2(existingHook.matcher, incomingHook.matcher);
-        }
-      }
-      result.hooks[event] = mergedEventHooks;
-    }
-  }
-  return result;
-}
-function extractReadmeDescription(readmeContent) {
-  const lines = readmeContent.split("\n");
-  const headingIndex = lines.findIndex((line) => line.trim().startsWith("# "));
-  const searchStart = headingIndex >= 0 ? headingIndex + 1 : 0;
-  for (const rawLine of lines.slice(searchStart)) {
-    const line = rawLine.trim();
-    if (!line || line.startsWith("#") || line.startsWith("[![") || line.startsWith("<")) {
-      continue;
-    }
-    return line.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1").replace(/[*_`]/g, "").trim();
-  }
-  return "No description available";
-}
-async function installProjectSkill(toolName, projectRootOverride) {
-  const skillPath = import_path11.default.join(PROJECT_SKILLS_DIR, toolName);
-  if (!await import_fs_extra11.default.pathExists(skillPath)) {
-    console.error(kleur_default.red(`
-\u2717 Project skill '${toolName}' not found.
-`));
-    console.error(kleur_default.dim(`  Available project skills:
-`));
-    await listProjectSkills();
-    process.exit(1);
-  }
-  const projectRoot = projectRootOverride ?? getProjectRoot();
-  const claudeDir = import_path11.default.join(projectRoot, ".claude");
-  console.log(kleur_default.dim(`
-  Installing project skill: ${kleur_default.cyan(toolName)}`));
-  console.log(kleur_default.dim(`  Target: ${projectRoot}
-`));
-  const skillClaudeDir = import_path11.default.join(skillPath, ".claude");
-  const skillSettingsPath = import_path11.default.join(skillClaudeDir, "settings.json");
-  const skillSkillsDir = import_path11.default.join(skillClaudeDir, "skills");
-  const skillReadmePath = import_path11.default.join(skillPath, "README.md");
-  if (await import_fs_extra11.default.pathExists(skillSettingsPath)) {
-    console.log(kleur_default.bold("\u2500\u2500 Installing Hooks \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
-    const targetSettingsPath = import_path11.default.join(claudeDir, "settings.json");
-    await import_fs_extra11.default.mkdirp(import_path11.default.dirname(targetSettingsPath));
-    let existingSettings = {};
-    if (await import_fs_extra11.default.pathExists(targetSettingsPath)) {
-      try {
-        existingSettings = JSON.parse(await import_fs_extra11.default.readFile(targetSettingsPath, "utf8"));
-      } catch {
-      }
-    }
-    const incomingSettings = JSON.parse(await import_fs_extra11.default.readFile(skillSettingsPath, "utf8"));
-    const { result: prunedSettings, removed } = pruneStaleHooks(existingSettings, incomingSettings);
-    if (removed.length > 0) {
-      console.log(kleur_default.yellow(`  \u21B3 Pruned ${removed.length} stale hook(s): ${removed.join(", ")}`));
-    }
-    const mergedSettings = deepMergeHooks(prunedSettings, incomingSettings);
-    await import_fs_extra11.default.writeFile(targetSettingsPath, JSON.stringify(mergedSettings, null, 2) + "\n");
-    console.log(`${kleur_default.green("  \u2713")} settings.json (hooks merged)`);
-  }
-  await syncProjectMcpServers(projectRoot);
-  if (await import_fs_extra11.default.pathExists(skillSkillsDir)) {
-    console.log(kleur_default.bold("\n\u2500\u2500 Installing Skills \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
-    const targetSkillsDir = import_path11.default.join(claudeDir, "skills");
-    const skillEntries = await import_fs_extra11.default.readdir(skillSkillsDir);
-    for (const entry of skillEntries) {
-      const src = import_path11.default.join(skillSkillsDir, entry);
-      const dest = import_path11.default.join(targetSkillsDir, entry);
-      await import_fs_extra11.default.copy(src, dest, {
-        filter: (src2) => !src2.includes(".Zone.Identifier") && !src2.includes("__pycache__") && !src2.includes(".pytest_cache") && !src2.endsWith(".pyc")
-      });
-      console.log(`${kleur_default.green("  \u2713")} .claude/skills/${entry}/`);
-    }
-  }
-  if (await import_fs_extra11.default.pathExists(skillClaudeDir)) {
-    const claudeEntries = await import_fs_extra11.default.readdir(skillClaudeDir);
-    for (const entry of claudeEntries) {
-      if (entry === "settings.json" || entry === "skills") {
-        continue;
-      }
-      const src = import_path11.default.join(skillClaudeDir, entry);
-      const dest = import_path11.default.join(claudeDir, entry);
-      await import_fs_extra11.default.copy(src, dest, {
-        filter: (src2) => !src2.includes(".Zone.Identifier") && !src2.includes("__pycache__") && !src2.includes(".pytest_cache") && !src2.endsWith(".pyc")
-      });
-      console.log(`${kleur_default.green("  \u2713")} .claude/${entry}/`);
-    }
-  }
-  const claudeSkillsDir = import_path11.default.join(claudeDir, "skills");
-  if (await import_fs_extra11.default.pathExists(claudeSkillsDir)) {
-    const agentsDir = import_path11.default.join(projectRoot, ".agents");
-    const agentsSkillsLink = import_path11.default.join(agentsDir, "skills");
-    const symlinkTarget = import_path11.default.join("..", ".claude", "skills");
-    let needsSymlink = true;
-    if (await import_fs_extra11.default.pathExists(agentsSkillsLink)) {
-      try {
-        const stat = await import_fs_extra11.default.lstat(agentsSkillsLink);
-        if (stat.isSymbolicLink()) {
-          const current = await import_fs_extra11.default.readlink(agentsSkillsLink);
-          if (current === symlinkTarget) {
-            needsSymlink = false;
-          } else {
-            await import_fs_extra11.default.remove(agentsSkillsLink);
-          }
-        } else {
-          console.log(kleur_default.yellow("  \u26A0 .agents/skills/ is a real directory \u2014 skipping Pi symlink"));
-          needsSymlink = false;
-        }
-      } catch {
-        needsSymlink = true;
-      }
-    }
-    if (needsSymlink) {
-      await import_fs_extra11.default.mkdirp(agentsDir);
-      await import_fs_extra11.default.symlink(symlinkTarget, agentsSkillsLink);
-      console.log(`${kleur_default.green("  \u2713")} .agents/skills \u2192 ../.claude/skills`);
-    } else {
-      console.log(kleur_default.dim("  \u2713 .agents/skills symlink already in place"));
-    }
-  }
-  if (await import_fs_extra11.default.pathExists(skillReadmePath)) {
-    console.log(kleur_default.bold("\n\u2500\u2500 Installing Documentation \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
-    const docsDir = import_path11.default.join(claudeDir, "docs");
-    await import_fs_extra11.default.mkdirp(docsDir);
-    const destReadme = import_path11.default.join(docsDir, `${toolName}-readme.md`);
-    await import_fs_extra11.default.copy(skillReadmePath, destReadme);
-    console.log(`${kleur_default.green("  \u2713")} .claude/docs/${toolName}-readme.md`);
-  }
-  if (toolName === "service-skills-set") {
-    console.log(kleur_default.bold("\n\u2500\u2500 Installing Git Hooks \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
-    await installGitHooks(projectRoot, skillClaudeDir);
-    console.log(`${kleur_default.green("  \u2713")} .githooks/pre-commit`);
-    console.log(`${kleur_default.green("  \u2713")} .githooks/pre-push`);
-    console.log(`${kleur_default.green("  \u2713")} activated in .git/hooks/`);
-  }
-  console.log(kleur_default.bold("\n\u2500\u2500 Post-Install Steps \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
-  console.log(kleur_default.yellow("\n  \u26A0 IMPORTANT: Manual setup required!\n"));
-  console.log(kleur_default.white(`  ${toolName} requires additional configuration.`));
-  console.log(kleur_default.white(`  Please read: ${kleur_default.cyan(".claude/docs/" + toolName + "-readme.md")}
-`));
-  if (toolName === "tdd-guard") {
-    const tddGuardCheck = (0, import_child_process3.spawnSync)("tdd-guard", ["--version"], { stdio: "pipe" });
-    if (tddGuardCheck.status !== 0) {
-      console.log(kleur_default.red("  \u2717 tdd-guard CLI not found globally!\n"));
-      console.log(kleur_default.white("  Install the global CLI:"));
-      console.log(kleur_default.cyan("    npm install -g tdd-guard\n"));
-    } else {
-      console.log(kleur_default.green("  \u2713 tdd-guard CLI found globally"));
-    }
-    console.log(kleur_default.white("\n  Install a test reporter (choose one):"));
-    console.log(kleur_default.dim("    npm install --save-dev tdd-guard-vitest    # Vitest"));
-    console.log(kleur_default.dim("    npm install --save-dev tdd-guard-jest      # Jest"));
-    console.log(kleur_default.dim("    pip install tdd-guard-pytest               # pytest\n"));
-  }
-  if (toolName === "quality-gates") {
-    console.log(kleur_default.white("  Install language dependencies:\n"));
-    console.log(kleur_default.white("  TypeScript:"));
-    console.log(kleur_default.dim("    npm install --save-dev typescript eslint prettier"));
-    console.log(kleur_default.white("\n  Python:"));
-    console.log(kleur_default.dim("    pip install ruff mypy"));
-    console.log(kleur_default.white("\n  For TDD (test-first) enforcement, install separately:"));
-    console.log(kleur_default.dim("    npm install -g tdd-guard"));
-    console.log(kleur_default.dim("    xtrm install project tdd-guard\n"));
-  }
-  console.log(kleur_default.green("  \u2713 Installation complete!\n"));
-}
-async function installAllProjectSkills(projectRootOverride) {
-  const skills = await getAvailableProjectSkills();
-  if (skills.length === 0) {
-    console.log(kleur_default.dim("  No project skills available.\n"));
-    return;
-  }
-  const projectRoot = projectRootOverride ?? getProjectRoot();
-  console.log(kleur_default.bold(`
-Installing ${skills.length} project skills:
-`));
-  for (const skill of skills) {
-    console.log(kleur_default.dim(`  \u2022 ${skill}`));
-  }
-  console.log("");
-  for (const skill of skills) {
-    await installProjectSkill(skill, projectRoot);
-  }
-}
-function buildProjectInitGuide() {
-  const lines = [
-    kleur_default.bold("\nProject Init \u2014 Global-first baseline\n"),
-    kleur_default.dim("xtrm init bootstraps project data (beads, GitNexus, service registry) while hooks/skills stay global.\n"),
-    `${kleur_default.cyan("1) Run initialization once per repository:")}`,
-    kleur_default.dim("   xtrm init   (alias: xtrm project init)"),
-    kleur_default.dim("   - Initializes beads workspace (bd init)"),
-    kleur_default.dim("   - Refreshes GitNexus index if missing/stale"),
-    kleur_default.dim("   - Syncs project-scoped MCP entries"),
-    kleur_default.dim("   - Detects TS/Python/Docker project signals"),
-    kleur_default.dim("   - Scaffolds service-registry.json when Docker services are detected"),
-    "",
-    `${kleur_default.cyan("2) What is already global (no per-project install needed):")}`,
-    kleur_default.dim("   - quality gates hooks (formerly installed via quality-gates)"),
-    kleur_default.dim("   - service-skills routing and drift checks (formerly service-skills-set)"),
-    kleur_default.dim("   - main-guard + beads workflow gates"),
-    kleur_default.dim("   - optional TDD strategy guidance (legacy name: tdd-guard)"),
-    "",
-    `${kleur_default.cyan("3) Configure repo quality tools (hooks enforce what exists):")}`,
-    kleur_default.dim("   - TS: eslint + prettier + tsc"),
-    kleur_default.dim("   - PY: ruff + mypy/pyright"),
-    kleur_default.dim("   - tests: failing tests should block regressions"),
-    "",
-    `${kleur_default.cyan("4) Beads workflow (required for gated edit/commit flow):")}`,
-    kleur_default.dim("   - Claim work:   bd ready --json  ->  bd update <id> --claim --json"),
-    kleur_default.dim("   - During work:  keep issue status current; create discovered follow-ups"),
-    kleur_default.dim('   - Finish work:  bd close <id> --reason "Done" --json'),
-    "",
-    `${kleur_default.cyan("5) Git workflow (main-guard expected path):")}`,
-    kleur_default.dim("   - git checkout -b feature/<name>"),
-    kleur_default.dim("   - commit on feature branch only"),
-    kleur_default.dim("   - git push -u origin feature/<name>"),
-    kleur_default.dim("   - gh pr create --fill && gh pr merge --squash"),
-    kleur_default.dim("   - git checkout main && git pull --ff-only"),
-    ""
-  ];
-  return lines.join("\n");
-}
-async function runProjectInit() {
-  console.log(buildProjectInitGuide());
-  await bootstrapProjectInit();
-}
-function printProjectInstallDeprecationWarning() {
-  console.log(kleur_default.yellow("\u26A0 Deprecated: `xtrm install project` is legacy and will be removed in a future release."));
-  console.log(kleur_default.dim("  Use `xtrm init` (alias: `xtrm project init`) for project bootstrap.\n"));
-}
-async function installProjectByName(toolName) {
-  printProjectInstallDeprecationWarning();
-  if (toolName === "all" || toolName === "*") {
-    await installAllProjectSkills();
-    return;
-  }
-  await installProjectSkill(toolName);
-}
-async function bootstrapProjectInit() {
-  let projectRoot;
-  try {
-    projectRoot = getProjectRoot();
-  } catch (err) {
-    console.log(kleur_default.yellow(`
-  \u26A0 Skipping project bootstrap: ${err.message}
-`));
-    return;
-  }
-  const detected = await detectProjectFeatures(projectRoot);
-  await runBdInitForProject(projectRoot);
-  await injectProjectInstructionHeaders(projectRoot);
-  await runGitNexusInitForProject(projectRoot);
-  await syncProjectMcpServers(projectRoot);
-  if (detected.dockerServices.length > 0) {
-    const { generated, registryPath } = await ensureServiceRegistry(projectRoot, detected.dockerServices);
-    detected.generatedRegistry = generated;
-    detected.registryPath = registryPath;
-    if (generated) {
-      console.log(`${kleur_default.green("  \u2713")} service registry scaffolded at ${import_path11.default.relative(projectRoot, registryPath)}`);
-    } else {
-      console.log(kleur_default.dim("  \u2713 service-registry.json already includes detected services"));
-    }
-  }
-  const projectTypes = [];
-  if (detected.hasTypeScript) projectTypes.push("TypeScript");
-  if (detected.hasPython) projectTypes.push("Python");
-  if (detected.dockerServices.length > 0) projectTypes.push("Docker");
-  console.log(kleur_default.bold("\nProject initialized."));
-  console.log(kleur_default.white(`  Quality gates active globally.`));
-  console.log(kleur_default.white(`  Project types: ${projectTypes.length > 0 ? projectTypes.join(", ") : "none detected"}.`));
-  console.log(kleur_default.white(`  Services detected: ${detected.dockerServices.length > 0 ? detected.dockerServices.join(", ") : "none"}.`));
-  if (detected.registryPath) {
-    console.log(kleur_default.dim(`  Service registry: ${detected.registryPath}`));
-  }
-  console.log("");
-}
-async function runBdInitForProject(projectRoot) {
-  console.log(kleur_default.bold("Running beads initialization (bd init)..."));
-  const result = (0, import_child_process3.spawnSync)("bd", ["init"], {
-    cwd: projectRoot,
-    encoding: "utf8",
-    timeout: 15e3
-  });
-  if (result.error) {
-    console.log(kleur_default.yellow(`  \u26A0 Could not run bd init (${result.error.message})`));
-    return;
-  }
-  if (result.status !== 0) {
-    const text = `${result.stdout || ""}
-${result.stderr || ""}`.toLowerCase();
-    if (text.includes("already initialized")) {
-      console.log(kleur_default.dim("  \u2713 beads workspace already initialized"));
-      return;
-    }
-    if (result.stdout) process.stdout.write(result.stdout);
-    if (result.stderr) process.stderr.write(result.stderr);
-    console.log(kleur_default.yellow(`  \u26A0 bd init exited with code ${result.status}`));
-    return;
-  }
-  if (result.stdout) process.stdout.write(result.stdout);
-  if (result.stderr) process.stderr.write(result.stderr);
-}
-async function runGitNexusInitForProject(projectRoot) {
-  const gitnexusCheck = (0, import_child_process3.spawnSync)("gitnexus", ["--version"], {
-    cwd: projectRoot,
-    encoding: "utf8",
-    timeout: 5e3
-  });
-  if (gitnexusCheck.status !== 0) {
-    console.log(kleur_default.yellow("  \u26A0 gitnexus not found; skipping index bootstrap"));
-    console.log(kleur_default.dim("    Install with: npm install -g gitnexus"));
-    return;
-  }
-  console.log(kleur_default.bold("Checking GitNexus index status..."));
-  const status = (0, import_child_process3.spawnSync)("gitnexus", ["status"], {
-    cwd: projectRoot,
-    encoding: "utf8",
-    timeout: 1e4
-  });
-  const statusText = `${status.stdout || ""}
-${status.stderr || ""}`.toLowerCase();
-  const needsAnalyze = status.status !== 0 || statusText.includes("stale") || statusText.includes("not indexed") || statusText.includes("missing");
-  if (!needsAnalyze) {
-    console.log(kleur_default.dim("  \u2713 GitNexus index is ready"));
-    return;
-  }
-  console.log(kleur_default.bold("Running GitNexus indexing (gitnexus analyze)..."));
-  const analyze = (0, import_child_process3.spawnSync)("gitnexus", ["analyze"], {
-    cwd: projectRoot,
-    encoding: "utf8",
-    timeout: 12e4
-  });
-  if (analyze.status === 0) {
-    console.log(kleur_default.green("  \u2713 GitNexus index updated"));
-    return;
-  }
-  if (analyze.stdout) process.stdout.write(analyze.stdout);
-  if (analyze.stderr) process.stderr.write(analyze.stderr);
-  console.log(kleur_default.yellow(`  \u26A0 gitnexus analyze exited with code ${analyze.status}`));
-}
-async function listProjectSkills() {
-  printProjectInstallDeprecationWarning();
-  const entries = await getAvailableProjectSkills();
-  if (entries.length === 0) {
-    console.log(kleur_default.dim("  No project skills available.\n"));
-    return;
-  }
-  const skills = [];
-  for (const entry of entries) {
-    const readmePath = import_path11.default.join(PROJECT_SKILLS_DIR, entry, "README.md");
-    let description = "No description available";
-    if (await import_fs_extra11.default.pathExists(readmePath)) {
-      const readmeContent = await import_fs_extra11.default.readFile(readmePath, "utf8");
-      description = extractReadmeDescription(readmeContent).slice(0, 80);
-    }
-    skills.push({ name: entry, description });
-  }
-  if (skills.length === 0) {
-    console.log(kleur_default.dim("  No project skills available.\n"));
-    return;
-  }
-  console.log(kleur_default.bold("\nAvailable Project Skills:\n"));
-  const Table = require_cli_table3();
-  const table = new Table({
-    head: [kleur_default.cyan("Skill"), kleur_default.cyan("Description")],
-    colWidths: [25, 60],
-    style: { head: [], border: [] }
-  });
-  for (const skill of skills) {
-    table.push([kleur_default.white(skill.name), kleur_default.dim(skill.description)]);
-  }
-  console.log(table.toString());
-  console.log(kleur_default.bold("\n\nUsage (legacy):\n"));
-  console.log(kleur_default.dim("  xtrm install project <skill-name>   Install a legacy project skill"));
-  console.log(kleur_default.dim("  xtrm install project all            Install all legacy project skills"));
-  console.log(kleur_default.dim("  xtrm install project list           List available legacy skills\n"));
-  console.log(kleur_default.bold("Preferred:\n"));
-  console.log(kleur_default.dim("  xtrm init                           Bootstrap project data for global hooks/skills\n"));
-}
-function getProjectRoot() {
-  const result = (0, import_child_process3.spawnSync)("git", ["rev-parse", "--show-toplevel"], {
-    encoding: "utf8",
-    timeout: 5e3
-  });
-  if (result.status !== 0) {
-    throw new Error("Not inside a git repository. Run this command from your target project directory.");
-  }
-  return import_path11.default.resolve(result.stdout.trim());
-}
-function createInstallProjectCommand() {
-  const installProjectCmd = new Command("project").description("[DEPRECATED] Legacy project skill installer (use `xtrm init`)");
-  installProjectCmd.argument("<tool-name>", "Name of the project skill to install").action(async (toolName) => {
-    try {
-      await installProjectByName(toolName);
-    } catch (err) {
-      console.error(kleur_default.red(`
-\u2717 ${err.message}
-`));
-      process.exit(1);
-    }
-  });
-  const listCmd = new Command("list").description("List available project skills").action(async () => {
-    await listProjectSkills();
-  });
-  const initCmd = new Command("init").description("Show full onboarding guidance and bootstrap beads + GitNexus").action(async () => {
-    await runProjectInit();
-  });
-  installProjectCmd.addCommand(listCmd);
-  installProjectCmd.addCommand(initCmd);
-  return installProjectCmd;
-}
-function createProjectCommand() {
-  const projectCmd = new Command("project").description("Project onboarding helpers (`project install` is deprecated; use `xtrm init`)");
-  projectCmd.command("init").description("Show full onboarding guidance and bootstrap beads + GitNexus").action(async () => {
-    await runProjectInit();
-  });
-  projectCmd.command("list").description("List available project skills").action(async () => {
-    await listProjectSkills();
-  });
-  projectCmd.command("install").argument("<tool-name>", "Name of the legacy project skill to install").description("[DEPRECATED] Alias for xtrm install project <tool-name>; prefer `xtrm init`").action(async (toolName) => {
-    try {
-      await installProjectByName(toolName);
-    } catch (err) {
-      console.error(kleur_default.red(`
-\u2717 ${err.message}
-`));
-      process.exit(1);
-    }
-  });
-  return projectCmd;
-}
 
 // src/commands/install-pi.ts
 var import_prompts2 = __toESM(require_prompts3(), 1);
-var import_fs_extra12 = __toESM(require_lib2(), 1);
-var import_path12 = __toESM(require("path"), 1);
+var import_fs_extra10 = __toESM(require_lib2(), 1);
+var import_path10 = __toESM(require("path"), 1);
 var import_node_child_process = require("child_process");
 var import_node_os4 = require("os");
-var PI_AGENT_DIR = process.env.PI_AGENT_DIR || import_path12.default.join((0, import_node_os4.homedir)(), ".pi", "agent");
+var PI_AGENT_DIR = process.env.PI_AGENT_DIR || import_path10.default.join((0, import_node_os4.homedir)(), ".pi", "agent");
 function fillTemplate(template, values) {
   return template.replace(/\{\{(\w+)\}\}/g, (_, key) => values[key] ?? "");
 }
 function readExistingPiValues(piAgentDir) {
   const values = {};
   try {
-    const auth = JSON.parse(require("fs").readFileSync(import_path12.default.join(piAgentDir, "auth.json"), "utf8"));
+    const auth = JSON.parse(require("fs").readFileSync(import_path10.default.join(piAgentDir, "auth.json"), "utf8"));
     if (auth?.dashscope?.key) values["DASHSCOPE_API_KEY"] = auth.dashscope.key;
     if (auth?.zai?.key) values["ZAI_API_KEY"] = auth.zai.key;
   } catch {
   }
   try {
-    const models = JSON.parse(require("fs").readFileSync(import_path12.default.join(piAgentDir, "models.json"), "utf8"));
+    const models = JSON.parse(require("fs").readFileSync(import_path10.default.join(piAgentDir, "models.json"), "utf8"));
     if (!values["DASHSCOPE_API_KEY"] && models?.providers?.dashscope?.apiKey) {
       values["DASHSCOPE_API_KEY"] = models.providers.dashscope.apiKey;
     }
@@ -41788,11 +40886,11 @@ function isPiInstalled() {
   return (0, import_node_child_process.spawnSync)("pi", ["--version"], { encoding: "utf8" }).status === 0;
 }
 async function listTsFilesRecursive(baseDir) {
-  if (!await import_fs_extra12.default.pathExists(baseDir)) return [];
-  const entries = await import_fs_extra12.default.readdir(baseDir, { withFileTypes: true });
+  if (!await import_fs_extra10.default.pathExists(baseDir)) return [];
+  const entries = await import_fs_extra10.default.readdir(baseDir, { withFileTypes: true });
   const files = [];
   for (const entry of entries) {
-    const abs = import_path12.default.join(baseDir, entry.name);
+    const abs = import_path10.default.join(baseDir, entry.name);
     if (entry.isDirectory()) {
       files.push(...await listTsFilesRecursive(abs));
       continue;
@@ -41805,20 +40903,20 @@ async function listTsFilesRecursive(baseDir) {
 }
 async function fileSha256(filePath) {
   const crypto2 = await import("crypto");
-  const content = await import_fs_extra12.default.readFile(filePath);
+  const content = await import_fs_extra10.default.readFile(filePath);
   return crypto2.createHash("sha256").update(content).digest("hex");
 }
 async function diffPiExtensions(sourceDir, targetDir) {
-  const sourceAbs = import_path12.default.resolve(sourceDir);
-  const targetAbs = import_path12.default.resolve(targetDir);
-  const sourceFiles = (await listTsFilesRecursive(sourceAbs)).map((f) => import_path12.default.relative(sourceAbs, f)).sort();
+  const sourceAbs = import_path10.default.resolve(sourceDir);
+  const targetAbs = import_path10.default.resolve(targetDir);
+  const sourceFiles = (await listTsFilesRecursive(sourceAbs)).map((f) => import_path10.default.relative(sourceAbs, f)).sort();
   const missing = [];
   const stale = [];
   const upToDate = [];
   for (const rel of sourceFiles) {
-    const src = import_path12.default.join(sourceAbs, rel);
-    const dst = import_path12.default.join(targetAbs, rel);
-    if (!await import_fs_extra12.default.pathExists(dst)) {
+    const src = import_path10.default.join(sourceAbs, rel);
+    const dst = import_path10.default.join(targetAbs, rel);
+    if (!await import_fs_extra10.default.pathExists(dst)) {
       missing.push(rel);
       continue;
     }
@@ -41851,10 +40949,10 @@ function createInstallPiCommand() {
   cmd.description("Install Pi coding agent with providers, extensions, and npm packages").option("-y, --yes", "Skip confirmation prompts", false).option("--check", "Check Pi extension deployment drift without writing changes", false).action(async (opts) => {
     const { yes, check: check2 } = opts;
     const repoRoot = await findRepoRoot();
-    const piConfigDir = import_path12.default.join(repoRoot, "config", "pi");
+    const piConfigDir = import_path10.default.join(repoRoot, "config", "pi");
     if (check2) {
-      const sourceDir = import_path12.default.join(piConfigDir, "extensions");
-      const targetDir = import_path12.default.join(PI_AGENT_DIR, "extensions");
+      const sourceDir = import_path10.default.join(piConfigDir, "extensions");
+      const targetDir = import_path10.default.join(PI_AGENT_DIR, "extensions");
       const diff = await diffPiExtensions(sourceDir, targetDir);
       printPiCheckSummary(diff);
       if (diff.missing.length > 0 || diff.stale.length > 0) {
@@ -41877,7 +40975,7 @@ function createInstallPiCommand() {
       console.log(t.success(`  pi ${v.stdout.trim()} already installed
 `));
     }
-    const schema = await import_fs_extra12.default.readJson(import_path12.default.join(piConfigDir, "install-schema.json"));
+    const schema = await import_fs_extra10.default.readJson(import_path10.default.join(piConfigDir, "install-schema.json"));
     const existing = readExistingPiValues(PI_AGENT_DIR);
     const values = { ...existing };
     console.log(t.bold("  API Keys\n"));
@@ -41893,23 +40991,23 @@ function createInstallPiCommand() {
       const { value } = await (0, import_prompts2.default)({ type: field.secret ? "password" : "text", name: "value", message: `  ${field.label}`, hint: field.hint, validate: (v) => field.required && !v ? "Required" : true });
       if (value) values[field.key] = value;
     }
-    await import_fs_extra12.default.ensureDir(PI_AGENT_DIR);
+    await import_fs_extra10.default.ensureDir(PI_AGENT_DIR);
     console.log(t.muted(`
   Writing config to ${PI_AGENT_DIR}`));
     for (const name of ["models.json", "auth.json", "settings.json"]) {
-      const destPath = import_path12.default.join(PI_AGENT_DIR, name);
-      if (name === "auth.json" && await import_fs_extra12.default.pathExists(destPath) && !yes) {
+      const destPath = import_path10.default.join(PI_AGENT_DIR, name);
+      if (name === "auth.json" && await import_fs_extra10.default.pathExists(destPath) && !yes) {
         const { overwrite } = await (0, import_prompts2.default)({ type: "confirm", name: "overwrite", message: `  ${name} already exists \u2014 overwrite? (OAuth tokens will be lost)`, initial: false });
         if (!overwrite) {
           console.log(t.muted(`    skipped ${name}`));
           continue;
         }
       }
-      const raw = await import_fs_extra12.default.readFile(import_path12.default.join(piConfigDir, `${name}.template`), "utf8");
-      await import_fs_extra12.default.writeFile(destPath, fillTemplate(raw, values), "utf8");
+      const raw = await import_fs_extra10.default.readFile(import_path10.default.join(piConfigDir, `${name}.template`), "utf8");
+      await import_fs_extra10.default.writeFile(destPath, fillTemplate(raw, values), "utf8");
       console.log(t.success(`    ${sym.ok} ${name}`));
     }
-    await import_fs_extra12.default.copy(import_path12.default.join(piConfigDir, "extensions"), import_path12.default.join(PI_AGENT_DIR, "extensions"), { overwrite: true });
+    await import_fs_extra10.default.copy(import_path10.default.join(piConfigDir, "extensions"), import_path10.default.join(PI_AGENT_DIR, "extensions"), { overwrite: true });
     console.log(t.success(`    ${sym.ok} extensions/`));
     console.log(t.bold("\n  npm Packages\n"));
     for (const pkg of schema.packages) {
@@ -41927,8 +41025,8 @@ function createInstallPiCommand() {
 }
 
 // src/commands/install.ts
-var import_child_process4 = require("child_process");
-var import_child_process5 = require("child_process");
+var import_child_process2 = require("child_process");
+var import_child_process3 = require("child_process");
 function renderPlanTable(allChanges) {
   const Table = require_cli_table3();
   const table = new Table({
@@ -41976,11 +41074,11 @@ function formatTargetLabel(target) {
   const normalized = target.replace(/\\/g, "/").toLowerCase();
   if (normalized.endsWith("/.agents/skills") || normalized.includes("/.agents/skills/")) return "~/.agents/skills";
   if (normalized.endsWith("/.claude") || normalized.includes("/.claude/")) return "~/.claude";
-  return import_path13.default.basename(target);
+  return import_path11.default.basename(target);
 }
 function isBeadsInstalled() {
   try {
-    (0, import_child_process4.execSync)("bd --version", { stdio: "ignore" });
+    (0, import_child_process2.execSync)("bd --version", { stdio: "ignore" });
     return true;
   } catch {
     return false;
@@ -41988,7 +41086,7 @@ function isBeadsInstalled() {
 }
 function isDoltInstalled() {
   try {
-    (0, import_child_process4.execSync)("dolt version", { stdio: "ignore" });
+    (0, import_child_process2.execSync)("dolt version", { stdio: "ignore" });
     return true;
   } catch {
     return false;
@@ -41998,15 +41096,15 @@ async function needsSettingsSync(repoRoot, target) {
   const normalizedTarget = target.replace(/\\/g, "/").toLowerCase();
   if (normalizedTarget.includes(".agents/skills")) return false;
   if (detectAgent(target) === "claude") return false;
-  const hooksTemplatePath = import_path13.default.join(repoRoot, "config", "hooks.json");
-  if (!await import_fs_extra13.default.pathExists(hooksTemplatePath)) return false;
-  const requiredEvents = Object.keys((await import_fs_extra13.default.readJson(hooksTemplatePath)).hooks ?? {});
+  const hooksTemplatePath = import_path11.default.join(repoRoot, "config", "hooks.json");
+  if (!await import_fs_extra11.default.pathExists(hooksTemplatePath)) return false;
+  const requiredEvents = Object.keys((await import_fs_extra11.default.readJson(hooksTemplatePath)).hooks ?? {});
   if (requiredEvents.length === 0) return false;
-  const targetSettingsPath = import_path13.default.join(target, "settings.json");
-  if (!await import_fs_extra13.default.pathExists(targetSettingsPath)) return true;
+  const targetSettingsPath = import_path11.default.join(target, "settings.json");
+  if (!await import_fs_extra11.default.pathExists(targetSettingsPath)) return true;
   let settings = {};
   try {
-    settings = await import_fs_extra13.default.readJson(targetSettingsPath);
+    settings = await import_fs_extra11.default.readJson(targetSettingsPath);
   } catch {
     return true;
   }
@@ -42029,8 +41127,8 @@ async function installOfficialClaudePlugins(dryRun) {
     console.log(t.accent("  [DRY RUN] Would register claude-plugins-official marketplace and install official plugins\n"));
     return;
   }
-  (0, import_child_process5.spawnSync)("claude", ["plugin", "marketplace", "add", OFFICIAL_CLAUDE_MARKETPLACE, "--scope", "user"], { stdio: "pipe" });
-  const listResult = (0, import_child_process5.spawnSync)("claude", ["plugin", "list"], { encoding: "utf8", stdio: "pipe" });
+  (0, import_child_process3.spawnSync)("claude", ["plugin", "marketplace", "add", OFFICIAL_CLAUDE_MARKETPLACE, "--scope", "user"], { stdio: "pipe" });
+  const listResult = (0, import_child_process3.spawnSync)("claude", ["plugin", "list"], { encoding: "utf8", stdio: "pipe" });
   const installedOutput = listResult.stdout ?? "";
   let installedCount = 0;
   let alreadyInstalledCount = 0;
@@ -42039,7 +41137,7 @@ async function installOfficialClaudePlugins(dryRun) {
       alreadyInstalledCount += 1;
       continue;
     }
-    const result = (0, import_child_process5.spawnSync)("claude", ["plugin", "install", pluginId, "--scope", "user"], { stdio: "inherit" });
+    const result = (0, import_child_process3.spawnSync)("claude", ["plugin", "install", pluginId, "--scope", "user"], { stdio: "inherit" });
     if (result.status === 0) {
       installedCount += 1;
     } else {
@@ -42056,12 +41154,12 @@ async function installPlugin(repoRoot, dryRun) {
     await installOfficialClaudePlugins(true);
     return;
   }
-  (0, import_child_process5.spawnSync)("claude", ["plugin", "marketplace", "add", repoRoot, "--scope", "user"], { stdio: "pipe" });
-  const listResult = (0, import_child_process5.spawnSync)("claude", ["plugin", "list"], { encoding: "utf8", stdio: "pipe" });
+  (0, import_child_process3.spawnSync)("claude", ["plugin", "marketplace", "add", repoRoot, "--scope", "user"], { stdio: "pipe" });
+  const listResult = (0, import_child_process3.spawnSync)("claude", ["plugin", "list"], { encoding: "utf8", stdio: "pipe" });
   if (listResult.stdout?.includes("xtrm-tools@xtrm-tools")) {
-    (0, import_child_process5.spawnSync)("claude", ["plugin", "uninstall", "xtrm-tools@xtrm-tools"], { stdio: "inherit" });
+    (0, import_child_process3.spawnSync)("claude", ["plugin", "uninstall", "xtrm-tools@xtrm-tools"], { stdio: "inherit" });
   }
-  (0, import_child_process5.spawnSync)("claude", ["plugin", "install", "xtrm-tools@xtrm-tools", "--scope", "user"], { stdio: "inherit" });
+  (0, import_child_process3.spawnSync)("claude", ["plugin", "install", "xtrm-tools@xtrm-tools", "--scope", "user"], { stdio: "inherit" });
   console.log(t.success("  \u2713 xtrm-tools plugin installed"));
   await installOfficialClaudePlugins(false);
 }
@@ -42112,15 +41210,15 @@ function createInstallCommand() {
         if (doInstall) {
           if (!beadsOk) {
             console.log(t.muted("\n  Installing @beads/bd..."));
-            (0, import_child_process5.spawnSync)("npm", ["install", "-g", "@beads/bd"], { stdio: "inherit" });
+            (0, import_child_process3.spawnSync)("npm", ["install", "-g", "@beads/bd"], { stdio: "inherit" });
             console.log(t.success("  \u2713 bd installed"));
           }
           if (!doltOk) {
             console.log(t.muted("\n  Installing dolt..."));
             if (process.platform === "darwin") {
-              (0, import_child_process5.spawnSync)("brew", ["install", "dolt"], { stdio: "inherit" });
+              (0, import_child_process3.spawnSync)("brew", ["install", "dolt"], { stdio: "inherit" });
             } else {
-              (0, import_child_process5.spawnSync)("sudo", [
+              (0, import_child_process3.spawnSync)("sudo", [
                 "bash",
                 "-c",
                 "curl -L https://github.com/dolthub/dolt/releases/latest/download/install.sh | bash"
@@ -42217,9 +41315,414 @@ function createInstallCommand() {
   });
   installCmd.addCommand(createInstallAllCommand());
   installCmd.addCommand(createInstallBasicCommand());
-  installCmd.addCommand(createInstallProjectCommand());
   installCmd.addCommand(createInstallPiCommand());
   return installCmd;
+}
+
+// src/commands/install-project.ts
+var import_path13 = __toESM(require("path"), 1);
+var import_fs_extra13 = __toESM(require_lib2(), 1);
+var import_child_process4 = require("child_process");
+
+// src/commands/install-service-skills.ts
+var import_path12 = __toESM(require("path"), 1);
+var import_fs_extra12 = __toESM(require_lib2(), 1);
+function resolvePkgRoot() {
+  const candidates = [
+    import_path12.default.resolve(__dirname, "../.."),
+    import_path12.default.resolve(__dirname, "../../..")
+  ];
+  const match = candidates.find((candidate) => import_fs_extra12.default.existsSync(import_path12.default.join(candidate, "project-skills")));
+  if (!match) {
+    throw new Error("Unable to locate project-skills directory from CLI runtime.");
+  }
+  return match;
+}
+var PKG_ROOT = resolvePkgRoot();
+var SKILLS_SRC = import_path12.default.join(PKG_ROOT, "project-skills", "service-skills-set", ".claude");
+
+// src/commands/install-project.ts
+function resolvePkgRoot2() {
+  const candidates = [
+    import_path13.default.resolve(__dirname, "../.."),
+    import_path13.default.resolve(__dirname, "../../..")
+  ];
+  const match = candidates.find((candidate) => import_fs_extra13.default.existsSync(import_path13.default.join(candidate, "project-skills")));
+  if (!match) {
+    throw new Error("Unable to locate project-skills directory from CLI runtime.");
+  }
+  return match;
+}
+var PKG_ROOT2 = resolvePkgRoot2();
+var PROJECT_SKILLS_DIR = import_path13.default.join(PKG_ROOT2, "project-skills");
+var MCP_CORE_CONFIG_PATH = import_path13.default.join(PKG_ROOT2, "config", "mcp_servers.json");
+var INSTRUCTIONS_DIR = import_path13.default.join(PKG_ROOT2, "config", "instructions");
+var XTRM_BLOCK_START = "<!-- xtrm:start -->";
+var XTRM_BLOCK_END = "<!-- xtrm:end -->";
+var syncedProjectMcpRoots = /* @__PURE__ */ new Set();
+function toServiceId(name) {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "service";
+}
+function parseComposeServices(content) {
+  const lines = content.split("\n");
+  const services = /* @__PURE__ */ new Set();
+  let inServices = false;
+  for (const line of lines) {
+    const raw = line.replace(/\t/g, "    ");
+    if (!inServices) {
+      if (/^services:\s*$/.test(raw)) {
+        inServices = true;
+      }
+      continue;
+    }
+    if (/^[^\s#].*:\s*$/.test(raw) && !/^services:\s*$/.test(raw)) {
+      break;
+    }
+    const serviceMatch = raw.match(/^\s{2}([A-Za-z0-9._-]+):\s*(?:#.*)?$/);
+    if (serviceMatch) {
+      services.add(serviceMatch[1]);
+    }
+  }
+  return [...services];
+}
+async function detectProjectFeatures(projectRoot) {
+  const hasTypeScript = await import_fs_extra13.default.pathExists(import_path13.default.join(projectRoot, "tsconfig.json"));
+  const hasPython = await import_fs_extra13.default.pathExists(import_path13.default.join(projectRoot, "pyproject.toml")) || await import_fs_extra13.default.pathExists(import_path13.default.join(projectRoot, "setup.py")) || await import_fs_extra13.default.pathExists(import_path13.default.join(projectRoot, "requirements.txt"));
+  const composeCandidates = [
+    "docker-compose.yml",
+    "docker-compose.yaml",
+    "compose.yml",
+    "compose.yaml"
+  ];
+  const dockerServices = /* @__PURE__ */ new Set();
+  for (const composeFile of composeCandidates) {
+    const composePath = import_path13.default.join(projectRoot, composeFile);
+    if (!await import_fs_extra13.default.pathExists(composePath)) continue;
+    try {
+      const content = await import_fs_extra13.default.readFile(composePath, "utf8");
+      for (const service of parseComposeServices(content)) {
+        dockerServices.add(service);
+      }
+    } catch {
+    }
+  }
+  const hasDockerfile = await import_fs_extra13.default.pathExists(import_path13.default.join(projectRoot, "Dockerfile"));
+  if (hasDockerfile && dockerServices.size === 0) {
+    dockerServices.add(import_path13.default.basename(projectRoot));
+  }
+  return {
+    hasTypeScript,
+    hasPython,
+    dockerServices: [...dockerServices],
+    generatedRegistry: false
+  };
+}
+async function ensureServiceRegistry(projectRoot, services) {
+  const registryPath = import_path13.default.join(projectRoot, "service-registry.json");
+  if (services.length === 0) {
+    return { generated: false, registryPath };
+  }
+  const existedBefore = await import_fs_extra13.default.pathExists(registryPath);
+  const now = (/* @__PURE__ */ new Date()).toISOString();
+  let registry2 = { version: "1.0.0", services: {} };
+  if (existedBefore) {
+    try {
+      registry2 = await import_fs_extra13.default.readJson(registryPath);
+      if (!registry2.services || typeof registry2.services !== "object") {
+        registry2.services = {};
+      }
+    } catch {
+      registry2 = { version: "1.0.0", services: {} };
+    }
+  }
+  let changed = false;
+  for (const serviceName of services) {
+    const serviceId = toServiceId(serviceName);
+    if (registry2.services[serviceId]) continue;
+    registry2.services[serviceId] = {
+      name: serviceName,
+      description: `Detected from Docker configuration (${serviceName}).`,
+      territory: [],
+      skill_path: `.claude/skills/${serviceId}/SKILL.md`,
+      last_sync: now
+    };
+    changed = true;
+  }
+  if (changed || !existedBefore) {
+    await import_fs_extra13.default.writeJson(registryPath, registry2, { spaces: 2 });
+  }
+  return { generated: changed || !existedBefore, registryPath };
+}
+function resolveEnvVars(value) {
+  if (typeof value !== "string") return value;
+  return value.replace(/\$\{([A-Z0-9_]+)\}/g, (_m, name) => process.env[name] || "");
+}
+function hasClaudeCli() {
+  const r = (0, import_child_process4.spawnSync)("claude", ["--version"], { stdio: "pipe" });
+  return r.status === 0;
+}
+function buildProjectMcpArgs(name, server) {
+  const transport = server.type || (server.url?.includes("/sse") ? "sse" : "http");
+  if (server.command) {
+    const args = ["mcp", "add", "-s", "project"];
+    if (server.env && typeof server.env === "object") {
+      for (const [k, v] of Object.entries(server.env)) {
+        args.push("-e", `${k}=${resolveEnvVars(String(v))}`);
+      }
+    }
+    args.push(name, "--", server.command, ...server.args || []);
+    return args;
+  }
+  if (server.url || server.serverUrl) {
+    const url2 = server.url || server.serverUrl;
+    const args = ["mcp", "add", "-s", "project", "--transport", transport, name, url2];
+    if (server.headers && typeof server.headers === "object") {
+      for (const [k, v] of Object.entries(server.headers)) {
+        args.push("--header", `${k}: ${resolveEnvVars(String(v))}`);
+      }
+    }
+    return args;
+  }
+  return null;
+}
+async function syncProjectMcpServers(projectRoot) {
+  if (syncedProjectMcpRoots.has(projectRoot)) return;
+  syncedProjectMcpRoots.add(projectRoot);
+  if (!await import_fs_extra13.default.pathExists(MCP_CORE_CONFIG_PATH)) return;
+  console.log(kleur_default.bold("\n\u2500\u2500 Installing MCP (project scope) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
+  if (!hasClaudeCli()) {
+    console.log(kleur_default.yellow("  \u26A0 Claude CLI not found; skipping project-scope MCP registration."));
+    return;
+  }
+  const mcpConfig = await import_fs_extra13.default.readJson(MCP_CORE_CONFIG_PATH);
+  const servers = Object.entries(mcpConfig?.mcpServers ?? {});
+  if (servers.length === 0) {
+    console.log(kleur_default.dim("  \u2139 No core MCP servers configured."));
+    return;
+  }
+  let added = 0;
+  let existing = 0;
+  let failed = 0;
+  for (const [name, server] of servers) {
+    const args = buildProjectMcpArgs(name, server);
+    if (!args) continue;
+    const r = (0, import_child_process4.spawnSync)("claude", args, {
+      cwd: projectRoot,
+      encoding: "utf8",
+      stdio: ["pipe", "pipe", "pipe"]
+    });
+    if (r.status === 0) {
+      added++;
+      console.log(`${kleur_default.green("  \u2713")} ${name}`);
+      continue;
+    }
+    const stderr = `${r.stderr || ""}`.toLowerCase();
+    if (stderr.includes("already exists") || stderr.includes("already configured")) {
+      existing++;
+      console.log(kleur_default.dim(`  \u2713 ${name} (already configured)`));
+      continue;
+    }
+    failed++;
+    console.log(kleur_default.red(`  \u2717 ${name} (${(r.stderr || r.stdout || "failed").toString().trim()})`));
+  }
+  console.log(kleur_default.dim(`  \u21B3 MCP project-scope result: ${added} added, ${existing} existing, ${failed} failed`));
+}
+function upsertManagedBlock(fileContent, blockBody, startMarker = XTRM_BLOCK_START, endMarker = XTRM_BLOCK_END) {
+  const normalizedBody = blockBody.trim();
+  const managedBlock = `${startMarker}
+${normalizedBody}
+${endMarker}`;
+  const escapedStart = startMarker.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&");
+  const escapedEnd = endMarker.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&");
+  const existingBlockPattern = new RegExp(`${escapedStart}[\\s\\S]*?${escapedEnd}`, "m");
+  if (existingBlockPattern.test(fileContent)) {
+    return fileContent.replace(existingBlockPattern, managedBlock);
+  }
+  const trimmed = fileContent.trimStart();
+  if (!trimmed) return `${managedBlock}
+`;
+  return `${managedBlock}
+
+${trimmed}`;
+}
+async function injectProjectInstructionHeaders(projectRoot) {
+  const targets = [
+    { output: "AGENTS.md", template: "agents-top.md" },
+    { output: "CLAUDE.md", template: "claude-top.md" }
+  ];
+  console.log(kleur_default.bold("Injecting xtrm agent instruction headers..."));
+  for (const target of targets) {
+    const templatePath = import_path13.default.join(INSTRUCTIONS_DIR, target.template);
+    if (!await import_fs_extra13.default.pathExists(templatePath)) {
+      console.log(kleur_default.yellow(`  \u26A0 Missing template: ${target.template}`));
+      continue;
+    }
+    const template = await import_fs_extra13.default.readFile(templatePath, "utf8");
+    const outputPath = import_path13.default.join(projectRoot, target.output);
+    const existing = await import_fs_extra13.default.pathExists(outputPath) ? await import_fs_extra13.default.readFile(outputPath, "utf8") : "";
+    const next = upsertManagedBlock(existing, template);
+    if (next === existing) {
+      console.log(kleur_default.dim(`  \u2713 ${target.output} already up to date`));
+      continue;
+    }
+    await import_fs_extra13.default.writeFile(outputPath, next.endsWith("\n") ? next : `${next}
+`, "utf8");
+    console.log(`${kleur_default.green("  \u2713")} updated ${target.output}`);
+  }
+}
+function buildProjectInitGuide() {
+  const lines = [
+    kleur_default.bold("\nProject Init \u2014 Global-first baseline\n"),
+    kleur_default.dim("xtrm init bootstraps project data (beads, GitNexus, service registry) while hooks/skills stay global.\n"),
+    `${kleur_default.cyan("1) Run initialization once per repository:")}`,
+    kleur_default.dim("   xtrm init   (alias: xtrm project init)"),
+    kleur_default.dim("   - Initializes beads workspace (bd init)"),
+    kleur_default.dim("   - Refreshes GitNexus index if missing/stale"),
+    kleur_default.dim("   - Syncs project-scoped MCP entries"),
+    kleur_default.dim("   - Detects TS/Python/Docker project signals"),
+    kleur_default.dim("   - Scaffolds service-registry.json when Docker services are detected"),
+    "",
+    `${kleur_default.cyan("2) What is already global (no per-project install needed):")}`,
+    kleur_default.dim("   - quality gates hooks (formerly installed via quality-gates)"),
+    kleur_default.dim("   - service-skills routing and drift checks (formerly service-skills-set)"),
+    kleur_default.dim("   - main-guard + beads workflow gates"),
+    kleur_default.dim("   - optional TDD strategy guidance (legacy name: tdd-guard)"),
+    "",
+    `${kleur_default.cyan("3) Configure repo quality tools (hooks enforce what exists):")}`,
+    kleur_default.dim("   - TS: eslint + prettier + tsc"),
+    kleur_default.dim("   - PY: ruff + mypy/pyright"),
+    kleur_default.dim("   - tests: failing tests should block regressions"),
+    "",
+    `${kleur_default.cyan("4) Beads workflow (required for gated edit/commit flow):")}`,
+    kleur_default.dim("   - Claim work:   bd ready --json  ->  bd update <id> --claim --json"),
+    kleur_default.dim("   - During work:  keep issue status current; create discovered follow-ups"),
+    kleur_default.dim('   - Finish work:  bd close <id> --reason "Done" --json'),
+    "",
+    `${kleur_default.cyan("5) Git workflow (main-guard expected path):")}`,
+    kleur_default.dim("   - git checkout -b feature/<name>"),
+    kleur_default.dim("   - commit on feature branch only"),
+    kleur_default.dim("   - git push -u origin feature/<name>"),
+    kleur_default.dim("   - gh pr create --fill && gh pr merge --squash"),
+    kleur_default.dim("   - git checkout main && git pull --ff-only"),
+    ""
+  ];
+  return lines.join("\n");
+}
+async function runProjectInit() {
+  console.log(buildProjectInitGuide());
+  await bootstrapProjectInit();
+}
+async function bootstrapProjectInit() {
+  let projectRoot;
+  try {
+    projectRoot = getProjectRoot();
+  } catch (err) {
+    console.log(kleur_default.yellow(`
+  \u26A0 Skipping project bootstrap: ${err.message}
+`));
+    return;
+  }
+  const detected = await detectProjectFeatures(projectRoot);
+  await runBdInitForProject(projectRoot);
+  await injectProjectInstructionHeaders(projectRoot);
+  await runGitNexusInitForProject(projectRoot);
+  await syncProjectMcpServers(projectRoot);
+  if (detected.dockerServices.length > 0) {
+    const { generated, registryPath } = await ensureServiceRegistry(projectRoot, detected.dockerServices);
+    detected.generatedRegistry = generated;
+    detected.registryPath = registryPath;
+    if (generated) {
+      console.log(`${kleur_default.green("  \u2713")} service registry scaffolded at ${import_path13.default.relative(projectRoot, registryPath)}`);
+    } else {
+      console.log(kleur_default.dim("  \u2713 service-registry.json already includes detected services"));
+    }
+  }
+  const projectTypes = [];
+  if (detected.hasTypeScript) projectTypes.push("TypeScript");
+  if (detected.hasPython) projectTypes.push("Python");
+  if (detected.dockerServices.length > 0) projectTypes.push("Docker");
+  console.log(kleur_default.bold("\nProject initialized."));
+  console.log(kleur_default.white(`  Quality gates active globally.`));
+  console.log(kleur_default.white(`  Project types: ${projectTypes.length > 0 ? projectTypes.join(", ") : "none detected"}.`));
+  console.log(kleur_default.white(`  Services detected: ${detected.dockerServices.length > 0 ? detected.dockerServices.join(", ") : "none"}.`));
+  if (detected.registryPath) {
+    console.log(kleur_default.dim(`  Service registry: ${detected.registryPath}`));
+  }
+  console.log("");
+}
+async function runBdInitForProject(projectRoot) {
+  console.log(kleur_default.bold("Running beads initialization (bd init)..."));
+  const result = (0, import_child_process4.spawnSync)("bd", ["init"], {
+    cwd: projectRoot,
+    encoding: "utf8",
+    timeout: 15e3
+  });
+  if (result.error) {
+    console.log(kleur_default.yellow(`  \u26A0 Could not run bd init (${result.error.message})`));
+    return;
+  }
+  if (result.status !== 0) {
+    const text = `${result.stdout || ""}
+${result.stderr || ""}`.toLowerCase();
+    if (text.includes("already initialized")) {
+      console.log(kleur_default.dim("  \u2713 beads workspace already initialized"));
+      return;
+    }
+    if (result.stdout) process.stdout.write(result.stdout);
+    if (result.stderr) process.stderr.write(result.stderr);
+    console.log(kleur_default.yellow(`  \u26A0 bd init exited with code ${result.status}`));
+    return;
+  }
+  if (result.stdout) process.stdout.write(result.stdout);
+  if (result.stderr) process.stderr.write(result.stderr);
+}
+async function runGitNexusInitForProject(projectRoot) {
+  const gitnexusCheck = (0, import_child_process4.spawnSync)("gitnexus", ["--version"], {
+    cwd: projectRoot,
+    encoding: "utf8",
+    timeout: 5e3
+  });
+  if (gitnexusCheck.status !== 0) {
+    console.log(kleur_default.yellow("  \u26A0 gitnexus not found; skipping index bootstrap"));
+    console.log(kleur_default.dim("    Install with: npm install -g gitnexus"));
+    return;
+  }
+  console.log(kleur_default.bold("Checking GitNexus index status..."));
+  const status = (0, import_child_process4.spawnSync)("gitnexus", ["status"], {
+    cwd: projectRoot,
+    encoding: "utf8",
+    timeout: 1e4
+  });
+  const statusText = `${status.stdout || ""}
+${status.stderr || ""}`.toLowerCase();
+  const needsAnalyze = status.status !== 0 || statusText.includes("stale") || statusText.includes("not indexed") || statusText.includes("missing");
+  if (!needsAnalyze) {
+    console.log(kleur_default.dim("  \u2713 GitNexus index is ready"));
+    return;
+  }
+  console.log(kleur_default.bold("Running GitNexus indexing (gitnexus analyze)..."));
+  const analyze = (0, import_child_process4.spawnSync)("gitnexus", ["analyze"], {
+    cwd: projectRoot,
+    encoding: "utf8",
+    timeout: 12e4
+  });
+  if (analyze.status === 0) {
+    console.log(kleur_default.green("  \u2713 GitNexus index updated"));
+    return;
+  }
+  if (analyze.stdout) process.stdout.write(analyze.stdout);
+  if (analyze.stderr) process.stderr.write(analyze.stderr);
+  console.log(kleur_default.yellow(`  \u26A0 gitnexus analyze exited with code ${analyze.status}`));
+}
+function getProjectRoot() {
+  const result = (0, import_child_process4.spawnSync)("git", ["rev-parse", "--show-toplevel"], {
+    encoding: "utf8",
+    timeout: 5e3
+  });
+  if (result.status !== 0) {
+    throw new Error("Not inside a git repository. Run this command from your target project directory.");
+  }
+  return import_path13.default.resolve(result.stdout.trim());
 }
 
 // src/commands/status.ts
@@ -57123,7 +56626,6 @@ program2.exitOverride((err) => {
   process.exit(1);
 });
 program2.addCommand(createInstallCommand());
-program2.addCommand(createProjectCommand());
 program2.command("init").description("Alias for xtrm project init").action(async () => {
   await runProjectInit();
 });

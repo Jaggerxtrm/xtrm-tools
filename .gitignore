@@ -33,4 +33,5 @@ skills/*-workspace/
 # Git worktrees (managed by Claude Code)
 .claude/worktrees/
 .worktrees/
+.xtrm/worktrees/
 .xtrm-session-state.json

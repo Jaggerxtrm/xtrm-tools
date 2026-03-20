@@ -17,7 +17,7 @@ function randomSlug(len: number = 4): string {
 /**
  * Launch a Claude or Pi session in a sandboxed git worktree.
  *
- * Worktree path: sibling to CWD, named <cwd-basename>-xt-<runtime>-<shortdate>
+ * Worktree path: inside repo under .xtrm/worktrees/, named <cwd-basename>-xt-<runtime>-<slug>
  * Branch: xt/<name> if name provided, xt/<4-char-random> otherwise
  * Dolt bootstrap: redirect worktree to main's canonical beads db
  */
@@ -30,9 +30,9 @@ export async function launchWorktreeSession(opts: WorktreeSessionOptions): Promi
     // Resolve slug — shared by both branch and worktree path so they're linked
     const slug = name ?? randomSlug(4);
 
-    // Resolve worktree path (sibling to cwd) — use slug not date to avoid same-day collisions
+    // Resolve worktree path (inside repo under .xtrm/worktrees/) — use slug not date to avoid same-day collisions
     const worktreeName = `${cwdBasename}-xt-${runtime}-${slug}`;
-    const worktreePath = path.join(path.dirname(cwd), worktreeName);
+    const worktreePath = path.join(repoRoot, '.xtrm', 'worktrees', worktreeName);
 
     // Resolve branch name
     const branchName = `xt/${slug}`;

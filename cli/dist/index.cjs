@@ -31075,7 +31075,7 @@ var require_main = __commonJS({
     "use strict";
     var fs22 = require("fs");
     var path21 = require("path");
-    var os7 = require("os");
+    var os8 = require("os");
     var crypto2 = require("crypto");
     var packageJson = require_package();
     var version3 = packageJson.version;
@@ -31198,7 +31198,7 @@ var require_main = __commonJS({
       return null;
     }
     function _resolveHome(envPath) {
-      return envPath[0] === "~" ? path21.join(os7.homedir(), envPath.slice(1)) : envPath;
+      return envPath[0] === "~" ? path21.join(os8.homedir(), envPath.slice(1)) : envPath;
     }
     function _configVault(options) {
       const debug = Boolean(options && options.debug);
@@ -31880,7 +31880,7 @@ var require_has_flag = __commonJS({
 var require_supports_colors = __commonJS({
   "../node_modules/@colors/colors/lib/system/supports-colors.js"(exports2, module2) {
     "use strict";
-    var os7 = require("os");
+    var os8 = require("os");
     var hasFlag2 = require_has_flag();
     var env3 = process.env;
     var forceColor = void 0;
@@ -31918,7 +31918,7 @@ var require_supports_colors = __commonJS({
       }
       var min = forceColor ? 1 : 0;
       if (process.platform === "win32") {
-        var osRelease = os7.release().split(".");
+        var osRelease = os8.release().split(".");
         if (Number(process.versions.node.split(".")[0]) >= 8 && Number(osRelease[0]) >= 10 && Number(osRelease[2]) >= 10586) {
           return Number(osRelease[2]) >= 14931 ? 3 : 2;
         }
@@ -35747,6 +35747,7 @@ var Listr = class {
 
 // src/commands/install.ts
 var import_fs_extra11 = __toESM(require_lib2(), 1);
+var import_os5 = __toESM(require("os"), 1);
 
 // src/core/context.ts
 var import_os2 = __toESM(require("os"), 1);
@@ -37182,16 +37183,13 @@ var PruneModeReadError = class extends Error {
 async function calculateDiff(repoRoot, systemRoot, pruneMode = false) {
   const adapter = detectAdapter(systemRoot);
   const isClaude = adapter?.toolName === "claude-code";
-  const isQwen = adapter?.toolName === "qwen";
   const normalizedRoot = (0, import_path4.normalize)(systemRoot).replace(/\\/g, "/");
   const isAgentsSkills = normalizedRoot.includes(".agents/skills");
   const changeSet = {
     skills: { missing: [], outdated: [], drifted: [], total: 0 },
     hooks: { missing: [], outdated: [], drifted: [], total: 0 },
     config: { missing: [], outdated: [], drifted: [], total: 0 },
-    commands: { missing: [], outdated: [], drifted: [], total: 0 },
-    "qwen-commands": { missing: [], outdated: [], drifted: [], total: 0 },
-    "antigravity-workflows": { missing: [], outdated: [], drifted: [], total: 0 }
+    commands: { missing: [], outdated: [], drifted: [], total: 0 }
   };
   const manifestPath = (0, import_path4.join)(systemRoot, ".jaggers-sync-manifest.json");
   let installedHashes = null;
@@ -37215,18 +37213,10 @@ async function calculateDiff(repoRoot, systemRoot, pruneMode = false) {
     return changeSet;
   }
   const folders = ["skills", "hooks"];
-  if (isQwen) folders.push("qwen-commands");
-  else if (!isClaude) folders.push("commands");
+  if (!isClaude) folders.push("commands");
   for (const category of folders) {
-    let repoPath;
-    let systemPath;
-    if (category === "qwen-commands") {
-      repoPath = (0, import_path4.join)(repoRoot, ".qwen", "commands");
-      systemPath = (0, import_path4.join)(systemRoot, "commands");
-    } else {
-      repoPath = (0, import_path4.join)(repoRoot, category);
-      systemPath = (0, import_path4.join)(systemRoot, category);
-    }
+    const repoPath = (0, import_path4.join)(repoRoot, category);
+    const systemPath = (0, import_path4.join)(systemRoot, category);
     if (!await import_fs_extra3.default.pathExists(repoPath)) continue;
     const items = (await import_fs_extra3.default.readdir(repoPath)).filter((i) => !IGNORED_ITEMS.has(i));
     changeSet[category].total = items.length;
@@ -41069,10 +41059,101 @@ async function installOfficialClaudePlugins(dryRun) {
   console.log(t.success(`  \u2713 Official plugins ready (${installedCount} installed, ${alreadyInstalledCount} already present)
 `));
 }
+async function cleanStalePrePluginFiles(repoRoot, dryRun) {
+  const home = import_os5.default.homedir();
+  const staleHooksDir = import_path11.default.join(home, ".claude", "hooks");
+  const staleSkillsDir = import_path11.default.join(home, ".claude", "skills");
+  const settingsPath = import_path11.default.join(home, ".claude", "settings.json");
+  const removed = [];
+  const repoHooksDir = import_path11.default.join(repoRoot, "hooks");
+  if (await import_fs_extra11.default.pathExists(repoHooksDir) && await import_fs_extra11.default.pathExists(staleHooksDir)) {
+    const repoHookNames = (await import_fs_extra11.default.readdir(repoHooksDir)).filter((n) => n !== "README.md" && n !== "hooks.json");
+    for (const name of repoHookNames) {
+      const staleFile = import_path11.default.join(staleHooksDir, name);
+      if (await import_fs_extra11.default.pathExists(staleFile)) {
+        if (dryRun) {
+          console.log(t.accent(`  [DRY RUN] Would remove stale hook: ~/.claude/hooks/${name}`));
+        } else {
+          await import_fs_extra11.default.remove(staleFile);
+          console.log(t.muted(`  \u2717 Removed stale hook: ~/.claude/hooks/${name}`));
+        }
+        removed.push(`hooks/${name}`);
+      }
+    }
+  }
+  const repoSkillsDir = import_path11.default.join(repoRoot, "skills");
+  if (await import_fs_extra11.default.pathExists(repoSkillsDir) && await import_fs_extra11.default.pathExists(staleSkillsDir)) {
+    const repoSkillNames = (await import_fs_extra11.default.readdir(repoSkillsDir)).filter((n) => !n.startsWith("."));
+    for (const name of repoSkillNames) {
+      const staleDir = import_path11.default.join(staleSkillsDir, name);
+      if (await import_fs_extra11.default.pathExists(staleDir)) {
+        if (dryRun) {
+          console.log(t.accent(`  [DRY RUN] Would remove stale skill: ~/.claude/skills/${name}`));
+        } else {
+          await import_fs_extra11.default.remove(staleDir);
+          console.log(t.muted(`  \u2717 Removed stale skill: ~/.claude/skills/${name}`));
+        }
+        removed.push(`skills/${name}`);
+      }
+    }
+  }
+  if (await import_fs_extra11.default.pathExists(settingsPath)) {
+    let settings;
+    try {
+      settings = await import_fs_extra11.default.readJson(settingsPath);
+    } catch {
+      settings = null;
+    }
+    if (settings && settings.hooks && typeof settings.hooks === "object") {
+      let settingsModified = false;
+      for (const [event, matchers] of Object.entries(settings.hooks)) {
+        if (!Array.isArray(matchers)) continue;
+        const cleanedMatchers = matchers.filter((matcher) => {
+          const hooks = Array.isArray(matcher?.hooks) ? matcher.hooks : [];
+          const staleHooks = hooks.filter((h) => {
+            const cmd = typeof h?.command === "string" ? h.command : "";
+            return cmd.includes("/.claude/hooks/") && !cmd.includes("${CLAUDE_PLUGIN_ROOT}");
+          });
+          if (staleHooks.length > 0) {
+            for (const h of staleHooks) {
+              const msg = `settings.json [${event}] hook: ${h.command}`;
+              if (dryRun) {
+                console.log(t.accent(`  [DRY RUN] Would remove stale ${msg}`));
+              } else {
+                console.log(t.muted(`  \u2717 Removed stale ${msg}`));
+              }
+              removed.push(msg);
+            }
+            const remainingHooks = hooks.filter((h) => {
+              const cmd = typeof h?.command === "string" ? h.command : "";
+              return !(cmd.includes("/.claude/hooks/") && !cmd.includes("${CLAUDE_PLUGIN_ROOT}"));
+            });
+            if (remainingHooks.length === 0) return false;
+            matcher.hooks = remainingHooks;
+            settingsModified = true;
+            return true;
+          }
+          return true;
+        });
+        if (cleanedMatchers.length !== matchers.length) {
+          settings.hooks[event] = cleanedMatchers;
+          settingsModified = true;
+        }
+      }
+      if (settingsModified && !dryRun) {
+        await import_fs_extra11.default.writeJson(settingsPath, settings, { spaces: 2 });
+      }
+    }
+  }
+  if (removed.length === 0) {
+    console.log(t.success("  \u2713 No stale pre-plugin files found"));
+  }
+}
 async function installPlugin(repoRoot, dryRun) {
   console.log(t.bold("\n  \u2699  xtrm-tools  (Claude Code plugin)"));
   if (dryRun) {
     console.log(t.accent("  [DRY RUN] Would register xtrm-tools marketplace and install plugin\n"));
+    await cleanStalePrePluginFiles(repoRoot, true);
     await installOfficialClaudePlugins(true);
     return;
   }
@@ -41083,6 +41164,7 @@ async function installPlugin(repoRoot, dryRun) {
   }
   (0, import_child_process3.spawnSync)("claude", ["plugin", "install", "xtrm-tools@xtrm-tools", "--scope", "user"], { stdio: "inherit" });
   console.log(t.success("  \u2713 xtrm-tools plugin installed"));
+  await cleanStalePrePluginFiles(repoRoot, dryRun);
   await installOfficialClaudePlugins(false);
 }
 function createInstallAllCommand() {
@@ -41257,7 +41339,7 @@ async function launchWorktreeSession(opts) {
   const cwdBasename = import_node_path5.default.basename(cwd);
   const slug = name ?? randomSlug(4);
   const worktreeName = `${cwdBasename}-xt-${runtime}-${slug}`;
-  const worktreePath = import_node_path5.default.join(import_node_path5.default.dirname(cwd), worktreeName);
+  const worktreePath = import_node_path5.default.join(repoRoot, ".xtrm", "worktrees", worktreeName);
   const branchName = `xt/${slug}`;
   console.log(kleur_default.bold(`
   Launching ${runtime} session`));
@@ -55819,9 +55901,7 @@ var ChangeSetSchema = external_exports.object({
   skills: ChangeSetCategorySchema,
   hooks: ChangeSetCategorySchema,
   config: ChangeSetCategorySchema,
-  commands: ChangeSetCategorySchema,
-  "qwen-commands": ChangeSetCategorySchema,
-  "antigravity-workflows": ChangeSetCategorySchema
+  commands: ChangeSetCategorySchema
 });
 var SyncPlanSchema = external_exports.object({
   mode: SyncModeSchema,
@@ -56141,7 +56221,7 @@ ${hr}`;
 // src/commands/clean.ts
 var import_fs_extra19 = __toESM(require_lib2(), 1);
 var import_path19 = __toESM(require("path"), 1);
-var import_os5 = require("os");
+var import_os6 = require("os");
 var CANONICAL_HOOKS = /* @__PURE__ */ new Set([
   "agent_context.py",
   "serena-workflow-reminder.py",
@@ -56202,7 +56282,7 @@ var IGNORED_ITEMS2 = /* @__PURE__ */ new Set([
   "node_modules"
 ]);
 async function cleanHooks(dryRun) {
-  const hooksDir = import_path19.default.join((0, import_os5.homedir)(), ".claude", "hooks");
+  const hooksDir = import_path19.default.join((0, import_os6.homedir)(), ".claude", "hooks");
   const removed = [];
   const cache = [];
   if (!await import_fs_extra19.default.pathExists(hooksDir)) {
@@ -56233,7 +56313,7 @@ async function cleanHooks(dryRun) {
   return { removed, cache };
 }
 async function cleanSkills(dryRun) {
-  const skillsDir = import_path19.default.join((0, import_os5.homedir)(), ".agents", "skills");
+  const skillsDir = import_path19.default.join((0, import_os6.homedir)(), ".agents", "skills");
   const removed = [];
   if (!await import_fs_extra19.default.pathExists(skillsDir)) {
     return removed;
@@ -56261,7 +56341,7 @@ async function cleanSkills(dryRun) {
   return removed;
 }
 async function cleanOrphanedHookEntries(dryRun, repoRoot) {
-  const settingsPath = import_path19.default.join((0, import_os5.homedir)(), ".claude", "settings.json");
+  const settingsPath = import_path19.default.join((0, import_os6.homedir)(), ".claude", "settings.json");
   const removed = [];
   if (!await import_fs_extra19.default.pathExists(settingsPath)) {
     return removed;

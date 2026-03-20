@@ -33,7 +33,7 @@ xt claude --name my-feature
 ```
 xt claude
   1. Generate slug (4 random chars, or --name value)
-  2. git worktree add ../xtrm-tools-xt-claude-<slug> -b xt/<slug>
+  2. git worktree add .xtrm/worktrees/xtrm-tools-xt-claude-<slug> -b xt/<slug>
   3. Find main's Dolt server port (.beads/dolt-server.port or bd dolt status)
   4. Write port redirect → worktree/.beads/dolt-server.port  ← BEFORE any bd call
   5. claude --dangerously-skip-permissions   (launched in worktree)
@@ -49,7 +49,7 @@ main's running Dolt server and see the same issue database.
 |---|---|---|
 | Branch | `xt/<slug>` | `xt/ab3k` |
 | Worktree dir | `<project>-xt-<runtime>-<slug>` | `xtrm-tools-xt-claude-ab3k` |
-| Worktree path | sibling of main checkout | `../xtrm-tools-xt-claude-ab3k` |
+| Worktree path | inside repo | `.xtrm/worktrees/xtrm-tools-xt-claude-ab3k` |
 
 Branch and worktree always share the same slug, so they're trivially linked.
 Slug-based naming (not date) avoids same-day collisions when launching multiple sessions.
@@ -102,7 +102,6 @@ with an empty database.
   before the session starts.
 - **Main's Dolt server must be running** before launching a worktree session.
   If `bd dolt status` shows no server in the main checkout, run `bd dolt start` there first.
-- Worktrees are siblings of the main checkout (same parent directory), not children.
 
 ## Troubleshooting
 

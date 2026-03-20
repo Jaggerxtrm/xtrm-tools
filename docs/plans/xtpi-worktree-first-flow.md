@@ -29,6 +29,93 @@ Owner issue: `jaggers-agent-tools-xepd`
 - `xt sp stop <job-id>`
 - Reserved shorthand: `xt @<specialist> "<prompt>"`
 
+## 2.1) Command semantics (what + why)
+
+### Global
+- `xt init`
+  - **What:** bootstrap project-level xtrm metadata/config.
+  - **Why:** ensures the repo has required local state before gates/orchestration rely on it.
+- `xt status`
+  - **What:** show current xtrm/runtime health and wiring state.
+  - **Why:** quick drift/sanity check before editing or debugging behavior.
+- `xt doctor`
+  - **What:** run diagnostic checks on local toolchain/runtime setup.
+  - **Why:** catches broken prerequisites early.
+- `xt install [all|basic|pi|claude|specialists]`
+  - **What:** install xtrm components by scope.
+  - **Why:** allows explicit, minimal, or full-stack setup depending on operator intent.
+
+### Runtime-specific
+- `xt pi <install|status|doctor|reload>`
+  - **What:** Pi-scoped setup/check/reload operations.
+  - **Why:** keeps Pi lifecycle controls explicit and isolated from Claude runtime paths.
+- `xt claude <install|status|doctor|reload>`
+  - **What:** Claude-scoped setup/check/reload operations.
+  - **Why:** keeps hook-based runtime controls explicit and avoids cross-runtime ambiguity.
+
+### Specialists
+- `xt sp list`
+  - **What:** list available specialists.
+  - **Why:** discover delegable capabilities before orchestration.
+- `xt sp run <specialist> --prompt "..."`
+  - **What:** execute a named specialist task.
+  - **Why:** offload heavy/parallelizable work while preserving canonical beads workflow.
+- `xt sp status [job-id]`
+  - **What:** show specialist job status (single/all).
+  - **Why:** track async execution state and handoff timing.
+- `xt sp result <job-id>`
+  - **What:** retrieve specialist output artifact.
+  - **Why:** reintegrate delegated output into the main session with traceability.
+- `xt sp stop <job-id>`
+  - **What:** stop a running specialist job.
+  - **Why:** recovery control for wrong/stuck/obsolete jobs.
+- `xt @<specialist> "<prompt>"`
+  - **What:** shorthand alias for specialist run.
+  - **Why:** fast UX while keeping `xt sp` as canonical namespace.
+
+### Core beads/session commands
+- `bd update <id> --claim`
+  - **What:** claim ownership for the issue.
+  - **Why:** unlocks claim-gated edits and establishes accountability.
+- `bd close <id> --reason "..."`
+  - **What:** canonical issue close with explicit reason.
+  - **Why:** authoritative completion signal; reason is reused by close-driven automation.
+
+### Session marker commands (technical)
+- `bd kv set claimed:<sessionId> <issueId>`
+  - **What:** set runtime-local claim marker.
+  - **Why:** fast gate lookup for current session state.
+- `bd kv set closed-this-session:<sessionId> <issueId>`
+  - **What:** set runtime-local close marker.
+  - **Why:** arm memory gate after successful close.
+- `bd kv clear claimed:<sessionId>`
+  - **What:** clear claim marker.
+  - **Why:** remove stale claim gating after acknowledgment lifecycle completes.
+- `bd kv clear closed-this-session:<sessionId>`
+  - **What:** clear close marker.
+  - **Why:** end pending memory-gate state.
+
+### Auto-commit commands (close lifecycle)
+- `git add -A`
+  - **What:** stage all repo changes.
+  - **Why:** capture full closure delta in one commit pass.
+- `git commit -m "<close_reason> (<id>)"`
+  - **What:** commit with close-derived message.
+  - **Why:** preserve issue-to-commit traceability from canonical close reason.
+
+### Memory-ack command
+- `touch .beads/.memory-gate-done`
+  - **What:** create marker file to acknowledge memory decision.
+  - **Why:** explicit gate completion signal before clearing session markers.
+
+### Worktree Dolt-bootstrap commands
+- `bd dolt stop`
+  - **What:** stop auto-spawned isolated worktree Dolt server.
+  - **Why:** prevent split/empty worktree-local tracker state.
+- `echo "<main_port>" > .beads/dolt-server.port`
+  - **What:** repoint worktree to canonical main-checkout Dolt server port.
+  - **Why:** force all worktrees to read/write the same canonical beads database.
+
 ## 3) Core workflow contract (shared Claude + Pi)
 
 Canonical loop remains beads-first:

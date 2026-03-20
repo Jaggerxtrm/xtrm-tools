@@ -57,24 +57,22 @@ function isPiInstalled(): boolean {
     return spawnSync('pi', ['--version'], { encoding: 'utf8' }).status === 0;
 }
 
-async function listTsFilesRecursive(baseDir: string): Promise<string[]> {
+/**
+ * List extension directories (contain package.json) in a base directory.
+ */
+async function listExtensionDirs(baseDir: string): Promise<string[]> {
     if (!await fs.pathExists(baseDir)) return [];
-
     const entries = await fs.readdir(baseDir, { withFileTypes: true });
-    const files: string[] = [];
-
+    const extDirs: string[] = [];
     for (const entry of entries) {
-        const abs = path.join(baseDir, entry.name);
-        if (entry.isDirectory()) {
-            files.push(...await listTsFilesRecursive(abs));
-            continue;
-        }
-        if (entry.isFile() && entry.name.endsWith('.ts')) {
-            files.push(abs);
+        if (!entry.isDirectory()) continue;
+        const extPath = path.join(baseDir, entry.name);
+        const pkgPath = path.join(extPath, 'package.json');
+        if (await fs.pathExists(pkgPath)) {
+            extDirs.push(entry.name);
         }
     }
-
-    return files;
+    return extDirs.sort();
 }
 
 async function fileSha256(filePath: string): Promise<string> {
@@ -83,26 +81,66 @@ async function fileSha256(filePath: string): Promise<string> {
     return crypto.createHash('sha256').update(content).digest('hex');
 }
 
+/**
+ * Compute a hash for an extension package based on package.json + index.ts.
+ */
+async function extensionHash(extDir: string): Promise<string> {
+    const pkgPath = path.join(extDir, 'package.json');
+    const indexPath = path.join(extDir, 'index.ts');
+    
+    const hashes: string[] = [];
+    
+    if (await fs.pathExists(pkgPath)) {
+        hashes.push(await fileSha256(pkgPath));
+    }
+    if (await fs.pathExists(indexPath)) {
+        hashes.push(await fileSha256(indexPath));
+    }
+    
+    return hashes.join(':');
+}
+
+/**
+ * Compare extension packages between source and target directories.
+ * Returns missing, stale, and up-to-date extension names.
+ */
 export async function diffPiExtensions(sourceDir: string, targetDir: string): Promise<PiExtensionDiff> {
     const sourceAbs = path.resolve(sourceDir);
     const targetAbs = path.resolve(targetDir);
 
-    const sourceFiles = (await listTsFilesRecursive(sourceAbs)).map((f) => path.relative(sourceAbs, f)).sort();
+    const sourceExts = await listExtensionDirs(sourceAbs);
     const missing: string[] = [];
     const stale: string[] = [];
     const upToDate: string[] = [];
 
-    for (const rel of sourceFiles) {
-        const src = path.join(sourceAbs, rel);
-        const dst = path.join(targetAbs, rel);
-        if (!await fs.pathExists(dst)) {
-            missing.push(rel);
+    for (const extName of sourceExts) {
+        const srcExtPath = path.join(sourceAbs, extName);
+        const dstExtPath = path.join(targetAbs, extName);
+        
+        // Check if extension exists in target
+        if (!await fs.pathExists(dstExtPath)) {
+            missing.push(extName);
+            continue;
+        }
+        
+        // Check if package.json exists in target
+        const dstPkgPath = path.join(dstExtPath, 'package.json');
+        if (!await fs.pathExists(dstPkgPath)) {
+            missing.push(extName);
             continue;
         }
 
-        const [srcHash, dstHash] = await Promise.all([fileSha256(src), fileSha256(dst)]);
-        if (srcHash !== dstHash) stale.push(rel);
-        else upToDate.push(rel);
+        // Compare hashes
+        const [srcHash, dstHash] = await Promise.all([
+            extensionHash(srcExtPath),
+            extensionHash(dstExtPath)
+        ]);
+        
+        if (srcHash !== dstHash) {
+            stale.push(extName);
+        } else {
+            upToDate.push(extName);
+        }
     }
 
     return { missing, stale, upToDate };
@@ -117,12 +155,12 @@ function printPiCheckSummary(diff: PiExtensionDiff): void {
     console.log(kleur.yellow(`  Stale:      ${diff.stale.length}`));
 
     if (diff.missing.length > 0) {
-        console.log(kleur.yellow('\n  Missing files:'));
+        console.log(kleur.yellow('\n  Missing extensions:'));
         diff.missing.forEach((f) => console.log(kleur.yellow(`    - ${f}`)));
     }
 
     if (diff.stale.length > 0) {
-        console.log(kleur.yellow('\n  Stale files:'));
+        console.log(kleur.yellow('\n  Stale extensions:'));
         diff.stale.forEach((f) => console.log(kleur.yellow(`    - ${f}`)));
     }
 
@@ -204,6 +242,21 @@ export function createInstallPiCommand(): Command {
 
             await fs.copy(path.join(piConfigDir, 'extensions'), path.join(PI_AGENT_DIR, 'extensions'), { overwrite: true });
             console.log(t.success(`    ${sym.ok} extensions/`));
+
+            // Register each extension with pi install -l
+            const extDirs = await listExtensionDirs(path.join(PI_AGENT_DIR, 'extensions'));
+            if (extDirs.length > 0) {
+                console.log(kleur.dim(`\n  Registering ${extDirs.length} extensions...`));
+                for (const extName of extDirs) {
+                    const extPath = path.join(PI_AGENT_DIR, 'extensions', extName);
+                    const r = spawnSync('pi', ['install', '-l', extPath], { stdio: 'pipe', encoding: 'utf8' });
+                    if (r.status === 0) {
+                        console.log(t.success(`    ${sym.ok} ${extName} registered`));
+                    } else {
+                        console.log(kleur.yellow(`    ⚠ ${extName} — registration failed`));
+                    }
+                }
+            }
 
             console.log(t.bold('\n  npm Packages\n'));
             for (const pkg of schema.packages) {

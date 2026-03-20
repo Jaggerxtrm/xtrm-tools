@@ -20,6 +20,24 @@ function isPiInstalled(): boolean {
 }
 
 /**
+ * List extension directories (contain package.json) in a base directory.
+ */
+async function listExtensionDirs(baseDir: string): Promise<string[]> {
+    if (!await fs.pathExists(baseDir)) return [];
+    const entries = await fs.readdir(baseDir, { withFileTypes: true });
+    const extDirs: string[] = [];
+    for (const entry of entries) {
+        if (!entry.isDirectory()) continue;
+        const extPath = path.join(baseDir, entry.name);
+        const pkgPath = path.join(extPath, 'package.json');
+        if (await fs.pathExists(pkgPath)) {
+            extDirs.push(extPath);
+        }
+    }
+    return extDirs;
+}
+
+/**
  * Non-interactive Pi install: copies extensions + installs npm packages.
  * Called automatically as part of `xtrm install`.
  */
@@ -56,6 +74,25 @@ export async function runPiInstall(dryRun: boolean = false): Promise<void> {
             await fs.copy(extensionsSrc, extensionsDst, { overwrite: true });
         }
         console.log(t.success(`  ${sym.ok} extensions synced`));
+
+        // Register each extension with pi install -l
+        const extDirs = await listExtensionDirs(extensionsDst);
+        if (extDirs.length > 0) {
+            console.log(kleur.dim(`  Registering ${extDirs.length} extensions...`));
+            for (const extPath of extDirs) {
+                const extName = path.basename(extPath);
+                if (dryRun) {
+                    console.log(kleur.cyan(`  [DRY RUN] pi install -l ~/.pi/agent/extensions/${extName}`));
+                    continue;
+                }
+                const r = spawnSync('pi', ['install', '-l', extPath], { stdio: 'pipe', encoding: 'utf8' });
+                if (r.status === 0) {
+                    console.log(t.success(`  ${sym.ok} ${extName} registered`));
+                } else {
+                    console.log(kleur.yellow(`  ⚠ ${extName} — registration failed`));
+                }
+            }
+        }
     }
 
     // Install npm packages from schema

@@ -1,0 +1,19 @@
+{
+  "packages": [
+    "../../../.pi/agent/extensions/auto-session-name",
+    "../../../.pi/agent/extensions/auto-update",
+    "../../../.pi/agent/extensions/beads",
+    "../../../.pi/agent/extensions/bg-process",
+    "../../../.pi/agent/extensions/compact-header",
+    "../../../.pi/agent/extensions/custom-footer",
+    "../../../.pi/agent/extensions/custom-provider-qwen-cli",
+    "../../../.pi/agent/extensions/git-checkpoint",
+    "../../../.pi/agent/extensions/minimal-mode",
+    "../../../.pi/agent/extensions/plan-mode",
+    "../../../.pi/agent/extensions/quality-gates",
+    "../../../.pi/agent/extensions/service-skills",
+    "../../../.pi/agent/extensions/session-flow",
+    "../../../.pi/agent/extensions/todo",
+    "../../../.pi/agent/extensions/xtrm-loader"
+  ]
+}

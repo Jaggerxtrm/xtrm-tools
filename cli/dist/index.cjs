@@ -40865,6 +40865,20 @@ function isPiInstalled() {
   const r = (0, import_node_child_process.spawnSync)("pi", ["--version"], { encoding: "utf8", stdio: "pipe" });
   return r.status === 0;
 }
+async function listExtensionDirs(baseDir) {
+  if (!await import_fs_extra10.default.pathExists(baseDir)) return [];
+  const entries = await import_fs_extra10.default.readdir(baseDir, { withFileTypes: true });
+  const extDirs = [];
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    const extPath = import_path10.default.join(baseDir, entry.name);
+    const pkgPath = import_path10.default.join(extPath, "package.json");
+    if (await import_fs_extra10.default.pathExists(pkgPath)) {
+      extDirs.push(extPath);
+    }
+  }
+  return extDirs;
+}
 async function runPiInstall(dryRun = false) {
   const repoRoot = await findRepoRoot();
   const piConfigDir = import_path10.default.join(repoRoot, "config", "pi");
@@ -40894,6 +40908,23 @@ async function runPiInstall(dryRun = false) {
       await import_fs_extra10.default.copy(extensionsSrc, extensionsDst, { overwrite: true });
     }
     console.log(t.success(`  ${sym.ok} extensions synced`));
+    const extDirs = await listExtensionDirs(extensionsDst);
+    if (extDirs.length > 0) {
+      console.log(kleur_default.dim(`  Registering ${extDirs.length} extensions...`));
+      for (const extPath of extDirs) {
+        const extName = import_path10.default.basename(extPath);
+        if (dryRun) {
+          console.log(kleur_default.cyan(`  [DRY RUN] pi install -l ~/.pi/agent/extensions/${extName}`));
+          continue;
+        }
+        const r = (0, import_node_child_process.spawnSync)("pi", ["install", "-l", extPath], { stdio: "pipe", encoding: "utf8" });
+        if (r.status === 0) {
+          console.log(t.success(`  ${sym.ok} ${extName} registered`));
+        } else {
+          console.log(kleur_default.yellow(`  \u26A0 ${extName} \u2014 registration failed`));
+        }
+      }
+    }
   }
   if (!await import_fs_extra10.default.pathExists(schemaPath)) {
     console.log(kleur_default.dim("  No install-schema.json found, skipping packages"));
@@ -41396,44 +41427,65 @@ function readExistingPiValues(piAgentDir) {
 function isPiInstalled2() {
   return (0, import_node_child_process4.spawnSync)("pi", ["--version"], { encoding: "utf8" }).status === 0;
 }
-async function listTsFilesRecursive(baseDir) {
+async function listExtensionDirs2(baseDir) {
   if (!await import_fs_extra13.default.pathExists(baseDir)) return [];
   const entries = await import_fs_extra13.default.readdir(baseDir, { withFileTypes: true });
-  const files = [];
+  const extDirs = [];
   for (const entry of entries) {
-    const abs = import_path12.default.join(baseDir, entry.name);
-    if (entry.isDirectory()) {
-      files.push(...await listTsFilesRecursive(abs));
-      continue;
-    }
-    if (entry.isFile() && entry.name.endsWith(".ts")) {
-      files.push(abs);
+    if (!entry.isDirectory()) continue;
+    const extPath = import_path12.default.join(baseDir, entry.name);
+    const pkgPath = import_path12.default.join(extPath, "package.json");
+    if (await import_fs_extra13.default.pathExists(pkgPath)) {
+      extDirs.push(entry.name);
     }
   }
-  return files;
+  return extDirs.sort();
 }
 async function fileSha256(filePath) {
   const crypto2 = await import("crypto");
   const content = await import_fs_extra13.default.readFile(filePath);
   return crypto2.createHash("sha256").update(content).digest("hex");
 }
+async function extensionHash(extDir) {
+  const pkgPath = import_path12.default.join(extDir, "package.json");
+  const indexPath = import_path12.default.join(extDir, "index.ts");
+  const hashes = [];
+  if (await import_fs_extra13.default.pathExists(pkgPath)) {
+    hashes.push(await fileSha256(pkgPath));
+  }
+  if (await import_fs_extra13.default.pathExists(indexPath)) {
+    hashes.push(await fileSha256(indexPath));
+  }
+  return hashes.join(":");
+}
 async function diffPiExtensions(sourceDir, targetDir) {
   const sourceAbs = import_path12.default.resolve(sourceDir);
   const targetAbs = import_path12.default.resolve(targetDir);
-  const sourceFiles = (await listTsFilesRecursive(sourceAbs)).map((f) => import_path12.default.relative(sourceAbs, f)).sort();
+  const sourceExts = await listExtensionDirs2(sourceAbs);
   const missing = [];
   const stale = [];
   const upToDate = [];
-  for (const rel of sourceFiles) {
-    const src = import_path12.default.join(sourceAbs, rel);
-    const dst = import_path12.default.join(targetAbs, rel);
-    if (!await import_fs_extra13.default.pathExists(dst)) {
-      missing.push(rel);
+  for (const extName of sourceExts) {
+    const srcExtPath = import_path12.default.join(sourceAbs, extName);
+    const dstExtPath = import_path12.default.join(targetAbs, extName);
+    if (!await import_fs_extra13.default.pathExists(dstExtPath)) {
+      missing.push(extName);
       continue;
     }
-    const [srcHash, dstHash] = await Promise.all([fileSha256(src), fileSha256(dst)]);
-    if (srcHash !== dstHash) stale.push(rel);
-    else upToDate.push(rel);
+    const dstPkgPath = import_path12.default.join(dstExtPath, "package.json");
+    if (!await import_fs_extra13.default.pathExists(dstPkgPath)) {
+      missing.push(extName);
+      continue;
+    }
+    const [srcHash, dstHash] = await Promise.all([
+      extensionHash(srcExtPath),
+      extensionHash(dstExtPath)
+    ]);
+    if (srcHash !== dstHash) {
+      stale.push(extName);
+    } else {
+      upToDate.push(extName);
+    }
   }
   return { missing, stale, upToDate };
 }
@@ -41444,11 +41496,11 @@ function printPiCheckSummary(diff) {
   console.log(kleur_default.yellow(`  Missing:    ${diff.missing.length}`));
   console.log(kleur_default.yellow(`  Stale:      ${diff.stale.length}`));
   if (diff.missing.length > 0) {
-    console.log(kleur_default.yellow("\n  Missing files:"));
+    console.log(kleur_default.yellow("\n  Missing extensions:"));
     diff.missing.forEach((f) => console.log(kleur_default.yellow(`    - ${f}`)));
   }
   if (diff.stale.length > 0) {
-    console.log(kleur_default.yellow("\n  Stale files:"));
+    console.log(kleur_default.yellow("\n  Stale extensions:"));
     diff.stale.forEach((f) => console.log(kleur_default.yellow(`    - ${f}`)));
   }
   if (totalDiff === 0) {
@@ -41520,6 +41572,20 @@ function createInstallPiCommand() {
     }
     await import_fs_extra13.default.copy(import_path12.default.join(piConfigDir, "extensions"), import_path12.default.join(PI_AGENT_DIR2, "extensions"), { overwrite: true });
     console.log(t.success(`    ${sym.ok} extensions/`));
+    const extDirs = await listExtensionDirs2(import_path12.default.join(PI_AGENT_DIR2, "extensions"));
+    if (extDirs.length > 0) {
+      console.log(kleur_default.dim(`
+  Registering ${extDirs.length} extensions...`));
+      for (const extName of extDirs) {
+        const extPath = import_path12.default.join(PI_AGENT_DIR2, "extensions", extName);
+        const r = (0, import_node_child_process4.spawnSync)("pi", ["install", "-l", extPath], { stdio: "pipe", encoding: "utf8" });
+        if (r.status === 0) {
+          console.log(t.success(`    ${sym.ok} ${extName} registered`));
+        } else {
+          console.log(kleur_default.yellow(`    \u26A0 ${extName} \u2014 registration failed`));
+        }
+      }
+    }
     console.log(t.bold("\n  npm Packages\n"));
     for (const pkg of schema.packages) {
       const r = (0, import_node_child_process4.spawnSync)("pi", ["install", pkg], { stdio: "inherit" });

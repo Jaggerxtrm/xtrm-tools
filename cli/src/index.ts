@@ -9,6 +9,8 @@ let version = '0.0.0';
 try { version = JSON.parse(readFileSync(resolve(__dirname, '../package.json'), 'utf8')).version; } catch { /* fallback */ }
 
 import { createInstallCommand } from './commands/install.js';
+import { createClaudeCommand } from './commands/claude.js';
+import { createPiCommand } from './commands/pi.js';
 import { runProjectInit } from './commands/init.js';
 import { createStatusCommand } from './commands/status.js';
 import { createResetCommand } from './commands/reset.js';
@@ -35,6 +37,8 @@ program.exitOverride((err) => {
 
 // Main commands
 program.addCommand(createInstallCommand());
+program.addCommand(createClaudeCommand());
+program.addCommand(createPiCommand());
 program
     .command('init')
     .description('Alias for xtrm project init')

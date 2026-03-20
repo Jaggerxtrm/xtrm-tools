@@ -157,7 +157,7 @@ const OFFICIAL_CLAUDE_PLUGINS = [
     'ralph-loop@claude-plugins-official',
 ] as const;
 
-async function installOfficialClaudePlugins(dryRun: boolean): Promise<void> {
+export async function installOfficialClaudePlugins(dryRun: boolean): Promise<void> {
     console.log(t.bold('\n  ⚙  official Claude plugins  (serena/context7/github/ralph-loop)'));
 
     if (dryRun) {
@@ -191,7 +191,7 @@ async function installOfficialClaudePlugins(dryRun: boolean): Promise<void> {
     console.log(t.success(`  ✓ Official plugins ready (${installedCount} installed, ${alreadyInstalledCount} already present)\n`));
 }
 
-async function installPlugin(repoRoot: string, dryRun: boolean): Promise<void> {
+export async function installPlugin(repoRoot: string, dryRun: boolean): Promise<void> {
     console.log(t.bold('\n  ⚙  xtrm-tools  (Claude Code plugin)'));
 
     if (dryRun) {

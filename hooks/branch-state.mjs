@@ -32,21 +32,25 @@ function getSessionClaim(sessionId, cwd) {
   } catch { return null; }
 }
 
-const input = readInput();
-if (!input) process.exit(0);
+try {
+  const input = readInput();
+  if (!input) process.exit(0);
 
-const cwd = input.cwd || process.cwd();
-const sessionId = resolveSessionId(input);
-const branch = getBranch(cwd);
-const isBeads = existsSync(join(cwd, '.beads'));
-const claim = isBeads && sessionId ? getSessionClaim(sessionId, cwd) : null;
+  const cwd = input.cwd || process.cwd();
+  const sessionId = resolveSessionId(input);
+  const branch = getBranch(cwd);
+  const isBeads = existsSync(join(cwd, '.beads'));
+  const claim = isBeads && sessionId ? getSessionClaim(sessionId, cwd) : null;
 
-if (!branch && !claim) process.exit(0);
+  if (!branch && !claim) process.exit(0);
 
-const context = `[Context: branch=${branch ?? 'unknown'}${claim ? ', claim=' + claim : ''}]`;
+  const context = `[Context: branch=${branch ?? 'unknown'}${claim ? ', claim=' + claim : ''}]`;
 
-process.stdout.write(JSON.stringify({
-  hookSpecificOutput: { additionalSystemPrompt: context },
-}));
-process.stdout.write('\n');
-process.exit(0);
+  process.stdout.write(JSON.stringify({
+    hookSpecificOutput: { additionalSystemPrompt: context },
+  }));
+  process.stdout.write('\n');
+  process.exit(0);
+} catch {
+  process.exit(0);
+}

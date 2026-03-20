@@ -80,6 +80,23 @@ export function getInProgress(cwd) {
 }
 
 /**
+ * Return true if a specific issue ID is currently in in_progress status.
+ * Used by commit/stop gates to scope the check to the session's own claimed issue.
+ * Returns false (fail open) if bd is unavailable.
+ */
+export function isIssueInProgress(issueId, cwd) {
+  if (!issueId) return false;
+  try {
+    const output = execSync('bd list --status=in_progress', {
+      encoding: 'utf8', cwd, stdio: ['pipe', 'pipe', 'pipe'], timeout: 8000,
+    });
+    return output.includes(issueId);
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Count total trackable work (open + in_progress issues) using a single bd list call.
  * Returns the count, or null if bd is unavailable.
  */
@@ -96,6 +113,42 @@ export function getTotalWork(cwd) {
   } catch {
     return null;
   }
+}
+
+/**
+ * Get the closed-this-session issue ID for a session from bd kv.
+ * Returns: issue ID string if set, '' if not set, null if bd kv unavailable.
+ */
+export function getClosedThisSession(sessionId, cwd) {
+  try {
+    return execSync(`bd kv get "closed-this-session:${sessionId}"`, {
+      encoding: 'utf8',
+      cwd,
+      stdio: ['pipe', 'pipe', 'pipe'],
+      timeout: 5000,
+    }).trim();
+  } catch (err) {
+    if (err.status === 1) return ''; // key not found
+    return null;                     // bd kv unavailable
+  }
+}
+
+/**
+ * Return true if the memory gate is pending acknowledgment for this session.
+ * Pending = closed-this-session kv is set AND .beads/.memory-gate-done marker is absent.
+ */
+export function isMemoryGatePending(sessionId, cwd) {
+  if (existsSync(join(cwd, '.beads', '.memory-gate-done'))) return false;
+  const closed = getClosedThisSession(sessionId, cwd);
+  return !!closed; // null (unavailable) is falsy → fail open
+}
+
+/**
+ * Return true if a Bash command is a memory-gate acknowledgment command.
+ * These commands are allowed even while the memory gate is pending.
+ */
+export function isMemoryAckCommand(command) {
+  return /\bbd\s+remember\b/.test(command) || /\btouch\s+\.beads\/\.memory-gate-done\b/.test(command);
 }
 
 /**
@@ -123,7 +176,10 @@ export function clearSessionClaim(sessionId, cwd) {
 export function withSafeBdContext(fn) {
   try {
     fn();
-  } catch {
+  } catch (err) {
+    if (err instanceof TypeError || err instanceof ReferenceError || err instanceof SyntaxError) {
+      throw err;
+    }
     process.exit(0);
   }
 }

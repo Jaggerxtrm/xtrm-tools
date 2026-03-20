@@ -1,0 +1,12 @@
+{
+  "name": "@xtrm/pi-plan-mode",
+  "version": "1.0.0",
+  "description": "Plan mode extension for Pi - read-only exploration with plan extraction and bd integration",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "keywords": ["pi", "extension", "plan-mode", "xtrm"],
+  "author": "xtrm",
+  "license": "MIT"
+}

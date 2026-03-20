@@ -13,19 +13,34 @@ import {
   resolveClaimAndWorkState,
   decideCommitGate,
 } from './beads-gate-core.mjs';
-import { withSafeBdContext } from './beads-gate-utils.mjs';
-import { commitBlockMessage } from './beads-gate-messages.mjs';
+import { withSafeBdContext, isMemoryGatePending, isMemoryAckCommand } from './beads-gate-utils.mjs';
+import { commitBlockMessage, memoryGatePendingMessage } from './beads-gate-messages.mjs';
 
 const input = readHookInput();
 if (!input) process.exit(0);
 
-// Only intercept git commit commands
 if ((input.tool_name ?? '') !== 'Bash') process.exit(0);
-if (!/\bgit\s+commit\b/.test(input.tool_input?.command ?? '')) process.exit(0);
+
+const command = input.tool_input?.command ?? '';
+// Strip quoted strings to avoid matching patterns inside --reason "..." or similar args
+const commandUnquoted = command.replace(/'[^']*'|"[^"]*"/g, '');
 
 withSafeBdContext(() => {
   const ctx = resolveSessionContext(input);
   if (!ctx || !ctx.isBeadsProject) process.exit(0);
+
+  // Memory gate: block all Bash except acknowledgment commands while gate pending
+  if (ctx.sessionId && isMemoryGatePending(ctx.sessionId, ctx.cwd)) {
+    if (!isMemoryAckCommand(commandUnquoted)) {
+      process.stdout.write(JSON.stringify({ decision: 'block', reason: memoryGatePendingMessage() }));
+      process.stdout.write('\n');
+      process.exit(0);
+    }
+    process.exit(0); // memory-ack command — allow
+  }
+
+  // Only intercept git commit for the claim-gate check
+  if (!/\bgit\s+commit\b/.test(commandUnquoted)) process.exit(0);
 
   const state = resolveClaimAndWorkState(ctx);
   const decision = decideCommitGate(ctx, state);

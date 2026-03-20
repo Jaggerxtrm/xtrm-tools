@@ -68,33 +68,15 @@ export function stopBlockMessage(summary, claimed) {
   );
 }
 
-export function stopBlockWaitingMergeMessage(state) {
-  const pr = state.prNumber != null ? `#${state.prNumber}` : '(PR pending)';
-  const prUrl = state.prUrl ? `\nPR: ${state.prUrl}` : '';
-  return (
-    `🚫 PR ${pr} not yet merged. Run: xtrm finish\n` +
-    `${prUrl}\n` +
-    `Worktree: ${state.worktreePath}\n`
-  );
-}
-
-export function stopBlockConflictingMessage(state) {
-  const conflicts = Array.isArray(state.conflictFiles) && state.conflictFiles.length > 0
-    ? state.conflictFiles.join(', ')
-    : 'unknown files';
-  return (
-    `🚫 Merge conflicts in: ${conflicts}. Resolve, push, then: xtrm finish\n` +
-    `Worktree: ${state.worktreePath}\n`
-  );
-}
-
-export function stopWarnActiveWorktreeMessage(state) {
-  return (
-    `⚠ Session has an active worktree at ${state.worktreePath}. Consider running: xtrm finish\n`
-  );
-}
-
 // ── Memory gate messages ─────────────────────────────────────────
+
+export function memoryGatePendingMessage() {
+  return (
+    '🧠 Memory gate pending — evaluate insights before continuing.\n' +
+    '  YES → bd remember "<insight>"   NO → note "nothing to persist"\n' +
+    '  Then acknowledge: touch .beads/.memory-gate-done\n'
+  );
+}
 
 export function memoryPromptMessage() {
   return (

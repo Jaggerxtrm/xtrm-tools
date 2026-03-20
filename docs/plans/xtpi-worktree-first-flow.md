@@ -1,157 +1,254 @@
-# xtpi Worktree-First Flow Plan
+# Unified Workflow Plan (Claude + Pi + Specialists)
 
-Status: Draft (iteration 2 — ready decisions only)
+Status: Active
 Owner issue: `jaggers-agent-tools-xepd`
 
-## 1) Goal
+## 1) Naming + CLI (decided)
 
-Create an `xtpi` launcher workflow where agents never start on repo-root `main` for implementation work.
+- **Canonical CLI:** `xtrm`
+- **Alias:** `xt`
+- `xtpi` is not the primary user-facing direction anymore.
 
-Target behavior:
-- `xtpi <issue-or-sandbox>` creates/opens a dedicated worktree
-- launches `pi` directly in that worktree
-- day-to-day work stays sandboxed
-- PR merge to `main` is an explicit external/landing step (not implicit)
+## 2) Command structure (decided)
 
----
+### Global
+- `xt init`
+- `xt status`
+- `xt doctor`
+- `xt install [all|basic|pi|claude|specialists]`
 
-## 2) Design Principles
+### Runtime-specific
+- `xt pi <install|status|doctor|reload>`
+- `xt claude <install|status|doctor|reload>`
 
-1. **Workspace lifecycle is separate from issue lifecycle**
-   - Worktree management (`xtpi`) should not be hidden in `bd update --claim`
-2. **No accidental writes on `main`**
-   - main-guard stays strict for mutating tools/commands
-3. **bd remains source of truth for task state**
-   - issue claim/close semantics stay canonical
-4. **Publish and land are distinct**
-   - publish PR from sandbox; merge is an explicit gate
+### Specialists
+- `xt sp list`
+- `xt sp run <specialist> --prompt "..."`
+- `xt sp status [job-id]`
+- `xt sp result <job-id>`
+- `xt sp stop <job-id>`
+- Reserved shorthand: `xt @<specialist> "<prompt>"`
 
----
+## 2.1) Command semantics (what + why)
 
-## 3) Proposed Commands (target)
+### Global
+- `xt init`
+  - **What:** bootstrap project-level xtrm metadata/config.
+  - **Why:** ensures the repo has required local state before gates/orchestration rely on it.
+- `xt status`
+  - **What:** show current xtrm/runtime health and wiring state.
+  - **Why:** quick drift/sanity check before editing or debugging behavior.
+- `xt doctor`
+  - **What:** run diagnostic checks on local toolchain/runtime setup.
+  - **Why:** catches broken prerequisites early.
+- `xt install [all|basic|pi|claude|specialists]`
+  - **What:** install xtrm components by scope.
+  - **Why:** allows explicit, minimal, or full-stack setup depending on operator intent.
 
-### `xtpi <name-or-issue>`
-- Resolve repo root + default naming
-- Ensure worktree exists (create if needed)
-- Ensure branch exists/attached (sandbox branch)
-- Start `pi` with cwd set to worktree path
+### Runtime-specific
+- `xt pi <install|status|doctor|reload>`
+  - **What:** Pi-scoped setup/check/reload operations.
+  - **Why:** keeps Pi lifecycle controls explicit and isolated from Claude runtime paths.
+- `xt claude <install|status|doctor|reload>`
+  - **What:** Claude-scoped setup/check/reload operations.
+  - **Why:** keeps hook-based runtime controls explicit and avoids cross-runtime ambiguity.
 
-### `xtpi resume <name-or-issue>`
-- Re-enter existing sandbox worktree and open `pi`
+### Specialists
+- `xt sp list`
+  - **What:** list available specialists.
+  - **Why:** discover delegable capabilities before orchestration.
+- `xt sp run <specialist> --prompt "..."`
+  - **What:** execute a named specialist task.
+  - **Why:** offload heavy/parallelizable work while preserving canonical beads workflow.
+- `xt sp status [job-id]`
+  - **What:** show specialist job status (single/all).
+  - **Why:** track async execution state and handoff timing.
+- `xt sp result <job-id>`
+  - **What:** retrieve specialist output artifact.
+  - **Why:** reintegrate delegated output into the main session with traceability.
+- `xt sp stop <job-id>`
+  - **What:** stop a running specialist job.
+  - **Why:** recovery control for wrong/stuck/obsolete jobs.
+- `xt @<specialist> "<prompt>"`
+  - **What:** shorthand alias for specialist run.
+  - **Why:** fast UX while keeping `xt sp` as canonical namespace.
 
-### `xtpi publish`
-- From current sandbox worktree:
-  - verify clean/dirty state policy
-  - ensure branch is pushed
-  - create/update one final PR to `main`
-- **No merge**
+### Core beads/session commands
+- `bd update <id> --claim`
+  - **What:** claim ownership for the issue.
+  - **Why:** unlocks claim-gated edits and establishes accountability.
+- `bd close <id> --reason "..."`
+  - **What:** canonical issue close with explicit reason.
+  - **Why:** authoritative completion signal; reason is reused by close-driven automation.
 
-### `xtpi cleanup`
-- Remove sandbox worktree after PR is merged (or force with explicit flag)
+### Session marker commands (technical)
+- `bd kv set claimed:<sessionId> <issueId>`
+  - **What:** set runtime-local claim marker.
+  - **Why:** fast gate lookup for current session state.
+- `bd kv set closed-this-session:<sessionId> <issueId>`
+  - **What:** set runtime-local close marker.
+  - **Why:** arm memory gate after successful close.
+- `bd kv clear claimed:<sessionId>`
+  - **What:** clear claim marker.
+  - **Why:** remove stale claim gating after acknowledgment lifecycle completes.
+- `bd kv clear closed-this-session:<sessionId>`
+  - **What:** clear close marker.
+  - **Why:** end pending memory-gate state.
 
-### `xtrm finish` (deprecation target)
-- **Deprecated in xtpi strict workflow**
-- Replacement path is `xtpi publish` + external merge + `xtpi cleanup`
+### Auto-commit commands (close lifecycle)
+- `git add -A`
+  - **What:** stage all repo changes.
+  - **Why:** capture full closure delta in one commit pass.
+- `git commit -m "<close_reason> (<id>)"`
+  - **What:** commit with close-derived message.
+  - **Why:** preserve issue-to-commit traceability from canonical close reason.
 
----
+### Memory-ack command
+- `touch .beads/.memory-gate-done`
+  - **What:** create marker file to acknowledge memory decision.
+  - **Why:** explicit gate completion signal before clearing session markers.
 
-## 4) Branch/PR Strategy Options
+### Worktree Dolt-bootstrap commands
+- `bd dolt stop`
+  - **What:** stop auto-spawned isolated worktree Dolt server.
+  - **Why:** prevent split/empty worktree-local tracker state.
+- `echo "<main_port>" > .beads/dolt-server.port`
+  - **What:** repoint worktree to canonical main-checkout Dolt server port.
+  - **Why:** force all worktrees to read/write the same canonical beads database.
 
-### Option A: One sandbox branch per issue
-- cleanest audit and review boundaries
-- more PRs
+## 3) Core workflow contract (shared Claude + Pi)
 
-### Option B: One sandbox branch per session/campaign (multi-issue)
-- one final PR
-- relies on bd for per-issue traceability
-- larger review surface
+Canonical loop remains beads-first:
 
-Current default direction: support both; keep default behavior configurable and confirm after practical validation.
+```bash
+bd update <id> --claim
+# implement
+bd close <id> --reason "..."
+```
 
----
+Rules:
+1. `bd update --claim` = ownership only.
+2. `bd close --reason` = canonical close action.
+3. Close reason may be reused for auto-commit message in runtime session-flow.
+4. Push/PR/merge are explicit external steps by default.
+5. No `xt` wrapper replaces canonical `bd close`.
 
-## 5) bd Integration Model (ready decision)
+## 4) Beads in Worktrees (explicit mechanism)
 
-- Keep canonical bd DB shared across worktrees (same repository backing)
-- `bd update <id> --claim` remains issue ownership, not workspace creation
-- `bd close` stays the canonical issue-closing command (no workflow fork to `xtpi close`)
-- Add **post-close automation** triggered by successful `bd close`:
-  1. read closed issue id + `close_reason` (`bd show <id> --json`)
-  2. if sandbox branch has changes: `git add -A && git commit -m "<close_reason> (<id>)"`
-  3. if no changes: no-op (do not fail `bd close`)
+This section is mandatory for agent/worktree correctness.
 
-### Push policy
-- **Default: no push on close**
-  - keeps local iteration fast
-  - avoids noisy remote history while issue work is still evolving
-- Optional setting: `xtpi.autoPushOnClose=true` for immediate remote backup
-- `xtpi publish` is the canonical "push + create/update final PR" step
+1. **Single canonical beads backing store**
+   - All worktrees for a repository must read/write the same canonical `.beads` database for that repo.
+   - Worktree changes do not create isolated issue trackers.
 
----
+2. **Claim visibility across worktrees**
+   - A claim created in one worktree (`bd update <id> --claim`) must be visible from any sibling worktree of the same repo.
+   - Orchestration/tools must not rely on per-worktree hidden state as source of truth for issue ownership.
 
-## 6) Guardrails
+3. **Session key behavior**
+   - Session-scoped keys (`claimed:<sessionId>`, `closed-this-session:<sessionId>`) remain runtime/session-local markers.
+   - They support edit/memory gates, but canonical issue truth is still `bd` issue status/ownership.
 
-1. On repo-root `main`: block edits and risky git ops (existing main-guard)
-2. In sandbox: allow normal dev flow
-3. If claim exists + user is on root: message should point to active sandbox path
-4. In xtpi strict workflow: disallow merge-to-main from development session commands
+4. **Switch/re-entry expectations**
+   - Re-entering a different worktree must preserve access to the same issue graph (`bd list/show/ready` parity).
+   - If session markers are missing after re-entry, user may need to re-claim for that runtime session, but issue history/state must remain consistent.
 
----
+5. **Specialists integration guardrail**
+   - `xt sp`/specialists jobs must attach to the same canonical beads context and must not fork a second tracker state.
+   - Specialist output should reference issue IDs/job IDs so traceability is preserved across worktrees.
 
-## 7) End-to-End Target Flow
+### Technical implementation details (required)
 
-1. User/orchestrator: `xtpi jaggers-agent-tools-123`
-2. Pi opens in sandbox worktree
-3. Agent: `bd update jaggers-agent-tools-123 --claim`
-4. Agent works and closes issues with `bd close --reason "..."`
-5. Post-close automation creates local commit message from `close_reason` (default: no push)
-6. Agent runs `xtpi publish` (push + create/update final PR, no merge)
-7. Human/landing agent merges PR
-8. Agent/user runs `xtpi cleanup`
+1. **Canonical data location and CWD rule**
+   - All beads commands execute against repo-local `.beads/` discovered from active working directory.
+   - Worktrees must be created under the same repo so they resolve to the same `.beads` backing store.
+   - Runtime check: `EventAdapter.isBeadsProject(cwd)` / hook equivalents gate behavior only when `.beads` exists.
 
----
+2. **Session markers and exact keys**
+   - Claim marker: `claimed:<sessionId>`
+   - Close marker: `closed-this-session:<sessionId>`
+   - Set on claim/close via:
+     - `bd kv set claimed:<sessionId> <issueId>`
+     - `bd kv set closed-this-session:<sessionId> <issueId>`
+   - Clear on memory acknowledgment:
+     - `bd kv clear claimed:<sessionId>`
+     - `bd kv clear closed-this-session:<sessionId>`
 
-## 8) Known Bugs (tracked)
+3. **Session ID resolution (cross-runtime parity)**
+   - Resolve in this order: `session_id` → `sessionId` → `cwd` fallback (or equivalent runtime fallback).
+   - This prevents deadlocks when runtimes expose different session-id field names.
 
-- `jaggers-agent-tools-26cg` (P0 bug): **Pi main-guard/worktree workflow regression blocks sandbox flow**
-  - Current behavior can produce blocked/looping guidance around active worktree state.
-  - Until fixed, treat current worktree-first flow as unstable and prioritize guard/worktree repair before strict xtpi rollout.
+4. **Memory gate ack contract**
+   - Marker file path is fixed: `.beads/.memory-gate-done`.
+   - On next gate cycle after marker exists:
+     - consume marker file
+     - clear both session kv keys above
+   - Until marker exists, runtime must continue prompting and/or blocking according to gate policy.
 
----
+5. **Close auto-commit contract (no push by default)**
+   - Trigger only on successful canonical close command: `bd close <id> --reason "..."`.
+   - Commit message source: `close_reason` + issue id (`<close_reason> (<id>)`).
+   - Auto-commit command path:
+     - `git add -A`
+     - `git commit -m "<close_reason> (<id>)"`
+   - If no file changes exist, commit step must no-op without failing close.
 
-## 9) Open Questions (still open)
 
-1. Naming decision: keep `xtrm` umbrella, add `xt` alias, or migrate to `xt`?
-2. Should campaign mode support an optional squash-at-publish helper?
-3. Do we need a separate `land` command, or keep merge fully external?
-4. Should `bd remember` trigger behavior be restored/updated as part of xtpi rollout or tracked as a separate bugfix stream?
+7. **Worktree Dolt server isolation (discovered 2026-03-20)**
 
----
+   When a worktree is created, `bd` auto-spawns a **separate Dolt server** on a new random port
+   pointing at the worktree's own `.beads/dolt/` — a completely empty database. This means
+   `bd list`, `bd kv`, and all gate hooks silently break in worktrees unless corrected.
 
-## 10) Rollout Plan
+   Root cause: bd reads the active port from `.beads/dolt-server.port` (written by the running
+   server process), which overrides `metadata.json`. `bd dolt set port <N>` alone is not enough.
 
-Phase 1
-- Add `xtpi` launcher (create/open worktree + exec pi in worktree cwd)
-- Keep current claim behavior for compatibility during transition
+   **Required worktree bootstrap** (must be automated by worktree creation tooling):
+   ```bash
+   bd dolt stop                                    # kill the auto-spawned isolated server
+   echo "<main_port>" > .beads/dolt-server.port    # redirect to the canonical running server
+   ```
+   Where `<main_port>` is the port of the main checkout's Dolt server (check `.beads/dolt-server.port`
+   in the repo root, or `bd dolt status` from the main checkout).
 
-Phase 2
-- Move worktree creation out of claim hook (feature-flagged)
-- Keep claim only as issue-state operation
-- Introduce `xtrm finish` deprecation messaging in strict xtpi mode
+   **Design implication**: Sessions must start directly inside a pre-configured worktree.
+   The "start on main then migrate to worktree mid-session" pattern is not viable — bd breaks
+   in the worktree and the bootstrap cannot be deferred.
 
-Phase 3
-- Enforce strict mode defaults:
-  - publish-only from agent
-  - merge gated externally
-  - cleanup command required
-- Fully deprecate `xtrm finish` in xtpi-managed workflow docs
+6. **Worktree re-entry behavior**
+   - Re-entering another worktree must preserve issue visibility (`bd list/show/ready` parity).
+   - Session kv markers may be absent in a new session; re-claim is allowed and expected for local runtime gating.
+   - Canonical issue state remains in beads issue DB, not in session kv markers.
 
----
+## 5) Current implemented behavior
 
-## 11) Success Criteria
+- Claim-time worktree bootstrap removed.
+- Pi close-driven auto-commit is active (`<close_reason> (<id>)`), no-op if clean.
+- Memory marker flow parity is active (`touch .beads/.memory-gate-done`).
+- Pending memory gate is enforced in Pi on mutating tools and `session_before_*` transitions.
+- Main-guard policy wiring is removed from active runtime.
 
-- Agents no longer start implementation sessions on root `main`
-- `bd close` remains canonical while commit text is reused automatically
-- PR lifecycle is deterministic and explicit (publish vs merge vs cleanup)
-- bd issue state remains reliable across multiple sandboxes
-- Fewer guard conflicts and fewer "active worktree" dead-end messages
+## 6) Claude/Pi parity model
+
+Same behavioral contract, different enforcement surfaces:
+- Claude: hook lifecycle (`PreToolUse`, `PostToolUse`, `Stop`, ...)
+- Pi: extension lifecycle (`tool_call`, `tool_result`, `agent_end`, `session_before_*`, ...)
+
+## 7) Specialists complement boundary
+
+- **xtrm/xt owns:** runtime gates, session flow, close/memory semantics.
+- **specialists owns:** delegated execution/orchestration, background jobs, specialist lifecycle.
+
+Integration rule: specialists must integrate with beads context/output, but not redefine canonical close semantics.
+
+## 8) Known follow-ups
+
+- `jaggers-agent-tools-ycg9` (P2): TS quality-gate false negative.
+- Session-end active-claim warning may need throttling.
+
+## 9) Success criteria
+
+- One shared workflow model for Claude + Pi.
+- CLI namespace settled (`xtrm` canonical, `xt` alias, `xt sp` specialists).
+- `bd close` remains canonical.
+- Memory gate marker flow is consistent and enforceable.

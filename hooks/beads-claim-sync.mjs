@@ -1,12 +1,11 @@
 #!/usr/bin/env node
 // beads-claim-sync — PostToolUse hook
-// Auto-sets kv claim on bd update --claim; auto-clears on bd close.
-// Also bootstraps worktree-first session state for xtrm finish workflow.
+// bd update --claim → set kv claim
+// bd close         → auto-commit staged changes, set closed-this-session kv for memory gate
 
 import { spawnSync } from 'node:child_process';
-import { readFileSync, existsSync, mkdirSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { writeSessionState } from './session-state.mjs';
 import { resolveSessionId } from './beads-gate-utils.mjs';
 
 function readInput() {
@@ -47,102 +46,55 @@ function runGit(args, cwd, timeout = 8000) {
   });
 }
 
-function getRepoRoot(cwd) {
-  const result = runGit(['rev-parse', '--show-toplevel'], cwd);
-  if (result.status !== 0) return null;
-  return result.stdout.trim();
+function runBd(args, cwd, timeout = 5000) {
+  return spawnSync('bd', args, {
+    cwd,
+    stdio: ['pipe', 'pipe', 'pipe'],
+    encoding: 'utf8',
+    timeout,
+  });
 }
 
-function inLinkedWorktree(cwd) {
-  const gitDir = runGit(['rev-parse', '--git-dir'], cwd);
-  const gitCommonDir = runGit(['rev-parse', '--git-common-dir'], cwd);
-  if (gitDir.status !== 0 || gitCommonDir.status !== 0) return false;
-  return gitDir.stdout.trim() !== gitCommonDir.stdout.trim();
+function hasGitChanges(cwd) {
+  const result = runGit(['status', '--porcelain'], cwd);
+  if (result.status !== 0) return false;
+  return result.stdout.trim().length > 0;
 }
 
-function ensureWorktreeForClaim(cwd, issueId) {
-  const repoRoot = getRepoRoot(cwd);
-  if (!repoRoot) return { created: false, reason: 'not-git' };
+function getCloseReason(cwd, issueId, command) {
+  // 1. Parse --reason "..." from the command itself (fastest, no extra call)
+  const reasonMatch = command.match(/--reason[=\s]+["']([^"']+)["']/);
+  if (reasonMatch) return reasonMatch[1].trim();
 
-  if (inLinkedWorktree(cwd)) {
-    return { created: false, reason: 'already-worktree', repoRoot };
-  }
-
-  const overstoryDir = join(repoRoot, '.overstory');
-  const worktreesBase = existsSync(overstoryDir)
-    ? join(overstoryDir, 'worktrees')
-    : join(repoRoot, '.worktrees');
-
-  mkdirSync(worktreesBase, { recursive: true });
-
-  const branch = `feature/${issueId}`;
-  const worktreePath = join(worktreesBase, issueId);
-
-  if (existsSync(worktreePath)) {
-    // Already created previously — rewrite state file for continuity.
+  // 2. Fall back to bd show <id> --json
+  const show = runBd(['show', issueId, '--json'], cwd);
+  if (show.status === 0 && show.stdout) {
     try {
-      const stateFile = writeSessionState({
-        issueId,
-        branch,
-        worktreePath,
-        prNumber: null,
-        prUrl: null,
-        phase: 'claimed',
-        conflictFiles: [],
-      }, { cwd: repoRoot });
-      return { created: false, reason: 'exists', repoRoot, branch, worktreePath, stateFile };
-    } catch {
-      return { created: false, reason: 'exists', repoRoot, branch, worktreePath };
-    }
+      const parsed = JSON.parse(show.stdout);
+      const reason = parsed?.[0]?.close_reason;
+      if (typeof reason === 'string' && reason.trim().length > 0) return reason.trim();
+    } catch { /* fall through */ }
   }
 
-  const branchExists = runGit(['show-ref', '--verify', '--quiet', `refs/heads/${branch}`], repoRoot).status === 0;
-  const addArgs = branchExists
-    ? ['worktree', 'add', worktreePath, branch]
-    : ['worktree', 'add', worktreePath, '-b', branch];
-
-  const addResult = runGit(addArgs, repoRoot, 20000);
-  if (addResult.status !== 0) {
-    return {
-      created: false,
-      reason: 'create-failed',
-      repoRoot,
-      branch,
-      worktreePath,
-      error: (addResult.stderr || addResult.stdout || '').trim(),
-    };
-  }
-
-  try {
-    const stateFile = writeSessionState({
-      issueId,
-      branch,
-      worktreePath,
-      prNumber: null,
-      prUrl: null,
-      phase: 'claimed',
-      conflictFiles: [],
-    }, { cwd: repoRoot });
-
-    return {
-      created: true,
-      reason: 'created',
-      repoRoot,
-      branch,
-      worktreePath,
-      stateFile,
-    };
-  } catch (err) {
-    return {
-      created: true,
-      reason: 'created-state-write-failed',
-      repoRoot,
-      branch,
-      worktreePath,
-      error: String(err?.message || err),
-    };
-  }
+  return `Close ${issueId}`;
 }
+
+function autoCommit(cwd, issueId, command) {
+  if (!hasGitChanges(cwd)) {
+    return { ok: true, message: 'No changes detected — auto-commit skipped.' };
+  }
+
+  const reason = getCloseReason(cwd, issueId, command);
+  const commitMessage = `${reason} (${issueId})`;
+  const result = runGit(['commit', '-am', commitMessage], cwd, 15000);
+  if (result.status !== 0) {
+    const err = (result.stderr || result.stdout || '').trim();
+    return { ok: false, message: `Auto-commit failed: ${err || 'unknown error'}` };
+  }
+
+  return { ok: true, message: `Auto-committed: \`${commitMessage}\`` };
+}
+
 
 function main() {
   const input = readInput();
@@ -172,33 +124,22 @@ function main() {
         process.exit(0);
       }
 
-      const wt = ensureWorktreeForClaim(cwd, issueId);
-      const details = [];
-      if (wt.created) {
-        details.push(`🧭 **Session Flow**: Worktree created: \`${wt.worktreePath}\`  Branch: \`${wt.branch}\``);
-      } else if (wt.reason === 'exists') {
-        details.push(`🧭 **Session Flow**: Worktree already exists: \`${wt.worktreePath}\`  Branch: \`${wt.branch}\``);
-      } else if (wt.reason === 'already-worktree') {
-        details.push('🧭 **Session Flow**: Already in a linked worktree — skipping nested worktree creation.');
-      } else if (wt.reason === 'create-failed') {
-        const err = wt.error ? `\nWarning: ${wt.error}` : '';
-        details.push(`⚠️ **Session Flow**: Worktree creation failed for \`${issueId}\`. Continuing without blocking claim.${err}`);
-      }
-
       process.stdout.write(JSON.stringify({
-        additionalContext: `\n✅ **Beads**: Session \`${sessionId}\` claimed issue \`${issueId}\`.${details.length ? `\n${details.join('\n')}` : ''}`,
+        additionalContext: `\n✅ **Beads**: Session \`${sessionId}\` claimed issue \`${issueId}\`.`,
       }));
       process.stdout.write('\n');
       process.exit(0);
     }
   }
 
-  // On bd close: mark as closed-this-session for memory gate (don't clear claim yet)
-  // Memory gate will clear the claim after user acknowledges memory prompt
+  // On bd close: auto-commit staged changes, then mark closed-this-session for memory gate
   if (/\bbd\s+close\b/.test(command) && commandSucceeded(input)) {
     const match = command.match(/\bbd\s+close\s+(\S+)/);
     const closedIssueId = match?.[1];
-    
+
+    // Auto-commit before marking the gate (no-op if clean)
+    const commit = closedIssueId ? autoCommit(cwd, closedIssueId, command) : null;
+
     // Mark this issue as closed this session (memory gate reads this)
     if (closedIssueId) {
       spawnSync('bd', ['kv', 'set', `closed-this-session:${sessionId}`, closedIssueId], {
@@ -208,8 +149,12 @@ function main() {
       });
     }
 
+    const commitLine = commit
+      ? `\n${commit.ok ? '✅' : '⚠️'} **Session Flow**: ${commit.message}`
+      : '';
+
     process.stdout.write(JSON.stringify({
-      additionalContext: `\n🔓 **Beads**: Issue closed. Memory gate will prompt on session end.`,
+      additionalContext: `\n🔓 **Beads**: Issue closed.${commitLine}\nEvaluate insights, then acknowledge:\n  \`bd remember "<insight>"\` (or note "nothing")\n  \`touch .beads/.memory-gate-done\``,
     }));
     process.stdout.write('\n');
     process.exit(0);

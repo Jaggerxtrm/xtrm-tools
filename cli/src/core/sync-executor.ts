@@ -199,7 +199,7 @@ export async function executeSync(
                         const hooksAdapted = await filterHooksByInstalledScripts(adapter.adaptHooksConfig(hooksRaw));
                         if (hooksAdapted.hooks) {
                             // hooks.json is the canonical source — replace template hooks entirely
-                            // to avoid Claude event names leaking into Gemini/Qwen configs
+                            // hooks.json is canonical source — replace template hooks entirely
                             finalRepoConfig.hooks = hooksAdapted.hooks;
                             if (!isDryRun) console.log(kleur.dim(`      (Injected hooks)`));
                         }
@@ -250,14 +250,8 @@ export async function executeSync(
                     continue;
                 }
 
-                const repoPath = category === 'commands' ? path.join(repoRoot, '.gemini', 'commands') :
-                    category === 'qwen-commands' ? path.join(repoRoot, '.qwen', 'commands') :
-                        category === 'antigravity-workflows' ? path.join(repoRoot, '.gemini', 'antigravity', 'global_workflows') :
-                            path.join(repoRoot, category);
-
-                const systemPath = category === 'qwen-commands' ? path.join(systemRoot, 'commands') :
-                    category === 'antigravity-workflows' ? path.join(systemRoot, '.gemini', 'antigravity', 'global_workflows') :
-                        path.join(systemRoot, category);
+                const repoPath = path.join(repoRoot, category);
+                const systemPath = path.join(systemRoot, category);
 
                 if (actionType === 'backport') {
                     src = path.join(systemPath, item);

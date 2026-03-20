@@ -40245,63 +40245,6 @@ var AGENT_CLI = {
     },
     remove: (name) => ["mcp", "remove", "-s", "user", name],
     parseList: (output) => parseMcpListOutput(output, /^([a-zA-Z0-9_-]+):/)
-  },
-  gemini: {
-    command: "gemini",
-    listArgs: ["mcp", "list"],
-    // list doesn't support -s flag, lists all scopes
-    addStdio: (name, cmd, args, env3) => {
-      const base = ["mcp", "add", "-s", "user", name, cmd];
-      if (args && args.length > 0) base.push(...args);
-      if (env3 && Object.keys(env3).length > 0) {
-        for (const [key, value] of Object.entries(env3)) {
-          base.push("-e", `${key}=${resolveEnvVar(value)}`);
-        }
-      }
-      return base;
-    },
-    addHttp: (name, url2, headers) => {
-      const base = ["mcp", "add", "-s", "user", "-t", "http", name, url2];
-      if (headers) {
-        for (const [key, value] of Object.entries(headers)) {
-          base.push("-H", `${key}=${resolveEnvVar(value)}`);
-        }
-      }
-      return base;
-    },
-    addSse: (name, url2) => {
-      return ["mcp", "add", "-s", "user", "-t", "sse", name, url2];
-    },
-    remove: (name) => ["mcp", "remove", "-s", "user", name],
-    parseList: (output) => parseMcpListOutput(output, /^✓ ([a-zA-Z0-9_-]+):/)
-  },
-  qwen: {
-    command: "qwen",
-    listArgs: ["mcp", "list"],
-    addStdio: (name, cmd, args, env3) => {
-      const base = ["mcp", "add", "-s", "user", name, cmd];
-      if (args && args.length > 0) base.push(...args);
-      if (env3 && Object.keys(env3).length > 0) {
-        for (const [key, value] of Object.entries(env3)) {
-          base.push("-e", `${key}=${resolveEnvVar(value)}`);
-        }
-      }
-      return base;
-    },
-    addHttp: (name, url2, headers) => {
-      const base = ["mcp", "add", "-s", "user", "-t", "http", name, url2];
-      if (headers) {
-        for (const [key, value] of Object.entries(headers)) {
-          base.push("-H", `${key}=${resolveEnvVar(value)}`);
-        }
-      }
-      return base;
-    },
-    addSse: (name, url2) => {
-      return ["mcp", "add", "-s", "user", "-t", "sse", name, url2];
-    },
-    remove: (name) => ["mcp", "remove", "-s", "user", name],
-    parseList: (output) => parseMcpListOutput(output, /^✓ ([a-zA-Z0-9_-]+):/)
   }
 };
 function stripAnsi2(str) {
@@ -40334,10 +40277,6 @@ function detectAgent(systemRoot) {
   const normalizedRoot = systemRoot.replace(/\\/g, "/").toLowerCase();
   if (normalizedRoot.includes(".claude") || normalizedRoot.includes("/claude")) {
     return "claude";
-  } else if (normalizedRoot.includes(".gemini") || normalizedRoot.includes("/gemini")) {
-    return "gemini";
-  } else if (normalizedRoot.includes(".qwen") || normalizedRoot.includes("/qwen")) {
-    return "qwen";
   }
   return null;
 }
@@ -40390,21 +40329,6 @@ function executeCommand(agent, args, dryRun = false, displayName) {
           serverName = arg;
           break;
         }
-      } else if (agent === "gemini" || agent === "qwen") {
-        const addIndex = args.indexOf("add");
-        for (let i = addIndex + 1; i < args.length; i++) {
-          const arg = args[i];
-          if (arg === "-t") {
-            i++;
-            continue;
-          }
-          if (arg.startsWith("-")) continue;
-          if (["http", "sse", "stdio"].includes(arg)) continue;
-          serverName = arg;
-          break;
-        }
-      } else {
-        serverName = args[2];
       }
       console.log(kleur_default.dim(`  \u2713 ${serverName} (already configured)`));
       return { success: true, skipped: true };
@@ -40729,8 +40653,8 @@ async function executeSync(repoRoot, systemRoot, changeSet, mode, actionType, is
           count++;
           continue;
         }
-        const repoPath = category === "commands" ? import_path8.default.join(repoRoot, ".gemini", "commands") : category === "qwen-commands" ? import_path8.default.join(repoRoot, ".qwen", "commands") : category === "antigravity-workflows" ? import_path8.default.join(repoRoot, ".gemini", "antigravity", "global_workflows") : import_path8.default.join(repoRoot, category);
-        const systemPath = category === "qwen-commands" ? import_path8.default.join(systemRoot, "commands") : category === "antigravity-workflows" ? import_path8.default.join(systemRoot, ".gemini", "antigravity", "global_workflows") : import_path8.default.join(systemRoot, category);
+        const repoPath = import_path8.default.join(repoRoot, category);
+        const systemPath = import_path8.default.join(systemRoot, category);
         if (actionType === "backport") {
           src = import_path8.default.join(systemPath, item);
           dest = import_path8.default.join(repoPath, item);
@@ -42048,24 +41972,11 @@ async function renderSummaryCard(allChanges, totalCount, allSkipped, isDryRun) {
     borderColor: hasDrift ? "yellow" : "green"
   }) + "\n");
 }
-var BEADS_HOOK_PATTERN = /^beads-/;
 function formatTargetLabel(target) {
   const normalized = target.replace(/\\/g, "/").toLowerCase();
   if (normalized.endsWith("/.agents/skills") || normalized.includes("/.agents/skills/")) return "~/.agents/skills";
   if (normalized.endsWith("/.claude") || normalized.includes("/.claude/")) return "~/.claude";
   return import_path13.default.basename(target);
-}
-function filterBeadsFromChangeSet(changeSet) {
-  return {
-    ...changeSet,
-    hooks: {
-      ...changeSet.hooks,
-      missing: changeSet.hooks.missing.filter((h) => !BEADS_HOOK_PATTERN.test(h)),
-      outdated: changeSet.hooks.outdated.filter((h) => !BEADS_HOOK_PATTERN.test(h)),
-      drifted: changeSet.hooks.drifted.filter((h) => !BEADS_HOOK_PATTERN.test(h)),
-      total: changeSet.hooks.total
-    }
-  };
 }
 function isBeadsInstalled() {
   try {
@@ -42252,10 +42163,7 @@ async function runGlobalInstall(flags, installOpts = {}) {
       title: formatTargetLabel(target),
       task: async (listCtx, task) => {
         try {
-          let changeSet = await calculateDiff(repoRoot, target, false);
-          if (skipBeads) {
-            changeSet = filterBeadsFromChangeSet(changeSet);
-          }
+          const changeSet = await calculateDiff(repoRoot, target, false);
           const totalChanges = Object.values(changeSet).reduce(
             (sum, c) => sum + c.missing.length + c.outdated.length + c.drifted.length,
             0
@@ -42408,10 +42316,7 @@ function createInstallCommand() {
         title: formatTargetLabel(target),
         task: async (listCtx, task) => {
           try {
-            let changeSet = await calculateDiff(repoRoot, target, prune);
-            if (skipBeads) {
-              changeSet = filterBeadsFromChangeSet(changeSet);
-            }
+            const changeSet = await calculateDiff(repoRoot, target, prune);
             if (syncType === "sync" && !prune) {
               const hasSettingsDiff = changeSet.config.missing.includes("settings.json") || changeSet.config.outdated.includes("settings.json") || changeSet.config.drifted.includes("settings.json");
               if (!hasSettingsDiff && await needsSettingsSync(repoRoot, target)) {
@@ -56336,7 +56241,7 @@ function createStatusCommand() {
       if (await import_fs_extra14.default.pathExists(c.path)) targets.push(c.path);
     }
     if (targets.length === 0) {
-      console.log(kleur_default.yellow("\n  No agent environments found (~/.claude, ~/.gemini, ~/.qwen)\n"));
+      console.log(kleur_default.yellow("\n  No agent environments found (~/.claude, ~/.agents/skills)\n"));
       return;
     }
     const results = [];

@@ -86,26 +86,11 @@ import { execSync } from 'child_process';
 
 import { spawnSync } from 'child_process';
 import { detectAgent } from '../utils/sync-mcp-cli.js';
-const BEADS_HOOK_PATTERN = /^beads-/;
-
 function formatTargetLabel(target: string): string {
     const normalized = target.replace(/\\/g, '/').toLowerCase();
     if (normalized.endsWith('/.agents/skills') || normalized.includes('/.agents/skills/')) return '~/.agents/skills';
     if (normalized.endsWith('/.claude') || normalized.includes('/.claude/')) return '~/.claude';
     return path.basename(target);
-}
-
-function filterBeadsFromChangeSet(changeSet: ChangeSet): ChangeSet {
-    return {
-        ...changeSet,
-        hooks: {
-            ...changeSet.hooks,
-            missing: changeSet.hooks.missing.filter(h => !BEADS_HOOK_PATTERN.test(h)),
-            outdated: changeSet.hooks.outdated.filter(h => !BEADS_HOOK_PATTERN.test(h)),
-            drifted: changeSet.hooks.drifted.filter(h => !BEADS_HOOK_PATTERN.test(h)),
-            total: changeSet.hooks.total,
-        },
-    };
 }
 
 function isBeadsInstalled(): boolean {
@@ -344,11 +329,7 @@ async function runGlobalInstall(
             title: formatTargetLabel(target),
             task: async (listCtx, task) => {
                 try {
-                    let changeSet = await calculateDiff(repoRoot, target, false);
-                    if (skipBeads) {
-                        changeSet = filterBeadsFromChangeSet(changeSet);
-                    }
-
+                    const changeSet = await calculateDiff(repoRoot, target, false);
                     const totalChanges = Object.values(changeSet).reduce(
                         (sum, c: any) => sum + c.missing.length + c.outdated.length + c.drifted.length, 0,
                     );
@@ -542,10 +523,7 @@ export function createInstallCommand(): Command {
                     title: formatTargetLabel(target),
                     task: async (listCtx, task) => {
                         try {
-                            let changeSet = await calculateDiff(repoRoot, target, prune);
-                            if (skipBeads) {
-                                changeSet = filterBeadsFromChangeSet(changeSet);
-                            }
+                            const changeSet = await calculateDiff(repoRoot, target, prune);
 
                             if (syncType === 'sync' && !prune) {
                                 const hasSettingsDiff =

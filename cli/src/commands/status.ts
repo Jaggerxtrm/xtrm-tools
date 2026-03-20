@@ -49,7 +49,7 @@ export function createStatusCommand(): Command {
                 if (await fs.pathExists(c.path)) targets.push(c.path);
             }
             if (targets.length === 0) {
-                console.log(kleur.yellow('\n  No agent environments found (~/.claude, ~/.gemini, ~/.qwen)\n'));
+                console.log(kleur.yellow('\n  No agent environments found (~/.claude, ~/.agents/skills)\n'));
                 return;
             }
 

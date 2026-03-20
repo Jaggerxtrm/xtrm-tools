@@ -8,7 +8,7 @@ import kleur from 'kleur';
 import ora from 'ora';
 import { ensureEnvFile, loadEnvFile, checkRequiredEnvVars, handleMissingEnvVars, getEnvFilePath } from './env-manager.js';
 
-export type AgentName = 'claude' | 'gemini' | 'qwen';
+export type AgentName = 'claude';
 
 interface AgentCLI {
     command: string;
@@ -49,62 +49,6 @@ const AGENT_CLI: Record<AgentName, AgentCLI> = {
         remove: (name) => ['mcp', 'remove', '-s', 'user', name],
         parseList: (output) => parseMcpListOutput(output, /^([a-zA-Z0-9_-]+):/)
     },
-    gemini: {
-        command: 'gemini',
-        listArgs: ['mcp', 'list'], // list doesn't support -s flag, lists all scopes
-        addStdio: (name, cmd, args, env) => {
-            const base = ['mcp', 'add', '-s', 'user', name, cmd];
-            if (args && args.length > 0) base.push(...args);
-            if (env && Object.keys(env).length > 0) {
-                for (const [key, value] of Object.entries(env)) {
-                    base.push('-e', `${key}=${resolveEnvVar(value)}`);
-                }
-            }
-            return base;
-        },
-        addHttp: (name, url, headers) => {
-            const base = ['mcp', 'add', '-s', 'user', '-t', 'http', name, url];
-            if (headers) {
-                for (const [key, value] of Object.entries(headers)) {
-                    base.push('-H', `${key}=${resolveEnvVar(value)}`);
-                }
-            }
-            return base;
-        },
-        addSse: (name, url) => {
-            return ['mcp', 'add', '-s', 'user', '-t', 'sse', name, url];
-        },
-        remove: (name) => ['mcp', 'remove', '-s', 'user', name],
-        parseList: (output) => parseMcpListOutput(output, /^✓ ([a-zA-Z0-9_-]+):/)
-    },
-    qwen: {
-        command: 'qwen',
-        listArgs: ['mcp', 'list'],
-        addStdio: (name, cmd, args, env) => {
-            const base = ['mcp', 'add', '-s', 'user', name, cmd];
-            if (args && args.length > 0) base.push(...args);
-            if (env && Object.keys(env).length > 0) {
-                for (const [key, value] of Object.entries(env)) {
-                    base.push('-e', `${key}=${resolveEnvVar(value)}`);
-                }
-            }
-            return base;
-        },
-        addHttp: (name, url, headers) => {
-            const base = ['mcp', 'add', '-s', 'user', '-t', 'http', name, url];
-            if (headers) {
-                for (const [key, value] of Object.entries(headers)) {
-                    base.push('-H', `${key}=${resolveEnvVar(value)}`);
-                }
-            }
-            return base;
-        },
-        addSse: (name, url) => {
-            return ['mcp', 'add', '-s', 'user', '-t', 'sse', name, url];
-        },
-        remove: (name) => ['mcp', 'remove', '-s', 'user', name],
-        parseList: (output) => parseMcpListOutput(output, /^✓ ([a-zA-Z0-9_-]+):/)
-    }
 };
 
 // Strip ANSI escape codes (e.g. qwen wraps ✓ in color codes)
@@ -142,10 +86,6 @@ export function detectAgent(systemRoot: string): AgentName | null {
     const normalizedRoot = systemRoot.replace(/\\/g, '/').toLowerCase();
     if (normalizedRoot.includes('.claude') || normalizedRoot.includes('/claude')) {
         return 'claude';
-    } else if (normalizedRoot.includes('.gemini') || normalizedRoot.includes('/gemini')) {
-        return 'gemini';
-    } else if (normalizedRoot.includes('.qwen') || normalizedRoot.includes('/qwen')) {
-        return 'qwen';
     }
     return null;
 }
@@ -215,18 +155,6 @@ function executeCommand(agent: AgentName, args: string[], dryRun: boolean = fals
                     serverName = arg;
                     break;
                 }
-            } else if (agent === 'gemini' || agent === 'qwen') {
-                const addIndex = args.indexOf('add');
-                for (let i = addIndex + 1; i < args.length; i++) {
-                    const arg = args[i];
-                    if (arg === '-t') { i++; continue; }
-                    if (arg.startsWith('-')) continue;
-                    if (['http', 'sse', 'stdio'].includes(arg)) continue;
-                    serverName = arg;
-                    break;
-                }
-            } else {
-                serverName = args[2];
             }
             console.log(kleur.dim(`  ✓ ${serverName} (already configured)`));
             return { success: true, skipped: true };

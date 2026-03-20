@@ -5,8 +5,8 @@
   "main": "./dist/index.js",
   "type": "module",
   "bin": {
-    "xtrm": "./dist/index.cjs",
-    "xt": "./dist/index.cjs"
+    "xtrm": "dist/index.cjs",
+    "xt": "dist/index.cjs"
   },
   "scripts": {
     "build": "tsup",

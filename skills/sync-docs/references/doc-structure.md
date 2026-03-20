@@ -1,6 +1,6 @@
 # docs/ Structure Guide
 
-This reference defines what belongs in each focused docs/ file vs README.md and `.serena/memories/`.
+This reference defines what belongs in each focused docs/ file vs README.md.
 
 ## The Rule
 
@@ -10,8 +10,6 @@ This reference defines what belongs in each focused docs/ file vs README.md and 
 - Has YAML frontmatter (see `schema.md`)
 - Covers exactly one subsystem or concern
 - Is linked from README.md with a single line
-
-**.serena/memories/** holds internal AI memory — architecture decisions, patterns, workflows — for the AI agents themselves. These are not user docs.
 
 ---
 
@@ -30,8 +28,6 @@ This reference defines what belongs in each focused docs/ file vs README.md and 
 | CLI commands reference | `docs/cli-reference.md` | When CLI has > 10 commands |
 | Troubleshooting and FAQs | `docs/troubleshooting.md` | When recurring issues exist |
 | In-progress work plans | `docs/plans/` | Always for planning docs |
-| Architecture decisions (AI) | `.serena/memories/*_ssot.md` | For AI context only |
-| Implementation patterns (AI) | `.serena/memories/*_pattern.md` | For AI context only |
 
 ---
 
@@ -93,12 +89,11 @@ The `EXTRACTABLE` status means sections are present but README isn't over thresh
 
 When extracting a section from README to docs/:
 
-1. Run `mcp__serena__get_symbols_overview` on README.md to map all sections
-2. Use `mcp__serena__find_symbol` to read the target section body
-3. Create `docs/X.md` with `validate_doc.py --generate`
-4. Paste the section content into the new file
-5. Use `mcp__serena__replace_symbol_body` to replace README section with:
+1. Identify the target section heading and its body in `README.md`
+2. Create `docs/X.md` with `validate_doc.py --generate`
+3. Move the section content into the new file
+4. Replace the original README section with:
    ```markdown
    See [docs/X.md](docs/X.md) for the full reference.
    ```
-6. Run `validate_doc.py docs/X.md` to confirm schema
+5. Run `validate_doc.py docs/X.md` to confirm schema

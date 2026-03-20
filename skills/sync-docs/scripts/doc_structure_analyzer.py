@@ -240,12 +240,12 @@ def analyze_changelog(root: Path) -> dict:
             if _semver(pkg_version) > _semver(latest_changelog_version):
                 add_entry = next(
                     (p for p in [
-                        Path.home() / ".claude/skills/documenting/scripts/changelog/add_entry.py",
-                        Path(__file__).parent.parent.parent / "documenting/scripts/changelog/add_entry.py",
+                        Path.home() / ".claude/skills/sync-docs/scripts/changelog/add_entry.py",
+                        Path(__file__).parent / "changelog/add_entry.py",
                     ] if p.exists()),
                     None,
                 )
-                script = str(add_entry) if add_entry else "skills/documenting/scripts/changelog/add_entry.py"
+                script = str(add_entry) if add_entry else "skills/sync-docs/scripts/changelog/add_entry.py"
                 result["fix_hint"] = (
                     f"python3 {script} CHANGELOG.md Added "
                     f'"v{pkg_version} — describe changes since v{latest_changelog_version}"'

@@ -4,232 +4,129 @@ description: >-
   Doc audit and structural sync for xtrm projects. Use whenever the README
   feels too long, docs are out of sync after a sprint, the CHANGELOG is behind,
   or the user asks to "sync docs", "doc audit", "split readme", "check docs
-  health", or "detect drift". Also triggers after closing bd issues or merging
-  PRs when documentation cleanup is implied. Reads bd issues, PRs, and memories
-  to understand what changed, then runs drift detection on README.md,
-  CHANGELOG.md, and docs/ — creating missing focused files instead of a
-  monolithic README. Prefer over /documenting for any structural reorganization
-  or multi-file sync work.
+  health", or "detect drift". Reads bd issues and git history, then runs
+  docs-only drift detection on README.md, CHANGELOG.md, and docs/ — creating
+  missing focused files instead of a monolithic README.
 gemini-command: sync-docs
-version: 1.0.0
+version: 1.1.0
 ---
 
 # sync-docs
 
-Keeps documentation in sync with reality. Reads what was done (bd issues, PRs, memories), finds what's stale or structurally wrong, and fixes it with Serena precision.
+Keeps project documentation in sync with code reality.
 
 ## Overview
 
 ```
-Phase 1: Gather context     — what was done recently?
-Phase 2: Detect drift       — what's stale in SSOT memories?
-Phase 3: Analyze structure  — what's in the wrong place?
-Phase 4: Plan + execute     — fix with Serena  (SKIP if audit/read-only task)
+Phase 1: Gather context     — what changed recently?
+Phase 2: Detect docs drift  — which docs/ files are stale?
+Phase 3: Analyze structure  — what belongs outside README?
+Phase 4: Plan + execute     — fix docs and changelog
 Phase 5: Validate           — schema-check all docs/
 ```
 
-**Audit vs Execute mode:** If the user asked for an audit, report, or "just check", stop after Phase 3 — do not run `--fix` or edit any files. Only proceed to Phase 4 when the user explicitly wants changes made.
-
----
-
-## MANDATORY FIRST STEP
-
-Activate the Serena project before any file edits:
-
-```javascript
-mcp__serena__activate_project({ project: "<cwd>" })
-```
+**Audit vs Execute mode:** If the user asked for an audit/report/check-only task, stop after Phase 3. Only run fixes when the user explicitly asks for changes.
 
 ---
 
 ## Phase 1: Gather Context
 
 ```bash
-# If skill is installed globally:
+# Global install
 python3 "$HOME/.claude/skills/sync-docs/scripts/context_gatherer.py" [--since=30]
 
-# If running from the repo directly:
+# From repository
 python3 "skills/sync-docs/scripts/context_gatherer.py" [--since=30]
 ```
 
-Outputs a JSON report with:
-- Recently closed bd issues (id, title, closed date)
-- Merged PRs (subject, merge date) from git history
-- bd memories persisted this cycle (`bd memory list` if available)
-- Stale Serena memories (delegates to drift_detector.py)
-
-If no `.beads/` directory exists, falls back to git-only context. All output is JSON — read it and keep the key findings in mind for Phase 3.
+Outputs JSON with:
+- recently closed bd issues
+- merged PRs from git history
+- recent commits
+- docs drift report from `sync-docs/scripts/drift_detector.py`
 
 ---
 
-## Phase 2: Detect SSOT Drift
+## Phase 2: Detect docs/ Drift
 
 ```bash
-python3 "$HOME/.claude/skills/documenting/scripts/drift_detector.py" scan
+python3 "skills/sync-docs/scripts/drift_detector.py" scan --since 30
+# optional JSON:
+python3 "skills/sync-docs/scripts/drift_detector.py" scan --since 30 --json
 ```
 
-This checks which Serena memories have `tracks:` globs matching recently modified files. If something is stale, note the memory name. You will handle it in Phase 4 using the same update steps as `/documenting` — but with Serena tools (not Edit/Write).
-
-> **Note:** `drift_detector.py` requires `pyyaml`. If you see `ModuleNotFoundError: No module named 'yaml'`, skip Phase 2 and note it — the rest of the skill works without it. Do not `pip install` unless the user explicitly approves.
+A docs file is stale when frontmatter `source_of_truth_for` (or `tracks`) matches files changed in recent commits.
 
 ---
 
 ## Phase 3: Analyze Document Structure
 
 ```bash
-# Analysis only (no changes) — always safe to run:
-python3 "$HOME/.claude/skills/sync-docs/scripts/doc_structure_analyzer.py"
-# or from repo: python3 "skills/sync-docs/scripts/doc_structure_analyzer.py"
+python3 "skills/sync-docs/scripts/doc_structure_analyzer.py"
 ```
 
 Checks:
-1. **README.md bloat** — flags if > 200 lines or contains sections that belong in `docs/`
-2. **CHANGELOG.md coverage** — date gap AND version gap (package.json vs latest changelog entry)
-3. **docs/ gaps** — expected focused files that don't exist yet
-4. **Schema validity** — existing docs/ files missing YAML frontmatter
+1. README bloat/extractable sections
+2. CHANGELOG staleness (date + version gap)
+3. Missing focused docs files
+4. Invalid docs schema (missing frontmatter)
 
-Reports are categorized as `BLOATED`, `EXTRACTABLE`, `MISSING`, `STALE`, `INVALID_SCHEMA`, or `OK`.
+Statuses: `BLOATED`, `EXTRACTABLE`, `MISSING`, `STALE`, `INVALID_SCHEMA`, `OK`.
 
-**If the task is audit/analysis only → stop here.** Summarize findings and present to the user. Do not run `--fix` without explicit intent to make changes.
-
-Read `references/doc-structure.md` for the complete guide on what belongs in each docs/ file.
+If this is audit-only, stop here and report.
 
 ---
 
-## Phase 4: Decide and Execute
+## Phase 4: Execute Fixes
 
 | Situation | Action |
 |---|---|
-| README bloated + section belongs in docs/ | Extract → new `docs/X.md`, replace with summary + link |
-| docs/ file missing for existing subsystem | Create `docs/X.md` with schema frontmatter |
-| Serena memory stale | Update memory using Serena tools (see below) |
-| bd issue closed, no doc reflects it | Update CHANGELOG + relevant doc |
-| docs/ file schema invalid | Fix frontmatter, regenerate INDEX |
-| Everything clean | Report "All docs in sync" and stop |
+| README bloated | Extract large sections to focused docs files |
+| Missing docs file | Generate scaffold via `validate_doc.py --generate` |
+| Stale docs file | Update content + bump `version` + `updated` |
+| Stale CHANGELOG | Add entry with local changelog script |
+| Invalid schema | Fix frontmatter and regenerate INDEX |
 
-### Editing with Serena (required for all doc edits)
-
-Never use the raw `Edit` tool on documentation files. Always go through Serena:
-
-```javascript
-// 1. Map structure first
-mcp__serena__get_symbols_overview({ relative_path: "README.md", depth: 1 })
-
-// 2. Read only the relevant section
-mcp__serena__find_symbol({ name: "Section Name", include_body: true })
-
-// 3. Replace section content
-mcp__serena__replace_symbol_body({ symbol_name: "Section Name", new_body: "..." })
-
-// 4. Insert a new section after an existing one
-mcp__serena__insert_after_symbol({ symbol_name: "Existing Section", new_symbol: "..." })
-```
-
-The reason this matters: Serena edits are atomic and reference-safe. Direct edits on large markdown files risk corrupting heading structure or inserting duplicates.
-
-### Auto-scaffolding missing docs/ files (--fix)
-
-For known subsystem patterns (hooks/, policies/, skills/, etc.), run `--fix` to generate all missing scaffolds at once:
+### Auto-fix known gaps
 
 ```bash
-python3 "$HOME/.claude/skills/sync-docs/scripts/doc_structure_analyzer.py" --fix
+python3 "skills/sync-docs/scripts/doc_structure_analyzer.py" --fix
+python3 "skills/sync-docs/scripts/doc_structure_analyzer.py" --fix --bd-remember
 ```
 
-Combine with `--bd-remember` to persist a summary insight for future sessions:
+### Create one docs scaffold
 
 ```bash
-python3 "$HOME/.claude/skills/sync-docs/scripts/doc_structure_analyzer.py" --fix --bd-remember
-```
-
-`--fix` only handles known MISSING patterns. README extraction (BLOATED/EXTRACTABLE) still requires Serena — content judgment is needed to split correctly.
-
-### Creating a single docs/ file manually
-
-Generate the scaffold with valid frontmatter:
-
-```bash
-python3 "$HOME/.claude/skills/sync-docs/scripts/validate_doc.py" --generate docs/hooks.md \
+python3 "skills/sync-docs/scripts/validate_doc.py" --generate docs/hooks.md \
   --title "Hooks Reference" --scope "hooks" --category "reference" \
   --source-for "hooks/**/*.mjs,policies/*.json"
 ```
 
-Then fill content using Serena. See `references/schema.md` for all frontmatter fields.
-
-### Updating Serena memories (when drift detected)
-
-1. Read the `<!-- INDEX -->` block only — identify stale sections
-2. Use `mcp__serena__search_for_pattern` to jump to stale content
-3. Use `mcp__serena__replace_symbol_body` to update
-4. Bump `version:` (patch = content fix, minor = new section) and `updated:` in frontmatter
-5. Regenerate INDEX:
+### Validate and regenerate metadata/index
 
 ```bash
-python3 "$HOME/.claude/skills/documenting/scripts/validate_metadata.py" <memory-file>
+python3 "skills/sync-docs/scripts/validate_metadata.py" docs/
 ```
 
-### Updating CHANGELOG
+### Add changelog entry
 
 ```bash
-python3 "$HOME/.claude/skills/documenting/scripts/changelog/add_entry.py" \
-  CHANGELOG.md <type> "<summary>"
+python3 "skills/sync-docs/scripts/changelog/add_entry.py" \
+  CHANGELOG.md Added "Describe the documentation update"
 ```
-
-Types: `Added`, `Changed`, `Fixed`, `Removed`.
-
-### Persisting insights via bd remember
-
-After significant doc work (new docs/ files created, README reorganized, major drift fixed), persist a summary for future sessions:
-
-```bash
-bd remember "<what was done and why>" --key sync-docs-<scope>-<YYYY-MM-DD>
-```
-
-Examples:
-```bash
-bd remember "docs/hooks.md created — extracted from README section + 12 hook scripts cataloged" --key sync-docs-hooks-2026-03-18
-bd remember "README trimmed from 340 to 180 lines — policies, hooks, MCP moved to docs/" --key sync-docs-readme-trim-2026-03-18
-```
-
-This is done automatically when using `--fix --bd-remember`, but do it manually too when making structural changes via Serena.
 
 ---
 
-## Phase 5: Validate
-
-Run schema validation on all docs/ files before finishing:
+## Phase 5: Final Validation
 
 ```bash
-python3 "$HOME/.claude/skills/sync-docs/scripts/validate_doc.py" docs/
+python3 "skills/sync-docs/scripts/validate_doc.py" docs/
+python3 "skills/sync-docs/scripts/drift_detector.py" scan --since 30
 ```
-
-Exits 0 if all pass. Fix any errors before reporting completion.
 
 ---
 
-## Standard docs/ Structure
+## docs/ as SSOT
 
-See `references/doc-structure.md` for the complete guide. At minimum, a mature xtrm project should have:
-
-```
-docs/
-├── hooks.md              # Hook events, scripts, and their behavior
-├── pi-extensions.md      # Pi/Copilot extension catalog
-├── architecture.md       # System design, key components
-└── plans/                # In-progress and completed work plans
-```
-
-If any of these are missing and the project has the relevant code, create them.
-
----
-
-## Relationship to /documenting
-
-| Use `/sync-docs` when | Use `/documenting` when |
-|---|---|
-| Finishing a feature cycle | Just adding a CHANGELOG entry |
-| README feels too big | Creating a single Serena memory |
-| After merging multiple PRs | Updating one stale memory |
-| Need bd context to know what changed | The scope is already clear |
-| Structural reorganization needed | No structural changes needed |
-
-`/documenting` inherits the changelog scripts from this skill. Both can run in the same repo — they don't conflict.
+`docs/` is the only source of truth for project documentation in this workflow.
+Use frontmatter (`source_of_truth_for`) to link docs pages to code areas and detect drift.

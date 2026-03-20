@@ -6,10 +6,10 @@ Collects:
   - Recently closed bd issues (if .beads/ exists)
   - Recently merged PRs (via git log)
   - bd memories persisted this cycle (bd kv list)
-  - Stale Serena memories (via drift_detector.py)
+  - Stale docs/ files (via sync-docs drift_detector.py)
 
 Outputs JSON to stdout. Safe to run in any project — degrades gracefully
-when bd or Serena are unavailable.
+when bd or drift detection tools are unavailable.
 
 Usage:
   context_gatherer.py [--since=30]
@@ -58,9 +58,6 @@ def find_main_repo_root(root: Path) -> Path:
         content = git_path.read_text(encoding="utf-8").strip()
         if content.startswith("gitdir:"):
             worktree_git = Path(content[len("gitdir:"):].strip())
-            # worktree_git = /path/to/main/.git/worktrees/<name>
-            # main .git   = /path/to/main/.git  (two levels up)
-            # main repo   = /path/to/main        (one more level)
             main_git = worktree_git.parent.parent
             return main_git.parent
     return root
@@ -68,21 +65,21 @@ def find_main_repo_root(root: Path) -> Path:
 
 def ensure_dolt_server(cwd: str) -> bool:
     """Ensure the Dolt server is running. Start it if not. Returns True if ready."""
-    # Quick connection test
     test = run(["bd", "dolt", "test"], cwd=cwd, timeout=5)
     if test is not None:
         return True
 
-    # Server not responding — try to start it
     try:
         subprocess.run(
             ["bd", "dolt", "start"],
-            cwd=cwd, capture_output=True, text=True, timeout=15
+            cwd=cwd,
+            capture_output=True,
+            text=True,
+            timeout=15,
         )
     except Exception:
         return False
 
-    # Wait up to 6 seconds for it to become ready
     for _ in range(6):
         time.sleep(1)
         if run(["bd", "dolt", "test"], cwd=cwd, timeout=3) is not None:
@@ -104,7 +101,6 @@ def gather_bd_closed(cwd: str) -> list[dict]:
     issues = []
     for line in out.splitlines():
         line = line.strip()
-        # bd list output: "✓ <id> ● <priority> <title>"
         if line.startswith("✓") or "closed" in line.lower():
             parts = line.lstrip("✓ ").split()
             if len(parts) >= 2:
@@ -172,32 +168,31 @@ def gather_recent_commits(root: Path, since_n: int) -> list[dict]:
     return commits[:15]
 
 
-def gather_serena_drift(root: Path) -> dict:
-    """Run drift_detector.py and capture its output."""
+def gather_docs_drift(root: Path, since_n: int) -> dict:
+    """Run sync-docs drift_detector.py and capture stale docs report."""
     candidates = [
-        Path.home() / ".claude/skills/documenting/scripts/drift_detector.py",
-        root / "skills/documenting/scripts/drift_detector.py",
+        Path.home() / ".claude/skills/sync-docs/scripts/drift_detector.py",
+        root / "skills/sync-docs/scripts/drift_detector.py",
+        Path(__file__).parent / "drift_detector.py",
     ]
     detector = next((p for p in candidates if p.exists()), None)
     if not detector:
         return {"available": False, "stale": []}
 
-    out = run([sys.executable, str(detector), "scan"], cwd=str(root))
+    out = run([sys.executable, str(detector), "scan", "--since", str(since_n), "--json"], cwd=str(root))
     if out is None:
         return {"available": False, "stale": []}
 
-    stale = []
-    for line in out.splitlines():
-        if line.strip().startswith(tuple("abcdefghijklmnopqrstuvwxyz_")):
-            name = line.strip()
-            if name and not name.startswith("Modified:") and not name.startswith("Last"):
-                stale.append(name)
-
-    return {
-        "available": True,
-        "stale": stale,
-        "raw": out,
-    }
+    try:
+        data = json.loads(out)
+        return {
+            "available": True,
+            "stale": data.get("stale", []),
+            "count": data.get("count", 0),
+            "raw": data,
+        }
+    except json.JSONDecodeError:
+        return {"available": True, "stale": [], "raw": out}
 
 
 def main() -> None:
@@ -210,7 +205,6 @@ def main() -> None:
                 pass
 
     root = find_project_root()
-    # In a git worktree, bd needs the main repo's .beads/ — resolve it
     main_root = find_main_repo_root(root)
     bd_cwd = str(main_root)
     bd_available = has_beads(main_root)
@@ -233,7 +227,7 @@ def main() -> None:
         "bd_memories": gather_bd_memories(bd_cwd) if dolt_ready else [],
         "merged_prs": gather_merged_prs(root, since_n),
         "recent_commits": gather_recent_commits(root, since_n),
-        "serena_drift": gather_serena_drift(root),
+        "docs_drift": gather_docs_drift(root, since_n),
     }
 
     if dolt_warning:

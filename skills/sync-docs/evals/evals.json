@@ -60,7 +60,7 @@
     {
       "id": 3,
       "prompt": "Do a doc audit. I think the README has sections that should be in docs/ but I'm not sure which ones.",
-      "expected_output": "Runs the full 5-phase sync-docs workflow: gathers context, runs drift detection, runs doc_structure_analyzer.py, identifies EXTRACTABLE/BLOATED sections with specific suggestions for what goes in which docs/ file, and uses Serena to map README structure before recommending or making changes.",
+      "expected_output": "Runs the full 5-phase sync-docs workflow: gathers context, runs drift detection, runs doc_structure_analyzer.py, and identifies EXTRACTABLE/BLOATED sections with specific suggestions for what goes in which docs/ file before recommending or making changes.",
       "files": [],
       "assertions": [
         {

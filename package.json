@@ -8,7 +8,8 @@
     "cli"
   ],
   "bin": {
-    "xtrm": "cli/dist/index.cjs"
+    "xtrm": "cli/dist/index.cjs",
+    "xt": "cli/dist/index.cjs"
   },
   "files": [
     "README.md",

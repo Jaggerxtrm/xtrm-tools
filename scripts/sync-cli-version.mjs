@@ -18,10 +18,28 @@ if (!rootPkg.version || typeof rootPkg.version !== 'string') {
   process.exit(1);
 }
 
+let changed = false;
+
+// Sync version
 if (cliPkg.version !== rootPkg.version) {
   cliPkg.version = rootPkg.version;
+  changed = true;
+}
+
+// Sync bin — root is SSOT; rewrite paths from 'cli/dist/...' to 'dist/...'
+if (rootPkg.bin) {
+  const cliBin = Object.fromEntries(
+    Object.entries(rootPkg.bin).map(([k, v]) => [k, v.replace(/^cli\//, '')])
+  );
+  if (JSON.stringify(cliPkg.bin) !== JSON.stringify(cliBin)) {
+    cliPkg.bin = cliBin;
+    changed = true;
+  }
+}
+
+if (changed) {
   fs.writeFileSync(cliPkgPath, `${JSON.stringify(cliPkg, null, 2)}\n`, 'utf8');
-  console.log(`Synced cli/package.json version to ${rootPkg.version}`);
+  console.log(`Synced cli/package.json (version: ${rootPkg.version}, bin: ${Object.keys(cliPkg.bin ?? {}).join(', ')})`);
 } else {
   console.log(`cli/package.json already in sync (${rootPkg.version})`);
 }

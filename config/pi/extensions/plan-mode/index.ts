@@ -75,6 +75,7 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 	});
 
 	function updateStatus(ctx: ExtensionContext): void {
+		// Execution phase - show bd issues
 		if (state.executing && state.issues.length > 0) {
 			const completed = state.issues.filter(i => i.status === "closed").length;
 			const current = state.issues.find(i => i.id === state.currentIssueId);
@@ -83,12 +84,17 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 				: `📋 ${completed}/${state.issues.length}`;
 			ctx.ui.setStatus("plan-mode", ctx.ui.theme.fg("accent", status));
 		} else if (state.enabled) {
-			ctx.ui.setStatus("plan-mode", ctx.ui.theme.fg("warning", "⏸ plan"));
+			// Planning phase - show plan indicator
+			const stepCount = pendingPlanSteps.length;
+			const status = stepCount > 0 
+				? `⏸ plan (${stepCount} steps)`
+				: "⏸ plan";
+			ctx.ui.setStatus("plan-mode", ctx.ui.theme.fg("warning", status));
 		} else {
 			ctx.ui.setStatus("plan-mode", undefined);
 		}
 
-		// Widget
+		// Widget - execution phase
 		if (state.executing && state.issues.length > 0) {
 			const lines = state.issues.map((issue) => {
 				const isCurrent = issue.id === state.currentIssueId;
@@ -102,6 +108,22 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 					: issue.title;
 				return prefix + (issue.status === "closed" ? ctx.ui.theme.fg("muted", text) : text);
 			});
+			ctx.ui.setWidget("plan-todos", lines);
+		} else if (state.enabled && pendingPlanSteps.length > 0) {
+			// Widget - planning phase with pending steps
+			const lines = [
+				ctx.ui.theme.fg("warning", ctx.ui.theme.bold("Plan Mode")),
+				ctx.ui.theme.fg("muted", `${pendingPlanSteps.length} steps extracted`),
+				"",
+			];
+			pendingPlanSteps.slice(0, 5).forEach((s, i) => {
+				lines.push(ctx.ui.theme.fg("dim", `${i + 1}. ${s.text}`));
+			});
+			if (pendingPlanSteps.length > 5) {
+				lines.push(ctx.ui.theme.fg("dim", `... +${pendingPlanSteps.length - 5} more`));
+			}
+			lines.push("");
+			lines.push(ctx.ui.theme.fg("muted", "Create plan, then approve epic"));
 			ctx.ui.setWidget("plan-todos", lines);
 		} else {
 			ctx.ui.setWidget("plan-todos", undefined);

@@ -66,17 +66,32 @@ export async function launchWorktreeSession(opts: WorktreeSessionOptions): Promi
     if (await fs.pathExists(mainBeadsDir)) {
         const worktreePortFile = path.join(worktreeBeadsDir, 'dolt-server.port');
 
-        // Stop the auto-spawned isolated dolt server in the worktree
+        // Stop the auto-spawned isolated dolt server in the worktree (best-effort)
         spawnSync('bd', ['dolt', 'stop'], { cwd: worktreePath, stdio: 'pipe' });
 
-        // Read main checkout's port and write to worktree
+        // Resolve main's Dolt port: prefer port file, fall back to bd dolt status
+        let mainPort: string | null = null;
         if (await fs.pathExists(mainPortFile)) {
-            const mainPort = (await fs.readFile(mainPortFile, 'utf8')).trim();
+            mainPort = (await fs.readFile(mainPortFile, 'utf8')).trim();
+        } else {
+            // Query live server port from main checkout
+            const statusResult = spawnSync('bd', ['dolt', 'status'], {
+                cwd: repoRoot, stdio: 'pipe', encoding: 'utf8',
+            });
+            const portMatch = (statusResult.stdout ?? '').match(/Port:\s*(\d+)/);
+            if (portMatch) {
+                mainPort = portMatch[1];
+                // Persist to port file so future worktrees find it immediately
+                await fs.writeFile(mainPortFile, mainPort, 'utf8');
+            }
+        }
+
+        if (mainPort) {
             await fs.ensureDir(worktreeBeadsDir);
             await fs.writeFile(worktreePortFile, mainPort, 'utf8');
             console.log(kleur.dim(`  beads: redirected to main server (port ${mainPort})`));
         } else {
-            console.log(kleur.dim('  beads: no port file found in main checkout, skipping redirect'));
+            console.log(kleur.dim('  beads: main Dolt server not running, worktree will use isolated db'));
         }
     }
 

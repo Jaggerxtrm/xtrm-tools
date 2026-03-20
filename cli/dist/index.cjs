@@ -41286,13 +41286,27 @@ async function launchWorktreeSession(opts) {
   if (await import_fs_extra12.default.pathExists(mainBeadsDir)) {
     const worktreePortFile = import_node_path5.default.join(worktreeBeadsDir, "dolt-server.port");
     (0, import_node_child_process2.spawnSync)("bd", ["dolt", "stop"], { cwd: worktreePath, stdio: "pipe" });
+    let mainPort = null;
     if (await import_fs_extra12.default.pathExists(mainPortFile)) {
-      const mainPort = (await import_fs_extra12.default.readFile(mainPortFile, "utf8")).trim();
+      mainPort = (await import_fs_extra12.default.readFile(mainPortFile, "utf8")).trim();
+    } else {
+      const statusResult = (0, import_node_child_process2.spawnSync)("bd", ["dolt", "status"], {
+        cwd: repoRoot,
+        stdio: "pipe",
+        encoding: "utf8"
+      });
+      const portMatch = (statusResult.stdout ?? "").match(/Port:\s*(\d+)/);
+      if (portMatch) {
+        mainPort = portMatch[1];
+        await import_fs_extra12.default.writeFile(mainPortFile, mainPort, "utf8");
+      }
+    }
+    if (mainPort) {
       await import_fs_extra12.default.ensureDir(worktreeBeadsDir);
       await import_fs_extra12.default.writeFile(worktreePortFile, mainPort, "utf8");
       console.log(kleur_default.dim(`  beads: redirected to main server (port ${mainPort})`));
     } else {
-      console.log(kleur_default.dim("  beads: no port file found in main checkout, skipping redirect"));
+      console.log(kleur_default.dim("  beads: main Dolt server not running, worktree will use isolated db"));
     }
   }
   console.log(kleur_default.green(`

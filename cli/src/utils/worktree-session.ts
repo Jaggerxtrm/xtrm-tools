@@ -62,11 +62,6 @@ export async function launchWorktreeSession(opts: WorktreeSessionOptions): Promi
     const mainPortFile = path.join(mainBeadsDir, 'dolt-server.port');
 
     if (await fs.pathExists(mainBeadsDir)) {
-        const worktreePortFile = path.join(worktreeBeadsDir, 'dolt-server.port');
-
-        // Stop the auto-spawned isolated dolt server in the worktree (best-effort)
-        spawnSync('bd', ['dolt', 'stop'], { cwd: worktreePath, stdio: 'pipe' });
-
         // Resolve main's Dolt port: prefer port file, fall back to bd dolt status
         let mainPort: string | null = null;
         if (await fs.pathExists(mainPortFile)) {
@@ -85,8 +80,9 @@ export async function launchWorktreeSession(opts: WorktreeSessionOptions): Promi
         }
 
         if (mainPort) {
+            // Write redirect BEFORE launching claude so bd never auto-spawns an isolated server
             await fs.ensureDir(worktreeBeadsDir);
-            await fs.writeFile(worktreePortFile, mainPort, 'utf8');
+            await fs.writeFile(path.join(worktreeBeadsDir, 'dolt-server.port'), mainPort, 'utf8');
             console.log(kleur.dim(`  beads: redirected to main server (port ${mainPort})`));
         } else {
             console.log(kleur.dim('  beads: main Dolt server not running, worktree will use isolated db'));

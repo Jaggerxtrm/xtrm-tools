@@ -70,18 +70,13 @@ export function stopBlockMessage(summary, claimed) {
 
 // ── Memory gate messages ─────────────────────────────────────────
 
-export function memoryGatePendingMessage() {
+export function memoryPromptMessage(claimId) {
+  const claimLine = claimId ? `claim \`${claimId}\` was closed this session.\n` : '';
   return (
-    '🧠 Memory gate pending — evaluate insights before continuing.\n' +
-    '  YES → bd remember "<insight>"   NO → note "nothing to persist"\n' +
-    '  Then acknowledge: touch .beads/.memory-gate-done\n'
-  );
-}
-
-export function memoryPromptMessage() {
-  return (
-    '🧠 Memory gate: for each closed issue, worth persisting?\n' +
-    '  YES → bd remember "<insight>"   NO → note "nothing to persist"\n' +
-    '  touch .beads/.memory-gate-done when done.\n'
+    `🧠 Memory gate: ${claimLine}` +
+    'For each closed issue, worth persisting?\n' +
+    '  YES → `bd remember "<insight>"`\n' +
+    '  NO  → note "nothing to persist"\n' +
+    '  Then acknowledge: `touch .beads/.memory-gate-done`\n'
   );
 }

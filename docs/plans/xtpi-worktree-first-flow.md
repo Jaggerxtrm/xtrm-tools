@@ -46,7 +46,31 @@ Rules:
 4. Push/PR/merge are explicit external steps by default.
 5. No `xt` wrapper replaces canonical `bd close`.
 
-## 4) Current implemented behavior
+## 4) Beads in Worktrees (explicit mechanism)
+
+This section is mandatory for agent/worktree correctness.
+
+1. **Single canonical beads backing store**
+   - All worktrees for a repository must read/write the same canonical `.beads` database for that repo.
+   - Worktree changes do not create isolated issue trackers.
+
+2. **Claim visibility across worktrees**
+   - A claim created in one worktree (`bd update <id> --claim`) must be visible from any sibling worktree of the same repo.
+   - Orchestration/tools must not rely on per-worktree hidden state as source of truth for issue ownership.
+
+3. **Session key behavior**
+   - Session-scoped keys (`claimed:<sessionId>`, `closed-this-session:<sessionId>`) remain runtime/session-local markers.
+   - They support edit/memory gates, but canonical issue truth is still `bd` issue status/ownership.
+
+4. **Switch/re-entry expectations**
+   - Re-entering a different worktree must preserve access to the same issue graph (`bd list/show/ready` parity).
+   - If session markers are missing after re-entry, user may need to re-claim for that runtime session, but issue history/state must remain consistent.
+
+5. **Specialists integration guardrail**
+   - `xt sp`/specialists jobs must attach to the same canonical beads context and must not fork a second tracker state.
+   - Specialist output should reference issue IDs/job IDs so traceability is preserved across worktrees.
+
+## 5) Current implemented behavior
 
 - Claim-time worktree bootstrap removed.
 - Pi close-driven auto-commit is active (`<close_reason> (<id>)`), no-op if clean.
@@ -54,25 +78,25 @@ Rules:
 - Pending memory gate is enforced in Pi on mutating tools and `session_before_*` transitions.
 - Main-guard policy wiring is removed from active runtime.
 
-## 5) Claude/Pi parity model
+## 6) Claude/Pi parity model
 
 Same behavioral contract, different enforcement surfaces:
 - Claude: hook lifecycle (`PreToolUse`, `PostToolUse`, `Stop`, ...)
 - Pi: extension lifecycle (`tool_call`, `tool_result`, `agent_end`, `session_before_*`, ...)
 
-## 6) Specialists complement boundary
+## 7) Specialists complement boundary
 
 - **xtrm/xt owns:** runtime gates, session flow, close/memory semantics.
 - **specialists owns:** delegated execution/orchestration, background jobs, specialist lifecycle.
 
 Integration rule: specialists must integrate with beads context/output, but not redefine canonical close semantics.
 
-## 7) Known follow-ups
+## 8) Known follow-ups
 
 - `jaggers-agent-tools-ycg9` (P2): TS quality-gate false negative.
 - Session-end active-claim warning may need throttling.
 
-## 8) Success criteria
+## 9) Success criteria
 
 - One shared workflow model for Claude + Pi.
 - CLI namespace settled (`xtrm` canonical, `xt` alias, `xt sp` specialists).

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // beads-claim-sync — PostToolUse hook
-// Auto-sets kv claim on bd update --claim; auto-clears on bd close.
-// Also bootstraps worktree-first session state for xtrm finish workflow.
+// bd update --claim → set kv claim + create worktree
+// bd close         → auto-commit staged changes, set closed-this-session kv for memory gate
 
 import { spawnSync } from 'node:child_process';
 import { readFileSync, existsSync, mkdirSync } from 'node:fs';
@@ -45,6 +45,55 @@ function runGit(args, cwd, timeout = 8000) {
     encoding: 'utf8',
     timeout,
   });
+}
+
+function runBd(args, cwd, timeout = 5000) {
+  return spawnSync('bd', args, {
+    cwd,
+    stdio: ['pipe', 'pipe', 'pipe'],
+    encoding: 'utf8',
+    timeout,
+  });
+}
+
+function hasGitChanges(cwd) {
+  const result = runGit(['status', '--porcelain'], cwd);
+  if (result.status !== 0) return false;
+  return result.stdout.trim().length > 0;
+}
+
+function getCloseReason(cwd, issueId, command) {
+  // 1. Parse --reason "..." from the command itself (fastest, no extra call)
+  const reasonMatch = command.match(/--reason[=\s]+["']([^"']+)["']/);
+  if (reasonMatch) return reasonMatch[1].trim();
+
+  // 2. Fall back to bd show <id> --json
+  const show = runBd(['show', issueId, '--json'], cwd);
+  if (show.status === 0 && show.stdout) {
+    try {
+      const parsed = JSON.parse(show.stdout);
+      const reason = parsed?.[0]?.close_reason;
+      if (typeof reason === 'string' && reason.trim().length > 0) return reason.trim();
+    } catch { /* fall through */ }
+  }
+
+  return `Close ${issueId}`;
+}
+
+function autoCommit(cwd, issueId, command) {
+  if (!hasGitChanges(cwd)) {
+    return { ok: true, message: 'No changes detected — auto-commit skipped.' };
+  }
+
+  const reason = getCloseReason(cwd, issueId, command);
+  const commitMessage = `${reason} (${issueId})`;
+  const result = runGit(['commit', '-am', commitMessage], cwd, 15000);
+  if (result.status !== 0) {
+    const err = (result.stderr || result.stdout || '').trim();
+    return { ok: false, message: `Auto-commit failed: ${err || 'unknown error'}` };
+  }
+
+  return { ok: true, message: `Auto-committed: \`${commitMessage}\`` };
 }
 
 function getRepoRoot(cwd) {
@@ -207,12 +256,14 @@ function main() {
     }
   }
 
-  // On bd close: mark as closed-this-session for memory gate (don't clear claim yet)
-  // Memory gate will clear the claim after user acknowledges memory prompt
+  // On bd close: auto-commit staged changes, then mark closed-this-session for memory gate
   if (/\bbd\s+close\b/.test(command) && commandSucceeded(input)) {
     const match = command.match(/\bbd\s+close\s+(\S+)/);
     const closedIssueId = match?.[1];
-    
+
+    // Auto-commit before marking the gate (no-op if clean)
+    const commit = closedIssueId ? autoCommit(cwd, closedIssueId, command) : null;
+
     // Mark this issue as closed this session (memory gate reads this)
     if (closedIssueId) {
       spawnSync('bd', ['kv', 'set', `closed-this-session:${sessionId}`, closedIssueId], {
@@ -222,8 +273,12 @@ function main() {
       });
     }
 
+    const commitLine = commit
+      ? `\n${commit.ok ? '✅' : '⚠️'} **Session Flow**: ${commit.message}`
+      : '';
+
     process.stdout.write(JSON.stringify({
-      additionalContext: `\n🔓 **Beads**: Issue closed. Evaluate insights, then acknowledge:\n  \`bd remember "<insight>"\` (or note "nothing")\n  \`touch .beads/.memory-gate-done\``,
+      additionalContext: `\n🔓 **Beads**: Issue closed.${commitLine}\nEvaluate insights, then acknowledge:\n  \`bd remember "<insight>"\` (or note "nothing")\n  \`touch .beads/.memory-gate-done\``,
     }));
     process.stdout.write('\n');
     process.exit(0);

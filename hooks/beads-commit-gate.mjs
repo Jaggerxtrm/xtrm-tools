@@ -22,6 +22,8 @@ if (!input) process.exit(0);
 if ((input.tool_name ?? '') !== 'Bash') process.exit(0);
 
 const command = input.tool_input?.command ?? '';
+// Strip quoted strings to avoid matching patterns inside --reason "..." or similar args
+const commandUnquoted = command.replace(/'[^']*'|"[^"]*"/g, '');
 
 withSafeBdContext(() => {
   const ctx = resolveSessionContext(input);
@@ -29,7 +31,7 @@ withSafeBdContext(() => {
 
   // Memory gate: block all Bash except acknowledgment commands while gate pending
   if (ctx.sessionId && isMemoryGatePending(ctx.sessionId, ctx.cwd)) {
-    if (!isMemoryAckCommand(command)) {
+    if (!isMemoryAckCommand(commandUnquoted)) {
       process.stdout.write(JSON.stringify({ decision: 'block', reason: memoryGatePendingMessage() }));
       process.stdout.write('\n');
       process.exit(0);
@@ -38,7 +40,7 @@ withSafeBdContext(() => {
   }
 
   // Only intercept git commit for the claim-gate check
-  if (!/\bgit\s+commit\b/.test(command)) process.exit(0);
+  if (!/\bgit\s+commit\b/.test(commandUnquoted)) process.exit(0);
 
   const state = resolveClaimAndWorkState(ctx);
   const decision = decideCommitGate(ctx, state);

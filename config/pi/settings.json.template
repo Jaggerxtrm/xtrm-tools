@@ -12,5 +12,5 @@
   ],
   "steeringMode": "all",
   "followUpMode": "all",
-  "hideThinkingBlock": false
+  "hideThinkingBlock": true
 }

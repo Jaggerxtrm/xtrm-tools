@@ -70,6 +70,47 @@ This section is mandatory for agent/worktree correctness.
    - `xt sp`/specialists jobs must attach to the same canonical beads context and must not fork a second tracker state.
    - Specialist output should reference issue IDs/job IDs so traceability is preserved across worktrees.
 
+### Technical implementation details (required)
+
+1. **Canonical data location and CWD rule**
+   - All beads commands execute against repo-local `.beads/` discovered from active working directory.
+   - Worktrees must be created under the same repo so they resolve to the same `.beads` backing store.
+   - Runtime check: `EventAdapter.isBeadsProject(cwd)` / hook equivalents gate behavior only when `.beads` exists.
+
+2. **Session markers and exact keys**
+   - Claim marker: `claimed:<sessionId>`
+   - Close marker: `closed-this-session:<sessionId>`
+   - Set on claim/close via:
+     - `bd kv set claimed:<sessionId> <issueId>`
+     - `bd kv set closed-this-session:<sessionId> <issueId>`
+   - Clear on memory acknowledgment:
+     - `bd kv clear claimed:<sessionId>`
+     - `bd kv clear closed-this-session:<sessionId>`
+
+3. **Session ID resolution (cross-runtime parity)**
+   - Resolve in this order: `session_id` → `sessionId` → `cwd` fallback (or equivalent runtime fallback).
+   - This prevents deadlocks when runtimes expose different session-id field names.
+
+4. **Memory gate ack contract**
+   - Marker file path is fixed: `.beads/.memory-gate-done`.
+   - On next gate cycle after marker exists:
+     - consume marker file
+     - clear both session kv keys above
+   - Until marker exists, runtime must continue prompting and/or blocking according to gate policy.
+
+5. **Close auto-commit contract (no push by default)**
+   - Trigger only on successful canonical close command: `bd close <id> --reason "..."`.
+   - Commit message source: `close_reason` + issue id (`<close_reason> (<id>)`).
+   - Auto-commit command path:
+     - `git add -A`
+     - `git commit -m "<close_reason> (<id>)"`
+   - If no file changes exist, commit step must no-op without failing close.
+
+6. **Worktree re-entry behavior**
+   - Re-entering another worktree must preserve issue visibility (`bd list/show/ready` parity).
+   - Session kv markers may be absent in a new session; re-claim is allowed and expected for local runtime gating.
+   - Canonical issue state remains in beads issue DB, not in session kv markers.
+
 ## 5) Current implemented behavior
 
 - Claim-time worktree bootstrap removed.

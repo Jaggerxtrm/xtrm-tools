@@ -26,7 +26,7 @@ within this stack. Read it at session start and refer back when uncertain about 
 | **Hooks** | Automated lifecycle enforcement (gates, suggestions, reminders) |
 | **Project Data (`xtrm init`)** | Per-repo bootstrap data (`.beads/`, `service-registry.json`, GitNexus index) |
 | **MCP Servers** | Semantic tools: Serena (code), gitnexus (graph), context7 (docs), deepwiki |
-| **CLI** | `xtrm install / status / finish / reset / help` — sync and closure tooling |
+| **CLI** | `xtrm install / status / reset / help` + `xt claude / pi / worktree / end` — sync and closure tooling |
 | **beads (bd)** | Git-backed issue tracker with session gate enforcement |
 
 ---
@@ -79,24 +79,23 @@ You cannot edit files without a claim, and you cannot safely end a closure-in-pr
 # 1. Claim before editing
 bd list --status=open
 bd update <id> --claim
-# hook auto-sets session claim + auto-creates worktree + writes .xtrm-session-state.json
+# hook auto-sets session claim
 
 # 2. Work in the claimed branch/worktree
 
 # 3. Close issue when implementation is done
 bd close <id>
 
-# 4. Session close protocol (single command)
-xtrm finish
+# 4. Session close protocol (single command, run from within the worktree)
+xt end
 # blocking: commit/push/pr-create/auto-merge poll/worktree cleanup
 ```
 
 **Key rules:**
 - One active claim per session
 - Always work on a **feature branch**, never directly on `main`/`master`
-- `main-guard.mjs` blocks edits on protected branches
-- `beads-stop-gate.mjs` blocks stop for closure phases: `waiting-merge`, `conflicting`, `pending-cleanup`
-- If blocked on stop: resolve state then re-run `xtrm finish`
+- `beads-stop-gate.mjs` blocks stop when active in_progress claim exists
+- If blocked on stop: close the claim then re-run `xt end`
 
 ---
 
@@ -211,11 +210,10 @@ These hooks run automatically — you cannot disable them mid-session:
 
 | Hook | Trigger | Effect |
 |---|---|---|
-| `main-guard.mjs` | PreToolUse (Edit/Write/Serena/Bash) | Blocks edits and unsafe Bash on protected branches |
 | `beads-edit-gate.mjs` | PreToolUse (Edit/Write/Serena) | Blocks edits without active claim |
 | `beads-commit-gate.mjs` | PreToolUse (Bash: git commit) | Blocks commit with unclosed claim |
-| `beads-claim-sync.mjs` | PostToolUse (Bash claim command) | Syncs claim + creates worktree + writes session state |
-| `beads-stop-gate.mjs` | Stop | Blocks stop for unresolved session-flow phases |
+| `beads-claim-sync.mjs` | PostToolUse (Bash claim command) | Runs auto-commit on bd close (feature branches only) |
+| `beads-stop-gate.mjs` | Stop | Blocks stop when active in_progress claim exists |
 | `beads-memory-gate.mjs` | Stop | Prompts for persistent insights after closure |
 | `beads-compact-save/restore.mjs` | PreCompact / SessionStart | Preserves claim + session state across compact |
 | `serena-workflow-reminder.py` | SessionStart | Reminds semantic editing workflow |
@@ -241,5 +239,4 @@ These hooks run automatically — you cannot disable them mid-session:
 2. All d=1 dependents updated (if any signal from impact analysis)
 3. Tests pass (targeted + relevant integration)
 4. Beads issue closed: `bd close <id>`
-5. Run `xtrm finish` for blocking closure lifecycle
-6. Verify session state reached `cleanup-done` (or intentional re-entry state)
+5. Run `xt end` from within the worktree for blocking closure lifecycle

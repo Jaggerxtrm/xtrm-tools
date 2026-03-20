@@ -297,6 +297,7 @@ export async function installPlugin(repoRoot: string, dryRun: boolean): Promise<
 
     if (dryRun) {
         console.log(t.accent('  [DRY RUN] Would register xtrm-tools marketplace and install plugin\n'));
+        await cleanStalePrePluginFiles(repoRoot, true);
         await installOfficialClaudePlugins(true);
         return;
     }

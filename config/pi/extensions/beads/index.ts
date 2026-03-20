@@ -1,6 +1,6 @@
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import { isToolCallEventType, isBashToolResult } from "@mariozechner/pi-coding-agent";
-import { SubprocessRunner, EventAdapter, Logger } from "./core/lib";
+import { SubprocessRunner, EventAdapter, Logger } from "../core/lib";
 
 const logger = new Logger({ namespace: "beads" });
 

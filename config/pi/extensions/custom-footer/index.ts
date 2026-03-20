@@ -7,7 +7,7 @@
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import { truncateToWidth } from "@mariozechner/pi-tui";
 
-import { SubprocessRunner, EventAdapter } from "./core/lib";
+import { SubprocessRunner, EventAdapter } from "../core/lib";
 
 export default function (pi: ExtensionAPI) {
 	interface BeadState {

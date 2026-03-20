@@ -1,0 +1,16 @@
+{
+  "name": "@xtrm/pi-bg-process",
+  "version": "1.0.0",
+  "description": "xtrm Pi extension: bg-process",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "keywords": [
+    "pi",
+    "extension",
+    "xtrm"
+  ],
+  "author": "xtrm",
+  "license": "MIT"
+}

@@ -1,5 +1,5 @@
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
-import { SubprocessRunner } from "./core/lib";
+import { SubprocessRunner } from "../core/lib";
 import * as path from "node:path";
 import * as fs from "node:fs";
 

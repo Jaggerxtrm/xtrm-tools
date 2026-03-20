@@ -2,8 +2,8 @@ import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import { isBashToolResult } from "@mariozechner/pi-coding-agent";
 import fs from "node:fs";
 import path from "node:path";
-import { SubprocessRunner, EventAdapter } from "./core/lib";
-import { readSessionState } from "./core/session-state";
+import { SubprocessRunner, EventAdapter } from "../core/lib";
+import { readSessionState } from "../core/session-state";
 
 function isClaimCommand(command: string): { isClaim: boolean; issueId: string | null } {
 	if (!/\bbd\s+update\b/.test(command) || !/--claim\b/.test(command)) {

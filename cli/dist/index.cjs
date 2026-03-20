@@ -6053,7 +6053,7 @@ var require_dist = __commonJS({
         });
       };
     }
-    var prompts6 = require_prompts();
+    var prompts7 = require_prompts();
     var passOn = ["suggest", "format", "onState", "validate", "onRender", "type"];
     var noop = () => {
     };
@@ -6104,7 +6104,7 @@ var require_dist = __commonJS({
             var _question2 = question;
             name = _question2.name;
             type = _question2.type;
-            if (prompts6[type] === void 0) {
+            if (prompts7[type] === void 0) {
               throw new Error(`prompt type (${type}) is not defined`);
             }
             if (override2[question.name] !== void 0) {
@@ -6115,7 +6115,7 @@ var require_dist = __commonJS({
               }
             }
             try {
-              answer = prompt._injected ? getInjectedAnswer(prompt._injected, question.initial) : yield prompts6[type](question);
+              answer = prompt._injected ? getInjectedAnswer(prompt._injected, question.initial) : yield prompts7[type](question);
               answers[name] = answer = yield getFormattedAnswer(question, answer, true);
               quit = yield onSubmit(question, answer, answers);
             } catch (err) {
@@ -6147,7 +6147,7 @@ var require_dist = __commonJS({
     }
     module2.exports = Object.assign(prompt, {
       prompt,
-      prompts: prompts6,
+      prompts: prompts7,
       inject,
       override
     });
@@ -8234,7 +8234,7 @@ var require_prompts2 = __commonJS({
 var require_lib = __commonJS({
   "../node_modules/prompts/lib/index.js"(exports2, module2) {
     "use strict";
-    var prompts6 = require_prompts2();
+    var prompts7 = require_prompts2();
     var passOn = ["suggest", "format", "onState", "validate", "onRender", "type"];
     var noop = () => {
     };
@@ -8266,7 +8266,7 @@ var require_lib = __commonJS({
           throw new Error("prompt message is required");
         }
         ({ name, type } = question);
-        if (prompts6[type] === void 0) {
+        if (prompts7[type] === void 0) {
           throw new Error(`prompt type (${type}) is not defined`);
         }
         if (override2[question.name] !== void 0) {
@@ -8277,7 +8277,7 @@ var require_lib = __commonJS({
           }
         }
         try {
-          answer = prompt._injected ? getInjectedAnswer(prompt._injected, question.initial) : await prompts6[type](question);
+          answer = prompt._injected ? getInjectedAnswer(prompt._injected, question.initial) : await prompts7[type](question);
           answers[name] = answer = await getFormattedAnswer(question, answer, true);
           quit = await onSubmit(question, answer, answers);
         } catch (err) {
@@ -8300,7 +8300,7 @@ var require_lib = __commonJS({
     function override(answers) {
       prompt._override = Object.assign({}, answers);
     }
-    module2.exports = Object.assign(prompt, { prompt, prompts: prompts6, inject, override });
+    module2.exports = Object.assign(prompt, { prompt, prompts: prompts7, inject, override });
   }
 });
 
@@ -40170,7 +40170,7 @@ async function handleMissingEnvVars(missing) {
   if (missing.length === 0) {
     return true;
   }
-  const prompts6 = (await Promise.resolve().then(() => __toESM(require_prompts3(), 1))).default;
+  const prompts7 = (await Promise.resolve().then(() => __toESM(require_prompts3(), 1))).default;
   const answers = {};
   for (const key of missing) {
     const config3 = REQUIRED_ENV_VARS[key];
@@ -40182,7 +40182,7 @@ async function handleMissingEnvVars(missing) {
       console.log(kleur_default.yellow(`
   \u26A0\uFE0F  ${key} is required by a selected MCP server`));
     }
-    const { value } = await prompts6({
+    const { value } = await prompts7({
       type: "text",
       name: "value",
       message: `Enter ${key}:`,
@@ -40395,8 +40395,8 @@ async function syncMcpServersWithCli(agent, mcpConfig, dryRun = false, prune = f
   }
   let selectedNames = toAdd.map(([name]) => name);
   if (!dryRun) {
-    const prompts6 = await Promise.resolve().then(() => __toESM(require_prompts3(), 1));
-    const { selected } = await prompts6.default({
+    const prompts7 = await Promise.resolve().then(() => __toESM(require_prompts3(), 1));
+    const { selected } = await prompts7.default({
       type: "multiselect",
       name: "selected",
       message: `Select MCP servers to install via ${agent} CLI:`,
@@ -56931,6 +56931,160 @@ function createEndCommand() {
   });
 }
 
+// src/commands/worktree.ts
+var import_prompts6 = __toESM(require_prompts3(), 1);
+var import_node_child_process9 = require("child_process");
+function listXtWorktrees(repoRoot) {
+  const r = (0, import_node_child_process9.spawnSync)("git", ["worktree", "list", "--porcelain"], {
+    cwd: repoRoot,
+    encoding: "utf8",
+    stdio: "pipe"
+  });
+  if (r.status !== 0) return [];
+  const worktrees = [];
+  let current = {};
+  for (const line of (r.stdout ?? "").split("\n")) {
+    if (line.startsWith("worktree ")) {
+      if (current.path && current.branch?.startsWith("refs/heads/xt/")) {
+        worktrees.push(current);
+      }
+      current = { path: line.slice("worktree ".length), prunable: false };
+    } else if (line.startsWith("HEAD ")) {
+      current.head = line.slice("HEAD ".length);
+    } else if (line.startsWith("branch ")) {
+      current.branch = line.slice("branch ".length);
+    } else if (line === "prunable") {
+      current.prunable = true;
+    }
+  }
+  if (current.path && current.branch?.startsWith("refs/heads/xt/")) {
+    worktrees.push(current);
+  }
+  return worktrees;
+}
+function isMergedIntoMain(branch, repoRoot) {
+  const branchShort = branch.replace("refs/heads/", "");
+  const r = (0, import_node_child_process9.spawnSync)("git", ["branch", "--merged", "origin/main", "--list", branchShort], {
+    cwd: repoRoot,
+    encoding: "utf8",
+    stdio: "pipe"
+  });
+  return (r.stdout ?? "").includes(branchShort);
+}
+function getRepoRoot(cwd) {
+  const r = (0, import_node_child_process9.spawnSync)("git", ["rev-parse", "--show-toplevel"], { cwd, encoding: "utf8", stdio: "pipe" });
+  return r.ok ? r.stdout.trim() : cwd;
+}
+function createWorktreeCommand() {
+  const cmd = new Command("worktree").description("Manage xt session worktrees");
+  cmd.command("list").description("List all active xt/* worktrees with status").action(async () => {
+    const repoRoot = getRepoRoot(process.cwd());
+    const worktrees = listXtWorktrees(repoRoot);
+    if (worktrees.length === 0) {
+      console.log(kleur_default.dim("\n  No xt worktrees found\n"));
+      return;
+    }
+    console.log(t.bold(`
+  xt worktrees (${worktrees.length})
+`));
+    for (const wt of worktrees) {
+      const branch = wt.branch.replace("refs/heads/", "");
+      const merged = isMergedIntoMain(wt.branch, repoRoot);
+      const status = merged ? kleur_default.green("merged") : kleur_default.yellow("open");
+      const prunable = wt.prunable ? kleur_default.dim(" [prunable]") : "";
+      console.log(`  ${status} ${kleur_default.bold(branch)}${prunable}`);
+      console.log(kleur_default.dim(`         ${wt.path}`));
+    }
+    console.log("");
+  });
+  cmd.command("clean").description("Remove worktrees whose branch has been merged into main").option("-y, --yes", "Skip confirmation prompt", false).action(async (opts) => {
+    const repoRoot = getRepoRoot(process.cwd());
+    const worktrees = listXtWorktrees(repoRoot);
+    const merged = worktrees.filter((wt) => isMergedIntoMain(wt.branch, repoRoot));
+    if (merged.length === 0) {
+      console.log(kleur_default.dim("\n  No merged xt worktrees to clean\n"));
+      return;
+    }
+    console.log(t.bold(`
+  ${merged.length} merged worktree(s) to remove:
+`));
+    for (const wt of merged) {
+      console.log(kleur_default.dim(`  - ${wt.path} (${wt.branch.replace("refs/heads/", "")})`));
+    }
+    let doRemove = opts.yes;
+    if (!opts.yes) {
+      const { confirm } = await (0, import_prompts6.default)({
+        type: "confirm",
+        name: "confirm",
+        message: `Remove ${merged.length} worktree(s)?`,
+        initial: true
+      });
+      doRemove = confirm;
+    }
+    if (!doRemove) {
+      console.log(kleur_default.dim("  Cancelled\n"));
+      return;
+    }
+    for (const wt of merged) {
+      const r = (0, import_node_child_process9.spawnSync)("git", ["worktree", "remove", wt.path, "--force"], {
+        cwd: repoRoot,
+        encoding: "utf8",
+        stdio: "pipe"
+      });
+      if (r.status === 0) {
+        console.log(t.success(`  \u2713 Removed ${wt.path}`));
+      } else {
+        console.log(kleur_default.yellow(`  \u26A0 Could not remove ${wt.path}: ${(r.stderr ?? "").trim()}`));
+      }
+    }
+    console.log("");
+  });
+  cmd.command("remove <name>").description("Manually remove a specific xt worktree by branch name or path").option("-y, --yes", "Skip confirmation", false).action(async (name, opts) => {
+    const repoRoot = getRepoRoot(process.cwd());
+    const worktrees = listXtWorktrees(repoRoot);
+    const target = worktrees.find(
+      (wt) => wt.path === name || wt.branch === `refs/heads/${name}` || wt.branch === `refs/heads/xt/${name}`
+    );
+    if (!target) {
+      console.error(kleur_default.red(`
+  \u2717 No xt worktree found matching "${name}"
+`));
+      console.log(kleur_default.dim("  Run: xt worktree list\n"));
+      process.exit(1);
+    }
+    let doRemove = opts.yes;
+    if (!opts.yes) {
+      const { confirm } = await (0, import_prompts6.default)({
+        type: "confirm",
+        name: "confirm",
+        message: `Remove ${target.path}?`,
+        initial: false
+      });
+      doRemove = confirm;
+    }
+    if (!doRemove) {
+      console.log(kleur_default.dim("  Cancelled\n"));
+      return;
+    }
+    const r = (0, import_node_child_process9.spawnSync)("git", ["worktree", "remove", target.path, "--force"], {
+      cwd: repoRoot,
+      encoding: "utf8",
+      stdio: "pipe"
+    });
+    if (r.status === 0) {
+      console.log(t.success(`
+  \u2713 Removed ${target.path}
+`));
+    } else {
+      console.error(kleur_default.red(`
+  \u2717 Failed: ${(r.stderr ?? "").trim()}
+`));
+      process.exit(1);
+    }
+  });
+  return cmd;
+}
+
 // src/utils/banner.ts
 var ART = [
   " \u2588\u2588\u2557  \u2588\u2588\u2557\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2557\u2588\u2588\u2588\u2588\u2588\u2588\u2557 \u2588\u2588\u2588\u2557   \u2588\u2588\u2588\u2557    \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2557 \u2588\u2588\u2588\u2588\u2588\u2588\u2557  \u2588\u2588\u2588\u2588\u2588\u2588\u2557 \u2588\u2588\u2557     \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2557",
@@ -57128,6 +57282,7 @@ program2.addCommand(createResetCommand());
 program2.addCommand(createCleanCommand());
 program2.addCommand(createFinishCommand());
 program2.addCommand(createEndCommand());
+program2.addCommand(createWorktreeCommand());
 program2.addCommand(createHelpCommand());
 program2.action(async () => {
   program2.help();

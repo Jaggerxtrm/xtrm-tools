@@ -18,6 +18,7 @@ import { createHelpCommand } from './commands/help.js';
 import { createCleanCommand } from './commands/clean.js';
 import { createFinishCommand } from './commands/finish.js';
 import { createEndCommand } from './commands/end.js';
+import { createWorktreeCommand } from './commands/worktree.js';
 import { printBanner } from './utils/banner.js';
 
 const program = new Command();
@@ -51,6 +52,7 @@ program.addCommand(createResetCommand());
 program.addCommand(createCleanCommand());
 program.addCommand(createFinishCommand());
 program.addCommand(createEndCommand());
+program.addCommand(createWorktreeCommand());
 program.addCommand(createHelpCommand());
 
 // Default action: show help

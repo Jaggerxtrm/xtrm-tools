@@ -78,38 +78,50 @@ function ensureWorktreeForClaim(cwd, issueId) {
   const branch = `feature/${issueId}`;
   const worktreePath = join(worktreesBase, issueId);
 
-  if (existsSync(worktreePath)) {
-    // Already created previously — rewrite state file for continuity.
-    try {
-      const stateFile = writeSessionState({
-        issueId,
-        branch,
-        worktreePath,
-        prNumber: null,
-        prUrl: null,
-        phase: 'claimed',
-        conflictFiles: [],
-      }, { cwd: repoRoot });
-      return { created: false, reason: 'exists', repoRoot, branch, worktreePath, stateFile };
-    } catch {
-      return { created: false, reason: 'exists', repoRoot, branch, worktreePath };
+  const worktreeExists = existsSync(worktreePath);
+  const branchExists = runGit(['show-ref', '--verify', '--quiet', `refs/heads/${branch}`], repoRoot).status === 0;
+
+  if (worktreeExists) {
+    // Validate it's actually a worktree (not a plain dir from a race)
+    if (existsSync(join(worktreePath, '.git'))) {
+      try {
+        const stateFile = writeSessionState({
+          issueId, branch, worktreePath, prNumber: null, prUrl: null,
+          phase: 'claimed', conflictFiles: [],
+        }, { cwd: repoRoot });
+        return { created: false, reason: 'exists', repoRoot, branch, worktreePath, stateFile };
+      } catch {
+        return { created: false, reason: 'exists', repoRoot, branch, worktreePath };
+      }
     }
+    return {
+      created: false, reason: 'create-failed', repoRoot, branch, worktreePath,
+      error: `Directory ${worktreePath} exists but is not a valid worktree`,
+    };
   }
 
-  const branchExists = runGit(['show-ref', '--verify', '--quiet', `refs/heads/${branch}`], repoRoot).status === 0;
   const addArgs = branchExists
     ? ['worktree', 'add', worktreePath, branch]
     : ['worktree', 'add', worktreePath, '-b', branch];
 
   const addResult = runGit(addArgs, repoRoot, 20000);
   if (addResult.status !== 0) {
+    // TOCTOU race: another process may have created the worktree between our check and add
+    const stderr = (addResult.stderr || addResult.stdout || '').trim();
+    if (stderr.includes('already exists') || existsSync(join(worktreePath, '.git'))) {
+      try {
+        const stateFile = writeSessionState({
+          issueId, branch, worktreePath, prNumber: null, prUrl: null,
+          phase: 'claimed', conflictFiles: [],
+        }, { cwd: repoRoot });
+        return { created: false, reason: 'race-won', repoRoot, branch, worktreePath, stateFile };
+      } catch {
+        return { created: false, reason: 'race-won', repoRoot, branch, worktreePath };
+      }
+    }
     return {
-      created: false,
-      reason: 'create-failed',
-      repoRoot,
-      branch,
-      worktreePath,
-      error: (addResult.stderr || addResult.stdout || '').trim(),
+      created: false, reason: 'create-failed', repoRoot, branch, worktreePath,
+      error: stderr,
     };
   }
 
@@ -180,6 +192,8 @@ function main() {
         details.push(`🧭 **Session Flow**: Worktree already exists: \`${wt.worktreePath}\`  Branch: \`${wt.branch}\``);
       } else if (wt.reason === 'already-worktree') {
         details.push('🧭 **Session Flow**: Already in a linked worktree — skipping nested worktree creation.');
+      } else if (wt.reason === 'race-won') {
+        details.push(`🧭 **Session Flow**: Worktree ready (race): \`${wt.worktreePath}\`  Branch: \`${wt.branch}\``);
       } else if (wt.reason === 'create-failed') {
         const err = wt.error ? `\nWarning: ${wt.error}` : '';
         details.push(`⚠️ **Session Flow**: Worktree creation failed for \`${issueId}\`. Continuing without blocking claim.${err}`);
@@ -209,7 +223,7 @@ function main() {
     }
 
     process.stdout.write(JSON.stringify({
-      additionalContext: `\n🔓 **Beads**: Issue closed. Memory gate will prompt on session end.`,
+      additionalContext: `\n🔓 **Beads**: Issue closed. Evaluate insights, then acknowledge:\n  \`bd remember "<insight>"\` (or note "nothing")\n  \`touch .beads/.memory-gate-done\``,
     }));
     process.stdout.write('\n');
     process.exit(0);

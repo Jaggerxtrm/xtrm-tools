@@ -99,6 +99,42 @@ export function getTotalWork(cwd) {
 }
 
 /**
+ * Get the closed-this-session issue ID for a session from bd kv.
+ * Returns: issue ID string if set, '' if not set, null if bd kv unavailable.
+ */
+export function getClosedThisSession(sessionId, cwd) {
+  try {
+    return execSync(`bd kv get "closed-this-session:${sessionId}"`, {
+      encoding: 'utf8',
+      cwd,
+      stdio: ['pipe', 'pipe', 'pipe'],
+      timeout: 5000,
+    }).trim();
+  } catch (err) {
+    if (err.status === 1) return ''; // key not found
+    return null;                     // bd kv unavailable
+  }
+}
+
+/**
+ * Return true if the memory gate is pending acknowledgment for this session.
+ * Pending = closed-this-session kv is set AND .beads/.memory-gate-done marker is absent.
+ */
+export function isMemoryGatePending(sessionId, cwd) {
+  if (existsSync(join(cwd, '.beads', '.memory-gate-done'))) return false;
+  const closed = getClosedThisSession(sessionId, cwd);
+  return !!closed; // null (unavailable) is falsy → fail open
+}
+
+/**
+ * Return true if a Bash command is a memory-gate acknowledgment command.
+ * These commands are allowed even while the memory gate is pending.
+ */
+export function isMemoryAckCommand(command) {
+  return /\bbd\s+remember\b/.test(command) || /\btouch\s+\.beads\/\.memory-gate-done\b/.test(command);
+}
+
+/**
  * Clear the session claim key from bd kv. Non-fatal — best-effort cleanup.
  */
 export function clearSessionClaim(sessionId, cwd) {
@@ -123,7 +159,10 @@ export function clearSessionClaim(sessionId, cwd) {
 export function withSafeBdContext(fn) {
   try {
     fn();
-  } catch {
+  } catch (err) {
+    if (err instanceof TypeError || err instanceof ReferenceError || err instanceof SyntaxError) {
+      throw err;
+    }
     process.exit(0);
   }
 }

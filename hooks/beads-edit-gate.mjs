@@ -13,8 +13,8 @@ import {
   resolveClaimAndWorkState,
   decideEditGate,
 } from './beads-gate-core.mjs';
-import { withSafeBdContext } from './beads-gate-utils.mjs';
-import { editBlockMessage, editBlockFallbackMessage } from './beads-gate-messages.mjs';
+import { withSafeBdContext, isMemoryGatePending } from './beads-gate-utils.mjs';
+import { editBlockMessage, editBlockFallbackMessage, memoryGatePendingMessage } from './beads-gate-messages.mjs';
 
 const input = readHookInput();
 if (!input) process.exit(0);
@@ -22,6 +22,13 @@ if (!input) process.exit(0);
 withSafeBdContext(() => {
   const ctx = resolveSessionContext(input);
   if (!ctx || !ctx.isBeadsProject) process.exit(0);
+
+  // Memory gate takes priority: block edits while pending acknowledgment
+  if (ctx.sessionId && isMemoryGatePending(ctx.sessionId, ctx.cwd)) {
+    process.stdout.write(JSON.stringify({ decision: 'block', reason: memoryGatePendingMessage() }));
+    process.stdout.write('\n');
+    process.exit(0);
+  }
 
   const state = resolveClaimAndWorkState(ctx);
   const decision = decideEditGate(ctx, state);

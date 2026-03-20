@@ -96,6 +96,14 @@ export function stopWarnActiveWorktreeMessage(state) {
 
 // ── Memory gate messages ─────────────────────────────────────────
 
+export function memoryGatePendingMessage() {
+  return (
+    '🧠 Memory gate pending — evaluate insights before continuing.\n' +
+    '  YES → bd remember "<insight>"   NO → note "nothing to persist"\n' +
+    '  Then acknowledge: touch .beads/.memory-gate-done\n'
+  );
+}
+
 export function memoryPromptMessage() {
   return (
     '🧠 Memory gate: for each closed issue, worth persisting?\n' +

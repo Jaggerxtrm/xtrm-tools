@@ -1,89 +1,79 @@
 # XTRM-Tools Guide
 
-> Current operational guide for Claude hooks + Pi extensions.
+> Operational guide for current Claude hooks + Pi extensions behavior.
 
-## Overview
+## 1) Canonical Workflow
 
-XTRM-Tools provides:
-- policy-driven Claude hooks (`policies/*.json` → `hooks/hooks.json`)
-- Pi extensions (`config/pi/extensions/*.ts`)
-- beads workflow integration (`bd`)
-- quality gates and graph/tooling integrations
+```bash
+bd update <id> --claim
+# work
+bd close <id> --reason "..."
+```
 
----
+Key rules:
+- `bd close` remains canonical (no wrapper replacement).
+- Close reason is reused for Pi auto-commit message.
+- Push/PR/merge are explicit external steps by default.
 
-## Current Policy Set
-
-| Policy | Runtime | Purpose |
-|---|---|---|
-| `beads.json` | both | Edit/commit/stop/memory/compact gates |
-| `session-flow.json` | both | Session flow behavior (Pi now centered on `bd close` auto-commit) |
-| `branch-state.json` | claude | Inject branch/claim context into prompt |
-| `gitnexus.json` | claude | Graph-aware enrichment |
-| `serena.json` | claude | Serena workflow reminder |
-| `quality-gates.json` | pi | Lint/type check extension wiring |
-| `service-skills.json` | pi | Service-skill activation wiring |
-
-`main-guard.json` is intentionally removed from active policy wiring.
-
----
-
-## Pi Extensions (current)
-
-| Extension | Events | Purpose |
-|---|---|---|
-| `beads.ts` | `session_start, tool_call, tool_result, agent_end, session_shutdown` | Beads edit/commit/memory gates |
-| `session-flow.ts` | `tool_result, agent_end` | `bd close`-driven auto-commit flow |
-| `quality-gates.ts` | `tool_result` | Post-edit quality checks |
-| `service-skills.ts` | `before_agent_start, tool_result` | Service-routing context |
-| `main-guard-post-push.ts` | `tool_result` | Post-push reminder text only |
-
-Pi installer excludes deprecated main-guard extension deployment.
-
----
-
-## Session Flow (Pi, current)
+## 2) Pi Runtime (current)
 
 ### Claim
-- `bd update <id> --claim` is issue ownership.
-- Claim no longer bootstrap-creates worktree/session-state in Pi session-flow extension.
+- `bd update --claim` sets ownership only.
+- No claim-time worktree bootstrap.
 
 ### Close
-- `bd close <id> --reason "..."` is canonical close action.
-- Pi session-flow now attempts auto-commit on successful close:
-  - reads `close_reason`
-  - runs `git add -A`
-  - runs `git commit -m "<close_reason> (<id>)"`
-  - no-op if there are no changes
+- On successful `bd close <id> --reason "..."`, Pi session-flow attempts:
+  - `git add -A`
+  - `git commit -m "<close_reason> (<id>)"`
+- If no file changes exist, auto-commit is skipped (no failure).
 
-### Publish / Merge
-- Publish/merge are explicit external steps (publish-only workflow).
-- Automatic `xtrm finish` orchestration is deprecated in Pi guidance.
-
----
-
-## Policy Compiler
+### Memory gate
+- On close, Pi stores `closed-this-session:<sessionId>`.
+- User is prompted to persist insight via `bd remember` and acknowledge with:
 
 ```bash
-node scripts/compile-policies.mjs
+touch .beads/.memory-gate-done
+```
+
+- While pending, Pi enforces hard blocking on:
+  - mutating tool calls
+  - `session_before_switch`
+  - `session_before_fork`
+  - `session_before_compact`
+
+- On marker acknowledgment, Pi clears:
+  - `claimed:<sessionId>`
+  - `closed-this-session:<sessionId>`
+
+## 3) Claude Hooks / Pi Extensions Snapshot
+
+### Core active behaviors
+- Beads edit gate
+- Beads commit gate
+- Memory gate reminders + marker acknowledgment
+- Session-flow close auto-commit
+- Quality-gates post-edit checks
+
+### De-scoped / deprecated behavior
+- `main-guard` policy wiring is removed from active runtime.
+- `xtrm finish` orchestration guidance is deprecated in Pi flow.
+
+## 4) Publish / Merge Model
+
+Current default:
+- local iteration allowed after close
+- no auto-push on close
+- publish + merge remain explicit external operations
+
+## 5) Verification commands
+
+```bash
 node scripts/compile-policies.mjs --check
 node scripts/compile-policies.mjs --check-pi
+npm run -s test --workspace cli -- test/extensions/beads.test.ts src/tests/session-flow-parity.test.ts src/tests/policy-parity.test.ts
 ```
 
----
+## 6) Known gaps
 
-## Beads Quick Reference
-
-```bash
-bd ready
-bd update <id> --claim
-bd close <id> --reason "Done"
-bd remember "<insight>"
-```
-
----
-
-## Notes
-
-- If behavior seems stale after edits, reload/restart client session so updated extension code is loaded.
-- Historical worktree-first + `xtrm finish` docs are being phased out in favor of explicit xtpi/publish workflow.
+- `jaggers-agent-tools-ycg9` (P2): TypeScript quality-gate false negative can allow invalid TS to pass.
+- Session-end active-claim warning can be noisy because it runs at frequent `agent_end` boundaries.

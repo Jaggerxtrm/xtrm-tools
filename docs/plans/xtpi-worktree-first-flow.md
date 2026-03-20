@@ -1,157 +1,97 @@
-# xtpi Worktree-First Flow Plan
+# xtpi / Pi Workflow Plan (Current State)
 
-Status: Draft (iteration 2 — ready decisions only)
+Status: Active (updated to implemented behavior)
 Owner issue: `jaggers-agent-tools-xepd`
 
 ## 1) Goal
 
-Create an `xtpi` launcher workflow where agents never start on repo-root `main` for implementation work.
-
-Target behavior:
-- `xtpi <issue-or-sandbox>` creates/opens a dedicated worktree
-- launches `pi` directly in that worktree
-- day-to-day work stays sandboxed
-- PR merge to `main` is an explicit external/landing step (not implicit)
+Keep Pi + beads aligned to a **claim → work → close** loop with minimal friction:
+- `bd` stays canonical (`bd update --claim`, `bd close --reason`)
+- close reason drives auto-commit in Pi session flow
+- memory/remember flow uses Claude-style marker acknowledgment
+- publish/merge stay explicit external steps
 
 ---
 
-## 2) Design Principles
+## 2) What is Working Now (Implemented)
 
-1. **Workspace lifecycle is separate from issue lifecycle**
-   - Worktree management (`xtpi`) should not be hidden in `bd update --claim`
-2. **No accidental writes on `main`**
-   - main-guard stays strict for mutating tools/commands
-3. **bd remains source of truth for task state**
-   - issue claim/close semantics stay canonical
-4. **Publish and land are distinct**
-   - publish PR from sandbox; merge is an explicit gate
+### A) Claim behavior
+- `bd update <id> --claim` is ownership only.
+- No worktree/session bootstrap is triggered from claim.
 
----
+### B) Close behavior
+- `bd close <id> --reason "..."` is canonical.
+- Pi session-flow derives commit message from close reason:
+  - `git add -A && git commit -m "<close_reason> (<id>)"`
+  - if no changes, auto-commit is skipped (no failure).
+- Default policy: **no push on close**.
 
-## 3) Proposed Commands (target)
+### C) Memory gate parity + hard enforcement
+- On successful `bd close`, Pi sets `closed-this-session:<sessionId>`.
+- Pi reminds user to persist memory (`bd remember ...`) and acknowledge with:
+  - `touch .beads/.memory-gate-done`
+- Pending memory gate is now enforced by Pi extension:
+  - blocks mutating `tool_call`s while pending
+  - blocks `session_before_switch`
+  - blocks `session_before_fork`
+  - blocks `session_before_compact`
+- On marker acknowledgment, Pi clears:
+  - `claimed:<sessionId>`
+  - `closed-this-session:<sessionId>`
 
-### `xtpi <name-or-issue>`
-- Resolve repo root + default naming
-- Ensure worktree exists (create if needed)
-- Ensure branch exists/attached (sandbox branch)
-- Start `pi` with cwd set to worktree path
-
-### `xtpi resume <name-or-issue>`
-- Re-enter existing sandbox worktree and open `pi`
-
-### `xtpi publish`
-- From current sandbox worktree:
-  - verify clean/dirty state policy
-  - ensure branch is pushed
-  - create/update one final PR to `main`
-- **No merge**
-
-### `xtpi cleanup`
-- Remove sandbox worktree after PR is merged (or force with explicit flag)
-
-### `xtrm finish` (deprecation target)
-- **Deprecated in xtpi strict workflow**
-- Replacement path is `xtpi publish` + external merge + `xtpi cleanup`
+### D) Main-guard policy wiring
+- Active `main-guard` policy wiring was removed due workflow regressions.
+- Current workflow relies on beads/session gates rather than main-branch hard blocking.
 
 ---
 
-## 4) Branch/PR Strategy Options
+## 3) Current Operator Flow
 
-### Option A: One sandbox branch per issue
-- cleanest audit and review boundaries
-- more PRs
-
-### Option B: One sandbox branch per session/campaign (multi-issue)
-- one final PR
-- relies on bd for per-issue traceability
-- larger review surface
-
-Current default direction: support both; keep default behavior configurable and confirm after practical validation.
-
----
-
-## 5) bd Integration Model (ready decision)
-
-- Keep canonical bd DB shared across worktrees (same repository backing)
-- `bd update <id> --claim` remains issue ownership, not workspace creation
-- `bd close` stays the canonical issue-closing command (no workflow fork to `xtpi close`)
-- Add **post-close automation** triggered by successful `bd close`:
-  1. read closed issue id + `close_reason` (`bd show <id> --json`)
-  2. if sandbox branch has changes: `git add -A && git commit -m "<close_reason> (<id>)"`
-  3. if no changes: no-op (do not fail `bd close`)
-
-### Push policy
-- **Default: no push on close**
-  - keeps local iteration fast
-  - avoids noisy remote history while issue work is still evolving
-- Optional setting: `xtpi.autoPushOnClose=true` for immediate remote backup
-- `xtpi publish` is the canonical "push + create/update final PR" step
+1. Create/select issue
+2. `bd update <id> --claim`
+3. Implement changes
+4. `bd close <id> --reason "..."`
+5. Pi auto-commit from close reason (or no-op if clean)
+6. If memory gate prompt appears:
+   - `bd remember "<insight>"` (or decide nothing to persist)
+   - `touch .beads/.memory-gate-done`
+7. Publish/merge explicitly outside close flow
 
 ---
 
-## 6) Guardrails
+## 4) Guardrails (Current)
 
-1. On repo-root `main`: block edits and risky git ops (existing main-guard)
-2. In sandbox: allow normal dev flow
-3. If claim exists + user is on root: message should point to active sandbox path
-4. In xtpi strict workflow: disallow merge-to-main from development session commands
-
----
-
-## 7) End-to-End Target Flow
-
-1. User/orchestrator: `xtpi jaggers-agent-tools-123`
-2. Pi opens in sandbox worktree
-3. Agent: `bd update jaggers-agent-tools-123 --claim`
-4. Agent works and closes issues with `bd close --reason "..."`
-5. Post-close automation creates local commit message from `close_reason` (default: no push)
-6. Agent runs `xtpi publish` (push + create/update final PR, no merge)
-7. Human/landing agent merges PR
-8. Agent/user runs `xtpi cleanup`
+1. Edit gate: mutating edits require active claim when trackable work exists.
+2. Commit gate: manual commit blocked while active claim remains in progress.
+3. Memory gate: pending closed-this-session blocks session transitions and mutating tools until marker ack.
 
 ---
 
-## 8) Known Bugs (tracked)
+## 5) Known Gaps / Follow-ups
 
-- `jaggers-agent-tools-26cg` (P0 bug): **Pi main-guard/worktree workflow regression blocks sandbox flow**
-  - Current behavior can produce blocked/looping guidance around active worktree state.
-  - Until fixed, treat current worktree-first flow as unstable and prioritize guard/worktree repair before strict xtpi rollout.
-
----
-
-## 9) Open Questions (still open)
-
-1. Naming decision: keep `xtrm` umbrella, add `xt` alias, or migrate to `xt`?
-2. Should campaign mode support an optional squash-at-publish helper?
-3. Do we need a separate `land` command, or keep merge fully external?
-4. Should `bd remember` trigger behavior be restored/updated as part of xtpi rollout or tracked as a separate bugfix stream?
+- `jaggers-agent-tools-ycg9` (P2): TS quality gate false negative; invalid TS can pass current hook.
+- `jaggers-agent-tools-8678`: docs/spec sync task (this stream).
+- Session-end active-claim warning is currently noisy because it runs frequently at `agent_end`; consider rate-limiting or `session_shutdown`-only variant.
 
 ---
 
-## 10) Rollout Plan
+## 6) xtpi Scope Going Forward
 
-Phase 1
-- Add `xtpi` launcher (create/open worktree + exec pi in worktree cwd)
-- Keep current claim behavior for compatibility during transition
+`xtpi` remains valid as a launcher/publish/cleanup UX layer, but current stable baseline is Pi-first beads flow above.
 
-Phase 2
-- Move worktree creation out of claim hook (feature-flagged)
-- Keep claim only as issue-state operation
-- Introduce `xtrm finish` deprecation messaging in strict xtpi mode
+If/when resumed, xtpi should add convenience only:
+- launch into chosen workspace/worktree
+- explicit `publish` helper (push + PR create/update, no merge)
+- explicit `cleanup` after merge
 
-Phase 3
-- Enforce strict mode defaults:
-  - publish-only from agent
-  - merge gated externally
-  - cleanup command required
-- Fully deprecate `xtrm finish` in xtpi-managed workflow docs
+No wrapper should replace canonical `bd close`.
 
 ---
 
-## 11) Success Criteria
+## 7) Success Criteria (Rebased to Current Reality)
 
-- Agents no longer start implementation sessions on root `main`
-- `bd close` remains canonical while commit text is reused automatically
-- PR lifecycle is deterministic and explicit (publish vs merge vs cleanup)
-- bd issue state remains reliable across multiple sandboxes
-- Fewer guard conflicts and fewer "active worktree" dead-end messages
+- `bd close` remains canonical and drives commit text reuse.
+- Memory gate parity with marker acknowledgment works end-to-end.
+- Pending memory gate cannot be bypassed via session switch/fork/compact.
+- Local iteration remains fast (no forced push-on-close).
+- Documentation reflects implemented behavior, not aspirational strict-flow defaults.

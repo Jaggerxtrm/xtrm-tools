@@ -2,8 +2,8 @@
 title: Hooks Reference
 scope: hooks
 category: reference
-version: 1.1.0
-updated: 2026-03-19
+version: 1.2.0
+updated: 2026-03-20
 description: "Active Claude hook wiring and behavior"
 source_of_truth_for:
   - "hooks/**/*.mjs"
@@ -24,20 +24,21 @@ This document describes active Claude hooks generated from `policies/*.json`.
 |---|---|
 | `beads-edit-gate.mjs` | Blocks edits without session claim when trackable work exists |
 | `beads-commit-gate.mjs` | Blocks commit while claimed in-progress work remains |
-| `beads-stop-gate.mjs` | Blocks stop when unresolved claim/phase requires follow-up |
-| `beads-memory-gate.mjs` | Stop-time memory prompt gate |
-| `beads-claim-sync.mjs` | Syncs claim/close markers from `bd` tool results |
+| `beads-stop-gate.mjs` | Stop-time claim workflow gate |
+| `beads-memory-gate.mjs` | Stop-time memory reflection gate |
+| `beads-claim-sync.mjs` | Syncs claim/close markers from `bd` command results |
+| `beads-compact-save.mjs` / `beads-compact-restore.mjs` | Persist/restore compact context |
 
 ### Context / Tooling
 
 | Hook | Behavior |
 |---|---|
 | `branch-state.mjs` | Injects branch + claim context on prompt submit |
-| `gitnexus/gitnexus-hook.cjs` | Graph-aware augment guidance |
+| `gitnexus/gitnexus-hook.cjs` | GitNexus guidance/enrichment |
 | `serena-workflow-reminder.py` | Session-start Serena workflow reminder |
 | `quality-check.cjs` / `quality-check.py` | Post-edit quality checks |
 
-## Operational Flow (current)
+## Operational Flow
 
 ```bash
 bd update <id> --claim
@@ -46,8 +47,8 @@ bd close <id> --reason "..."
 ```
 
 - Edits are blocked without claim when work exists.
-- Close marks session progress for memory prompt behavior.
-- Memory prompt asks whether to persist insight via `bd remember`.
+- Close state participates in memory prompt behavior.
+- Memory prompt supports persisting insight via `bd remember`.
 
 ## Notes
 

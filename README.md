@@ -1,201 +1,97 @@
 # XTRM-Tools
 
-> **Claude Code plugin** — workflow enforcement, code quality gates, issue tracking, and development automation.
+> Claude Code + Pi workflow tooling: beads gates, session-flow automation, quality checks, and service skills.
 
-**Version 2.4.0** | [Complete Guide](XTRM-GUIDE.md) | [Changelog](CHANGELOG.md)
-
----
-
-## Quick Start
-
-```bash
-# Install globally (one-time)
-npm install -g github:Jaggerxtrm/xtrm-tools@latest
-
-# Install the plugin
-xtrm install all
-
-# Verify
-claude plugin list
-# → xtrm-tools@xtrm-tools  Version: 2.4.0  Status: ✔ enabled
-```
-
-**One-line run:**
-```bash
-npx -y github:Jaggerxtrm/xtrm-tools install all
-```
+**Version 2.4.0** | [Guide](XTRM-GUIDE.md) | [Changelog](CHANGELOG.md)
 
 ---
 
-## What's Included
+## Current Workflow (Pi-first)
 
-### Core Enforcement
+Canonical loop:
+
+```bash
+bd update <id> --claim
+# implement
+bd close <id> --reason "..."
+```
+
+What happens now:
+- `bd update --claim` = ownership only (no worktree bootstrap).
+- `bd close --reason` = canonical close action.
+- Pi session-flow auto-commit attempts:
+  - `git add -A && git commit -m "<close_reason> (<id>)"`
+  - skipped cleanly if no changes.
+- Default is **no push on close** (publish/merge remain explicit external steps).
+
+---
+
+## Memory Gate (Claude-style marker parity)
+
+After successful `bd close`, Pi tracks closed issue state per session and prompts memory reflection.
+
+Acknowledge with:
+
+```bash
+touch .beads/.memory-gate-done
+```
+
+While memory gate is pending:
+- mutating tool calls are blocked
+- `session_before_switch` is blocked
+- `session_before_fork` is blocked
+- `session_before_compact` is blocked
+
+After marker acknowledgment, Pi clears:
+- `claimed:<sessionId>`
+- `closed-this-session:<sessionId>`
+
+---
+
+## What’s Included
 
 | Component | Purpose |
-|-----------|---------|
-| **Main Guard** | PR-only workflow — blocks direct commits on `main`/`master` |
-| **Beads Gates** | Issue tracking — edit/commit/stop gates, memory prompts |
-| **Quality Gates** | Auto linting (ESLint, tsc, ruff, mypy) on file edits |
-| **GitNexus** | Knowledge graph context for code exploration |
+|---|---|
+| Beads Gates | Claim/edit/commit/memory workflow enforcement |
+| Session Flow | `bd close`-driven auto-commit from close reason |
+| Quality Gates | Post-edit quality checks (TS/JS/Python) |
+| Service Skills | Routing/context for service-specific skill workflows |
+| GitNexus | Graph-aware exploration/debugging support |
 
-### Skills
-
-| Skill | Type | Purpose |
-|-------|------|---------|
-| `using-xtrm` | Global | Session operating manual |
-| `documenting` | Global | SSOT documentation with drift detection |
-| `delegating` | Global | Task delegation to cost-optimized agents |
-| `orchestrating-agents` | Global | Multi-model collaboration |
-| `using-quality-gates` | Global | Quality gate configuration and usage guide |
-| `using-service-skills` | Global | Territory-based service skill activation |
-| `creating-service-skills` | Global | Scaffold new service skills via Serena LSP deep dive |
-| `scoping-service-skills` | Global | Define territory globs for service skill routing |
-| `updating-service-skills` | Global | Drift detection and sync for service skill definitions |
+> Note: main-guard policy wiring is currently removed from active runtime.
 
 ---
 
-## Plugin Structure
-
-```
-plugins/xtrm-tools/
-├── .claude-plugin/plugin.json   # Manifest
-├── hooks → ../../hooks           # All hook scripts + hooks.json
-├── skills → ../../skills         # Auto-discovered skills
-└── .mcp.json → ../../.mcp.json   # MCP servers
-```
-
-All hook paths use `${CLAUDE_PLUGIN_ROOT}` — works from any installation location.
-
----
-
-## Policy System
-
-Policies are the **single source of truth** for all enforcement rules. Located in `policies/`, they compile to both Claude hooks and Pi extensions.
-
-### Policy Files
-
-| Policy | Runtime | Purpose |
-|--------|---------|---------|
-| `main-guard.json` | both | PR-only workflow |
-| `beads.json` | both | Issue tracking gates |
-| `branch-state.json` | claude | Branch context injection |
-| `gitnexus.json` | claude | Knowledge graph enrichment |
-| `serena.json` | claude | Serena LSP workflow reminder |
-| `quality-gates.json` | pi | Linting/typechecking |
-| `service-skills.json` | pi | Territory-based skill activation |
-
-### Compiler
+## Commands
 
 ```bash
-node scripts/compile-policies.mjs           # Generate hooks.json
-node scripts/compile-policies.mjs --check   # CI drift detection
+xtrm install all
+xtrm init
+xtrm status
 ```
 
----
-
-## CLI Commands
-
-```
-xtrm <command> [options]
-```
-
-| Command | Description |
-|---------|-------------|
-| `install all` | Full plugin + beads + gitnexus |
-| `install basic` | Plugin + skills (no beads) |
-| `init` | Initialize current project (alias for `project init`) |
-| `project init` | Initialize project data (bd, gitnexus, service-registry) |
-| `install project <name>` | **Deprecated** — use `xtrm init` instead |
-| `status` | Read-only diff view |
-| `clean` | Remove orphaned hooks |
-
-### Flags
-
-| Flag | Description |
-|------|-------------|
-| `--yes`, `-y` | Non-interactive mode |
-| `--dry-run` | Preview only |
-| `--prune` | Force-replace hooks |
-
----
-
-## Hooks Reference
-
-### Event Types
-
-| Event | When |
-|-------|------|
-| `SessionStart` | Session begins |
-| `PreToolUse` | Before tool invocation |
-| `PostToolUse` | After tool completes |
-| `Stop` | Session ends |
-| `PreCompact` | Before compaction |
-
-### Main Guard
-
-- Blocks `git commit`/`push` on protected branches
-- Blocks direct file edits on `main`/`master`
-- Post-push reminder: `gh pr merge --squash`
-
-### Beads Gates
-
-| Hook | Behavior |
-|------|----------|
-| Edit Gate | Requires claimed issue to edit files |
-| Commit Gate | Prompts to close issue before commit |
-| Stop Gate | Blocks session end with unclosed issues |
-| Memory Gate | Prompts to persist insights when closing |
-
----
-
-## MCP Servers
-
-Configured in `.mcp.json` (xtrm-managed only):
-
-| Server | Purpose |
-|--------|---------|
-| `gitnexus` | Knowledge graph |
-| `github-grep` | Code search |
-| `deepwiki` | DeepWiki docs search |
-
-Official Claude plugins are installed during `xtrm install all`:
-- `serena@claude-plugins-official`
-- `context7@claude-plugins-official`
-- `github@claude-plugins-official`
-- `ralph-loop@claude-plugins-official`
-
----
-
-## Issue Tracking (Beads)
+Beads quick reference:
 
 ```bash
-bd ready                    # Find unblocked work
-bd update <id> --claim      # Claim an issue
-bd close <id> --reason "Done"  # Close when done
+bd ready
+bd update <id> --claim
+bd close <id> --reason "Done"
+bd remember "<insight>"
 ```
 
 ---
 
 ## Documentation
 
-- **[XTRM-GUIDE.md](XTRM-GUIDE.md)** — Complete reference guide
-- **[CHANGELOG.md](CHANGELOG.md)** — Full version history
-- **[ROADMAP.md](ROADMAP.md)** — Planned features
+- [XTRM-GUIDE.md](XTRM-GUIDE.md)
+- [docs/pi-extensions.md](docs/pi-extensions.md)
+- [docs/hooks.md](docs/hooks.md)
+- [docs/policies.md](docs/policies.md)
+- [docs/testing.md](docs/testing.md)
+- [docs/plans/xtpi-worktree-first-flow.md](docs/plans/xtpi-worktree-first-flow.md)
 
 ---
 
-## Version History
+## Known Gap
 
-| Version | Date | Highlights |
-|---------|------|------------|
-| 2.4.0 | 2026-03-18 | Global-first architecture: quality gates + service skills as global hooks/skills, xtrm init project detection, guard-rules centralization, Pi drift checks |
-| 2.3.0 | 2026-03-17 | Plugin structure, policy compiler, Pi extension parity |
-| 2.2.0 | 2026-03-17 | Pi extensions: quality-gates, beads, main-guard |
-| 2.0.0 | 2026-03-12 | CLI rebrand, project skills engine |
-| 1.7.0 | 2026-02-25 | GitNexus integration |
-
----
-
-## License
-
-MIT License
+- `jaggers-agent-tools-ycg9` (P2): TS quality-gate false negative (invalid TS can pass current hook).

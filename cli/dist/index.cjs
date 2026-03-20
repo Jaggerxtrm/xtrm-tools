@@ -6053,7 +6053,7 @@ var require_dist = __commonJS({
         });
       };
     }
-    var prompts5 = require_prompts();
+    var prompts4 = require_prompts();
     var passOn = ["suggest", "format", "onState", "validate", "onRender", "type"];
     var noop = () => {
     };
@@ -6104,7 +6104,7 @@ var require_dist = __commonJS({
             var _question2 = question;
             name = _question2.name;
             type = _question2.type;
-            if (prompts5[type] === void 0) {
+            if (prompts4[type] === void 0) {
               throw new Error(`prompt type (${type}) is not defined`);
             }
             if (override2[question.name] !== void 0) {
@@ -6115,7 +6115,7 @@ var require_dist = __commonJS({
               }
             }
             try {
-              answer = prompt._injected ? getInjectedAnswer(prompt._injected, question.initial) : yield prompts5[type](question);
+              answer = prompt._injected ? getInjectedAnswer(prompt._injected, question.initial) : yield prompts4[type](question);
               answers[name] = answer = yield getFormattedAnswer(question, answer, true);
               quit = yield onSubmit(question, answer, answers);
             } catch (err) {
@@ -6147,7 +6147,7 @@ var require_dist = __commonJS({
     }
     module2.exports = Object.assign(prompt, {
       prompt,
-      prompts: prompts5,
+      prompts: prompts4,
       inject,
       override
     });
@@ -8234,7 +8234,7 @@ var require_prompts2 = __commonJS({
 var require_lib = __commonJS({
   "../node_modules/prompts/lib/index.js"(exports2, module2) {
     "use strict";
-    var prompts5 = require_prompts2();
+    var prompts4 = require_prompts2();
     var passOn = ["suggest", "format", "onState", "validate", "onRender", "type"];
     var noop = () => {
     };
@@ -8266,7 +8266,7 @@ var require_lib = __commonJS({
           throw new Error("prompt message is required");
         }
         ({ name, type } = question);
-        if (prompts5[type] === void 0) {
+        if (prompts4[type] === void 0) {
           throw new Error(`prompt type (${type}) is not defined`);
         }
         if (override2[question.name] !== void 0) {
@@ -8277,7 +8277,7 @@ var require_lib = __commonJS({
           }
         }
         try {
-          answer = prompt._injected ? getInjectedAnswer(prompt._injected, question.initial) : await prompts5[type](question);
+          answer = prompt._injected ? getInjectedAnswer(prompt._injected, question.initial) : await prompts4[type](question);
           answers[name] = answer = await getFormattedAnswer(question, answer, true);
           quit = await onSubmit(question, answer, answers);
         } catch (err) {
@@ -8300,7 +8300,7 @@ var require_lib = __commonJS({
     function override(answers) {
       prompt._override = Object.assign({}, answers);
     }
-    module2.exports = Object.assign(prompt, { prompt, prompts: prompts5, inject, override });
+    module2.exports = Object.assign(prompt, { prompt, prompts: prompts4, inject, override });
   }
 });
 
@@ -33948,7 +33948,7 @@ function init(open, close) {
 var kleur_default = $;
 
 // src/commands/install.ts
-var import_prompts3 = __toESM(require_prompts3(), 1);
+var import_prompts2 = __toESM(require_prompts3(), 1);
 
 // ../node_modules/eventemitter3/index.mjs
 var import_index2 = __toESM(require_eventemitter3(), 1);
@@ -40170,7 +40170,7 @@ async function handleMissingEnvVars(missing) {
   if (missing.length === 0) {
     return true;
   }
-  const prompts5 = (await Promise.resolve().then(() => __toESM(require_prompts3(), 1))).default;
+  const prompts4 = (await Promise.resolve().then(() => __toESM(require_prompts3(), 1))).default;
   const answers = {};
   for (const key of missing) {
     const config3 = REQUIRED_ENV_VARS[key];
@@ -40182,7 +40182,7 @@ async function handleMissingEnvVars(missing) {
       console.log(kleur_default.yellow(`
   \u26A0\uFE0F  ${key} is required by a selected MCP server`));
     }
-    const { value } = await prompts5({
+    const { value } = await prompts4({
       type: "text",
       name: "value",
       message: `Enter ${key}:`,
@@ -40395,8 +40395,8 @@ async function syncMcpServersWithCli(agent, mcpConfig, dryRun = false, prune = f
   }
   let selectedNames = toAdd.map(([name]) => name);
   if (!dryRun) {
-    const prompts5 = await Promise.resolve().then(() => __toESM(require_prompts3(), 1));
-    const { selected } = await prompts5.default({
+    const prompts4 = await Promise.resolve().then(() => __toESM(require_prompts3(), 1));
+    const { selected } = await prompts4.default({
       type: "multiselect",
       name: "selected",
       message: `Select MCP servers to install via ${agent} CLI:`,
@@ -40855,173 +40855,64 @@ var sym = {
 // src/commands/install.ts
 var import_path11 = __toESM(require("path"), 1);
 
-// src/commands/install-pi.ts
-var import_prompts2 = __toESM(require_prompts3(), 1);
+// src/commands/pi-install.ts
 var import_fs_extra10 = __toESM(require_lib2(), 1);
 var import_path10 = __toESM(require("path"), 1);
 var import_node_child_process = require("child_process");
 var import_node_os4 = require("os");
 var PI_AGENT_DIR = process.env.PI_AGENT_DIR || import_path10.default.join((0, import_node_os4.homedir)(), ".pi", "agent");
-function fillTemplate(template, values) {
-  return template.replace(/\{\{(\w+)\}\}/g, (_, key) => values[key] ?? "");
-}
-function readExistingPiValues(piAgentDir) {
-  const values = {};
-  try {
-    const auth = JSON.parse(require("fs").readFileSync(import_path10.default.join(piAgentDir, "auth.json"), "utf8"));
-    if (auth?.dashscope?.key) values["DASHSCOPE_API_KEY"] = auth.dashscope.key;
-    if (auth?.zai?.key) values["ZAI_API_KEY"] = auth.zai.key;
-  } catch {
-  }
-  try {
-    const models = JSON.parse(require("fs").readFileSync(import_path10.default.join(piAgentDir, "models.json"), "utf8"));
-    if (!values["DASHSCOPE_API_KEY"] && models?.providers?.dashscope?.apiKey) {
-      values["DASHSCOPE_API_KEY"] = models.providers.dashscope.apiKey;
-    }
-  } catch {
-  }
-  return values;
-}
 function isPiInstalled() {
-  return (0, import_node_child_process.spawnSync)("pi", ["--version"], { encoding: "utf8" }).status === 0;
+  const r = (0, import_node_child_process.spawnSync)("pi", ["--version"], { encoding: "utf8", stdio: "pipe" });
+  return r.status === 0;
 }
-async function listTsFilesRecursive(baseDir) {
-  if (!await import_fs_extra10.default.pathExists(baseDir)) return [];
-  const entries = await import_fs_extra10.default.readdir(baseDir, { withFileTypes: true });
-  const files = [];
-  for (const entry of entries) {
-    const abs = import_path10.default.join(baseDir, entry.name);
-    if (entry.isDirectory()) {
-      files.push(...await listTsFilesRecursive(abs));
-      continue;
-    }
-    if (entry.isFile() && entry.name.endsWith(".ts")) {
-      files.push(abs);
-    }
-  }
-  return files;
-}
-async function fileSha256(filePath) {
-  const crypto2 = await import("crypto");
-  const content = await import_fs_extra10.default.readFile(filePath);
-  return crypto2.createHash("sha256").update(content).digest("hex");
-}
-async function diffPiExtensions(sourceDir, targetDir) {
-  const sourceAbs = import_path10.default.resolve(sourceDir);
-  const targetAbs = import_path10.default.resolve(targetDir);
-  const sourceFiles = (await listTsFilesRecursive(sourceAbs)).map((f) => import_path10.default.relative(sourceAbs, f)).sort();
-  const missing = [];
-  const stale = [];
-  const upToDate = [];
-  for (const rel of sourceFiles) {
-    const src = import_path10.default.join(sourceAbs, rel);
-    const dst = import_path10.default.join(targetAbs, rel);
-    if (!await import_fs_extra10.default.pathExists(dst)) {
-      missing.push(rel);
-      continue;
-    }
-    const [srcHash, dstHash] = await Promise.all([fileSha256(src), fileSha256(dst)]);
-    if (srcHash !== dstHash) stale.push(rel);
-    else upToDate.push(rel);
-  }
-  return { missing, stale, upToDate };
-}
-function printPiCheckSummary(diff) {
-  const totalDiff = diff.missing.length + diff.stale.length;
-  console.log(t.bold("\n  Pi extension drift check\n"));
-  console.log(t.muted(`  Up-to-date: ${diff.upToDate.length}`));
-  console.log(kleur_default.yellow(`  Missing:    ${diff.missing.length}`));
-  console.log(kleur_default.yellow(`  Stale:      ${diff.stale.length}`));
-  if (diff.missing.length > 0) {
-    console.log(kleur_default.yellow("\n  Missing files:"));
-    diff.missing.forEach((f) => console.log(kleur_default.yellow(`    - ${f}`)));
-  }
-  if (diff.stale.length > 0) {
-    console.log(kleur_default.yellow("\n  Stale files:"));
-    diff.stale.forEach((f) => console.log(kleur_default.yellow(`    - ${f}`)));
-  }
-  if (totalDiff === 0) {
-    console.log(t.success("\n  \u2713 Pi extensions are in sync\n"));
-  }
-}
-function createInstallPiCommand() {
-  const cmd = new Command("pi");
-  cmd.description("Install Pi coding agent with providers, extensions, and npm packages").option("-y, --yes", "Skip confirmation prompts", false).option("--check", "Check Pi extension deployment drift without writing changes", false).action(async (opts) => {
-    const { yes, check: check2 } = opts;
-    const repoRoot = await findRepoRoot();
-    const piConfigDir = import_path10.default.join(repoRoot, "config", "pi");
-    if (check2) {
-      const sourceDir = import_path10.default.join(piConfigDir, "extensions");
-      const targetDir = import_path10.default.join(PI_AGENT_DIR, "extensions");
-      const diff = await diffPiExtensions(sourceDir, targetDir);
-      printPiCheckSummary(diff);
-      if (diff.missing.length > 0 || diff.stale.length > 0) {
-        console.error(kleur_default.red("  \u2717 Pi extension drift detected. Run `xtrm install pi` to sync.\n"));
-        process.exit(1);
-      }
-      return;
-    }
-    console.log(t.bold("\n  Pi Coding Agent Setup\n"));
-    if (!isPiInstalled()) {
-      console.log(kleur_default.yellow("  pi not found \u2014 installing oh-pi globally...\n"));
+async function runPiInstall(dryRun = false) {
+  const repoRoot = await findRepoRoot();
+  const piConfigDir = import_path10.default.join(repoRoot, "config", "pi");
+  const schemaPath = import_path10.default.join(piConfigDir, "install-schema.json");
+  console.log(t.bold("\n  \u2699  Pi extensions + packages"));
+  if (!isPiInstalled()) {
+    console.log(kleur_default.yellow("  pi not found \u2014 installing oh-pi globally..."));
+    if (!dryRun) {
       const r = (0, import_node_child_process.spawnSync)("npm", ["install", "-g", "oh-pi"], { stdio: "inherit" });
       if (r.status !== 0) {
-        console.error(kleur_default.red("\n  Failed to install oh-pi. Run: npm install -g oh-pi\n"));
-        process.exit(1);
+        console.error(kleur_default.red("  \u2717 Failed to install oh-pi. Run: npm install -g oh-pi\n"));
+        return;
       }
-      console.log(t.success("  pi installed\n"));
     } else {
-      const v = (0, import_node_child_process.spawnSync)("pi", ["--version"], { encoding: "utf8" });
-      console.log(t.success(`  pi ${v.stdout.trim()} already installed
-`));
+      console.log(kleur_default.cyan("  [DRY RUN] npm install -g oh-pi"));
     }
-    const schema = await import_fs_extra10.default.readJson(import_path10.default.join(piConfigDir, "install-schema.json"));
-    const existing = readExistingPiValues(PI_AGENT_DIR);
-    const values = { ...existing };
-    console.log(t.bold("  API Keys\n"));
-    for (const field of schema.fields) {
-      if (existing[field.key]) {
-        console.log(t.success(`    ${sym.ok} ${field.label} [already set]`));
-        continue;
-      }
-      if (!field.required && !yes) {
-        const { include } = await (0, import_prompts2.default)({ type: "confirm", name: "include", message: `  Configure ${field.label}? (optional)`, initial: false });
-        if (!include) continue;
-      }
-      const { value } = await (0, import_prompts2.default)({ type: field.secret ? "password" : "text", name: "value", message: `  ${field.label}`, hint: field.hint, validate: (v) => field.required && !v ? "Required" : true });
-      if (value) values[field.key] = value;
+    console.log(t.success("  \u2713 pi installed"));
+  } else {
+    const v = (0, import_node_child_process.spawnSync)("pi", ["--version"], { encoding: "utf8" });
+    console.log(t.success(`  \u2713 pi ${v.stdout.trim()} already installed`));
+  }
+  const extensionsSrc = import_path10.default.join(piConfigDir, "extensions");
+  const extensionsDst = import_path10.default.join(PI_AGENT_DIR, "extensions");
+  if (await import_fs_extra10.default.pathExists(extensionsSrc)) {
+    if (!dryRun) {
+      await import_fs_extra10.default.ensureDir(PI_AGENT_DIR);
+      await import_fs_extra10.default.copy(extensionsSrc, extensionsDst, { overwrite: true });
     }
-    await import_fs_extra10.default.ensureDir(PI_AGENT_DIR);
-    console.log(t.muted(`
-  Writing config to ${PI_AGENT_DIR}`));
-    for (const name of ["models.json", "auth.json", "settings.json"]) {
-      const destPath = import_path10.default.join(PI_AGENT_DIR, name);
-      if (name === "auth.json" && await import_fs_extra10.default.pathExists(destPath) && !yes) {
-        const { overwrite } = await (0, import_prompts2.default)({ type: "confirm", name: "overwrite", message: `  ${name} already exists \u2014 overwrite? (OAuth tokens will be lost)`, initial: false });
-        if (!overwrite) {
-          console.log(t.muted(`    skipped ${name}`));
-          continue;
-        }
-      }
-      const raw = await import_fs_extra10.default.readFile(import_path10.default.join(piConfigDir, `${name}.template`), "utf8");
-      await import_fs_extra10.default.writeFile(destPath, fillTemplate(raw, values), "utf8");
-      console.log(t.success(`    ${sym.ok} ${name}`));
+    console.log(t.success(`  ${sym.ok} extensions synced`));
+  }
+  if (!await import_fs_extra10.default.pathExists(schemaPath)) {
+    console.log(kleur_default.dim("  No install-schema.json found, skipping packages"));
+    return;
+  }
+  const schema = await import_fs_extra10.default.readJson(schemaPath);
+  for (const pkg of schema.packages) {
+    if (dryRun) {
+      console.log(kleur_default.cyan(`  [DRY RUN] pi install ${pkg}`));
+      continue;
     }
-    await import_fs_extra10.default.copy(import_path10.default.join(piConfigDir, "extensions"), import_path10.default.join(PI_AGENT_DIR, "extensions"), { overwrite: true });
-    console.log(t.success(`    ${sym.ok} extensions/`));
-    console.log(t.bold("\n  npm Packages\n"));
-    for (const pkg of schema.packages) {
-      const r = (0, import_node_child_process.spawnSync)("pi", ["install", pkg], { stdio: "inherit" });
-      if (r.status === 0) console.log(t.success(`    ${sym.ok} ${pkg}`));
-      else console.log(kleur_default.yellow(`    ${pkg} \u2014 failed, run manually: pi install ${pkg}`));
+    const r = (0, import_node_child_process.spawnSync)("pi", ["install", pkg], { stdio: "pipe", encoding: "utf8" });
+    if (r.status === 0) {
+      console.log(t.success(`  ${sym.ok} ${pkg}`));
+    } else {
+      console.log(kleur_default.yellow(`  \u26A0 ${pkg} \u2014 install failed (run manually: pi install ${pkg})`));
     }
-    console.log(t.bold("\n  OAuth (manual steps)\n"));
-    for (const provider of schema.oauth_providers) {
-      console.log(t.muted(`    ${provider.key}: ${provider.instruction}`));
-    }
-    console.log(t.boldGreen("\n  Pi setup complete\n"));
-  });
-  return cmd;
+  }
+  console.log("");
 }
 
 // src/commands/install.ts
@@ -41199,7 +41090,7 @@ function createInstallCommand() {
         const missing = [!beadsOk && "bd", !doltOk && "dolt"].filter(Boolean).join(", ");
         let doInstall = effectiveYes;
         if (!effectiveYes) {
-          const { install } = await (0, import_prompts3.default)({
+          const { install } = await (0, import_prompts2.default)({
             type: "confirm",
             name: "install",
             message: `Install beads + dolt? (${missing} not found) \u2014 required for workflow enforcement hooks`,
@@ -41228,8 +41119,7 @@ function createInstallCommand() {
           }
           console.log("");
         } else {
-          console.log(t.muted("  \u2139 Skipping beads gate hooks for this install run.\n"));
-          skipBeads = true;
+          console.log(t.muted("  \u2139 Skipped. Re-run after installing beads+dolt.\n"));
         }
       }
     }
@@ -41237,6 +41127,7 @@ function createInstallCommand() {
       for (const _claudeTarget of claudeTargets) {
         await installPlugin(repoRoot, dryRun);
       }
+      await runPiInstall(dryRun);
     }
     const diffTasks = new Listr(
       otherTargets.map((target) => ({
@@ -41285,7 +41176,7 @@ function createInstallCommand() {
     }
     if (!effectiveYes) {
       const totalChangesCount = allChanges.reduce((s, c) => s + c.totalChanges, 0);
-      const { confirm } = await (0, import_prompts3.default)({
+      const { confirm } = await (0, import_prompts2.default)({
         type: "confirm",
         name: "confirm",
         message: `Proceed with ${actionLabel} (${totalChangesCount} total changes)?`,
@@ -41315,11 +41206,10 @@ function createInstallCommand() {
   });
   installCmd.addCommand(createInstallAllCommand());
   installCmd.addCommand(createInstallBasicCommand());
-  installCmd.addCommand(createInstallPiCommand());
   return installCmd;
 }
 
-// src/commands/install-project.ts
+// src/commands/init.ts
 var import_path13 = __toESM(require("path"), 1);
 var import_fs_extra13 = __toESM(require_lib2(), 1);
 var import_child_process4 = require("child_process");
@@ -41341,7 +41231,7 @@ function resolvePkgRoot() {
 var PKG_ROOT = resolvePkgRoot();
 var SKILLS_SRC = import_path12.default.join(PKG_ROOT, "project-skills", "service-skills-set", ".claude");
 
-// src/commands/install-project.ts
+// src/commands/init.ts
 function resolvePkgRoot2() {
   const candidates = [
     import_path13.default.resolve(__dirname, "../.."),
@@ -41726,7 +41616,7 @@ function getProjectRoot() {
 }
 
 // src/commands/status.ts
-var import_prompts4 = __toESM(require_prompts3(), 1);
+var import_prompts3 = __toESM(require_prompts3(), 1);
 
 // src/core/manifest.ts
 var import_path14 = require("path");
@@ -55632,7 +55522,7 @@ function createStatusCommand() {
     console.log(kleur_default.yellow(`
   \u26A0  ${totalPending} pending change${totalPending !== 1 ? "s" : ""} across ${pending.length} environment${pending.length !== 1 ? "s" : ""}
 `));
-    const { selected } = await (0, import_prompts4.default)({
+    const { selected } = await (0, import_prompts3.default)({
       type: "multiselect",
       name: "selected",
       message: "Select environments to sync:",

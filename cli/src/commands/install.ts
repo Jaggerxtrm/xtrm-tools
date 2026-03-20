@@ -9,7 +9,7 @@ import { executeSync, syncMcpForTargets } from '../core/sync-executor.js';
 import { findRepoRoot } from '../utils/repo-root.js';
 import { t, sym } from '../utils/theme.js';
 import path from 'path';
-import { createInstallPiCommand } from './install-pi.js';
+import { runPiInstall } from './pi-install.js';
 
 interface TargetChanges {
     target: string;
@@ -307,8 +307,7 @@ export function createInstallCommand(): Command {
                         }
                         console.log('');
                     } else {
-                        console.log(t.muted('  ℹ Skipping beads gate hooks for this install run.\n'));
-                        skipBeads = true;
+                        console.log(t.muted('  ℹ Skipped. Re-run after installing beads+dolt.\n'));
                     }
                 }
             }
@@ -318,6 +317,8 @@ export function createInstallCommand(): Command {
                 for (const _claudeTarget of claudeTargets) {
                     await installPlugin(repoRoot, dryRun);
                 }
+                // Pi: non-interactive extension sync + package install
+                await runPiInstall(dryRun);
             }
 
             // Phase 1: Diff (concurrent via listr2)
@@ -421,7 +422,6 @@ export function createInstallCommand(): Command {
     // Add subcommands
     installCmd.addCommand(createInstallAllCommand());
     installCmd.addCommand(createInstallBasicCommand());
-    installCmd.addCommand(createInstallPiCommand());
 
     return installCmd;
 }

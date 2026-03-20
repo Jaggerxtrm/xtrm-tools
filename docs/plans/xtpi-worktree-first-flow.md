@@ -106,6 +106,28 @@ This section is mandatory for agent/worktree correctness.
      - `git commit -m "<close_reason> (<id>)"`
    - If no file changes exist, commit step must no-op without failing close.
 
+
+7. **Worktree Dolt server isolation (discovered 2026-03-20)**
+
+   When a worktree is created, `bd` auto-spawns a **separate Dolt server** on a new random port
+   pointing at the worktree's own `.beads/dolt/` — a completely empty database. This means
+   `bd list`, `bd kv`, and all gate hooks silently break in worktrees unless corrected.
+
+   Root cause: bd reads the active port from `.beads/dolt-server.port` (written by the running
+   server process), which overrides `metadata.json`. `bd dolt set port <N>` alone is not enough.
+
+   **Required worktree bootstrap** (must be automated by worktree creation tooling):
+   ```bash
+   bd dolt stop                                    # kill the auto-spawned isolated server
+   echo "<main_port>" > .beads/dolt-server.port    # redirect to the canonical running server
+   ```
+   Where `<main_port>` is the port of the main checkout's Dolt server (check `.beads/dolt-server.port`
+   in the repo root, or `bd dolt status` from the main checkout).
+
+   **Design implication**: Sessions must start directly inside a pre-configured worktree.
+   The "start on main then migrate to worktree mid-session" pattern is not viable — bd breaks
+   in the worktree and the bootstrap cannot be deferred.
+
 6. **Worktree re-entry behavior**
    - Re-entering another worktree must preserve issue visibility (`bd list/show/ready` parity).
    - Session kv markers may be absent in a new session; re-claim is allowed and expected for local runtime gating.

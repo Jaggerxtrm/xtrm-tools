@@ -3,6 +3,7 @@ import kleur from 'kleur';
 import prompts from 'prompts';
 import { Listr } from 'listr2';
 import fs from 'fs-extra';
+import os from 'os';
 import { getContext } from '../core/context.js';
 import { calculateDiff, PruneModeReadError } from '../core/diff.js';
 import { executeSync, syncMcpForTargets } from '../core/sync-executor.js';
@@ -191,6 +192,106 @@ export async function installOfficialClaudePlugins(dryRun: boolean): Promise<voi
     console.log(t.success(`  ✓ Official plugins ready (${installedCount} installed, ${alreadyInstalledCount} already present)\n`));
 }
 
+async function cleanStalePrePluginFiles(repoRoot: string, dryRun: boolean): Promise<void> {
+    const home = os.homedir();
+    const staleHooksDir = path.join(home, '.claude', 'hooks');
+    const staleSkillsDir = path.join(home, '.claude', 'skills');
+    const settingsPath = path.join(home, '.claude', 'settings.json');
+
+    const removed: string[] = [];
+
+    // Remove stale hook files managed by xtrm-tools (those matching repo hooks/)
+    const repoHooksDir = path.join(repoRoot, 'hooks');
+    if (await fs.pathExists(repoHooksDir) && await fs.pathExists(staleHooksDir)) {
+        const repoHookNames = (await fs.readdir(repoHooksDir)).filter(n => n !== 'README.md' && n !== 'hooks.json');
+        for (const name of repoHookNames) {
+            const staleFile = path.join(staleHooksDir, name);
+            if (await fs.pathExists(staleFile)) {
+                if (dryRun) {
+                    console.log(t.accent(`  [DRY RUN] Would remove stale hook: ~/.claude/hooks/${name}`));
+                } else {
+                    await fs.remove(staleFile);
+                    console.log(t.muted(`  ✗ Removed stale hook: ~/.claude/hooks/${name}`));
+                }
+                removed.push(`hooks/${name}`);
+            }
+        }
+    }
+
+    // Remove stale skill directories managed by xtrm-tools (those matching repo skills/)
+    const repoSkillsDir = path.join(repoRoot, 'skills');
+    if (await fs.pathExists(repoSkillsDir) && await fs.pathExists(staleSkillsDir)) {
+        const repoSkillNames = (await fs.readdir(repoSkillsDir)).filter(n => !n.startsWith('.'));
+        for (const name of repoSkillNames) {
+            const staleDir = path.join(staleSkillsDir, name);
+            if (await fs.pathExists(staleDir)) {
+                if (dryRun) {
+                    console.log(t.accent(`  [DRY RUN] Would remove stale skill: ~/.claude/skills/${name}`));
+                } else {
+                    await fs.remove(staleDir);
+                    console.log(t.muted(`  ✗ Removed stale skill: ~/.claude/skills/${name}`));
+                }
+                removed.push(`skills/${name}`);
+            }
+        }
+    }
+
+    // Clean stale settings.json hook entries pointing to ~/.claude/hooks/ (not ${CLAUDE_PLUGIN_ROOT})
+    if (await fs.pathExists(settingsPath)) {
+        let settings: any;
+        try {
+            settings = await fs.readJson(settingsPath);
+        } catch {
+            settings = null;
+        }
+        if (settings && settings.hooks && typeof settings.hooks === 'object') {
+            let settingsModified = false;
+            for (const [event, matchers] of Object.entries(settings.hooks)) {
+                if (!Array.isArray(matchers)) continue;
+                const cleanedMatchers = (matchers as any[]).filter((matcher: any) => {
+                    const hooks = Array.isArray(matcher?.hooks) ? matcher.hooks : [];
+                    const staleHooks = hooks.filter((h: any) => {
+                        const cmd: string = typeof h?.command === 'string' ? h.command : '';
+                        return cmd.includes('/.claude/hooks/') && !cmd.includes('${CLAUDE_PLUGIN_ROOT}');
+                    });
+                    if (staleHooks.length > 0) {
+                        for (const h of staleHooks) {
+                            const msg = `settings.json [${event}] hook: ${h.command}`;
+                            if (dryRun) {
+                                console.log(t.accent(`  [DRY RUN] Would remove stale ${msg}`));
+                            } else {
+                                console.log(t.muted(`  ✗ Removed stale ${msg}`));
+                            }
+                            removed.push(msg);
+                        }
+                        // Remove stale hooks from matcher; drop matcher if empty
+                        const remainingHooks = hooks.filter((h: any) => {
+                            const cmd: string = typeof h?.command === 'string' ? h.command : '';
+                            return !(cmd.includes('/.claude/hooks/') && !cmd.includes('${CLAUDE_PLUGIN_ROOT}'));
+                        });
+                        if (remainingHooks.length === 0) return false;
+                        matcher.hooks = remainingHooks;
+                        settingsModified = true;
+                        return true;
+                    }
+                    return true;
+                });
+                if (cleanedMatchers.length !== matchers.length) {
+                    settings.hooks[event] = cleanedMatchers;
+                    settingsModified = true;
+                }
+            }
+            if (settingsModified && !dryRun) {
+                await fs.writeJson(settingsPath, settings, { spaces: 2 });
+            }
+        }
+    }
+
+    if (removed.length === 0) {
+        console.log(t.success('  ✓ No stale pre-plugin files found'));
+    }
+}
+
 export async function installPlugin(repoRoot: string, dryRun: boolean): Promise<void> {
     console.log(t.bold('\n  ⚙  xtrm-tools  (Claude Code plugin)'));
 
@@ -211,6 +312,9 @@ export async function installPlugin(repoRoot: string, dryRun: boolean): Promise<
     spawnSync('claude', ['plugin', 'install', 'xtrm-tools@xtrm-tools', '--scope', 'user'], { stdio: 'inherit' });
 
     console.log(t.success('  ✓ xtrm-tools plugin installed'));
+
+    // Clean up stale pre-plugin files from ~/.claude/hooks/ and ~/.claude/skills/
+    await cleanStalePrePluginFiles(repoRoot, dryRun);
 
     await installOfficialClaudePlugins(false);
 }

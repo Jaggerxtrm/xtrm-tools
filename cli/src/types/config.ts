@@ -23,8 +23,6 @@ export const ChangeSetSchema = z.object({
     hooks: ChangeSetCategorySchema,
     config: ChangeSetCategorySchema,
     commands: ChangeSetCategorySchema,
-    'qwen-commands': ChangeSetCategorySchema,
-    'antigravity-workflows': ChangeSetCategorySchema,
 });
 export type ChangeSet = z.infer<typeof ChangeSetSchema>;
 

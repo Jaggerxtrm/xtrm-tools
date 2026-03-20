@@ -10,20 +10,6 @@ Hooks intercept specific events in the Claude Code lifecycle. Following architec
 
 ## Project Hooks
 
-### main-guard.mjs
-
-**Purpose**: Enforces PR-only merge workflow with full git protection. Blocks direct commits and dangerous `git checkout`, `git reset`, and file writes via Bash on protected branches (`main`/`master`).
-
-**Trigger**: PreToolUse (Write|Edit|MultiEdit|Serena edit tools|Bash)
-
-**Configuration**: Installed automatically to protect the main branch from unreviewed changes.
-
-### main-guard-post-push.mjs
-
-**Purpose**: Workflow enforcement. After pushing a feature branch, reminds to open a PR, merge using `gh pr merge --squash`, and sync local via `git reset --hard origin/main`.
-
-**Trigger**: PostToolUse (Bash: git push)
-
 ### gitnexus-hook.cjs
 
 **Purpose**: Enriches tool calls with knowledge graph context via `gitnexus augment`. Now supports Serena tools and uses a deduplication cache for efficiency.

@@ -1,3 +1,12 @@
+---
+title: Session-Flow Test Report Template
+scope: session-flow
+category: reference
+version: 1.0.0
+updated: 2026-03-20
+domain: [pi, beads]
+---
+
 # Session-Flow Test Report Template
 
 Use this template for both runtime test issues:

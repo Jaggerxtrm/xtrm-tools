@@ -2,8 +2,8 @@
 title: Skills Catalog
 scope: skills
 category: overview
-version: 1.0.0
-updated: 2026-03-18
+version: 1.1.0
+updated: 2026-03-20
 description: "Global skills installed to the user-level Claude environment"
 source_of_truth_for:
   - "skills/**/*.md"
@@ -65,6 +65,7 @@ Additional workflows included in the `skills/` catalog (managed separately):
 | `hook-development` | Build and wire Claude hooks |
 | `skill-creator` | Author and evolve skills systematically |
 | `find-skills` | Discover/install missing skills |
+| `xt-end` | Autonomous session close — pre-flight beads checks, dry-run preview, `xt end` execution, conflict resolution, worktree cleanup |
 
 *(Note: Domain-specific expert skills such as `docker-expert`, `senior-backend`, `senior-data-scientist`, `python-testing`, etc., are also available but serve as advisory personas rather than core workflow orchestrators).*
 

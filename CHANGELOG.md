@@ -9,19 +9,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [0.5.0] - 2026-03-20
+
 ### Added
 
-- **`AGENTS.md` — bd (beads) issue tracking section**: Comprehensive reference for the `bd` CLI covering session protocol, issue creation, dependency management, search/view commands, advanced features (`agent`, `gate`, `mol`, `audit`), and a bd vs TodoWrite decision table.
-- **`xtrm install project all` / `xtrm install project '*'`**: Non-interactive install of every available project skill into the current repository.
+#### xt CLI Redesign (epic hxmh)
+- **`xt` binary alias**: `xt` registered as a secondary bin alias for `xtrm`
+- **`xt claude` / `xt pi` runtime namespaces**: Session launcher with worktree-first flow; creates `<project>-xt-<runtime>-<date>` worktree, Dolt-bootstraps Beads server, execs the agent
+- **`xt claude install/reload/status/doctor`** and **`xt pi install/setup/status/doctor/reload`**: Per-runtime management subcommands
+- **`xt end`**: Session close — `xt/*` branch gate, dirty-tree gate, rebase `origin/main`, `--force-with-lease` push, `gh pr create`, optional worktree removal
+- **`xt worktree list/clean/remove`**: List `xt/*` worktrees with merged status, batch-clean merged, manual remove
+- **`xt init`**: Project init command
+- **`skills/xt-end/SKILL.md`**: Autonomous session-close skill for agents
+
+#### Pi Extensions — Directory Package Format
+- All 13 Pi extensions converted from flat `.ts` files to directory packages: `<name>/index.ts` + `<name>/package.json` with `exports` field
+- Format: `{"name": "@xtrm/pi-<name>", "version": "1.0.0", "type": "module", "exports": {".": "./index.ts"}}`
+
+#### Pi Installer Improvements
+- `xtrm pi install` now registers each extension via `pi install -l <path>` after copying
+- `diffPiExtensions` now compares extension directories using `sha256(package.json + index.ts)`
+
+### Changed
+
+- **`xtrm install all` / `basic`** now print a deprecation notice; primary entry point is `xtrm install`
+- **Project namespace removed**: `xtrm install project <name>` removed
+- **Gemini/Qwen scoped out**: no longer surfaced in `xtrm --help`
+- **`exitOverride` fix**: `--help` now exits `0` instead of `1`
+- **Version restarted at `0.5.0`** (was `2.4.6`)
 
 ### Fixed
 
-- **Claude-only target detection**: `xtrm install all` now enumerates Claude Code targets only, instead of surfacing stale Gemini/Qwen/Agents paths.
-- **Project-skill install-all coverage**: Added regression tests to verify merged hook counts and copied assets across all shipped project skills.
+- **Pi extensions not loadable**: flat `.ts` files were silently ignored — Pi requires directory packages with `package.json` + `exports`
+- **Claude-only target detection**: `xtrm install all` enumerates Claude Code targets only
+- **Project-skill install-all coverage**: regression tests verify merged hook counts and copied assets
 
-### Roadmap
+### Previous Unreleased
 
-- `AGENTS.md` should be included in the `jaggers-config install-service-skills` installation flow so all target projects get agent context out of the box (see ROADMAP.md).
+- **`AGENTS.md` — bd (beads) issue tracking section**: comprehensive `bd` CLI reference
+- **`xtrm install project all` / `xtrm install project '*'`**: non-interactive project skill install
 
 ---
 

@@ -3,6 +3,10 @@
  * Extracted for testability.
  */
 
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+import { spawnSync } from "node:child_process";
+
 // Destructive commands blocked in plan mode
 const DESTRUCTIVE_PATTERNS = [
 	/\brm\b/i,
@@ -134,7 +138,8 @@ export function extractTodoItems(message: string): TodoItem[] {
 	const planSection = message.slice(message.indexOf(headerMatch[0]) + headerMatch[0].length);
 	const numberedPattern = /^\s*(\d+)[.)]\s+\*{0,2}([^*\n]+)/gm;
 
-	for (const match of planSection.matchAll(numberedPattern)) {
+	const matches = Array.from(planSection.matchAll(numberedPattern));
+	for (const match of matches) {
 		const text = match[2]
 			.trim()
 			.replace(/\*{1,2}$/, "")
@@ -151,7 +156,8 @@ export function extractTodoItems(message: string): TodoItem[] {
 
 export function extractDoneSteps(message: string): number[] {
 	const steps: number[] = [];
-	for (const match of message.matchAll(/\[DONE:(\d+)\]/gi)) {
+	const matches = Array.from(message.matchAll(/\[DONE:(\d+)\]/gi));
+	for (const match of matches) {
 		const step = Number(match[1]);
 		if (Number.isFinite(step)) steps.push(step);
 	}
@@ -165,4 +171,154 @@ export function markCompletedSteps(text: string, items: TodoItem[]): number {
 		if (item) item.completed = true;
 	}
 	return doneSteps.length;
+}
+
+// =============================================================================
+// bd (beads) Integration Functions
+// =============================================================================
+
+/**
+ * Extract short ID from full bd issue ID.
+ * Example: "jaggers-agent-tools-xr9b.1" → "xr9b.1"
+ */
+export function getShortId(fullId: string): string {
+	const parts = fullId.split("-");
+	// Last part is the ID (e.g., "xr9b.1")
+	return parts[parts.length - 1];
+}
+
+/**
+ * Check if a directory is a beads project (has .beads directory).
+ */
+export function isBeadsProject(cwd: string): boolean {
+	return existsSync(join(cwd, ".beads"));
+}
+
+/**
+ * Derive epic title from user prompt or conversation messages.
+ */
+export function deriveEpicTitle(messages: Array<{ role: string; content?: unknown }>): string {
+	// Find the last user message
+	for (let i = messages.length - 1; i >= 0; i--) {
+		const msg = messages[i];
+		if (msg.role === "user") {
+			const content = msg.content;
+			if (typeof content === "string") {
+				// Extract first sentence or first 50 chars
+				const firstSentence = content.split(/[.!?\n]/)[0].trim();
+				if (firstSentence.length > 10 && firstSentence.length < 80) {
+					return firstSentence;
+				}
+				if (firstSentence.length >= 80) {
+					return `${firstSentence.slice(0, 77)}...`;
+				}
+			}
+		}
+	}
+	return "Plan execution";
+}
+
+/**
+ * Run a bd command and return the result.
+ */
+function runBd(args: string[], cwd: string): { stdout: string; stderr: string; status: number } {
+	const result = spawnSync("bd", args, {
+		cwd,
+		encoding: "utf8",
+		timeout: 30000,
+	});
+	return {
+		stdout: result.stdout || "",
+		stderr: result.stderr || "",
+		status: result.status ?? 1,
+	};
+}
+
+/**
+ * Create an epic in bd.
+ */
+export function bdCreateEpic(title: string, cwd: string): { id: string; title: string } | null {
+	const result = runBd(["create", title, "-t", "epic", "-p", "1", "--json"], cwd);
+	if (result.status === 0) {
+		try {
+			const data = JSON.parse(result.stdout);
+			if (Array.isArray(data) && data[0]) {
+				return { id: data[0].id, title: data[0].title };
+			}
+		} catch {
+			// Parse the ID from stdout if JSON parse fails
+			const match = result.stdout.match(/Created issue:\s*(\S+)/);
+			if (match) {
+				return { id: match[1], title };
+			}
+		}
+	}
+	return null;
+}
+
+/**
+ * Create a task issue in bd under an epic.
+ */
+export function bdCreateIssue(
+	title: string,
+	description: string,
+	parentId: string,
+	cwd: string,
+): { id: string; title: string } | null {
+	const result = runBd(
+		["create", title, "-t", "task", "-p", "1", "--parent", parentId, "-d", description, "--json"],
+		cwd,
+	);
+	if (result.status === 0) {
+		try {
+			const data = JSON.parse(result.stdout);
+			if (Array.isArray(data) && data[0]) {
+				return { id: data[0].id, title: data[0].title };
+			}
+		} catch {
+			const match = result.stdout.match(/Created issue:\s*(\S+)/);
+			if (match) {
+				return { id: match[1], title };
+			}
+		}
+	}
+	return null;
+}
+
+/**
+ * Claim an issue in bd.
+ */
+export function bdClaim(issueId: string, cwd: string): boolean {
+	const result = runBd(["update", issueId, "--claim"], cwd);
+	return result.status === 0;
+}
+
+/**
+ * Result of creating plan issues.
+ */
+export interface PlanIssuesResult {
+	epic: { id: string; title: string };
+	issues: Array<{ id: string; title: string }>;
+}
+
+/**
+ * Create an epic and issues from todo items.
+ */
+export function createPlanIssues(
+	epicTitle: string,
+	todos: TodoItem[],
+	cwd: string,
+): PlanIssuesResult | null {
+	const epic = bdCreateEpic(epicTitle, cwd);
+	if (!epic) return null;
+
+	const issues: Array<{ id: string; title: string }> = [];
+	for (const todo of todos) {
+		const issue = bdCreateIssue(todo.text, `Step ${todo.step} of plan: ${epicTitle}`, epic.id, cwd);
+		if (issue) {
+			issues.push(issue);
+		}
+	}
+
+	return { epic, issues };
 }

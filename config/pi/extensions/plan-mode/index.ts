@@ -16,7 +16,17 @@ import type { AgentMessage } from "@mariozechner/pi-agent-core";
 import type { AssistantMessage, TextContent } from "@mariozechner/pi-ai";
 import type { ExtensionAPI, ExtensionContext } from "@mariozechner/pi-coding-agent";
 import { Key } from "@mariozechner/pi-tui";
-import { extractTodoItems, isSafeCommand, markCompletedSteps, type TodoItem } from "./utils.js";
+import {
+	extractTodoItems,
+	isSafeCommand,
+	markCompletedSteps,
+	type TodoItem,
+	getShortId,
+	isBeadsProject,
+	deriveEpicTitle,
+	createPlanIssues,
+	bdClaim,
+} from "./utils.js";
 
 // Tools
 const PLAN_MODE_TOOLS = ["read", "bash", "grep", "find", "ls", "questionnaire"];
@@ -39,6 +49,8 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 	let planModeEnabled = false;
 	let executionMode = false;
 	let todoItems: TodoItem[] = [];
+	let epicId: string | null = null;
+	let issueIds: Map<number, string> = new Map(); // step -> issue ID
 
 	pi.registerFlag("plan", {
 		description: "Start in plan mode (read-only exploration)",
@@ -57,15 +69,17 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 			ctx.ui.setStatus("plan-mode", undefined);
 		}
 
-		// Widget showing todo list
+		// Widget showing todo list with bd issue IDs
 		if (executionMode && todoItems.length > 0) {
 			const lines = todoItems.map((item) => {
+				const issueId = issueIds.get(item.step);
+				const idLabel = issueId ? `[${getShortId(issueId)}] ` : "";
 				if (item.completed) {
 					return (
-						ctx.ui.theme.fg("success", "☑ ") + ctx.ui.theme.fg("muted", ctx.ui.theme.strikethrough(item.text))
+						ctx.ui.theme.fg("success", "☑ ") + ctx.ui.theme.fg("muted", ctx.ui.theme.strikethrough(`${idLabel}${item.text}`))
 					);
 				}
-				return `${ctx.ui.theme.fg("muted", "☐ ")}${item.text}`;
+				return `${ctx.ui.theme.fg("muted", "☐ ")}${idLabel}${item.text}`;
 			});
 			ctx.ui.setWidget("plan-todos", lines);
 		} else {
@@ -77,6 +91,8 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 		planModeEnabled = !planModeEnabled;
 		executionMode = false;
 		todoItems = [];
+		epicId = null;
+		issueIds.clear();
 
 		if (planModeEnabled) {
 			pi.setActiveTools(PLAN_MODE_TOOLS);
@@ -93,6 +109,8 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 			enabled: planModeEnabled,
 			todos: todoItems,
 			executing: executionMode,
+			epicId,
+			issueIds: Object.fromEntries(issueIds),
 		});
 	}
 
@@ -108,7 +126,11 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 				ctx.ui.notify("No todos. Create a plan first with /plan", "info");
 				return;
 			}
-			const list = todoItems.map((item, i) => `${i + 1}. ${item.completed ? "✓" : "○"} ${item.text}`).join("\n");
+			const list = todoItems.map((item, i) => {
+				const issueId = issueIds.get(item.step);
+				const idLabel = issueId ? `[${getShortId(issueId)}] ` : "";
+				return `${i + 1}. ${item.completed ? "✓" : "○"} ${idLabel}${item.text}`;
+			}).join("\n");
 			ctx.ui.notify(`Plan Progress:\n${list}`, "info");
 		},
 	});
@@ -187,7 +209,11 @@ Do NOT attempt to make changes - just describe what you would do.`,
 
 		if (executionMode && todoItems.length > 0) {
 			const remaining = todoItems.filter((t) => !t.completed);
-			const todoList = remaining.map((t) => `${t.step}. ${t.text}`).join("\n");
+			const todoList = remaining.map((t) => {
+				const issueId = issueIds.get(t.step);
+				const idLabel = issueId ? `[${getShortId(issueId)}] ` : "";
+				return `${t.step}. ${idLabel}${t.text}`;
+			}).join("\n");
 			return {
 				message: {
 					customType: "plan-execution-context",
@@ -221,13 +247,19 @@ After completing a step, include a [DONE:n] tag in your response.`,
 		// Check if execution is complete
 		if (executionMode && todoItems.length > 0) {
 			if (todoItems.every((t) => t.completed)) {
-				const completedList = todoItems.map((t) => `~~${t.text}~~`).join("\n");
+				const completedList = todoItems.map((t) => {
+					const issueId = issueIds.get(t.step);
+					const idLabel = issueId ? `[${getShortId(issueId)}] ` : "";
+					return `~~${idLabel}${t.text}~~`;
+				}).join("\n");
 				pi.sendMessage(
 					{ customType: "plan-complete", content: `**Plan Complete!** ✓\n\n${completedList}`, display: true },
 					{ triggerTurn: false },
 				);
 				executionMode = false;
 				todoItems = [];
+				epicId = null;
+				issueIds.clear();
 				pi.setActiveTools(NORMAL_MODE_TOOLS);
 				updateStatus(ctx);
 				persistState(); // Save cleared state so resume doesn't restore old execution mode
@@ -246,30 +278,71 @@ After completing a step, include a [DONE:n] tag in your response.`,
 			}
 		}
 
-		// Show plan steps and prompt for next action
+		// Auto-create epic + issues if in a beads project
+		const cwd = ctx.cwd || process.cwd();
+		if (todoItems.length > 0 && isBeadsProject(cwd) && !epicId) {
+			// Derive epic title from user prompt or first step
+			const epicTitle = deriveEpicTitle(event.messages);
+			
+			ctx.ui.notify("Creating epic and issues in bd...", "info");
+			const result = await createPlanIssues(epicTitle, todoItems, cwd);
+			
+			if (result) {
+				epicId = result.epic.id;
+				for (const issue of result.issues) {
+					// Match issue to todo by title similarity
+					const matchingTodo = todoItems.find(t => 
+						issue.title.toLowerCase().includes(t.text.toLowerCase().slice(0, 30)) ||
+						t.text.toLowerCase().includes(issue.title.toLowerCase().slice(0, 30))
+					);
+					if (matchingTodo) {
+						issueIds.set(matchingTodo.step, issue.id);
+					}
+				}
+				ctx.ui.notify(`Created epic ${getShortId(epicId)} with ${result.issues.length} issues`, "info");
+			}
+		}
+
+		// Show plan steps with bd issue IDs
 		if (todoItems.length > 0) {
-			const todoListText = todoItems.map((t, i) => `${i + 1}. ☐ ${t.text}`).join("\n");
+			const todoListText = todoItems.map((t, i) => {
+				const issueId = issueIds.get(t.step);
+				const idLabel = issueId ? `[${getShortId(issueId)}] ` : "";
+				return `${i + 1}. ☐ ${idLabel}${t.text}`;
+			}).join("\n");
+			
+			const epicLabel = epicId ? `\n\nEpic: ${getShortId(epicId)}` : "";
 			pi.sendMessage(
 				{
 					customType: "plan-todo-list",
-					content: `**Plan Steps (${todoItems.length}):**\n\n${todoListText}`,
+					content: `**Plan Steps (${todoItems.length}):**${epicLabel}\n\n${todoListText}`,
 					display: true,
 				},
 				{ triggerTurn: false },
 			);
 		}
 
-		const choice = await ctx.ui.select("Plan mode - what next?", [
-			todoItems.length > 0 ? "Execute the plan (track progress)" : "Execute the plan",
+		// Show "Start implementation?" prompt (no approval dialog for issue creation)
+		const choice = await ctx.ui.select("Start implementation?", [
+			todoItems.length > 0 ? "Yes, start with first step" : "Yes",
 			"Stay in plan mode",
 			"Refine the plan",
 		]);
 
-		if (choice?.startsWith("Execute")) {
+		if (choice?.startsWith("Yes")) {
+			// Auto-exit plan mode and start execution
 			planModeEnabled = false;
 			executionMode = todoItems.length > 0;
 			pi.setActiveTools(NORMAL_MODE_TOOLS);
 			updateStatus(ctx);
+
+			// Auto-claim first issue if available
+			if (todoItems.length > 0 && issueIds.size > 0) {
+				const firstIssueId = issueIds.get(todoItems[0].step);
+				if (firstIssueId) {
+					await bdClaim(firstIssueId, cwd);
+				}
+			}
 
 			const execMessage =
 				todoItems.length > 0
@@ -298,12 +371,16 @@ After completing a step, include a [DONE:n] tag in your response.`,
 		// Restore persisted state
 		const planModeEntry = entries
 			.filter((e: { type: string; customType?: string }) => e.type === "custom" && e.customType === "plan-mode")
-			.pop() as { data?: { enabled: boolean; todos?: TodoItem[]; executing?: boolean } } | undefined;
+			.pop() as { data?: { enabled: boolean; todos?: TodoItem[]; executing?: boolean; epicId?: string; issueIds?: Record<number, string> } } | undefined;
 
 		if (planModeEntry?.data) {
 			planModeEnabled = planModeEntry.data.enabled ?? planModeEnabled;
 			todoItems = planModeEntry.data.todos ?? todoItems;
 			executionMode = planModeEntry.data.executing ?? executionMode;
+			epicId = planModeEntry.data.epicId ?? null;
+			if (planModeEntry.data.issueIds) {
+				issueIds = new Map(Object.entries(planModeEntry.data.issueIds).map(([k, v]) => [Number(k), v]));
+			}
 		}
 
 		// On resume: re-scan messages to rebuild completion state

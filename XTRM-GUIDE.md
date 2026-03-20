@@ -1,6 +1,6 @@
 # XTRM-Tools Complete Guide
 
-> **Version 0.5.10** | A comprehensive reference for the XTRM-Tools Claude Code plugin ecosystem.
+> **Version 0.5.10** | A comprehensive reference for the XTRM-Tools dual-runtime workflow system (Claude Code + Pi).
 
 ---
 
@@ -23,16 +23,18 @@
 
 ## Overview
 
-XTRM-Tools is a **Claude Code plugin** that provides workflow enforcement, code quality gates, issue tracking integration, and development automation.
+XTRM-Tools is a **dual-runtime workflow system** — a Claude Code plugin and a Pi extension suite that implement the same policies in parallel. Both runtimes receive identical enforcement rules (beads gates, session flow, quality gates) compiled from a shared `policies/` source. Claude Code and Pi are peers: neither is downstream of the other.
 
 ### Key Features
 
-| Feature | Description |
-|---------|-------------|
-| **Beads Gates** | Issue tracking gates — edit, commit, stop, memory gates |
-| **Quality Gates** | Automatic linting and type checking on file edits |
-| **GitNexus** | Knowledge graph context for code exploration and impact analysis |
-| **Service Skills** | Docker service expertise with territory-based skill activation |
+| Feature | Runtime | Description |
+|---------|---------|-------------|
+| **Beads Gates** | both | Issue tracking gates — edit, commit, stop, memory gates |
+| **Session Flow** | both | Claim sync, stop gate, `xt end` reminder in worktrees |
+| **Quality Gates** | both | Automatic linting and type checking on file edits |
+| **GitNexus** | Claude | Knowledge graph context for code exploration and impact analysis |
+| **Branch State** | Claude | Current branch + claim state injected into every prompt turn |
+| **Service Skills** | Pi | Docker service expertise with territory-based skill activation |
 
 ---
 
@@ -40,25 +42,20 @@ XTRM-Tools is a **Claude Code plugin** that provides workflow enforcement, code 
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                         Claude Code Session                         │
-├─────────────────────────────────────────────────────────────────────┤
-│  ┌─────────────┐    ┌─────────────┐    ┌─────────────────────────┐ │
-│  │   Plugin    │    │   Skills    │    │      MCP Servers        │ │
-│  │  (hooks/)   │    │  (skills/)  │    │  (.mcp.json)            │ │
-│  └──────┬──────┘    └──────┬──────┘    └─────────────┬───────────┘ │
-│         │                  │                         │             │
-│         ▼                  ▼                         ▼             │
-│  ┌─────────────────────────────────────────────────────────────┐  │
-│  │                    Policy Compiler                          │  │
-│  │            (policies/*.json → hooks.json)                   │  │
-│  └─────────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                        Pi Extensions                                │
-│   (quality-gates.ts, beads.ts, session-flow.ts, service-skills.ts) │
-└─────────────────────────────────────────────────────────────────────┘
+│                       Policy Compiler                               │
+│             policies/*.json → hooks.json + Pi extensions            │
+└──────────────────────────┬──────────────────────────────────────────┘
+                            │
+           ┌────────────────┴─────────────────┐
+           ▼                                   ▼
+┌──────────────────────────┐     ┌─────────────────────────────────┐
+│    Claude Code Session   │     │          Pi Session             │
+├──────────────────────────┤     ├─────────────────────────────────┤
+│ Plugin hooks (hooks/)    │     │ Extensions (config/pi/          │
+│ Skills (skills/)         │     │   extensions/)                  │
+│ MCP Servers (.mcp.json)  │     │ Skills (.agents/skills/)        │
+│                          │     │ MCP Servers (.mcp.json)         │
+└──────────────────────────┘     └─────────────────────────────────┘
 ```
 
 ---

@@ -80,6 +80,23 @@ export function getInProgress(cwd) {
 }
 
 /**
+ * Return true if a specific issue ID is currently in in_progress status.
+ * Used by commit/stop gates to scope the check to the session's own claimed issue.
+ * Returns false (fail open) if bd is unavailable.
+ */
+export function isIssueInProgress(issueId, cwd) {
+  if (!issueId) return false;
+  try {
+    const output = execSync('bd list --status=in_progress', {
+      encoding: 'utf8', cwd, stdio: ['pipe', 'pipe', 'pipe'], timeout: 8000,
+    });
+    return output.includes(issueId);
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Count total trackable work (open + in_progress issues) using a single bd list call.
  * Returns the count, or null if bd is unavailable.
  */

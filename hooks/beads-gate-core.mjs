@@ -15,6 +15,7 @@ import {
   getSessionClaim,
   getTotalWork,
   getInProgress,
+  isIssueInProgress,
 } from './beads-gate-utils.mjs';
 
 // ── Input parsing ────────────────────────────────────────────────────────────
@@ -69,6 +70,7 @@ export function resolveClaimAndWorkState(ctx) {
     return {
       claimed: !!claimId,
       claimId: claimId || null,
+      claimInProgress: claimId ? isIssueInProgress(claimId, ctx.cwd) : false,
       totalWork,
       inProgress,
     };
@@ -78,6 +80,7 @@ export function resolveClaimAndWorkState(ctx) {
   return {
     claimed: false,
     claimId: null,
+    claimInProgress: false,
     totalWork,
     inProgress,
   };
@@ -155,16 +158,16 @@ export function decideCommitGate(ctx, state) {
     return { allow: true };
   }
 
-  // Has claim but no in_progress issues → allow (stale/already-closed claim)
-  if (!state.inProgress || state.inProgress.count === 0) {
+  // Claimed issue is no longer in_progress → allow (closed or transferred to another agent)
+  if (!state.claimInProgress) {
     return { allow: true };
   }
 
-  // Has claim + in_progress issues → block (need to close first)
+  // Session's own claimed issue is still in_progress → block (need to close first)
   return {
     allow: false,
     reason: 'unclosed_claim',
-    summary: state.inProgress.summary,
+    summary: `  Claimed: ${state.claimId} (still in_progress)`,
     claimed: state.claimId,
   };
 }
@@ -197,16 +200,16 @@ export function decideStopGate(ctx, state) {
     return { allow: true };
   }
 
-  // Has claim but no in_progress issues → allow (stale claim)
-  if (!state.inProgress || state.inProgress.count === 0) {
+  // Claimed issue is no longer in_progress → allow (stale claim)
+  if (!state.claimInProgress) {
     return { allow: true };
   }
 
-  // Has claim + in_progress issues → block
+  // Session's own claimed issue is still in_progress → block
   return {
     allow: false,
     reason: 'unclosed_claim',
-    summary: state.inProgress.summary,
+    summary: `  Claimed: ${state.claimId} (still in_progress)`,
     claimed: state.claimId,
   };
 }

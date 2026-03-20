@@ -1,97 +1,128 @@
-# xtpi / Pi Workflow Plan (Current State)
+# Unified Workflow Plan (Claude + Pi + Specialists)
 
-Status: Active (updated to implemented behavior)
+Status: Active (decision update)
 Owner issue: `jaggers-agent-tools-xepd`
 
-## 1) Goal
+## 1) Final Naming + CLI Decision
 
-Keep Pi + beads aligned to a **claim → work → close** loop with minimal friction:
-- `bd` stays canonical (`bd update --claim`, `bd close --reason`)
-- close reason drives auto-commit in Pi session flow
-- memory/remember flow uses Claude-style marker acknowledgment
-- publish/merge stay explicit external steps
+- **Canonical CLI:** `xtrm`
+- **Short alias:** `xt`
+- Both are supported; docs should prefer `xt` for brevity and keep `xtrm` as canonical/stable.
+
+`xtpi` is no longer the primary naming direction.
 
 ---
 
-## 2) What is Working Now (Implemented)
+## 2) Command Structure (decided now)
+
+### Global
+- `xt init`
+- `xt status`
+- `xt doctor`
+- `xt install [all|basic|pi|claude|specialists]`
+- `xt update`
+
+### Runtime-specific
+- `xt claude <install|status|doctor|reload>`
+- `xt pi <install|status|doctor|reload>`
+
+### Specialists integration
+- `xt sp list`
+- `xt sp run <specialist> --prompt "..."`
+- `xt sp status [job-id]`
+- `xt sp result <job-id>`
+- `xt sp stop <job-id>`
+
+### Specialist shorthand (reserved)
+- `xt @<specialist> "<prompt>"` → alias of `xt sp run ...`
+
+This keeps top-level command space clean if specialists becomes a primary runner.
+
+---
+
+## 3) Core Workflow Contract (shared across Claude + Pi)
+
+Canonical loop stays beads-first:
+
+```bash
+bd update <id> --claim
+# work
+bd close <id> --reason "..."
+```
+
+Rules:
+1. `bd update --claim` = ownership only.
+2. `bd close --reason` = canonical close action.
+3. Close reason is reused for auto-commit message where session-flow automation is active.
+4. No wrapper command replaces canonical `bd close`.
+5. Push/PR/merge remain explicit external steps by default.
+
+---
+
+## 4) Implemented Behavior (current)
 
 ### A) Claim behavior
-- `bd update <id> --claim` is ownership only.
-- No worktree/session bootstrap is triggered from claim.
+- No claim-time worktree/session bootstrap.
 
 ### B) Close behavior
-- `bd close <id> --reason "..."` is canonical.
-- Pi session-flow derives commit message from close reason:
+- Pi session-flow auto-commit on successful close:
   - `git add -A && git commit -m "<close_reason> (<id>)"`
-  - if no changes, auto-commit is skipped (no failure).
-- Default policy: **no push on close**.
+  - no-op if no changes.
+- Default: **no push on close**.
 
 ### C) Memory gate parity + hard enforcement
-- On successful `bd close`, Pi sets `closed-this-session:<sessionId>`.
-- Pi reminds user to persist memory (`bd remember ...`) and acknowledge with:
+- On close, set `closed-this-session:<sessionId>`.
+- Prompt memory reflection and marker acknowledgment:
   - `touch .beads/.memory-gate-done`
-- Pending memory gate is now enforced by Pi extension:
-  - blocks mutating `tool_call`s while pending
-  - blocks `session_before_switch`
-  - blocks `session_before_fork`
-  - blocks `session_before_compact`
-- On marker acknowledgment, Pi clears:
+- While pending, Pi blocks:
+  - mutating `tool_call`
+  - `session_before_switch`
+  - `session_before_fork`
+  - `session_before_compact`
+- On marker consume, clear:
   - `claimed:<sessionId>`
   - `closed-this-session:<sessionId>`
 
-### D) Main-guard policy wiring
-- Active `main-guard` policy wiring was removed due workflow regressions.
-- Current workflow relies on beads/session gates rather than main-branch hard blocking.
+### D) Main-guard
+- Active main-guard policy wiring removed from current runtime due regressions.
 
 ---
 
-## 3) Current Operator Flow
+## 5) Claude vs Pi Parity Model
 
-1. Create/select issue
-2. `bd update <id> --claim`
-3. Implement changes
-4. `bd close <id> --reason "..."`
-5. Pi auto-commit from close reason (or no-op if clean)
-6. If memory gate prompt appears:
-   - `bd remember "<insight>"` (or decide nothing to persist)
-   - `touch .beads/.memory-gate-done`
-7. Publish/merge explicitly outside close flow
+This plan is shared; implementation points differ by runtime:
+
+- **Claude path:** hook events (`PreToolUse`, `PostToolUse`, `Stop`, etc.)
+- **Pi path:** extension events (`tool_call`, `tool_result`, `agent_end`, `session_before_*`, etc.)
+
+Behavioral contract must remain aligned even if enforcement mechanics differ.
 
 ---
 
-## 4) Guardrails (Current)
+## 6) Specialists Complement Model (boundary)
 
-1. Edit gate: mutating edits require active claim when trackable work exists.
-2. Commit gate: manual commit blocked while active claim remains in progress.
-3. Memory gate: pending closed-this-session blocks session transitions and mutating tools until marker ack.
+- **xtrm/xt owns:** local runtime gates, session-flow, policy wiring, close/memory semantics.
+- **specialists owns:** delegation/orchestration execution plane (specialist runs, background jobs, job lifecycle).
 
----
-
-## 5) Known Gaps / Follow-ups
-
-- `jaggers-agent-tools-ycg9` (P2): TS quality gate false negative; invalid TS can pass current hook.
-- `jaggers-agent-tools-8678`: docs/spec sync task (this stream).
-- Session-end active-claim warning is currently noisy because it runs frequently at `agent_end`; consider rate-limiting or `session_shutdown`-only variant.
+Integration contract:
+1. specialists accepts issue/work context; does not redefine beads close semantics.
+2. specialists output links back to beads/job records.
+3. no duplicate ownership of claim/close state transitions.
+4. memory decision flow remains compatible with marker acknowledgment contract.
 
 ---
 
-## 6) xtpi Scope Going Forward
+## 7) Known Gaps / Follow-ups
 
-`xtpi` remains valid as a launcher/publish/cleanup UX layer, but current stable baseline is Pi-first beads flow above.
-
-If/when resumed, xtpi should add convenience only:
-- launch into chosen workspace/worktree
-- explicit `publish` helper (push + PR create/update, no merge)
-- explicit `cleanup` after merge
-
-No wrapper should replace canonical `bd close`.
+- `jaggers-agent-tools-ycg9` (P2): TS quality-gate false negative (invalid TS can pass current hook).
+- Active-claim warning at `agent_end` is noisy; consider throttling or shutdown-only variant.
 
 ---
 
-## 7) Success Criteria (Rebased to Current Reality)
+## 8) Success Criteria
 
-- `bd close` remains canonical and drives commit text reuse.
-- Memory gate parity with marker acknowledgment works end-to-end.
-- Pending memory gate cannot be bypassed via session switch/fork/compact.
-- Local iteration remains fast (no forced push-on-close).
-- Documentation reflects implemented behavior, not aspirational strict-flow defaults.
+- One shared workflow model for Claude and Pi.
+- Command namespace is settled (`xtrm` canonical, `xt` alias, `xt sp` specialists domain).
+- `bd close` remains canonical with reason reuse.
+- Memory gate marker flow works and is enforceable.
+- specialists integrates as complementary orchestration, not competing workflow authority.

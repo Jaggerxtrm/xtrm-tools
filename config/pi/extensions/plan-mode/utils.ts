@@ -3,6 +3,9 @@
  * Extracted for testability.
  */
 
+import type { PlanStep, IssueType, IssuePriority, Layer } from "./types.js";
+import { classifyLayer, detectIssueType, derivePriority } from "./test-planning.js";
+
 // Destructive commands blocked in plan mode
 const DESTRUCTIVE_PATTERNS = [
 	/\brm\b/i,
@@ -92,6 +95,8 @@ const SAFE_PATTERNS = [
 	/^\s*fd\b/,
 	/^\s*bat\b/,
 	/^\s*exa\b/,
+	// Add bd read-only commands
+	/^\s*bd\s+(ready|list|show|status|search|graph|blocked|stale|children|epic\s+list)\b/,
 ];
 
 export function isSafeCommand(command: string): boolean {
@@ -126,27 +131,52 @@ export function cleanStepText(text: string): string {
 	return cleaned;
 }
 
-export function extractTodoItems(message: string): TodoItem[] {
-	const items: TodoItem[] = [];
+/**
+ * Extract plan steps from a message, with full classification
+ */
+export function extractPlanSteps(message: string): PlanStep[] {
+	const steps: PlanStep[] = [];
 	const headerMatch = message.match(/\*{0,2}Plan:\*{0,2}\s*\n/i);
-	if (!headerMatch) return items;
+	if (!headerMatch) return steps;
 
 	const planSection = message.slice(message.indexOf(headerMatch[0]) + headerMatch[0].length);
 	const numberedPattern = /^\s*(\d+)[.)]\s+\*{0,2}([^*\n]+)/gm;
 
-	for (const match of planSection.matchAll(numberedPattern)) {
+	const allMatches = [...planSection.matchAll(numberedPattern)];
+	
+	for (const match of allMatches) {
+		const stepNum = parseInt(match[1], 10);
 		const text = match[2]
 			.trim()
 			.replace(/\*{1,2}$/, "")
 			.trim();
+		
 		if (text.length > 5 && !text.startsWith("`") && !text.startsWith("/") && !text.startsWith("-")) {
 			const cleaned = cleanStepText(text);
 			if (cleaned.length > 3) {
-				items.push({ step: items.length + 1, text: cleaned, completed: false });
+				const layer = classifyLayer(cleaned);
+				const type = detectIssueType(cleaned);
+				const priority = derivePriority(stepNum, allMatches.length, false);
+				
+				steps.push({
+					step: stepNum,
+					text: cleaned,
+					type,
+					priority,
+					layer,
+					dependencies: [],
+					gitnexusSymbols: []
+				});
 			}
 		}
 	}
-	return items;
+	return steps;
+}
+
+// Legacy function for backward compatibility
+export function extractTodoItems(message: string): TodoItem[] {
+	const steps = extractPlanSteps(message);
+	return steps.map(s => ({ step: s.step, text: s.text, completed: false }));
 }
 
 export function extractDoneSteps(message: string): number[] {
@@ -165,4 +195,65 @@ export function markCompletedSteps(text: string, items: TodoItem[]): number {
 		if (item) item.completed = true;
 	}
 	return doneSteps.length;
+}
+
+/**
+ * Derive epic title from user prompt or plan content
+ */
+export function deriveEpicTitle(userPrompt: string, steps: PlanStep[]): string {
+	// Try to extract from first sentence of user prompt
+	const firstSentence = userPrompt.split(/[.!?]/)[0].trim();
+	if (firstSentence.length > 10 && firstSentence.length < 80) {
+		return firstSentence;
+	}
+	
+	// Use first step as basis
+	if (steps.length > 0) {
+		const firstStep = steps[0].text;
+		if (firstStep.length < 60) {
+			return firstStep;
+		}
+		return firstStep.slice(0, 57) + "...";
+	}
+	
+	// Fallback
+	return `Plan: ${new Date().toISOString().split('T')[0]}`;
+}
+
+/**
+ * Generate issue description with GitNexus safety reminders
+ */
+export function generateIssueDescription(
+	step: PlanStep,
+	issueId: string,
+	gitnexusSymbols: string[]
+): string {
+	const symbolsSection = gitnexusSymbols.length > 0
+		? `\n\n## GitNexus Safety\nAffected symbols: ${gitnexusSymbols.join(", ")}\n\nBefore editing:\n- gitnexus_impact({target: "<symbol>"})\n- Check d=1 callers\n\nBefore commit:\n- gitnexus_detect_changes({scope: "staged"})`
+		: "\n\n## GitNexus Safety\nRun gitnexus_impact before editing affected code.";
+
+	return `${step.text}${symbolsSection}\n\n## Testing\n- Layer: ${step.layer}\n- Run gitnexus_impact before editing\n- Test issue will be created`;
+}
+
+/**
+ * Extract GitNexus symbols from tool result content
+ */
+export function extractGitNexusSymbols(content: string): string[] {
+	const symbols: string[] = [];
+	// Match symbol names from gitnexus output patterns
+	const patterns = [
+		/\b([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/g,  // function calls
+		/class\s+([A-Z][a-zA-Z0-9_]*)/g,       // class definitions
+		/interface\s+([A-Z][a-zA-Z0-9_]*)/g,   // interfaces
+	];
+	
+	for (const pattern of patterns) {
+		for (const match of content.matchAll(pattern)) {
+			if (match[1] && !symbols.includes(match[1])) {
+				symbols.push(match[1]);
+			}
+		}
+	}
+	
+	return symbols.slice(0, 10); // Limit to 10 symbols
 }

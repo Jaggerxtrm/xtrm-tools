@@ -1,26 +1,45 @@
 /**
- * Plan Mode Extension
+ * Plan Mode Extension - Beads-Integrated
  *
- * Read-only exploration mode for safe code analysis.
- * When enabled, only read-only tools are available.
+ * Read-only exploration mode that creates bd issues from plans.
  *
  * Features:
  * - /plan command or Ctrl+Alt+P to toggle
  * - Bash restricted to allowlisted read-only commands
  * - Extracts numbered plan steps from "Plan:" sections
- * - [DONE:n] markers to complete steps during execution
- * - Progress tracking widget during execution
+ * - Auto-creates epic + bd issues from plan
+ * - Integrates test-planning for coverage
+ * - Execution via bd ready/claim/close workflow
  */
 
 import type { AgentMessage } from "@mariozechner/pi-agent-core";
 import type { AssistantMessage, TextContent } from "@mariozechner/pi-ai";
 import type { ExtensionAPI, ExtensionContext } from "@mariozechner/pi-coding-agent";
 import { Key } from "@mariozechner/pi-tui";
-import { extractTodoItems, isSafeCommand, markCompletedSteps, type TodoItem } from "./utils.js";
+import { 
+	extractPlanSteps, 
+	extractTodoItems, 
+	isSafeCommand, 
+	markCompletedSteps, 
+	deriveEpicTitle,
+	generateIssueDescription,
+	type TodoItem 
+} from "./utils.js";
+import { 
+	bdCreateEpic, 
+	bdCreateIssue, 
+	bdReady, 
+	bdShow, 
+	bdClaim, 
+	bdChildren,
+	bdList,
+	isBeadsProject 
+} from "./beads.js";
+import { batchByLayer, generateTestIssueTitle, generateTestIssueDescription } from "./test-planning.js";
+import type { PlanStep, PlanModeState, IssueRef, BdIssue } from "./types.js";
 
-// Tools
+// Tools for plan mode
 const PLAN_MODE_TOOLS = ["read", "bash", "grep", "find", "ls", "questionnaire"];
-const NORMAL_MODE_TOOLS = ["read", "bash", "edit", "write"];
 
 // Type guard for assistant messages
 function isAssistantMessage(m: AgentMessage): m is AssistantMessage {
@@ -35,10 +54,19 @@ function getTextContent(message: AssistantMessage): string {
 		.join("\n");
 }
 
+// State
+let state: PlanModeState = {
+	enabled: false,
+	executing: false,
+	issues: []
+};
+
+// Cached plan steps before epic creation
+let pendingPlanSteps: PlanStep[] = [];
+let pendingUserPrompt = "";
+
 export default function planModeExtension(pi: ExtensionAPI): void {
-	let planModeEnabled = false;
-	let executionMode = false;
-	let todoItems: TodoItem[] = [];
+	const getCwd = (ctx: ExtensionContext) => ctx.cwd || process.cwd();
 
 	pi.registerFlag("plan", {
 		description: "Start in plan mode (read-only exploration)",
@@ -47,25 +75,32 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 	});
 
 	function updateStatus(ctx: ExtensionContext): void {
-		// Footer status
-		if (executionMode && todoItems.length > 0) {
-			const completed = todoItems.filter((t) => t.completed).length;
-			ctx.ui.setStatus("plan-mode", ctx.ui.theme.fg("accent", `📋 ${completed}/${todoItems.length}`));
-		} else if (planModeEnabled) {
+		if (state.executing && state.issues.length > 0) {
+			const completed = state.issues.filter(i => i.status === "closed").length;
+			const current = state.issues.find(i => i.id === state.currentIssueId);
+			const status = current 
+				? `📋 ${current.id}: ${completed}/${state.issues.length}`
+				: `📋 ${completed}/${state.issues.length}`;
+			ctx.ui.setStatus("plan-mode", ctx.ui.theme.fg("accent", status));
+		} else if (state.enabled) {
 			ctx.ui.setStatus("plan-mode", ctx.ui.theme.fg("warning", "⏸ plan"));
 		} else {
 			ctx.ui.setStatus("plan-mode", undefined);
 		}
 
-		// Widget showing todo list
-		if (executionMode && todoItems.length > 0) {
-			const lines = todoItems.map((item) => {
-				if (item.completed) {
-					return (
-						ctx.ui.theme.fg("success", "☑ ") + ctx.ui.theme.fg("muted", ctx.ui.theme.strikethrough(item.text))
-					);
-				}
-				return `${ctx.ui.theme.fg("muted", "☐ ")}${item.text}`;
+		// Widget
+		if (state.executing && state.issues.length > 0) {
+			const lines = state.issues.map((issue) => {
+				const isCurrent = issue.id === state.currentIssueId;
+				const prefix = issue.status === "closed" 
+					? ctx.ui.theme.fg("success", "☑ ")
+					: isCurrent 
+						? ctx.ui.theme.fg("accent", "→ ")
+						: ctx.ui.theme.fg("muted", "☐ ");
+				const text = issue.status === "closed"
+					? ctx.ui.theme.strikethrough(issue.title)
+					: issue.title;
+				return prefix + (issue.status === "closed" ? ctx.ui.theme.fg("muted", text) : text);
 			});
 			ctx.ui.setWidget("plan-todos", lines);
 		} else {
@@ -73,43 +108,84 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 		}
 	}
 
-	function togglePlanMode(ctx: ExtensionContext): void {
-		planModeEnabled = !planModeEnabled;
-		executionMode = false;
-		todoItems = [];
+	async function persistState(): Promise<void> {
+		pi.appendEntry("plan-mode-v2", state);
+	}
 
-		if (planModeEnabled) {
+	function togglePlanMode(ctx: ExtensionContext): void {
+		state.enabled = !state.enabled;
+		state.executing = false;
+		state.issues = [];
+		state.epic = undefined;
+		state.currentIssueId = undefined;
+		pendingPlanSteps = [];
+
+		if (state.enabled) {
 			pi.setActiveTools(PLAN_MODE_TOOLS);
-			ctx.ui.notify(`Plan mode enabled. Tools: ${PLAN_MODE_TOOLS.join(", ")}`);
+			ctx.ui.notify("Plan mode enabled. Create a plan, then approve epic creation.", "info");
 		} else {
-			pi.setActiveTools(NORMAL_MODE_TOOLS);
-			ctx.ui.notify("Plan mode disabled. Full access restored.");
+			pi.setActiveTools(["read", "bash", "edit", "write"]);
+			ctx.ui.notify("Plan mode disabled. Full access restored.", "info");
 		}
 		updateStatus(ctx);
 	}
 
-	function persistState(): void {
-		pi.appendEntry("plan-mode", {
-			enabled: planModeEnabled,
-			todos: todoItems,
-			executing: executionMode,
-		});
-	}
-
+	// Commands
 	pi.registerCommand("plan", {
 		description: "Toggle plan mode (read-only exploration)",
 		handler: async (_args, ctx) => togglePlanMode(ctx),
 	});
 
-	pi.registerCommand("todos", {
-		description: "Show current plan todo list",
+	pi.registerCommand("plan-status", {
+		description: "Show current epic/issue status",
 		handler: async (_args, ctx) => {
-			if (todoItems.length === 0) {
-				ctx.ui.notify("No todos. Create a plan first with /plan", "info");
+			if (!state.epic) {
+				ctx.ui.notify("No active epic. Create one from a plan.", "info");
 				return;
 			}
-			const list = todoItems.map((item, i) => `${i + 1}. ${item.completed ? "✓" : "○"} ${item.text}`).join("\n");
-			ctx.ui.notify(`Plan Progress:\n${list}`, "info");
+			const children = await bdChildren(state.epic.epicId, getCwd(ctx));
+			const statusLines = children.map(c => `${c.id}: ${c.status} - ${c.title}`);
+			ctx.ui.notify(`Epic ${state.epic.epicId}:\n${statusLines.join("\n")}`, "info");
+		},
+	});
+
+	pi.registerCommand("next", {
+		description: "Claim next ready issue from current epic",
+		handler: async (_args, ctx) => {
+			const cwd = getCwd(ctx);
+			if (!state.epic) {
+				ctx.ui.notify("No active epic. Use /plan first.", "warning");
+				return;
+			}
+
+			const ready = await bdReady(cwd);
+			const epicChildren = await bdChildren(state.epic.epicId, cwd);
+			const readyFromEpic = ready.filter(r => 
+				epicChildren.some(c => c.id === r.id && c.status !== "closed")
+			);
+
+			if (readyFromEpic.length === 0) {
+				ctx.ui.notify("All issues complete or blocked!", "success");
+				state.executing = false;
+				updateStatus(ctx);
+				return;
+			}
+
+			const next = readyFromEpic[0];
+			const claimed = await bdClaim(next.id, cwd);
+			if (claimed) {
+				state.currentIssueId = next.id;
+				const issueRef = state.issues.find(i => i.id === next.id);
+				if (issueRef) issueRef.status = "in_progress";
+				
+				pi.sendMessage({
+					customType: "plan-next-issue",
+					content: `[NEXT ISSUE: ${next.id}]\n\n${next.title}\n\nWorkflow:\n1. gitnexus_impact before editing\n2. Implement\n3. bd close ${next.id} --reason "Done"\n4. /next for next issue`,
+					display: true
+				}, { triggerTurn: true });
+			}
+			updateStatus(ctx);
+			await persistState();
 		},
 	});
 
@@ -120,25 +196,25 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 
 	// Block destructive bash commands in plan mode
 	pi.on("tool_call", async (event) => {
-		if (!planModeEnabled || event.toolName !== "bash") return;
+		if (!state.enabled || event.toolName !== "bash") return;
 
 		const command = event.input.command as string;
 		if (!isSafeCommand(command)) {
 			return {
 				block: true,
-				reason: `Plan mode: command blocked (not allowlisted). Use /plan to disable plan mode first.\nCommand: ${command}`,
+				reason: `Plan mode: command blocked. Use /plan to disable.\nCommand: ${command}`,
 			};
 		}
 	});
 
-	// Filter out stale plan mode context when not in plan mode
+	// Filter out stale plan mode context
 	pi.on("context", async (event) => {
-		if (planModeEnabled) return;
+		if (state.enabled) return;
 
 		return {
 			messages: event.messages.filter((m) => {
 				const msg = m as AgentMessage & { customType?: string };
-				if (msg.customType === "plan-mode-context") return false;
+				if (msg.customType?.startsWith("plan-")) return false;
 				if (msg.role !== "user") return true;
 
 				const content = msg.content;
@@ -155,184 +231,288 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 		};
 	});
 
-	// Inject plan/execution context before agent starts
-	pi.on("before_agent_start", async () => {
-		if (planModeEnabled) {
+	// Inject plan/execution context
+	pi.on("before_agent_start", async (event) => {
+		// Store user prompt for epic title derivation
+		if (event.prompt) {
+			pendingUserPrompt = event.prompt;
+		}
+
+		if (state.enabled) {
 			return {
 				message: {
 					customType: "plan-mode-context",
-					content: `[PLAN MODE ACTIVE]
-You are in plan mode - a read-only exploration mode for safe code analysis.
+					content: `[PLAN MODE ACTIVE - Beads Workflow]
 
-Restrictions:
-- You can only use: read, bash, grep, find, ls, questionnaire
-- You CANNOT use: edit, write (file modifications are disabled)
-- Bash is restricted to an allowlist of read-only commands
+You are in plan mode. Your goal is to create a plan that will become bd issues.
 
-Ask clarifying questions using the questionnaire tool.
-Use brave-search skill via bash for web research.
+Your workflow:
+1. Explore codebase using GitNexus (gitnexus_query, gitnexus_context, gitnexus_impact)
+2. Run impact analysis for any proposed changes
+3. Create a numbered plan under "Plan:" header
+4. Plan will auto-create: epic → issues → test issues
 
-Create a detailed numbered plan under a "Plan:" header:
+GitNexus Tools:
+- gitnexus_query({query: "concept"}) → Find related execution flows
+- gitnexus_context({name: "symbol"}) → Understand dependencies  
+- gitnexus_impact({target: "symbol", direction: "upstream"}) → Blast radius
 
+Plan Format:
 Plan:
 1. First step description
 2. Second step description
 ...
 
-Do NOT attempt to make changes - just describe what you would do.`,
+Do NOT make changes - just plan. After planning, you will approve epic creation.`,
 					display: false,
 				},
 			};
 		}
 
-		if (executionMode && todoItems.length > 0) {
-			const remaining = todoItems.filter((t) => !t.completed);
-			const todoList = remaining.map((t) => `${t.step}. ${t.text}`).join("\n");
-			return {
-				message: {
-					customType: "plan-execution-context",
-					content: `[EXECUTING PLAN - Full tool access enabled]
+		if (state.executing && state.currentIssueId) {
+			const current = state.issues.find(i => i.id === state.currentIssueId);
+			if (current) {
+				return {
+					message: {
+						customType: "plan-execution-context",
+						content: `[EXECUTING ISSUE ${state.currentIssueId}]
 
-Remaining steps:
-${todoList}
+Current: ${current.title}
+Type: ${current.type} | Layer: ${current.layer}
 
-Execute each step in order.
-After completing a step, include a [DONE:n] tag in your response.`,
-					display: false,
-				},
-			};
+Workflow:
+1. gitnexus_impact({target: "<symbol>"}) before editing
+2. Implement changes
+3. gitnexus_detect_changes() before close
+4. bd close ${state.currentIssueId} --reason "Done"
+5. /next for next issue
+
+GitNexus symbols: ${state.epic?.gitnexusSymbols[current.step]?.join(", ") || "check code"}`,
+						display: false,
+					},
+				};
+			}
 		}
 	});
 
-	// Track progress after each turn
-	pi.on("turn_end", async (event, ctx) => {
-		if (!executionMode || todoItems.length === 0) return;
-		if (!isAssistantMessage(event.message)) return;
-
-		const text = getTextContent(event.message);
-		if (markCompletedSteps(text, todoItems) > 0) {
-			updateStatus(ctx);
-		}
-		persistState();
-	});
-
-	// Handle plan completion and plan mode UI
+	// Handle plan completion - prompt for epic creation
 	pi.on("agent_end", async (event, ctx) => {
-		// Check if execution is complete
-		if (executionMode && todoItems.length > 0) {
-			if (todoItems.every((t) => t.completed)) {
-				const completedList = todoItems.map((t) => `~~${t.text}~~`).join("\n");
-				pi.sendMessage(
-					{ customType: "plan-complete", content: `**Plan Complete!** ✓\n\n${completedList}`, display: true },
-					{ triggerTurn: false },
-				);
-				executionMode = false;
-				todoItems = [];
-				pi.setActiveTools(NORMAL_MODE_TOOLS);
+		const cwd = getCwd(ctx);
+
+		// Check if all issues are closed
+		if (state.executing && state.issues.length > 0) {
+			const allClosed = state.issues.every(i => i.status === "closed");
+			if (allClosed) {
+				pi.sendMessage({
+					customType: "plan-complete",
+					content: `**Plan Complete!** ✓\n\nEpic ${state.epic?.epicId} finished.\nAll ${state.issues.length} issues closed.`,
+					display: true
+				}, { triggerTurn: false });
+				state.executing = false;
+				state.issues = [];
+				state.epic = undefined;
+				state.currentIssueId = undefined;
 				updateStatus(ctx);
-				persistState(); // Save cleared state so resume doesn't restore old execution mode
+				await persistState();
 			}
 			return;
 		}
 
-		if (!planModeEnabled || !ctx.hasUI) return;
+		if (!state.enabled || !ctx.hasUI) return;
 
-		// Extract todos from last assistant message
+		// Check if this is a beads project
+		if (!(isBeadsProject(cwd))) {
+			ctx.ui.notify("Not a beads project. bd commands not available.", "warning");
+			return;
+		}
+
+		// Extract plan from last assistant message
 		const lastAssistant = [...event.messages].reverse().find(isAssistantMessage);
 		if (lastAssistant) {
-			const extracted = extractTodoItems(getTextContent(lastAssistant));
-			if (extracted.length > 0) {
-				todoItems = extracted;
+			const planSteps = extractPlanSteps(getTextContent(lastAssistant));
+			if (planSteps.length > 0) {
+				pendingPlanSteps = planSteps;
 			}
 		}
 
-		// Show plan steps and prompt for next action
-		if (todoItems.length > 0) {
-			const todoListText = todoItems.map((t, i) => `${i + 1}. ☐ ${t.text}`).join("\n");
-			pi.sendMessage(
-				{
-					customType: "plan-todo-list",
-					content: `**Plan Steps (${todoItems.length}):**\n\n${todoListText}`,
-					display: true,
-				},
-				{ triggerTurn: false },
-			);
-		}
+		// Show plan and prompt for approval
+		if (pendingPlanSteps.length > 0) {
+			const todoListText = pendingPlanSteps.map((s, i) => 
+				`${i + 1}. ☐ ${s.text} [${s.type}/${s.layer}]`
+			).join("\n");
+			
+			pi.sendMessage({
+				customType: "plan-todo-list",
+				content: `**Plan Steps (${pendingPlanSteps.length}):**\n\n${todoListText}`,
+				display: true
+			}, { triggerTurn: false });
 
-		const choice = await ctx.ui.select("Plan mode - what next?", [
-			todoItems.length > 0 ? "Execute the plan (track progress)" : "Execute the plan",
-			"Stay in plan mode",
-			"Refine the plan",
-		]);
+			const epicTitle = deriveEpicTitle(pendingUserPrompt, pendingPlanSteps);
+			const choice = await ctx.ui.select("Create epic + issues from this plan?", [
+				`Yes, create "${epicTitle.slice(0, 50)}..."`,
+				"Refine plan",
+				"Cancel"
+			]);
 
-		if (choice?.startsWith("Execute")) {
-			planModeEnabled = false;
-			executionMode = todoItems.length > 0;
-			pi.setActiveTools(NORMAL_MODE_TOOLS);
-			updateStatus(ctx);
-
-			const execMessage =
-				todoItems.length > 0
-					? `Execute the plan. Start with: ${todoItems[0].text}`
-					: "Execute the plan you just created.";
-			pi.sendMessage(
-				{ customType: "plan-mode-execute", content: execMessage, display: true },
-				{ triggerTurn: true },
-			);
-		} else if (choice === "Refine the plan") {
-			const refinement = await ctx.ui.editor("Refine the plan:", "");
-			if (refinement?.trim()) {
-				pi.sendUserMessage(refinement.trim());
+			if (choice?.startsWith("Yes")) {
+				await createEpicAndIssues(ctx, epicTitle);
+			} else if (choice === "Refine plan") {
+				const refinement = await ctx.ui.editor("Refine the plan:", "");
+				if (refinement?.trim()) {
+					pi.sendUserMessage(refinement.trim());
+				}
 			}
 		}
 	});
 
-	// Restore state on session start/resume
+	// Create epic and issues
+	async function createEpicAndIssues(ctx: ExtensionContext, epicTitle: string): Promise<void> {
+		const cwd = getCwd(ctx);
+
+		// Create epic
+		const epic = await bdCreateEpic(epicTitle, 1, cwd);
+		if (!epic) {
+			ctx.ui.notify("Failed to create epic", "error");
+			return;
+		}
+
+		ctx.ui.notify(`Created epic ${epic.id}`, "success");
+
+		const issueIds = new Map<number, string>();
+
+		// Create implementation issues
+		for (const step of pendingPlanSteps) {
+			const description = generateIssueDescription(step, epic.id, []);
+			const issue = await bdCreateIssue(
+				step.text,
+				step.type,
+				step.priority,
+				epic.id,
+				cwd,
+				description
+			);
+
+			if (issue) {
+				issueIds.set(step.step, issue.id);
+				state.issues.push({
+					id: issue.id,
+					step: step.step,
+					title: step.text,
+					status: "open",
+					type: step.type,
+					layer: step.layer
+				});
+				ctx.ui.notify(`Created issue ${issue.id}`, "info");
+			}
+		}
+
+		// Create test issues (batched by layer)
+		const layerBatches = batchByLayer(pendingPlanSteps.filter(s => s.layer !== "unknown"));
+		for (const [layer, steps] of layerBatches) {
+			if (steps.length === 0) continue;
+			
+			const testTitle = generateTestIssueTitle(layer, steps);
+			const testDesc = generateTestIssueDescription(layer, steps, issueIds);
+			
+			const testIssue = await bdCreateIssue(
+				testTitle,
+				"task",
+				2,
+				epic.id,
+				cwd,
+				testDesc
+			);
+
+			if (testIssue) {
+				ctx.ui.notify(`Created test issue ${testIssue.id} for ${layer} layer`, "info");
+			}
+		}
+
+		// Store epic state
+		state.epic = {
+			epicId: epic.id,
+			epicTitle,
+			issueIds: Array.from(issueIds.values()),
+			stepMapping: Object.fromEntries(issueIds),
+			gitnexusSymbols: {},
+			createdAt: Date.now()
+		};
+
+		// Prompt to start execution
+		const startNow = await ctx.ui.select("Epic created. Start execution?", ["Yes, claim first issue", "Later"]);
+		
+		if (startNow === "Yes, claim first issue") {
+			state.enabled = false;
+			state.executing = true;
+			pi.setActiveTools(["read", "bash", "edit", "write"]);
+			
+			// Claim first issue
+			const firstIssueId = issueIds.get(1);
+			if (firstIssueId) {
+				const claimed = await bdClaim(firstIssueId, cwd);
+				if (claimed) {
+					state.currentIssueId = firstIssueId;
+					const first = state.issues.find(i => i.id === firstIssueId);
+					if (first) first.status = "in_progress";
+					
+					pi.sendMessage({
+						customType: "plan-start-execution",
+						content: `[START EXECUTION]\n\nEpic: ${epicTitle}\nFirst issue: ${firstIssueId}\n\nWorkflow:\n1. gitnexus_impact before editing\n2. Implement\n3. bd close ${firstIssueId} --reason "Done"\n4. /next for next issue`,
+						display: true
+					}, { triggerTurn: true });
+				}
+			}
+		}
+
+		pendingPlanSteps = [];
+		updateStatus(ctx);
+		await persistState();
+	}
+
+	// Sync issue status on bd close
+	pi.on("tool_result", async (event, ctx) => {
+		if (event.toolName !== "bash") return;
+		const command = event.input.command as string;
+		if (!command?.includes("bd close")) return;
+
+		const match = command.match(/bd\s+close\s+(\S+)/);
+		if (!match) return;
+
+		const closedId = match[1];
+		const issue = state.issues.find(i => i.id === closedId);
+		if (issue) {
+			issue.status = "closed";
+			state.currentIssueId = undefined;
+			updateStatus(ctx);
+			await persistState();
+		}
+	});
+
+	// Restore state on session start
 	pi.on("session_start", async (_event, ctx) => {
 		if (pi.getFlag("plan") === true) {
-			planModeEnabled = true;
+			state.enabled = true;
 		}
 
 		const entries = ctx.sessionManager.getEntries();
-
-		// Restore persisted state
 		const planModeEntry = entries
-			.filter((e: { type: string; customType?: string }) => e.type === "custom" && e.customType === "plan-mode")
-			.pop() as { data?: { enabled: boolean; todos?: TodoItem[]; executing?: boolean } } | undefined;
+			.filter((e: any) => e.type === "custom" && e.customType === "plan-mode-v2")
+			.pop() as { data?: PlanModeState } | undefined;
 
 		if (planModeEntry?.data) {
-			planModeEnabled = planModeEntry.data.enabled ?? planModeEnabled;
-			todoItems = planModeEntry.data.todos ?? todoItems;
-			executionMode = planModeEntry.data.executing ?? executionMode;
-		}
-
-		// On resume: re-scan messages to rebuild completion state
-		// Only scan messages AFTER the last "plan-mode-execute" to avoid picking up [DONE:n] from previous plans
-		const isResume = planModeEntry !== undefined;
-		if (isResume && executionMode && todoItems.length > 0) {
-			// Find the index of the last plan-mode-execute entry (marks when current execution started)
-			let executeIndex = -1;
-			for (let i = entries.length - 1; i >= 0; i--) {
-				const entry = entries[i] as { type: string; customType?: string };
-				if (entry.customType === "plan-mode-execute") {
-					executeIndex = i;
-					break;
+			state = { ...state, ...planModeEntry.data };
+			
+			// Sync with bd
+			if (state.executing && state.epic) {
+				const children = await bdChildren(state.epic.epicId, getCwd(ctx));
+				for (const child of children) {
+					const issue = state.issues.find(i => i.id === child.id);
+					if (issue) issue.status = child.status;
 				}
 			}
-
-			// Only scan messages after the execute marker
-			const messages: AssistantMessage[] = [];
-			for (let i = executeIndex + 1; i < entries.length; i++) {
-				const entry = entries[i];
-				if (entry.type === "message" && "message" in entry && isAssistantMessage(entry.message as AgentMessage)) {
-					messages.push(entry.message as AssistantMessage);
-				}
-			}
-			const allText = messages.map(getTextContent).join("\n");
-			markCompletedSteps(allText, todoItems);
 		}
 
-		if (planModeEnabled) {
+		if (state.enabled) {
 			pi.setActiveTools(PLAN_MODE_TOOLS);
 		}
 		updateStatus(ctx);

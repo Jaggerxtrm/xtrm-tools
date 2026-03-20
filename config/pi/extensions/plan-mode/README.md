@@ -1,65 +1,122 @@
-# Plan Mode Extension
+# Plan Mode Extension - Beads-Integrated
 
-Read-only exploration mode for safe code analysis.
+Read-only exploration mode that creates bd issues from plans.
 
 ## Features
 
-- **Read-only tools**: Restricts available tools to read, bash, grep, find, ls, question
-- **Bash allowlist**: Only read-only bash commands are allowed
-- **Plan extraction**: Extracts numbered steps from `Plan:` sections
-- **Progress tracking**: Widget shows completion status during execution
-- **[DONE:n] markers**: Explicit step completion tracking
-- **Session persistence**: State survives session resume
+- **Read-only tools**: Restricts available tools during planning
+- **Bash allowlist**: Only read-only bash commands allowed
+- **Auto epic creation**: Plan steps become bd issues automatically
+- **Test planning**: Creates test issues per layer (core/boundary/shell)
+- **GitNexus integration**: Reminders to run impact analysis
+- **Beads workflow**: Execution via bd ready/claim/close
 
 ## Commands
 
-- `/plan` - Toggle plan mode
-- `/todos` - Show current plan progress
-- `Ctrl+Alt+P` - Toggle plan mode (shortcut)
+| Command | Description |
+|---------|-------------|
+| `/plan` | Toggle plan mode |
+| `/plan-status` | Show current epic/issue status |
+| `/next` | Claim next ready issue from epic |
 
-## Usage
+## Shortcuts
 
-1. Enable plan mode with `/plan` or `--plan` flag
-2. Ask the agent to analyze code and create a plan
-3. The agent should output a numbered plan under a `Plan:` header:
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+Alt+P` | Toggle plan mode |
+
+## Workflow
+
+### 1. Planning Phase
+
+1. Enable plan mode: `/plan`
+2. Agent explores codebase using GitNexus tools
+3. Agent creates numbered plan under "Plan:" header
+4. Approve epic creation
+
+### 2. Epic Creation
+
+- Epic title auto-derived from user prompt
+- Each plan step becomes a bd issue with:
+  - Proper type (feature/task/bug/chore)
+  - Priority based on position
+  - Layer classification (core/boundary/shell)
+  - GitNexus safety reminders
+- Test issues created per layer
+
+### 3. Execution Phase
+
+1. First issue auto-claimed
+2. Implement changes
+3. `bd close <id> --reason "Done"` (auto-commits)
+4. `/next` to claim next issue
+5. Repeat until complete
+
+## Plan Format
 
 ```
 Plan:
-1. First step description
-2. Second step description
-3. Third step description
+1. Implement user authentication
+2. Add JWT token validation
+3. Create login/logout endpoints
+4. Write integration tests
 ```
 
-4. Choose "Execute the plan" when prompted
-5. During execution, the agent marks steps complete with `[DONE:n]` tags
-6. Progress widget shows completion status
+## Layer Classification
 
-## How It Works
+| Layer | Signals | Test Strategy |
+|-------|---------|---------------|
+| Core | implement, compute, parse, validate | Unit + property |
+| Boundary | API, endpoint, client, fetch | Contract (live) |
+| Shell | CLI, command, workflow | Integration |
 
-### Plan Mode (Read-Only)
-- Only read-only tools available
-- Bash commands filtered through allowlist
-- Agent creates a plan without making changes
+## GitNexus Safety
 
-### Execution Mode
-- Full tool access restored
-- Agent executes steps in order
-- `[DONE:n]` markers track completion
-- Widget shows progress
+Each issue description includes:
+- Affected symbols (if detected)
+- Reminder to run `gitnexus_impact` before editing
+- Reminder to run `gitnexus_detect_changes` before commit
 
-### Command Allowlist
+## Example Flow
 
-Safe commands (allowed):
-- File inspection: `cat`, `head`, `tail`, `less`, `more`
-- Search: `grep`, `find`, `rg`, `fd`
-- Directory: `ls`, `pwd`, `tree`
-- Git read: `git status`, `git log`, `git diff`, `git branch`
-- Package info: `npm list`, `npm outdated`, `yarn info`
-- System info: `uname`, `whoami`, `date`, `uptime`
+```
+User: Add user authentication
 
-Blocked commands:
-- File modification: `rm`, `mv`, `cp`, `mkdir`, `touch`
-- Git write: `git add`, `git commit`, `git push`
-- Package install: `npm install`, `yarn add`, `pip install`
-- System: `sudo`, `kill`, `reboot`
-- Editors: `vim`, `nano`, `code`
+Agent: [explores with gitnexus_query, gitnexus_impact]
+       [creates plan]
+
+Plan Steps (4):
+1. ☐ Implement user model [feature/core]
+2. ☐ Add password hashing [task/core]
+3. ☐ Create auth endpoints [feature/boundary]
+4. ☐ Write auth tests [task/shell]
+
+User: [approves "Yes, create epic"]
+
+System: Created epic bd-42
+        Created issue bd-43: Implement user model
+        Created issue bd-44: Add password hashing
+        Created issue bd-45: Create auth endpoints
+        Created issue bd-46: Write auth tests
+        Created test issue bd-47: Test core layer
+
+User: [starts execution]
+
+Agent: [claims bd-43, implements, bd close bd-43 --reason "Done"]
+       [/next]
+       [claims bd-44, implements, bd close bd-44 --reason "Done"]
+       ...
+       [all issues closed]
+
+Plan Complete! ✓
+```
+
+## Files
+
+| File | Purpose |
+|------|---------|
+| `index.ts` | Main extension logic |
+| `utils.ts` | Plan parsing, classification |
+| `beads.ts` | bd command wrappers |
+| `test-planning.ts` | Layer classification, test issue creation |
+| `types.ts` | TypeScript interfaces |

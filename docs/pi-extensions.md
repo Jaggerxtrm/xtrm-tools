@@ -65,7 +65,7 @@ Pi will silently ignore extensions that lack `package.json` with an `exports` fi
 | `plan-mode` | Planning phase UI with beads integration |
 | `quality-gates` | Quality gate enforcement hooks |
 | `service-skills` | Service skill catalog activation |
-| `session-flow` | Session lifecycle management (claim, memory gate, close) |
+| `session-flow` | Claim sync (notifies on bd update --claim), stop gate (blocks agent end with unclosed in_progress claim), xt end reminder when session ends in a worktree |
 | `todo` | Todo tracking extension |
 | `xtrm-loader` | xtrm config loading at session start |
 

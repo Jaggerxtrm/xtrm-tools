@@ -13,7 +13,18 @@
 import { readFileSync, writeFileSync, readdirSync, existsSync, statSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { WRITE_TOOLS } from '../hooks/guard-rules.mjs';
+
+// Inlined from the former hooks/guard-rules.mjs (removed as dead hook)
+const WRITE_TOOLS = [
+  'Edit',
+  'Write',
+  'MultiEdit',
+  'NotebookEdit',
+  'mcp__serena__rename_symbol',
+  'mcp__serena__replace_symbol_body',
+  'mcp__serena__insert_after_symbol',
+  'mcp__serena__insert_before_symbol',
+];
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');

@@ -22,7 +22,7 @@ domain: [hooks, claude, enforcement]
 | [Operational Workflow (Beads + Hooks)](#operational-workflow-beads-+-hooks) | Behavior: |
 | [Troubleshooting](#troubleshooting) | - Edits blocked unexpectedly: |
 | [Related Docs](#related-docs) | - Root overview: `README |
-| [Verified Completed Issues (2026-03-13)](#verified-completed-issues-2026-03-13) | - `jaggers-agent-tools-ojt`: migrated canonical `main-guard |
+| [Verified Completed Issues (2026-03-13)](#verified-completed-issues-2026-03-13) | Historical migration records |
 <!-- END INDEX -->
 
 # Hooks Module
@@ -54,7 +54,6 @@ Common events used in this repo:
 
 | Hook | Core Behavior |
 |---|---|
-| `main-guard.mjs` | Blocks direct edits and risky Bash/git actions on protected branches |
 | `beads-edit-gate.mjs` | Blocks writes when current session has no claimed issue |
 | `beads-commit-gate.mjs` | Blocks `git commit` with unresolved session claim |
 | `beads-stop-gate.mjs` | Blocks session stop while claim remains open |
@@ -75,7 +74,6 @@ Common events used in this repo:
 | Hook | Core Behavior |
 |---|---|
 | `type-safety-enforcement.py` | Type-safety checks around relevant write/bash flows |
-| `agent_context.py` | Session context helper utilities |
 
 ## Install Profiles and Hook Coverage
 
@@ -105,7 +103,6 @@ Behavior:
 ## Troubleshooting
 
 - Edits blocked unexpectedly:
-  - check active branch; protected branches enforce `main-guard`
   - check session claim key: `bd kv get "claimed:<session_id>"`
 - Beads hooks not running:
   - confirm `xtrm install all` was used

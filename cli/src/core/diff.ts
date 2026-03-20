@@ -2,7 +2,6 @@ import { join, normalize } from 'path';
 import fs from 'fs-extra';
 import { hashDirectory, getNewestMtime } from '../utils/hash.js';
 import type { ChangeSet } from '../types/config.js';
-import { getAdapter } from '../adapters/registry.js';
 import { detectAdapter } from '../adapters/registry.js';
 
 // Items to ignore from diff scanning (similar to .gitignore)
@@ -18,7 +17,6 @@ export class PruneModeReadError extends Error {
 export async function calculateDiff(repoRoot: string, systemRoot: string, pruneMode: boolean = false): Promise<ChangeSet> {
     const adapter = detectAdapter(systemRoot);
     const isClaude = adapter?.toolName === 'claude-code';
-    const isQwen = adapter?.toolName === 'qwen';
     const normalizedRoot = normalize(systemRoot).replace(/\\/g, '/');
     const isAgentsSkills = normalizedRoot.includes('.agents/skills');
 
@@ -27,8 +25,6 @@ export async function calculateDiff(repoRoot: string, systemRoot: string, pruneM
         hooks: { missing: [], outdated: [], drifted: [], total: 0 },
         config: { missing: [], outdated: [], drifted: [], total: 0 },
         commands: { missing: [], outdated: [], drifted: [], total: 0 },
-        'qwen-commands': { missing: [], outdated: [], drifted: [], total: 0 },
-        'antigravity-workflows': { missing: [], outdated: [], drifted: [], total: 0 },
     };
 
     // Load installed file hashes from manifest for precise drift classification
@@ -61,20 +57,11 @@ export async function calculateDiff(repoRoot: string, systemRoot: string, pruneM
 
     // 1. Folders: Skills & Hooks & Commands
     const folders = ['skills', 'hooks'];
-    if (isQwen) folders.push('qwen-commands');
-    else if (!isClaude) folders.push('commands');
+    if (!isClaude) folders.push('commands');
 
     for (const category of folders) {
-        let repoPath: string;
-        let systemPath: string;
-
-        if (category === 'qwen-commands') {
-            repoPath = join(repoRoot, '.qwen', 'commands');
-            systemPath = join(systemRoot, 'commands');
-        } else {
-            repoPath = join(repoRoot, category);
-            systemPath = join(systemRoot, category);
-        }
+        const repoPath = join(repoRoot, category);
+        const systemPath = join(systemRoot, category);
 
         if (!(await fs.pathExists(repoPath))) continue;
 

@@ -1,6 +1,6 @@
 # XTRM-Tools Complete Guide
 
-> **Version 2.4.0** | A comprehensive reference for the XTRM-Tools Claude Code plugin ecosystem.
+> **Version 0.5.5** | A comprehensive reference for the XTRM-Tools Claude Code plugin ecosystem.
 
 ---
 
@@ -207,18 +207,15 @@ node scripts/compile-policies.mjs --check   # CI drift check
 
 | Hook | Purpose |
 |------|---------|
-| Claim Sync | Creates worktree + `.xtrm-session-state.json` on `bd update <id> --claim` |
-| Stop Flow Gate | Blocks stop when phase is `waiting-merge`, `conflicting`, `pending-cleanup` |
+| Claim Sync | Runs auto-commit on bd close (feature branches only) |
+| Stop Flow Gate | Blocks stop when active in_progress claim exists |
 
 #### Intended Worktree-First Flow (Pi + Claude)
 
-1. `bd update <id> --claim` (worktree auto-created)
-2. Move your agent session to that worktree path and do all edits there (sandboxed)
+1. `bd update <id> --claim` — claim the issue
+2. Work in the claimed branch/worktree (created manually or via `xt worktree`)
 3. If you remain on `main`/`master`, `main-guard` blocks mutating tools and points to active worktree path
-4. Run `xtrm finish` to complete closure lifecycle (commit/push/pr/merge/cleanup)
-
-> `xtrm finish` is allowed on protected branches and resolves execution context from `.xtrm-session-state.json`.
-> If invoked from repo root, it executes git/gh phase steps in the claimed worktree path.
+4. Run `xt end` from within the worktree to complete closure lifecycle (commit/push/pr/merge/cleanup)
 
 ### GitNexus Hook
 
@@ -233,7 +230,7 @@ Enriches tool output with knowledge graph context via `gitnexus augment`.
 | `main-guard.ts` | tool_call | Branch protection (blocks dangerous tool calls) |
 | `main-guard-post-push.ts` | tool_result | Post-push PR workflow reminders |
 | `beads.ts` | session_start, tool_call, tool_result, agent_end, session_shutdown | Issue tracking gates + memory gate |
-| `session-flow.ts` | tool_result, agent_end | Worktree claim flow + finish lifecycle reminders |
+| `session-flow.ts` | tool_result, agent_end | Auto-commit on bd close (feature branches) + stop-gate when claim is in_progress |
 | `quality-gates.ts` | tool_result | Linting/typechecking after file edits |
 | `service-skills.ts` | before_agent_start, tool_result | Territory-based skill activation |
 
@@ -289,7 +286,12 @@ Enriches tool output with knowledge graph context via `gitnexus augment`.
 | `project init` | Initialize project data for global hooks/skills |
 | `install project <name>` | **Deprecated** legacy project-skill installer |
 | `status` | Read-only diff view |
-| `finish` | Blocking session closure: phase1 + PR poll + cleanup |
+| `xt claude` | Launch Claude Code in current worktree |
+| `xt pi` | Launch Pi in current worktree |
+| `xt worktree list` | List all active worktrees |
+| `xt worktree clean` | Remove stale/merged worktrees |
+| `xt worktree remove` | Remove a specific worktree |
+| `xt end` | Blocking session closure: commit/push/pr/merge/cleanup |
 | `clean` | Remove orphaned hooks |
 | `reset` | Clear preferences |
 
@@ -364,7 +366,8 @@ bd status
 
 | Version | Date | Highlights |
 |---------|------|------------|
-| 2.4.0 | 2026-03-18 | Session-flow policy (runtime:both), worktree-first claim sync, `.xtrm-session-state.json`, `xtrm finish` command, stop-gate phase enforcement, compact save/restore continuity |
+| 0.5.x | 2026-03-20 | `xt` CLI commands (`xt claude`, `xt pi`, `xt worktree list/clean/remove`, `xt end`); plugin-only delivery for Claude; worktrees stored in `.xtrm/worktrees/`; deprecated `xtrm finish` and `.xtrm-session-state.json`; worktree auto-creation via `bd update --claim` removed |
+| 2.4.0 | 2026-03-18 | Session-flow policy (runtime:both), worktree-first claim sync, stop-gate phase enforcement, compact save/restore continuity |
 | 2.3.0 | 2026-03-18 | Plugin structure, policy compiler, Pi extension parity, manifest hash drift detection, MCP sync refactor (`syncMcpForTargets`), commit gate stale-claim fix, context7 free stdio transport |
 | 2.2.0 | 2026-03-17 | Pi extensions: quality-gates, beads, main-guard |
 | 2.0.0 | 2026-03-12 | CLI rebrand, project skills engine |

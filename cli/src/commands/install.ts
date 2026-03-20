@@ -120,13 +120,6 @@ function isGitnexusInstalled(): boolean {
     }
 }
 
-interface GlobalInstallFlags {
-    dryRun: boolean;
-    yes: boolean;
-    noMcp: boolean;
-    force: boolean;
-}
-
 async function needsSettingsSync(repoRoot: string, target: string): Promise<boolean> {
     const normalizedTarget = target.replace(/\\/g, '/').toLowerCase();
     if (normalizedTarget.includes('.agents/skills')) return false;
@@ -223,216 +216,29 @@ async function installPlugin(repoRoot: string, dryRun: boolean): Promise<void> {
     await installOfficialClaudePlugins(false);
 }
 
-async function runGlobalInstall(
-    flags: GlobalInstallFlags,
-    installOpts: { excludeBeads?: boolean; checkBeads?: boolean } = {},
-): Promise<void> {
-    const { dryRun, yes, noMcp, force } = flags;
-    const effectiveYes = yes || process.argv.includes('--yes') || process.argv.includes('-y');
-    const repoRoot = await findRepoRoot();
-    const ctx = await getContext({ selector: 'all', createMissingDirs: !dryRun });
-    const { targets, syncMode } = ctx;
-
-    const claudeTargets = targets.filter(t => detectAgent(t) === 'claude');
-    const otherTargets = targets.filter(t => detectAgent(t) !== 'claude');
-
-    let skipBeads = installOpts.excludeBeads ?? false;
-
-    if (installOpts.checkBeads && !skipBeads) {
-        console.log(t.bold('\n  ⚙  beads + dolt  (workflow enforcement backend)'));
-        console.log(t.muted('  beads is a git-backed issue tracker; dolt is its SQL+git storage backend.'));
-        console.log(t.muted('  Without them the gate hooks install but provide no enforcement.\n'));
-
-        const beadsOk = isBeadsInstalled();
-        const doltOk = isDoltInstalled();
-
-        if (beadsOk && doltOk) {
-            console.log(t.success('  ✓ beads + dolt already installed\n'));
-        } else {
-            const missing = [!beadsOk && 'bd', !doltOk && 'dolt'].filter(Boolean).join(', ');
-
-            let doInstall = effectiveYes;
-            if (!effectiveYes) {
-                const { install } = await prompts({
-                    type: 'confirm',
-                    name: 'install',
-                    message: `Install beads + dolt? (${missing} not found) — required for workflow enforcement hooks`,
-                    initial: true,
-                });
-                doInstall = install;
-            }
-
-            if (doInstall) {
-                if (!beadsOk) {
-                    console.log(t.muted('\n  Installing @beads/bd...'));
-                    spawnSync('npm', ['install', '-g', '@beads/bd'], { stdio: 'inherit' });
-                    console.log(t.success('  ✓ bd installed'));
-                }
-                if (!doltOk) {
-                    console.log(t.muted('\n  Installing dolt...'));
-                    if (process.platform === 'darwin') {
-                        spawnSync('brew', ['install', 'dolt'], { stdio: 'inherit' });
-                    } else {
-                        spawnSync('sudo', ['bash', '-c',
-                            'curl -L https://github.com/dolthub/dolt/releases/latest/download/install.sh | bash',
-                        ], { stdio: 'inherit' });
-                    }
-                    console.log(t.success('  ✓ dolt installed'));
-                }
-                console.log('');
-            } else {
-                console.log(t.muted('  ℹ Skipping beads gate hooks. Re-run xtrm install all after installing beads+dolt.\n'));
-                skipBeads = true;
-            }
-        }
-    }
-
-    // Gitnexus global install (for MCP server + CLI tools)
-    console.log(t.bold('\n  ⚙  gitnexus  (code intelligence)'));
-    console.log(t.muted('  GitNexus provides knowledge graph queries for impact analysis, execution flows, and symbol context.'));
-
-    const gitnexusOk = isGitnexusInstalled();
-    if (gitnexusOk) {
-        console.log(t.success('  ✓ gitnexus already installed\n'));
-    } else {
-        let doInstallGitnexus = effectiveYes;
-        if (!effectiveYes) {
-            const { install } = await prompts({
-                type: 'confirm',
-                name: 'install',
-                message: 'Install gitnexus globally? (recommended for MCP server and CLI tools)',
-                initial: true,
-            });
-            doInstallGitnexus = install;
-        }
-
-        if (doInstallGitnexus) {
-            console.log(t.muted('\n  Installing gitnexus...'));
-            spawnSync('npm', ['install', '-g', 'gitnexus'], { stdio: 'inherit' });
-            console.log(t.success('  ✓ gitnexus installed\n'));
-        } else {
-            console.log(t.muted('  ℹ Skipped. Install later with: npm install -g gitnexus\n'));
-        }
-    }
-
-    // Claude Code: install via plugin (no hook/settings wiring needed)
-    for (const _claudeTarget of claudeTargets) {
-        await installPlugin(repoRoot, dryRun);
-    }
-
-    if (otherTargets.length === 0) {
-        return;
-    }
-
-    const diffTasks = new Listr<DiffCtx>(
-        otherTargets.map(target => ({
-            title: formatTargetLabel(target),
-            task: async (listCtx, task) => {
-                try {
-                    const changeSet = await calculateDiff(repoRoot, target, false);
-                    const totalChanges = Object.values(changeSet).reduce(
-                        (sum, c: any) => sum + c.missing.length + c.outdated.length + c.drifted.length, 0,
-                    );
-                    task.title = `${formatTargetLabel(target)}${t.muted(` — ${totalChanges} change${totalChanges !== 1 ? 's' : ''}`)}`;
-                    if (totalChanges > 0) {
-                        listCtx.allChanges.push({ target, changeSet, totalChanges, skippedDrifted: [] });
-                    }
-                } catch (err) {
-                    if (err instanceof PruneModeReadError) {
-                        task.title = `${formatTargetLabel(target)} ${kleur.red('(skipped — cannot read in prune mode)')}`;
-                    } else {
-                        throw err;
-                    }
-                }
-            },
-        })),
-        { concurrent: true, exitOnError: false },
-    );
-
-    const diffCtx = await diffTasks.run({ allChanges: [] });
-    const allChanges = diffCtx.allChanges;
-
-    if (allChanges.length === 0) {
-        console.log('\n' + t.boldGreen('✓ Files are up-to-date') + '\n');
-        return;
-    }
-
-    renderPlanTable(allChanges);
-
-    if (dryRun) {
-        console.log(t.accent('💡 Dry run — no changes written\n'));
-        return;
-    }
-
-    if (!effectiveYes) {
-        const totalChangesCount = allChanges.reduce((s, c) => s + c.totalChanges, 0);
-        const { confirm } = await prompts({
-            type: 'confirm',
-            name: 'confirm',
-            message: `Proceed with install (${totalChangesCount} total changes)?`,
-            initial: true,
-        });
-        if (!confirm) {
-            console.log(t.muted('  Install cancelled.\n'));
-            return;
-        }
-    }
-
-    let totalCount = 0;
-
-    if (!noMcp) {
-        await syncMcpForTargets(repoRoot, otherTargets, dryRun);
-    }
-
-    for (const { target, changeSet, skippedDrifted } of allChanges) {
-        console.log(t.bold(`\n  ${sym.arrow} ${formatTargetLabel(target)}`));
-
-        const count = await executeSync(repoRoot, target, changeSet, syncMode, 'sync', dryRun, {
-            force,
-        });
-        totalCount += count;
-
-        for (const [category, cat] of Object.entries(changeSet)) {
-            const c = cat as any;
-            if (c.drifted.length > 0 && !force) {
-                skippedDrifted.push(...c.drifted.map((item: string) => `${category}/${item}`));
-            }
-        }
-
-        console.log(t.success(`  ${sym.ok} ${count} item${count !== 1 ? 's' : ''} installed`));
-    }
-
-    const allSkipped = allChanges.flatMap(c => c.skippedDrifted);
-    await renderSummaryCard(allChanges, totalCount, allSkipped, dryRun);
-}
-
 export function createInstallAllCommand(): Command {
+    // Deprecated: kept temporarily for backward compat; use bare 'xtrm install'
     return new Command('all')
-        .description('Install everything: skills, all hooks (including beads gates), and MCP servers')
+        .description('[deprecated] Use xtrm install')
         .option('--dry-run', 'Preview changes without making any modifications', false)
         .option('-y, --yes', 'Skip confirmation prompts', false)
         .option('--no-mcp', 'Skip MCP server registration', false)
         .option('--force', 'Overwrite locally drifted files', false)
-        .action(async (opts) => {
-            await runGlobalInstall(
-                { dryRun: opts.dryRun, yes: opts.yes, noMcp: opts.mcp === false, force: opts.force },
-                { checkBeads: true },
-            );
+        .action(async (_opts) => {
+            console.log('xtrm install all is deprecated — use: xtrm install');
         });
 }
 
 export function createInstallBasicCommand(): Command {
+    // Deprecated: kept temporarily for backward compat; use bare 'xtrm install'
     return new Command('basic')
-        .description('Install skills, general hooks, and MCP servers (no beads gate hooks)')
+        .description('[deprecated] Use xtrm install')
         .option('--dry-run', 'Preview changes without making any modifications', false)
         .option('-y, --yes', 'Skip confirmation prompts', false)
         .option('--no-mcp', 'Skip MCP server registration', false)
         .option('--force', 'Overwrite locally drifted files', false)
-        .action(async (opts) => {
-            await runGlobalInstall(
-                { dryRun: opts.dryRun, yes: opts.yes, noMcp: opts.mcp === false, force: opts.force },
-                { excludeBeads: true },
-            );
+        .action(async (_opts) => {
+            console.log('xtrm install basic is deprecated — use: xtrm install');
         });
 }
 
@@ -458,8 +264,6 @@ export function createInstallCommand(): Command {
             const { targets, syncMode } = ctx;
             const claudeTargets = targets.filter(t => detectAgent(t) === 'claude');
             const otherTargets = targets.filter(t => detectAgent(t) !== 'claude');
-
-            let skipBeads = false;
 
             if (!backport) {
                 console.log(t.bold('\n  ⚙  beads + dolt  (workflow enforcement backend)'));

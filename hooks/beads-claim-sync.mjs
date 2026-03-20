@@ -1,12 +1,11 @@
 #!/usr/bin/env node
 // beads-claim-sync — PostToolUse hook
-// bd update --claim → set kv claim + create worktree
+// bd update --claim → set kv claim
 // bd close         → auto-commit staged changes, set closed-this-session kv for memory gate
 
 import { spawnSync } from 'node:child_process';
-import { readFileSync, existsSync, mkdirSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { writeSessionState } from './session-state.mjs';
 import { resolveSessionId } from './beads-gate-utils.mjs';
 
 function readInput() {
@@ -96,114 +95,6 @@ function autoCommit(cwd, issueId, command) {
   return { ok: true, message: `Auto-committed: \`${commitMessage}\`` };
 }
 
-function getRepoRoot(cwd) {
-  const result = runGit(['rev-parse', '--show-toplevel'], cwd);
-  if (result.status !== 0) return null;
-  return result.stdout.trim();
-}
-
-function inLinkedWorktree(cwd) {
-  const gitDir = runGit(['rev-parse', '--git-dir'], cwd);
-  const gitCommonDir = runGit(['rev-parse', '--git-common-dir'], cwd);
-  if (gitDir.status !== 0 || gitCommonDir.status !== 0) return false;
-  return gitDir.stdout.trim() !== gitCommonDir.stdout.trim();
-}
-
-function ensureWorktreeForClaim(cwd, issueId) {
-  const repoRoot = getRepoRoot(cwd);
-  if (!repoRoot) return { created: false, reason: 'not-git' };
-
-  if (inLinkedWorktree(cwd)) {
-    return { created: false, reason: 'already-worktree', repoRoot };
-  }
-
-  const overstoryDir = join(repoRoot, '.overstory');
-  const worktreesBase = existsSync(overstoryDir)
-    ? join(overstoryDir, 'worktrees')
-    : join(repoRoot, '.worktrees');
-
-  mkdirSync(worktreesBase, { recursive: true });
-
-  const branch = `feature/${issueId}`;
-  const worktreePath = join(worktreesBase, issueId);
-
-  const worktreeExists = existsSync(worktreePath);
-  const branchExists = runGit(['show-ref', '--verify', '--quiet', `refs/heads/${branch}`], repoRoot).status === 0;
-
-  if (worktreeExists) {
-    // Validate it's actually a worktree (not a plain dir from a race)
-    if (existsSync(join(worktreePath, '.git'))) {
-      try {
-        const stateFile = writeSessionState({
-          issueId, branch, worktreePath, prNumber: null, prUrl: null,
-          phase: 'claimed', conflictFiles: [],
-        }, { cwd: repoRoot });
-        return { created: false, reason: 'exists', repoRoot, branch, worktreePath, stateFile };
-      } catch {
-        return { created: false, reason: 'exists', repoRoot, branch, worktreePath };
-      }
-    }
-    return {
-      created: false, reason: 'create-failed', repoRoot, branch, worktreePath,
-      error: `Directory ${worktreePath} exists but is not a valid worktree`,
-    };
-  }
-
-  const addArgs = branchExists
-    ? ['worktree', 'add', worktreePath, branch]
-    : ['worktree', 'add', worktreePath, '-b', branch];
-
-  const addResult = runGit(addArgs, repoRoot, 20000);
-  if (addResult.status !== 0) {
-    // TOCTOU race: another process may have created the worktree between our check and add
-    const stderr = (addResult.stderr || addResult.stdout || '').trim();
-    if (stderr.includes('already exists') || existsSync(join(worktreePath, '.git'))) {
-      try {
-        const stateFile = writeSessionState({
-          issueId, branch, worktreePath, prNumber: null, prUrl: null,
-          phase: 'claimed', conflictFiles: [],
-        }, { cwd: repoRoot });
-        return { created: false, reason: 'race-won', repoRoot, branch, worktreePath, stateFile };
-      } catch {
-        return { created: false, reason: 'race-won', repoRoot, branch, worktreePath };
-      }
-    }
-    return {
-      created: false, reason: 'create-failed', repoRoot, branch, worktreePath,
-      error: stderr,
-    };
-  }
-
-  try {
-    const stateFile = writeSessionState({
-      issueId,
-      branch,
-      worktreePath,
-      prNumber: null,
-      prUrl: null,
-      phase: 'claimed',
-      conflictFiles: [],
-    }, { cwd: repoRoot });
-
-    return {
-      created: true,
-      reason: 'created',
-      repoRoot,
-      branch,
-      worktreePath,
-      stateFile,
-    };
-  } catch (err) {
-    return {
-      created: true,
-      reason: 'created-state-write-failed',
-      repoRoot,
-      branch,
-      worktreePath,
-      error: String(err?.message || err),
-    };
-  }
-}
 
 function main() {
   const input = readInput();
@@ -233,23 +124,8 @@ function main() {
         process.exit(0);
       }
 
-      const wt = ensureWorktreeForClaim(cwd, issueId);
-      const details = [];
-      if (wt.created) {
-        details.push(`🧭 **Session Flow**: Worktree created: \`${wt.worktreePath}\`  Branch: \`${wt.branch}\``);
-      } else if (wt.reason === 'exists') {
-        details.push(`🧭 **Session Flow**: Worktree already exists: \`${wt.worktreePath}\`  Branch: \`${wt.branch}\``);
-      } else if (wt.reason === 'already-worktree') {
-        details.push('🧭 **Session Flow**: Already in a linked worktree — skipping nested worktree creation.');
-      } else if (wt.reason === 'race-won') {
-        details.push(`🧭 **Session Flow**: Worktree ready (race): \`${wt.worktreePath}\`  Branch: \`${wt.branch}\``);
-      } else if (wt.reason === 'create-failed') {
-        const err = wt.error ? `\nWarning: ${wt.error}` : '';
-        details.push(`⚠️ **Session Flow**: Worktree creation failed for \`${issueId}\`. Continuing without blocking claim.${err}`);
-      }
-
       process.stdout.write(JSON.stringify({
-        additionalContext: `\n✅ **Beads**: Session \`${sessionId}\` claimed issue \`${issueId}\`.${details.length ? `\n${details.join('\n')}` : ''}`,
+        additionalContext: `\n✅ **Beads**: Session \`${sessionId}\` claimed issue \`${issueId}\`.`,
       }));
       process.stdout.write('\n');
       process.exit(0);

@@ -7,7 +7,6 @@
 import { execSync } from 'node:child_process';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
-import { readSessionState } from './session-state.mjs';
 
 let input;
 try {
@@ -40,38 +39,13 @@ for (const line of output.split('\n')) {
   if (match) ids.push(match[1]);
 }
 
-const sessionState = readSessionState(cwd);
 const bundle = {
   ids,
-  sessionState: sessionState ? {
-    issueId: sessionState.issueId,
-    branch: sessionState.branch,
-    worktreePath: sessionState.worktreePath,
-    prNumber: sessionState.prNumber,
-    prUrl: sessionState.prUrl,
-    phase: sessionState.phase,
-    conflictFiles: Array.isArray(sessionState.conflictFiles) ? sessionState.conflictFiles : [],
-    startedAt: sessionState.startedAt,
-    lastChecked: sessionState.lastChecked,
-  } : null,
   savedAt: new Date().toISOString(),
 };
 
-if (bundle.ids.length === 0 && !bundle.sessionState) process.exit(0);
+if (bundle.ids.length === 0) process.exit(0);
 
 writeFileSync(path.join(beadsDir, '.last_active'), JSON.stringify(bundle, null, 2) + '\n', 'utf8');
-
-if (bundle.sessionState?.phase === 'waiting-merge') {
-  const pr = bundle.sessionState.prNumber != null ? `#${bundle.sessionState.prNumber}` : '(pending PR)';
-  process.stdout.write(
-    JSON.stringify({
-      hookSpecificOutput: {
-        hookEventName: 'PreCompact',
-        additionalSystemPrompt:
-          `PENDING: xtrm finish waiting for PR ${pr} to merge. Re-run xtrm finish to resume.`,
-      },
-    }) + '\n',
-  );
-}
 
 process.exit(0);

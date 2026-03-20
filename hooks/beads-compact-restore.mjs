@@ -7,7 +7,6 @@
 import { execSync } from 'node:child_process';
 import { readFileSync, existsSync, unlinkSync } from 'node:fs';
 import path from 'node:path';
-import { writeSessionState } from './session-state.mjs';
 
 let input;
 try {
@@ -22,14 +21,12 @@ const lastActivePath = path.join(cwd, '.beads', '.last_active');
 if (!existsSync(lastActivePath)) process.exit(0);
 
 let ids = [];
-let sessionState = null;
 
 try {
   const raw = readFileSync(lastActivePath, 'utf8').trim();
   if (raw.startsWith('{')) {
     const parsed = JSON.parse(raw);
     ids = Array.isArray(parsed.ids) ? parsed.ids.filter(Boolean) : [];
-    sessionState = parsed.sessionState ?? null;
   } else {
     // Backward compatibility: legacy newline format
     ids = raw.split('\n').filter(Boolean);
@@ -56,27 +53,8 @@ for (const id of ids) {
   }
 }
 
-let restoredSession = false;
-if (sessionState && typeof sessionState === 'object') {
-  try {
-    writeSessionState(sessionState, { cwd });
-    restoredSession = true;
-  } catch {
-    // fail open
-  }
-}
-
-if (restored > 0 || restoredSession) {
-  const lines = [];
-  if (restored > 0) {
-    lines.push(`Restored ${restored} in_progress issue${restored === 1 ? '' : 's'} from last session before compaction.`);
-  }
-
-  if (restoredSession && (sessionState.phase === 'waiting-merge' || sessionState.phase === 'pending-cleanup')) {
-    const pr = sessionState.prNumber != null ? `#${sessionState.prNumber}` : '(pending PR)';
-    const prUrl = sessionState.prUrl ? ` ${sessionState.prUrl}` : '';
-    lines.push(`RESUME: Run xtrm finish — PR ${pr}${prUrl} waiting for merge. Worktree: ${sessionState.worktreePath}`);
-  }
+if (restored > 0) {
+  const lines = [`Restored ${restored} in_progress issue${restored === 1 ? '' : 's'} from last session before compaction.`];
 
   process.stdout.write(
     JSON.stringify({

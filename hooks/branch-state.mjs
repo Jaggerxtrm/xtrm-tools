@@ -5,9 +5,7 @@
 // Output: { hookSpecificOutput: { additionalSystemPrompt } }
 
 import { execSync } from 'node:child_process';
-import { readFileSync, existsSync } from 'node:fs';
-import { join } from 'node:path';
-import { resolveSessionId } from './beads-gate-utils.mjs';
+import { readFileSync } from 'node:fs';
 
 function readInput() {
   try { return JSON.parse(readFileSync(0, 'utf-8')); } catch { return null; }
@@ -17,18 +15,8 @@ function getBranch(cwd) {
   try {
     return execSync('git branch --show-current', {
       encoding: 'utf8', cwd,
-      stdio: ['pipe', 'pipe', 'pipe'], timeout: 3000,
+      stdio: ['pipe', 'pipe', 'pipe'], timeout: 2000,
     }).trim() || null;
-  } catch { return null; }
-}
-
-function getSessionClaim(sessionId, cwd) {
-  try {
-    const out = execSync(`bd kv get "claimed:${sessionId}"`, {
-      encoding: 'utf8', cwd,
-      stdio: ['pipe', 'pipe', 'pipe'], timeout: 3000,
-    }).trim();
-    return out || null;
   } catch { return null; }
 }
 
@@ -37,17 +25,12 @@ try {
   if (!input) process.exit(0);
 
   const cwd = input.cwd || process.cwd();
-  const sessionId = resolveSessionId(input);
   const branch = getBranch(cwd);
-  const isBeads = existsSync(join(cwd, '.beads'));
-  const claim = isBeads && sessionId ? getSessionClaim(sessionId, cwd) : null;
 
-  if (!branch && !claim) process.exit(0);
-
-  const context = `[Context: branch=${branch ?? 'unknown'}${claim ? ', claim=' + claim : ''}]`;
+  if (!branch) process.exit(0);
 
   process.stdout.write(JSON.stringify({
-    hookSpecificOutput: { additionalSystemPrompt: context },
+    hookSpecificOutput: { additionalSystemPrompt: `[Context: branch=${branch}]` },
   }));
   process.stdout.write('\n');
   process.exit(0);

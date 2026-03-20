@@ -41153,7 +41153,6 @@ async function installPlugin(repoRoot, dryRun) {
   console.log(t.bold("\n  \u2699  xtrm-tools  (Claude Code plugin)"));
   if (dryRun) {
     console.log(t.accent("  [DRY RUN] Would register xtrm-tools marketplace and install plugin\n"));
-    await cleanStalePrePluginFiles(repoRoot, true);
     await installOfficialClaudePlugins(true);
     return;
   }

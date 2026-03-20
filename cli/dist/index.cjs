@@ -41313,7 +41313,8 @@ async function launchWorktreeSession(opts) {
   \u2713 Worktree ready \u2014 launching ${runtime}...
 `));
   const runtimeCmd = runtime === "claude" ? "claude" : "pi";
-  const launchResult = (0, import_node_child_process2.spawnSync)(runtimeCmd, [], {
+  const runtimeArgs = runtime === "claude" ? ["--dangerously-skip-permissions"] : [];
+  const launchResult = (0, import_node_child_process2.spawnSync)(runtimeCmd, runtimeArgs, {
     cwd: worktreePath,
     stdio: "inherit"
   });

@@ -99,7 +99,8 @@ export async function launchWorktreeSession(opts: WorktreeSessionOptions): Promi
 
     // Launch the runtime in the worktree
     const runtimeCmd = runtime === 'claude' ? 'claude' : 'pi';
-    const launchResult = spawnSync(runtimeCmd, [], {
+    const runtimeArgs = runtime === 'claude' ? ['--dangerously-skip-permissions'] : [];
+    const launchResult = spawnSync(runtimeCmd, runtimeArgs, {
         cwd: worktreePath,
         stdio: 'inherit',
     });

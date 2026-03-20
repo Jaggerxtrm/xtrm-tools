@@ -522,7 +522,33 @@ GitNexus symbols: ${state.epic?.gitnexusSymbols[current.step]?.join(", ") || "ch
 	});
 
 	// Restore state on session start
+	// Persist state before session switch
+	pi.on("session_before_switch", async (_event, ctx) => {
+		// Persist current state before switching
+		if (state.enabled || state.executing) {
+			await persistState();
+			await persistPendingSteps();
+		}
+		// Clear module-level cache for next session
+		state = {
+			enabled: false,
+			executing: false,
+			issues: []
+		};
+		pendingPlanSteps = [];
+		pendingUserPrompt = "";
+	});
+
 	pi.on("session_start", async (_event, ctx) => {
+		// Reset module-level state first
+		state = {
+			enabled: false,
+			executing: false,
+			issues: []
+		};
+		pendingPlanSteps = [];
+		pendingUserPrompt = "";
+
 		if (pi.getFlag("plan") === true) {
 			state.enabled = true;
 		}

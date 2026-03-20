@@ -134,6 +134,14 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 		pi.appendEntry("plan-mode-v2", state);
 	}
 
+	async function persistPendingSteps(): Promise<void> {
+		pi.appendEntry("plan-mode-pending", {
+			steps: pendingPlanSteps,
+			userPrompt: pendingUserPrompt,
+			timestamp: Date.now()
+		});
+	}
+
 	function togglePlanMode(ctx: ExtensionContext): void {
 		state.enabled = !state.enabled;
 		state.executing = false;
@@ -354,6 +362,7 @@ GitNexus symbols: ${state.epic?.gitnexusSymbols[current.step]?.join(", ") || "ch
 			const planSteps = extractPlanSteps(getTextContent(lastAssistant));
 			if (planSteps.length > 0) {
 				pendingPlanSteps = planSteps;
+				await persistPendingSteps();
 			}
 		}
 
@@ -487,6 +496,8 @@ GitNexus symbols: ${state.epic?.gitnexusSymbols[current.step]?.join(", ") || "ch
 		}
 
 		pendingPlanSteps = [];
+		pendingUserPrompt = "";
+		await persistPendingSteps();
 		updateStatus(ctx);
 		await persistState();
 	}
@@ -517,6 +528,16 @@ GitNexus symbols: ${state.epic?.gitnexusSymbols[current.step]?.join(", ") || "ch
 		}
 
 		const entries = ctx.sessionManager.getEntries();
+
+		// Restore pending plan steps
+		const pendingEntry = entries
+			.filter((e: any) => e.type === "custom" && e.customType === "plan-mode-pending")
+			.pop() as { data?: { steps?: any[]; userPrompt?: string } } | undefined;
+
+		if (pendingEntry?.data) {
+			pendingPlanSteps = pendingEntry.data.steps || [];
+			pendingUserPrompt = pendingEntry.data.userPrompt || "";
+		}
 		const planModeEntry = entries
 			.filter((e: any) => e.type === "custom" && e.customType === "plan-mode-v2")
 			.pop() as { data?: PlanModeState } | undefined;

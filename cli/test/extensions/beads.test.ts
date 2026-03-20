@@ -129,4 +129,34 @@ describe("Beads Extension", () => {
 		expect(calls.some((a) => String(a[2]).startsWith("closed-this-session:"))).toBe(true);
 		expect(harness.pi.sendUserMessage).not.toHaveBeenCalled();
 	});
+
+	it("blocks mutating tool calls while memory gate is pending", async () => {
+		(SubprocessRunner.run as any).mockImplementation(async (_cmd: string, args: string[]) => {
+			if (args[0] === "kv" && args[1] === "get" && String(args[2]).startsWith("closed-this-session:")) {
+				return { code: 0, stdout: "issue-123", stderr: "" };
+			}
+			return { code: 1, stdout: "", stderr: "" };
+		});
+		(fs.existsSync as any).mockReturnValue(false);
+
+		beadsExtension(harness.pi);
+		const result = await harness.emit("tool_call", { toolName: "write", input: { path: "src/x.ts" } });
+		expect(result?.block).toBe(true);
+		expect(String(result?.reason ?? "")).toContain("Memory gate pending");
+	});
+
+	it("blocks session_before_switch while memory gate is pending", async () => {
+		(SubprocessRunner.run as any).mockImplementation(async (_cmd: string, args: string[]) => {
+			if (args[0] === "kv" && args[1] === "get" && String(args[2]).startsWith("closed-this-session:")) {
+				return { code: 0, stdout: "issue-123", stderr: "" };
+			}
+			return { code: 1, stdout: "", stderr: "" };
+		});
+		(fs.existsSync as any).mockReturnValue(false);
+
+		beadsExtension(harness.pi);
+		const result = await harness.emit("session_before_switch", {});
+		expect(result?.cancel).toBe(true);
+		expect(String(result?.reason ?? "")).toContain("Memory gate pending");
+	});
 });

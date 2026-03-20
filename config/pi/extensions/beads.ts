@@ -19,6 +19,17 @@ export default function (pi: ExtensionAPI) {
 		return resolved;
 	};
 
+	const memoryGateReason =
+		"Memory gate pending for a closed issue.\n" +
+		"  1) Persist insight: bd remember \"<insight>\" (or decide none)\n" +
+		"  2) Acknowledge: touch .beads/.memory-gate-done\n";
+
+	const markerPath = (cwd: string) => path.join(cwd, ".beads", ".memory-gate-done");
+
+	const isMemoryAckBash = (command: string): boolean => {
+		return /\bbd\s+remember\b/.test(command) || /\btouch\s+\.beads\/\.memory-gate-done\b/.test(command);
+	};
+
 	const getSessionClaim = async (sessionId: string, cwd: string): Promise<string | null> => {
 		const result = await SubprocessRunner.run("bd", ["kv", "get", `claimed:${sessionId}`], { cwd });
 		if (result.code === 0) return result.stdout.trim();
@@ -57,6 +68,12 @@ export default function (pi: ExtensionAPI) {
 		return false;
 	};
 
+	const isMemoryGatePending = async (sessionId: string, cwd: string): Promise<boolean> => {
+		if (existsSync(markerPath(cwd))) return false;
+		const closed = await getClosedThisSession(sessionId, cwd);
+		return !!closed;
+	};
+
 	pi.on("session_start", async (_event, ctx) => {
 		cachedSessionId = ctx?.sessionManager?.getSessionId?.() ?? ctx?.sessionId ?? ctx?.session_id ?? cachedSessionId;
 		return undefined;
@@ -66,6 +83,18 @@ export default function (pi: ExtensionAPI) {
 		const cwd = getCwd(ctx);
 		if (!EventAdapter.isBeadsProject(cwd)) return undefined;
 		const sessionId = getSessionId(ctx);
+
+		if (await isMemoryGatePending(sessionId, cwd)) {
+			if (EventAdapter.isMutatingFileTool(event)) {
+				return { block: true, reason: memoryGateReason };
+			}
+			if (isToolCallEventType("bash", event)) {
+				const command = event.input.command || "";
+				if (!isMemoryAckBash(command)) {
+					return { block: true, reason: memoryGateReason };
+				}
+			}
+		}
 
 		if (EventAdapter.isMutatingFileTool(event)) {
 			const claim = await getSessionClaim(sessionId, cwd);
@@ -137,7 +166,7 @@ export default function (pi: ExtensionAPI) {
 		if (!EventAdapter.isBeadsProject(cwd)) return false;
 		const sessionId = getSessionId(ctx);
 
-		const marker = path.join(cwd, ".beads", ".memory-gate-done");
+		const marker = markerPath(cwd);
 		if (existsSync(marker)) {
 			try { unlinkSync(marker); } catch { /* ignore */ }
 			await clearKv(`claimed:${sessionId}`, cwd);
@@ -175,6 +204,20 @@ export default function (pi: ExtensionAPI) {
 		if (ctx.hasUI) ctx.ui.notify(message, "warning");
 		else logger.warn(message);
 	};
+
+	const maybeBlockBeforeSessionAction = async (ctx: any) => {
+		const cwd = getCwd(ctx);
+		if (!EventAdapter.isBeadsProject(cwd)) return undefined;
+		const sessionId = getSessionId(ctx);
+		if (await isMemoryGatePending(sessionId, cwd)) {
+			return { cancel: true, reason: memoryGateReason };
+		}
+		return undefined;
+	};
+
+	pi.on("session_before_switch", async (_event, ctx) => maybeBlockBeforeSessionAction(ctx));
+	pi.on("session_before_fork", async (_event, ctx) => maybeBlockBeforeSessionAction(ctx));
+	pi.on("session_before_compact", async (_event, ctx) => maybeBlockBeforeSessionAction(ctx));
 
 	pi.on("agent_end", async (_event, ctx) => {
 		const handled = await maybeHandleMemoryGate(ctx);

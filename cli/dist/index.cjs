@@ -35753,7 +35753,7 @@ var import_os2 = __toESM(require("os"), 1);
 var import_path = __toESM(require("path"), 1);
 var import_fs_extra = __toESM(require_lib2(), 1);
 
-// ../node_modules/conf/dist/source/index.js
+// node_modules/conf/dist/source/index.js
 var import_node_util3 = require("util");
 var import_node_process10 = __toESM(require("process"), 1);
 var import_node_fs3 = __toESM(require("fs"), 1);
@@ -36432,7 +36432,7 @@ function writeFileSync(filePath, data, options = DEFAULT_WRITE_OPTIONS) {
   }
 }
 
-// ../node_modules/conf/dist/source/index.js
+// node_modules/conf/dist/source/index.js
 var import_ajv = __toESM(require_ajv(), 1);
 var import_ajv_formats = __toESM(require_dist2(), 1);
 
@@ -36546,7 +36546,7 @@ var debounceFn = (inputFunction, options = {}) => {
 };
 var debounce_fn_default = debounceFn;
 
-// ../node_modules/conf/dist/source/index.js
+// node_modules/conf/dist/source/index.js
 var import_semver = __toESM(require_semver2(), 1);
 
 // ../node_modules/uint8array-extras/index.js
@@ -36588,7 +36588,7 @@ function stringToUint8Array(string4) {
 }
 var byteToHexLookupTable = Array.from({ length: 256 }, (_, index) => index.toString(16).padStart(2, "0"));
 
-// ../node_modules/conf/dist/source/index.js
+// node_modules/conf/dist/source/index.js
 var Ajv = import_ajv.default.default;
 var ajvFormats = import_ajv_formats.default.default;
 var encryptionAlgorithm = "aes-256-cbc";

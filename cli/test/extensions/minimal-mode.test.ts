@@ -43,6 +43,7 @@ describe("minimal-mode extension", () => {
 			ui: {
 				notify: vi.fn(),
 				setStatus: vi.fn(),
+				setHeader: vi.fn(),
 				theme: {
 					fg: vi.fn((_color: string, text: string) => text),
 					bold: vi.fn((text: string) => text),
@@ -89,16 +90,18 @@ describe("minimal-mode extension", () => {
 		expect(tools["ls"]).toBeDefined();
 	});
 
-	it("starts and clears thinking status across turn lifecycle", async () => {
+	it("starts and clears thinking status/header across turn lifecycle", async () => {
 		minimalModeExtension(pi);
 
 		await emit("turn_start", {});
 		expect(ctx.ui.setStatus).toHaveBeenCalledWith("thinking", "thinking   ");
+		expect(ctx.ui.setHeader).toHaveBeenCalled();
 
 		vi.advanceTimersByTime(240);
 		expect(ctx.ui.setStatus).toHaveBeenCalledWith("thinking", "thinking.  ");
 
 		await emit("turn_end", {});
 		expect(ctx.ui.setStatus).toHaveBeenCalledWith("thinking", undefined);
+		expect(ctx.ui.setHeader).toHaveBeenCalledWith(undefined);
 	});
 });

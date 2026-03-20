@@ -23,6 +23,15 @@ function oneLine(s: string): string {
 	return (s || "").replace(/\s+/g, " ").trim();
 }
 
+function summarize(result: any): { text: string; isError: boolean } {
+	const raw = getTextContent(result);
+	if (!raw) return { text: "done", isError: false };
+	const line = oneLine(raw.split("\n").find((l) => l.trim()) || "");
+	const lower = line.toLowerCase();
+	const isError = lower.includes("error") || lower.includes("failed") || lower.includes("exception");
+	return { text: line.slice(0, 140) || "done", isError };
+}
+
 const toolCache = new Map<string, ReturnType<typeof createBuiltInTools>>();
 function createBuiltInTools(cwd: string) {
 	return {
@@ -56,7 +65,21 @@ export default function (pi: ExtensionAPI) {
 			clearInterval(spinnerTimer);
 			spinnerTimer = null;
 		}
-		if (ctx?.hasUI) ctx.ui.setStatus("thinking", undefined);
+		if (ctx?.hasUI) {
+			ctx.ui.setStatus("thinking", undefined);
+			ctx.ui.setHeader(undefined);
+		}
+	};
+
+	const mountThinkingHeader = (ctx: any) => {
+		if (!ctx?.hasUI) return;
+		ctx.ui.setHeader((_tui: any, theme: any) => ({
+			invalidate() {},
+			render(width: number): string[] {
+				const text = frames[spinnerIndex];
+				return [oneLine(theme.fg("accent", text)).slice(0, width)];
+			},
+		}));
 	};
 
 	const startSpinner = (ctx: any) => {
@@ -64,17 +87,20 @@ export default function (pi: ExtensionAPI) {
 		clearSpinner(ctx);
 		spinnerIndex = 0;
 		ctx.ui.setStatus("thinking", frames[spinnerIndex]);
+		mountThinkingHeader(ctx);
 		spinnerTimer = setInterval(() => {
 			spinnerIndex = (spinnerIndex + 1) % frames.length;
 			ctx.ui.setStatus("thinking", frames[spinnerIndex]);
+			mountThinkingHeader(ctx);
 		}, 220);
 	};
 
 	const renderCollapsedResult = (result: any, theme: any) => {
-		if (minimalEnabled) return new Text("", 0, 0);
-		const text = oneLine(getTextContent(result));
-		if (!text) return new Text("", 0, 0);
-		return new Text(theme.fg("muted", ` → ${text.slice(0, 120)}`), 0, 0);
+		const s = summarize(result);
+		const icon = s.isError ? theme.fg("error", "✗") : theme.fg("success", "✓");
+		const text = s.isError ? theme.fg("error", s.text) : theme.fg("muted", s.text);
+		if (minimalEnabled) return new Text(` ${icon} ${text}`, 0, 0);
+		return new Text(theme.fg("muted", ` → ${s.text}`), 0, 0);
 	};
 
 	const renderExpandedResult = (result: any, theme: any) => {
@@ -94,7 +120,7 @@ export default function (pi: ExtensionAPI) {
 		},
 		renderCall(args, theme) {
 			const cmd = oneLine(args.command || "");
-			return new Text(`${theme.fg("toolTitle", theme.bold("bash"))} ${theme.fg("accent", cmd || "...")}`, 0, 0);
+			return new Text(`${theme.fg("toolTitle", theme.bold("bash"))}(${theme.fg("accent", cmd || "...")})`, 0, 0);
 		},
 		renderResult(result, { expanded }, theme) {
 			return expanded ? renderExpandedResult(result, theme) : renderCollapsedResult(result, theme);
@@ -112,7 +138,7 @@ export default function (pi: ExtensionAPI) {
 			},
 			renderCall(args, theme) {
 				const suffix = oneLine(args.path || args.pattern || "");
-				return new Text(`${theme.fg("toolTitle", theme.bold(name))}${suffix ? ` ${theme.fg("accent", suffix)}` : ""}`, 0, 0);
+				return new Text(`${theme.fg("toolTitle", theme.bold(name))}${suffix ? `(${theme.fg("accent", suffix)})` : ""}`, 0, 0);
 			},
 			renderResult(result, { expanded }, theme) {
 				return expanded ? renderExpandedResult(result, theme) : renderCollapsedResult(result, theme);

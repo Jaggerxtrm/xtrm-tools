@@ -9,13 +9,20 @@ import type { BdCreateResult, BdIssue, IssueType, IssuePriority } from "./types.
 
 export async function runBd(args: string[], cwd: string): Promise<{ stdout: string; stderr: string; code: number }> {
 	return new Promise((resolve) => {
-		const proc = spawn("bd", args, { cwd, shell: true });
-		let stdout = "";
-		let stderr = "";
-		proc.stdout?.on("data", (d) => (stdout += d.toString()));
-		proc.stderr?.on("data", (d) => (stderr += d.toString()));
-		proc.on("close", (code) => resolve({ stdout, stderr, code: code ?? 1 }));
-		proc.on("error", () => resolve({ stdout, stderr, code: 1 }));
+		try {
+			const proc = spawn("bd", args, { cwd, shell: true });
+			let stdout = "";
+			let stderr = "";
+			proc.stdout?.on("data", (d) => (stdout += d.toString()));
+			proc.stderr?.on("data", (d) => (stderr += d.toString()));
+			proc.on("close", (code) => resolve({ stdout, stderr, code: code ?? 1 }));
+			proc.on("error", (err) => {
+				stderr = `Failed to spawn bd: ${err.message}`;
+				resolve({ stdout, stderr, code: 1 });
+			});
+		} catch (err: any) {
+			resolve({ stdout: "", stderr: err.message || "Unknown error", code: 1 });
+		}
 	});
 }
 

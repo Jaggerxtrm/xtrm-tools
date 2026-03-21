@@ -1,8 +1,8 @@
 # XTRM-Tools
 
-> **Claude Code plugin** — workflow enforcement, code quality gates, issue tracking, and development automation.
+> **Dual-runtime workflow system** — Claude Code plugin + Pi extension suite for workflow enforcement, code quality gates, issue tracking, and development automation.
 
-**Version 2.4.0** | [Complete Guide](XTRM-GUIDE.md) | [Changelog](CHANGELOG.md)
+**Version 0.5.10** | [Complete Guide](XTRM-GUIDE.md) | [Changelog](CHANGELOG.md)
 
 ---
 
@@ -13,16 +13,16 @@
 npm install -g github:Jaggerxtrm/xtrm-tools@latest
 
 # Install the plugin
-xtrm install all
+xtrm install
 
 # Verify
 claude plugin list
-# → xtrm-tools@xtrm-tools  Version: 2.4.0  Status: ✔ enabled
+# → xtrm-tools@xtrm-tools  Version: 0.5.10  Status: ✔ enabled
 ```
 
 **One-line run:**
 ```bash
-npx -y github:Jaggerxtrm/xtrm-tools install all
+npx -y github:Jaggerxtrm/xtrm-tools install
 ```
 
 ---
@@ -31,12 +31,13 @@ npx -y github:Jaggerxtrm/xtrm-tools install all
 
 ### Core Enforcement
 
-| Component | Purpose |
-|-----------|---------|
-| **Main Guard** | PR-only workflow — blocks direct commits on `main`/`master` |
-| **Beads Gates** | Issue tracking — edit/commit/stop gates, memory prompts |
-| **Quality Gates** | Auto linting (ESLint, tsc, ruff, mypy) on file edits |
-| **GitNexus** | Knowledge graph context for code exploration |
+| Component | Runtime | Purpose |
+|-----------|---------|---------|
+| **Beads Gates** | both | Issue tracking — edit/commit/stop gates, memory prompts |
+| **Session Flow** | both | Claim sync, stop gate, `xt end` reminder in worktrees |
+| **Quality Gates** | both | Auto linting (ESLint, tsc, ruff, mypy) on file edits |
+| **GitNexus** | Claude | Knowledge graph context for code exploration |
+| **Service Skills** | Pi | Territory-based Docker service skill activation |
 
 ### Skills
 
@@ -76,12 +77,12 @@ Policies are the **single source of truth** for all enforcement rules. Located i
 
 | Policy | Runtime | Purpose |
 |--------|---------|---------|
-| `main-guard.json` | both | PR-only workflow |
+| `session-flow.json` | both | Claim sync, stop gate, `xt end` reminder |
 | `beads.json` | both | Issue tracking gates |
+| `quality-gates.json` | both | Linting/typechecking |
 | `branch-state.json` | claude | Branch context injection |
 | `gitnexus.json` | claude | Knowledge graph enrichment |
 | `serena.json` | claude | Serena LSP workflow reminder |
-| `quality-gates.json` | pi | Linting/typechecking |
 | `service-skills.json` | pi | Territory-based skill activation |
 
 ### Compiler
@@ -101,13 +102,15 @@ xtrm <command> [options]
 
 | Command | Description |
 |---------|-------------|
-| `install all` | Full plugin + beads + gitnexus |
-| `install basic` | Plugin + skills (no beads) |
-| `init` | Initialize current project (alias for `project init`) |
-| `project init` | Initialize project data (bd, gitnexus, service-registry) |
-| `install project <name>` | **Deprecated** — use `xtrm init` instead |
+| `install` | Install plugin + beads + gitnexus (interactive target selection) |
+| `init` | Initialize project data (bd, gitnexus, service-registry) |
 | `status` | Read-only diff view |
 | `clean` | Remove orphaned hooks |
+| `end` | Close worktree session: rebase, push, PR, cleanup |
+| `worktree list` | List all active `xt/*` worktrees |
+| `worktree clean` | Remove worktrees whose branch has been merged |
+| `claude` | Launch Claude Code in a sandboxed worktree |
+| `pi` | Launch Pi in a sandboxed worktree |
 
 ### Flags
 
@@ -126,16 +129,11 @@ xtrm <command> [options]
 | Event | When |
 |-------|------|
 | `SessionStart` | Session begins |
+| `UserPromptSubmit` | After user submits prompt |
 | `PreToolUse` | Before tool invocation |
 | `PostToolUse` | After tool completes |
 | `Stop` | Session ends |
 | `PreCompact` | Before compaction |
-
-### Main Guard
-
-- Blocks `git commit`/`push` on protected branches
-- Blocks direct file edits on `main`/`master`
-- Post-push reminder: `gh pr merge --squash`
 
 ### Beads Gates
 
@@ -158,7 +156,7 @@ Configured in `.mcp.json` (xtrm-managed only):
 | `github-grep` | Code search |
 | `deepwiki` | DeepWiki docs search |
 
-Official Claude plugins are installed during `xtrm install all`:
+Official Claude plugins are installed during `xtrm install`:
 - `serena@claude-plugins-official`
 - `context7@claude-plugins-official`
 - `github@claude-plugins-official`
@@ -188,11 +186,11 @@ bd close <id> --reason "Done"  # Close when done
 
 | Version | Date | Highlights |
 |---------|------|------------|
-| 2.4.0 | 2026-03-18 | Global-first architecture: quality gates + service skills as global hooks/skills, xtrm init project detection, guard-rules centralization, Pi drift checks |
-| 2.3.0 | 2026-03-17 | Plugin structure, policy compiler, Pi extension parity |
-| 2.2.0 | 2026-03-17 | Pi extensions: quality-gates, beads, main-guard |
-| 2.0.0 | 2026-03-12 | CLI rebrand, project skills engine |
-| 1.7.0 | 2026-02-25 | GitNexus integration |
+| 0.5.10 | 2026-03-21 | Install cleanup: removes stale `~/.claude/hooks/` + `~/.claude/skills/`; Qwen/Gemini dead code removed |
+| 0.5.9 | 2026-03-20 | Worktrees moved inside repo under `.xtrm/worktrees/` |
+| 0.5.8 | 2026-03-20 | session-flow rewrite: claim sync, stop gate, `xt end` reminder |
+| 0.5.7 | 2026-03-20 | Dead hooks removed; dead CLI removed (`finish.ts`, `session-state.ts`) |
+| 0.5.6 | 2026-03-20 | `xt` CLI commands; plugin-only delivery for Claude; deprecated `xtrm finish` |
 
 ---
 

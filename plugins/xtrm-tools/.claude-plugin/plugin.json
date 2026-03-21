@@ -1,7 +1,7 @@
 {
   "name": "xtrm-tools",
-  "version": "2.3.0",
-  "description": "xtrm-tools: workflow enforcement hooks, skills, and MCP servers for Claude Code",
+  "version": "0.5.10",
+  "description": "xtrm-tools: dual-runtime workflow enforcement (Claude Code + Pi) — hooks, extensions, skills, and MCP servers",
   "author": {
     "name": "jaggers"
   },

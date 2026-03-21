@@ -1,6 +1,8 @@
 import kleur from 'kleur';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { homedir } from 'node:os';
 
 export interface WorktreeSessionOptions {
     runtime: 'claude' | 'pi';
@@ -79,6 +81,19 @@ export async function launchWorktreeSession(opts: WorktreeSessionOptions): Promi
     }
 
     console.log(kleur.green(`\n  ✓ Worktree ready — launching ${runtime}...\n`));
+
+    // Inject statusLine config for claude worktree sessions
+    if (runtime === 'claude') {
+        const statuslineScript = path.join(homedir(), '.claude', 'hooks', 'statusline.mjs');
+        const claudeDir = path.join(worktreePath, '.claude');
+        const localSettingsPath = path.join(claudeDir, 'settings.local.json');
+        try {
+            mkdirSync(claudeDir, { recursive: true });
+            writeFileSync(localSettingsPath, JSON.stringify({
+                statusLine: { type: 'command', command: `node ${statuslineScript}`, padding: 1 },
+            }, null, 2));
+        } catch { /* non-fatal — statusline is cosmetic */ }
+    }
 
     // Launch the runtime in the worktree
     const runtimeCmd = runtime === 'claude' ? 'claude' : 'pi';

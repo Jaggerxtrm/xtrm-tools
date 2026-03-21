@@ -13503,7 +13503,7 @@ var require_jsonfile = __commonJS({
       await universalify.fromCallback(fs21.writeFile)(file2, str, options);
     }
     var writeFile = universalify.fromPromise(_writeFile);
-    function writeFileSync2(file2, obj, options = {}) {
+    function writeFileSync3(file2, obj, options = {}) {
       const fs21 = options.fs || _fs;
       const str = stringify2(obj, options);
       return fs21.writeFileSync(file2, str, options);
@@ -13512,7 +13512,7 @@ var require_jsonfile = __commonJS({
       readFile,
       readFileSync: readFileSync2,
       writeFile,
-      writeFileSync: writeFileSync2
+      writeFileSync: writeFileSync3
     };
   }
 });
@@ -33827,7 +33827,7 @@ var init_boxen = __esm({
 });
 
 // src/index.ts
-var import_node_fs4 = require("fs");
+var import_node_fs5 = require("fs");
 var import_node_path6 = require("path");
 
 // ../node_modules/commander/esm.mjs
@@ -41286,6 +41286,8 @@ var import_node_child_process3 = require("child_process");
 // src/utils/worktree-session.ts
 var import_node_path5 = __toESM(require("path"), 1);
 var import_node_child_process2 = require("child_process");
+var import_node_fs4 = require("fs");
+var import_node_os5 = require("os");
 function randomSlug(len = 4) {
   return Math.random().toString(36).slice(2, 2 + len);
 }
@@ -41339,6 +41341,18 @@ async function launchWorktreeSession(opts) {
   console.log(kleur_default.green(`
   \u2713 Worktree ready \u2014 launching ${runtime}...
 `));
+  if (runtime === "claude") {
+    const statuslineScript = import_node_path5.default.join((0, import_node_os5.homedir)(), ".claude", "hooks", "statusline.mjs");
+    const claudeDir = import_node_path5.default.join(worktreePath, ".claude");
+    const localSettingsPath = import_node_path5.default.join(claudeDir, "settings.local.json");
+    try {
+      (0, import_node_fs4.mkdirSync)(claudeDir, { recursive: true });
+      (0, import_node_fs4.writeFileSync)(localSettingsPath, JSON.stringify({
+        statusLine: { type: "command", command: `node ${statuslineScript}`, padding: 1 }
+      }, null, 2));
+    } catch {
+    }
+  }
   const runtimeCmd = runtime === "claude" ? "claude" : "pi";
   const runtimeArgs = runtime === "claude" ? ["--dangerously-skip-permissions"] : [];
   const launchResult = (0, import_node_child_process2.spawnSync)(runtimeCmd, runtimeArgs, {
@@ -41436,7 +41450,7 @@ function createClaudeCommand() {
 // src/commands/pi.ts
 var import_path13 = __toESM(require("path"), 1);
 var import_node_child_process5 = require("child_process");
-var import_node_os6 = require("os");
+var import_node_os7 = require("os");
 var import_fs_extra13 = __toESM(require_lib2(), 1);
 
 // src/commands/install-pi.ts
@@ -41444,8 +41458,8 @@ var import_prompts2 = __toESM(require_prompts3(), 1);
 var import_fs_extra12 = __toESM(require_lib2(), 1);
 var import_path12 = __toESM(require("path"), 1);
 var import_node_child_process4 = require("child_process");
-var import_node_os5 = require("os");
-var PI_AGENT_DIR2 = process.env.PI_AGENT_DIR || import_path12.default.join((0, import_node_os5.homedir)(), ".pi", "agent");
+var import_node_os6 = require("os");
+var PI_AGENT_DIR2 = process.env.PI_AGENT_DIR || import_path12.default.join((0, import_node_os6.homedir)(), ".pi", "agent");
 function fillTemplate(template, values) {
   return template.replace(/\{\{(\w+)\}\}/g, (_, key) => values[key] ?? "");
 }
@@ -41644,7 +41658,7 @@ function createInstallPiCommand() {
 }
 
 // src/commands/pi.ts
-var PI_AGENT_DIR3 = process.env.PI_AGENT_DIR || import_path13.default.join((0, import_node_os6.homedir)(), ".pi", "agent");
+var PI_AGENT_DIR3 = process.env.PI_AGENT_DIR || import_path13.default.join((0, import_node_os7.homedir)(), ".pi", "agent");
 function createPiCommand() {
   const cmd = new Command("pi").description("Launch a Pi session in a sandboxed worktree, or manage the Pi runtime").argument("[name]", "Optional session name \u2014 used as xt/<name> branch (random if omitted)").action(async (name) => {
     await launchWorktreeSession({ runtime: "pi", name });
@@ -56918,7 +56932,7 @@ async function printBanner(version3) {
 // src/index.ts
 var version2 = "0.0.0";
 try {
-  version2 = JSON.parse((0, import_node_fs4.readFileSync)((0, import_node_path6.resolve)(__dirname, "../package.json"), "utf8")).version;
+  version2 = JSON.parse((0, import_node_fs5.readFileSync)((0, import_node_path6.resolve)(__dirname, "../package.json"), "utf8")).version;
 } catch {
 }
 var program2 = new Command();

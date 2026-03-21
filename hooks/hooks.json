@@ -14,6 +14,11 @@
           },
           {
             "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/quality-check-env.mjs",
+            "timeout": 5000
+          },
+          {
+            "type": "command",
             "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/serena-workflow-reminder.py"
           }
         ]

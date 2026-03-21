@@ -109,17 +109,6 @@
           }
         ]
       }
-    ],
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/branch-state.mjs",
-            "timeout": 3000
-          }
-        ]
-      }
     ]
   }
 }

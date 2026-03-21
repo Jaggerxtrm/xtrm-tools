@@ -40962,6 +40962,14 @@ function isDoltInstalled() {
     return false;
   }
 }
+function isDeepwikiInstalled() {
+  try {
+    (0, import_child_process2.execSync)("deepwiki --version", { stdio: "ignore" });
+    return true;
+  } catch {
+    return false;
+  }
+}
 async function needsSettingsSync(repoRoot, target) {
   const normalizedTarget = target.replace(/\\/g, "/").toLowerCase();
   if (normalizedTarget.includes(".agents/skills")) return false;
@@ -41193,6 +41201,31 @@ function createInstallCommand() {
           console.log("");
         } else {
           console.log(t.muted("  \u2139 Skipped. Re-run after installing beads+dolt.\n"));
+        }
+      }
+    }
+    if (!backport) {
+      console.log(t.bold("\n  \u2699  deepwiki  (AI-powered repo documentation)"));
+      const deepwikiOk = isDeepwikiInstalled();
+      if (deepwikiOk) {
+        console.log(t.success("  \u2713 deepwiki already installed\n"));
+      } else {
+        let doInstall = effectiveYes;
+        if (!effectiveYes) {
+          const { install } = await (0, import_prompts.default)({
+            type: "confirm",
+            name: "install",
+            message: "Install @seflless/deepwiki?",
+            initial: true
+          });
+          doInstall = install;
+        }
+        if (doInstall) {
+          console.log(t.muted("\n  Installing @seflless/deepwiki..."));
+          (0, import_child_process3.spawnSync)("npm", ["install", "-g", "@seflless/deepwiki"], { stdio: "inherit" });
+          console.log(t.success("  \u2713 deepwiki installed\n"));
+        } else {
+          console.log(t.muted("  \u2139 Skipped.\n"));
         }
       }
     }

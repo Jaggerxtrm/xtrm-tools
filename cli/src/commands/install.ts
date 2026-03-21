@@ -120,6 +120,15 @@ function isGitnexusInstalled(): boolean {
     }
 }
 
+function isDeepwikiInstalled(): boolean {
+    try {
+        execSync('deepwiki --version', { stdio: 'ignore' });
+        return true;
+    } catch {
+        return false;
+    }
+}
+
 async function needsSettingsSync(repoRoot: string, target: string): Promise<boolean> {
     const normalizedTarget = target.replace(/\\/g, '/').toLowerCase();
     if (normalizedTarget.includes('.agents/skills')) return false;
@@ -417,6 +426,36 @@ export function createInstallCommand(): Command {
                         console.log('');
                     } else {
                         console.log(t.muted('  ℹ Skipped. Re-run after installing beads+dolt.\n'));
+                    }
+                }
+            }
+
+            // deepwiki CLI
+            if (!backport) {
+                console.log(t.bold('\n  ⚙  deepwiki  (AI-powered repo documentation)'));
+
+                const deepwikiOk = isDeepwikiInstalled();
+
+                if (deepwikiOk) {
+                    console.log(t.success('  ✓ deepwiki already installed\n'));
+                } else {
+                    let doInstall = effectiveYes;
+                    if (!effectiveYes) {
+                        const { install } = await prompts({
+                            type: 'confirm',
+                            name: 'install',
+                            message: 'Install @seflless/deepwiki?',
+                            initial: true,
+                        });
+                        doInstall = install;
+                    }
+
+                    if (doInstall) {
+                        console.log(t.muted('\n  Installing @seflless/deepwiki...'));
+                        spawnSync('npm', ['install', '-g', '@seflless/deepwiki'], { stdio: 'inherit' });
+                        console.log(t.success('  ✓ deepwiki installed\n'));
+                    } else {
+                        console.log(t.muted('  ℹ Skipped.\n'));
                     }
                 }
             }

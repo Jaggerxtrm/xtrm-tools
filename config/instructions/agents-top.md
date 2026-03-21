@@ -75,10 +75,7 @@ git checkout -b feature/<issue-id>-<slug>   # or fix/... chore/...
 bd update <id> --claim                       # claim before any edit
 # ... write code ...
 bd close <id> --reason="..."                 # closes issue + auto-commits
-git push -u origin feature/<name>
-gh pr create --fill && gh pr merge --squash
-git checkout main && git pull --ff-only
-git branch -d <branch> && git push origin --delete <branch>
+xt end                                       # push, PR, merge, worktree cleanup
 ```
 
 **Never** continue new work on a previously used branch.

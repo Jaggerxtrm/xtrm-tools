@@ -76,7 +76,7 @@ get_symbols_overview("hooks/init.ts")                           # map file
 find_symbol("parseComposeServices", include_body=True)          # read just this
 replace_symbol_body("parseComposeServices", newBody)            # Serena edit
 bd close bd-xyz --reason="Fix YAML parse edge case"            # close + auto-commit
-git push -u origin feature/bd-xyz-fix && gh pr create --fill
+xt end                                                         # push, PR, merge, cleanup
 ```
 
 **Exploring unfamiliar code:**

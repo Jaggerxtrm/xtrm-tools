@@ -150,7 +150,6 @@ function main() {
         kind: 'bd.claimed',
         outcome: 'allow',
         issueId,
-        message: `Session ${sessionId} claimed issue ${issueId}`,
       });
 
       process.stdout.write(JSON.stringify({
@@ -191,7 +190,6 @@ function main() {
         kind: 'bd.closed',
         outcome: 'allow',
         issueId: closedIssueId,
-        message: `Issue ${closedIssueId} closed`,
       });
     }
     if (commit) {
@@ -203,7 +201,7 @@ function main() {
         kind: 'bd.committed',
         outcome: commit.ok ? 'allow' : 'block',
         issueId: closedIssueId ?? null,
-        message: commit.message,
+        data: { msg: commit.message },
         extra: { ok: commit.ok },
       });
     }

@@ -36342,14 +36342,14 @@ var Temp = {
     }
   },
   truncate: (filePath) => {
-    const basename = import_node_path2.default.basename(filePath);
-    if (basename.length <= LIMIT_BASENAME_LENGTH)
+    const basename2 = import_node_path2.default.basename(filePath);
+    if (basename2.length <= LIMIT_BASENAME_LENGTH)
       return filePath;
-    const truncable = /^(\.?)(.*?)((?:\.[^.]+)?(?:\.tmp-\d{10}[a-f0-9]{6})?)$/.exec(basename);
+    const truncable = /^(\.?)(.*?)((?:\.[^.]+)?(?:\.tmp-\d{10}[a-f0-9]{6})?)$/.exec(basename2);
     if (!truncable)
       return filePath;
-    const truncationLength = basename.length - LIMIT_BASENAME_LENGTH;
-    return `${filePath.slice(0, -basename.length)}${truncable[1]}${truncable[2].slice(0, -truncationLength)}${truncable[3]}`;
+    const truncationLength = basename2.length - LIMIT_BASENAME_LENGTH;
+    return `${filePath.slice(0, -basename2.length)}${truncable[1]}${truncable[2].slice(0, -truncationLength)}${truncable[3]}`;
   }
 };
 node_default(Temp.purgeSyncAll);
@@ -56906,7 +56906,7 @@ var import_node_fs5 = require("fs");
 var import_node_path6 = require("path");
 var KIND_LABELS = {
   "session.start": { label: "SESS+", color: kleur_default.green },
-  "session.end": { label: "SESS-", color: kleur_default.dim },
+  "session.end": { label: "SESS-", color: kleur_default.white },
   "gate.edit.allow": { label: "EDIT+", color: kleur_default.green },
   "gate.edit.block": { label: "EDIT-", color: kleur_default.red },
   "gate.commit.allow": { label: "CMIT+", color: kleur_default.green },
@@ -57002,16 +57002,15 @@ function buildDetail(event) {
     }
   }
   if (event.kind === "tool.call") {
-    if (d?.cmd) parts.push(kleur_default.dim(d.cmd.slice(0, 60)));
-    if (d?.file) parts.push(kleur_default.dim(d.file));
+    if (d?.cmd) parts.push(kleur_default.dim(d.cmd.slice(0, 72)));
+    if (d?.file) parts.push(kleur_default.dim((0, import_node_path6.basename)(d.file)));
     if (d?.pattern) parts.push(kleur_default.dim(`/${d.pattern}/`));
-    if (d?.url) parts.push(kleur_default.dim(d.url.slice(0, 60)));
-    if (d?.query) parts.push(kleur_default.dim(d.query.slice(0, 60)));
-    if (d?.prompt) parts.push(kleur_default.dim(d.prompt.slice(0, 60)));
+    if (d?.url) parts.push(kleur_default.dim(d.url.slice(0, 72)));
+    if (d?.query) parts.push(kleur_default.dim(d.query.slice(0, 72)));
+    if (d?.prompt) parts.push(kleur_default.dim(d.prompt.slice(0, 72)));
   } else {
     if (event.issue_id) parts.push(kleur_default.yellow(event.issue_id));
-    if (d?.file) parts.push(kleur_default.dim(d.file));
-    if (d?.msg) parts.push(kleur_default.dim(d.msg.slice(0, 60)));
+    if (d?.file) parts.push(kleur_default.dim((0, import_node_path6.basename)(d.file)));
     if (d?.reason_code) parts.push(kleur_default.dim(`[${d.reason_code}]`));
     if (event.worktree) parts.push(kleur_default.dim(`wt:${event.worktree}`));
   }
@@ -57023,13 +57022,7 @@ function formatLine(event, colorMap) {
   const session = colorFn(event.session_id.slice(0, 8));
   const label = getLabel(event);
   const detail = buildDetail(event);
-  return `${time3}  ${session}  ${label}  ${detail}`;
-}
-function printHeader() {
-  console.log(
-    `  ${kleur_default.dim("TIME      ")}  ${kleur_default.dim("SESSION ")}  ${kleur_default.dim("LABEL")}  ${kleur_default.dim("DETAIL")}`
-  );
-  console.log(`  ${kleur_default.dim("\u2500".repeat(72))}`);
+  return `${time3} ${label} ${session}  ${detail}`;
 }
 function findDbPath(cwd) {
   let dir = cwd;
@@ -57073,13 +57066,9 @@ function follow(dbPath, opts) {
   const initial = queryEvents(dbPath, buildWhere(opts, `ts >= ${sinceTs}`), 200);
   const colorMap = buildColorMap(initial);
   let lastId = 0;
-  if (initial.length > 0) {
-    for (const ev of initial) {
-      if (ev.id > lastId) lastId = ev.id;
-      opts.json ? console.log(JSON.stringify(ev)) : console.log("  " + formatLine(ev, colorMap));
-    }
-  } else if (!opts.json) {
-    console.log(kleur_default.dim("  (no recent events \u2014 waiting for new ones)\n"));
+  for (const ev of initial) {
+    if (ev.id > lastId) lastId = ev.id;
+    opts.json ? console.log(JSON.stringify(ev)) : console.log(formatLine(ev, colorMap));
   }
   const interval = setInterval(() => {
     const events = queryEvents(dbPath, buildWhere(opts, `id > ${lastId}`), 50);
@@ -57087,13 +57076,12 @@ function follow(dbPath, opts) {
       extendColorMap(colorMap, events);
       for (const ev of events) {
         if (ev.id > lastId) lastId = ev.id;
-        opts.json ? console.log(JSON.stringify(ev)) : console.log("  " + formatLine(ev, colorMap));
+        opts.json ? console.log(JSON.stringify(ev)) : console.log(formatLine(ev, colorMap));
       }
     }
   }, 2e3);
   process.on("SIGINT", () => {
     clearInterval(interval);
-    if (!opts.json) console.log(kleur_default.dim("\n  stopped\n"));
     process.exit(0);
   });
 }
@@ -57101,29 +57089,12 @@ function createDebugCommand() {
   return new Command("debug").description("Watch xtrm events: tool calls, gate decisions, bd lifecycle").option("-f, --follow", "Follow new events (default)", false).option("--all", "Show full history and exit", false).option("--session <id>", "Filter by session ID (prefix match)").option("--type <domain>", "Filter by domain: tool | gate | bd | session").option("--json", "Output raw JSON lines", false).action((opts) => {
     const cwd = process.cwd();
     const dbPath = findDbPath(cwd);
-    if (!dbPath || !(0, import_node_fs5.existsSync)(dbPath)) {
-      if (!opts.json) {
-        console.log(kleur_default.bold("\n  xtrm event log"));
-        console.log(kleur_default.dim("  No events yet \u2014 DB initializes on first hook fire.\n"));
-        console.log(kleur_default.dim("  Run from inside an xtrm project with beads initialized.\n"));
-      }
-      return;
-    }
-    if (!opts.json) {
-      console.log(kleur_default.bold("\n  xtrm event log"));
-      console.log(kleur_default.dim(opts.all ? "  Full history\n" : "  Following \u2014 Ctrl+C to stop\n"));
-      printHeader();
-    }
+    if (!dbPath || !(0, import_node_fs5.existsSync)(dbPath)) return;
     if (opts.all) {
       const events = queryEvents(dbPath, buildWhere(opts, ""), 1e3);
-      if (events.length === 0) {
-        if (!opts.json) console.log(kleur_default.dim("\n  No events recorded yet.\n"));
-      } else {
-        const colorMap = buildColorMap(events);
-        for (const ev of events) {
-          opts.json ? console.log(JSON.stringify(ev)) : console.log("  " + formatLine(ev, colorMap));
-        }
-        if (!opts.json) console.log("");
+      const colorMap = buildColorMap(events);
+      for (const ev of events) {
+        opts.json ? console.log(JSON.stringify(ev)) : console.log(formatLine(ev, colorMap));
       }
       return;
     }
@@ -57350,8 +57321,9 @@ process.on("unhandledRejection", (reason) => {
   process.exit(1);
 });
 var isHelpOrVersion = process.argv.some((a) => a === "--help" || a === "-h" || a === "--version" || a === "-V");
+var isViewerCommand = ["debug", "status"].includes(process.argv[2] ?? "");
 (async () => {
-  if (!isHelpOrVersion) {
+  if (!isHelpOrVersion && !isViewerCommand) {
     await printBanner(version2);
   }
   program2.parseAsync(process.argv);

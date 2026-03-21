@@ -78,11 +78,12 @@ process.on('unhandledRejection', (reason) => {
     process.exit(1);
 });
 
-// Show startup banner unless --help or --version flag is present
+// Suppress banner for help/version flags and for viewer commands (debug, status)
 const isHelpOrVersion = process.argv.some(a => a === '--help' || a === '-h' || a === '--version' || a === '-V');
+const isViewerCommand = ['debug', 'status'].includes(process.argv[2] ?? '');
 
 (async () => {
-    if (!isHelpOrVersion) {
+    if (!isHelpOrVersion && !isViewerCommand) {
         await printBanner(version);
     }
     program.parseAsync(process.argv);

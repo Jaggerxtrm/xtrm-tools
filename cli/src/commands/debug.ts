@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import kleur from 'kleur';
 import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, basename } from 'node:path';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -35,7 +35,7 @@ type ColorFn = (s: string) => string;
 // Gate and lifecycle events: fixed 5-char label + fixed color
 const KIND_LABELS: Record<string, { label: string; color: ColorFn }> = {
   'session.start':         { label: 'SESS+', color: kleur.green  },
-  'session.end':           { label: 'SESS-', color: kleur.dim    },
+  'session.end':           { label: 'SESS-', color: kleur.white  },
   'gate.edit.allow':       { label: 'EDIT+', color: kleur.green  },
   'gate.edit.block':       { label: 'EDIT-', color: kleur.red    },
   'gate.commit.allow':     { label: 'CMIT+', color: kleur.green  },
@@ -131,18 +131,17 @@ function buildDetail(event: XtrmEvent): string {
   }
 
   if (event.kind === 'tool.call') {
-    if (d?.cmd)   parts.push(kleur.dim(d.cmd.slice(0, 60)));
-    if (d?.file)  parts.push(kleur.dim(d.file));
+    if (d?.cmd)     parts.push(kleur.dim(d.cmd.slice(0, 72)));
+    if (d?.file)    parts.push(kleur.dim(basename(d.file)));
     if (d?.pattern) parts.push(kleur.dim(`/${d.pattern}/`));
-    if (d?.url)   parts.push(kleur.dim(d.url.slice(0, 60)));
-    if (d?.query) parts.push(kleur.dim(d.query.slice(0, 60)));
-    if (d?.prompt) parts.push(kleur.dim(d.prompt.slice(0, 60)));
+    if (d?.url)     parts.push(kleur.dim(d.url.slice(0, 72)));
+    if (d?.query)   parts.push(kleur.dim(d.query.slice(0, 72)));
+    if (d?.prompt)  parts.push(kleur.dim(d.prompt.slice(0, 72)));
   } else {
-    if (event.issue_id) parts.push(kleur.yellow(event.issue_id));
-    if (d?.file)        parts.push(kleur.dim(d.file));
-    if (d?.msg)         parts.push(kleur.dim(d.msg.slice(0, 60)));
-    if (d?.reason_code) parts.push(kleur.dim(`[${d.reason_code}]`));
-    if (event.worktree) parts.push(kleur.dim(`wt:${event.worktree}`));
+    if (event.issue_id)  parts.push(kleur.yellow(event.issue_id));
+    if (d?.file)         parts.push(kleur.dim(basename(d.file)));
+    if (d?.reason_code)  parts.push(kleur.dim(`[${d.reason_code}]`));
+    if (event.worktree)  parts.push(kleur.dim(`wt:${event.worktree}`));
   }
 
   return parts.join('  ') || kleur.dim('—');
@@ -154,14 +153,7 @@ function formatLine(event: XtrmEvent, colorMap: Map<string, ColorFn>): string {
   const session = colorFn(event.session_id.slice(0, 8));
   const label   = getLabel(event);
   const detail  = buildDetail(event);
-  return `${time}  ${session}  ${label}  ${detail}`;
-}
-
-function printHeader(): void {
-  console.log(
-    `  ${kleur.dim('TIME      ')}  ${kleur.dim('SESSION ')}  ${kleur.dim('LABEL')}  ${kleur.dim('DETAIL')}`
-  );
-  console.log(`  ${kleur.dim('─'.repeat(72))}`);
+  return `${time} ${label} ${session}  ${detail}`;
 }
 
 // ── SQLite queries ────────────────────────────────────────────────────────────
@@ -213,13 +205,9 @@ function follow(dbPath: string, opts: DebugOptions): void {
   const colorMap = buildColorMap(initial);
   let lastId = 0;
 
-  if (initial.length > 0) {
-    for (const ev of initial) {
-      if (ev.id > lastId) lastId = ev.id;
-      opts.json ? console.log(JSON.stringify(ev)) : console.log('  ' + formatLine(ev, colorMap));
-    }
-  } else if (!opts.json) {
-    console.log(kleur.dim('  (no recent events — waiting for new ones)\n'));
+  for (const ev of initial) {
+    if (ev.id > lastId) lastId = ev.id;
+    opts.json ? console.log(JSON.stringify(ev)) : console.log(formatLine(ev, colorMap));
   }
 
   // Poll every 2s — clean integer comparison, no datetime overlap needed
@@ -229,16 +217,12 @@ function follow(dbPath: string, opts: DebugOptions): void {
       extendColorMap(colorMap, events);
       for (const ev of events) {
         if (ev.id > lastId) lastId = ev.id;
-        opts.json ? console.log(JSON.stringify(ev)) : console.log('  ' + formatLine(ev, colorMap));
+        opts.json ? console.log(JSON.stringify(ev)) : console.log(formatLine(ev, colorMap));
       }
     }
   }, 2000);
 
-  process.on('SIGINT', () => {
-    clearInterval(interval);
-    if (!opts.json) console.log(kleur.dim('\n  stopped\n'));
-    process.exit(0);
-  });
+  process.on('SIGINT', () => { clearInterval(interval); process.exit(0); });
 }
 
 // ── Command ───────────────────────────────────────────────────────────────────
@@ -255,31 +239,13 @@ export function createDebugCommand(): Command {
       const cwd    = process.cwd();
       const dbPath = findDbPath(cwd);
 
-      if (!dbPath || !existsSync(dbPath)) {
-        if (!opts.json) {
-          console.log(kleur.bold('\n  xtrm event log'));
-          console.log(kleur.dim('  No events yet — DB initializes on first hook fire.\n'));
-          console.log(kleur.dim('  Run from inside an xtrm project with beads initialized.\n'));
-        }
-        return;
-      }
-
-      if (!opts.json) {
-        console.log(kleur.bold('\n  xtrm event log'));
-        console.log(kleur.dim(opts.all ? '  Full history\n' : '  Following — Ctrl+C to stop\n'));
-        printHeader();
-      }
+      if (!dbPath || !existsSync(dbPath)) return;
 
       if (opts.all) {
         const events = queryEvents(dbPath, buildWhere(opts, ''), 1000);
-        if (events.length === 0) {
-          if (!opts.json) console.log(kleur.dim('\n  No events recorded yet.\n'));
-        } else {
-          const colorMap = buildColorMap(events);
-          for (const ev of events) {
-            opts.json ? console.log(JSON.stringify(ev)) : console.log('  ' + formatLine(ev, colorMap));
-          }
-          if (!opts.json) console.log('');
+        const colorMap = buildColorMap(events);
+        for (const ev of events) {
+          opts.json ? console.log(JSON.stringify(ev)) : console.log(formatLine(ev, colorMap));
         }
         return;
       }

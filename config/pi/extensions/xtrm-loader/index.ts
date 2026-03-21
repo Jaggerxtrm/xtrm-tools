@@ -1,6 +1,7 @@
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { homedir } from "node:os";
 import { Logger } from "../core/lib";
 
 const logger = new Logger({ namespace: "xtrm-loader" });
@@ -24,12 +25,36 @@ function findMarkdownFiles(dir: string, basePath: string = ""): string[] {
 	return results;
 }
 
+// Path to global xtrm skills
+const GLOBAL_SKILLS_DIR = path.join(homedir(), ".agents", "skills");
+
+/**
+ * Load a skill file, stripping YAML frontmatter.
+ */
+function loadSkillContent(skillPath: string): string | null {
+	try {
+		const content = fs.readFileSync(skillPath, "utf8");
+		// Strip YAML frontmatter (--- ... ---)
+		return content.replace(/^---\n[\s\S]*?\n---\n/, "").trim();
+	} catch {
+		return null;
+	}
+}
+
 export default function (pi: ExtensionAPI) {
 	let projectContext: string = "";
+	let usingXtrmContent: string | null = null;
 
 	pi.on("session_start", async (_event, ctx) => {
 		const cwd = ctx.cwd;
 		const contextParts: string[] = [];
+
+		// 0. Load using-xtrm skill (global)
+		const usingXtrmPath = path.join(GLOBAL_SKILLS_DIR, "using-xtrm", "SKILL.md");
+		usingXtrmContent = loadSkillContent(usingXtrmPath);
+		if (usingXtrmContent && ctx.hasUI) {
+			logger.info("Loaded using-xtrm skill from global skills directory");
+		}
 
 		// 1. Architecture & Roadmap
 		const roadmapPaths = [
@@ -80,10 +105,22 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	pi.on("before_agent_start", async (event) => {
-		if (!projectContext) return undefined;
+		const parts: string[] = [];
+		
+		// Prepend using-xtrm skill (session operating manual)
+		if (usingXtrmContent) {
+			parts.push("# XTRM Session Operating Manual\n\n" + usingXtrmContent);
+		}
+		
+		// Append project context
+		if (projectContext) {
+			parts.push("# Project Intelligence Context\n\n" + projectContext);
+		}
+		
+		if (parts.length === 0) return undefined;
 
 		return {
-			systemPrompt: event.systemPrompt + "\n\n# Project Intelligence Context\n\n" + projectContext
+			systemPrompt: event.systemPrompt + "\n\n" + parts.join("\n\n---\n\n")
 		};
 	});
 }

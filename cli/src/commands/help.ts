@@ -7,21 +7,18 @@ import { findRepoRoot } from '../utils/repo-root.js';
 declare const __dirname: string;
 
 const HOOK_CATALOG: Array<{ file: string; event: string; desc: string; beads?: true; sessionFlow?: true }> = [
-    { file: 'main-guard.mjs',               event: 'PreToolUse',       desc: 'Blocks direct edits / unsafe Bash on protected branches' },
-    { file: 'main-guard-post-push.mjs',     event: 'PostToolUse',      desc: 'After feature-branch push, reminds PR/merge/sync steps' },
     { file: 'serena-workflow-reminder.py',  event: 'SessionStart',     desc: 'Injects Serena semantic editing workflow reminder' },
     { file: 'gitnexus/gitnexus-hook.cjs',   event: 'PostToolUse',      desc: 'Adds GitNexus context for search and Serena tooling' },
-    { file: 'agent_context.py',             event: 'Support module',   desc: 'Shared hook I/O helper used by Python hook scripts' },
-    { file: 'beads-edit-gate.mjs',          event: 'PreToolUse',       desc: 'Blocks file edits if no beads issue is claimed',      beads: true },
-    { file: 'beads-commit-gate.mjs',        event: 'PreToolUse',       desc: 'Blocks commits when no beads issue is in progress',   beads: true },
-    { file: 'beads-memory-gate.mjs',        event: 'Stop',             desc: 'Prompts memory save when claim was closed',           beads: true },
-    { file: 'beads-compact-save.mjs',       event: 'PreCompact',       desc: 'Saves in_progress issue + session-state bundle',      beads: true },
-    { file: 'beads-compact-restore.mjs',    event: 'SessionStart',     desc: 'Restores compacted issue + session-state bundle',     beads: true },
-    { file: 'beads-claim-sync.mjs',         event: 'PostToolUse',      desc: 'Auto-claim sync + worktree/session-state bootstrap',  sessionFlow: true },
-    { file: 'beads-stop-gate.mjs',          event: 'Stop',             desc: 'Blocks stop for waiting-merge/conflicting/pending-cleanup', sessionFlow: true },
     { file: 'branch-state.mjs',             event: 'UserPromptSubmit', desc: 'Injects current git branch into prompt context' },
     { file: 'quality-check.cjs',            event: 'PostToolUse',      desc: 'Runs JS/TS quality checks on mutating edits' },
     { file: 'quality-check.py',             event: 'PostToolUse',      desc: 'Runs Python quality checks on mutating edits' },
+    { file: 'beads-edit-gate.mjs',          event: 'PreToolUse',       desc: 'Blocks file edits if no beads issue is claimed',           beads: true },
+    { file: 'beads-commit-gate.mjs',        event: 'PreToolUse',       desc: 'Blocks commits when no beads issue is in progress',        beads: true },
+    { file: 'beads-stop-gate.mjs',          event: 'Stop',             desc: 'Blocks stop when there is an unclosed in_progress claim',  beads: true },
+    { file: 'beads-memory-gate.mjs',        event: 'Stop',             desc: 'Prompts memory save when claim was closed this session',   beads: true },
+    { file: 'beads-compact-save.mjs',       event: 'PreCompact',       desc: 'Saves claim state across /compact',                        beads: true },
+    { file: 'beads-compact-restore.mjs',    event: 'SessionStart',     desc: 'Restores claim state after /compact',                      beads: true },
+    { file: 'beads-claim-sync.mjs',         event: 'PostToolUse',      desc: 'Notifies on bd update --claim; auto-commits on bd close',  sessionFlow: true },
 ];
 
 async function readSkillsFromDir(dir: string): Promise<Array<{ name: string; desc: string }>> {
@@ -128,7 +125,7 @@ export function createHelpCommand(): Command {
                 `  ${kleur.dim('beads gate hooks (xtrm install all -- require beads+dolt):')}`,
                 hookRows(beads),
                 '',
-                `  ${kleur.dim('session-flow hooks (xtrm finish lifecycle):')}`,
+                `  ${kleur.dim('session-flow hooks:')}`,
                 hookRows(sessionFlow),
             ].join('\n');
 
@@ -159,10 +156,14 @@ export function createHelpCommand(): Command {
             const otherSection = [
                 section('OTHER COMMANDS'),
                 '',
-                `  ${kleur.bold('xtrm status')}    ${kleur.dim('Show pending changes without applying them')}`,
-                `  ${kleur.bold('xtrm finish')}    ${kleur.dim('Run blocking session closure lifecycle (PR + cleanup)')}`,
-                `  ${kleur.bold('xtrm reset')}     ${kleur.dim('Clear saved preferences and start fresh')}`,
-                `  ${kleur.bold('xtrm help')}      ${kleur.dim('Show this overview')}`,
+                `  ${kleur.bold('xtrm status')}          ${kleur.dim('Show pending changes without applying them')}`,
+                `  ${kleur.bold('xtrm clean')}           ${kleur.dim('Remove orphaned hooks and skills not in canonical repo')}`,
+                `  ${kleur.bold('xtrm init')}            ${kleur.dim('Initialize project data (beads, gitnexus, service-registry)')}`,
+                `  ${kleur.bold('xtrm reset')}           ${kleur.dim('Clear saved preferences and start fresh')}`,
+                `  ${kleur.bold('xtrm end')}             ${kleur.dim('Close worktree session: rebase, push, PR, link issues, cleanup')}`,
+                `  ${kleur.bold('xtrm worktree list')}   ${kleur.dim('List all active xt/* worktrees with status')}`,
+                `  ${kleur.bold('xtrm worktree clean')}  ${kleur.dim('Remove worktrees whose branch has been merged into main')}`,
+                `  ${kleur.bold('xtrm help')}            ${kleur.dim('Show this overview')}`,
             ].join('\n');
 
             const resourcesSection = [

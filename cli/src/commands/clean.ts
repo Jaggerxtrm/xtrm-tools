@@ -8,10 +8,7 @@ import { findRepoRoot } from '../utils/repo-root.js';
 
 // Canonical hooks (files in ~/.claude/hooks/)
 const CANONICAL_HOOKS = new Set([
-    'agent_context.py',
     'serena-workflow-reminder.py',
-    'main-guard.mjs',
-    'main-guard-post-push.mjs',
     'beads-gate-core.mjs',
     'beads-gate-utils.mjs',
     'beads-gate-messages.mjs',

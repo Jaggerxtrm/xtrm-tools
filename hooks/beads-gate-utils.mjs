@@ -152,15 +152,6 @@ export function isMemoryAckCommand(command) {
 }
 
 /**
- * If cwd is inside a .xtrm/worktrees/<name> directory, return the worktree root path.
- * Returns null if not in a worktree.
- */
-export function resolveWorktreeRoot(cwd) {
-  const m = cwd.match(/^(.+\/\.xtrm\/worktrees\/[^/]+)/);
-  return m ? m[1] : null;
-}
-
-/**
  * Clear the session claim key from bd kv. Non-fatal — best-effort cleanup.
  */
 export function clearSessionClaim(sessionId, cwd) {

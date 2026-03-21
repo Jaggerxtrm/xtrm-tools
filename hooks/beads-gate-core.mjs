@@ -8,7 +8,6 @@
 // Dependencies: beads-gate-utils.mjs (adapters)
 
 import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import {
   resolveCwd,
   resolveSessionId,
@@ -17,7 +16,6 @@ import {
   getTotalWork,
   getInProgress,
   isIssueInProgress,
-  resolveWorktreeRoot,
 } from './beads-gate-utils.mjs';
 
 // ── Input parsing ────────────────────────────────────────────────────────────
@@ -89,25 +87,6 @@ export function resolveClaimAndWorkState(ctx) {
 }
 
 // ── Decision functions ───────────────────────────────────────────────────────
-
-/**
- * Decide whether a file edit is within the active worktree boundary.
- * If the session cwd is inside .xtrm/worktrees/<name>, block any edit whose
- * resolved path falls outside that worktree root.
- * Returns { allow: boolean, filePath?: string, worktreeRoot?: string }
- */
-export function decideWorktreeBoundary(input, cwd) {
-  const filePath = input?.tool_input?.file_path;
-  if (!filePath) return { allow: true };
-
-  const worktreeRoot = resolveWorktreeRoot(cwd);
-  if (!worktreeRoot) return { allow: true }; // not in a worktree — no constraint
-
-  const abs = resolve(cwd, filePath);
-  if (abs === worktreeRoot || abs.startsWith(worktreeRoot + '/')) return { allow: true };
-
-  return { allow: false, filePath: abs, worktreeRoot };
-}
 
 /**
  * Decide whether to allow or block an edit operation.

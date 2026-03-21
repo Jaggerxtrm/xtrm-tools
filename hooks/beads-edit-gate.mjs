@@ -12,12 +12,25 @@ import {
   resolveSessionContext,
   resolveClaimAndWorkState,
   decideEditGate,
+  decideWorktreeBoundary,
 } from './beads-gate-core.mjs';
-import { withSafeBdContext } from './beads-gate-utils.mjs';
+import { withSafeBdContext, resolveCwd } from './beads-gate-utils.mjs';
 import { editBlockMessage, editBlockFallbackMessage } from './beads-gate-messages.mjs';
 
 const input = readHookInput();
 if (!input) process.exit(0);
+
+// Worktree boundary check — independent of beads, fires first
+const _cwd = resolveCwd(input);
+const _boundary = decideWorktreeBoundary(input, _cwd);
+if (!_boundary.allow) {
+  process.stdout.write(JSON.stringify({
+    decision: 'block',
+    reason: `🚫 Edit outside worktree boundary.\n  File:    ${_boundary.filePath}\n  Allowed: ${_boundary.worktreeRoot}\n\n  All edits must stay within the active worktree.`,
+  }));
+  process.stdout.write('\n');
+  process.exit(0);
+}
 
 withSafeBdContext(() => {
   const ctx = resolveSessionContext(input);

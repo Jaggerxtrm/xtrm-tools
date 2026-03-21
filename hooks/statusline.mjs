@@ -1,29 +1,30 @@
 #!/usr/bin/env node
-// statusline.mjs — Claude Code statusLine command for xt claude worktree sessions
-// Two lines:
-//   Line 1 (plain):   XTRM  ⎇ <branch>
-//   Line 2 (colored): ◐ <claim title in italics>  OR  ○ N open
-// State file: .xtrm/statusline-claim (written by beads-claim-sync.mjs)
-// Results cached 5s in /tmp to avoid hammering bd on every render.
+// statusline.mjs — Claude Code statusLine for xt claude sessions
+// Line 1: XTRM  dim(model [xx%])  hostname  bold(dir)  dim(branch (status))  dim((venv))
+// Line 2: ◐ italic(claim title)  OR  ○ bold(N) open  — no background
+//
+// Colors: bold/dim/italic only — no explicit fg/bg, adapts to dark & light themes.
+// State: .xtrm/statusline-claim (written by beads-claim-sync.mjs)
+// Cache: /tmp per cwd, 5s TTL
 
 import { execSync } from 'node:child_process';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
-import { join } from 'node:path';
-import { tmpdir } from 'node:os';
+import { join, basename, relative } from 'node:path';
+import { tmpdir, hostname } from 'node:os';
 import { createHash } from 'node:crypto';
 
-const cwd = process.cwd();
+// Claude Code passes statusline context as JSON on stdin
+let ctx = {};
+try { ctx = JSON.parse(readFileSync(0, 'utf8')); } catch {}
+
+const cwd = ctx?.workspace?.current_dir ?? process.cwd();
 const cacheKey = createHash('md5').update(cwd).digest('hex').slice(0, 8);
 const CACHE_FILE = join(tmpdir(), `xtrm-sl-${cacheKey}.json`);
 const CACHE_TTL = 5000;
 
 function run(cmd) {
   try {
-    return execSync(cmd, {
-      encoding: 'utf8', cwd,
-      stdio: ['pipe', 'pipe', 'pipe'],
-      timeout: 2000,
-    }).trim();
+    return execSync(cmd, { encoding: 'utf8', cwd, stdio: ['pipe', 'pipe', 'pipe'], timeout: 2000 }).trim();
   } catch { return null; }
 }
 
@@ -39,76 +40,101 @@ function setCache(data) {
   try { writeFileSync(CACHE_FILE, JSON.stringify({ ts: Date.now(), data })); } catch {}
 }
 
-// ANSI
-const R          = '\x1b[0m';
-const BOLD       = '\x1b[1m';
-const BOLD_OFF   = '\x1b[22m';
-const ITALIC     = '\x1b[3m';
-const ITALIC_OFF = '\x1b[23m';
-const FG_WHITE   = '\x1b[38;5;15m';
-const FG_ACCENT  = '\x1b[38;5;75m';
-const FG_MUTED   = '\x1b[38;5;245m';
-const BG_CLAIMED = '\x1b[48;5;17m';
-const BG_IDLE    = '\x1b[48;5;238m';
+// ANSI — bold/dim/italic only; no explicit fg/bg colors
+const R  = '\x1b[0m';
+const B  = '\x1b[1m';   // bold on
+const B_ = '\x1b[22m';  // bold off (normal intensity)
+const D  = '\x1b[2m';   // dim on
+const I  = '\x1b[3m';   // italic on
+const I_ = '\x1b[23m';  // italic off
 
-// Data
 let data = getCached();
 if (!data) {
-  const branch = run('git branch --show-current');
+  // Model + token %
+  const modelId = ctx?.model?.display_name ?? ctx?.model?.id ?? null;
+  const pct = ctx?.context_window?.used_percentage;
+  const modelStr = modelId ? `${modelId}${pct != null ? ` [${Math.round(pct)}%]` : ''}` : null;
+
+  // Short hostname
+  const host = hostname().split('.')[0];
+
+  // Directory — repo-relative like the global script
+  const repoRoot = run('git rev-parse --show-toplevel');
+  let displayDir;
+  if (repoRoot) {
+    const rel = relative(repoRoot, cwd) || '.';
+    displayDir = rel === '.' ? basename(repoRoot) : `${basename(repoRoot)}/${rel}`;
+  } else {
+    displayDir = cwd.replace(process.env.HOME ?? '', '~');
+  }
+
+  // Branch + git status indicators
+  let branch = null;
+  let gitStatus = '';
+  if (repoRoot) {
+    branch = run('git -c core.useBuiltinFSMonitor=false branch --show-current') || run('git rev-parse --short HEAD');
+    const porcelain = run('git -c core.useBuiltinFSMonitor=false --no-optional-locks status --porcelain') ?? '';
+    let modified = false, staged = false, deleted = false;
+    for (const l of porcelain.split('\n').filter(Boolean)) {
+      if (/^ M|^AM|^MM/.test(l)) modified = true;
+      if (/^A |^M /.test(l)) staged = true;
+      if (/^ D|^D /.test(l)) deleted = true;
+    }
+    let st = (modified ? '*' : '') + (staged ? '+' : '') + (deleted ? '-' : '');
+    const ab = run('git -c core.useBuiltinFSMonitor=false --no-optional-locks rev-list --left-right --count @{upstream}...HEAD');
+    if (ab) {
+      const [behind, ahead] = ab.split(/\s+/).map(Number);
+      if (ahead > 0 && behind > 0) st += '↕';
+      else if (ahead > 0) st += '↑';
+      else if (behind > 0) st += '↓';
+    }
+    if (st) gitStatus = `(${st})`;
+  }
+
+  // Python venv
+  const venv = process.env.VIRTUAL_ENV ? `(${basename(process.env.VIRTUAL_ENV)})` : null;
+
+  // Beads
   let claimTitle = null;
   let openCount = 0;
-
-  const hasBeads = existsSync(join(cwd, '.beads'));
-  if (hasBeads) {
+  if (existsSync(join(cwd, '.beads'))) {
     const claimFile = join(cwd, '.xtrm', 'statusline-claim');
-    let claimId = null;
-    if (existsSync(claimFile)) {
-      claimId = readFileSync(claimFile, 'utf8').trim() || null;
-    }
-
+    const claimId = existsSync(claimFile) ? (readFileSync(claimFile, 'utf8').trim() || null) : null;
     if (claimId) {
       try {
         const raw = run(`bd show ${claimId} --json`);
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          claimTitle = parsed?.[0]?.title ?? null;
-        }
+        claimTitle = raw ? (JSON.parse(raw)?.[0]?.title ?? null) : null;
       } catch {}
     }
-
     if (!claimTitle) {
-      const listOut = run('bd list');
-      const m = listOut?.match(/\((\d+)\s+open/);
+      const m = run('bd list')?.match(/\((\d+)\s+open/);
       if (m) openCount = parseInt(m[1], 10);
     }
   }
 
-  data = { branch, claimTitle, openCount };
+  data = { modelStr, host, displayDir, branch, gitStatus, venv, claimTitle, openCount };
   setCache(data);
 }
 
-// Render
-const { branch, claimTitle, openCount } = data;
-const cols = process.stdout.columns || 80;
+const { modelStr, host, displayDir, branch, gitStatus, venv, claimTitle, openCount } = data;
 
-const brand = `${BOLD}${FG_ACCENT}XTRM${BOLD_OFF}${R}`;
-const branchStr = branch ? `${FG_MUTED}⎇ ${branch}${R}` : '';
-const line1 = [brand, branchStr].filter(Boolean).join('  ');
+// Line 1 — matches global format, XTRM prepended
+const parts = [`${B}XTRM${B_}`];
+if (modelStr) parts.push(`${D}${modelStr}${R}`);
+parts.push(host);
+if (displayDir) parts.push(`${B}${displayDir}${B_}`);
+if (branch) parts.push(`${D}${[branch, gitStatus].filter(Boolean).join(' ')}${R}`);
+if (venv) parts.push(`${D}${venv}${R}`);
+const line1 = parts.join(' ');
 
-function padded(text, bg) {
-  const visible = text.replace(/\x1b\[[0-9;]*m/g, '');
-  const pad = Math.max(0, cols - visible.length);
-  return `${bg}${FG_WHITE}${text}${' '.repeat(pad)}${R}`;
-}
-
+// Line 2 — no background; open count bold
 let line2;
 if (claimTitle) {
-  const maxLen = cols - 4;
-  const title = claimTitle.length > maxLen ? claimTitle.slice(0, maxLen - 1) + '\u2026' : claimTitle;
-  line2 = padded(` \u25d0 ${ITALIC}${title}${ITALIC_OFF}`, BG_CLAIMED);
+  const cols = process.stdout.columns || 80;
+  const t = claimTitle.length > cols - 4 ? claimTitle.slice(0, cols - 5) + '…' : claimTitle;
+  line2 = ` ◐ ${I}${t}${I_}`;
 } else {
-  const idle = openCount > 0 ? `\u25cb ${openCount} open` : '\u25cb no open issues';
-  line2 = padded(` ${idle}`, BG_IDLE);
+  line2 = ` ○ ${openCount > 0 ? `${B}${openCount}${B_} open` : 'no open issues'}`;
 }
 
 process.stdout.write(line1 + '\n' + line2 + '\n');

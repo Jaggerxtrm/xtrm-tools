@@ -6053,7 +6053,7 @@ var require_dist = __commonJS({
         });
       };
     }
-    var prompts7 = require_prompts();
+    var prompts6 = require_prompts();
     var passOn = ["suggest", "format", "onState", "validate", "onRender", "type"];
     var noop = () => {
     };
@@ -6104,7 +6104,7 @@ var require_dist = __commonJS({
             var _question2 = question;
             name = _question2.name;
             type = _question2.type;
-            if (prompts7[type] === void 0) {
+            if (prompts6[type] === void 0) {
               throw new Error(`prompt type (${type}) is not defined`);
             }
             if (override2[question.name] !== void 0) {
@@ -6115,7 +6115,7 @@ var require_dist = __commonJS({
               }
             }
             try {
-              answer = prompt._injected ? getInjectedAnswer(prompt._injected, question.initial) : yield prompts7[type](question);
+              answer = prompt._injected ? getInjectedAnswer(prompt._injected, question.initial) : yield prompts6[type](question);
               answers[name] = answer = yield getFormattedAnswer(question, answer, true);
               quit = yield onSubmit(question, answer, answers);
             } catch (err) {
@@ -6147,7 +6147,7 @@ var require_dist = __commonJS({
     }
     module2.exports = Object.assign(prompt, {
       prompt,
-      prompts: prompts7,
+      prompts: prompts6,
       inject,
       override
     });
@@ -8234,7 +8234,7 @@ var require_prompts2 = __commonJS({
 var require_lib = __commonJS({
   "../node_modules/prompts/lib/index.js"(exports2, module2) {
     "use strict";
-    var prompts7 = require_prompts2();
+    var prompts6 = require_prompts2();
     var passOn = ["suggest", "format", "onState", "validate", "onRender", "type"];
     var noop = () => {
     };
@@ -8266,7 +8266,7 @@ var require_lib = __commonJS({
           throw new Error("prompt message is required");
         }
         ({ name, type } = question);
-        if (prompts7[type] === void 0) {
+        if (prompts6[type] === void 0) {
           throw new Error(`prompt type (${type}) is not defined`);
         }
         if (override2[question.name] !== void 0) {
@@ -8277,7 +8277,7 @@ var require_lib = __commonJS({
           }
         }
         try {
-          answer = prompt._injected ? getInjectedAnswer(prompt._injected, question.initial) : await prompts7[type](question);
+          answer = prompt._injected ? getInjectedAnswer(prompt._injected, question.initial) : await prompts6[type](question);
           answers[name] = answer = await getFormattedAnswer(question, answer, true);
           quit = await onSubmit(question, answer, answers);
         } catch (err) {
@@ -8300,7 +8300,7 @@ var require_lib = __commonJS({
     function override(answers) {
       prompt._override = Object.assign({}, answers);
     }
-    module2.exports = Object.assign(prompt, { prompt, prompts: prompts7, inject, override });
+    module2.exports = Object.assign(prompt, { prompt, prompts: prompts6, inject, override });
   }
 });
 
@@ -33948,7 +33948,7 @@ function init(open, close) {
 var kleur_default = $;
 
 // src/commands/install.ts
-var import_prompts2 = __toESM(require_prompts3(), 1);
+var import_prompts = __toESM(require_prompts3(), 1);
 
 // ../node_modules/eventemitter3/index.mjs
 var import_index2 = __toESM(require_eventemitter3(), 1);
@@ -36986,7 +36986,6 @@ var Conf = class {
 };
 
 // src/core/context.ts
-var import_prompts = __toESM(require_prompts3(), 1);
 var config = null;
 function getConfig() {
   if (!config) {
@@ -37022,58 +37021,17 @@ function resolveTargets(selector, candidates) {
 }
 async function getContext(options = {}) {
   const { selector, createMissingDirs = true } = options;
-  const choices = [];
   const candidates = getCandidatePaths();
   const directTargets = resolveTargets(selector, candidates);
-  if (directTargets) {
-    const activeConfig2 = getConfig();
-    if (createMissingDirs) {
-      for (const target of directTargets) {
-        await import_fs_extra.default.ensureDir(target);
-      }
-    }
-    return {
-      targets: directTargets,
-      syncMode: activeConfig2.get("syncMode"),
-      config: activeConfig2
-    };
-  }
   const activeConfig = getConfig();
-  for (const c of candidates) {
-    const exists = await import_fs_extra.default.pathExists(c.path);
-    const icon = exists ? kleur_default.green("\u25CF") : kleur_default.gray("\u25CB");
-    const desc = exists ? "Found" : "Not found (will create)";
-    choices.push({
-      title: `${icon} ${c.label} (${c.path})`,
-      description: desc,
-      value: c.path,
-      selected: exists
-      // Pre-select existing environments
-    });
-  }
-  const response = await (0, import_prompts.default)({
-    type: "multiselect",
-    name: "targets",
-    message: "Select target environment(s):",
-    choices,
-    hint: "- Space to select. Return to submit",
-    instructions: false
-  });
-  if (response.targets === void 0) {
-    console.log(kleur_default.gray("\nCancelled."));
-    process.exit(130);
-  }
-  if (response.targets.length === 0) {
-    console.log(kleur_default.gray("No targets selected."));
-    process.exit(0);
-  }
+  const selectedPaths = directTargets ?? candidates.map((c) => c.path);
   if (createMissingDirs) {
-    for (const target of response.targets) {
+    for (const target of selectedPaths) {
       await import_fs_extra.default.ensureDir(target);
     }
   }
   return {
-    targets: response.targets,
+    targets: selectedPaths,
     syncMode: activeConfig.get("syncMode"),
     config: activeConfig
   };
@@ -40160,7 +40118,7 @@ async function handleMissingEnvVars(missing) {
   if (missing.length === 0) {
     return true;
   }
-  const prompts7 = (await Promise.resolve().then(() => __toESM(require_prompts3(), 1))).default;
+  const prompts6 = (await Promise.resolve().then(() => __toESM(require_prompts3(), 1))).default;
   const answers = {};
   for (const key of missing) {
     const config3 = REQUIRED_ENV_VARS[key];
@@ -40172,7 +40130,7 @@ async function handleMissingEnvVars(missing) {
       console.log(kleur_default.yellow(`
   \u26A0\uFE0F  ${key} is required by a selected MCP server`));
     }
-    const { value } = await prompts7({
+    const { value } = await prompts6({
       type: "text",
       name: "value",
       message: `Enter ${key}:`,
@@ -40385,8 +40343,8 @@ async function syncMcpServersWithCli(agent, mcpConfig, dryRun = false, prune = f
   }
   let selectedNames = toAdd.map(([name]) => name);
   if (!dryRun) {
-    const prompts7 = await Promise.resolve().then(() => __toESM(require_prompts3(), 1));
-    const { selected } = await prompts7.default({
+    const prompts6 = await Promise.resolve().then(() => __toESM(require_prompts3(), 1));
+    const { selected } = await prompts6.default({
       type: "multiselect",
       name: "selected",
       message: `Select MCP servers to install via ${agent} CLI:`,
@@ -41203,7 +41161,7 @@ function createInstallCommand() {
         const missing = [!beadsOk && "bd", !doltOk && "dolt"].filter(Boolean).join(", ");
         let doInstall = effectiveYes;
         if (!effectiveYes) {
-          const { install } = await (0, import_prompts2.default)({
+          const { install } = await (0, import_prompts.default)({
             type: "confirm",
             name: "install",
             message: `Install beads + dolt? (${missing} not found) \u2014 required for workflow enforcement hooks`,
@@ -41289,7 +41247,7 @@ function createInstallCommand() {
     }
     if (!effectiveYes) {
       const totalChangesCount = allChanges.reduce((s, c) => s + c.totalChanges, 0);
-      const { confirm } = await (0, import_prompts2.default)({
+      const { confirm } = await (0, import_prompts.default)({
         type: "confirm",
         name: "confirm",
         message: `Proceed with ${actionLabel} (${totalChangesCount} total changes)?`,
@@ -41482,7 +41440,7 @@ var import_node_os6 = require("os");
 var import_fs_extra13 = __toESM(require_lib2(), 1);
 
 // src/commands/install-pi.ts
-var import_prompts3 = __toESM(require_prompts3(), 1);
+var import_prompts2 = __toESM(require_prompts3(), 1);
 var import_fs_extra12 = __toESM(require_lib2(), 1);
 var import_path12 = __toESM(require("path"), 1);
 var import_node_child_process4 = require("child_process");
@@ -41632,10 +41590,10 @@ function createInstallPiCommand() {
         continue;
       }
       if (!field.required && !yes) {
-        const { include } = await (0, import_prompts3.default)({ type: "confirm", name: "include", message: `  Configure ${field.label}? (optional)`, initial: false });
+        const { include } = await (0, import_prompts2.default)({ type: "confirm", name: "include", message: `  Configure ${field.label}? (optional)`, initial: false });
         if (!include) continue;
       }
-      const { value } = await (0, import_prompts3.default)({ type: field.secret ? "password" : "text", name: "value", message: `  ${field.label}`, hint: field.hint, validate: (v) => field.required && !v ? "Required" : true });
+      const { value } = await (0, import_prompts2.default)({ type: field.secret ? "password" : "text", name: "value", message: `  ${field.label}`, hint: field.hint, validate: (v) => field.required && !v ? "Required" : true });
       if (value) values[field.key] = value;
     }
     await import_fs_extra12.default.ensureDir(PI_AGENT_DIR2);
@@ -41644,7 +41602,7 @@ function createInstallPiCommand() {
     for (const name of ["models.json", "auth.json", "settings.json"]) {
       const destPath = import_path12.default.join(PI_AGENT_DIR2, name);
       if (name === "auth.json" && await import_fs_extra12.default.pathExists(destPath) && !yes) {
-        const { overwrite } = await (0, import_prompts3.default)({ type: "confirm", name: "overwrite", message: `  ${name} already exists \u2014 overwrite? (OAuth tokens will be lost)`, initial: false });
+        const { overwrite } = await (0, import_prompts2.default)({ type: "confirm", name: "overwrite", message: `  ${name} already exists \u2014 overwrite? (OAuth tokens will be lost)`, initial: false });
         if (!overwrite) {
           console.log(t.muted(`    skipped ${name}`));
           continue;
@@ -42049,7 +42007,7 @@ function getProjectRoot() {
 }
 
 // src/commands/status.ts
-var import_prompts4 = __toESM(require_prompts3(), 1);
+var import_prompts3 = __toESM(require_prompts3(), 1);
 
 // src/core/manifest.ts
 var import_path16 = require("path");
@@ -55953,7 +55911,7 @@ function createStatusCommand() {
     console.log(kleur_default.yellow(`
   \u26A0  ${totalPending} pending change${totalPending !== 1 ? "s" : ""} across ${pending.length} environment${pending.length !== 1 ? "s" : ""}
 `));
-    const { selected } = await (0, import_prompts4.default)({
+    const { selected } = await (0, import_prompts3.default)({
       type: "multiselect",
       name: "selected",
       message: "Select environments to sync:",
@@ -56450,7 +56408,7 @@ function createCleanCommand() {
 }
 
 // src/commands/end.ts
-var import_prompts5 = __toESM(require_prompts3(), 1);
+var import_prompts4 = __toESM(require_prompts3(), 1);
 var import_node_child_process6 = require("child_process");
 function git(args, cwd) {
   const r = (0, import_node_child_process6.spawnSync)("git", args, { cwd, encoding: "utf8", stdio: "pipe" });
@@ -56604,7 +56562,7 @@ function createEndCommand() {
     if (!opts.keep) {
       let doRemove = opts.yes;
       if (!opts.yes) {
-        const { remove } = await (0, import_prompts5.default)({
+        const { remove } = await (0, import_prompts4.default)({
           type: "confirm",
           name: "remove",
           message: `Remove local worktree at ${cwd}?`,
@@ -56638,7 +56596,7 @@ function createEndCommand() {
 }
 
 // src/commands/worktree.ts
-var import_prompts6 = __toESM(require_prompts3(), 1);
+var import_prompts5 = __toESM(require_prompts3(), 1);
 var import_node_child_process7 = require("child_process");
 function listXtWorktrees(repoRoot) {
   const r = (0, import_node_child_process7.spawnSync)("git", ["worktree", "list", "--porcelain"], {
@@ -56719,7 +56677,7 @@ function createWorktreeCommand() {
     }
     let doRemove = opts.yes;
     if (!opts.yes) {
-      const { confirm } = await (0, import_prompts6.default)({
+      const { confirm } = await (0, import_prompts5.default)({
         type: "confirm",
         name: "confirm",
         message: `Remove ${merged.length} worktree(s)?`,
@@ -56760,7 +56718,7 @@ function createWorktreeCommand() {
     }
     let doRemove = opts.yes;
     if (!opts.yes) {
-      const { confirm } = await (0, import_prompts6.default)({
+      const { confirm } = await (0, import_prompts5.default)({
         type: "confirm",
         name: "confirm",
         message: `Remove ${target.path}?`,

@@ -21,6 +21,7 @@ const CANONICAL_HOOKS = new Set([
     'beads-compact-save.mjs',
     'beads-compact-restore.mjs',
     'branch-state.mjs',
+    'statusline.mjs',
     'quality-check.cjs',
     'quality-check-env.mjs',
     'quality-check.py',

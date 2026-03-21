@@ -4,6 +4,7 @@ scope: mcp
 category: reference
 version: 1.0.0
 updated: 2026-03-18
+synced_at: 0d985ad
 description: "MCP server configuration, canonical sources, and operational workflow"
 source_of_truth_for:
   - "config/mcp_servers.json"

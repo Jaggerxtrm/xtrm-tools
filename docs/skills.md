@@ -4,6 +4,7 @@ scope: skills
 category: overview
 version: 1.1.0
 updated: 2026-03-21
+synced_at: 0d985ad
 description: "Global skills installed to the user-level Claude environment"
 source_of_truth_for:
   - "skills/**/*.md"

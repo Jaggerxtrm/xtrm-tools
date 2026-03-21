@@ -4,6 +4,7 @@ scope: project-skills
 category: reference
 version: 1.0.0
 updated: 2026-03-18
+synced_at: 0d985ad
 description: "Project-local skills installed into a repository's .claude/ directory"
 source_of_truth_for:
   - "project-skills/**/*.md"

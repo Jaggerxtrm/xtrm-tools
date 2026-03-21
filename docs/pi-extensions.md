@@ -4,6 +4,7 @@ scope: pi-extensions
 category: reference
 version: 1.1.0
 updated: 2026-03-20
+synced_at: 0d985ad
 source_of_truth_for:
   - "config/pi/extensions/**/*.ts"
   - "config/pi/extensions/**/*.json"

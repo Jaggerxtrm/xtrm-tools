@@ -115,7 +115,7 @@ plugins/xtrm-tools/
 {
   "name": "xtrm-tools",
   "version": "0.5.10",
-  "description": "xtrm-tools: workflow enforcement hooks, skills, and MCP servers",
+  "description": "xtrm-tools: dual-runtime workflow enforcement (Claude Code + Pi) — hooks, extensions, skills, and MCP servers",
   "mcpServers": "./.mcp.json"
 }
 ```

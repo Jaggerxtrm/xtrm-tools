@@ -149,7 +149,9 @@ export default function (pi: ExtensionAPI) {
 		pi.sendUserMessage(
 			`🧠 Memory gate: claim \`${claimId}\` was closed this session.\n` +
 			`For each closed issue, worth persisting?\n` +
-			`  YES → \`bd remember "<insight>"\`   NO → note "nothing to persist"`,
+			`  YES → \`bd remember "<insight>"\`\n` +
+			`  NO  → note "nothing to persist"\n` +
+			`  Then acknowledge: \`touch .beads/.memory-gate-done\``,
 		);
 	};
 

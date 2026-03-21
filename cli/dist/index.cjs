@@ -41895,12 +41895,9 @@ function buildProjectInitGuide() {
     kleur_default.dim("   - During work:  keep issue status current; create discovered follow-ups"),
     kleur_default.dim('   - Finish work:  bd close <id> --reason "Done" --json'),
     "",
-    `${kleur_default.cyan("5) Git workflow (main-guard expected path):")}`,
-    kleur_default.dim("   - git checkout -b feature/<name>"),
-    kleur_default.dim("   - commit on feature branch only"),
-    kleur_default.dim("   - git push -u origin feature/<name>"),
-    kleur_default.dim("   - gh pr create --fill && gh pr merge --squash"),
-    kleur_default.dim("   - git checkout main && git pull --ff-only"),
+    `${kleur_default.cyan("5) Git workflow:")}`,
+    kleur_default.dim('   - bd close <id> --reason "..."    \u2190 closes issue + auto-commits'),
+    kleur_default.dim("   - xt end                          \u2190 push, PR, merge, worktree cleanup"),
     ""
   ];
   return lines.join("\n");

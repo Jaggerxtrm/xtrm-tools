@@ -12,6 +12,21 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { createHash } from 'node:crypto';
 
+// Read session context from stdin (model, costUSD — piped by Claude Code)
+let stdin = {};
+try { stdin = JSON.parse(readFileSync(0, 'utf8')); } catch {}
+const sessionModel = stdin.model ?? null;
+const sessionCost  = stdin.costUSD ?? null;
+
+function shortModel(m) {
+  return m.replace(/^claude-/, '').replace(/-\d{8}$/, '');
+}
+
+function fmtCost(c) {
+  if (c == null || c === 0) return null;
+  return c < 0.01 ? '<$0.01' : `$${c.toFixed(2)}`;
+}
+
 const cwd = process.cwd();
 const cacheKey = createHash('md5').update(cwd).digest('hex').slice(0, 8);
 const CACHE_FILE = join(tmpdir(), `xtrm-sl-${cacheKey}.json`);
@@ -91,9 +106,11 @@ if (!data) {
 const { branch, claimTitle, openCount } = data;
 const cols = process.stdout.columns || 80;
 
-const brand = `${BOLD}${FG_ACCENT}XTRM${BOLD_OFF}${R}`;
-const branchStr = branch ? `${FG_MUTED}⎇ ${branch}${R}` : '';
-const line1 = [brand, branchStr].filter(Boolean).join('  ');
+const brand     = `${FG_MUTED}XTRM${R}`;
+const branchStr = branch       ? `${FG_MUTED}⎇ ${branch}${R}`                : '';
+const modelStr  = sessionModel ? `${FG_MUTED}${shortModel(sessionModel)}${R}` : '';
+const costStr   = fmtCost(sessionCost) ? `${FG_MUTED}${fmtCost(sessionCost)}${R}` : '';
+const line1 = [brand, branchStr, modelStr, costStr].filter(Boolean).join('  ');
 
 function padded(text, bg) {
   const visible = text.replace(/\x1b\[[0-9;]*m/g, '');

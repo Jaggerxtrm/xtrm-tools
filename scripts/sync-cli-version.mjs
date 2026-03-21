@@ -10,8 +10,11 @@ const repoRoot = path.resolve(__dirname, '..');
 const rootPkgPath = path.join(repoRoot, 'package.json');
 const cliPkgPath = path.join(repoRoot, 'cli', 'package.json');
 
+const pluginJsonPath = path.join(repoRoot, '.claude-plugin', 'plugin.json');
+
 const rootPkg = JSON.parse(fs.readFileSync(rootPkgPath, 'utf8'));
 const cliPkg = JSON.parse(fs.readFileSync(cliPkgPath, 'utf8'));
+const pluginJson = JSON.parse(fs.readFileSync(pluginJsonPath, 'utf8'));
 
 if (!rootPkg.version || typeof rootPkg.version !== 'string') {
   console.error('Root package.json missing valid version');
@@ -20,7 +23,7 @@ if (!rootPkg.version || typeof rootPkg.version !== 'string') {
 
 let changed = false;
 
-// Sync version
+// Sync cli/package.json version
 if (cliPkg.version !== rootPkg.version) {
   cliPkg.version = rootPkg.version;
   changed = true;
@@ -42,4 +45,13 @@ if (changed) {
   console.log(`Synced cli/package.json (version: ${rootPkg.version}, bin: ${Object.keys(cliPkg.bin ?? {}).join(', ')})`);
 } else {
   console.log(`cli/package.json already in sync (${rootPkg.version})`);
+}
+
+// Sync .claude-plugin/plugin.json version
+if (pluginJson.version !== rootPkg.version) {
+  pluginJson.version = rootPkg.version;
+  fs.writeFileSync(pluginJsonPath, `${JSON.stringify(pluginJson, null, 2)}\n`, 'utf8');
+  console.log(`Synced .claude-plugin/plugin.json (version: ${rootPkg.version})`);
+} else {
+  console.log(`.claude-plugin/plugin.json already in sync (${rootPkg.version})`);
 }

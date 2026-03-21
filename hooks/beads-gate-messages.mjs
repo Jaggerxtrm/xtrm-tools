@@ -57,12 +57,12 @@ export function stopBlockMessage(summary, claimed) {
 // ── Memory gate messages ─────────────────────────────────────────
 
 export function memoryPromptMessage(claimId) {
-  const claimLine = claimId ? `claim \`${claimId}\` was closed this session.\n` : '';
+  const claimLine = claimId ? `claim \`${claimId}\` was closed.\n` : '';
   return (
-    `🧠 Memory gate: ${claimLine}` +
-    'For each closed issue, worth persisting?\n' +
+    `\u25cf Memory gate: ${claimLine}` +
+    'Ask: "Would this be useful in 14 days on a fresh session?"\n' +
     '  YES → `bd remember "<insight>"`\n' +
     '  NO  → note "nothing to persist"\n' +
-    '  Then acknowledge: `touch .beads/.memory-gate-done`\n'
+    '  Then: `touch .beads/.memory-gate-done`\n'
   );
 }

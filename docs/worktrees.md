@@ -3,7 +3,7 @@ title: xt Worktrees
 scope: worktrees
 category: reference
 version: 1.0.0
-updated: 2026-03-20
+updated: 2026-03-21
 source_of_truth_for:
   - "cli/src/commands/worktree.ts"
   - "cli/src/utils/worktree-session.ts"
@@ -36,12 +36,37 @@ xt claude
   2. git worktree add .xtrm/worktrees/xtrm-tools-xt-claude-<slug> -b xt/<slug>
   3. Find main's Dolt server port (.beads/dolt-server.port or bd dolt status)
   4. Write port redirect → worktree/.beads/dolt-server.port  ← BEFORE any bd call
-  5. claude --dangerously-skip-permissions   (launched in worktree)
+  5. Inject statusline → worktree/.claude/settings.local.json
+  6. claude --dangerously-skip-permissions   (launched in worktree)
 ```
 
 The port redirect in step 4 is written **before** `claude` launches, so `bd` never
 auto-spawns an isolated Dolt server. All `bd` commands in the worktree connect to
 main's running Dolt server and see the same issue database.
+
+## Statusline Injection
+
+When launching a `claude` worktree session, `xt` injects a statusline configuration
+into the worktree's `.claude/settings.local.json` before Claude starts:
+
+```json
+{
+  "statusLine": {
+    "type": "command",
+    "command": "node /path/to/hooks/statusline.mjs",
+    "padding": 1
+  }
+}
+```
+
+The path to `statusline.mjs` is resolved in order:
+1. Plugin cache — `~/.claude/plugins/cache/.../hooks/statusline.mjs` (stays in sync with installed plugin version)
+2. Fallback — `~/.claude/hooks/statusline.mjs`
+
+This gives the worktree session the same beads/claim statusline as a main session.
+The settings file is written to `.claude/` inside the worktree, so it doesn't affect
+the main checkout. Failure to write the file is non-fatal — the session launches without
+a statusline rather than aborting.
 
 ## Naming Convention
 

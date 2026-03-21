@@ -4,6 +4,7 @@ scope: hooks
 category: reference
 version: 1.3.0
 updated: 2026-03-21
+synced_at: b933f0d
 description: "All hook events, scripts, and behavior for the xtrm plugin"
 source_of_truth_for:
   - "hooks/**/*.mjs"

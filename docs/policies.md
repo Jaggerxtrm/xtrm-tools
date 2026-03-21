@@ -4,6 +4,7 @@ scope: policies
 category: reference
 version: 1.2.0
 updated: 2026-03-21
+synced_at: b933f0d
 source_of_truth_for:
   - "policies/*.json"
 domain: [hooks, enforcement]

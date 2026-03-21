@@ -90,7 +90,7 @@ describe('worktree creation naming convention (2q8j)', () => {
             removeWorktree(expectedPath, repoDir);
         }
 
-        run(['claude', 'mysession'], { cwd: repoDir });
+        run(['claude', 'mysession'], { cwd: repoDir, env: { PATH: '/usr/bin:/bin' } });
 
         expect(fs.existsSync(expectedPath)).toBe(true);
 
@@ -109,7 +109,7 @@ describe('worktree creation naming convention (2q8j)', () => {
         // Worktree lands at <repoDir>/.xtrm/worktrees/myproject-xt-pi-<slug>
         const worktreesDir = path.join(repoDir, '.xtrm', 'worktrees');
 
-        run(['pi'], { cwd: repoDir });
+        run(['pi'], { cwd: repoDir, env: { PATH: '/usr/bin:/bin' } });
 
         // Find the created worktree (slug is random, so glob the dir)
         const entries = fs.existsSync(worktreesDir)

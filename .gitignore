@@ -36,3 +36,4 @@ skills/*-workspace/
 .xtrm/worktrees/
 .xtrm-session-state.json
 .claude/skills/
+.perles/

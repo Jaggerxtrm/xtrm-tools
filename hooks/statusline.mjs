@@ -95,11 +95,12 @@ if (!data) {
   const venv = process.env.VIRTUAL_ENV ? `(${basename(process.env.VIRTUAL_ENV)})` : null;
 
   // Beads
+  let claimId = null;
   let claimTitle = null;
   let openCount = 0;
   if (existsSync(join(cwd, '.beads'))) {
     const claimFile = join(cwd, '.xtrm', 'statusline-claim');
-    const claimId = existsSync(claimFile) ? (readFileSync(claimFile, 'utf8').trim() || null) : null;
+    claimId = existsSync(claimFile) ? (readFileSync(claimFile, 'utf8').trim() || null) : null;
     if (claimId) {
       try {
         const raw = run(`bd show ${claimId} --json`);

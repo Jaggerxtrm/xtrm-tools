@@ -200,7 +200,7 @@ function main() {
         runtime: 'claude',
         sessionId,
         layer: 'bd',
-        kind: 'bd.auto_committed',
+        kind: 'bd.committed',
         outcome: commit.ok ? 'allow' : 'block',
         issueId: closedIssueId ?? null,
         message: commit.message,

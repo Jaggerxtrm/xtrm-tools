@@ -31,7 +31,7 @@ withSafeBdContext(() => {
       runtime: 'claude',
       sessionId: ctx.sessionId,
       layer: 'gate',
-      kind: 'hook.stop_gate.block',
+      kind: 'gate.stop.block',
       outcome: 'block',
       issueId: decision.claimed ?? null,
       message,
@@ -46,7 +46,7 @@ withSafeBdContext(() => {
     runtime: 'claude',
     sessionId: ctx.sessionId,
     layer: 'gate',
-    kind: 'hook.stop_gate.allow',
+    kind: 'session.end',
     outcome: 'allow',
   });
   process.exit(0);

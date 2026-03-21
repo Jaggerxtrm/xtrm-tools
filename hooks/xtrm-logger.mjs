@@ -1,130 +1,123 @@
 #!/usr/bin/env node
-// xtrm-logger.mjs — shared event logger for xtrm hook and bd lifecycle events
+// xtrm-logger.mjs — shared event logger for xtrm hooks
 //
-// Writes to the xtrm_events table in the project's beads Dolt DB.
-// Self-initializing: creates the table on first write if it doesn't exist.
+// Writes to .xtrm/debug.db (SQLite WAL) in the project root.
+// Self-initializing: creates the DB and table on first write.
 // Fails completely silently — logging NEVER affects hook behavior.
 //
 // Usage (from any hook):
 //   import { logEvent } from './xtrm-logger.mjs';
-//   logEvent({ cwd, runtime: 'claude', sessionId, layer: 'gate', kind: 'hook.edit_gate.block',
-//              outcome: 'block', toolName, issueId, message, extra });
+//   logEvent({ cwd, sessionId, kind: 'gate.edit.allow', outcome: 'allow', toolName, issueId });
 
 import { spawnSync } from 'node:child_process';
-import { randomUUID } from 'node:crypto';
+import { existsSync, mkdirSync } from 'node:fs';
+import { join, dirname } from 'node:path';
 
 // ── Schema ────────────────────────────────────────────────────────────────────
 
-const CREATE_SQL = `CREATE TABLE IF NOT EXISTS xtrm_events (
-  seq         INT           NOT NULL AUTO_INCREMENT,
-  id          VARCHAR(36)   NOT NULL,
-  created_at  DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  runtime     VARCHAR(16)   NOT NULL,
-  session_id  VARCHAR(255)  NOT NULL,
-  worktree    VARCHAR(255)  DEFAULT NULL,
-  layer       VARCHAR(16)   NOT NULL,
-  kind        VARCHAR(64)   NOT NULL,
-  outcome     VARCHAR(8)    NOT NULL,
-  tool_name   VARCHAR(255)  DEFAULT NULL,
-  issue_id    VARCHAR(255)  DEFAULT NULL,
-  message     TEXT          DEFAULT NULL,
-  extra       JSON          DEFAULT NULL,
-  PRIMARY KEY (id),
-  UNIQUE KEY uk_seq (seq),
-  INDEX idx_session (session_id(64)),
-  INDEX idx_kind (kind),
-  INDEX idx_created (created_at)
-)`;
+const INIT_SQL = `
+PRAGMA journal_mode=WAL;
+PRAGMA busy_timeout=5000;
+CREATE TABLE IF NOT EXISTS events (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  ts          INTEGER NOT NULL,
+  session_id  TEXT    NOT NULL,
+  runtime     TEXT    NOT NULL,
+  worktree    TEXT,
+  kind        TEXT    NOT NULL,
+  tool_name   TEXT,
+  outcome     TEXT,
+  issue_id    TEXT,
+  duration_ms INTEGER,
+  data        TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_ts      ON events(ts);
+CREATE INDEX IF NOT EXISTS idx_session ON events(session_id);
+CREATE INDEX IF NOT EXISTS idx_kind    ON events(kind);
+`;
 
-// Migration: add seq column to existing tables that predate this schema version
-const ADD_SEQ_SQL = `ALTER TABLE xtrm_events ADD COLUMN seq INT NOT NULL AUTO_INCREMENT, ADD UNIQUE KEY uk_seq (seq)`;
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
-// ── SQL helpers ───────────────────────────────────────────────────────────────
-
-/**
- * Escape a value for use in a MySQL single-quoted string literal.
- * Returns the quoted string, or NULL for null/undefined.
- */
-function sqlEscape(val) {
-  if (val === null || val === undefined) return 'NULL';
-  const str = String(val)
-    .replace(/\\/g, '\\\\')   // backslash first
-    .replace(/'/g, "''")      // single-quote → doubled
-    .replace(/\0/g, '');      // strip null bytes (invalid in utf8 strings)
-  return `'${str}'`;
+function findDbPath(cwd) {
+  let dir = cwd;
+  for (let i = 0; i < 10; i++) {
+    if (existsSync(join(dir, '.beads'))) {
+      return join(dir, '.xtrm', 'debug.db');
+    }
+    const parent = join(dir, '..');
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return null; // No beads project found — silently skip logging
 }
 
-function bdSql(sql, cwd) {
-  return spawnSync('bd', ['sql', sql], {
-    cwd,
+function sqlExec(dbPath, sql) {
+  return spawnSync('sqlite3', [dbPath, sql], {
     stdio: ['pipe', 'pipe', 'pipe'],
     encoding: 'utf8',
-    timeout: 5000,
+    timeout: 3000,
   });
+}
+
+function ensureDb(dbPath) {
+  mkdirSync(dirname(dbPath), { recursive: true });
+  sqlExec(dbPath, INIT_SQL);
+}
+
+function sqlEsc(val) {
+  if (val === null || val === undefined) return 'NULL';
+  return `'${String(val).replace(/'/g, "''")}'`;
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
 /**
- * Log an xtrm event to the beads xtrm_events table.
+ * Log an xtrm event to .xtrm/debug.db.
  *
  * @param {object}  params
  * @param {string}  params.cwd         Project working directory (required)
- * @param {string}  params.runtime     'claude' | 'pi'
- * @param {string}  params.sessionId   Claude session UUID or Pi PID string
- * @param {string}  params.layer       'gate' | 'bd'
- * @param {string}  params.kind        e.g. 'hook.edit_gate.block', 'bd.claimed'
- * @param {string}  params.outcome     'allow' | 'block'
- * @param {string}  [params.toolName]  Tool intercepted (gates)
+ * @param {string}  params.sessionId   Session UUID or Pi PID string (required)
+ * @param {string}  params.kind        Dot-separated kind: 'gate.edit.allow', 'tool.call', 'bd.claimed', etc. (required)
+ * @param {string}  [params.runtime]   'claude' | 'pi'  (default: 'claude')
+ * @param {string}  [params.outcome]   'allow' | 'block' | 'ok' | 'error'
+ * @param {string}  [params.toolName]  Tool name for gate / tool.call events
  * @param {string}  [params.issueId]   Linked beads issue ID
- * @param {string}  [params.message]   Full message sent to agent (blocks)
- * @param {object}  [params.extra]     Additional structured data {file, cwd, reason_code, ...}
- *
- * @returns {string|null} The event UUID, or null if logging failed
+ * @param {number}  [params.durationMs] Tool call duration
+ * @param {object}  [params.data]      Structured context (file, cmd, reason, etc.)
+ * @param {string}  [params.message]   Legacy: message string (merged into data.msg)
+ * @param {object}  [params.extra]     Legacy: extra object (merged into data)
  */
 export function logEvent(params) {
   try {
-    const { cwd, runtime, sessionId, layer, kind, outcome } = params;
-    if (!cwd || !runtime || !sessionId || !layer || !kind || !outcome) return null;
+    const { cwd, sessionId, kind } = params;
+    if (!cwd || !sessionId || !kind) return;
 
-    const { toolName, issueId, message, extra } = params;
+    const { runtime = 'claude', outcome, toolName, issueId, durationMs, message, extra, data } = params;
 
-    // Derive worktree name if cwd is inside .xtrm/worktrees/<name>
+    const dbPath = findDbPath(cwd);
+    if (!dbPath) return;
+
     const worktreeMatch = cwd.match(/\.xtrm\/worktrees\/([^/]+)/);
     const worktree = worktreeMatch ? worktreeMatch[1] : null;
 
-    const id = randomUUID();
-    const extraJson = extra ? JSON.stringify(extra) : null;
-
-    const cols = 'id, runtime, session_id, worktree, layer, kind, outcome, tool_name, issue_id, message, extra';
-    const vals = [
-      sqlEscape(id),
-      sqlEscape(runtime),
-      sqlEscape(sessionId),
-      sqlEscape(worktree),
-      sqlEscape(layer),
-      sqlEscape(kind),
-      sqlEscape(outcome),
-      sqlEscape(toolName ?? null),
-      sqlEscape(issueId ?? null),
-      sqlEscape(message ?? null),
-      sqlEscape(extraJson),
-    ].join(', ');
-
-    const insertSql = `INSERT INTO xtrm_events (${cols}) VALUES (${vals})`;
-
-    let result = bdSql(insertSql, cwd);
-    if (result.status !== 0) {
-      // Table may not exist yet — create it (includes seq col) and retry once
-      bdSql(CREATE_SQL, cwd);
-      // Migrate existing table if it predates the seq column (fails silently if col exists)
-      bdSql(ADD_SEQ_SQL, cwd);
-      result = bdSql(insertSql, cwd);
+    // Merge message/extra/data into a single JSON string
+    let dataStr = null;
+    if (data !== null && data !== undefined) {
+      dataStr = typeof data === 'string' ? data : JSON.stringify(data);
+    } else if (message || extra) {
+      const merged = { ...(message ? { msg: message } : {}), ...(extra || {}) };
+      if (Object.keys(merged).length > 0) dataStr = JSON.stringify(merged);
     }
 
-    return result.status === 0 ? id : null;
+    const ts = Date.now();
+    const sql = `INSERT INTO events (ts,session_id,runtime,worktree,kind,tool_name,outcome,issue_id,duration_ms,data) VALUES (${ts},${sqlEsc(sessionId)},${sqlEsc(runtime)},${sqlEsc(worktree)},${sqlEsc(kind)},${sqlEsc(toolName ?? null)},${sqlEsc(outcome ?? null)},${sqlEsc(issueId ?? null)},${durationMs ?? 'NULL'},${sqlEsc(dataStr)})`;
+
+    let result = sqlExec(dbPath, sql);
+    if (result.status !== 0) {
+      ensureDb(dbPath);
+      result = sqlExec(dbPath, sql);
+    }
   } catch {
     // Silently swallow all errors — logging never affects hook behavior
-    return null;
   }
 }

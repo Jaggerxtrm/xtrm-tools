@@ -41,7 +41,7 @@ if (existsSync(marker)) {
     runtime: 'claude',
     sessionId,
     layer: 'gate',
-    kind: 'hook.memory_gate.acked',
+    kind: 'gate.memory.acked',
     outcome: 'allow',
   });
   process.exit(0);
@@ -72,7 +72,7 @@ logEvent({
   runtime: 'claude',
   sessionId,
   layer: 'gate',
-  kind: 'hook.memory_gate.triggered',
+  kind: 'gate.memory.triggered',
   outcome: 'block',
   issueId: closedIssueId,
   message: memoryMessage,

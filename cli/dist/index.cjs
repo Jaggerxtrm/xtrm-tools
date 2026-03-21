@@ -56870,30 +56870,66 @@ var import_node_child_process8 = require("child_process");
 var import_node_fs5 = require("fs");
 var import_node_path6 = require("path");
 var KIND_LABELS = {
-  "hook.edit_gate.allow": { label: "EDIT+", color: kleur_default.green },
-  "hook.edit_gate.block": { label: "EDIT-", color: kleur_default.red },
-  "hook.commit_gate.allow": { label: "CMIT+", color: kleur_default.green },
-  "hook.commit_gate.block": { label: "CMIT-", color: kleur_default.red },
-  "hook.stop_gate.allow": { label: "STOP+", color: kleur_default.green },
-  "hook.stop_gate.block": { label: "STOP-", color: kleur_default.red },
-  "hook.memory_gate.acked": { label: "MEMO+", color: kleur_default.green },
-  "hook.memory_gate.triggered": { label: "MEMO-", color: kleur_default.yellow },
-  "hook.worktree_boundary.block": { label: "WTRE-", color: kleur_default.red },
+  "session.start": { label: "SESS+", color: kleur_default.green },
+  "session.end": { label: "SESS-", color: kleur_default.dim },
+  "gate.edit.allow": { label: "EDIT+", color: kleur_default.green },
+  "gate.edit.block": { label: "EDIT-", color: kleur_default.red },
+  "gate.commit.allow": { label: "CMIT+", color: kleur_default.green },
+  "gate.commit.block": { label: "CMIT-", color: kleur_default.red },
+  "gate.stop.block": { label: "STOP-", color: kleur_default.red },
+  "gate.memory.triggered": { label: "MEMO-", color: kleur_default.yellow },
+  "gate.memory.acked": { label: "MEMO+", color: kleur_default.green },
+  "gate.worktree.block": { label: "WTRE-", color: kleur_default.red },
   "bd.claimed": { label: "CLMD ", color: kleur_default.cyan },
   "bd.closed": { label: "CLSD ", color: kleur_default.green },
-  "bd.auto_committed": { label: "ACMT+", color: kleur_default.cyan }
+  "bd.committed": {
+    label: (outcome) => outcome === "error" ? "ACMT-" : "ACMT+",
+    color: (outcome) => outcome === "error" ? kleur_default.red : kleur_default.cyan
+  }
 };
-function getLabel(kind, outcome) {
-  const def = KIND_LABELS[kind];
+var TOOL_ABBREVS = {
+  Bash: "BASH",
+  bash: "BASH",
+  execute_shell_command: "BASH",
+  Read: "READ",
+  Write: "WRIT",
+  Edit: "EDIT",
+  MultiEdit: "EDIT",
+  NotebookEdit: "NTED",
+  Glob: "GLOB",
+  Grep: "GREP",
+  WebFetch: "WBFT",
+  WebSearch: "WSRC",
+  Agent: "AGNT",
+  Task: "TASK",
+  LSP: "LSP "
+};
+function toolAbbrev(toolName) {
+  if (TOOL_ABBREVS[toolName]) return TOOL_ABBREVS[toolName];
+  if (toolName.startsWith("mcp__serena__")) return "SRNA";
+  if (toolName.startsWith("mcp__gitnexus__")) return "GTNX";
+  if (toolName.startsWith("mcp__deepwiki__")) return "WIKI";
+  if (toolName.startsWith("mcp__")) return "MCP ";
+  return toolName.slice(0, 4).toUpperCase();
+}
+function getLabel(event) {
+  if (event.kind === "tool.call") {
+    const abbrev = toolAbbrev(event.tool_name ?? "").padEnd(5);
+    return event.outcome === "error" ? kleur_default.red(abbrev) : kleur_default.dim(abbrev);
+  }
+  const def = KIND_LABELS[event.kind];
   if (!def) {
-    const short = (kind.split(".").pop() ?? "UNKN").slice(0, 4).toUpperCase();
-    const label = `${short}${outcome === "block" ? "-" : "+"}`.padEnd(5);
-    return outcome === "block" ? kleur_default.red(label) : kleur_default.green(label);
+    const seg = (event.kind.split(".").pop() ?? "UNKN").slice(0, 4).toUpperCase();
+    const label = `${seg}${event.outcome === "block" ? "-" : "+"}`.padEnd(5);
+    return event.outcome === "block" ? kleur_default.red(label) : kleur_default.dim(label);
   }
-  if (kind === "bd.auto_committed") {
-    return outcome === "block" ? kleur_default.red("ACMT-") : kleur_default.cyan("ACMT+");
+  if (event.kind === "bd.committed") {
+    const label = event.outcome === "error" ? "ACMT-" : "ACMT+";
+    return event.outcome === "error" ? kleur_default.red(label) : kleur_default.cyan(label);
   }
-  return def.color(def.label);
+  return def.color(
+    def.label
+  );
 }
 var SESSION_COLORS = [
   kleur_default.blue,
@@ -56902,7 +56938,7 @@ var SESSION_COLORS = [
   kleur_default.cyan,
   kleur_default.magenta
 ];
-function buildSessionColorMap(events) {
+function buildColorMap(events) {
   const map2 = /* @__PURE__ */ new Map();
   for (const ev of events) {
     if (!map2.has(ev.session_id)) {
@@ -56911,146 +56947,112 @@ function buildSessionColorMap(events) {
   }
   return map2;
 }
-function extendSessionColorMap(map2, events) {
+function extendColorMap(map2, events) {
   for (const ev of events) {
     if (!map2.has(ev.session_id)) {
       map2.set(ev.session_id, SESSION_COLORS[map2.size % SESSION_COLORS.length]);
     }
   }
 }
-function fmtTime(created_at) {
-  try {
-    const d = new Date(created_at);
-    if (isNaN(d.getTime())) return created_at.slice(11, 19) || "??:??:??";
-    return d.toLocaleTimeString("en-GB", { hour12: false });
-  } catch {
-    return created_at.slice(11, 19) || "??:??:??";
-  }
+function fmtTime(ts) {
+  return new Date(ts).toLocaleTimeString("en-GB", { hour12: false });
 }
 function buildDetail(event) {
   const parts = [];
-  if (event.tool_name) parts.push(kleur_default.dim(`tool=${event.tool_name}`));
-  if (event.issue_id) parts.push(kleur_default.yellow(`issue=${event.issue_id}`));
-  if (event.worktree) parts.push(kleur_default.dim(`wt=${event.worktree}`));
+  let d = null;
+  if (event.data) {
+    try {
+      d = JSON.parse(event.data);
+    } catch {
+    }
+  }
+  if (event.kind === "tool.call") {
+    if (d?.cmd) parts.push(kleur_default.dim(d.cmd.slice(0, 60)));
+    if (d?.file) parts.push(kleur_default.dim(d.file));
+    if (d?.pattern) parts.push(kleur_default.dim(`/${d.pattern}/`));
+    if (d?.url) parts.push(kleur_default.dim(d.url.slice(0, 60)));
+    if (d?.query) parts.push(kleur_default.dim(d.query.slice(0, 60)));
+    if (d?.prompt) parts.push(kleur_default.dim(d.prompt.slice(0, 60)));
+  } else {
+    if (event.issue_id) parts.push(kleur_default.yellow(event.issue_id));
+    if (d?.file) parts.push(kleur_default.dim(d.file));
+    if (d?.msg) parts.push(kleur_default.dim(d.msg.slice(0, 60)));
+    if (d?.reason_code) parts.push(kleur_default.dim(`[${d.reason_code}]`));
+    if (event.worktree) parts.push(kleur_default.dim(`wt:${event.worktree}`));
+  }
   return parts.join("  ") || kleur_default.dim("\u2014");
 }
-function formatEventLine(event, colorMap) {
-  const time3 = kleur_default.dim(fmtTime(event.created_at));
+function formatLine(event, colorMap) {
+  const time3 = kleur_default.dim(fmtTime(event.ts));
   const colorFn = colorMap.get(event.session_id) ?? kleur_default.white;
   const session = colorFn(event.session_id.slice(0, 8));
-  const label = getLabel(event.kind, event.outcome);
+  const label = getLabel(event);
   const detail = buildDetail(event);
   return `${time3}  ${session}  ${label}  ${detail}`;
 }
 function printHeader() {
-  const h = kleur_default.dim;
-  console.log(`  ${h("TIME      ")}  ${h("SESSION ")}  ${h("LABEL")}  ${h("DETAIL")}`);
+  console.log(
+    `  ${kleur_default.dim("TIME      ")}  ${kleur_default.dim("SESSION ")}  ${kleur_default.dim("LABEL")}  ${kleur_default.dim("DETAIL")}`
+  );
   console.log(`  ${kleur_default.dim("\u2500".repeat(72))}`);
 }
-function findProjectRoot(cwd) {
+function findDbPath(cwd) {
   let dir = cwd;
   for (let i = 0; i < 10; i++) {
-    if ((0, import_node_fs5.existsSync)((0, import_node_path6.join)(dir, ".beads"))) return dir;
+    if ((0, import_node_fs5.existsSync)((0, import_node_path6.join)(dir, ".beads"))) return (0, import_node_path6.join)(dir, ".xtrm", "debug.db");
     const parent = (0, import_node_path6.join)(dir, "..");
     if (parent === dir) break;
     dir = parent;
   }
   return null;
 }
-function parseBdTable(output, columns2) {
-  const lines = output.split("\n").map((l) => l.trim()).filter(Boolean);
-  const sepIdx = lines.findIndex((l) => /^[-+\s]+$/.test(l) && l.includes("-"));
-  if (sepIdx < 1) return [];
-  return lines.slice(sepIdx + 1).filter((l) => !l.startsWith("(")).map((line) => {
-    const cells = line.split("|").map((c) => c.trim());
-    const row = {};
-    columns2.forEach((col2, i) => {
-      row[col2] = cells[i] ?? "";
-    });
-    return row;
-  });
-}
-var COLS = "seq, id, created_at, runtime, session_id, worktree, layer, kind, outcome, tool_name, issue_id";
-var COL_NAMES = ["seq", "id", "created_at", "runtime", "session_id", "worktree", "layer", "kind", "outcome", "tool_name", "issue_id"];
-var ADD_SEQ_SQL = `ALTER TABLE xtrm_events ADD COLUMN seq INT NOT NULL AUTO_INCREMENT, ADD UNIQUE KEY uk_seq (seq)`;
-function queryEvents(cwd, where, limit) {
-  const sql = `SELECT ${COLS} FROM xtrm_events${where ? ` WHERE ${where}` : ""} ORDER BY seq ASC LIMIT ${limit}`;
-  let result = (0, import_node_child_process8.spawnSync)("bd", ["sql", sql], {
-    cwd,
-    stdio: ["pipe", "pipe", "pipe"],
-    encoding: "utf8",
-    timeout: 8e3
-  });
-  if (result.status !== 0) {
-    (0, import_node_child_process8.spawnSync)("bd", ["sql", ADD_SEQ_SQL], {
-      cwd,
-      stdio: ["pipe", "pipe", "pipe"],
-      encoding: "utf8",
-      timeout: 5e3
-    });
-    result = (0, import_node_child_process8.spawnSync)("bd", ["sql", sql], {
-      cwd,
-      stdio: ["pipe", "pipe", "pipe"],
-      encoding: "utf8",
-      timeout: 8e3
-    });
-  }
-  if (result.status !== 0) return [];
-  return parseBdTable(result.stdout, COL_NAMES).map((r) => ({
-    seq: parseInt(r.seq, 10) || 0,
-    id: r.id,
-    created_at: r.created_at,
-    runtime: r.runtime,
-    session_id: r.session_id,
-    worktree: r.worktree === "<nil>" || !r.worktree ? null : r.worktree,
-    layer: r.layer,
-    kind: r.kind,
-    outcome: r.outcome,
-    tool_name: r.tool_name === "<nil>" || !r.tool_name ? null : r.tool_name,
-    issue_id: r.issue_id === "<nil>" || !r.issue_id ? null : r.issue_id
-  }));
-}
-function buildWhere(opts, baseClause) {
+function buildWhere(opts, base) {
   const clauses = [];
-  if (baseClause) clauses.push(baseClause);
+  if (base) clauses.push(base);
   if (opts.session) {
     const s = opts.session.replace(/'/g, "''");
     clauses.push(`session_id LIKE '${s}%'`);
   }
   if (opts.type) {
-    const layer = opts.type.replace(/'/g, "''");
-    clauses.push(`layer = '${layer}'`);
+    const t3 = opts.type.replace(/'/g, "''");
+    clauses.push(`kind LIKE '${t3}.%' OR kind = '${t3}'`);
   }
-  return clauses.join(" AND ");
+  return clauses.length ? clauses.join(" AND ") : "";
 }
-function follow(cwd, opts) {
-  const fiveMinsAgo = new Date(Date.now() - 5 * 60 * 1e3).toISOString().replace("T", " ").slice(0, 19);
-  const initial = queryEvents(cwd, buildWhere(opts, `created_at >= '${fiveMinsAgo}'`), 200);
-  const colorMap = buildSessionColorMap(initial);
-  let lastSeq = 0;
+function queryEvents(dbPath, where, limit) {
+  const sql = `SELECT id,ts,session_id,runtime,worktree,kind,tool_name,outcome,issue_id,duration_ms,data FROM events${where ? ` WHERE ${where}` : ""} ORDER BY id ASC LIMIT ${limit}`;
+  const result = (0, import_node_child_process8.spawnSync)("sqlite3", [dbPath, "-json", sql], {
+    stdio: ["pipe", "pipe", "pipe"],
+    encoding: "utf8",
+    timeout: 5e3
+  });
+  if (result.status !== 0 || !result.stdout.trim()) return [];
+  try {
+    return JSON.parse(result.stdout);
+  } catch {
+    return [];
+  }
+}
+function follow(dbPath, opts) {
+  const sinceTs = Date.now() - 5 * 60 * 1e3;
+  const initial = queryEvents(dbPath, buildWhere(opts, `ts >= ${sinceTs}`), 200);
+  const colorMap = buildColorMap(initial);
+  let lastId = 0;
   if (initial.length > 0) {
     for (const ev of initial) {
-      if (ev.seq > lastSeq) lastSeq = ev.seq;
-      if (opts.json) {
-        console.log(JSON.stringify(ev));
-      } else {
-        console.log("  " + formatEventLine(ev, colorMap));
-      }
+      if (ev.id > lastId) lastId = ev.id;
+      opts.json ? console.log(JSON.stringify(ev)) : console.log("  " + formatLine(ev, colorMap));
     }
   } else if (!opts.json) {
     console.log(kleur_default.dim("  (no recent events \u2014 waiting for new ones)\n"));
   }
   const interval = setInterval(() => {
-    const events = queryEvents(cwd, buildWhere(opts, `seq > ${lastSeq}`), 50);
+    const events = queryEvents(dbPath, buildWhere(opts, `id > ${lastId}`), 50);
     if (events.length > 0) {
-      extendSessionColorMap(colorMap, events);
+      extendColorMap(colorMap, events);
       for (const ev of events) {
-        if (ev.seq > lastSeq) lastSeq = ev.seq;
-        if (opts.json) {
-          console.log(JSON.stringify(ev));
-        } else {
-          console.log("  " + formatEventLine(ev, colorMap));
-        }
+        if (ev.id > lastId) lastId = ev.id;
+        opts.json ? console.log(JSON.stringify(ev)) : console.log("  " + formatLine(ev, colorMap));
       }
     }
   }, 2e3);
@@ -57061,44 +57063,36 @@ function follow(cwd, opts) {
   });
 }
 function createDebugCommand() {
-  return new Command("debug").description("Watch xtrm hook and bd lifecycle events in real time").option("-f, --follow", "Follow new events (default when no other mode set)", false).option("--all", "Show full history and exit", false).option("--session <id>", "Filter by session ID (prefix match)").option("--type <layer>", "Filter by layer: gate | bd").option("--json", "Output raw JSON lines", false).action((opts) => {
+  return new Command("debug").description("Watch xtrm events: tool calls, gate decisions, bd lifecycle").option("-f, --follow", "Follow new events (default)", false).option("--all", "Show full history and exit", false).option("--session <id>", "Filter by session ID (prefix match)").option("--type <domain>", "Filter by domain: tool | gate | bd | session").option("--json", "Output raw JSON lines", false).action((opts) => {
     const cwd = process.cwd();
-    const root = findProjectRoot(cwd);
-    if (!root) {
-      console.error(kleur_default.red("\n  \u2717 No beads project found (.beads directory missing)\n"));
-      console.error(kleur_default.dim("  Run from inside an xtrm project.\n"));
-      process.exit(1);
+    const dbPath = findDbPath(cwd);
+    if (!dbPath || !(0, import_node_fs5.existsSync)(dbPath)) {
+      if (!opts.json) {
+        console.log(kleur_default.bold("\n  xtrm event log"));
+        console.log(kleur_default.dim("  No events yet \u2014 DB initializes on first hook fire.\n"));
+        console.log(kleur_default.dim("  Run from inside an xtrm project with beads initialized.\n"));
+      }
+      return;
     }
     if (!opts.json) {
       console.log(kleur_default.bold("\n  xtrm event log"));
-      if (opts.all) {
-        console.log(kleur_default.dim("  Showing full history\n"));
-      } else {
-        console.log(kleur_default.dim("  Following events \u2014 Ctrl+C to stop\n"));
-      }
+      console.log(kleur_default.dim(opts.all ? "  Full history\n" : "  Following \u2014 Ctrl+C to stop\n"));
       printHeader();
     }
     if (opts.all) {
-      const events = queryEvents(root, buildWhere(opts, ""), 200);
+      const events = queryEvents(dbPath, buildWhere(opts, ""), 1e3);
       if (events.length === 0) {
-        if (!opts.json) {
-          console.log(kleur_default.dim("\n  No events recorded yet."));
-          console.log(kleur_default.dim("  Events appear here as hooks fire and bd lifecycle runs.\n"));
-        }
+        if (!opts.json) console.log(kleur_default.dim("\n  No events recorded yet.\n"));
       } else {
-        const colorMap = buildSessionColorMap(events);
+        const colorMap = buildColorMap(events);
         for (const ev of events) {
-          if (opts.json) {
-            console.log(JSON.stringify(ev));
-          } else {
-            console.log("  " + formatEventLine(ev, colorMap));
-          }
+          opts.json ? console.log(JSON.stringify(ev)) : console.log("  " + formatLine(ev, colorMap));
         }
         if (!opts.json) console.log("");
       }
       return;
     }
-    follow(root, opts);
+    follow(dbPath, opts);
   });
 }
 

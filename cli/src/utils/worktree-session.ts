@@ -1,7 +1,7 @@
 import kleur from 'kleur';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
 import { homedir } from 'node:os';
 
 export interface WorktreeSessionOptions {
@@ -36,14 +36,15 @@ function resolveStatuslineScript(): string | null {
     const pluginsFile = path.join(homedir(), '.claude', 'plugins', 'installed_plugins.json');
     try {
         const plugins = JSON.parse(readFileSync(pluginsFile, 'utf8'));
-        const entries = plugins?.plugins?.['xtrm-tools@xtrm-tools'];
-        if (entries?.length > 0) {
-            return path.join(entries[0].installPath, 'hooks', 'statusline.mjs');
+        for (const [key, entries] of Object.entries(plugins?.plugins ?? {}) as [string, any[]][]) {
+            if (!key.startsWith('xtrm-tools@') || !entries?.length) continue;
+            const p = path.join(entries[0].installPath, 'hooks', 'statusline.mjs');
+            if (existsSync(p)) return p;
         }
     } catch { /* fall through */ }
-    // Fallback: ~\.claude/hooks/statusline.mjs
+    // Fallback: ~/.claude/hooks/statusline.mjs
     const fallback = path.join(homedir(), '.claude', 'hooks', 'statusline.mjs');
-    return fallback;
+    return existsSync(fallback) ? fallback : null;
 }
 
 export async function launchWorktreeSession(opts: WorktreeSessionOptions): Promise<void> {

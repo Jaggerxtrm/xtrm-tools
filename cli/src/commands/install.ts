@@ -302,8 +302,11 @@ export async function installPlugin(repoRoot: string, dryRun: boolean): Promise<
         return;
     }
 
-    // Register marketplace (re-register to pick up any path changes)
-    spawnSync('claude', ['plugin', 'marketplace', 'add', repoRoot, '--scope', 'user'], { stdio: 'pipe' });
+    // Register marketplace using the xtrm-tools package root.
+    // __dirname in the built CJS bundle is cli/dist/, so ../../ is the package root.
+    // Do NOT use repoRoot here — that is the user's project, not the xtrm-tools package.
+    const xtrmPkgRoot = path.resolve(__dirname, '..', '..');
+    spawnSync('claude', ['plugin', 'marketplace', 'add', xtrmPkgRoot, '--scope', 'user'], { stdio: 'pipe' });
 
     // Always uninstall + reinstall to refresh the cached copy from the live repo
     const listResult = spawnSync('claude', ['plugin', 'list'], { encoding: 'utf8', stdio: 'pipe' });
@@ -313,6 +316,7 @@ export async function installPlugin(repoRoot: string, dryRun: boolean): Promise<
     spawnSync('claude', ['plugin', 'install', 'xtrm-tools@xtrm-tools', '--scope', 'user'], { stdio: 'inherit' });
 
     console.log(t.success('  ✓ xtrm-tools plugin installed'));
+    console.log(t.warning('  ↻ Restart Claude Code for the new plugin hooks to take effect'));
 
     // Clean up stale pre-plugin files from ~/.claude/hooks/ and ~/.claude/skills/
     await cleanStalePrePluginFiles(repoRoot, dryRun);

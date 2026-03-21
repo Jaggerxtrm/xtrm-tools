@@ -41115,13 +41115,15 @@ async function installPlugin(repoRoot, dryRun) {
     await installOfficialClaudePlugins(true);
     return;
   }
-  (0, import_child_process3.spawnSync)("claude", ["plugin", "marketplace", "add", repoRoot, "--scope", "user"], { stdio: "pipe" });
+  const xtrmPkgRoot = import_path11.default.resolve(__dirname, "..", "..");
+  (0, import_child_process3.spawnSync)("claude", ["plugin", "marketplace", "add", xtrmPkgRoot, "--scope", "user"], { stdio: "pipe" });
   const listResult = (0, import_child_process3.spawnSync)("claude", ["plugin", "list"], { encoding: "utf8", stdio: "pipe" });
   if (listResult.stdout?.includes("xtrm-tools@xtrm-tools")) {
     (0, import_child_process3.spawnSync)("claude", ["plugin", "uninstall", "xtrm-tools@xtrm-tools"], { stdio: "inherit" });
   }
   (0, import_child_process3.spawnSync)("claude", ["plugin", "install", "xtrm-tools@xtrm-tools", "--scope", "user"], { stdio: "inherit" });
   console.log(t.success("  \u2713 xtrm-tools plugin installed"));
+  console.log(t.warning("  \u21BB Restart Claude Code for the new plugin hooks to take effect"));
   await cleanStalePrePluginFiles(repoRoot, dryRun);
   await installOfficialClaudePlugins(false);
 }

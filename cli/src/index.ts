@@ -78,12 +78,12 @@ process.on('unhandledRejection', (reason) => {
     process.exit(1);
 });
 
-// Suppress banner for help/version flags and for viewer commands (debug, status)
+// Show banner only for the install command (never for help/version output)
 const isHelpOrVersion = process.argv.some(a => a === '--help' || a === '-h' || a === '--version' || a === '-V');
-const isViewerCommand = ['debug', 'status'].includes(process.argv[2] ?? '');
+const isInstallCommand = (process.argv[2] ?? '') === 'install';
 
 (async () => {
-    if (!isHelpOrVersion && !isViewerCommand) {
+    if (!isHelpOrVersion && isInstallCommand) {
         await printBanner(version);
     }
     program.parseAsync(process.argv);

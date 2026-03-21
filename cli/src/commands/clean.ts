@@ -9,7 +9,6 @@ import { findRepoRoot } from '../utils/repo-root.js';
 // Canonical hooks (files in ~/.claude/hooks/)
 const CANONICAL_HOOKS = new Set([
     'using-xtrm-reminder.mjs',
-    'serena-workflow-reminder.py',
     'beads-gate-core.mjs',
     'beads-gate-utils.mjs',
     'beads-gate-messages.mjs',
@@ -20,12 +19,15 @@ const CANONICAL_HOOKS = new Set([
     'beads-claim-sync.mjs',
     'beads-compact-save.mjs',
     'beads-compact-restore.mjs',
+    'worktree-boundary.mjs',
     'statusline.mjs',
     'quality-check.cjs',
     'quality-check-env.mjs',
     'quality-check.py',
+    'xtrm-logger.mjs',
+    'xtrm-tool-logger.mjs',
+    'xtrm-session-logger.mjs',
     'gitnexus',  // directory
-    'statusline-starship.sh',
     'README.md',
 ]);
 

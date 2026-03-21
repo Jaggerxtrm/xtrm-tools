@@ -37,11 +37,13 @@ Always installed (`xtrm install`).
 
 | Hook | Event | Behavior |
 |------|-------|----------|
-| `serena-workflow-reminder.py` | SessionStart | Injects Serena LSP semantic editing reminder |
+| `using-xtrm-reminder.mjs` | SessionStart | Injects the xtrm operating manual into system prompt |
 | `gitnexus/gitnexus-hook.cjs` | PostToolUse | Enriches Bash/Grep/Read/Glob/Serena tool output with GitNexus graph context |
 | `quality-check.cjs` | PostToolUse | Runs tsc/ESLint checks after JS/TS/CJS/MJS file edits |
 | `quality-check.py` | PostToolUse | Runs ruff/mypy checks after Python file edits |
 | `quality-check-env.mjs` | SessionStart | Warns if tsc/ruff/eslint are missing so gate degradation is caught early |
+| `xtrm-session-logger.mjs` | SessionStart | Writes `session.start` events to `.xtrm/debug.db` |
+| `xtrm-tool-logger.mjs` | PostToolUse | Writes `tool.call` events to `.xtrm/debug.db` for debug traces |
 
 ### Beads Gate Hooks
 

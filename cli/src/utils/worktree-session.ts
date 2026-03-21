@@ -1,8 +1,6 @@
 import kleur from 'kleur';
 import path from 'node:path';
-import fs from 'fs-extra';
-import { execSync, spawnSync } from 'node:child_process';
-import { findRepoRoot } from './repo-root.js';
+import { spawnSync } from 'node:child_process';
 
 export interface WorktreeSessionOptions {
     runtime: 'claude' | 'pi';
@@ -13,79 +11,70 @@ function randomSlug(len: number = 4): string {
     return Math.random().toString(36).slice(2, 2 + len);
 }
 
+function gitRepoRoot(cwd: string): string | null {
+    const r = spawnSync('git', ['rev-parse', '--show-toplevel'], {
+        cwd, stdio: 'pipe', encoding: 'utf8',
+    });
+    return r.status === 0 ? (r.stdout ?? '').trim() : null;
+}
 
 /**
  * Launch a Claude or Pi session in a sandboxed git worktree.
  *
  * Worktree path: inside repo under .xtrm/worktrees/, named <cwd-basename>-xt-<runtime>-<slug>
  * Branch: xt/<name> if name provided, xt/<4-char-random> otherwise
- * Dolt bootstrap: redirect worktree to main's canonical beads db
+ * Beads: bd worktree create sets up canonical .beads/redirect to share the main db
  */
 export async function launchWorktreeSession(opts: WorktreeSessionOptions): Promise<void> {
     const { runtime, name } = opts;
     const cwd = process.cwd();
-    const repoRoot = await findRepoRoot();
-    const cwdBasename = path.basename(cwd);
+
+    // Use git to find the user's actual repo root — not xtrm-tools' package root
+    const repoRoot = gitRepoRoot(cwd);
+    if (!repoRoot) {
+        console.error(kleur.red('\n  ✗ Not inside a git repository\n'));
+        process.exit(1);
+    }
+
+    const cwdBasename = path.basename(repoRoot);
 
     // Resolve slug — shared by both branch and worktree path so they're linked
     const slug = name ?? randomSlug(4);
 
-    // Resolve worktree path (inside repo under .xtrm/worktrees/) — use slug not date to avoid same-day collisions
+    // Worktree path: inside repo under .xtrm/worktrees/
     const worktreeName = `${cwdBasename}-xt-${runtime}-${slug}`;
     const worktreePath = path.join(repoRoot, '.xtrm', 'worktrees', worktreeName);
 
-    // Resolve branch name
+    // Branch name
     const branchName = `xt/${slug}`;
 
     console.log(kleur.bold(`\n  Launching ${runtime} session`));
     console.log(kleur.dim(`  worktree: ${worktreePath}`));
     console.log(kleur.dim(`  branch:   ${branchName}\n`));
 
-    // Create worktree (create branch if it doesn't exist)
-    const branchExists = spawnSync('git', ['rev-parse', '--verify', branchName], {
-        cwd: repoRoot, stdio: 'pipe',
-    }).status === 0;
+    // Use bd worktree create — sets up git worktree + canonical .beads/redirect in one step.
+    // Falls back to plain git worktree add if bd is unavailable or the project has no .beads/.
+    const bdResult = spawnSync('bd', ['worktree', 'create', worktreePath, '--branch', branchName], {
+        cwd: repoRoot, stdio: 'inherit',
+    });
 
-    const worktreeArgs = branchExists
-        ? ['worktree', 'add', worktreePath, branchName]
-        : ['worktree', 'add', '-b', branchName, worktreePath];
-
-    const worktreeResult = spawnSync('git', worktreeArgs, { cwd: repoRoot, stdio: 'inherit' });
-    if (worktreeResult.status !== 0) {
-        console.error(kleur.red(`\n  ✗ Failed to create worktree at ${worktreePath}\n`));
-        process.exit(1);
-    }
-
-    // Dolt bootstrap: redirect worktree to main's canonical beads db
-    const mainBeadsDir = path.join(repoRoot, '.beads');
-    const worktreeBeadsDir = path.join(worktreePath, '.beads');
-    const mainPortFile = path.join(mainBeadsDir, 'dolt-server.port');
-
-    if (await fs.pathExists(mainBeadsDir)) {
-        // Resolve main's Dolt port: prefer port file, fall back to bd dolt status
-        let mainPort: string | null = null;
-        if (await fs.pathExists(mainPortFile)) {
-            mainPort = (await fs.readFile(mainPortFile, 'utf8')).trim();
-        } else {
-            // Query live server port from main checkout
-            const statusResult = spawnSync('bd', ['dolt', 'status'], {
-                cwd: repoRoot, stdio: 'pipe', encoding: 'utf8',
-            });
-            const portMatch = (statusResult.stdout ?? '').match(/Port:\s*(\d+)/);
-            if (portMatch) {
-                mainPort = portMatch[1];
-                // Persist to port file so future worktrees find it immediately
-                await fs.writeFile(mainPortFile, mainPort, 'utf8');
-            }
+    if (bdResult.error || bdResult.status !== 0) {
+        // Fall back to plain git worktree add (bd not found or no .beads/ in project)
+        if (bdResult.status !== 0 && !bdResult.error) {
+            console.log(kleur.dim('  beads: no database found, creating worktree without redirect'));
         }
+        const branchExists = spawnSync('git', ['rev-parse', '--verify', branchName], {
+            cwd: repoRoot, stdio: 'pipe',
+        }).status === 0;
 
-        if (mainPort) {
-            // Write redirect BEFORE launching claude so bd never auto-spawns an isolated server
-            await fs.ensureDir(worktreeBeadsDir);
-            await fs.writeFile(path.join(worktreeBeadsDir, 'dolt-server.port'), mainPort, 'utf8');
-            console.log(kleur.dim(`  beads: redirected to main server (port ${mainPort})`));
-        } else {
-            console.log(kleur.dim('  beads: main Dolt server not running, worktree will use isolated db'));
+        const gitArgs = branchExists
+            ? ['worktree', 'add', worktreePath, branchName]
+            : ['worktree', 'add', '-b', branchName, worktreePath];
+
+        const gitResult = spawnSync('git', gitArgs, { cwd: repoRoot, stdio: 'inherit' });
+        if (gitResult.status !== 0) {
+            console.error(kleur.red(`\n  ✗ Failed to create worktree at ${worktreePath}\n`));
+            process.exit(1);
         }
     }
 

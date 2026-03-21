@@ -82,58 +82,48 @@ describe('session launcher CLI surface (2q8j)', () => {
 
 describe('worktree creation naming convention (2q8j)', () => {
 
-    it('creates worktree with xt/<name> branch when name is provided', () => {
-        const today = new Date();
-        const dateStr = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
-        const expectedName = `myproject-xt-claude-${dateStr}`;
-        const expectedPath = path.join(siblingBase, expectedName);
+    it('creates worktree inside repo under .xtrm/worktrees/ with xt/<name> branch', () => {
+        // Worktree lands at <repoDir>/.xtrm/worktrees/myproject-xt-claude-mysession
+        const expectedPath = path.join(repoDir, '.xtrm', 'worktrees', 'myproject-xt-claude-mysession');
 
-        // Pre-clean any stale worktree from previous runs
         if (fs.existsSync(expectedPath)) {
             removeWorktree(expectedPath, repoDir);
         }
 
-        run(['claude', 'mysession'], {
-            cwd: repoDir,
-            env: { PATH: '/usr/bin:/bin' },
+        run(['claude', 'mysession'], { cwd: repoDir });
+
+        expect(fs.existsSync(expectedPath)).toBe(true);
+
+        const branchResult = spawnSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], {
+            cwd: expectedPath, encoding: 'utf8', stdio: 'pipe',
         });
+        expect(branchResult.stdout.trim()).toBe('xt/mysession');
 
-        if (fs.existsSync(expectedPath)) {
-            const branchResult = spawnSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], {
-                cwd: expectedPath, encoding: 'utf8', stdio: 'pipe',
-            });
-            expect(branchResult.stdout.trim()).toBe('xt/mysession');
+        // Worktree is nested inside repoDir, not a sibling
+        expect(expectedPath.startsWith(repoDir + path.sep)).toBe(true);
 
-            // Verify it's a sibling of repoDir, not nested inside it
-            // Use repoDir + sep to avoid "myproject-xt-..." startsWith "myproject"
-            expect(expectedPath.startsWith(repoDir + path.sep)).toBe(false);
-            expect(path.dirname(expectedPath)).toBe(siblingBase);
-
-            removeWorktree(expectedPath, repoDir);
-        }
+        removeWorktree(expectedPath, repoDir);
     });
 
     it('creates worktree with random xt/<slug> branch when no name provided', () => {
-        const today = new Date();
-        const dateStr = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
-        const expectedName = `myproject-xt-pi-${dateStr}`;
-        const expectedPath = path.join(siblingBase, expectedName);
+        // Worktree lands at <repoDir>/.xtrm/worktrees/myproject-xt-pi-<slug>
+        const worktreesDir = path.join(repoDir, '.xtrm', 'worktrees');
 
-        if (fs.existsSync(expectedPath)) {
-            removeWorktree(expectedPath, repoDir);
-        }
+        run(['pi'], { cwd: repoDir });
 
-        run(['pi'], {
-            cwd: repoDir,
-            env: { PATH: '/usr/bin:/bin' },
+        // Find the created worktree (slug is random, so glob the dir)
+        const entries = fs.existsSync(worktreesDir)
+            ? fs.readdirSync(worktreesDir).filter(e => e.startsWith('myproject-xt-pi-'))
+            : [];
+
+        expect(entries.length).toBeGreaterThan(0);
+
+        const wtPath = path.join(worktreesDir, entries[0]!);
+        const branchResult = spawnSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], {
+            cwd: wtPath, encoding: 'utf8', stdio: 'pipe',
         });
+        expect(branchResult.stdout.trim()).toMatch(/^xt\/[a-z0-9]{4}$/);
 
-        if (fs.existsSync(expectedPath)) {
-            const branchResult = spawnSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], {
-                cwd: expectedPath, encoding: 'utf8', stdio: 'pipe',
-            });
-            expect(branchResult.stdout.trim()).toMatch(/^xt\/[a-z0-9]{4}$/);
-            removeWorktree(expectedPath, repoDir);
-        }
+        removeWorktree(wtPath, repoDir);
     });
 });

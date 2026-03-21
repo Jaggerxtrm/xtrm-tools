@@ -35,7 +35,8 @@ bd update <id> --claim            # claim before any edit
 | About to edit a symbol | `gitnexus_impact({target: "name", direction: "upstream"})` |
 | Before `git commit` | `gitnexus_detect_changes({scope: "staged"})` to verify scope |
 | Reading code | `get_symbols_overview` → `find_symbol` — never read whole files |
-| Task is tests / docs / typo | `/delegating` — hand off to a cost-optimized agent |
+| Task is tests | use /test-planning
+| Task is docs updates | use /sync-docs
 | Session end (issue closed) | Memory gate fires — evaluate `bd remember` for each closed issue |
 
 ---
@@ -118,8 +119,6 @@ Vague prompt (under 8 words, no specifics)? Ask one clarifying question before p
 | Navigate unfamiliar code | `gitnexus-exploring` |
 | Trace a bug | `gitnexus-debugging` |
 | Safe rename / refactor | `gitnexus-refactoring` |
-| Docs maintenance | `documenting` |
+| Docs maintenance | `sync-docs` |
 | Docker service project | `using-service-skills` |
-| Simple subtask | `delegating` |
-| Second opinion | `/orchestrate adversarial "task"` |
 | Build / improve a skill | `skill-creator` |

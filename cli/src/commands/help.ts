@@ -7,6 +7,7 @@ import { findRepoRoot } from '../utils/repo-root.js';
 declare const __dirname: string;
 
 const HOOK_CATALOG: Array<{ file: string; event: string; desc: string; beads?: true; sessionFlow?: true }> = [
+    { file: 'using-xtrm-reminder.mjs',      event: 'SessionStart',     desc: 'Injects using-xtrm session operating manual into system prompt' },
     { file: 'serena-workflow-reminder.py',  event: 'SessionStart',     desc: 'Injects Serena semantic editing workflow reminder' },
     { file: 'gitnexus/gitnexus-hook.cjs',   event: 'PostToolUse',      desc: 'Adds GitNexus context for search and Serena tooling' },
     { file: 'branch-state.mjs',             event: 'UserPromptSubmit', desc: 'Injects current git branch into prompt context' },

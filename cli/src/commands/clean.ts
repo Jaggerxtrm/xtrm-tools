@@ -8,6 +8,7 @@ import { findRepoRoot } from '../utils/repo-root.js';
 
 // Canonical hooks (files in ~/.claude/hooks/)
 const CANONICAL_HOOKS = new Set([
+    'using-xtrm-reminder.mjs',
     'serena-workflow-reminder.py',
     'beads-gate-core.mjs',
     'beads-gate-utils.mjs',

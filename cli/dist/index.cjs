@@ -56005,6 +56005,7 @@ function createResetCommand() {
 var import_path18 = __toESM(require("path"), 1);
 var import_fs_extra18 = __toESM(require_lib2(), 1);
 var HOOK_CATALOG = [
+  { file: "using-xtrm-reminder.mjs", event: "SessionStart", desc: "Injects using-xtrm session operating manual into system prompt" },
   { file: "serena-workflow-reminder.py", event: "SessionStart", desc: "Injects Serena semantic editing workflow reminder" },
   { file: "gitnexus/gitnexus-hook.cjs", event: "PostToolUse", desc: "Adds GitNexus context for search and Serena tooling" },
   { file: "branch-state.mjs", event: "UserPromptSubmit", desc: "Injects current git branch into prompt context" },
@@ -56169,6 +56170,7 @@ var import_fs_extra19 = __toESM(require_lib2(), 1);
 var import_path19 = __toESM(require("path"), 1);
 var import_os6 = require("os");
 var CANONICAL_HOOKS = /* @__PURE__ */ new Set([
+  "using-xtrm-reminder.mjs",
   "serena-workflow-reminder.py",
   "beads-gate-core.mjs",
   "beads-gate-utils.mjs",

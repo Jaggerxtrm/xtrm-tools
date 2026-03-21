@@ -2,7 +2,7 @@
 /**
  * GitNexus Claude Code Hook — PostToolUse enrichment
  *
- * Fires AFTER Read/Grep/Glob/Bash/Serena tools complete.
+ * Fires AFTER Bash/Grep/Read/Glob/Serena tools complete.
  * Extracts patterns from both tool input AND output, runs
  * `gitnexus augment <pattern>`, and injects a [GitNexus: ...]
  * block into Claude's context — mirroring pi-gitnexus behavior.

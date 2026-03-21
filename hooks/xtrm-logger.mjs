@@ -16,6 +16,7 @@ import { randomUUID } from 'node:crypto';
 // ── Schema ────────────────────────────────────────────────────────────────────
 
 const CREATE_SQL = `CREATE TABLE IF NOT EXISTS xtrm_events (
+  seq         INT           NOT NULL AUTO_INCREMENT,
   id          VARCHAR(36)   NOT NULL,
   created_at  DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
   runtime     VARCHAR(16)   NOT NULL,
@@ -29,10 +30,14 @@ const CREATE_SQL = `CREATE TABLE IF NOT EXISTS xtrm_events (
   message     TEXT          DEFAULT NULL,
   extra       JSON          DEFAULT NULL,
   PRIMARY KEY (id),
+  UNIQUE KEY uk_seq (seq),
   INDEX idx_session (session_id(64)),
   INDEX idx_kind (kind),
   INDEX idx_created (created_at)
 )`;
+
+// Migration: add seq column to existing tables that predate this schema version
+const ADD_SEQ_SQL = `ALTER TABLE xtrm_events ADD COLUMN seq INT NOT NULL AUTO_INCREMENT, ADD UNIQUE KEY uk_seq (seq)`;
 
 // ── SQL helpers ───────────────────────────────────────────────────────────────
 
@@ -110,8 +115,10 @@ export function logEvent(params) {
 
     let result = bdSql(insertSql, cwd);
     if (result.status !== 0) {
-      // Table may not exist yet — create it and retry once (self-initializing)
+      // Table may not exist yet — create it (includes seq col) and retry once
       bdSql(CREATE_SQL, cwd);
+      // Migrate existing table if it predates the seq column (fails silently if col exists)
+      bdSql(ADD_SEQ_SQL, cwd);
       result = bdSql(insertSql, cwd);
     }
 

@@ -447,7 +447,7 @@ class QualityChecker {
     if (/\.(ts|tsx)$/.test(filePath)) {
       return 'typescript';
     }
-    if (/\.(js|jsx)$/.test(filePath)) {
+    if (/\.(js|jsx|cjs|mjs)$/.test(filePath)) {
       return 'javascript';
     }
     return 'unknown';
@@ -537,7 +537,7 @@ class QualityChecker {
     const resolved = path.resolve(dir, importPath);
 
     // Try common extensions
-    const extensions = ['.ts', '.tsx', '.js', '.jsx'];
+    const extensions = ['.ts', '.tsx', '.js', '.jsx', '.cjs', '.mjs'];
     for (const ext of extensions) {
       const fullPath = resolved + ext;
       if (require('fs').existsSync(fullPath)) {
@@ -565,8 +565,8 @@ class QualityChecker {
       return;
     }
 
-    // Skip TypeScript checking for JavaScript files in hook directories
-    if (this.filePath.endsWith('.js') && this.filePath.includes('.claude/hooks/')) {
+    // Skip TypeScript checking for JavaScript/CJS/MJS files in hook directories
+    if (/\.(js|cjs|mjs)$/.test(this.filePath) && this.filePath.includes('.claude/hooks/')) {
       log.debug('Skipping TypeScript check for JavaScript hook file');
       return;
     }
@@ -865,7 +865,7 @@ class QualityChecker {
       const debuggerRule = config._fileConfig.rules?.debugger || {};
       if (debuggerRule.enabled !== false) {
         lines.forEach((line, index) => {
-          if (/\bdebugger\b/.test(line)) {
+          if (/^\s*debugger\s*;/.test(line)) {
             const severity = debuggerRule.severity || 'error';
             const message =
               debuggerRule.message || 'Remove debugger statements before committing';
@@ -1111,7 +1111,7 @@ async function fileExists(filePath) {
  * @returns {boolean} True if source file
  */
 function isSourceFile(filePath) {
-  return /\.(ts|tsx|js|jsx)$/.test(filePath);
+  return /\.(ts|tsx|js|jsx|cjs|mjs)$/.test(filePath);
 }
 
 /**

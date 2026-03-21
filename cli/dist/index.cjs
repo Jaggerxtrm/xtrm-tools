@@ -56060,21 +56060,18 @@ function createResetCommand() {
 var import_path18 = __toESM(require("path"), 1);
 var import_fs_extra18 = __toESM(require_lib2(), 1);
 var HOOK_CATALOG = [
-  { file: "main-guard.mjs", event: "PreToolUse", desc: "Blocks direct edits / unsafe Bash on protected branches" },
-  { file: "main-guard-post-push.mjs", event: "PostToolUse", desc: "After feature-branch push, reminds PR/merge/sync steps" },
   { file: "serena-workflow-reminder.py", event: "SessionStart", desc: "Injects Serena semantic editing workflow reminder" },
   { file: "gitnexus/gitnexus-hook.cjs", event: "PostToolUse", desc: "Adds GitNexus context for search and Serena tooling" },
-  { file: "agent_context.py", event: "Support module", desc: "Shared hook I/O helper used by Python hook scripts" },
-  { file: "beads-edit-gate.mjs", event: "PreToolUse", desc: "Blocks file edits if no beads issue is claimed", beads: true },
-  { file: "beads-commit-gate.mjs", event: "PreToolUse", desc: "Blocks commits when no beads issue is in progress", beads: true },
-  { file: "beads-memory-gate.mjs", event: "Stop", desc: "Prompts memory save when claim was closed", beads: true },
-  { file: "beads-compact-save.mjs", event: "PreCompact", desc: "Saves in_progress issue + session-state bundle", beads: true },
-  { file: "beads-compact-restore.mjs", event: "SessionStart", desc: "Restores compacted issue + session-state bundle", beads: true },
-  { file: "beads-claim-sync.mjs", event: "PostToolUse", desc: "Auto-claim sync + worktree/session-state bootstrap", sessionFlow: true },
-  { file: "beads-stop-gate.mjs", event: "Stop", desc: "Blocks stop for waiting-merge/conflicting/pending-cleanup", sessionFlow: true },
   { file: "branch-state.mjs", event: "UserPromptSubmit", desc: "Injects current git branch into prompt context" },
   { file: "quality-check.cjs", event: "PostToolUse", desc: "Runs JS/TS quality checks on mutating edits" },
-  { file: "quality-check.py", event: "PostToolUse", desc: "Runs Python quality checks on mutating edits" }
+  { file: "quality-check.py", event: "PostToolUse", desc: "Runs Python quality checks on mutating edits" },
+  { file: "beads-edit-gate.mjs", event: "PreToolUse", desc: "Blocks file edits if no beads issue is claimed", beads: true },
+  { file: "beads-commit-gate.mjs", event: "PreToolUse", desc: "Blocks commits when no beads issue is in progress", beads: true },
+  { file: "beads-stop-gate.mjs", event: "Stop", desc: "Blocks stop when there is an unclosed in_progress claim", beads: true },
+  { file: "beads-memory-gate.mjs", event: "Stop", desc: "Prompts memory save when claim was closed this session", beads: true },
+  { file: "beads-compact-save.mjs", event: "PreCompact", desc: "Saves claim state across /compact", beads: true },
+  { file: "beads-compact-restore.mjs", event: "SessionStart", desc: "Restores claim state after /compact", beads: true },
+  { file: "beads-claim-sync.mjs", event: "PostToolUse", desc: "Notifies on bd update --claim; auto-commits on bd close", sessionFlow: true }
 ];
 async function readSkillsFromDir(dir) {
   if (!await import_fs_extra18.default.pathExists(dir)) return [];
@@ -56174,7 +56171,7 @@ ${hr}`;
       `  ${kleur_default.dim("beads gate hooks (xtrm install all -- require beads+dolt):")}`,
       hookRows(beads),
       "",
-      `  ${kleur_default.dim("session-flow hooks (xtrm finish lifecycle):")}`,
+      `  ${kleur_default.dim("session-flow hooks:")}`,
       hookRows(sessionFlow)
     ].join("\n");
     const skillRows = skills.map((s) => {
@@ -56200,10 +56197,14 @@ ${hr}`;
     const otherSection = [
       section("OTHER COMMANDS"),
       "",
-      `  ${kleur_default.bold("xtrm status")}    ${kleur_default.dim("Show pending changes without applying them")}`,
-      `  ${kleur_default.bold("xtrm finish")}    ${kleur_default.dim("Run blocking session closure lifecycle (PR + cleanup)")}`,
-      `  ${kleur_default.bold("xtrm reset")}     ${kleur_default.dim("Clear saved preferences and start fresh")}`,
-      `  ${kleur_default.bold("xtrm help")}      ${kleur_default.dim("Show this overview")}`
+      `  ${kleur_default.bold("xtrm status")}          ${kleur_default.dim("Show pending changes without applying them")}`,
+      `  ${kleur_default.bold("xtrm clean")}           ${kleur_default.dim("Remove orphaned hooks and skills not in canonical repo")}`,
+      `  ${kleur_default.bold("xtrm init")}            ${kleur_default.dim("Initialize project data (beads, gitnexus, service-registry)")}`,
+      `  ${kleur_default.bold("xtrm reset")}           ${kleur_default.dim("Clear saved preferences and start fresh")}`,
+      `  ${kleur_default.bold("xtrm end")}             ${kleur_default.dim("Close worktree session: rebase, push, PR, link issues, cleanup")}`,
+      `  ${kleur_default.bold("xtrm worktree list")}   ${kleur_default.dim("List all active xt/* worktrees with status")}`,
+      `  ${kleur_default.bold("xtrm worktree clean")}  ${kleur_default.dim("Remove worktrees whose branch has been merged into main")}`,
+      `  ${kleur_default.bold("xtrm help")}            ${kleur_default.dim("Show this overview")}`
     ].join("\n");
     const resourcesSection = [
       section("RESOURCES"),
@@ -56223,10 +56224,7 @@ var import_fs_extra19 = __toESM(require_lib2(), 1);
 var import_path19 = __toESM(require("path"), 1);
 var import_os6 = require("os");
 var CANONICAL_HOOKS = /* @__PURE__ */ new Set([
-  "agent_context.py",
   "serena-workflow-reminder.py",
-  "main-guard.mjs",
-  "main-guard-post-push.mjs",
   "beads-gate-core.mjs",
   "beads-gate-utils.mjs",
   "beads-gate-messages.mjs",

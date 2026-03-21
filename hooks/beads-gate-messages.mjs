@@ -9,14 +9,11 @@
 
 export const SESSION_CLOSE_PROTOCOL =
   '  bd close <id> --reason="..."\n' +
-  '  git push -u origin <feature-branch>\n' +
-  '  gh pr create --fill && gh pr merge --squash\n' +
-  '  git checkout main && git pull --ff-only\n';
+  '  xt end\n';
 
 export const COMMIT_NEXT_STEPS =
   '  bd close <id> --reason="..."   ← closes issue + auto-commits\n' +
-  '  git push -u origin <feature-branch>\n' +
-  '  gh pr create --fill && gh pr merge --squash\n';
+  '  xt end                          ← push, PR, merge, worktree cleanup\n';
 
 // ── Edit gate messages ───────────────────────────────────────────
 

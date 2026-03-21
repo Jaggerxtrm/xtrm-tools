@@ -2,7 +2,7 @@
 title: Hooks Reference
 scope: hooks
 category: reference
-version: 1.1.0
+version: 1.2.0
 updated: 2026-03-21
 description: "All hook events, scripts, and behavior for the xtrm plugin"
 source_of_truth_for:
@@ -39,9 +39,10 @@ Always installed (`xtrm install`).
 |------|-------|----------|
 | `serena-workflow-reminder.py` | SessionStart | Injects Serena LSP semantic editing reminder |
 | `branch-state.mjs` | UserPromptSubmit | Injects current git branch + claim state into every prompt turn |
-| `gitnexus/gitnexus-hook.cjs` | PostToolUse | Enriches Bash/Serena tool output with GitNexus graph context |
-| `quality-check.cjs` | PostToolUse | Runs ESLint/tsc checks after JS/TS file edits |
+| `gitnexus/gitnexus-hook.cjs` | PostToolUse | Enriches Bash/Grep/Read/Glob/Serena tool output with GitNexus graph context |
+| `quality-check.cjs` | PostToolUse | Runs tsc/ESLint checks after JS/TS/CJS/MJS file edits |
 | `quality-check.py` | PostToolUse | Runs ruff/mypy checks after Python file edits |
+| `quality-check-env.mjs` | SessionStart | Warns if tsc/ruff/eslint are missing so gate degradation is caught early |
 
 ### Beads Gate Hooks
 

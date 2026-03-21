@@ -4,7 +4,7 @@
 // bd close         → auto-commit staged changes, set closed-this-session kv for memory gate
 
 import { spawnSync } from 'node:child_process';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, writeFileSync, unlinkSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { resolveSessionId } from './beads-gate-utils.mjs';
 
@@ -124,6 +124,13 @@ function main() {
         process.exit(0);
       }
 
+      // Write state file for statusline
+      try {
+        const xtrmDir = join(cwd, '.xtrm');
+        mkdirSync(xtrmDir, { recursive: true });
+        writeFileSync(join(xtrmDir, 'statusline-claim'), issueId, 'utf8');
+      } catch { /* non-fatal */ }
+
       process.stdout.write(JSON.stringify({
         additionalContext: `\n✅ **Beads**: Session \`${sessionId}\` claimed issue \`${issueId}\`.`,
       }));
@@ -139,6 +146,9 @@ function main() {
 
     // Auto-commit before marking the gate (no-op if clean)
     const commit = closedIssueId ? autoCommit(cwd, closedIssueId, command) : null;
+
+    // Clear statusline state file on close
+    try { unlinkSync(join(cwd, '.xtrm', 'statusline-claim')); } catch { /* non-fatal */ }
 
     // Mark this issue as closed this session (memory gate reads this)
     if (closedIssueId) {

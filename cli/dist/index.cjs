@@ -56175,7 +56175,6 @@ var CANONICAL_HOOKS = /* @__PURE__ */ new Set([
   "beads-claim-sync.mjs",
   "beads-compact-save.mjs",
   "beads-compact-restore.mjs",
-  "branch-state.mjs",
   "statusline.mjs",
   "quality-check.cjs",
   "quality-check-env.mjs",

@@ -1,7 +1,7 @@
 import kleur from 'kleur';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 
 export interface WorktreeSessionOptions {
@@ -27,6 +27,25 @@ function gitRepoRoot(cwd: string): string | null {
  * Branch: xt/<name> if name provided, xt/<4-char-random> otherwise
  * Beads: bd worktree create sets up canonical .beads/redirect to share the main db
  */
+
+/**
+ * Resolve the statusline.mjs path: prefer the plugin cache (stays in sync with
+ * plugin version), fall back to ~/.claude/hooks/statusline.mjs.
+ */
+function resolveStatuslineScript(): string | null {
+    const pluginsFile = path.join(homedir(), '.claude', 'plugins', 'installed_plugins.json');
+    try {
+        const plugins = JSON.parse(readFileSync(pluginsFile, 'utf8'));
+        const entries = plugins?.plugins?.['xtrm-tools@xtrm-tools'];
+        if (entries?.length > 0) {
+            return path.join(entries[0].installPath, 'hooks', 'statusline.mjs');
+        }
+    } catch { /* fall through */ }
+    // Fallback: ~\.claude/hooks/statusline.mjs
+    const fallback = path.join(homedir(), '.claude', 'hooks', 'statusline.mjs');
+    return fallback;
+}
+
 export async function launchWorktreeSession(opts: WorktreeSessionOptions): Promise<void> {
     const { runtime, name } = opts;
     const cwd = process.cwd();
@@ -84,15 +103,17 @@ export async function launchWorktreeSession(opts: WorktreeSessionOptions): Promi
 
     // Inject statusLine config for claude worktree sessions
     if (runtime === 'claude') {
-        const statuslineScript = path.join(homedir(), '.claude', 'hooks', 'statusline.mjs');
-        const claudeDir = path.join(worktreePath, '.claude');
-        const localSettingsPath = path.join(claudeDir, 'settings.local.json');
-        try {
-            mkdirSync(claudeDir, { recursive: true });
-            writeFileSync(localSettingsPath, JSON.stringify({
-                statusLine: { type: 'command', command: `node ${statuslineScript}`, padding: 1 },
-            }, null, 2));
-        } catch { /* non-fatal — statusline is cosmetic */ }
+        const statuslinePath = resolveStatuslineScript();
+        if (statuslinePath) {
+            const claudeDir = path.join(worktreePath, '.claude');
+            const localSettingsPath = path.join(claudeDir, 'settings.local.json');
+            try {
+                mkdirSync(claudeDir, { recursive: true });
+                writeFileSync(localSettingsPath, JSON.stringify({
+                    statusLine: { type: 'command', command: `node ${statuslinePath}`, padding: 1 },
+                }, null, 2));
+            } catch { /* non-fatal — statusline is cosmetic */ }
+        }
     }
 
     // Launch the runtime in the worktree

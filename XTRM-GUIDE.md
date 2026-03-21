@@ -1,6 +1,6 @@
 # XTRM-Tools Complete Guide
 
-> **Version 0.5.10** | A comprehensive reference for the XTRM-Tools dual-runtime workflow system (Claude Code + Pi).
+> **Version 0.5.24** | A comprehensive reference for the XTRM-Tools dual-runtime workflow system (Claude Code + Pi).
 
 ---
 
@@ -33,7 +33,6 @@ XTRM-Tools is a **dual-runtime workflow system** — a Claude Code plugin and a 
 | **Session Flow** | both | Claim sync, stop gate, `xt end` reminder in worktrees |
 | **Quality Gates** | both | Automatic linting and type checking on file edits |
 | **GitNexus** | Claude | Knowledge graph context for code exploration and impact analysis |
-| **Branch State** | Claude | Current branch + claim state injected into every prompt turn |
 | **Service Skills** | Pi | Docker service expertise with territory-based skill activation |
 
 ---
@@ -73,7 +72,7 @@ xtrm install all
 
 # Verify installation
 claude plugin list
-# → xtrm-tools@xtrm-tools  Version: 0.5.10  Status: ✔ enabled
+# → xtrm-tools@xtrm-tools  Version: 0.5.24  Status: ✔ enabled
 ```
 
 ### One-Line Run
@@ -114,7 +113,7 @@ plugins/xtrm-tools/
 ```json
 {
   "name": "xtrm-tools",
-  "version": "0.5.10",
+  "version": "0.5.24",
   "description": "xtrm-tools: dual-runtime workflow enforcement (Claude Code + Pi) — hooks, extensions, skills, and MCP servers",
   "mcpServers": "./.mcp.json"
 }
@@ -150,11 +149,12 @@ Policies are the **single source of truth** for all enforcement rules.
 |--------|---------|-------|---------|
 | `session-flow.json` | both | 19 | Claim sync, stop gate (blocks with unclosed in_progress claim), `xt end` reminder in worktrees |
 | `beads.json` | both | 20 | Issue tracking gates (edit/commit/memory/compact) |
-| `branch-state.json` | claude | 30 | Branch state injection |
 | `quality-gates.json` | both | 30 | Linting/typechecking |
+| `quality-gates-env.json` | both | 31 | Warns if tsc/ruff/eslint missing at session start |
+| `using-xtrm.json` | claude | 5 | Injects using-xtrm session manual at SessionStart |
 | `gitnexus.json` | claude | 40 | Knowledge graph enrichment |
+| `worktree-boundary.json` | claude | 15 | Blocks edits outside worktree when in `.xtrm/worktrees` |
 | `service-skills.json` | pi | 40 | Territory-based skill activation |
-| `serena.json` | claude | 50 | Serena LSP workflow reminder at session start |
 
 ### Compiler
 
@@ -263,20 +263,19 @@ Enriches tool output with knowledge graph context via `gitnexus augment`.
 
 | Command | Description |
 |---------|-------------|
-| `install all` | Full plugin + beads + gitnexus |
-| `install basic` | Plugin + skills (no beads) |
-| `init` | Initialize current project (alias for `project init`) |
-| `project init` | Initialize project data for global hooks/skills |
-| `install project <name>` | **Deprecated** legacy project-skill installer |
+| `install` | Install plugin + skills + hooks + MCP servers |
+| `init` | Initialize project data (bd, gitnexus, service-registry) |
 | `status` | Read-only diff view |
-| `xt claude` | Launch Claude Code in current worktree |
-| `xt pi` | Launch Pi in current worktree |
-| `xt worktree list` | List all active worktrees |
-| `xt worktree clean` | Remove stale/merged worktrees |
-| `xt worktree remove` | Remove a specific worktree |
-| `xt end` | Blocking session closure: commit/push/pr/merge/cleanup |
 | `clean` | Remove orphaned hooks |
 | `reset` | Clear preferences |
+| `claude` | Launch Claude Code in a sandboxed worktree |
+| `pi` | Launch Pi in a sandboxed worktree |
+| `end` | Close worktree session: rebase, push, PR, cleanup |
+| `worktree list` | List all active worktrees |
+| `worktree clean` | Remove stale/merged worktrees |
+| `worktree remove` | Remove a specific worktree |
+| `docs show` | Display frontmatter for README, CHANGELOG, docs/*.md |
+| `debug` | Watch xtrm hook and bd lifecycle events in real time |
 
 ### Flags
 
@@ -349,6 +348,9 @@ bd status
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 0.5.24 | 2026-03-21 | Hash-based docs drift detection; CLI docs cleanup; `docs` and `debug` commands documented |
+| 0.5.23 | 2026-03-21 | `xtrm debug` command for real-time event monitoring |
+| 0.5.20 | 2026-03-21 | `xtrm docs show` command; worktree-boundary hook; statusline injection |
 | 0.5.10 | 2026-03-21 | Install cleanup: `cleanStalePrePluginFiles()` removes stale `~/.claude/hooks/` + `~/.claude/skills/` on install; Qwen/Gemini dead code removed |
 | 0.5.9 | 2026-03-20 | Worktrees moved inside repo under `.xtrm/worktrees/`; `.gitignore` entry added |
 | 0.5.8 | 2026-03-20 | session-flow rewrite: removed xtrm-finish/session-state dead code; claim sync + stop gate + `xt end` reminder |

@@ -8,11 +8,12 @@ declare const __dirname: string;
 
 const HOOK_CATALOG: Array<{ file: string; event: string; desc: string; beads?: true; sessionFlow?: true }> = [
     { file: 'using-xtrm-reminder.mjs',      event: 'SessionStart',     desc: 'Injects using-xtrm session operating manual into system prompt' },
-    { file: 'serena-workflow-reminder.py',  event: 'SessionStart',     desc: 'Injects Serena semantic editing workflow reminder' },
     { file: 'gitnexus/gitnexus-hook.cjs',   event: 'PostToolUse',      desc: 'Adds GitNexus context for search and Serena tooling' },
-    { file: 'branch-state.mjs',             event: 'UserPromptSubmit', desc: 'Injects current git branch into prompt context' },
     { file: 'quality-check.cjs',            event: 'PostToolUse',      desc: 'Runs JS/TS quality checks on mutating edits' },
     { file: 'quality-check.py',             event: 'PostToolUse',      desc: 'Runs Python quality checks on mutating edits' },
+    { file: 'quality-check-env.mjs',        event: 'SessionStart',     desc: 'Warns if tsc/ruff/eslint are missing at session start' },
+    { file: 'worktree-boundary.mjs',        event: 'PreToolUse',       desc: 'Blocks edits outside .xtrm/worktrees when in worktree session' },
+    { file: 'statusline.mjs',               event: 'statusLine',       desc: 'Renders 2-line status: XTRM model branch + claim/open issues' },
     { file: 'beads-edit-gate.mjs',          event: 'PreToolUse',       desc: 'Blocks file edits if no beads issue is claimed',           beads: true },
     { file: 'beads-commit-gate.mjs',        event: 'PreToolUse',       desc: 'Blocks commits when no beads issue is in progress',        beads: true },
     { file: 'beads-stop-gate.mjs',          event: 'Stop',             desc: 'Blocks stop when there is an unclosed in_progress claim',  beads: true },
@@ -77,9 +78,7 @@ export function createHelpCommand(): Command {
             const pkgRoot = resolvePkgRootFallback();
 
             const skillsRoot = repoRoot || pkgRoot || '';
-            const projectSkillsRoot = repoRoot || pkgRoot || '';
             const skills = skillsRoot ? await readSkillsFromDir(path.join(skillsRoot, 'skills')) : [];
-            const projectSkills = projectSkillsRoot ? await readProjectSkillsFromDir(path.join(projectSkillsRoot, 'project-skills')) : [];
 
             const W = 80;
             const hr = kleur.dim('-'.repeat(W));
@@ -88,24 +87,11 @@ export function createHelpCommand(): Command {
             const installSection = [
                 section('INSTALL COMMANDS'),
                 '',
-                `  ${kleur.bold('xtrm install all')}`,
-                `    ${kleur.dim('Global install: skills + all hooks (including beads gates) + MCP servers.')}`,
+                `  ${kleur.bold('xtrm install')}`,
+                `    ${kleur.dim('Install plugin + skills + hooks + MCP servers.')}`,
                 `    ${kleur.dim('Checks for beads+dolt and prompts to install if missing.')}`,
                 '',
-                `  ${kleur.bold('xtrm install basic')}`,
-                `    ${kleur.dim('Global install: skills + general hooks + MCP servers.')}`,
-                `    ${kleur.dim('No beads dependency -- safe to run with zero external deps.')}`,
-                '',
-                `  ${kleur.bold('xtrm install project')} ${kleur.dim('<tool-name | all>')}`,
-                `    ${kleur.dim('Project-scoped install into .claude/ of current git root.')}`,
-                `    ${kleur.dim('Run xtrm install project list to see available project skills.')}`,
-                '',
-                `  ${kleur.dim('Default target directories:')}`,
-                `    ${kleur.dim('~/.claude/hooks     (global hook scripts)')}`,
-                `    ${kleur.dim('~/.claude/skills    (global Claude skills)')}`,
-                `    ${kleur.dim('~/.agents/skills    (agents skills cache mirror)')}`,
-                '',
-                `  ${kleur.dim('Flags (all profiles): --dry-run  --yes / -y  --no-mcp  --force  --prune  --backport')}`,
+                `  ${kleur.dim('Flags: --dry-run  --yes / -y  --no-mcp  --force  --prune  --backport')}`,
             ].join('\n');
 
             const general = HOOK_CATALOG.filter(h => !h.beads && !h.sessionFlow);
@@ -141,25 +127,14 @@ export function createHelpCommand(): Command {
                 skills.length ? skillRows : kleur.dim('  (none found -- run from repo root to see skills)'),
             ].join('\n');
 
-            const psRows = projectSkills.map(s =>
-                `  ${kleur.white(col(s.name, 30))}${kleur.dim(s.desc)}`
-            ).join('\n');
-
-            const psSection = [
-                section('PROJECT SKILLS + HOOKS'),
-                '',
-                projectSkills.length ? psRows : kleur.dim('  (none found in package)'),
-                '',
-                `  ${kleur.dim('Install: xtrm install project <name>  |  xtrm install project list')}`,
-                `  ${kleur.dim('Each project skill can install .claude/skills plus project hooks/settings.')}`,
-            ].join('\n');
-
             const otherSection = [
                 section('OTHER COMMANDS'),
                 '',
                 `  ${kleur.bold('xtrm status')}          ${kleur.dim('Show pending changes without applying them')}`,
                 `  ${kleur.bold('xtrm clean')}           ${kleur.dim('Remove orphaned hooks and skills not in canonical repo')}`,
                 `  ${kleur.bold('xtrm init')}            ${kleur.dim('Initialize project data (beads, gitnexus, service-registry)')}`,
+                `  ${kleur.bold('xtrm docs show')}       ${kleur.dim('Display frontmatter for README, CHANGELOG, docs/*.md')}`,
+                `  ${kleur.bold('xtrm debug')}           ${kleur.dim('Watch xtrm hook and bd lifecycle events in real time')}`,
                 `  ${kleur.bold('xtrm reset')}           ${kleur.dim('Clear saved preferences and start fresh')}`,
                 `  ${kleur.bold('xtrm end')}             ${kleur.dim('Close worktree session: rebase, push, PR, link issues, cleanup')}`,
                 `  ${kleur.bold('xtrm worktree list')}   ${kleur.dim('List all active xt/* worktrees with status')}`,
@@ -177,6 +152,6 @@ export function createHelpCommand(): Command {
                 '',
             ].join('\n');
 
-            console.log([installSection, hooksSection, skillsSection, psSection, otherSection, resourcesSection].join('\n'));
+            console.log([installSection, hooksSection, skillsSection, otherSection, resourcesSection].join('\n'));
         });
 }

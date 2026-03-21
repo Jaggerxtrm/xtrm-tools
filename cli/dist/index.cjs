@@ -41303,14 +41303,15 @@ function resolveStatuslineScript() {
   const pluginsFile = import_node_path5.default.join((0, import_node_os5.homedir)(), ".claude", "plugins", "installed_plugins.json");
   try {
     const plugins = JSON.parse((0, import_node_fs4.readFileSync)(pluginsFile, "utf8"));
-    const entries = plugins?.plugins?.["xtrm-tools@xtrm-tools"];
-    if (entries?.length > 0) {
-      return import_node_path5.default.join(entries[0].installPath, "hooks", "statusline.mjs");
+    for (const [key, entries] of Object.entries(plugins?.plugins ?? {})) {
+      if (!key.startsWith("xtrm-tools@") || !entries?.length) continue;
+      const p = import_node_path5.default.join(entries[0].installPath, "hooks", "statusline.mjs");
+      if ((0, import_node_fs4.existsSync)(p)) return p;
     }
   } catch {
   }
   const fallback = import_node_path5.default.join((0, import_node_os5.homedir)(), ".claude", "hooks", "statusline.mjs");
-  return fallback;
+  return (0, import_node_fs4.existsSync)(fallback) ? fallback : null;
 }
 async function launchWorktreeSession(opts) {
   const { runtime, name } = opts;
@@ -55983,11 +55984,12 @@ var import_path18 = __toESM(require("path"), 1);
 var import_fs_extra17 = __toESM(require_lib2(), 1);
 var HOOK_CATALOG = [
   { file: "using-xtrm-reminder.mjs", event: "SessionStart", desc: "Injects using-xtrm session operating manual into system prompt" },
-  { file: "serena-workflow-reminder.py", event: "SessionStart", desc: "Injects Serena semantic editing workflow reminder" },
   { file: "gitnexus/gitnexus-hook.cjs", event: "PostToolUse", desc: "Adds GitNexus context for search and Serena tooling" },
-  { file: "branch-state.mjs", event: "UserPromptSubmit", desc: "Injects current git branch into prompt context" },
   { file: "quality-check.cjs", event: "PostToolUse", desc: "Runs JS/TS quality checks on mutating edits" },
   { file: "quality-check.py", event: "PostToolUse", desc: "Runs Python quality checks on mutating edits" },
+  { file: "quality-check-env.mjs", event: "SessionStart", desc: "Warns if tsc/ruff/eslint are missing at session start" },
+  { file: "worktree-boundary.mjs", event: "PreToolUse", desc: "Blocks edits outside .xtrm/worktrees when in worktree session" },
+  { file: "statusline.mjs", event: "statusLine", desc: "Renders 2-line status: XTRM model branch + claim/open issues" },
   { file: "beads-edit-gate.mjs", event: "PreToolUse", desc: "Blocks file edits if no beads issue is claimed", beads: true },
   { file: "beads-commit-gate.mjs", event: "PreToolUse", desc: "Blocks commits when no beads issue is in progress", beads: true },
   { file: "beads-stop-gate.mjs", event: "Stop", desc: "Blocks stop when there is an unclosed in_progress claim", beads: true },
@@ -56006,22 +56008,6 @@ async function readSkillsFromDir(dir) {
     const content = await import_fs_extra17.default.readFile(skillMd, "utf8");
     const m = content.match(/^description:\s*(.+)$/m);
     skills.push({ name, desc: m ? m[1].replace(/^["']|["']$/g, "").trim() : "" });
-  }
-  return skills;
-}
-async function readProjectSkillsFromDir(dir) {
-  if (!await import_fs_extra17.default.pathExists(dir)) return [];
-  const entries = await import_fs_extra17.default.readdir(dir);
-  const skills = [];
-  for (const name of entries.sort()) {
-    const readme = import_path18.default.join(dir, name, "README.md");
-    if (!await import_fs_extra17.default.pathExists(readme)) continue;
-    const content = await import_fs_extra17.default.readFile(readme, "utf8");
-    const descLine = content.split("\n").find((line) => {
-      const trimmed = line.trim();
-      return Boolean(trimmed) && !trimmed.startsWith("#") && !trimmed.startsWith("[") && !trimmed.startsWith("<");
-    }) || "";
-    skills.push({ name, desc: descLine.replace(/[*_`]/g, "").trim() });
   }
   return skills;
 }
@@ -56048,9 +56034,7 @@ function createHelpCommand() {
     }
     const pkgRoot = resolvePkgRootFallback();
     const skillsRoot = repoRoot || pkgRoot || "";
-    const projectSkillsRoot = repoRoot || pkgRoot || "";
     const skills = skillsRoot ? await readSkillsFromDir(import_path18.default.join(skillsRoot, "skills")) : [];
-    const projectSkills = projectSkillsRoot ? await readProjectSkillsFromDir(import_path18.default.join(projectSkillsRoot, "project-skills")) : [];
     const W = 80;
     const hr = kleur_default.dim("-".repeat(W));
     const section = (title) => `
@@ -56059,24 +56043,11 @@ ${hr}`;
     const installSection = [
       section("INSTALL COMMANDS"),
       "",
-      `  ${kleur_default.bold("xtrm install all")}`,
-      `    ${kleur_default.dim("Global install: skills + all hooks (including beads gates) + MCP servers.")}`,
+      `  ${kleur_default.bold("xtrm install")}`,
+      `    ${kleur_default.dim("Install plugin + skills + hooks + MCP servers.")}`,
       `    ${kleur_default.dim("Checks for beads+dolt and prompts to install if missing.")}`,
       "",
-      `  ${kleur_default.bold("xtrm install basic")}`,
-      `    ${kleur_default.dim("Global install: skills + general hooks + MCP servers.")}`,
-      `    ${kleur_default.dim("No beads dependency -- safe to run with zero external deps.")}`,
-      "",
-      `  ${kleur_default.bold("xtrm install project")} ${kleur_default.dim("<tool-name | all>")}`,
-      `    ${kleur_default.dim("Project-scoped install into .claude/ of current git root.")}`,
-      `    ${kleur_default.dim("Run xtrm install project list to see available project skills.")}`,
-      "",
-      `  ${kleur_default.dim("Default target directories:")}`,
-      `    ${kleur_default.dim("~/.claude/hooks     (global hook scripts)")}`,
-      `    ${kleur_default.dim("~/.claude/skills    (global Claude skills)")}`,
-      `    ${kleur_default.dim("~/.agents/skills    (agents skills cache mirror)")}`,
-      "",
-      `  ${kleur_default.dim("Flags (all profiles): --dry-run  --yes / -y  --no-mcp  --force  --prune  --backport")}`
+      `  ${kleur_default.dim("Flags: --dry-run  --yes / -y  --no-mcp  --force  --prune  --backport")}`
     ].join("\n");
     const general = HOOK_CATALOG.filter((h) => !h.beads && !h.sessionFlow);
     const beads = HOOK_CATALOG.filter((h) => h.beads);
@@ -56106,23 +56077,14 @@ ${hr}`;
       "",
       skills.length ? skillRows : kleur_default.dim("  (none found -- run from repo root to see skills)")
     ].join("\n");
-    const psRows = projectSkills.map(
-      (s) => `  ${kleur_default.white(col(s.name, 30))}${kleur_default.dim(s.desc)}`
-    ).join("\n");
-    const psSection = [
-      section("PROJECT SKILLS + HOOKS"),
-      "",
-      projectSkills.length ? psRows : kleur_default.dim("  (none found in package)"),
-      "",
-      `  ${kleur_default.dim("Install: xtrm install project <name>  |  xtrm install project list")}`,
-      `  ${kleur_default.dim("Each project skill can install .claude/skills plus project hooks/settings.")}`
-    ].join("\n");
     const otherSection = [
       section("OTHER COMMANDS"),
       "",
       `  ${kleur_default.bold("xtrm status")}          ${kleur_default.dim("Show pending changes without applying them")}`,
       `  ${kleur_default.bold("xtrm clean")}           ${kleur_default.dim("Remove orphaned hooks and skills not in canonical repo")}`,
       `  ${kleur_default.bold("xtrm init")}            ${kleur_default.dim("Initialize project data (beads, gitnexus, service-registry)")}`,
+      `  ${kleur_default.bold("xtrm docs show")}       ${kleur_default.dim("Display frontmatter for README, CHANGELOG, docs/*.md")}`,
+      `  ${kleur_default.bold("xtrm debug")}           ${kleur_default.dim("Watch xtrm hook and bd lifecycle events in real time")}`,
       `  ${kleur_default.bold("xtrm reset")}           ${kleur_default.dim("Clear saved preferences and start fresh")}`,
       `  ${kleur_default.bold("xtrm end")}             ${kleur_default.dim("Close worktree session: rebase, push, PR, link issues, cleanup")}`,
       `  ${kleur_default.bold("xtrm worktree list")}   ${kleur_default.dim("List all active xt/* worktrees with status")}`,
@@ -56138,7 +56100,7 @@ ${hr}`;
       `  ${kleur_default.dim("Run 'xtrm <command> --help' for command-specific options.")}`,
       ""
     ].join("\n");
-    console.log([installSection, hooksSection, skillsSection, psSection, otherSection, resourcesSection].join("\n"));
+    console.log([installSection, hooksSection, skillsSection, otherSection, resourcesSection].join("\n"));
   });
 }
 

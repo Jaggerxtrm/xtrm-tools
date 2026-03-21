@@ -26,11 +26,9 @@ Each policy declares which runtime it targets (`claude`, `pi`, or `both`) and wh
 | Policy | Runtime | Description |
 |--------|---------|-------------|
 | `beads.json` | both | Issue tracking enforcement — edit gate, commit gate, stop gate, memory gate, compact save/restore |
-| `branch-state.json` | claude | Injects current git branch + beads claim state into every user prompt turn |
 | `gitnexus.json` | claude | Auto-augments Bash/Grep/Read/Glob/Serena tool results with GitNexus graph context |
 | `quality-gates.json` | both | Runs tsc/ESLint/ruff/mypy after mutating file edits (JS/TS/CJS/MJS + Python) |
-| `quality-gates-env.json` | claude | Verifies tsc/eslint/ruff are available at session start; warns if enforcement would be silently degraded |
-| `serena.json` | claude | Injects Serena LSP workflow reminder at session start |
+| `quality-gates-env.json` | both | Verifies tsc/eslint/ruff are available at session start; warns if enforcement would be silently degraded |
 | `service-skills.json` | pi | Injects service catalog + detects skill doc drift (only when `service-registry.json` present) |
 | `session-flow.json` | both | Claim sync (auto-commit on `bd close`), stop gate, `xt end` worktree reminder |
 | `using-xtrm.json` | claude | Injects `using-xtrm` session operating manual at session start |

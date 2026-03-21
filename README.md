@@ -2,7 +2,7 @@
 
 > **Dual-runtime workflow system** — Claude Code plugin + Pi extension suite for workflow enforcement, code quality gates, issue tracking, and development automation.
 
-**Version 0.5.10** | [Complete Guide](XTRM-GUIDE.md) | [Changelog](CHANGELOG.md)
+**Version 0.5.24** | [Complete Guide](XTRM-GUIDE.md) | [Changelog](CHANGELOG.md)
 
 ---
 
@@ -80,9 +80,10 @@ Policies are the **single source of truth** for all enforcement rules. Located i
 | `session-flow.json` | both | Claim sync, stop gate, `xt end` reminder |
 | `beads.json` | both | Issue tracking gates |
 | `quality-gates.json` | both | Linting/typechecking |
-| `branch-state.json` | claude | Branch context injection |
+| `quality-gates-env.json` | both | Warns if tsc/ruff/eslint missing at session start |
+| `using-xtrm.json` | claude | Injects using-xtrm session manual at SessionStart |
 | `gitnexus.json` | claude | Knowledge graph enrichment |
-| `serena.json` | claude | Serena LSP workflow reminder |
+| `worktree-boundary.json` | claude | Blocks edits outside worktree when in `.xtrm/worktrees` |
 | `service-skills.json` | pi | Territory-based skill activation |
 
 ### Compiler
@@ -111,6 +112,8 @@ xtrm <command> [options]
 | `worktree clean` | Remove worktrees whose branch has been merged |
 | `claude` | Launch Claude Code in a sandboxed worktree |
 | `pi` | Launch Pi in a sandboxed worktree |
+| `docs show` | Display frontmatter for README, CHANGELOG, docs/*.md |
+| `debug` | Watch xtrm hook and bd lifecycle events in real time |
 
 ### Flags
 
@@ -186,6 +189,9 @@ bd close <id> --reason "Done"  # Close when done
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 0.5.24 | 2026-03-21 | Hash-based docs drift detection; CLI docs cleanup; `docs` and `debug` commands documented |
+| 0.5.23 | 2026-03-21 | `xtrm debug` command for real-time event monitoring |
+| 0.5.20 | 2026-03-21 | `xtrm docs show` command; worktree-boundary hook; statusline injection |
 | 0.5.10 | 2026-03-21 | Install cleanup: removes stale `~/.claude/hooks/` + `~/.claude/skills/`; Qwen/Gemini dead code removed |
 | 0.5.9 | 2026-03-20 | Worktrees moved inside repo under `.xtrm/worktrees/` |
 | 0.5.8 | 2026-03-20 | session-flow rewrite: claim sync, stop gate, `xt end` reminder |

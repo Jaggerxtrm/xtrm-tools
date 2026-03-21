@@ -3,7 +3,7 @@ title: Skills Catalog
 scope: skills
 category: overview
 version: 1.1.0
-updated: 2026-03-20
+updated: 2026-03-21
 description: "Global skills installed to the user-level Claude environment"
 source_of_truth_for:
   - "skills/**/*.md"

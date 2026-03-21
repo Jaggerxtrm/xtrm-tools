@@ -3,7 +3,7 @@ title: CLI Architecture
 scope: cli-architecture
 category: reference
 version: 1.0.0
-updated: 2026-03-20
+updated: 2026-03-21
 source_of_truth_for:
   - "cli/src/**/*.ts"
 domain: [cli]

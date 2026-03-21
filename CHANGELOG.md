@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- gitnexus hook now fires on Grep/Read/Glob tools (parity with Pi); quality-check covers .cjs/.mjs files; quality gate env pre-check at SessionStart; policies.md rewritten from scaffold; using-xtrm SKILL.md rewritten; worktree-session migrated to bd worktree; branch state + xt end reminders in gate messages
+
 ---
 
 ## [0.5.0] - 2026-03-20

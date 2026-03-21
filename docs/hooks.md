@@ -4,7 +4,7 @@ scope: hooks
 category: reference
 version: 1.3.0
 updated: 2026-03-21
-synced_at: 0d985ad
+synced_at: 9a29306
 description: "All hook events, scripts, and behavior for the xtrm plugin"
 source_of_truth_for:
   - "hooks/**/*.mjs"
@@ -85,6 +85,7 @@ Runs via Claude Code's `statusLine` injection. Reads claim state from `.xtrm/sta
 | `beads-gate-core.mjs` | Core gate decision logic (commit gate, stop gate) |
 | `beads-gate-utils.mjs` | Claim resolution, work-state helpers |
 | `beads-gate-messages.mjs` | Shared message formatting for gate blocks |
+| `xtrm-logger.mjs` | Event logger for hooks/bd lifecycle — writes to `xtrm_events` table in beads Dolt DB |
 
 ## Claim Workflow
 

@@ -4,7 +4,7 @@ scope: cli-architecture
 category: reference
 version: 1.1.0
 updated: 2026-03-21
-synced_at: 0d985ad
+synced_at: 9a29306
 source_of_truth_for:
   - "cli/src/**/*.ts"
 domain: [cli]
@@ -32,6 +32,7 @@ xt / xtrm
 ├── status           → commands/status.ts
 ├── docs             → commands/docs.ts
 │   └── docs show    → displays frontmatter for README, CHANGELOG, docs/*.md
+├── debug            → commands/debug.ts   → real-time hook/bd event monitoring
 └── help             → commands/help.ts
 ```
 

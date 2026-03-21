@@ -2,9 +2,9 @@
 name: using-xtrm
 description: >
   Operating manual for an xtrm-equipped Claude Code session. Activates automatically at
-  session start to orient the agent on how to work within the xtrm stack: when to apply
-  prompt improvement, how the beads issue-tracking gate works, which hooks enforce workflows,
-  and how to compose the full toolset (gitnexus, Serena, quality gates, delegation).
+  session start to orient the agent on how to work within the xtrm stack: session start
+  checklist, beads gate workflow, memory gate protocol, which hooks enforce which rules,
+  and how to compose the full toolset (GitNexus, Serena, quality gates, delegation).
   Use this skill whenever a new session begins in an xtrm-tools-installed environment, or
   when the user asks how to work with the xtrm stack, what tools are available, or how any
   xtrm workflow operates.
@@ -24,10 +24,26 @@ within this stack. Read it at session start and refer back when uncertain about 
 |---|---|
 | **Skills** | Domain expertise loaded on demand |
 | **Hooks** | Automated lifecycle enforcement (gates, suggestions, reminders) |
-| **Project Data (`xtrm init`)** | Per-repo bootstrap data (`.beads/`, `service-registry.json`, GitNexus index) |
+| **Project Data (`xtrm init`)** | Per-repo bootstrap: `.beads/` issue DB, GitNexus index, AGENTS.md/CLAUDE.md headers |
 | **MCP Servers** | Semantic tools: Serena (code), gitnexus (graph), context7 (docs), deepwiki |
-| **CLI** | `xtrm install / status / reset / help` + `xt claude / pi / worktree / end` — sync and closure tooling |
-| **beads (bd)** | Git-backed issue tracker with session gate enforcement |
+| **CLI** | `xtrm install / status / clean / help` + `xt claude / pi / worktree / end` |
+| **beads (bd)** | Git-backed issue tracker with session gate enforcement and persistent memory |
+
+---
+
+## Session Start Checklist
+
+Run these in order at the beginning of every session:
+
+```bash
+bd prime                    # Load workflow context + active claims (auto-called by hook)
+bd memories <keyword>       # Retrieve memories relevant to today's task
+bd recall <key>             # Retrieve a specific memory by key if needed
+bd ready                    # Find available unblocked work
+bd update <id> --claim      # Claim before any file edit
+```
+
+> After `/compact`, run `bd prime` manually — the hook only fires at true session start.
 
 ---
 
@@ -70,32 +86,99 @@ proceeding. Don't ask about things you can reasonably infer.
 
 ---
 
-## Beads + Session Flow — Session Protocol
+## Beads — Session Protocol
 
 This environment enforces a **beads session gate** plus **session-flow lifecycle gate**.
-You cannot edit files without a claim, and you cannot safely end a closure-in-progress session.
+You cannot edit files without a claim, and you cannot stop with an unclosed claim.
+
+### Standard workflow
 
 ```bash
-# 1. Claim before editing
-bd list --status=open
-bd update <id> --claim
-# hook auto-sets session claim
+# 1. Find and claim work
+bd ready                         # find unblocked issues
+bd show <id>                     # review details
+bd update <id> --claim           # claim — required before any file edit
 
-# 2. Work in the claimed branch/worktree
+# 2. Work on the claimed branch/worktree
 
-# 3. Close issue when implementation is done
-bd close <id>
+# 3. Close when done
+bd close <id> --reason="..."     # closes issue + auto-commits
 
-# 4. Session close protocol (single command, run from within the worktree)
-xt end
-# blocking: commit/push/pr-create/auto-merge poll/worktree cleanup
+# 4. Push and merge
+git push -u origin feature/<name>
+gh pr create --fill && gh pr merge --squash
+git checkout main && git pull --ff-only
+git branch -d <branch> && git push origin --delete <branch>
+```
+
+### bd quick reference
+
+```bash
+# Discovery
+bd ready                                       # unblocked open issues
+bd show <id>                                   # full detail + deps
+bd list --status=in_progress                   # your active claims
+bd query "status=in_progress AND assignee=me"  # complex filter
+bd search <text>                               # full-text search
+
+# Creating
+bd create --title="..." --description="..." --type=task --priority=2
+# --deps "discovered-from:<id>"  link follow-ups to their source
+# priority: 0=critical  1=high  2=medium  3=low  4=backlog
+# types: task | bug | feature | epic | chore | decision
+
+# Updating
+bd update <id> --notes "..."    # append notes inline
+bd update                       # update last-touched issue (no ID needed)
+
+# Closing
+bd close <id> --reason="..."    # close + auto-commit
+bd close <id1> <id2> <id3>     # batch close
+
+# Dependencies
+bd dep add <issue> <depends-on> # issue depends on depends-on
+bd dep <blocker> --blocks <id>  # shorthand
+bd dep relate <a> <b>           # non-blocking "relates to" link
+bd blocked                      # show all blocked issues
+
+# Memory
+bd remember "<insight>"         # persist across sessions
+bd memories <keyword>           # search memories
+bd recall <key>                 # retrieve by key
+bd forget <key>                 # remove a memory
+
+# Health
+bd stats                        # open/closed/blocked counts
+bd preflight --check            # pre-PR readiness
+bd doctor                       # diagnose installation issues
 ```
 
 **Key rules:**
-- One active claim per session
 - Always work on a **feature branch**, never directly on `main`/`master`
-- `beads-stop-gate.mjs` blocks stop when active in_progress claim exists
-- If blocked on stop: close the claim then re-run `xt end`
+- `bd close` auto-commits via `git commit -am` — do not double-commit after closing
+- Never chain `bd kv clear` with `git commit` — run them as separate commands
+
+---
+
+## Beads — Memory Gate Protocol
+
+The **memory gate** fires automatically at session Stop if an issue was closed this session.
+When blocked on Stop with the memory gate message:
+
+```bash
+# For each closed issue — did this session produce insights worth keeping?
+bd remember "<insight>"              # YES: persist it
+# or note "nothing to persist"       # NO: explicitly decide
+
+# Acknowledge when evaluation is complete
+touch .beads/.memory-gate-done
+```
+
+At the **start** of the next session, retrieve those memories:
+```bash
+bd memories <keyword>    # search by topic
+bd recall <key>          # retrieve by exact key
+```
 
 ---
 
@@ -120,15 +203,15 @@ mcp__serena__activate_project("<project-name>")
 
 ---
 
-## Code Intelligence — gitnexus Workflow
+## Code Intelligence — GitNexus Workflow
 
 Before editing any function, class, or method — always run impact analysis.
 
 ```bash
-# 1. Before editing
-npx gitnexus impact <symbolName> --direction upstream
+# 1. Before editing — blast radius
+gitnexus_impact({target: "symbolName", direction: "upstream"})
 
-# 2. Understand a symbol fully
+# 2. Full context on a symbol (callers, callees, flows)
 gitnexus_context({name: "symbolName"})
 
 # 3. Find code by concept (instead of grepping)
@@ -139,6 +222,8 @@ gitnexus_detect_changes({scope: "staged"})
 ```
 
 **Risk levels**: d=1 = WILL BREAK (must fix), d=2 = likely affected (should test), d=3 = transitive (test if critical).
+
+Stop and warn the user if impact returns HIGH or CRITICAL before proceeding.
 
 If index is stale: `npx gitnexus analyze` before using MCP tools.
 
@@ -157,9 +242,9 @@ You do not invoke these manually — they fire via PostToolUse hooks. If a gate 
 lint/type error before continuing. Do not suppress errors with `// eslint-disable` or `# type: ignore`
 unless there is a genuine reason.
 
-> **Global-first behavior**: quality-gates hooks are global; no per-project install is needed.
-> Run `xtrm init` once per repository to bootstrap project data, then ensure the repo has
-> `eslint.config.*` (TS) or `pyproject.toml` / `ruff.toml` (Python) configured so checks can run.
+> **Global-first**: quality-gates hooks are global; no per-project install needed.
+> Run `xtrm init` once per repo to bootstrap project data, then ensure the repo has
+> `eslint.config.*` (TS) or `pyproject.toml` / `ruff.toml` (Python) so checks can run.
 
 ---
 
@@ -198,9 +283,8 @@ unless there is a genuine reason.
 **Integrations:**
 `obsidian-cli`, `hook-development`, `claude-api`
 
-**Global-first note:**
-`quality-gates` and `service-skills` workflows are globally available after `xtrm install all`.
-Use `xtrm init` to provision per-project data (beads + service-registry + GitNexus index).
+> Quality-gates and service-skills workflows are globally available after `xtrm install`.
+> Use `xtrm init` to provision per-project data (beads + GitNexus index).
 
 ---
 
@@ -211,13 +295,15 @@ These hooks run automatically — you cannot disable them mid-session:
 | Hook | Trigger | Effect |
 |---|---|---|
 | `beads-edit-gate.mjs` | PreToolUse (Edit/Write/Serena) | Blocks edits without active claim |
-| `beads-commit-gate.mjs` | PreToolUse (Bash: git commit) | Blocks commit with unclosed claim |
-| `beads-claim-sync.mjs` | PostToolUse (Bash claim command) | Runs auto-commit on bd close (feature branches only) |
-| `beads-stop-gate.mjs` | Stop | Blocks stop when active in_progress claim exists |
-| `beads-memory-gate.mjs` | Stop | Prompts for persistent insights after closure |
-| `beads-compact-save/restore.mjs` | PreCompact / SessionStart | Preserves claim + session state across compact |
+| `beads-commit-gate.mjs` | PreToolUse (Bash: git commit) | Blocks commit while claim is open |
+| `beads-claim-sync.mjs` | PostToolUse (Bash: bd close/claim) | Auto-commits on `bd close`; notifies on `bd update --claim` |
+| `beads-stop-gate.mjs` | Stop | Blocks stop with unclosed in_progress claim |
+| `beads-memory-gate.mjs` | Stop | Prompts for persistent insights after issue closure |
+| `beads-compact-save/restore.mjs` | PreCompact / SessionStart | Preserves claim + session state across `/compact` |
 | `serena-workflow-reminder.py` | SessionStart | Reminds semantic editing workflow |
-| `quality-check.(cjs|py)` | PostToolUse (Edit/Write) | Runs lint + type checks automatically |
+| `branch-state.mjs` | UserPromptSubmit | Injects current branch + claim state into every prompt |
+| `quality-check.(cjs\|py)` | PostToolUse (Edit/Write) | Runs lint + type checks automatically |
+| `gitnexus/gitnexus-hook.cjs` | PostToolUse (Bash/Serena tools) | Enriches context with knowledge graph data |
 
 ---
 
@@ -238,5 +324,5 @@ These hooks run automatically — you cannot disable them mid-session:
 1. `gitnexus_detect_changes(...)` — confirms only expected files/flows changed
 2. All d=1 dependents updated (if any signal from impact analysis)
 3. Tests pass (targeted + relevant integration)
-4. Beads issue closed: `bd close <id>`
-5. Run `xt end` from within the worktree for blocking closure lifecycle
+4. `bd close <id> --reason="..."` — issue closed
+5. `git push` and PR merged (or `xt end` from within worktree for full lifecycle)

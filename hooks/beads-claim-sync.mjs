@@ -7,6 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { readFileSync, existsSync, writeFileSync, unlinkSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { resolveSessionId } from './beads-gate-utils.mjs';
+import { logEvent } from './xtrm-logger.mjs';
 
 function readInput() {
   try {
@@ -141,6 +142,17 @@ function main() {
         writeFileSync(join(xtrmDir, 'statusline-claim'), issueId);
       } catch { /* non-fatal */ }
 
+      logEvent({
+        cwd,
+        runtime: 'claude',
+        sessionId,
+        layer: 'bd',
+        kind: 'bd.claimed',
+        outcome: 'allow',
+        issueId,
+        message: `Session ${sessionId} claimed issue ${issueId}`,
+      });
+
       process.stdout.write(JSON.stringify({
         additionalContext: `\n✅ **Beads**: Session \`${sessionId}\` claimed issue \`${issueId}\`.`,
       }));
@@ -166,6 +178,33 @@ function main() {
         cwd,
         stdio: ['pipe', 'pipe', 'pipe'],
         timeout: 5000,
+      });
+    }
+
+    // Log bd lifecycle events
+    if (closedIssueId) {
+      logEvent({
+        cwd,
+        runtime: 'claude',
+        sessionId,
+        layer: 'bd',
+        kind: 'bd.closed',
+        outcome: 'allow',
+        issueId: closedIssueId,
+        message: `Issue ${closedIssueId} closed`,
+      });
+    }
+    if (commit) {
+      logEvent({
+        cwd,
+        runtime: 'claude',
+        sessionId,
+        layer: 'bd',
+        kind: 'bd.auto_committed',
+        outcome: commit.ok ? 'allow' : 'block',
+        issueId: closedIssueId ?? null,
+        message: commit.message,
+        extra: { ok: commit.ok },
       });
     }
 

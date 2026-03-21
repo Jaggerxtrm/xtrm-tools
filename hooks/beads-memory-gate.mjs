@@ -13,6 +13,7 @@ import { join } from 'node:path';
 import { readHookInput } from './beads-gate-core.mjs';
 import { resolveCwd, resolveSessionId, isBeadsProject, getSessionClaim, clearSessionClaim } from './beads-gate-utils.mjs';
 import { memoryPromptMessage } from './beads-gate-messages.mjs';
+import { logEvent } from './xtrm-logger.mjs';
 
 const input = readHookInput();
 if (!input) process.exit(0);
@@ -35,6 +36,14 @@ if (existsSync(marker)) {
       timeout: 5000,
     });
   } catch { /* ignore */ }
+  logEvent({
+    cwd,
+    runtime: 'claude',
+    sessionId,
+    layer: 'gate',
+    kind: 'hook.memory_gate.acked',
+    outcome: 'allow',
+  });
   process.exit(0);
 }
 
@@ -57,5 +66,16 @@ try {
 
 if (!closedIssueId) process.exit(0);
 
-process.stderr.write(memoryPromptMessage());
+const memoryMessage = memoryPromptMessage();
+logEvent({
+  cwd,
+  runtime: 'claude',
+  sessionId,
+  layer: 'gate',
+  kind: 'hook.memory_gate.triggered',
+  outcome: 'block',
+  issueId: closedIssueId,
+  message: memoryMessage,
+});
+process.stderr.write(memoryMessage);
 process.exit(2);

@@ -30319,10 +30319,10 @@ var require_stringify = __commonJS({
       replacer = null;
       indent2 = EMPTY;
     };
-    var join5 = (one, two, gap) => one ? two ? one + two.trim() + LF + gap : one.trimRight() + LF + gap : two ? two.trimRight() + LF + gap : EMPTY;
+    var join6 = (one, two, gap) => one ? two ? one + two.trim() + LF + gap : one.trimRight() + LF + gap : two ? two.trimRight() + LF + gap : EMPTY;
     var join_content = (inside, value, gap) => {
       const comment = process_comments(value, PREFIX_BEFORE, gap + indent2, true);
-      return join5(comment, inside, gap);
+      return join6(comment, inside, gap);
     };
     var array_stringify = (value, gap) => {
       const deeper_gap = gap + indent2;
@@ -30333,7 +30333,7 @@ var require_stringify = __commonJS({
         if (i !== 0) {
           inside += COMMA;
         }
-        const before = join5(
+        const before = join6(
           after_comma,
           process_comments(value, BEFORE(i), deeper_gap),
           deeper_gap
@@ -30343,7 +30343,7 @@ var require_stringify = __commonJS({
         inside += process_comments(value, AFTER_VALUE(i), deeper_gap);
         after_comma = process_comments(value, AFTER(i), deeper_gap);
       }
-      inside += join5(
+      inside += join6(
         after_comma,
         process_comments(value, PREFIX_AFTER, deeper_gap),
         deeper_gap
@@ -30368,7 +30368,7 @@ var require_stringify = __commonJS({
           inside += COMMA;
         }
         first = false;
-        const before = join5(
+        const before = join6(
           after_comma,
           process_comments(value, BEFORE(key), deeper_gap),
           deeper_gap
@@ -30378,7 +30378,7 @@ var require_stringify = __commonJS({
         after_comma = process_comments(value, AFTER(key), deeper_gap);
       };
       keys.forEach(iteratee);
-      inside += join5(
+      inside += join6(
         after_comma,
         process_comments(value, PREFIX_AFTER, deeper_gap),
         deeper_gap
@@ -33827,8 +33827,8 @@ var init_boxen = __esm({
 });
 
 // src/index.ts
-var import_node_fs5 = require("fs");
-var import_node_path6 = require("path");
+var import_node_fs6 = require("fs");
+var import_node_path7 = require("path");
 
 // ../node_modules/commander/esm.mjs
 var import_index = __toESM(require_commander(), 1);
@@ -56903,6 +56903,198 @@ function createDocsCommand() {
   return docs;
 }
 
+// src/commands/debug.ts
+var import_node_child_process8 = require("child_process");
+var import_node_fs5 = require("fs");
+var import_node_path6 = require("path");
+function findProjectRoot(cwd) {
+  let dir = cwd;
+  for (let i = 0; i < 10; i++) {
+    if ((0, import_node_fs5.existsSync)((0, import_node_path6.join)(dir, ".beads"))) return dir;
+    const parent = (0, import_node_path6.join)(dir, "..");
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return null;
+}
+function parseBdTable(output, columns2) {
+  const lines = output.split("\n").map((l) => l.trim()).filter(Boolean);
+  const sepIdx = lines.findIndex((l) => /^[-+\s]+$/.test(l) && l.includes("-"));
+  if (sepIdx < 1) return [];
+  const dataLines = lines.slice(sepIdx + 1).filter((l) => !l.startsWith("("));
+  return dataLines.map((line) => {
+    const cells = line.split("|").map((c) => c.trim());
+    const row = {};
+    columns2.forEach((col2, i) => {
+      row[col2] = cells[i] ?? "";
+    });
+    return row;
+  });
+}
+function queryEvents(cwd, whereExtra, limit) {
+  const cols = "id, created_at, runtime, session_id, worktree, layer, kind, outcome, tool_name, issue_id";
+  const colNames = ["id", "created_at", "runtime", "session_id", "worktree", "layer", "kind", "outcome", "tool_name", "issue_id"];
+  const where = whereExtra ? `WHERE ${whereExtra}` : "";
+  const sql = `SELECT ${cols} FROM xtrm_events ${where} ORDER BY created_at ASC, id ASC LIMIT ${limit}`;
+  const result = (0, import_node_child_process8.spawnSync)("bd", ["sql", sql], {
+    cwd,
+    stdio: ["pipe", "pipe", "pipe"],
+    encoding: "utf8",
+    timeout: 8e3
+  });
+  if (result.status !== 0) return [];
+  const rows = parseBdTable(result.stdout, colNames);
+  return rows.map((r) => ({
+    id: r.id,
+    created_at: r.created_at,
+    runtime: r.runtime,
+    session_id: r.session_id,
+    worktree: r.worktree === "<nil>" || !r.worktree ? null : r.worktree,
+    layer: r.layer,
+    kind: r.kind,
+    outcome: r.outcome,
+    tool_name: r.tool_name === "<nil>" || !r.tool_name ? null : r.tool_name,
+    issue_id: r.issue_id === "<nil>" || !r.issue_id ? null : r.issue_id
+  }));
+}
+function fmtTime(created_at) {
+  try {
+    const d = new Date(created_at);
+    if (isNaN(d.getTime())) return created_at.slice(11, 19) || "??:??:??";
+    return d.toLocaleTimeString("en-GB", { hour12: false });
+  } catch {
+    return created_at.slice(11, 19) || "??:??:??";
+  }
+}
+function fmtKind(kind, outcome) {
+  const dot = outcome === "block" ? kleur_default.red("\u25CF") : kleur_default.green("\u25CB");
+  const label = kind.padEnd(36);
+  const colored = outcome === "block" ? kleur_default.red(label) : kleur_default.green(label);
+  return `${dot} ${colored}`;
+}
+function fmtSession(sessionId) {
+  const short = sessionId.length > 8 ? sessionId.slice(0, 8) : sessionId;
+  return kleur_default.dim(short);
+}
+function fmtMeta(event) {
+  const parts = [];
+  if (event.tool_name) parts.push(kleur_default.cyan(event.tool_name.padEnd(10)));
+  if (event.issue_id) parts.push(kleur_default.yellow(event.issue_id));
+  if (event.worktree) parts.push(kleur_default.dim(`[${event.worktree}]`));
+  return parts.join("  ") || kleur_default.dim("\u2014");
+}
+function printEvent(event) {
+  const time3 = kleur_default.dim(`[${fmtTime(event.created_at)}]`);
+  const session = fmtSession(event.session_id);
+  const kind = fmtKind(event.kind, event.outcome);
+  const meta3 = fmtMeta(event);
+  console.log(`  ${time3} ${session}  ${kind}  ${meta3}`);
+}
+function printHeader() {
+  const h = kleur_default.dim;
+  const col2 = (s, w) => s.padEnd(w);
+  console.log(
+    `  ${h(col2("[TIME]", 10))} ${h(col2("SESSION", 10))}  ${h("\u25CF/\u25CB")} ${h(col2("KIND", 37))}  ${h("TOOL/ISSUE")}`
+  );
+  console.log(`  ${kleur_default.dim("\u2500".repeat(90))}`);
+}
+function buildWhereClause(opts, sinceTs) {
+  const clauses = [];
+  if (sinceTs) {
+    clauses.push(`created_at >= '${sinceTs}'`);
+  }
+  if (opts.session) {
+    const s = opts.session.replace(/'/g, "''");
+    clauses.push(`session_id LIKE '${s}%'`);
+  }
+  if (opts.type) {
+    const layer = opts.type.replace(/'/g, "''");
+    clauses.push(`layer = '${layer}'`);
+  }
+  return clauses.join(" AND ");
+}
+function watch(cwd, opts) {
+  const seenIds = /* @__PURE__ */ new Set();
+  let lastTs = null;
+  const fiveMinsAgo = new Date(Date.now() - 5 * 60 * 1e3).toISOString().replace("T", " ").slice(0, 19);
+  const initialWhere = buildWhereClause(opts, fiveMinsAgo);
+  const initial = queryEvents(cwd, initialWhere, 200);
+  if (initial.length > 0) {
+    for (const ev of initial) {
+      seenIds.add(ev.id);
+      if (!lastTs || ev.created_at > lastTs) lastTs = ev.created_at;
+      if (opts.json) {
+        console.log(JSON.stringify(ev));
+      } else {
+        printEvent(ev);
+      }
+    }
+  } else {
+    if (!opts.json) console.log(kleur_default.dim("  (no recent events \u2014 waiting for new ones)\n"));
+  }
+  const interval = setInterval(() => {
+    const overlapTs = lastTs ? new Date(new Date(lastTs.replace(" +0000 UTC", "Z")).getTime() - 2e3).toISOString().replace("T", " ").slice(0, 19) : new Date(Date.now() - 1e4).toISOString().replace("T", " ").slice(0, 19);
+    const where = buildWhereClause(opts, overlapTs);
+    const events = queryEvents(cwd, where, 50);
+    const newEvents = events.filter((ev) => !seenIds.has(ev.id));
+    for (const ev of newEvents) {
+      seenIds.add(ev.id);
+      if (!lastTs || ev.created_at > lastTs) lastTs = ev.created_at;
+      if (opts.json) {
+        console.log(JSON.stringify(ev));
+      } else {
+        printEvent(ev);
+      }
+    }
+  }, 2e3);
+  process.on("SIGINT", () => {
+    clearInterval(interval);
+    if (!opts.json) console.log(kleur_default.dim("\n  stopped\n"));
+    process.exit(0);
+  });
+}
+function createDebugCommand() {
+  return new Command("debug").description("Watch xtrm hook and bd lifecycle events in real time").option("--all", "Show full history instead of watching", false).option("--session <id>", "Filter by session ID (prefix match)").option("--type <layer>", "Filter by layer: gate | bd").option("--json", "Output raw JSON lines", false).action((opts) => {
+    const cwd = process.cwd();
+    const root = findProjectRoot(cwd);
+    if (!root) {
+      console.error(kleur_default.red("\n  \u2717 No beads project found (.beads directory missing)\n"));
+      console.error(kleur_default.dim("  Run from inside an xtrm project.\n"));
+      process.exit(1);
+    }
+    if (!opts.json) {
+      console.log(kleur_default.bold("\n  xtrm event log"));
+      if (opts.all) {
+        console.log(kleur_default.dim("  Showing full history\n"));
+      } else {
+        console.log(kleur_default.dim("  Watching for events \u2014 Ctrl+C to stop\n"));
+      }
+      printHeader();
+    }
+    if (opts.all) {
+      const where = buildWhereClause(opts, null);
+      const events = queryEvents(root, where, 200);
+      if (events.length === 0) {
+        if (!opts.json) {
+          console.log(kleur_default.dim("\n  No events recorded yet."));
+          console.log(kleur_default.dim("  Events appear here as hooks fire and bd lifecycle runs.\n"));
+        }
+      } else {
+        for (const ev of events) {
+          if (opts.json) {
+            console.log(JSON.stringify(ev));
+          } else {
+            printEvent(ev);
+          }
+        }
+        if (!opts.json) console.log("");
+      }
+      return;
+    }
+    watch(root, opts);
+  });
+}
+
 // src/utils/banner.ts
 var ART = [
   " \u2588\u2588\u2557  \u2588\u2588\u2557\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2557\u2588\u2588\u2588\u2588\u2588\u2588\u2557 \u2588\u2588\u2588\u2557   \u2588\u2588\u2588\u2557    \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2557 \u2588\u2588\u2588\u2588\u2588\u2588\u2557  \u2588\u2588\u2588\u2588\u2588\u2588\u2557 \u2588\u2588\u2557     \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2557",
@@ -57075,7 +57267,7 @@ async function printBanner(version3) {
 // src/index.ts
 var version2 = "0.0.0";
 try {
-  version2 = JSON.parse((0, import_node_fs5.readFileSync)((0, import_node_path6.resolve)(__dirname, "../package.json"), "utf8")).version;
+  version2 = JSON.parse((0, import_node_fs6.readFileSync)((0, import_node_path7.resolve)(__dirname, "../package.json"), "utf8")).version;
 } catch {
 }
 var program2 = new Command();
@@ -57101,6 +57293,7 @@ program2.addCommand(createCleanCommand());
 program2.addCommand(createEndCommand());
 program2.addCommand(createWorktreeCommand());
 program2.addCommand(createDocsCommand());
+program2.addCommand(createDebugCommand());
 program2.addCommand(createHelpCommand());
 program2.action(async () => {
   program2.help();

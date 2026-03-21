@@ -12,6 +12,7 @@ import {
 } from './beads-gate-core.mjs';
 import { withSafeBdContext } from './beads-gate-utils.mjs';
 import { stopBlockMessage } from './beads-gate-messages.mjs';
+import { logEvent } from './xtrm-logger.mjs';
 
 const input = readHookInput();
 if (!input) process.exit(0);
@@ -24,9 +25,29 @@ withSafeBdContext(() => {
   const decision = decideStopGate(ctx, state);
 
   if (!decision.allow) {
-    process.stderr.write(stopBlockMessage(decision.summary, decision.claimed));
+    const message = stopBlockMessage(decision.summary, decision.claimed);
+    logEvent({
+      cwd: ctx.cwd,
+      runtime: 'claude',
+      sessionId: ctx.sessionId,
+      layer: 'gate',
+      kind: 'hook.stop_gate.block',
+      outcome: 'block',
+      issueId: decision.claimed ?? null,
+      message,
+      extra: { reason_code: decision.reason },
+    });
+    process.stderr.write(message);
     process.exit(2);
   }
 
+  logEvent({
+    cwd: ctx.cwd,
+    runtime: 'claude',
+    sessionId: ctx.sessionId,
+    layer: 'gate',
+    kind: 'hook.stop_gate.allow',
+    outcome: 'allow',
+  });
   process.exit(0);
 });

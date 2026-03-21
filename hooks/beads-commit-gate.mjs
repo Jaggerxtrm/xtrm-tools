@@ -15,6 +15,7 @@ import {
 } from './beads-gate-core.mjs';
 import { withSafeBdContext } from './beads-gate-utils.mjs';
 import { commitBlockMessage } from './beads-gate-messages.mjs';
+import { logEvent } from './xtrm-logger.mjs';
 
 const input = readHookInput();
 if (!input) process.exit(0);
@@ -35,10 +36,34 @@ withSafeBdContext(() => {
   const state = resolveClaimAndWorkState(ctx);
   const decision = decideCommitGate(ctx, state);
 
-  if (decision.allow) process.exit(0);
+  if (decision.allow) {
+    logEvent({
+      cwd: ctx.cwd,
+      runtime: 'claude',
+      sessionId: ctx.sessionId,
+      layer: 'gate',
+      kind: 'hook.commit_gate.allow',
+      outcome: 'allow',
+      toolName: 'Bash',
+      issueId: state?.claimId ?? null,
+    });
+    process.exit(0);
+  }
 
   // Block with structured decision
   const reason = commitBlockMessage(decision.summary, decision.claimed);
+  logEvent({
+    cwd: ctx.cwd,
+    runtime: 'claude',
+    sessionId: ctx.sessionId,
+    layer: 'gate',
+    kind: 'hook.commit_gate.block',
+    outcome: 'block',
+    toolName: 'Bash',
+    issueId: decision.claimed ?? null,
+    message: reason,
+    extra: { reason_code: decision.reason },
+  });
   process.stdout.write(JSON.stringify({ decision: 'block', reason }));
   process.stdout.write('\n');
   process.exit(0);

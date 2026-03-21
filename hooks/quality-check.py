@@ -26,20 +26,20 @@ class Colors:
     RESET = '\x1b[0m'
 
 def log_info(msg: str):
-    print(f"{Colors.BLUE}[INFO]{Colors.RESET} {msg}", file=sys.stderr)
+    print(f"{Colors.BLUE}[INFO]{Colors.RESET} {msg}")
 
 def log_error(msg: str):
-    print(f"{Colors.RED}[ERROR]{Colors.RESET} {msg}", file=sys.stderr)
+    print(f"{Colors.RED}[ERROR]{Colors.RESET} {msg}")
 
 def log_success(msg: str):
-    print(f"{Colors.GREEN}[OK]{Colors.RESET} {msg}", file=sys.stderr)
+    print(f"{Colors.GREEN}[OK]{Colors.RESET} {msg}")
 
 def log_warning(msg: str):
-    print(f"{Colors.YELLOW}[WARN]{Colors.RESET} {msg}", file=sys.stderr)
+    print(f"{Colors.YELLOW}[WARN]{Colors.RESET} {msg}")
 
 def log_debug(msg: str):
     if os.environ.get('CLAUDE_HOOKS_DEBUG', 'false').lower() == 'true':
-        print(f"{Colors.CYAN}[DEBUG]{Colors.RESET} {msg}", file=sys.stderr)
+        print(f"{Colors.CYAN}[DEBUG]{Colors.RESET} {msg}")
 
 def find_project_root(file_path: str) -> str:
     """Find project root by looking for pyproject.toml, setup.py, or .git"""
@@ -203,20 +203,20 @@ def check_pytest_suggestions(file_path: str, project_root: str):
 def print_summary(errors: list[str], autofixes: list[str]):
     """Print summary of errors and autofixes"""
     if autofixes:
-        print(f'\n{Colors.BLUE}═══ Auto-fixes Applied ═══{Colors.RESET}', file=sys.stderr)
+        print(f'\n{Colors.BLUE}═══ Auto-fixes Applied ═══{Colors.RESET}')
         for fix in autofixes:
-            print(f'{Colors.GREEN}✨{Colors.RESET} {fix}', file=sys.stderr)
-        print(f'{Colors.GREEN}Automatically fixed {len(autofixes)} issue(s)!{Colors.RESET}', file=sys.stderr)
+            print(f'{Colors.GREEN}✨{Colors.RESET} {fix}')
+        print(f'{Colors.GREEN}Automatically fixed {len(autofixes)} issue(s)!{Colors.RESET}')
     
     if errors:
-        print(f'\n{Colors.BLUE}═══ Quality Check Summary ═══{Colors.RESET}', file=sys.stderr)
+        print(f'\n{Colors.BLUE}═══ Quality Check Summary ═══{Colors.RESET}')
         for error in errors:
-            print(f'{Colors.RED}❌{Colors.RESET} {error}', file=sys.stderr)
-        print(f'\n{Colors.RED}Found {len(errors)} issue(s) that MUST be fixed!{Colors.RESET}', file=sys.stderr)
-        print(f'{Colors.RED}══════════════════════════════════════{Colors.RESET}', file=sys.stderr)
-        print(f'{Colors.RED}❌ ALL ISSUES ARE BLOCKING ❌{Colors.RESET}', file=sys.stderr)
-        print(f'{Colors.RED}══════════════════════════════════════{Colors.RESET}', file=sys.stderr)
-        print(f'{Colors.RED}Fix EVERYTHING above until all checks are ✅ GREEN{Colors.RESET}', file=sys.stderr)
+            print(f'{Colors.RED}❌{Colors.RESET} {error}')
+        print(f'\n{Colors.RED}Found {len(errors)} issue(s) that MUST be fixed!{Colors.RESET}')
+        print(f'{Colors.RED}══════════════════════════════════════{Colors.RESET}')
+        print(f'{Colors.RED}❌ ALL ISSUES ARE BLOCKING ❌{Colors.RESET}')
+        print(f'{Colors.RED}══════════════════════════════════════{Colors.RESET}')
+        print(f'{Colors.RED}Fix EVERYTHING above until all checks are ✅ GREEN{Colors.RESET}')
 
 def parse_json_input() -> dict:
     """Parse JSON input from stdin"""
@@ -224,7 +224,7 @@ def parse_json_input() -> dict:
     
     if not input_data:
         log_warning('No JSON input provided.')
-        print(f'\n{Colors.YELLOW}👉 Hook executed but no input to process.{Colors.RESET}', file=sys.stderr)
+        print(f'\n{Colors.YELLOW}👉 Hook executed but no input to process.{Colors.RESET}')
         sys.exit(0)
     
     try:
@@ -253,9 +253,9 @@ def extract_file_path(input_data: dict) -> str | None:
 
 def main():
     """Main entry point"""
-    print('', file=sys.stderr)
-    print(f'📦 Python Quality Check - Starting...', file=sys.stderr)
-    print('─────────────────────────────────────', file=sys.stderr)
+    print('')
+    print(f'📦 Python Quality Check - Starting...')
+    print('─────────────────────────────────────')
     
     # Parse input
     input_data = parse_json_input()
@@ -263,25 +263,25 @@ def main():
     
     if not file_path:
         log_warning('No file path found in JSON input.')
-        print(f'\n{Colors.YELLOW}👉 No file to check - tool may not be file-related.{Colors.RESET}', file=sys.stderr)
+        print(f'\n{Colors.YELLOW}👉 No file to check - tool may not be file-related.{Colors.RESET}')
         sys.exit(0)
     
     # Check if file exists
     if not Path(file_path).exists():
         log_info(f'File does not exist: {file_path}')
-        print(f'\n{Colors.YELLOW}👉 File skipped - doesn\'t exist.{Colors.RESET}', file=sys.stderr)
+        print(f'\n{Colors.YELLOW}👉 File skipped - doesn\'t exist.{Colors.RESET}')
         sys.exit(0)
     
     # Skip non-Python files
     if not is_python_file(file_path):
         log_info(f'Skipping non-Python file: {file_path}')
-        print(f'\n{Colors.GREEN}✅ No checks needed for {os.path.basename(file_path)}{Colors.RESET}', file=sys.stderr)
+        print(f'\n{Colors.GREEN}✅ No checks needed for {os.path.basename(file_path)}{Colors.RESET}')
         sys.exit(0)
     
     # Update header
-    print('', file=sys.stderr)
-    print(f'🔍 Validating: {os.path.basename(file_path)}', file=sys.stderr)
-    print('─────────────────────────────────────', file=sys.stderr)
+    print('')
+    print(f'🔍 Validating: {os.path.basename(file_path)}')
+    print('─────────────────────────────────────')
     log_info(f'Checking: {file_path}')
     
     # Find project root
@@ -290,7 +290,7 @@ def main():
 
     if not has_python_project_config(project_root):
         log_info('No pyproject.toml or .python-version found - skipping Python quality checks')
-        print(f'\n{Colors.GREEN}✅ No Python project config detected; skipping checks for {os.path.basename(file_path)}{Colors.RESET}', file=sys.stderr)
+        print(f'\n{Colors.GREEN}✅ No Python project config detected; skipping checks for {os.path.basename(file_path)}{Colors.RESET}')
         sys.exit(0)
     
     # Get config from environment
@@ -317,20 +317,20 @@ def main():
     
     # Exit with appropriate code
     if all_errors:
-        print(f'\n{Colors.RED}🛑 FAILED - Fix issues in your edited file! 🛑{Colors.RESET}', file=sys.stderr)
-        print(f'{Colors.CYAN}💡 CLAUDE.md CHECK:{Colors.RESET}', file=sys.stderr)
-        print(f'{Colors.CYAN}  → What CLAUDE.md pattern would have prevented this?{Colors.RESET}', file=sys.stderr)
-        print(f'{Colors.YELLOW}📋 NEXT STEPS:{Colors.RESET}', file=sys.stderr)
-        print(f'{Colors.YELLOW}  1. Fix the issues listed above{Colors.RESET}', file=sys.stderr)
-        print(f'{Colors.YELLOW}  2. The hook will run again automatically{Colors.RESET}', file=sys.stderr)
-        print(f'{Colors.YELLOW}  3. Continue once all checks pass{Colors.RESET}', file=sys.stderr)
+        print(f'\n{Colors.RED}🛑 FAILED - Fix issues in your edited file! 🛑{Colors.RESET}')
+        print(f'{Colors.CYAN}💡 CLAUDE.md CHECK:{Colors.RESET}')
+        print(f'{Colors.CYAN}  → What CLAUDE.md pattern would have prevented this?{Colors.RESET}')
+        print(f'{Colors.YELLOW}📋 NEXT STEPS:{Colors.RESET}')
+        print(f'{Colors.YELLOW}  1. Fix the issues listed above{Colors.RESET}')
+        print(f'{Colors.YELLOW}  2. The hook will run again automatically{Colors.RESET}')
+        print(f'{Colors.YELLOW}  3. Continue once all checks pass{Colors.RESET}')
         sys.exit(2)
     else:
-        print(f'\n{Colors.GREEN}✅ Quality check passed for {os.path.basename(file_path)}{Colors.RESET}', file=sys.stderr)
+        print(f'\n{Colors.GREEN}✅ Quality check passed for {os.path.basename(file_path)}{Colors.RESET}')
         if all_autofixes:
-            print(f'\n{Colors.YELLOW}👉 File quality verified. Auto-fixes applied. Continue with your task.{Colors.RESET}', file=sys.stderr)
+            print(f'\n{Colors.YELLOW}👉 File quality verified. Auto-fixes applied. Continue with your task.{Colors.RESET}')
         else:
-            print(f'\n{Colors.YELLOW}👉 File quality verified. Continue with your task.{Colors.RESET}', file=sys.stderr)
+            print(f'\n{Colors.YELLOW}👉 File quality verified. Continue with your task.{Colors.RESET}')
         
         # Suggest tests
         check_pytest_suggestions(file_path, project_root)

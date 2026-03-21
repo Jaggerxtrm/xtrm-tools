@@ -2,7 +2,7 @@
 title: Hooks Reference
 scope: hooks
 category: reference
-version: 1.2.0
+version: 1.3.0
 updated: 2026-03-21
 description: "All hook events, scripts, and behavior for the xtrm plugin"
 source_of_truth_for:
@@ -55,11 +55,27 @@ Installed with `xtrm install` when beads + dolt are present.
 | `beads-compact-save.mjs` | PreCompact | Saves claim state before `/compact` |
 | `beads-compact-restore.mjs` | SessionStart | Restores claim state after `/compact` or session resume |
 
+### Worktree Boundary Hook
+
+| Hook | Event | Behavior |
+|------|-------|----------|
+| `worktree-boundary.mjs` | PreToolUse | Blocks Write/Edit outside `.xtrm/worktrees/<name>` when in worktree session |
+
+Active only when cwd is inside a worktree (detected via path matching `.xtrm/worktrees/<name>`). Fail-open: any error allows the edit through.
+
 ### Session Flow Hooks
 
 | Hook | Event | Behavior |
 |------|-------|----------|
-| `beads-claim-sync.mjs` | PostToolUse | Notifies on `bd update --claim`; auto-commits on `bd close` |
+| `beads-claim-sync.mjs` | PostToolUse | Notifies on `bd update --claim`; auto-commits on `bd close` (stages untracked files first) |
+
+### Statusline Hook
+
+| Hook | Event | Behavior |
+|------|-------|----------|
+| `statusline.mjs` | statusLine | Renders 2-line status: `XTRM model dir branch` + claim/open issues |
+
+Runs via Claude Code's `statusLine` injection. Reads claim state from `.xtrm/statusline-claim`, shows model name, context %, git branch + status, and either active claim title or open issue count.
 
 ### Shared Utilities (not wired directly)
 

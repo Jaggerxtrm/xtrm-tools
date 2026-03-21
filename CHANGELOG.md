@@ -14,6 +14,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.5.20] - 2026-03-21
+
+### Added
+- **`xtrm docs show`**: New command to display frontmatter for README, CHANGELOG, and docs/*.md files with `--raw` and `--json` options
+- **`worktree-boundary.mjs`**: PreToolUse hook that blocks Write/Edit outside `.xtrm/worktrees/<name>` when in worktree session
+- **`worktree-boundary.json`**: Policy for worktree boundary enforcement
+- **`statusline.mjs`**: Two-line status injection showing XTRM, model, branch, and claim state
+
+### Changed
+- **`beads-claim-sync.mjs`**: Now stages untracked files before auto-commit on `bd close`
+- **Statusline format**: XTRM bold prepended, no hardcoded colors (theme-adaptive), issue ID shown before title in claim line
+
+### Fixed
+- **plugin.json sync**: `sync-cli-version.mjs` now syncs both root and plugin cache plugin.json files
+
+---
+
 ## [0.5.0] - 2026-03-20
 
 ### Added

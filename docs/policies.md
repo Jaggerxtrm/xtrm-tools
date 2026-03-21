@@ -2,7 +2,7 @@
 title: Policy Reference
 scope: policies
 category: reference
-version: 1.1.0
+version: 1.2.0
 updated: 2026-03-21
 source_of_truth_for:
   - "policies/*.json"
@@ -33,6 +33,7 @@ Each policy declares which runtime it targets (`claude`, `pi`, or `both`) and wh
 | `service-skills.json` | pi | Injects service catalog + detects skill doc drift (only when `service-registry.json` present) |
 | `session-flow.json` | both | Claim sync (auto-commit on `bd close`), stop gate, `xt end` worktree reminder |
 | `using-xtrm.json` | claude | Injects `using-xtrm` session operating manual at session start |
+| `worktree-boundary.json` | claude | Blocks Write/Edit outside active worktree when inside `.xtrm/worktrees/<name>` |
 
 ## Adding a Policy
 

@@ -2,7 +2,7 @@
 title: CLI Architecture
 scope: cli-architecture
 category: reference
-version: 1.0.0
+version: 1.1.0
 updated: 2026-03-21
 source_of_truth_for:
   - "cli/src/**/*.ts"
@@ -29,6 +29,8 @@ xt / xtrm
 ├── init             → commands/init.ts
 ├── clean            → commands/clean.ts
 ├── status           → commands/status.ts
+├── docs             → commands/docs.ts
+│   └── docs show    → displays frontmatter for README, CHANGELOG, docs/*.md
 └── help             → commands/help.ts
 ```
 

@@ -112,11 +112,11 @@ if (!data) {
     }
   }
 
-  data = { modelStr, host, displayDir, branch, gitStatus, venv, claimTitle, openCount };
+  data = { modelStr, host, displayDir, branch, gitStatus, venv, claimId, claimTitle, openCount };
   setCache(data);
 }
 
-const { modelStr, host, displayDir, branch, gitStatus, venv, claimTitle, openCount } = data;
+const { modelStr, host, displayDir, branch, gitStatus, venv, claimId, claimTitle, openCount } = data;
 
 // Line 1 — matches global format, XTRM prepended
 const parts = [`${B}XTRM${B_}`];
@@ -131,8 +131,11 @@ const line1 = parts.join(' ');
 let line2;
 if (claimTitle) {
   const cols = process.stdout.columns || 80;
-  const t = claimTitle.length > cols - 4 ? claimTitle.slice(0, cols - 5) + '…' : claimTitle;
-  line2 = ` ◐ ${I}${t}${I_}`;
+  const prefix = ` ◐ ${claimId} `;
+  const prefixLen = prefix.replace(/\x1b\[[0-9;]*m/g, '').length;
+  const maxLen = cols - prefixLen - 1;
+  const t = claimTitle.length > maxLen ? claimTitle.slice(0, maxLen - 1) + '…' : claimTitle;
+  line2 = `${prefix}${I}${t}${I_}`;
 } else {
   line2 = ` ○ ${openCount > 0 ? `${B}${openCount}${B_} open` : 'no open issues'}`;
 }

@@ -55,7 +55,30 @@ python3 "skills/sync-docs/scripts/drift_detector.py" scan --since 30
 python3 "skills/sync-docs/scripts/drift_detector.py" scan --since 30 --json
 ```
 
-A docs file is stale when frontmatter `source_of_truth_for` (or `tracks`) matches files changed in recent commits.
+A docs file is stale when:
+1. It declares `source_of_truth_for` globs in frontmatter
+2. AND there are commits affecting matching files AFTER the `synced_at` hash
+
+### synced_at Checkpoint
+
+Add `synced_at: <git-hash>` to doc frontmatter to mark the last sync point:
+
+```yaml
+---
+title: Hooks Reference
+updated: 2026-03-21
+synced_at: a1b2c3d  # git hash when doc was last synced
+source_of_truth_for:
+  - "hooks/**/*.mjs"
+---
+```
+
+After updating a doc, run:
+```bash
+python3 "skills/sync-docs/scripts/drift_detector.py" update-sync docs/hooks.md
+```
+
+This sets `synced_at` to current HEAD, marking the doc as synced.
 
 ---
 

@@ -41820,9 +41820,6 @@ var MCP_CORE_CONFIG_PATH = import_path15.default.join(PKG_ROOT2, "config", "mcp_
 var INSTRUCTIONS_DIR = import_path15.default.join(PKG_ROOT2, "config", "instructions");
 var XTRM_BLOCK_START = "<!-- xtrm:start -->";
 var XTRM_BLOCK_END = "<!-- xtrm:end -->";
-function toServiceId(name) {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "service";
-}
 function parseComposeServices(content) {
   const lines = content.split("\n");
   const services = /* @__PURE__ */ new Set();
@@ -41877,42 +41874,6 @@ async function detectProjectFeatures(projectRoot) {
     generatedRegistry: false
   };
 }
-async function ensureServiceRegistry(projectRoot, services) {
-  const registryPath = import_path15.default.join(projectRoot, "service-registry.json");
-  if (services.length === 0) {
-    return { generated: false, registryPath };
-  }
-  const existedBefore = await import_fs_extra16.default.pathExists(registryPath);
-  const now = (/* @__PURE__ */ new Date()).toISOString();
-  let registry2 = { version: "1.0.0", services: {} };
-  if (existedBefore) {
-    try {
-      registry2 = await import_fs_extra16.default.readJson(registryPath);
-      if (!registry2.services || typeof registry2.services !== "object") {
-        registry2.services = {};
-      }
-    } catch {
-      registry2 = { version: "1.0.0", services: {} };
-    }
-  }
-  let changed = false;
-  for (const serviceName of services) {
-    const serviceId = toServiceId(serviceName);
-    if (registry2.services[serviceId]) continue;
-    registry2.services[serviceId] = {
-      name: serviceName,
-      description: `Detected from Docker configuration (${serviceName}).`,
-      territory: [],
-      skill_path: `.claude/skills/${serviceId}/SKILL.md`,
-      last_sync: now
-    };
-    changed = true;
-  }
-  if (changed || !existedBefore) {
-    await import_fs_extra16.default.writeJson(registryPath, registry2, { spaces: 2 });
-  }
-  return { generated: changed || !existedBefore, registryPath };
-}
 function upsertManagedBlock(fileContent, blockBody, startMarker = XTRM_BLOCK_START, endMarker = XTRM_BLOCK_END) {
   const normalizedBody = blockBody.trim();
   const managedBlock = `${startMarker}
@@ -41964,15 +41925,14 @@ function buildProjectInitGuide() {
     kleur_default.dim("   xtrm init   (alias: xtrm project init)"),
     kleur_default.dim("   - Initializes beads workspace (bd init)"),
     kleur_default.dim("   - Refreshes GitNexus index if missing/stale"),
-    kleur_default.dim("   - Syncs project-scoped MCP entries"),
-    kleur_default.dim("   - Detects TS/Python/Docker project signals"),
-    kleur_default.dim("   - Scaffolds service-registry.json when Docker services are detected"),
+    kleur_default.dim("   - Injects XTRM workflow headers into AGENTS.md + CLAUDE.md"),
+    kleur_default.dim("   - Detects TypeScript/Python project signals"),
     "",
     `${kleur_default.cyan("2) What is already global (no per-project install needed):")}`,
-    kleur_default.dim("   - quality gates hooks (formerly installed via quality-gates)"),
-    kleur_default.dim("   - service-skills routing and drift checks (formerly service-skills-set)"),
-    kleur_default.dim("   - main-guard + beads workflow gates"),
-    kleur_default.dim("   - optional TDD strategy guidance (legacy name: tdd-guard)"),
+    kleur_default.dim("   - quality gates hooks (ESLint/tsc/ruff/mypy on every edit)"),
+    kleur_default.dim("   - beads workflow gates (edit/commit/stop/memory enforcement)"),
+    kleur_default.dim("   - session-flow gates (claim sync, stop gate, xt end reminder)"),
+    kleur_default.dim("   - service-skills routing and drift checks"),
     "",
     `${kleur_default.cyan("3) Configure repo quality tools (hooks enforce what exists):")}`,
     kleur_default.dim("   - TS: eslint + prettier + tsc"),
@@ -42012,27 +41972,12 @@ async function bootstrapProjectInit() {
   await runBdInitForProject(projectRoot);
   await injectProjectInstructionHeaders(projectRoot);
   await runGitNexusInitForProject(projectRoot);
-  if (detected.dockerServices.length > 0) {
-    const { generated, registryPath } = await ensureServiceRegistry(projectRoot, detected.dockerServices);
-    detected.generatedRegistry = generated;
-    detected.registryPath = registryPath;
-    if (generated) {
-      console.log(`${kleur_default.green("  \u2713")} service registry scaffolded at ${import_path15.default.relative(projectRoot, registryPath)}`);
-    } else {
-      console.log(kleur_default.dim("  \u2713 service-registry.json already includes detected services"));
-    }
-  }
   const projectTypes = [];
   if (detected.hasTypeScript) projectTypes.push("TypeScript");
   if (detected.hasPython) projectTypes.push("Python");
-  if (detected.dockerServices.length > 0) projectTypes.push("Docker");
   console.log(kleur_default.bold("\nProject initialized."));
   console.log(kleur_default.white(`  Quality gates active globally.`));
   console.log(kleur_default.white(`  Project types: ${projectTypes.length > 0 ? projectTypes.join(", ") : "none detected"}.`));
-  console.log(kleur_default.white(`  Services detected: ${detected.dockerServices.length > 0 ? detected.dockerServices.join(", ") : "none"}.`));
-  if (detected.registryPath) {
-    console.log(kleur_default.dim(`  Service registry: ${detected.registryPath}`));
-  }
   console.log("");
 }
 async function runBdInitForProject(projectRoot) {

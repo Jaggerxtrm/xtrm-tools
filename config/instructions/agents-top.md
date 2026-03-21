@@ -1,30 +1,97 @@
-# XTRM Agent Workflow (Short)
+# XTRM Agent Workflow
 
-This file is an **agent operating manual** (not a project overview).
+> Full reference: [XTRM-GUIDE.md](XTRM-GUIDE.md)
+> Run `bd prime` at session start (or after context reset) for live beads workflow context.
 
-1. **Start with scope**
-   - Clarify task intent if ambiguous.
-   - Prefer semantic discovery (Serena + GitNexus) over broad grep-first exploration.
+## Session Start
 
-2. **Track work in `bd`**
-   - Use `bd ready --json` / `bd update <id> --claim --json` before edits.
-   - Create discovered follow-ups with `--deps discovered-from:<id>`.
+1. `bd prime` — load workflow context and active claims
+2. `bd memories <keyword>` — retrieve memories relevant to today's task
+3. `bd recall <key>` — retrieve a specific memory by key if needed
+4. `bd ready` — find available work
+5. `bd update <id> --claim` — claim before any file edit
 
-3. **Branch per issue (strict)**
-   - Create a **new branch for each issue** from latest `main`.
-   - Do **not** continue new work on a previously used branch.
-   - Branch format: `feature/<issue-id>-<short-description>` (or `fix/...`, `chore/...`).
+## Active Gates (extensions enforce these — not optional)
 
-4. **Edit safely**
-   - Use Serena symbol tools for code changes when possible.
-   - Run GitNexus impact checks before symbol changes and detect-changes before commit.
+| Gate | Trigger | Required action |
+|------|---------|-----------------|
+| **Edit** | Write/Edit without active claim | `bd update <id> --claim` |
+| **Commit** | `git commit` while claim is open | `bd close <id>` first, then commit |
+| **Stop** | Session end with unclosed claim | `bd close <id>` |
+| **Memory** | Auto-fires at session end if issue closed | `bd remember "<insight>"` then `touch .beads/.memory-gate-done` |
 
-5. **PR merge + return to main**
-   - Always merge via PR (squash merge preferred).
-   - After merge: switch to `main` and sync (`git reset --hard origin/main`).
-   - Delete merged branch locally and remotely (`git branch -d <branch>` and `git push origin --delete <branch>`).
+> `bd close` auto-commits via `git commit -am`. Do not double-commit after closing.
 
-6. **Before finishing**
-   - Run relevant tests/linters.
-   - Close/update bead state.
-   - Ensure changes are committed and pushed.
+## bd Command Reference
+
+```bash
+# Work discovery
+bd ready                               # Unblocked open issues
+bd show <id>                           # Full detail + deps + blockers
+bd list --status=in_progress           # Your active claims
+bd query "status=in_progress AND assignee=me"  # Complex filter
+bd search <text>                       # Full-text search across issues
+
+# Claiming & updating
+bd update <id> --claim                 # Claim (sets you as owner, status→in_progress)
+bd update <id> --notes "..."           # Append notes inline
+bd update <id> --status=blocked        # Mark blocked
+bd update                              # Update last-touched issue (no ID needed)
+
+# Creating
+bd create --title="..." --description="..." --type=task --priority=2
+# --deps "discovered-from:<parent-id>"  link follow-ups to source
+# priority: 0=critical  1=high  2=medium  3=low  4=backlog
+# types: task | bug | feature | epic | chore | decision
+
+# Closing
+bd close <id>                          # Close + auto-commit
+bd close <id> --reason="Done: ..."     # Close with context
+bd close <id1> <id2> <id3>            # Batch close
+
+# Dependencies
+bd dep add <issue> <depends-on>        # issue depends on depends-on (depends-on blocks issue)
+bd dep <blocker> --blocks <blocked>    # shorthand: blocker blocks blocked
+bd dep relate <a> <b>                  # non-blocking "relates to" link
+bd dep tree <id>                       # visualise dependency tree
+bd blocked                             # show all currently blocked issues
+
+# Persistent memory
+bd remember "<insight>"                # Store across sessions (project-scoped)
+bd memories <keyword>                  # Search stored memories
+bd recall <key>                        # Retrieve full memory by key
+bd forget <key>                        # Remove a memory
+
+# Health & pre-flight
+bd stats                               # Open/closed/blocked counts
+bd preflight --check                   # Pre-PR readiness (lint, tests, beads)
+bd doctor                              # Diagnose installation issues
+```
+
+## Git Workflow (strict: one branch per issue)
+
+```bash
+git checkout -b feature/<issue-id>-<slug>   # or fix/... chore/...
+bd update <id> --claim                       # claim before any edit
+# ... write code ...
+bd close <id> --reason="..."                 # closes issue + auto-commits
+git push -u origin feature/<name>
+gh pr create --fill && gh pr merge --squash
+git checkout main && git pull --ff-only
+git branch -d <branch> && git push origin --delete <branch>
+```
+
+**Never** continue new work on a previously used branch.
+
+## Quality Gates (automatic)
+
+Run on every file edit via PostToolUse extension:
+- **TypeScript/JS**: ESLint + tsc
+- **Python**: ruff + mypy
+
+Gate output appears as extension context. Fix failures before proceeding — do not commit with lint errors.
+
+## Worktree Sessions
+
+- `xt pi` — launch Pi in a sandboxed worktree
+- `xt end` — close session: commit / push / PR / cleanup

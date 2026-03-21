@@ -727,15 +727,14 @@ export function buildProjectInitGuide(): string {
         kleur.dim('   xtrm init   (alias: xtrm project init)'),
         kleur.dim('   - Initializes beads workspace (bd init)'),
         kleur.dim('   - Refreshes GitNexus index if missing/stale'),
-        kleur.dim('   - Syncs project-scoped MCP entries'),
-        kleur.dim('   - Detects TS/Python/Docker project signals'),
-        kleur.dim('   - Scaffolds service-registry.json when Docker services are detected'),
+        kleur.dim('   - Injects XTRM workflow headers into AGENTS.md + CLAUDE.md'),
+        kleur.dim('   - Detects TypeScript/Python project signals'),
         '',
         `${kleur.cyan('2) What is already global (no per-project install needed):')}`,
-        kleur.dim('   - quality gates hooks (formerly installed via quality-gates)'),
-        kleur.dim('   - service-skills routing and drift checks (formerly service-skills-set)'),
-        kleur.dim('   - main-guard + beads workflow gates'),
-        kleur.dim('   - optional TDD strategy guidance (legacy name: tdd-guard)'),
+        kleur.dim('   - quality gates hooks (ESLint/tsc/ruff/mypy on every edit)'),
+        kleur.dim('   - beads workflow gates (edit/commit/stop/memory enforcement)'),
+        kleur.dim('   - session-flow gates (claim sync, stop gate, xt end reminder)'),
+        kleur.dim('   - service-skills routing and drift checks'),
         '',
         `${kleur.cyan('3) Configure repo quality tools (hooks enforce what exists):')}`,
         kleur.dim('   - TS: eslint + prettier + tsc'),
@@ -779,29 +778,14 @@ async function bootstrapProjectInit(): Promise<void> {
     await runBdInitForProject(projectRoot);
     await injectProjectInstructionHeaders(projectRoot);
     await runGitNexusInitForProject(projectRoot);
-    if (detected.dockerServices.length > 0) {
-        const { generated, registryPath } = await ensureServiceRegistry(projectRoot, detected.dockerServices);
-        detected.generatedRegistry = generated;
-        detected.registryPath = registryPath;
-        if (generated) {
-            console.log(`${kleur.green('  ✓')} service registry scaffolded at ${path.relative(projectRoot, registryPath)}`);
-        } else {
-            console.log(kleur.dim('  ✓ service-registry.json already includes detected services'));
-        }
-    }
 
     const projectTypes: string[] = [];
     if (detected.hasTypeScript) projectTypes.push('TypeScript');
     if (detected.hasPython) projectTypes.push('Python');
-    if (detected.dockerServices.length > 0) projectTypes.push('Docker');
 
     console.log(kleur.bold('\nProject initialized.'));
     console.log(kleur.white(`  Quality gates active globally.`));
     console.log(kleur.white(`  Project types: ${projectTypes.length > 0 ? projectTypes.join(', ') : 'none detected'}.`));
-    console.log(kleur.white(`  Services detected: ${detected.dockerServices.length > 0 ? detected.dockerServices.join(', ') : 'none'}.`));
-    if (detected.registryPath) {
-        console.log(kleur.dim(`  Service registry: ${detected.registryPath}`));
-    }
     console.log('');
 }
 

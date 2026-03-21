@@ -7,6 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { homedir } from 'node:os';
 import { findRepoRoot } from '../utils/repo-root.js';
 import { t, sym } from '../utils/theme.js';
+import { syncManagedPiExtensions } from '../utils/pi-extensions.js';
 
 const PI_AGENT_DIR = process.env.PI_AGENT_DIR || path.join(homedir(), '.pi', 'agent');
 
@@ -240,22 +241,14 @@ export function createInstallPiCommand(): Command {
                 console.log(t.success(`    ${sym.ok} ${name}`));
             }
 
-            await fs.copy(path.join(piConfigDir, 'extensions'), path.join(PI_AGENT_DIR, 'extensions'), { overwrite: true });
-            console.log(t.success(`    ${sym.ok} extensions/`));
-
-            // Register each extension with pi install -l
-            const extDirs = await listExtensionDirs(path.join(PI_AGENT_DIR, 'extensions'));
-            if (extDirs.length > 0) {
-                console.log(kleur.dim(`\n  Registering ${extDirs.length} extensions...`));
-                for (const extName of extDirs) {
-                    const extPath = path.join(PI_AGENT_DIR, 'extensions', extName);
-                    const r = spawnSync('pi', ['install', '-l', extPath], { stdio: 'pipe', encoding: 'utf8' });
-                    if (r.status === 0) {
-                        console.log(t.success(`    ${sym.ok} ${extName} registered`));
-                    } else {
-                        console.log(kleur.yellow(`    ⚠ ${extName} — registration failed`));
-                    }
-                }
+            const managedPackages = await syncManagedPiExtensions({
+                sourceDir: path.join(piConfigDir, 'extensions'),
+                targetDir: path.join(PI_AGENT_DIR, 'extensions'),
+                dryRun: false,
+                log: (message) => console.log(kleur.dim(`    ${message}`)),
+            });
+            if (managedPackages > 0) {
+                console.log(t.success(`    ${sym.ok} extensions/ (${managedPackages} packages)`));
             }
 
             console.log(t.bold('\n  npm Packages\n'));

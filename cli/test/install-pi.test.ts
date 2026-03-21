@@ -107,12 +107,15 @@ describe('createInstallPiCommand', () => {
         expect(keys).toContain('qwen-cli');
     });
 
-    it('extensions directory contains all expected .ts files', () => {
+    it('extensions directory contains expected extension package directories', () => {
         const fs = require('node:fs');
         const p = require('node:path');
         const extDir = p.resolve(__dirname, '..', '..', 'config', 'pi', 'extensions');
-        const files = ['auto-session-name.ts','auto-update.ts','bg-process.ts','compact-header.ts','custom-footer.ts','git-checkpoint.ts','todo.ts'];
-        for (const f of files) expect(fs.existsSync(p.join(extDir, f))).toBe(true);
+        const packages = ['auto-session-name', 'auto-update', 'compact-header', 'custom-footer', 'git-checkpoint', 'quality-gates', 'beads', 'session-flow', 'service-skills', 'xtrm-loader', 'plan-mode'];
+        for (const pkg of packages) {
+            expect(fs.existsSync(p.join(extDir, pkg, 'index.ts'))).toBe(true);
+            expect(fs.existsSync(p.join(extDir, pkg, 'package.json'))).toBe(true);
+        }
     });
 
     it('custom-provider-qwen-cli extension has index.ts and package.json', () => {
@@ -155,7 +158,7 @@ describe('createInstallPiCommand', () => {
         expect(result['DASHSCOPE_API_KEY']).toBe('sk-from-models-789');
     });
 
-    it('diffPiExtensions reports missing and stale files', async () => {
+    it('diffPiExtensions reports missing and stale extension packages', async () => {
         const { diffPiExtensions } = await import('../src/commands/install-pi.js?t=diff' + Date.now());
         const nodeFs = require('node:fs');
         const nodePath = require('node:path');
@@ -164,17 +167,25 @@ describe('createInstallPiCommand', () => {
         const srcDir = nodeFs.mkdtempSync(nodePath.join(os.tmpdir(), 'pi-ext-src-'));
         const dstDir = nodeFs.mkdtempSync(nodePath.join(os.tmpdir(), 'pi-ext-dst-'));
 
-        nodeFs.writeFileSync(nodePath.join(srcDir, 'a.ts'), 'export const a = 1;');
-        nodeFs.writeFileSync(nodePath.join(srcDir, 'b.ts'), 'export const b = 1;');
-        nodeFs.writeFileSync(nodePath.join(dstDir, 'a.ts'), 'export const a = 2;');
+        nodeFs.mkdirSync(nodePath.join(srcDir, 'a'));
+        nodeFs.writeFileSync(nodePath.join(srcDir, 'a', 'package.json'), JSON.stringify({ name: 'a' }));
+        nodeFs.writeFileSync(nodePath.join(srcDir, 'a', 'index.ts'), 'export const a = 1;');
+
+        nodeFs.mkdirSync(nodePath.join(srcDir, 'b'));
+        nodeFs.writeFileSync(nodePath.join(srcDir, 'b', 'package.json'), JSON.stringify({ name: 'b' }));
+        nodeFs.writeFileSync(nodePath.join(srcDir, 'b', 'index.ts'), 'export const b = 1;');
+
+        nodeFs.mkdirSync(nodePath.join(dstDir, 'a'));
+        nodeFs.writeFileSync(nodePath.join(dstDir, 'a', 'package.json'), JSON.stringify({ name: 'a' }));
+        nodeFs.writeFileSync(nodePath.join(dstDir, 'a', 'index.ts'), 'export const a = 2;');
 
         const diff = await diffPiExtensions(srcDir, dstDir);
 
-        expect(diff.missing).toContain('b.ts');
-        expect(diff.stale).toContain('a.ts');
+        expect(diff.missing).toContain('b');
+        expect(diff.stale).toContain('a');
 
-        nodeFs.rmSync(srcDir, { recursive: true });
-        nodeFs.rmSync(dstDir, { recursive: true });
+        nodeFs.rmSync(srcDir, { recursive: true, force: true });
+        nodeFs.rmSync(dstDir, { recursive: true, force: true });
     });
 
     it('createInstallPiCommand supports --check flag', () => {

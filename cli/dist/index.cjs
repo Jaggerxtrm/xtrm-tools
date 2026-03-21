@@ -13478,7 +13478,7 @@ var require_jsonfile = __commonJS({
       return obj;
     }
     var readFile = universalify.fromPromise(_readFile);
-    function readFileSync2(file2, options = {}) {
+    function readFileSync3(file2, options = {}) {
       if (typeof options === "string") {
         options = { encoding: options };
       }
@@ -13510,7 +13510,7 @@ var require_jsonfile = __commonJS({
     }
     module2.exports = {
       readFile,
-      readFileSync: readFileSync2,
+      readFileSync: readFileSync3,
       writeFile,
       writeFileSync: writeFileSync3
     };
@@ -41299,6 +41299,19 @@ function gitRepoRoot(cwd) {
   });
   return r.status === 0 ? (r.stdout ?? "").trim() : null;
 }
+function resolveStatuslineScript() {
+  const pluginsFile = import_node_path5.default.join((0, import_node_os5.homedir)(), ".claude", "plugins", "installed_plugins.json");
+  try {
+    const plugins = JSON.parse((0, import_node_fs4.readFileSync)(pluginsFile, "utf8"));
+    const entries = plugins?.plugins?.["xtrm-tools@xtrm-tools"];
+    if (entries?.length > 0) {
+      return import_node_path5.default.join(entries[0].installPath, "hooks", "statusline.mjs");
+    }
+  } catch {
+  }
+  const fallback = import_node_path5.default.join((0, import_node_os5.homedir)(), ".claude", "hooks", "statusline.mjs");
+  return fallback;
+}
 async function launchWorktreeSession(opts) {
   const { runtime, name } = opts;
   const cwd = process.cwd();
@@ -41342,15 +41355,17 @@ async function launchWorktreeSession(opts) {
   \u2713 Worktree ready \u2014 launching ${runtime}...
 `));
   if (runtime === "claude") {
-    const statuslineScript = import_node_path5.default.join((0, import_node_os5.homedir)(), ".claude", "hooks", "statusline.mjs");
-    const claudeDir = import_node_path5.default.join(worktreePath, ".claude");
-    const localSettingsPath = import_node_path5.default.join(claudeDir, "settings.local.json");
-    try {
-      (0, import_node_fs4.mkdirSync)(claudeDir, { recursive: true });
-      (0, import_node_fs4.writeFileSync)(localSettingsPath, JSON.stringify({
-        statusLine: { type: "command", command: `node ${statuslineScript}`, padding: 1 }
-      }, null, 2));
-    } catch {
+    const statuslinePath = resolveStatuslineScript();
+    if (statuslinePath) {
+      const claudeDir = import_node_path5.default.join(worktreePath, ".claude");
+      const localSettingsPath = import_node_path5.default.join(claudeDir, "settings.local.json");
+      try {
+        (0, import_node_fs4.mkdirSync)(claudeDir, { recursive: true });
+        (0, import_node_fs4.writeFileSync)(localSettingsPath, JSON.stringify({
+          statusLine: { type: "command", command: `node ${statuslinePath}`, padding: 1 }
+        }, null, 2));
+      } catch {
+      }
     }
   }
   const runtimeCmd = runtime === "claude" ? "claude" : "pi";

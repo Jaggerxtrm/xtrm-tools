@@ -3,8 +3,6 @@ import path from 'path';
 import fs from 'fs-extra';
 // @ts-ignore
 import Conf from 'conf';
-// @ts-ignore
-import prompts from 'prompts';
 import kleur from 'kleur';
 import type { SyncMode } from '../types/config.js';
 
@@ -68,73 +66,27 @@ export function resolveTargets(
 
 export async function getContext(options: GetContextOptions = {}): Promise<Context> {
     const { selector, createMissingDirs = true } = options;
-    const choices = [];
     const candidates = getCandidatePaths();
     const directTargets = resolveTargets(selector, candidates);
 
-    if (directTargets) {
-        const activeConfig = getConfig();
-        if (createMissingDirs) {
-            for (const target of directTargets) {
-                await fs.ensureDir(target);
-            }
-        }
-
-        return {
-            targets: directTargets,
-            syncMode: activeConfig.get('syncMode') as SyncMode,
-            config: activeConfig,
-        };
-    }
-
     const activeConfig = getConfig();
 
-    for (const c of candidates) {
-        const exists = await fs.pathExists(c.path);
-        const icon = exists ? kleur.green('●') : kleur.gray('○');
-        const desc = exists ? 'Found' : 'Not found (will create)';
+    // Use explicitly specified targets, or default to all candidates
+    const selectedPaths = directTargets ?? candidates.map(c => c.path);
 
-        choices.push({
-            title: `${icon} ${c.label} (${c.path})`,
-            description: desc,
-            value: c.path,
-            selected: exists, // Pre-select existing environments
-        });
-    }
-
-    const response = await prompts({
-        type: 'multiselect',
-        name: 'targets',
-        message: 'Select target environment(s):',
-        choices: choices,
-        hint: '- Space to select. Return to submit',
-        instructions: false,
-    });
-
-    if (response.targets === undefined) {
-        console.log(kleur.gray('\nCancelled.'));
-        process.exit(130);
-    }
-    if (response.targets.length === 0) {
-        console.log(kleur.gray('No targets selected.'));
-        process.exit(0);
-    }
-
-    // Ensure directories exist for selected targets
     if (createMissingDirs) {
-        for (const target of response.targets) {
+        for (const target of selectedPaths) {
             await fs.ensureDir(target);
         }
     }
 
     return {
-        targets: response.targets,
+        targets: selectedPaths,
         syncMode: activeConfig.get('syncMode') as SyncMode,
         config: activeConfig,
     };
 
 }
-
 export function resetContext(): void {
     getConfig().clear();
     console.log(kleur.yellow('Configuration cleared.'));

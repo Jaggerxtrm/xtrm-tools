@@ -23,7 +23,6 @@ Hook scripts are delivered via the xtrm-tools Claude Code plugin. All paths use 
 | Event | When |
 |-------|------|
 | `SessionStart` | Session begins |
-| `UserPromptSubmit` | After user submits a prompt |
 | `PreToolUse` | Before a tool call executes |
 | `PostToolUse` | After a tool call completes |
 | `Stop` | Session ends |
@@ -38,7 +37,6 @@ Always installed (`xtrm install`).
 | Hook | Event | Behavior |
 |------|-------|----------|
 | `serena-workflow-reminder.py` | SessionStart | Injects Serena LSP semantic editing reminder |
-| `branch-state.mjs` | UserPromptSubmit | Injects current git branch + claim state into every prompt turn |
 | `gitnexus/gitnexus-hook.cjs` | PostToolUse | Enriches Bash/Grep/Read/Glob/Serena tool output with GitNexus graph context |
 | `quality-check.cjs` | PostToolUse | Runs tsc/ESLint checks after JS/TS/CJS/MJS file edits |
 | `quality-check.py` | PostToolUse | Runs ruff/mypy checks after Python file edits |

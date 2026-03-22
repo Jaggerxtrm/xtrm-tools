@@ -285,12 +285,10 @@ export default function (pi: ExtensionAPI) {
 					const hostStr = theme.fg("muted", runtimeState.host);
 					const cwdStr = `${BOLD}${runtimeState.displayDir}${BOLD_OFF}`;
 					const venvStr = runtimeState.venv ? theme.fg("muted", `(${runtimeState.venv})`) : "";
-					const beadChip = buildBeadChip();
 
 					const line1Parts = [brand, modelStr, hostStr, cwdStr];
 					if (branchStr) line1Parts.push(branchStr);
 					if (venvStr) line1Parts.push(venvStr);
-					if (beadChip) line1Parts.push(beadChip);
 
 					const line1 = truncateToWidth(line1Parts.join(" "), width);
 					const line2 = buildIssueLine(width, theme);

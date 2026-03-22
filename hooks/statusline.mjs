@@ -155,8 +155,8 @@ const { modelStr, host, displayDir, branch, gitStatus, venv, claimId, claimTitle
 
 // Line 1 — matches global format, XTRM prepended
 const col = xtrmColor(pct);
-const xtrmLabel = col ? `${col}${B}XTRM${B_}${R}` : `${B}XTRM${B_}`;
-const parts = [xtrmLabel];
+const dot = col ? `${col}●${R}` : '●';
+const parts = [`${dot} ${B}XTRM${B_}`];
 if (modelStr) parts.push(`${D}${modelStr}${R}`);
 parts.push(host);
 if (displayDir) parts.push(`${B}${displayDir}${B_}`);

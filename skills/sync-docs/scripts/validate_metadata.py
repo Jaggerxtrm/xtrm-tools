@@ -158,7 +158,7 @@ def validate_metadata_file(path: Path) -> bool:
 
 def iter_targets(target: Path) -> list[Path]:
     if target.is_dir():
-        return sorted(target.rglob("*.md"))
+        return sorted(target.glob("*.md"))
     return [target]
 
 

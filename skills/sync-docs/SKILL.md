@@ -8,7 +8,7 @@ description: >-
   docs-only drift detection on README.md, CHANGELOG.md, and docs/ — creating
   missing focused files instead of a monolithic README.
 gemini-command: sync-docs
-version: 1.1.0
+version: 1.2.0
 ---
 
 # sync-docs
@@ -33,7 +33,7 @@ Phase 5: Validate           — schema-check all docs/
 
 ```bash
 # Global install
-python3 "$HOME/.claude/skills/sync-docs/scripts/context_gatherer.py" [--since=30]
+python3 "$HOME/.agents/skills/sync-docs/scripts/context_gatherer.py" [--since=30]
 
 # From repository
 python3 "skills/sync-docs/scripts/context_gatherer.py" [--since=30]
@@ -149,7 +149,62 @@ python3 "skills/sync-docs/scripts/drift_detector.py" scan --since 30
 
 ---
 
+## Frontmatter Schema
+
+All `docs/*.md` files require valid YAML frontmatter. Scripts only validate `docs/*.md` (not subdirectories).
+
+### Required Fields
+
+| Field | Format | Example |
+|-------|--------|---------|
+| `title` | string (quote if contains colon) | `"Session-Flow: Pi Parity"` |
+| `scope` | string | `hooks` |
+| `category` | enum (see below) | `reference` |
+| `version` | semver | `1.0.0` |
+| `updated` | date | `2026-03-22` |
+
+### Valid Categories
+
+Only these values pass validation:
+
+| Category | Use for |
+|----------|---------|
+| `api` | API documentation |
+| `architecture` | System design, architecture decisions |
+| `guide` | How-to guides, tutorials |
+| `overview` | High-level introductions |
+| `plan` | Planning documents, roadmaps |
+| `reference` | Reference documentation |
+
+**Invalid**: `roadmap`, `deprecated`, `complete` — will fail validation.
+
+### YAML Quoting
+
+Titles with special characters (colons, quotes) must be quoted:
+
+```yaml
+# ✅ Correct
+title: "Session-Flow: Pi Parity"
+title: "What's New in v2.0"
+
+# ❌ Incorrect — YAML parse error
+title: Session-Flow: Pi Parity
+title: What's New in v2.0
+```
+
+### Optional Fields
+
+| Field | Format | Use |
+|-------|--------|-----|
+| `description` | string (quoted) | Brief summary |
+| `source_of_truth_for` | list of globs | Link to code areas |
+| `synced_at` | git hash | Drift checkpoint |
+| `domain` | list of tags | Categorization |
+
+---
+
 ## docs/ as SSOT
 
 `docs/` is the only source of truth for project documentation in this workflow.
+Scripts validate `docs/*.md` only — subdirectories (`docs/plans/`, `docs/reference/`) are ignored.
 Use frontmatter (`source_of_truth_for`) to link docs pages to code areas and detect drift.

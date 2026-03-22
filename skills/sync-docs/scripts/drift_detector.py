@@ -42,7 +42,7 @@ def get_docs_files(project_root: Path) -> list[Path]:
     docs_dir = project_root / "docs"
     if not docs_dir.exists():
         return []
-    return sorted(docs_dir.rglob("*.md"))
+    return sorted(docs_dir.glob("*.md"))
 
 
 def extract_frontmatter(content: str) -> dict[str, Any]:

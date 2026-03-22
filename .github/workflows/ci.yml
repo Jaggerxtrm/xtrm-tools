@@ -51,10 +51,7 @@ jobs:
     - name: Policy parity checks (Claude + Pi)
       run: |
         mkdir -p ~/.pi/agent/extensions
-        cp config/pi/extensions/beads.ts ~/.pi/agent/extensions/
-        cp config/pi/extensions/main-guard.ts ~/.pi/agent/extensions/
-        cp config/pi/extensions/quality-gates.ts ~/.pi/agent/extensions/
-        cp config/pi/extensions/service-skills.ts ~/.pi/agent/extensions/
+        cp -r config/pi/extensions/* ~/.pi/agent/extensions/
         node scripts/compile-policies.mjs --check
         node scripts/compile-policies.mjs --check-pi
 

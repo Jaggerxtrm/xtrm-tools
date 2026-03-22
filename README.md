@@ -111,9 +111,15 @@ xtrm <command> [options]
 | `worktree list` | List all active `xt/*` worktrees |
 | `worktree clean` | Remove worktrees whose branch has been merged |
 | `claude` | Launch Claude Code in a sandboxed worktree |
-| `pi` | Launch Pi in a sandboxed worktree |
+| `pi` | Launch Pi in a sandboxed worktree; includes `install/setup/status/doctor/reload` runtime management |
 | `docs show` | Display frontmatter for README, CHANGELOG, docs/*.md |
 | `debug` | Watch xtrm hook and bd lifecycle events in real time |
+
+### Pi Extension Loading
+
+- `xt pi setup`, `xt pi install`, and `xt pi reload` share the same managed extension sync behavior.
+- Extensions from `config/pi/extensions/<name>/` are synced to `~/.pi/agent/extensions/<name>/` and loaded by Pi auto-discovery.
+- Managed extensions are not re-registered with `pi install -l` (prevents duplicate command/flag/shortcut registration conflicts).
 
 ### Flags
 

@@ -35,6 +35,13 @@ xtrm pi doctor
 xtrm pi reload
 ```
 
+## Managed Extension Loading Model
+
+- `xtrm pi setup`, `xtrm pi install`, and `xtrm pi reload` all use the same managed extension sync path.
+- Managed extensions are copied to `~/.pi/agent/extensions/<name>/` and loaded via Pi auto-discovery.
+- Managed extensions are **not** registered with `pi install -l` to avoid duplicate discovery (`<dir>` + `<dir>/index.ts`) and command/flag/shortcut collisions.
+- Use `pi install -l` only for ad-hoc third-party/local extensions outside the managed `config/pi/extensions` set.
+
 ## Package Format
 
 Each extension is a directory package:

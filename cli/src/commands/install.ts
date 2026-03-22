@@ -351,6 +351,37 @@ export async function installPlugin(repoRoot: string, dryRun: boolean): Promise<
     await cleanStalePrePluginFiles(repoRoot, dryRun);
 
     await installOfficialClaudePlugins(false);
+
+    // Write statusLine to user-scope ~/.claude/settings.json so it fires in all sessions.
+    installUserStatusLine(dryRun);
+}
+
+function installUserStatusLine(dryRun: boolean): void {
+    try {
+        const pluginsFile = path.join(os.homedir(), '.claude', 'plugins', 'installed_plugins.json');
+        const plugins = JSON.parse(fs.readFileSync(pluginsFile, 'utf8'));
+        const entries: any[] = Object.entries(plugins?.plugins ?? {})
+            .filter(([k]) => k.startsWith('xtrm-tools@'))
+            .flatMap(([, v]) => v as any[]);
+        if (!entries.length) return;
+
+        const scriptPath = path.join(entries[0].installPath, 'hooks', 'statusline.mjs');
+        if (!fs.existsSync(scriptPath)) return;
+
+        const settingsPath = path.join(os.homedir(), '.claude', 'settings.json');
+        const settings = fs.existsSync(settingsPath)
+            ? JSON.parse(fs.readFileSync(settingsPath, 'utf8'))
+            : {};
+
+        if (dryRun) {
+            console.log(t.accent(`  [DRY RUN] Would write statusLine → ${scriptPath}`));
+            return;
+        }
+
+        settings.statusLine = { type: 'command', command: `node ${scriptPath}`, padding: 1 };
+        fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n');
+        console.log(t.success(`  ✓ statusLine registered in ~/.claude/settings.json`));
+    } catch { /* non-fatal */ }
 }
 
 export function createInstallAllCommand(): Command {

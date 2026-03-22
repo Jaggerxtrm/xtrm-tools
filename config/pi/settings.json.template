@@ -12,5 +12,8 @@
   ],
   "steeringMode": "all",
   "followUpMode": "all",
-  "hideThinkingBlock": true
+  "hideThinkingBlock": true,
+  "lsp": {
+    "hookMode": "agent_end"
+  }
 }

@@ -228,9 +228,10 @@ export default function (pi: ExtensionAPI) {
 	};
 
 	const buildIssueLine = (width: number, theme: any): string => {
-		const { shortId, claimTitle, openCount } = beadState;
-		if (shortId && claimTitle) {
-			const prefix = `◐ ${shortId} `;
+		const { shortId, claimTitle, status, openCount } = beadState;
+		if (shortId && claimTitle && status) {
+			const icon = STATUS_ICONS[status] ?? "◐";
+			const prefix = `${icon} ${shortId} `;
 			const title = theme.fg("muted", claimTitle);
 			return truncateToWidth(`${prefix}${title}`, width);
 		}
@@ -309,7 +310,7 @@ export default function (pi: ExtensionAPI) {
 
 	pi.on("session_start", async (_event, ctx) => {
 		capturedCtx = ctx;
-		sessionId = ctx.sessionManager?.getSessionId?.() ?? ctx.sessionId ?? ctx.session_id ?? process.pid.toString();
+		sessionId = ctx.sessionManager?.getSessionId?.() || ctx.sessionId || ctx.session_id || process.pid.toString();
 		runtimeState.lastFetch = 0;
 		beadState.lastFetch = 0;
 		applyCustomFooter(ctx);

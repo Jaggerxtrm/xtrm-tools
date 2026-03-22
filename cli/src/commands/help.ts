@@ -24,9 +24,11 @@ export function createHelpCommand(): Command {
                 '  1) Start a runtime session in a worktree:',
                 '     xt claude [name]   or   xt pi [name]',
                 '  2) Do your work in that worktree/branch.',
-                '  3) Finish with:',
+                '  3) If the session closes unexpectedly, re-attach:',
+                '     xt attach [slug]',
+                '  4) Finish with:',
                 '     xt end',
-                '  4) Manage old worktrees when needed:',
+                '  5) Manage old worktrees when needed:',
                 '     xt worktree list | xt worktree clean',
             ]));
 
@@ -76,8 +78,14 @@ export function createHelpCommand(): Command {
             ]));
 
             blocks.push(section('WORKTREE COMMANDS', [
+                '  xt attach [slug]',
+                '    Re-attach to an existing worktree and resume the Claude or Pi session.',
+                '    Picks the most recent worktree if no slug is given; shows a picker when',
+                '    multiple exist. Resumes with --continue (claude) or -c (pi).',
+                '',
                 '  xt worktree list',
-                '    List active xt/* worktrees and merge status.',
+                '    List active xt/* worktrees with runtime, last activity, last commit, and',
+                '    a ready-to-run resume hint.',
                 '  xt worktree clean [--yes/-y]',
                 '    Remove worktrees already merged into main.',
                 '  xt worktree remove <name> [--yes/-y]',

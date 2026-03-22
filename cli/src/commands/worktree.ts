@@ -2,6 +2,8 @@ import { Command } from 'commander';
 import kleur from 'kleur';
 import prompts from 'prompts';
 import { spawnSync } from 'node:child_process';
+import { existsSync, unlinkSync } from 'node:fs';
+import { join } from 'node:path';
 import { t } from '../utils/theme.js';
 
 interface WorktreeInfo {
@@ -140,6 +142,7 @@ export function createWorktreeCommand(): Command {
                 });
                 if (r.status === 0) {
                     console.log(t.success(`  ✓ Removed ${wt.path}`));
+                    clearStatuslineClaim(repoRoot);
                 } else {
                     console.log(kleur.yellow(`  ⚠ Could not remove ${wt.path}: ${(r.stderr ?? '').trim()}`));
                 }
@@ -182,6 +185,7 @@ export function createWorktreeCommand(): Command {
                 cwd: repoRoot, encoding: 'utf8', stdio: 'pipe',
             });
             if (r.status === 0) {
+                clearStatuslineClaim(repoRoot);
                 console.log(t.success(`\n  ✓ Removed ${target.path}\n`));
             } else {
                 console.error(kleur.red(`\n  ✗ Failed: ${(r.stderr ?? '').trim()}\n`));
@@ -190,4 +194,12 @@ export function createWorktreeCommand(): Command {
         });
 
     return cmd;
+}
+
+/** Clear the shared statusline claim file at repo root so no ghost claim shows after worktree removal. */
+function clearStatuslineClaim(repoRoot: string): void {
+    try {
+        const claimFile = join(repoRoot, '.xtrm', 'statusline-claim');
+        if (existsSync(claimFile)) unlinkSync(claimFile);
+    } catch { /* non-fatal */ }
 }

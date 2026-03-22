@@ -47,6 +47,27 @@ function resolveStatuslineScript(): string | null {
     return existsSync(fallback) ? fallback : null;
 }
 
+export interface SessionMeta {
+    runtime: 'claude' | 'pi';
+    launchedAt: string;
+}
+
+export function writeSessionMeta(worktreePath: string, runtime: 'claude' | 'pi'): void {
+    try {
+        const meta: SessionMeta = { runtime, launchedAt: new Date().toISOString() };
+        writeFileSync(path.join(worktreePath, '.session-meta.json'), JSON.stringify(meta, null, 2));
+    } catch { /* non-fatal */ }
+}
+
+export function readSessionMeta(worktreePath: string): SessionMeta | null {
+    try {
+        const raw = readFileSync(path.join(worktreePath, '.session-meta.json'), 'utf8');
+        return JSON.parse(raw) as SessionMeta;
+    } catch {
+        return null;
+    }
+}
+
 export async function launchWorktreeSession(opts: WorktreeSessionOptions): Promise<void> {
     const { runtime, name } = opts;
     const cwd = process.cwd();
@@ -100,6 +121,7 @@ export async function launchWorktreeSession(opts: WorktreeSessionOptions): Promi
         }
     }
 
+    writeSessionMeta(worktreePath, runtime);
     console.log(kleur.green(`\n  ✓ Worktree ready — launching ${runtime}...\n`));
 
     // Inject statusLine config for claude worktree sessions

@@ -6053,7 +6053,7 @@ var require_dist = __commonJS({
         });
       };
     }
-    var prompts6 = require_prompts();
+    var prompts7 = require_prompts();
     var passOn = ["suggest", "format", "onState", "validate", "onRender", "type"];
     var noop = () => {
     };
@@ -6104,7 +6104,7 @@ var require_dist = __commonJS({
             var _question2 = question;
             name = _question2.name;
             type = _question2.type;
-            if (prompts6[type] === void 0) {
+            if (prompts7[type] === void 0) {
               throw new Error(`prompt type (${type}) is not defined`);
             }
             if (override2[question.name] !== void 0) {
@@ -6115,7 +6115,7 @@ var require_dist = __commonJS({
               }
             }
             try {
-              answer = prompt._injected ? getInjectedAnswer(prompt._injected, question.initial) : yield prompts6[type](question);
+              answer = prompt._injected ? getInjectedAnswer(prompt._injected, question.initial) : yield prompts7[type](question);
               answers[name] = answer = yield getFormattedAnswer(question, answer, true);
               quit = yield onSubmit(question, answer, answers);
             } catch (err) {
@@ -6147,7 +6147,7 @@ var require_dist = __commonJS({
     }
     module2.exports = Object.assign(prompt, {
       prompt,
-      prompts: prompts6,
+      prompts: prompts7,
       inject,
       override
     });
@@ -8234,7 +8234,7 @@ var require_prompts2 = __commonJS({
 var require_lib = __commonJS({
   "../node_modules/prompts/lib/index.js"(exports2, module2) {
     "use strict";
-    var prompts6 = require_prompts2();
+    var prompts7 = require_prompts2();
     var passOn = ["suggest", "format", "onState", "validate", "onRender", "type"];
     var noop = () => {
     };
@@ -8266,7 +8266,7 @@ var require_lib = __commonJS({
           throw new Error("prompt message is required");
         }
         ({ name, type } = question);
-        if (prompts6[type] === void 0) {
+        if (prompts7[type] === void 0) {
           throw new Error(`prompt type (${type}) is not defined`);
         }
         if (override2[question.name] !== void 0) {
@@ -8277,7 +8277,7 @@ var require_lib = __commonJS({
           }
         }
         try {
-          answer = prompt._injected ? getInjectedAnswer(prompt._injected, question.initial) : await prompts6[type](question);
+          answer = prompt._injected ? getInjectedAnswer(prompt._injected, question.initial) : await prompts7[type](question);
           answers[name] = answer = await getFormattedAnswer(question, answer, true);
           quit = await onSubmit(question, answer, answers);
         } catch (err) {
@@ -8300,7 +8300,7 @@ var require_lib = __commonJS({
     function override(answers) {
       prompt._override = Object.assign({}, answers);
     }
-    module2.exports = Object.assign(prompt, { prompt, prompts: prompts6, inject, override });
+    module2.exports = Object.assign(prompt, { prompt, prompts: prompts7, inject, override });
   }
 });
 
@@ -13478,7 +13478,7 @@ var require_jsonfile = __commonJS({
       return obj;
     }
     var readFile = universalify.fromPromise(_readFile);
-    function readFileSync3(file2, options = {}) {
+    function readFileSync4(file2, options = {}) {
       if (typeof options === "string") {
         options = { encoding: options };
       }
@@ -13510,7 +13510,7 @@ var require_jsonfile = __commonJS({
     }
     module2.exports = {
       readFile,
-      readFileSync: readFileSync3,
+      readFileSync: readFileSync4,
       writeFile,
       writeFileSync: writeFileSync3
     };
@@ -40118,7 +40118,7 @@ async function handleMissingEnvVars(missing) {
   if (missing.length === 0) {
     return true;
   }
-  const prompts6 = (await Promise.resolve().then(() => __toESM(require_prompts3(), 1))).default;
+  const prompts7 = (await Promise.resolve().then(() => __toESM(require_prompts3(), 1))).default;
   const answers = {};
   for (const key of missing) {
     const config3 = REQUIRED_ENV_VARS[key];
@@ -40130,7 +40130,7 @@ async function handleMissingEnvVars(missing) {
       console.log(kleur_default.yellow(`
   \u26A0\uFE0F  ${key} is required by a selected MCP server`));
     }
-    const { value } = await prompts6({
+    const { value } = await prompts7({
       type: "text",
       name: "value",
       message: `Enter ${key}:`,
@@ -40343,8 +40343,8 @@ async function syncMcpServersWithCli(agent, mcpConfig, dryRun = false, prune = f
   }
   let selectedNames = toAdd.map(([name]) => name);
   if (!dryRun) {
-    const prompts6 = await Promise.resolve().then(() => __toESM(require_prompts3(), 1));
-    const { selected } = await prompts6.default({
+    const prompts7 = await Promise.resolve().then(() => __toESM(require_prompts3(), 1));
+    const { selected } = await prompts7.default({
       type: "multiselect",
       name: "selected",
       message: `Select MCP servers to install via ${agent} CLI:`,
@@ -41569,6 +41569,13 @@ function resolveStatuslineScript() {
   const fallback = import_node_path5.default.join((0, import_node_os5.homedir)(), ".claude", "hooks", "statusline.mjs");
   return (0, import_node_fs4.existsSync)(fallback) ? fallback : null;
 }
+function writeSessionMeta(worktreePath, runtime) {
+  try {
+    const meta3 = { runtime, launchedAt: (/* @__PURE__ */ new Date()).toISOString() };
+    (0, import_node_fs4.writeFileSync)(import_node_path5.default.join(worktreePath, ".session-meta.json"), JSON.stringify(meta3, null, 2));
+  } catch {
+  }
+}
 async function launchWorktreeSession(opts) {
   const { runtime, name } = opts;
   const cwd = process.cwd();
@@ -41608,6 +41615,7 @@ async function launchWorktreeSession(opts) {
       process.exit(1);
     }
   }
+  writeSessionMeta(worktreePath, runtime);
   console.log(kleur_default.green(`
   \u2713 Worktree ready \u2014 launching ${runtime}...
 `));
@@ -56804,6 +56812,27 @@ function listXtWorktrees(repoRoot) {
   if (current.path && current.branch?.startsWith("refs/heads/xt/")) {
     worktrees.push(current);
   }
+  for (const wt of worktrees) {
+    try {
+      const raw = (0, import_node_fs5.readFileSync)((0, import_node_path6.join)(wt.path, ".session-meta.json"), "utf8");
+      const meta3 = JSON.parse(raw);
+      wt.runtime = meta3.runtime;
+      wt.launchedAt = meta3.launchedAt;
+    } catch {
+    }
+    const logR = (0, import_node_child_process8.spawnSync)("git", ["log", "-1", "--format=%ci%s", "HEAD"], {
+      cwd: wt.path,
+      encoding: "utf8",
+      stdio: "pipe"
+    });
+    if (logR.status === 0 && logR.stdout.trim()) {
+      const sep = logR.stdout.trim().indexOf("");
+      if (sep !== -1) {
+        wt.lastLogTime = new Date(logR.stdout.slice(0, sep).trim());
+        wt.lastLogMsg = logR.stdout.slice(sep + 1).trim();
+      }
+    }
+  }
   return worktrees;
 }
 function isMergedIntoMain(branch, repoRoot) {
@@ -56833,13 +56862,19 @@ function createWorktreeCommand() {
 `));
     for (const wt of worktrees) {
       const branch = wt.branch.replace("refs/heads/", "");
+      const slug = branch.replace("xt/", "");
       const merged = isMergedIntoMain(wt.branch, repoRoot);
       const status = merged ? kleur_default.green("merged") : kleur_default.yellow("open");
       const prunable = wt.prunable ? kleur_default.dim(" [prunable]") : "";
-      console.log(`  ${status} ${kleur_default.bold(branch)}${prunable}`);
-      console.log(kleur_default.dim(`         ${wt.path}`));
+      const runtimeBadge = wt.runtime ? kleur_default.cyan(` [${wt.runtime}]`) : "";
+      const timeStr = wt.lastLogTime ? kleur_default.dim(wt.lastLogTime.toLocaleString()) : wt.launchedAt ? kleur_default.dim(new Date(wt.launchedAt).toLocaleString()) : "";
+      const logLine = wt.lastLogMsg ? kleur_default.dim(`  "${wt.lastLogMsg}"`) : "";
+      console.log(`  ${status}${runtimeBadge} ${kleur_default.bold(branch)}${prunable}`);
+      if (timeStr) console.log(`    last activity: ${timeStr}${logLine}`);
+      console.log(kleur_default.dim(`    path: ${wt.path}`));
+      console.log(kleur_default.dim(`    resume: xt attach ${slug}`));
+      console.log("");
     }
-    console.log("");
   });
   cmd.command("clean").description("Remove worktrees whose branch has been merged into main").option("-y, --yes", "Skip confirmation prompt", false).action(async (opts) => {
     const repoRoot = getRepoRoot(process.cwd());
@@ -56936,6 +56971,84 @@ function clearStatuslineClaim(repoRoot) {
     if ((0, import_node_fs5.existsSync)(claimFile)) (0, import_node_fs5.unlinkSync)(claimFile);
   } catch {
   }
+}
+
+// src/commands/attach.ts
+var import_prompts6 = __toESM(require_prompts3(), 1);
+var import_node_child_process9 = require("child_process");
+function createAttachCommand() {
+  return new Command("attach").description("Re-attach to an existing xt worktree and resume the Claude or Pi session").argument("[name]", 'Worktree slug or branch name to attach to (e.g. "abc1" or "xt/abc1")').action(async (name) => {
+    const repoRoot = getRepoRoot(process.cwd());
+    const worktrees = listXtWorktrees(repoRoot);
+    if (worktrees.length === 0) {
+      console.log(kleur_default.dim("\n  No xt worktrees found \u2014 start one with: xt claude\n"));
+      return;
+    }
+    let target = worktrees[0];
+    if (name) {
+      const norm = name.startsWith("xt/") ? `refs/heads/${name}` : `refs/heads/xt/${name}`;
+      const found = worktrees.find(
+        (wt) => wt.path.endsWith(name) || wt.branch === norm || wt.branch === `refs/heads/${name}`
+      );
+      if (!found) {
+        console.error(kleur_default.red(`
+  \u2717 No xt worktree found matching "${name}"
+`));
+        console.log(kleur_default.dim("  Run: xt worktree list\n"));
+        process.exit(1);
+      }
+      target = found;
+    } else if (worktrees.length > 1) {
+      const choices = worktrees.map((wt) => {
+        const branch2 = wt.branch.replace("refs/heads/", "");
+        const slug = branch2.replace("xt/", "");
+        const runtime2 = wt.runtime ? ` [${wt.runtime}]` : "";
+        const time3 = wt.lastLogTime ? wt.lastLogTime.toLocaleString() : wt.launchedAt ? new Date(wt.launchedAt).toLocaleString() : "unknown";
+        const msg = wt.lastLogMsg ? `  "${wt.lastLogMsg.slice(0, 50)}"` : "";
+        return {
+          title: `${branch2}${runtime2}  \u2014  ${time3}${msg}`,
+          value: slug
+        };
+      });
+      const { picked } = await (0, import_prompts6.default)({
+        type: "select",
+        name: "picked",
+        message: "Select worktree to attach",
+        choices
+      });
+      if (!picked) {
+        console.log(kleur_default.dim("  Cancelled\n"));
+        return;
+      }
+      target = worktrees.find((wt) => wt.branch.endsWith(`/${picked}`)) ?? target;
+    }
+    const branch = target.branch.replace("refs/heads/", "");
+    const runtime = target.runtime ?? await pickRuntime();
+    const resumeArgs = runtime === "claude" ? ["--continue", "--dangerously-skip-permissions"] : ["-c"];
+    console.log(t.bold(`
+  Attaching to ${branch}`));
+    console.log(kleur_default.dim(`  runtime: ${runtime}  (resuming session)`));
+    console.log(kleur_default.dim(`  path:    ${target.path}
+`));
+    const result = (0, import_node_child_process9.spawnSync)(runtime, resumeArgs, {
+      cwd: target.path,
+      stdio: "inherit"
+    });
+    process.exit(result.status ?? 0);
+  });
+}
+async function pickRuntime() {
+  const { runtime } = await (0, import_prompts6.default)({
+    type: "select",
+    name: "runtime",
+    message: "No session metadata found \u2014 which runtime?",
+    choices: [
+      { title: "claude", value: "claude" },
+      { title: "pi", value: "pi" }
+    ],
+    initial: 0
+  });
+  return runtime ?? "claude";
 }
 
 // src/commands/docs.ts
@@ -57067,7 +57180,7 @@ function createDocsCommand() {
 }
 
 // src/commands/debug.ts
-var import_node_child_process9 = require("child_process");
+var import_node_child_process10 = require("child_process");
 var import_node_fs6 = require("fs");
 var import_node_path7 = require("path");
 var KIND_LABELS = {
@@ -57215,7 +57328,7 @@ function buildWhere(opts, base) {
 }
 function queryEvents(dbPath, where, limit) {
   const sql = `SELECT id,ts,session_id,runtime,worktree,kind,tool_name,outcome,issue_id,duration_ms,data FROM events${where ? ` WHERE ${where}` : ""} ORDER BY id ASC LIMIT ${limit}`;
-  const result = (0, import_node_child_process9.spawnSync)("sqlite3", [dbPath, "-json", sql], {
+  const result = (0, import_node_child_process10.spawnSync)("sqlite3", [dbPath, "-json", sql], {
     stdio: ["pipe", "pipe", "pipe"],
     encoding: "utf8",
     timeout: 5e3
@@ -57465,6 +57578,7 @@ program2.addCommand(createResetCommand());
 program2.addCommand(createCleanCommand());
 program2.addCommand(createEndCommand());
 program2.addCommand(createWorktreeCommand());
+program2.addCommand(createAttachCommand());
 program2.addCommand(createDocsCommand());
 program2.addCommand(createDebugCommand());
 program2.addCommand(createHelpCommand());

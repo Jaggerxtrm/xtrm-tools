@@ -2,19 +2,24 @@ import { Command } from 'commander';
 import kleur from 'kleur';
 import prompts from 'prompts';
 import { spawnSync } from 'node:child_process';
-import { existsSync, unlinkSync } from 'node:fs';
+import { existsSync, unlinkSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import type { SessionMeta } from '../utils/worktree-session.js';
 import { t } from '../utils/theme.js';
 
-interface WorktreeInfo {
+export interface WorktreeInfo {
     path: string;
     branch: string;
     head: string;
     prunable: boolean;
+    runtime?: 'claude' | 'pi';
+    launchedAt?: string;
+    lastLogMsg?: string;
+    lastLogTime?: Date;
 }
 
 /** Parse `git worktree list --porcelain` output into WorktreeInfo array */
-function listXtWorktrees(repoRoot: string): WorktreeInfo[] {
+export function listXtWorktrees(repoRoot: string): WorktreeInfo[] {
     const r = spawnSync('git', ['worktree', 'list', '--porcelain'], {
         cwd: repoRoot, encoding: 'utf8', stdio: 'pipe',
     });
@@ -40,6 +45,27 @@ function listXtWorktrees(repoRoot: string): WorktreeInfo[] {
     // Flush last entry
     if (current.path && current.branch?.startsWith('refs/heads/xt/')) {
         worktrees.push(current as WorktreeInfo);
+    }
+
+    // Enrich with session meta and last git activity
+    for (const wt of worktrees) {
+        try {
+            const raw = readFileSync(join(wt.path, '.session-meta.json'), 'utf8');
+            const meta = JSON.parse(raw) as SessionMeta;
+            wt.runtime = meta.runtime;
+            wt.launchedAt = meta.launchedAt;
+        } catch { /* no meta — older worktree */ }
+
+        const logR = spawnSync('git', ['log', '-1', '--format=%ci\x1f%s', 'HEAD'], {
+            cwd: wt.path, encoding: 'utf8', stdio: 'pipe',
+        });
+        if (logR.status === 0 && logR.stdout.trim()) {
+            const sep = logR.stdout.trim().indexOf('\x1f');
+            if (sep !== -1) {
+                wt.lastLogTime = new Date(logR.stdout.slice(0, sep).trim());
+                wt.lastLogMsg = logR.stdout.slice(sep + 1).trim();
+            }
+        }
     }
 
     return worktrees;
@@ -70,7 +96,7 @@ function getPrStatus(branch: string, repoRoot: string): string {
     }
 }
 
-function getRepoRoot(cwd: string): string {
+export function getRepoRoot(cwd: string): string {
     const r = spawnSync('git', ['rev-parse', '--show-toplevel'], { cwd, encoding: 'utf8', stdio: 'pipe' });
     return r.ok ? r.stdout.trim() : cwd;
 }
@@ -93,13 +119,23 @@ export function createWorktreeCommand(): Command {
             console.log(t.bold(`\n  xt worktrees (${worktrees.length})\n`));
             for (const wt of worktrees) {
                 const branch = wt.branch.replace('refs/heads/', '');
+                const slug = branch.replace('xt/', '');
                 const merged = isMergedIntoMain(wt.branch, repoRoot);
                 const status = merged ? kleur.green('merged') : kleur.yellow('open');
                 const prunable = wt.prunable ? kleur.dim(' [prunable]') : '';
-                console.log(`  ${status} ${kleur.bold(branch)}${prunable}`);
-                console.log(kleur.dim(`         ${wt.path}`));
+                const runtimeBadge = wt.runtime ? kleur.cyan(` [${wt.runtime}]`) : '';
+                const timeStr = wt.lastLogTime
+                    ? kleur.dim(wt.lastLogTime.toLocaleString())
+                    : wt.launchedAt
+                        ? kleur.dim(new Date(wt.launchedAt).toLocaleString())
+                        : '';
+                const logLine = wt.lastLogMsg ? kleur.dim(`  "${wt.lastLogMsg}"`) : '';
+                console.log(`  ${status}${runtimeBadge} ${kleur.bold(branch)}${prunable}`);
+                if (timeStr) console.log(`    last activity: ${timeStr}${logLine}`);
+                console.log(kleur.dim(`    path: ${wt.path}`));
+                console.log(kleur.dim(`    resume: xt attach ${slug}`));
+                console.log('');
             }
-            console.log('');
         });
 
     cmd.command('clean')

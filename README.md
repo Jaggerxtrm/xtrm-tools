@@ -120,6 +120,7 @@ xtrm <command> [options]
 - `xt pi setup`, `xt pi install`, and `xt pi reload` share the same managed extension sync behavior.
 - Extensions from `config/pi/extensions/<name>/` are synced to `~/.pi/agent/extensions/<name>/` and loaded by Pi auto-discovery.
 - Managed extensions are not re-registered with `pi install -l` (prevents duplicate command/flag/shortcut registration conflicts).
+- `custom-footer` now mirrors Claude statusline information density with a two-line parity layout (session metadata + claim/open issue row), while remaining compatible with `pi-dex` footer refresh behavior.
 
 ### Flags
 

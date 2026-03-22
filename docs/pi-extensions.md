@@ -63,6 +63,9 @@ config/pi/extensions/<name>/
 ## Notes
 
 - Layout is directory-based (not legacy single `.ts` files).
+- Custom footer now follows Claude statusline parity as a 2-line layout:
+  - Line 1: `XTRM`, model + context used%, host, repo-relative dir, branch + git flags, optional venv
+  - Line 2: claim-first issue row (`◐ <id> <title>`), else open-count fallback (`○ <N open>` / `○ no open issues`)
 - Policy mappings for runtime-both features are defined in `policies/*.json`.
 - Claude hook source-of-truth remains `policies/*.json` → `hooks/hooks.json`.
 

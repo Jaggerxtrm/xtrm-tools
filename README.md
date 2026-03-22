@@ -41,7 +41,7 @@ Native integration with the [specialists](https://github.com/Jaggerxtrm/speciali
 | [docs/policies.md](docs/policies.md) | Policy system — compiler, schema, Claude/Pi parity |
 | [docs/skills.md](docs/skills.md) | Skills catalog — all skills, categories, how they load |
 | [docs/pi-extensions.md](docs/pi-extensions.md) | Pi extensions — managed sync, authoring, parity notes |
-| [docs/worktrees.md](docs/worktrees.md) | xt worktrees — `xt claude/pi`, `xt end`, isolation model |
+| [docs/worktrees.md](docs/worktrees.md) | xt worktrees — `xt claude/pi`, `xt attach`, `xt end`, isolation model |
 | [docs/mcp-servers.md](docs/mcp-servers.md) | MCP servers — gitnexus, github-grep, deepwiki, official plugins |
 | [docs/cli-architecture.md](docs/cli-architecture.md) | CLI internals — install flow, diff/sync engine, config merge |
 | [docs/project-skills.md](docs/project-skills.md) | Project-scoped skills — install, layout, Pi/Claude symlinks |
@@ -171,11 +171,12 @@ xtrm <command> [options]
 | `init` | Initialize project (bd, gitnexus, service-registry) |
 | `status` | Read-only diff view |
 | `clean` | Remove orphaned hooks |
+| `claude [name]` | Launch Claude Code in a sandboxed `xt/<name>` worktree |
+| `pi [name]` | Launch Pi in a sandboxed `xt/<name>` worktree |
+| `attach [slug]` | Re-attach to an existing worktree and resume the Claude or Pi session |
 | `end` | Close worktree session: rebase, push, PR, cleanup |
-| `worktree list` | List all active `xt/*` worktrees |
+| `worktree list` | List active `xt/*` worktrees with runtime, last activity, and resume hint |
 | `worktree clean` | Remove merged worktrees |
-| `claude` | Launch Claude Code in a sandboxed worktree |
-| `pi` | Launch Pi in a sandboxed worktree |
 | `docs show` | Display frontmatter for README, CHANGELOG, docs/*.md |
 | `debug` | Watch hook and bd lifecycle events in real time |
 

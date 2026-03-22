@@ -4,7 +4,7 @@ scope: hooks
 category: reference
 version: 1.3.0
 updated: 2026-03-22
-synced_at: 0fc2a3b
+synced_at: 7cb17aa
 description: "All hook events, scripts, and behavior for the xtrm plugin"
 source_of_truth_for:
   - "hooks/**/*.mjs"
@@ -83,7 +83,7 @@ Active only when cwd is inside a worktree (detected via path matching `.xtrm/wor
 
 | Hook | Event | Behavior |
 |------|-------|----------|
-| `beads-claim-sync.mjs` | PostToolUse | Notifies on `bd update --claim`; auto-commits on `bd close` (stages untracked files first) |
+| `beads-claim-sync.mjs` | PostToolUse | Notifies on `bd update --claim`; auto-commits on `bd close` with `--no-verify` (stages untracked files first) |
 
 ### Statusline Hook
 

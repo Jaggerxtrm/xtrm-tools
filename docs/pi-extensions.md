@@ -4,7 +4,7 @@ scope: pi-extensions
 category: reference
 version: 1.2.0
 updated: 2026-03-22
-synced_at: 0fc2a3b
+synced_at: 7cb17aa
 source_of_truth_for:
   - "config/pi/extensions/**/index.ts"
   - "config/pi/extensions/**/package.json"
@@ -55,11 +55,30 @@ config/pi/extensions/<name>/
 
 ## Active Extensions
 
-- `beads`
-- `session-flow`
-- `quality-gates`
-- `service-skills`
-- plus supporting UX/runtime extensions (e.g., `custom-footer`, `xtrm-loader`, `plan-mode`)
+### `beads`
+
+Beads workflow enforcement for Pi. Implements claim-based edit gates and session lifecycle:
+
+- **Edit gate**: Blocks file edits when no beads issue is claimed
+- **Commit gate**: Blocks `git commit` when claimed issue is still in_progress  
+- **Auto-commit**: On `bd close`, automatically commits staged changes with `--no-verify` (stages untracked files first)
+- **Memory gate**: Prompts insight persistence when a claim was closed this session
+
+### `session-flow`
+
+Session lifecycle tracking with worktree awareness:
+
+- Claim sync notifications
+- Stop-gate warnings for unclosed claims
+- Worktree cleanup reminders (`xt end`)
+
+### Other Extensions
+
+- `quality-gates` — TypeScript/Python linting on file edit
+- `service-skills` — Service skill routing and activation
+- `custom-footer` — 2-line status bar with claim/open issues
+- `xtrm-loader` — XTRM context injection
+- `plan-mode` — Plan-mode workflow support
 
 ## Notes
 

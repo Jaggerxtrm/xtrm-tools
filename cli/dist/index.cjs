@@ -41043,6 +41043,28 @@ function renderPlanTable(allChanges) {
   }
   console.log("\n" + table.toString() + "\n");
 }
+function printNextSteps() {
+  const c = (s) => kleur_default.cyan(s);
+  const d = (s) => kleur_default.dim(s);
+  const b = (s) => kleur_default.bold(s);
+  console.log(b("  Next steps\n"));
+  console.log(d("  In your project:"));
+  console.log(`  ${c("xtrm init")}                     ${d("initialize beads + gitnexus for this repo")}`);
+  console.log(`  ${c("bd prime")}                      ${d("load session context and available work")}`);
+  console.log(`  ${c("bd ready")}                      ${d("find unblocked issues to work on")}`);
+  console.log(`  ${c("bd update <id> --claim")}        ${d("claim an issue before editing any file")}`);
+  console.log(`  ${c("bd close <id>")}                 ${d("close when done \u2014 auto-commits")}`);
+  console.log("");
+  console.log(d("  Worktree workflow:"));
+  console.log(`  ${c("xt claude")}                     ${d("launch Claude Code in a sandboxed worktree")}`);
+  console.log(`  ${c("xt end --dry-run")}              ${d("preview PR title, body, and linked issues")}`);
+  console.log(`  ${c("xt end")}                        ${d("push branch, open PR, clean up worktree")}`);
+  console.log("");
+  console.log(d("  Reference:"));
+  console.log(`  ${c("xtrm status")}                   ${d("check installed vs repo")}`);
+  console.log(`  ${c("xtrm docs show")}                ${d("browse all documentation")}`);
+  console.log("");
+}
 async function renderSummaryCard(allChanges, totalCount, allSkipped, isDryRun) {
   const boxen2 = (await Promise.resolve().then(() => (init_boxen(), boxen_exports))).default;
   const hasDrift = allSkipped.length > 0;
@@ -41471,6 +41493,9 @@ function createInstallCommand() {
     }
     const allSkipped = allChanges.flatMap((c) => c.skippedDrifted);
     await renderSummaryCard(allChanges, totalCount, allSkipped, dryRun);
+    if (!dryRun && !backport) {
+      printNextSteps();
+    }
   });
   installCmd.addCommand(createInstallAllCommand());
   installCmd.addCommand(createInstallBasicCommand());

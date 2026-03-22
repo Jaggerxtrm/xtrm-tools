@@ -54,6 +54,33 @@ function renderPlanTable(allChanges: TargetChanges[]): void {
     console.log('\n' + table.toString() + '\n');
 }
 
+function printNextSteps(): void {
+    const c = (s: string) => kleur.cyan(s);
+    const d = (s: string) => kleur.dim(s);
+    const b = (s: string) => kleur.bold(s);
+
+    console.log(b('  Next steps\n'));
+
+    console.log(d('  In your project:'));
+    console.log(`  ${c('xtrm init')}                     ${d('initialize beads + gitnexus for this repo')}`);
+    console.log(`  ${c('bd prime')}                      ${d('load session context and available work')}`);
+    console.log(`  ${c('bd ready')}                      ${d('find unblocked issues to work on')}`);
+    console.log(`  ${c('bd update <id> --claim')}        ${d('claim an issue before editing any file')}`);
+    console.log(`  ${c('bd close <id>')}                 ${d('close when done — auto-commits')}`);
+
+    console.log('');
+    console.log(d('  Worktree workflow:'));
+    console.log(`  ${c('xt claude')}                     ${d('launch Claude Code in a sandboxed worktree')}`);
+    console.log(`  ${c('xt end --dry-run')}              ${d('preview PR title, body, and linked issues')}`);
+    console.log(`  ${c('xt end')}                        ${d('push branch, open PR, clean up worktree')}`);
+
+    console.log('');
+    console.log(d('  Reference:'));
+    console.log(`  ${c('xtrm status')}                   ${d('check installed vs repo')}`);
+    console.log(`  ${c('xtrm docs show')}                ${d('browse all documentation')}`);
+    console.log('');
+}
+
 async function renderSummaryCard(
     allChanges: TargetChanges[],
     totalCount: number,
@@ -612,6 +639,10 @@ export function createInstallCommand(): Command {
             // Phase 5: Summary card
             const allSkipped = allChanges.flatMap(c => c.skippedDrifted);
             await renderSummaryCard(allChanges, totalCount, allSkipped, dryRun);
+
+            if (!dryRun && !backport) {
+                printNextSteps();
+            }
         });
 
     // Add subcommands

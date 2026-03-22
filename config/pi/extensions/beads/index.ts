@@ -4,6 +4,61 @@ import { existsSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 import { SubprocessRunner, EventAdapter } from "../core/lib";
 
+// ─── Autocommit helpers (mirrors hooks/beads-claim-sync.mjs) ─────────────────
+
+async function hasGitChanges(cwd: string): Promise<boolean> {
+	const result = await SubprocessRunner.run("git", ["status", "--porcelain"], { cwd });
+	if (result.code !== 0) return false;
+	return result.stdout.trim().length > 0;
+}
+
+async function stageUntracked(cwd: string): Promise<void> {
+	const result = await SubprocessRunner.run("git", ["ls-files", "--others", "--exclude-standard"], { cwd });
+	if (result.code !== 0 || !result.stdout.trim()) return;
+	const untracked = result.stdout.trim().split("\n").filter(Boolean);
+	if (untracked.length > 0) {
+		await SubprocessRunner.run("git", ["add", "--", ...untracked], { cwd });
+	}
+}
+
+async function getCloseReason(cwd: string, issueId: string, command: string): Promise<string> {
+	// 1. Parse --reason "..." from the command itself
+	const reasonMatch = command.match(/--reason[=\s]+["']([^"']+)["']/);
+	if (reasonMatch) return reasonMatch[1].trim();
+
+	// 2. Fall back to bd show <id> --json
+	const show = await SubprocessRunner.run("bd", ["show", issueId, "--json"], { cwd });
+	if (show.code === 0 && show.stdout.trim()) {
+		try {
+			const parsed = JSON.parse(show.stdout);
+			const issue = Array.isArray(parsed) ? parsed[0] : parsed;
+			const reason = issue?.close_reason;
+			if (typeof reason === "string" && reason.trim()) return reason.trim();
+		} catch { /* fall through */ }
+	}
+
+	return `Close ${issueId}`;
+}
+
+async function autoCommit(cwd: string, issueId: string, command: string): Promise<{ ok: boolean; message: string }> {
+	if (!await hasGitChanges(cwd)) {
+		return { ok: true, message: "No changes detected — auto-commit skipped." };
+	}
+
+	await stageUntracked(cwd);
+
+	const reason = await getCloseReason(cwd, issueId, command);
+	const commitMessage = `${reason} (${issueId})`;
+	const result = await SubprocessRunner.run("git", ["commit", "--no-verify", "-am", commitMessage], { cwd });
+
+	if (result.code !== 0) {
+		const err = (result.stderr || result.stdout || "").trim();
+		return { ok: false, message: `Auto-commit failed: ${err || "unknown error"}` };
+	}
+
+	return { ok: true, message: `Auto-committed: \`${commitMessage}\`` };
+}
+
 export default function (pi: ExtensionAPI) {
 	const getCwd = (ctx: any) => ctx.cwd || process.cwd();
 
@@ -141,11 +196,19 @@ export default function (pi: ExtensionAPI) {
 		if (/\bbd\s+close\b/.test(command) && !event.isError) {
 			const closeMatch = command.match(/\bbd\s+close\s+(\S+)/);
 			const closedIssueId = closeMatch?.[1] ?? null;
+
+			// Auto-commit staged changes (mirrors hooks/beads-claim-sync.mjs)
+			const commit = closedIssueId ? await autoCommit(cwd, closedIssueId, command) : null;
+
 			if (closedIssueId) {
 				await SubprocessRunner.run("bd", ["kv", "set", `closed-this-session:${sessionId}`, closedIssueId], { cwd });
 				memoryGateFired = false;
 			}
-			const reminder = "\n\n**Beads Insight**: Work completed. Consider if this session produced insights worth persisting via `bd remember`.";
+
+			const commitLine = commit
+				? `\n${commit.ok ? "✅" : "⚠️"} **Session Flow**: ${commit.message}`
+				: "";
+			const reminder = `\n\n**Beads Insight**: Work completed. Consider if this session produced insights worth persisting via \`bd remember\`.${commitLine}`;
 			return { content: [...event.content, { type: "text", text: reminder }] };
 		}
 

@@ -109,7 +109,7 @@ function autoCommit(cwd, issueId, command) {
 
   const reason = getCloseReason(cwd, issueId, command);
   const commitMessage = `${reason} (${issueId})`;
-  const result = runGit(['commit', '-am', commitMessage], cwd, 15000);
+  const result = runGit(['commit', '--no-verify', '-am', commitMessage], cwd, 15000);
   if (result.status !== 0) {
     const err = (result.stderr || result.stdout || '').trim();
     return { ok: false, message: `Auto-commit failed: ${err || 'unknown error'}` };

@@ -3,8 +3,8 @@ title: Hooks Reference
 scope: hooks
 category: reference
 version: 1.3.0
-updated: 2026-03-21
-synced_at: 0954a1e
+updated: 2026-03-22
+synced_at: 0fc2a3b
 description: "All hook events, scripts, and behavior for the xtrm plugin"
 source_of_truth_for:
   - "hooks/**/*.mjs"

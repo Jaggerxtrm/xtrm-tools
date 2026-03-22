@@ -11,15 +11,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - gitnexus hook now fires on Grep/Read/Glob tools (parity with Pi); quality-check covers .cjs/.mjs files; quality gate env pre-check at SessionStart; policies.md rewritten from scaffold; using-xtrm SKILL.md rewritten; worktree-session migrated to bd worktree; branch state + xt end reminders in gate messages
-- ## [0.5.29] - 2026-03-22
-
----
-
 
 ### Changed
 - v0.5.26 docs sync and Pi parity updates: quality gates, beads/session-flow lifecycle, using-xtrm loader parity, and policy-path normalization
 - Pi installer parity: `xt pi setup` now matches `xt pi install/reload` for extension deployment; managed extensions use sync + auto-discovery and no longer use duplicate `pi install -l` registration
 - Pi custom-footer now tracks Claude statusline parity with richer runtime/git snapshots and a two-line footer layout (metadata + issue row), including pi-dex-safe reapply behavior.
+
+---
+
+## [0.5.29] - 2026-03-22
+
+### Added
+- `skills/merge-prs/SKILL.md` and `specialists/merge-prs.specialist.yaml` for PR merge workflow
+- Release script now encodes `--tag latest` for npm publish
+
+### Changed
+- Detect default branch via `symbolic-ref` + master fallback, replaced 9 hardcoded `origin/main` references
+- Optimized Pi installer with pre-check and diff-based sync
+- Statusline improvements: fixed sessionId fallback, fixed hardcoded icons, added statusline-claim to .gitignore
+
+### Fixed
+- **Autocommit now uses `--no-verify`**: both Claude hook (`beads-claim-sync.mjs`) and Pi extension (`beads/index.ts`) skip pre-commit hooks on automated `bd close` commits
+
+---
+
 ## [0.5.20] - 2026-03-21
 
 ### Added

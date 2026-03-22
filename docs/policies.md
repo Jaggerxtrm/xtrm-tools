@@ -4,7 +4,7 @@ scope: policies
 category: reference
 version: 1.3.0
 updated: 2026-03-22
-synced_at: 0954a1e
+synced_at: 0fc2a3b
 source_of_truth_for:
   - "policies/*.json"
   - "hooks/hooks.json"

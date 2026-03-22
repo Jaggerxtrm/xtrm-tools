@@ -3,8 +3,8 @@ title: xt Worktrees
 scope: worktrees
 category: reference
 version: 1.0.0
-updated: 2026-03-21
-synced_at: 0954a1e
+updated: 2026-03-22
+synced_at: 0fc2a3b
 source_of_truth_for:
   - "cli/src/commands/worktree.ts"
   - "cli/src/utils/worktree-session.ts"

@@ -4,7 +4,7 @@ scope: skills
 category: overview
 version: 1.2.0
 updated: 2026-03-22
-synced_at: 0954a1e
+synced_at: 0fc2a3b
 description: "Global skills installed into the xtrm-managed agent environments"
 source_of_truth_for:
   - "skills/**/SKILL.md"

@@ -7,7 +7,8 @@ import fs from 'fs-extra';
 import { findRepoRoot } from '../utils/repo-root.js';
 import { t } from '../utils/theme.js';
 import { runPiInstall } from './pi-install.js';
-import { diffPiExtensions, createInstallPiCommand } from './install-pi.js';
+import { diffPiExtensions } from '../utils/pi-extensions.js';
+import { createInstallPiCommand } from './install-pi.js';
 import { launchWorktreeSession } from '../utils/worktree-session.js';
 
 const PI_AGENT_DIR = process.env.PI_AGENT_DIR || path.join(homedir(), '.pi', 'agent');

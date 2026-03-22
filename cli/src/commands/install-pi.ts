@@ -7,15 +7,9 @@ import { spawnSync } from 'node:child_process';
 import { homedir } from 'node:os';
 import { findRepoRoot } from '../utils/repo-root.js';
 import { t, sym } from '../utils/theme.js';
-import { syncManagedPiExtensions } from '../utils/pi-extensions.js';
+import { syncManagedPiExtensions, diffPiExtensions, piPreCheck } from '../utils/pi-extensions.js';
 
 const PI_AGENT_DIR = process.env.PI_AGENT_DIR || path.join(homedir(), '.pi', 'agent');
-
-export interface PiExtensionDiff {
-    missing: string[];
-    stale: string[];
-    upToDate: string[];
-}
 
 interface SchemaField { key: string; label: string; hint: string; secret: boolean; required: boolean; }
 interface OAuthProvider { key: string; instruction: string; }
@@ -58,96 +52,7 @@ function isPiInstalled(): boolean {
     return spawnSync('pi', ['--version'], { encoding: 'utf8' }).status === 0;
 }
 
-/**
- * List extension directories (contain package.json) in a base directory.
- */
-async function listExtensionDirs(baseDir: string): Promise<string[]> {
-    if (!await fs.pathExists(baseDir)) return [];
-    const entries = await fs.readdir(baseDir, { withFileTypes: true });
-    const extDirs: string[] = [];
-    for (const entry of entries) {
-        if (!entry.isDirectory()) continue;
-        const extPath = path.join(baseDir, entry.name);
-        const pkgPath = path.join(extPath, 'package.json');
-        if (await fs.pathExists(pkgPath)) {
-            extDirs.push(entry.name);
-        }
-    }
-    return extDirs.sort();
-}
-
-async function fileSha256(filePath: string): Promise<string> {
-    const crypto = await import('node:crypto');
-    const content = await fs.readFile(filePath);
-    return crypto.createHash('sha256').update(content).digest('hex');
-}
-
-/**
- * Compute a hash for an extension package based on package.json + index.ts.
- */
-async function extensionHash(extDir: string): Promise<string> {
-    const pkgPath = path.join(extDir, 'package.json');
-    const indexPath = path.join(extDir, 'index.ts');
-    
-    const hashes: string[] = [];
-    
-    if (await fs.pathExists(pkgPath)) {
-        hashes.push(await fileSha256(pkgPath));
-    }
-    if (await fs.pathExists(indexPath)) {
-        hashes.push(await fileSha256(indexPath));
-    }
-    
-    return hashes.join(':');
-}
-
-/**
- * Compare extension packages between source and target directories.
- * Returns missing, stale, and up-to-date extension names.
- */
-export async function diffPiExtensions(sourceDir: string, targetDir: string): Promise<PiExtensionDiff> {
-    const sourceAbs = path.resolve(sourceDir);
-    const targetAbs = path.resolve(targetDir);
-
-    const sourceExts = await listExtensionDirs(sourceAbs);
-    const missing: string[] = [];
-    const stale: string[] = [];
-    const upToDate: string[] = [];
-
-    for (const extName of sourceExts) {
-        const srcExtPath = path.join(sourceAbs, extName);
-        const dstExtPath = path.join(targetAbs, extName);
-        
-        // Check if extension exists in target
-        if (!await fs.pathExists(dstExtPath)) {
-            missing.push(extName);
-            continue;
-        }
-        
-        // Check if package.json exists in target
-        const dstPkgPath = path.join(dstExtPath, 'package.json');
-        if (!await fs.pathExists(dstPkgPath)) {
-            missing.push(extName);
-            continue;
-        }
-
-        // Compare hashes
-        const [srcHash, dstHash] = await Promise.all([
-            extensionHash(srcExtPath),
-            extensionHash(dstExtPath)
-        ]);
-        
-        if (srcHash !== dstHash) {
-            stale.push(extName);
-        } else {
-            upToDate.push(extName);
-        }
-    }
-
-    return { missing, stale, upToDate };
-}
-
-function printPiCheckSummary(diff: PiExtensionDiff): void {
+function printPiCheckSummary(diff: Awaited<ReturnType<typeof diffPiExtensions>>): void {
     const totalDiff = diff.missing.length + diff.stale.length;
 
     console.log(t.bold('\n  Pi extension drift check\n'));
@@ -241,9 +146,20 @@ export function createInstallPiCommand(): Command {
                 console.log(t.success(`    ${sym.ok} ${name}`));
             }
 
+            // Run pre-check for extensions and packages
+            const extensionsSrc = path.join(piConfigDir, 'extensions');
+            const extensionsDst = path.join(PI_AGENT_DIR, 'extensions');
+            const preCheck = await piPreCheck(extensionsSrc, extensionsDst, schema.packages);
+
+            const extTotal = preCheck.extensions.missing.length + preCheck.extensions.stale.length + preCheck.extensions.upToDate.length;
+            console.log(kleur.dim(`\n  Pre-check:`));
+            console.log(kleur.dim(`    Extensions: ${preCheck.extensions.upToDate.length}/${extTotal} up-to-date, ${preCheck.extensions.stale.length} stale, ${preCheck.extensions.missing.length} missing`));
+            console.log(kleur.dim(`    Packages:   ${preCheck.packages.installed.length}/${schema.packages.length} installed, ${preCheck.packages.needed.length} needed`));
+
+            // Sync extensions (only missing + stale)
             const managedPackages = await syncManagedPiExtensions({
-                sourceDir: path.join(piConfigDir, 'extensions'),
-                targetDir: path.join(PI_AGENT_DIR, 'extensions'),
+                sourceDir: extensionsSrc,
+                targetDir: extensionsDst,
                 dryRun: false,
                 log: (message) => console.log(kleur.dim(`    ${message}`)),
             });
@@ -251,11 +167,16 @@ export function createInstallPiCommand(): Command {
                 console.log(t.success(`    ${sym.ok} extensions/ (${managedPackages} packages)`));
             }
 
+            // Install packages (only needed)
             console.log(t.bold('\n  npm Packages\n'));
-            for (const pkg of schema.packages) {
-                const r = spawnSync('pi', ['install', pkg], { stdio: 'inherit' });
-                if (r.status === 0) console.log(t.success(`    ${sym.ok} ${pkg}`));
-                else console.log(kleur.yellow(`    ${pkg} — failed, run manually: pi install ${pkg}`));
+            if (preCheck.packages.needed.length === 0) {
+                console.log(kleur.dim(`    ✓ All ${schema.packages.length} packages already installed`));
+            } else {
+                for (const pkg of preCheck.packages.needed) {
+                    const r = spawnSync('pi', ['install', pkg], { stdio: 'inherit' });
+                    if (r.status === 0) console.log(t.success(`    ${sym.ok} ${pkg}`));
+                    else console.log(kleur.yellow(`    ${pkg} — failed, run manually: pi install ${pkg}`));
+                }
             }
 
             console.log(t.bold('\n  OAuth (manual steps)\n'));

@@ -5,7 +5,7 @@ import { spawnSync } from 'node:child_process';
 import { homedir } from 'node:os';
 import { findRepoRoot } from '../utils/repo-root.js';
 import { t, sym } from '../utils/theme.js';
-import { syncManagedPiExtensions } from '../utils/pi-extensions.js';
+import { syncManagedPiExtensions, piPreCheck, getInstalledPiPackages } from '../utils/pi-extensions.js';
 
 const PI_AGENT_DIR = process.env.PI_AGENT_DIR || path.join(homedir(), '.pi', 'agent');
 
@@ -48,36 +48,54 @@ export async function runPiInstall(dryRun: boolean = false): Promise<void> {
         console.log(t.success(`  ✓ pi ${v.stdout.trim()} already installed`));
     }
 
-    // Sync managed extensions (Pi auto-discovers from ~/.pi/agent/extensions)
+    // Load schema for packages
+    let packages: string[] = [];
+    if (await fs.pathExists(schemaPath)) {
+        const schema: InstallSchema = await fs.readJson(schemaPath);
+        packages = schema.packages;
+    }
+
+    // Run pre-check
     const extensionsSrc = path.join(piConfigDir, 'extensions');
     const extensionsDst = path.join(PI_AGENT_DIR, 'extensions');
+
+    const preCheck = await piPreCheck(extensionsSrc, extensionsDst, packages);
+
+    // Print pre-check summary
+    const extTotal = preCheck.extensions.missing.length + preCheck.extensions.stale.length + preCheck.extensions.upToDate.length;
+    const pkgTotal = packages.length;
+
+    console.log(kleur.dim(`\n  Pre-check:`));
+    console.log(kleur.dim(`    Extensions: ${preCheck.extensions.upToDate.length}/${extTotal} up-to-date, ${preCheck.extensions.stale.length} stale, ${preCheck.extensions.missing.length} missing`));
+    console.log(kleur.dim(`    Packages:   ${preCheck.packages.installed.length}/${pkgTotal} installed, ${preCheck.packages.needed.length} needed`));
+
+    // Sync extensions (only missing + stale)
     const managedPackages = await syncManagedPiExtensions({
         sourceDir: extensionsSrc,
         targetDir: extensionsDst,
         dryRun,
-        log: (message) => console.log(kleur.dim(message)),
+        log: (message) => console.log(kleur.dim(`    ${message}`)),
     });
-    if (managedPackages > 0) {
-        console.log(t.success(`  ${sym.ok} extensions synced (${managedPackages} packages)`));
-    }
 
-    // Install npm packages from schema
-    if (!(await fs.pathExists(schemaPath))) {
-        console.log(kleur.dim('  No install-schema.json found, skipping packages'));
-        return;
-    }
+    // Install packages (only needed)
+    if (packages.length > 0) {
+        console.log(t.bold('\n  npm Packages'));
 
-    const schema: InstallSchema = await fs.readJson(schemaPath);
-    for (const pkg of schema.packages) {
-        if (dryRun) {
-            console.log(kleur.cyan(`  [DRY RUN] pi install ${pkg}`));
-            continue;
-        }
-        const r = spawnSync('pi', ['install', pkg], { stdio: 'pipe', encoding: 'utf8' });
-        if (r.status === 0) {
-            console.log(t.success(`  ${sym.ok} ${pkg}`));
+        if (preCheck.packages.needed.length === 0) {
+            console.log(kleur.dim(`    ✓ All ${packages.length} packages already installed`));
         } else {
-            console.log(kleur.yellow(`  ⚠ ${pkg} — install failed (run manually: pi install ${pkg})`));
+            for (const pkg of preCheck.packages.needed) {
+                if (dryRun) {
+                    console.log(kleur.cyan(`    [DRY RUN] pi install ${pkg}`));
+                    continue;
+                }
+                const r = spawnSync('pi', ['install', pkg], { stdio: 'pipe', encoding: 'utf8' });
+                if (r.status === 0) {
+                    console.log(t.success(`    ${sym.ok} ${pkg}`));
+                } else {
+                    console.log(kleur.yellow(`    ⚠ ${pkg} — install failed (run manually: pi install ${pkg})`));
+                }
+            }
         }
     }
 

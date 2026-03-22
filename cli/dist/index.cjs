@@ -40806,12 +40806,111 @@ var import_path12 = __toESM(require("path"), 1);
 // src/commands/pi-install.ts
 var import_fs_extra11 = __toESM(require_lib2(), 1);
 var import_path11 = __toESM(require("path"), 1);
-var import_node_child_process = require("child_process");
+var import_node_child_process2 = require("child_process");
 var import_node_os4 = require("os");
 
 // src/utils/pi-extensions.ts
 var import_fs_extra10 = __toESM(require_lib2(), 1);
 var import_path10 = __toESM(require("path"), 1);
+var import_node_child_process = require("child_process");
+async function listExtensionDirs(baseDir) {
+  if (!await import_fs_extra10.default.pathExists(baseDir)) return [];
+  const entries = await import_fs_extra10.default.readdir(baseDir, { withFileTypes: true });
+  const extDirs = [];
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    const extPath = import_path10.default.join(baseDir, entry.name);
+    const pkgPath = import_path10.default.join(extPath, "package.json");
+    if (await import_fs_extra10.default.pathExists(pkgPath)) {
+      extDirs.push(entry.name);
+    }
+  }
+  return extDirs.sort();
+}
+async function fileSha256(filePath) {
+  const crypto2 = await import("crypto");
+  const content = await import_fs_extra10.default.readFile(filePath);
+  return crypto2.createHash("sha256").update(content).digest("hex");
+}
+async function extensionHash(extDir) {
+  const pkgPath = import_path10.default.join(extDir, "package.json");
+  const indexPath = import_path10.default.join(extDir, "index.ts");
+  const hashes = [];
+  if (await import_fs_extra10.default.pathExists(pkgPath)) {
+    hashes.push(await fileSha256(pkgPath));
+  }
+  if (await import_fs_extra10.default.pathExists(indexPath)) {
+    hashes.push(await fileSha256(indexPath));
+  }
+  return hashes.join(":");
+}
+async function diffPiExtensions(sourceDir, targetDir) {
+  const sourceAbs = import_path10.default.resolve(sourceDir);
+  const targetAbs = import_path10.default.resolve(targetDir);
+  const sourceExts = await listExtensionDirs(sourceAbs);
+  const missing = [];
+  const stale = [];
+  const upToDate = [];
+  for (const extName of sourceExts) {
+    const srcExtPath = import_path10.default.join(sourceAbs, extName);
+    const dstExtPath = import_path10.default.join(targetAbs, extName);
+    if (!await import_fs_extra10.default.pathExists(dstExtPath)) {
+      missing.push(extName);
+      continue;
+    }
+    const dstPkgPath = import_path10.default.join(dstExtPath, "package.json");
+    if (!await import_fs_extra10.default.pathExists(dstPkgPath)) {
+      missing.push(extName);
+      continue;
+    }
+    const [srcHash, dstHash] = await Promise.all([
+      extensionHash(srcExtPath),
+      extensionHash(dstExtPath)
+    ]);
+    if (srcHash !== dstHash) {
+      stale.push(extName);
+    } else {
+      upToDate.push(extName);
+    }
+  }
+  return { missing, stale, upToDate };
+}
+function getInstalledPiPackages() {
+  const result = (0, import_node_child_process.spawnSync)("pi", ["list"], { encoding: "utf8", stdio: "pipe" });
+  if (result.status !== 0) return [];
+  const output = result.stdout;
+  const packages = [];
+  let inUserPackages = false;
+  for (const line of output.split("\n")) {
+    if (line.includes("User packages:")) {
+      inUserPackages = true;
+      continue;
+    }
+    if (line.includes("Project packages:")) {
+      inUserPackages = false;
+      continue;
+    }
+    if (inUserPackages) {
+      const match = line.match(/^\s+(npm:[\w\-/@]+)/);
+      if (match) {
+        packages.push(match[1]);
+      }
+    }
+  }
+  return packages.sort();
+}
+async function piPreCheck(sourceExtDir, targetExtDir, requiredPackages) {
+  const extensions = await diffPiExtensions(sourceExtDir, targetExtDir);
+  const installedPkgs = getInstalledPiPackages();
+  const needed = requiredPackages.filter((pkg) => !installedPkgs.includes(pkg));
+  return {
+    extensions,
+    packages: {
+      installed: installedPkgs,
+      needed
+    }
+  };
+}
 async function syncManagedPiExtensions({
   sourceDir,
   targetDir,
@@ -40819,25 +40918,40 @@ async function syncManagedPiExtensions({
   log
 }) {
   if (!await import_fs_extra10.default.pathExists(sourceDir)) return 0;
-  if (!dryRun) {
-    await import_fs_extra10.default.ensureDir(import_path10.default.dirname(targetDir));
-    await import_fs_extra10.default.copy(sourceDir, targetDir, { overwrite: true });
-  }
-  const entries = await import_fs_extra10.default.readdir(sourceDir, { withFileTypes: true });
-  const managedPackages = entries.filter((entry) => entry.isDirectory()).length;
-  if (log) {
-    if (dryRun) {
-      log(`  [DRY RUN] sync extensions ${sourceDir} -> ${targetDir}`);
+  const diff = await diffPiExtensions(sourceDir, targetDir);
+  const toSync = [...diff.missing, ...diff.stale];
+  if (toSync.length === 0) {
+    if (log) {
+      log(`  \u2713 All ${diff.upToDate.length} extensions up-to-date, skipping sync`);
     }
-    log(`  Pi will auto-discover ${managedPackages} extension package(s) from ${targetDir}`);
+    return diff.upToDate.length;
   }
-  return managedPackages;
+  if (!dryRun) {
+    await import_fs_extra10.default.ensureDir(targetDir);
+    for (const extName of toSync) {
+      const srcPath = import_path10.default.join(sourceDir, extName);
+      const dstPath = import_path10.default.join(targetDir, extName);
+      await import_fs_extra10.default.copy(srcPath, dstPath, { overwrite: true });
+      if (log) {
+        log(`  ${diff.missing.includes(extName) ? "+" : "\u21BB"} ${extName}`);
+      }
+    }
+  } else {
+    if (log) {
+      log(`  [DRY RUN] would sync ${toSync.length} extensions: ${toSync.join(", ")}`);
+    }
+  }
+  if (log) {
+    const action = dryRun ? "would sync" : "synced";
+    log(`  ${action} ${toSync.length} extension(s), skipped ${diff.upToDate.length} up-to-date`);
+  }
+  return diff.upToDate.length + toSync.length;
 }
 
 // src/commands/pi-install.ts
 var PI_AGENT_DIR = process.env.PI_AGENT_DIR || import_path11.default.join((0, import_node_os4.homedir)(), ".pi", "agent");
 function isPiInstalled() {
-  const r = (0, import_node_child_process.spawnSync)("pi", ["--version"], { encoding: "utf8", stdio: "pipe" });
+  const r = (0, import_node_child_process2.spawnSync)("pi", ["--version"], { encoding: "utf8", stdio: "pipe" });
   return r.status === 0;
 }
 async function runPiInstall(dryRun = false) {
@@ -40848,7 +40962,7 @@ async function runPiInstall(dryRun = false) {
   if (!isPiInstalled()) {
     console.log(kleur_default.yellow("  pi not found \u2014 installing oh-pi globally..."));
     if (!dryRun) {
-      const r = (0, import_node_child_process.spawnSync)("npm", ["install", "-g", "oh-pi"], { stdio: "inherit" });
+      const r = (0, import_node_child_process2.spawnSync)("npm", ["install", "-g", "oh-pi"], { stdio: "inherit" });
       if (r.status !== 0) {
         console.error(kleur_default.red("  \u2717 Failed to install oh-pi. Run: npm install -g oh-pi\n"));
         return;
@@ -40858,35 +40972,46 @@ async function runPiInstall(dryRun = false) {
     }
     console.log(t.success("  \u2713 pi installed"));
   } else {
-    const v = (0, import_node_child_process.spawnSync)("pi", ["--version"], { encoding: "utf8" });
+    const v = (0, import_node_child_process2.spawnSync)("pi", ["--version"], { encoding: "utf8" });
     console.log(t.success(`  \u2713 pi ${v.stdout.trim()} already installed`));
+  }
+  let packages = [];
+  if (await import_fs_extra11.default.pathExists(schemaPath)) {
+    const schema = await import_fs_extra11.default.readJson(schemaPath);
+    packages = schema.packages;
   }
   const extensionsSrc = import_path11.default.join(piConfigDir, "extensions");
   const extensionsDst = import_path11.default.join(PI_AGENT_DIR, "extensions");
+  const preCheck = await piPreCheck(extensionsSrc, extensionsDst, packages);
+  const extTotal = preCheck.extensions.missing.length + preCheck.extensions.stale.length + preCheck.extensions.upToDate.length;
+  const pkgTotal = packages.length;
+  console.log(kleur_default.dim(`
+  Pre-check:`));
+  console.log(kleur_default.dim(`    Extensions: ${preCheck.extensions.upToDate.length}/${extTotal} up-to-date, ${preCheck.extensions.stale.length} stale, ${preCheck.extensions.missing.length} missing`));
+  console.log(kleur_default.dim(`    Packages:   ${preCheck.packages.installed.length}/${pkgTotal} installed, ${preCheck.packages.needed.length} needed`));
   const managedPackages = await syncManagedPiExtensions({
     sourceDir: extensionsSrc,
     targetDir: extensionsDst,
     dryRun,
-    log: (message) => console.log(kleur_default.dim(message))
+    log: (message) => console.log(kleur_default.dim(`    ${message}`))
   });
-  if (managedPackages > 0) {
-    console.log(t.success(`  ${sym.ok} extensions synced (${managedPackages} packages)`));
-  }
-  if (!await import_fs_extra11.default.pathExists(schemaPath)) {
-    console.log(kleur_default.dim("  No install-schema.json found, skipping packages"));
-    return;
-  }
-  const schema = await import_fs_extra11.default.readJson(schemaPath);
-  for (const pkg of schema.packages) {
-    if (dryRun) {
-      console.log(kleur_default.cyan(`  [DRY RUN] pi install ${pkg}`));
-      continue;
-    }
-    const r = (0, import_node_child_process.spawnSync)("pi", ["install", pkg], { stdio: "pipe", encoding: "utf8" });
-    if (r.status === 0) {
-      console.log(t.success(`  ${sym.ok} ${pkg}`));
+  if (packages.length > 0) {
+    console.log(t.bold("\n  npm Packages"));
+    if (preCheck.packages.needed.length === 0) {
+      console.log(kleur_default.dim(`    \u2713 All ${packages.length} packages already installed`));
     } else {
-      console.log(kleur_default.yellow(`  \u26A0 ${pkg} \u2014 install failed (run manually: pi install ${pkg})`));
+      for (const pkg of preCheck.packages.needed) {
+        if (dryRun) {
+          console.log(kleur_default.cyan(`    [DRY RUN] pi install ${pkg}`));
+          continue;
+        }
+        const r = (0, import_node_child_process2.spawnSync)("pi", ["install", pkg], { stdio: "pipe", encoding: "utf8" });
+        if (r.status === 0) {
+          console.log(t.success(`    ${sym.ok} ${pkg}`));
+        } else {
+          console.log(kleur_default.yellow(`    \u26A0 ${pkg} \u2014 install failed (run manually: pi install ${pkg})`));
+        }
+      }
     }
   }
   console.log("");
@@ -41314,18 +41439,18 @@ function createInstallCommand() {
 }
 
 // src/commands/claude.ts
-var import_node_child_process3 = require("child_process");
+var import_node_child_process4 = require("child_process");
 
 // src/utils/worktree-session.ts
 var import_node_path5 = __toESM(require("path"), 1);
-var import_node_child_process2 = require("child_process");
+var import_node_child_process3 = require("child_process");
 var import_node_fs4 = require("fs");
 var import_node_os5 = require("os");
 function randomSlug(len = 4) {
   return Math.random().toString(36).slice(2, 2 + len);
 }
 function gitRepoRoot(cwd) {
-  const r = (0, import_node_child_process2.spawnSync)("git", ["rev-parse", "--show-toplevel"], {
+  const r = (0, import_node_child_process3.spawnSync)("git", ["rev-parse", "--show-toplevel"], {
     cwd,
     stdio: "pipe",
     encoding: "utf8"
@@ -41364,7 +41489,7 @@ async function launchWorktreeSession(opts) {
   console.log(kleur_default.dim(`  worktree: ${worktreePath}`));
   console.log(kleur_default.dim(`  branch:   ${branchName}
 `));
-  const bdResult = (0, import_node_child_process2.spawnSync)("bd", ["worktree", "create", worktreePath, "--branch", branchName], {
+  const bdResult = (0, import_node_child_process3.spawnSync)("bd", ["worktree", "create", worktreePath, "--branch", branchName], {
     cwd: repoRoot,
     stdio: "inherit"
   });
@@ -41372,12 +41497,12 @@ async function launchWorktreeSession(opts) {
     if (bdResult.status !== 0 && !bdResult.error) {
       console.log(kleur_default.dim("  beads: no database found, creating worktree without redirect"));
     }
-    const branchExists = (0, import_node_child_process2.spawnSync)("git", ["rev-parse", "--verify", branchName], {
+    const branchExists = (0, import_node_child_process3.spawnSync)("git", ["rev-parse", "--verify", branchName], {
       cwd: repoRoot,
       stdio: "pipe"
     }).status === 0;
     const gitArgs = branchExists ? ["worktree", "add", worktreePath, branchName] : ["worktree", "add", "-b", branchName, worktreePath];
-    const gitResult = (0, import_node_child_process2.spawnSync)("git", gitArgs, { cwd: repoRoot, stdio: "inherit" });
+    const gitResult = (0, import_node_child_process3.spawnSync)("git", gitArgs, { cwd: repoRoot, stdio: "inherit" });
     if (gitResult.status !== 0) {
       console.error(kleur_default.red(`
   \u2717 Failed to create worktree at ${worktreePath}
@@ -41404,7 +41529,7 @@ async function launchWorktreeSession(opts) {
   }
   const runtimeCmd = runtime === "claude" ? "claude" : "pi";
   const runtimeArgs = runtime === "claude" ? ["--dangerously-skip-permissions"] : [];
-  const launchResult = (0, import_node_child_process2.spawnSync)(runtimeCmd, runtimeArgs, {
+  const launchResult = (0, import_node_child_process3.spawnSync)(runtimeCmd, runtimeArgs, {
     cwd: worktreePath,
     stdio: "inherit"
   });
@@ -41427,14 +41552,14 @@ function createClaudeCommand() {
   cmd.command("status").description("Show Claude CLI version, plugin status, and hook wiring").action(async () => {
     console.log(t.bold("\n  Claude Code Status\n"));
     try {
-      const version3 = (0, import_node_child_process3.execSync)("claude --version", { encoding: "utf8", stdio: "pipe" }).trim();
+      const version3 = (0, import_node_child_process4.execSync)("claude --version", { encoding: "utf8", stdio: "pipe" }).trim();
       console.log(t.success(`  \u2713 claude CLI: ${version3}`));
     } catch {
       console.log(kleur_default.red("  \u2717 claude CLI not found"));
       console.log("");
       return;
     }
-    const listResult = (0, import_node_child_process3.spawnSync)("claude", ["plugin", "list"], { encoding: "utf8", stdio: "pipe" });
+    const listResult = (0, import_node_child_process4.spawnSync)("claude", ["plugin", "list"], { encoding: "utf8", stdio: "pipe" });
     const pluginOutput = listResult.stdout ?? "";
     if (pluginOutput.includes("xtrm-tools")) {
       console.log(t.success("  \u2713 xtrm-tools plugin installed"));
@@ -41442,7 +41567,7 @@ function createClaudeCommand() {
       console.log(kleur_default.yellow("  \u26A0 xtrm-tools plugin not installed \u2014 run: xt claude install"));
     }
     try {
-      (0, import_node_child_process3.execSync)("bd --version", { stdio: "ignore" });
+      (0, import_node_child_process4.execSync)("bd --version", { stdio: "ignore" });
       console.log(t.success("  \u2713 beads (bd) available"));
     } catch {
       console.log(kleur_default.dim("  \u25CB beads (bd) not installed"));
@@ -41453,13 +41578,13 @@ function createClaudeCommand() {
     console.log(t.bold("\n  Claude Code Doctor\n"));
     let allOk = true;
     try {
-      (0, import_node_child_process3.execSync)("claude --version", { stdio: "ignore" });
+      (0, import_node_child_process4.execSync)("claude --version", { stdio: "ignore" });
       console.log(t.success("  \u2713 claude CLI available"));
     } catch {
       console.log(kleur_default.red("  \u2717 claude CLI not found \u2014 install Claude Code"));
       allOk = false;
     }
-    const listResult = (0, import_node_child_process3.spawnSync)("claude", ["plugin", "list"], { encoding: "utf8", stdio: "pipe" });
+    const listResult = (0, import_node_child_process4.spawnSync)("claude", ["plugin", "list"], { encoding: "utf8", stdio: "pipe" });
     if (listResult.stdout?.includes("xtrm-tools")) {
       console.log(t.success("  \u2713 xtrm-tools plugin installed"));
     } else {
@@ -41467,21 +41592,21 @@ function createClaudeCommand() {
       allOk = false;
     }
     try {
-      (0, import_node_child_process3.execSync)("bd --version", { stdio: "ignore" });
+      (0, import_node_child_process4.execSync)("bd --version", { stdio: "ignore" });
       console.log(t.success("  \u2713 beads (bd) installed"));
     } catch {
       console.log(kleur_default.yellow("  \u26A0 beads not installed \u2014 run: npm install -g @beads/bd"));
       allOk = false;
     }
     try {
-      (0, import_node_child_process3.execSync)("dolt version", { stdio: "ignore" });
+      (0, import_node_child_process4.execSync)("dolt version", { stdio: "ignore" });
       console.log(t.success("  \u2713 dolt installed"));
     } catch {
       console.log(kleur_default.yellow("  \u26A0 dolt not installed \u2014 required for beads storage"));
       allOk = false;
     }
     try {
-      (0, import_node_child_process3.execSync)("gitnexus --version", { stdio: "ignore" });
+      (0, import_node_child_process4.execSync)("gitnexus --version", { stdio: "ignore" });
       console.log(t.success("  \u2713 gitnexus installed"));
     } catch {
       console.log(kleur_default.dim("  \u25CB gitnexus not installed (optional) \u2014 npm install -g gitnexus"));
@@ -41498,7 +41623,7 @@ function createClaudeCommand() {
 
 // src/commands/pi.ts
 var import_path14 = __toESM(require("path"), 1);
-var import_node_child_process5 = require("child_process");
+var import_node_child_process6 = require("child_process");
 var import_node_os7 = require("os");
 var import_fs_extra14 = __toESM(require_lib2(), 1);
 
@@ -41506,7 +41631,7 @@ var import_fs_extra14 = __toESM(require_lib2(), 1);
 var import_prompts2 = __toESM(require_prompts3(), 1);
 var import_fs_extra13 = __toESM(require_lib2(), 1);
 var import_path13 = __toESM(require("path"), 1);
-var import_node_child_process4 = require("child_process");
+var import_node_child_process5 = require("child_process");
 var import_node_os6 = require("os");
 var PI_AGENT_DIR2 = process.env.PI_AGENT_DIR || import_path13.default.join((0, import_node_os6.homedir)(), ".pi", "agent");
 function fillTemplate(template, values) {
@@ -41530,69 +41655,7 @@ function readExistingPiValues(piAgentDir) {
   return values;
 }
 function isPiInstalled2() {
-  return (0, import_node_child_process4.spawnSync)("pi", ["--version"], { encoding: "utf8" }).status === 0;
-}
-async function listExtensionDirs(baseDir) {
-  if (!await import_fs_extra13.default.pathExists(baseDir)) return [];
-  const entries = await import_fs_extra13.default.readdir(baseDir, { withFileTypes: true });
-  const extDirs = [];
-  for (const entry of entries) {
-    if (!entry.isDirectory()) continue;
-    const extPath = import_path13.default.join(baseDir, entry.name);
-    const pkgPath = import_path13.default.join(extPath, "package.json");
-    if (await import_fs_extra13.default.pathExists(pkgPath)) {
-      extDirs.push(entry.name);
-    }
-  }
-  return extDirs.sort();
-}
-async function fileSha256(filePath) {
-  const crypto2 = await import("crypto");
-  const content = await import_fs_extra13.default.readFile(filePath);
-  return crypto2.createHash("sha256").update(content).digest("hex");
-}
-async function extensionHash(extDir) {
-  const pkgPath = import_path13.default.join(extDir, "package.json");
-  const indexPath = import_path13.default.join(extDir, "index.ts");
-  const hashes = [];
-  if (await import_fs_extra13.default.pathExists(pkgPath)) {
-    hashes.push(await fileSha256(pkgPath));
-  }
-  if (await import_fs_extra13.default.pathExists(indexPath)) {
-    hashes.push(await fileSha256(indexPath));
-  }
-  return hashes.join(":");
-}
-async function diffPiExtensions(sourceDir, targetDir) {
-  const sourceAbs = import_path13.default.resolve(sourceDir);
-  const targetAbs = import_path13.default.resolve(targetDir);
-  const sourceExts = await listExtensionDirs(sourceAbs);
-  const missing = [];
-  const stale = [];
-  const upToDate = [];
-  for (const extName of sourceExts) {
-    const srcExtPath = import_path13.default.join(sourceAbs, extName);
-    const dstExtPath = import_path13.default.join(targetAbs, extName);
-    if (!await import_fs_extra13.default.pathExists(dstExtPath)) {
-      missing.push(extName);
-      continue;
-    }
-    const dstPkgPath = import_path13.default.join(dstExtPath, "package.json");
-    if (!await import_fs_extra13.default.pathExists(dstPkgPath)) {
-      missing.push(extName);
-      continue;
-    }
-    const [srcHash, dstHash] = await Promise.all([
-      extensionHash(srcExtPath),
-      extensionHash(dstExtPath)
-    ]);
-    if (srcHash !== dstHash) {
-      stale.push(extName);
-    } else {
-      upToDate.push(extName);
-    }
-  }
-  return { missing, stale, upToDate };
+  return (0, import_node_child_process5.spawnSync)("pi", ["--version"], { encoding: "utf8" }).status === 0;
 }
 function printPiCheckSummary(diff) {
   const totalDiff = diff.missing.length + diff.stale.length;
@@ -41632,14 +41695,14 @@ function createInstallPiCommand() {
     console.log(t.bold("\n  Pi Coding Agent Setup\n"));
     if (!isPiInstalled2()) {
       console.log(kleur_default.yellow("  pi not found \u2014 installing oh-pi globally...\n"));
-      const r = (0, import_node_child_process4.spawnSync)("npm", ["install", "-g", "oh-pi"], { stdio: "inherit" });
+      const r = (0, import_node_child_process5.spawnSync)("npm", ["install", "-g", "oh-pi"], { stdio: "inherit" });
       if (r.status !== 0) {
         console.error(kleur_default.red("\n  Failed to install oh-pi. Run: npm install -g oh-pi\n"));
         process.exit(1);
       }
       console.log(t.success("  pi installed\n"));
     } else {
-      const v = (0, import_node_child_process4.spawnSync)("pi", ["--version"], { encoding: "utf8" });
+      const v = (0, import_node_child_process5.spawnSync)("pi", ["--version"], { encoding: "utf8" });
       console.log(t.success(`  pi ${v.stdout.trim()} already installed
 `));
     }
@@ -41675,9 +41738,17 @@ function createInstallPiCommand() {
       await import_fs_extra13.default.writeFile(destPath, fillTemplate(raw, values), "utf8");
       console.log(t.success(`    ${sym.ok} ${name}`));
     }
+    const extensionsSrc = import_path13.default.join(piConfigDir, "extensions");
+    const extensionsDst = import_path13.default.join(PI_AGENT_DIR2, "extensions");
+    const preCheck = await piPreCheck(extensionsSrc, extensionsDst, schema.packages);
+    const extTotal = preCheck.extensions.missing.length + preCheck.extensions.stale.length + preCheck.extensions.upToDate.length;
+    console.log(kleur_default.dim(`
+  Pre-check:`));
+    console.log(kleur_default.dim(`    Extensions: ${preCheck.extensions.upToDate.length}/${extTotal} up-to-date, ${preCheck.extensions.stale.length} stale, ${preCheck.extensions.missing.length} missing`));
+    console.log(kleur_default.dim(`    Packages:   ${preCheck.packages.installed.length}/${schema.packages.length} installed, ${preCheck.packages.needed.length} needed`));
     const managedPackages = await syncManagedPiExtensions({
-      sourceDir: import_path13.default.join(piConfigDir, "extensions"),
-      targetDir: import_path13.default.join(PI_AGENT_DIR2, "extensions"),
+      sourceDir: extensionsSrc,
+      targetDir: extensionsDst,
       dryRun: false,
       log: (message) => console.log(kleur_default.dim(`    ${message}`))
     });
@@ -41685,10 +41756,14 @@ function createInstallPiCommand() {
       console.log(t.success(`    ${sym.ok} extensions/ (${managedPackages} packages)`));
     }
     console.log(t.bold("\n  npm Packages\n"));
-    for (const pkg of schema.packages) {
-      const r = (0, import_node_child_process4.spawnSync)("pi", ["install", pkg], { stdio: "inherit" });
-      if (r.status === 0) console.log(t.success(`    ${sym.ok} ${pkg}`));
-      else console.log(kleur_default.yellow(`    ${pkg} \u2014 failed, run manually: pi install ${pkg}`));
+    if (preCheck.packages.needed.length === 0) {
+      console.log(kleur_default.dim(`    \u2713 All ${schema.packages.length} packages already installed`));
+    } else {
+      for (const pkg of preCheck.packages.needed) {
+        const r = (0, import_node_child_process5.spawnSync)("pi", ["install", pkg], { stdio: "inherit" });
+        if (r.status === 0) console.log(t.success(`    ${sym.ok} ${pkg}`));
+        else console.log(kleur_default.yellow(`    ${pkg} \u2014 failed, run manually: pi install ${pkg}`));
+      }
     }
     console.log(t.bold("\n  OAuth (manual steps)\n"));
     for (const provider of schema.oauth_providers) {
@@ -41714,7 +41789,7 @@ function createPiCommand() {
   cmd.addCommand(piSetup);
   cmd.command("status").description("Check Pi version and extension deployment drift").action(async () => {
     console.log(t.bold("\n  Pi Runtime Status\n"));
-    const piResult = (0, import_node_child_process5.spawnSync)("pi", ["--version"], { encoding: "utf8", stdio: "pipe" });
+    const piResult = (0, import_node_child_process6.spawnSync)("pi", ["--version"], { encoding: "utf8", stdio: "pipe" });
     if (piResult.status === 0) {
       console.log(t.success(`  \u2713 pi ${piResult.stdout.trim()} installed`));
     } else {
@@ -41738,7 +41813,7 @@ function createPiCommand() {
   cmd.command("doctor").description("Diagnostic checks: pi installed, extensions deployed, packages present").action(async () => {
     console.log(t.bold("\n  Pi Doctor\n"));
     let allOk = true;
-    const piResult = (0, import_node_child_process5.spawnSync)("pi", ["--version"], { encoding: "utf8", stdio: "pipe" });
+    const piResult = (0, import_node_child_process6.spawnSync)("pi", ["--version"], { encoding: "utf8", stdio: "pipe" });
     if (piResult.status === 0) {
       console.log(t.success(`  \u2713 pi ${piResult.stdout.trim()} installed`));
     } else {
@@ -41759,9 +41834,9 @@ function createPiCommand() {
     const schemaPath = import_path14.default.join(piConfigDir, "install-schema.json");
     if (await import_fs_extra14.default.pathExists(schemaPath)) {
       try {
-        (0, import_node_child_process5.execSync)("pi --version", { stdio: "ignore" });
+        (0, import_node_child_process6.execSync)("pi --version", { stdio: "ignore" });
         const schema = await import_fs_extra14.default.readJson(schemaPath);
-        const listResult = (0, import_node_child_process5.spawnSync)("pi", ["list"], { encoding: "utf8", stdio: "pipe" });
+        const listResult = (0, import_node_child_process6.spawnSync)("pi", ["list"], { encoding: "utf8", stdio: "pipe" });
         const installed = listResult.stdout ?? "";
         const missing = schema.packages.filter((p) => !installed.includes(p.replace("npm:", "")));
         if (missing.length === 0) {
@@ -56389,13 +56464,13 @@ function createCleanCommand() {
 
 // src/commands/end.ts
 var import_prompts4 = __toESM(require_prompts3(), 1);
-var import_node_child_process6 = require("child_process");
+var import_node_child_process7 = require("child_process");
 function git(args, cwd) {
-  const r = (0, import_node_child_process6.spawnSync)("git", args, { cwd, encoding: "utf8", stdio: "pipe" });
+  const r = (0, import_node_child_process7.spawnSync)("git", args, { cwd, encoding: "utf8", stdio: "pipe" });
   return { ok: r.status === 0, out: (r.stdout ?? "").trim(), err: (r.stderr ?? "").trim() };
 }
 function bd(args, cwd) {
-  const r = (0, import_node_child_process6.spawnSync)("bd", args, { cwd, encoding: "utf8", stdio: "pipe" });
+  const r = (0, import_node_child_process7.spawnSync)("bd", args, { cwd, encoding: "utf8", stdio: "pipe" });
   return { ok: r.status === 0, out: (r.stdout ?? "").trim() };
 }
 function extractIssueIds(commitLog) {
@@ -56523,7 +56598,7 @@ function createEndCommand() {
     console.log(kleur_default.dim("  Creating PR..."));
     const prArgs = ["pr", "create", "--title", prTitle, "--body", prBody];
     if (opts.draft) prArgs.push("--draft");
-    const prResult = (0, import_node_child_process6.spawnSync)("gh", prArgs, { cwd, encoding: "utf8", stdio: "pipe" });
+    const prResult = (0, import_node_child_process7.spawnSync)("gh", prArgs, { cwd, encoding: "utf8", stdio: "pipe" });
     if (prResult.status !== 0) {
       console.error(kleur_default.red(`
   \u2717 PR creation failed:
@@ -56553,7 +56628,7 @@ function createEndCommand() {
       if (doRemove) {
         try {
           const repoRoot = git(["rev-parse", "--show-toplevel"], cwd).out;
-          const removeResult = (0, import_node_child_process6.spawnSync)(
+          const removeResult = (0, import_node_child_process7.spawnSync)(
             "git",
             ["worktree", "remove", cwd, "--force"],
             { cwd: repoRoot, encoding: "utf8", stdio: "pipe" }
@@ -56577,9 +56652,9 @@ function createEndCommand() {
 
 // src/commands/worktree.ts
 var import_prompts5 = __toESM(require_prompts3(), 1);
-var import_node_child_process7 = require("child_process");
+var import_node_child_process8 = require("child_process");
 function listXtWorktrees(repoRoot) {
-  const r = (0, import_node_child_process7.spawnSync)("git", ["worktree", "list", "--porcelain"], {
+  const r = (0, import_node_child_process8.spawnSync)("git", ["worktree", "list", "--porcelain"], {
     cwd: repoRoot,
     encoding: "utf8",
     stdio: "pipe"
@@ -56608,7 +56683,7 @@ function listXtWorktrees(repoRoot) {
 }
 function isMergedIntoMain(branch, repoRoot) {
   const branchShort = branch.replace("refs/heads/", "");
-  const r = (0, import_node_child_process7.spawnSync)("git", ["branch", "--merged", "origin/main", "--list", branchShort], {
+  const r = (0, import_node_child_process8.spawnSync)("git", ["branch", "--merged", "origin/main", "--list", branchShort], {
     cwd: repoRoot,
     encoding: "utf8",
     stdio: "pipe"
@@ -56616,7 +56691,7 @@ function isMergedIntoMain(branch, repoRoot) {
   return (r.stdout ?? "").includes(branchShort);
 }
 function getRepoRoot(cwd) {
-  const r = (0, import_node_child_process7.spawnSync)("git", ["rev-parse", "--show-toplevel"], { cwd, encoding: "utf8", stdio: "pipe" });
+  const r = (0, import_node_child_process8.spawnSync)("git", ["rev-parse", "--show-toplevel"], { cwd, encoding: "utf8", stdio: "pipe" });
   return r.ok ? r.stdout.trim() : cwd;
 }
 function createWorktreeCommand() {
@@ -56670,7 +56745,7 @@ function createWorktreeCommand() {
       return;
     }
     for (const wt of merged) {
-      const r = (0, import_node_child_process7.spawnSync)("git", ["worktree", "remove", wt.path, "--force"], {
+      const r = (0, import_node_child_process8.spawnSync)("git", ["worktree", "remove", wt.path, "--force"], {
         cwd: repoRoot,
         encoding: "utf8",
         stdio: "pipe"
@@ -56710,7 +56785,7 @@ function createWorktreeCommand() {
       console.log(kleur_default.dim("  Cancelled\n"));
       return;
     }
-    const r = (0, import_node_child_process7.spawnSync)("git", ["worktree", "remove", target.path, "--force"], {
+    const r = (0, import_node_child_process8.spawnSync)("git", ["worktree", "remove", target.path, "--force"], {
       cwd: repoRoot,
       encoding: "utf8",
       stdio: "pipe"
@@ -56858,7 +56933,7 @@ function createDocsCommand() {
 }
 
 // src/commands/debug.ts
-var import_node_child_process8 = require("child_process");
+var import_node_child_process9 = require("child_process");
 var import_node_fs5 = require("fs");
 var import_node_path6 = require("path");
 var KIND_LABELS = {
@@ -57006,7 +57081,7 @@ function buildWhere(opts, base) {
 }
 function queryEvents(dbPath, where, limit) {
   const sql = `SELECT id,ts,session_id,runtime,worktree,kind,tool_name,outcome,issue_id,duration_ms,data FROM events${where ? ` WHERE ${where}` : ""} ORDER BY id ASC LIMIT ${limit}`;
-  const result = (0, import_node_child_process8.spawnSync)("sqlite3", [dbPath, "-json", sql], {
+  const result = (0, import_node_child_process9.spawnSync)("sqlite3", [dbPath, "-json", sql], {
     stdio: ["pipe", "pipe", "pipe"],
     encoding: "utf8",
     timeout: 5e3

@@ -111,7 +111,7 @@ describe('createInstallPiCommand', () => {
         const fs = require('node:fs');
         const p = require('node:path');
         const extDir = p.resolve(__dirname, '..', '..', 'config', 'pi', 'extensions');
-        const packages = ['auto-session-name', 'auto-update', 'compact-header', 'custom-footer', 'git-checkpoint', 'quality-gates', 'beads', 'session-flow', 'service-skills', 'xtrm-loader', 'plan-mode'];
+        const packages = ['auto-session-name', 'auto-update', 'compact-header', 'custom-footer', 'git-checkpoint', 'quality-gates', 'beads', 'session-flow', 'service-skills', 'xtrm-loader', 'custom-provider-qwen-cli'];
         for (const pkg of packages) {
             expect(fs.existsSync(p.join(extDir, pkg, 'index.ts'))).toBe(true);
             expect(fs.existsSync(p.join(extDir, pkg, 'package.json'))).toBe(true);
@@ -159,7 +159,7 @@ describe('createInstallPiCommand', () => {
     });
 
     it('diffPiExtensions reports missing and stale extension packages', async () => {
-        const { diffPiExtensions } = await import('../src/commands/install-pi.js?t=diff' + Date.now());
+        const { diffPiExtensions } = await import('../src/utils/pi-extensions.js?t=diff' + Date.now());
         const nodeFs = require('node:fs');
         const nodePath = require('node:path');
         const os = require('node:os');

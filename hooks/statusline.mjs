@@ -8,8 +8,8 @@
 // Cache: /tmp per cwd, 5s TTL
 
 import { execSync } from 'node:child_process';
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
-import { join, basename, relative } from 'node:path';
+import { readFileSync, writeFileSync, existsSync, unlinkSync } from 'node:fs';
+import { join, basename, relative, dirname, isAbsolute } from 'node:path';
 import { tmpdir, hostname } from 'node:os';
 import { createHash } from 'node:crypto';
 
@@ -60,6 +60,10 @@ if (!data) {
 
   // Directory — repo-relative like the global script
   const repoRoot = run('git rev-parse --show-toplevel');
+  // In a git worktree, --git-common-dir returns an absolute path to the main .git dir.
+  // In a regular repo it returns '.git' (relative). Use this to find the canonical main root.
+  const gitCommonDir = run('git rev-parse --git-common-dir');
+  const mainRoot = (gitCommonDir && isAbsolute(gitCommonDir)) ? dirname(gitCommonDir) : (repoRoot || cwd);
   let displayDir;
   if (repoRoot) {
     const rel = relative(repoRoot, cwd) || '.';
@@ -98,13 +102,21 @@ if (!data) {
   let claimId = null;
   let claimTitle = null;
   let openCount = 0;
-  if (existsSync(join(cwd, '.beads'))) {
-    const claimFile = join(cwd, '.xtrm', 'statusline-claim');
+  if (existsSync(join(cwd, '.beads')) || existsSync(join(mainRoot, '.beads'))) {
+    // Use mainRoot so all sessions (main + worktrees) share one canonical claim file.
+    const claimFile = join(mainRoot, '.xtrm', 'statusline-claim');
     claimId = existsSync(claimFile) ? (readFileSync(claimFile, 'utf8').trim() || null) : null;
     if (claimId) {
       try {
         const raw = run(`bd show ${claimId} --json`);
-        claimTitle = raw ? (JSON.parse(raw)?.[0]?.title ?? null) : null;
+        const issue = raw ? JSON.parse(raw)?.[0] : null;
+        if (issue?.status === 'closed') {
+          // Self-heal: remove stale claim file left behind when bd close didn't clean up.
+          try { unlinkSync(claimFile); } catch {}
+          claimId = null;
+        } else {
+          claimTitle = issue?.title ?? null;
+        }
       } catch {}
     }
     if (!claimTitle) {

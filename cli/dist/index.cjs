@@ -56563,7 +56563,14 @@ function createEndCommand() {
     console.log(t.bold(`
   xt end \u2014 closing session on ${branch}
 `));
-    const logResult = git(["log", "origin/main..HEAD", "--oneline"], cwd);
+    let defaultBranch = "main";
+    const symRef = git(["symbolic-ref", "refs/remotes/origin/HEAD", "--short"], cwd);
+    if (symRef.ok && symRef.out) {
+      defaultBranch = symRef.out.replace("origin/", "");
+    } else if (git(["rev-parse", "--verify", "origin/master"], cwd).ok) {
+      defaultBranch = "master";
+    }
+    const logResult = git(["log", `origin/${defaultBranch}..HEAD`, "--oneline"], cwd);
     const issueIds = extractIssueIds(logResult.out);
     const issues = [];
     for (const id of issueIds) {
@@ -56587,10 +56594,10 @@ function createEndCommand() {
     } else {
       console.log(kleur_default.dim("  \u25CB No beads issues found in commit log"));
     }
-    console.log(kleur_default.dim("  Fetching origin/main..."));
-    git(["fetch", "origin", "main"], cwd);
-    console.log(kleur_default.dim("  Rebasing onto origin/main..."));
-    const rebaseResult = git(["rebase", "origin/main"], cwd);
+    console.log(kleur_default.dim(`  Fetching origin/${defaultBranch}...`));
+    git(["fetch", "origin", defaultBranch], cwd);
+    console.log(kleur_default.dim(`  Rebasing onto origin/${defaultBranch}...`));
+    const rebaseResult = git(["rebase", `origin/${defaultBranch}`], cwd);
     if (!rebaseResult.ok) {
       const conflicts = git(["diff", "--name-only", "--diff-filter=U"], cwd).out;
       console.error(kleur_default.red("\n  \u2717 Rebase conflicts detected:\n"));
@@ -56602,7 +56609,7 @@ function createEndCommand() {
       ));
       process.exit(1);
     }
-    console.log(t.success("  \u2713 Rebased onto origin/main"));
+    console.log(t.success(`  \u2713 Rebased onto origin/${defaultBranch}`));
     console.log(kleur_default.dim("  Pushing branch..."));
     const pushResult = git(["push", "origin", branch, "--force-with-lease"], cwd);
     if (!pushResult.ok) {
@@ -56613,8 +56620,8 @@ function createEndCommand() {
       process.exit(1);
     }
     console.log(t.success(`  \u2713 Pushed ${branch}`));
-    const fullLog = git(["log", "origin/main..HEAD", "--oneline"], cwd).out;
-    const diffStat = git(["diff", "origin/main", "--stat"], cwd).out;
+    const fullLog = git(["log", `origin/${defaultBranch}..HEAD`, "--oneline"], cwd).out;
+    const diffStat = git(["diff", `origin/${defaultBranch}`, "--stat"], cwd).out;
     const prTitle = buildPrTitle(issues);
     const prBody = buildPrBody(issues, fullLog, diffStat, branch);
     console.log(kleur_default.dim("  Creating PR..."));

@@ -5,7 +5,7 @@
 
 import { spawnSync } from 'node:child_process';
 import { readFileSync, existsSync, writeFileSync, unlinkSync, mkdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, dirname, isAbsolute } from 'node:path';
 import { resolveSessionId } from './beads-gate-utils.mjs';
 import { logEvent } from './xtrm-logger.mjs';
 
@@ -19,6 +19,18 @@ function readInput() {
 
 function isBeadsProject(cwd) {
   return existsSync(join(cwd, '.beads'));
+}
+
+// In a git worktree, --git-common-dir returns an absolute path to the main .git dir.
+// In a regular repo it returns '.git' (relative). Use this to find the canonical main root
+// so claim files are always written/deleted from the same location across sessions.
+function resolveMainRoot(cwd) {
+  const r = spawnSync('git', ['rev-parse', '--git-common-dir'], {
+    cwd, encoding: 'utf8', stdio: 'pipe',
+  });
+  const commonDir = r.stdout?.trim();
+  if (commonDir && isAbsolute(commonDir)) return dirname(commonDir);
+  return cwd;
 }
 
 function isShellTool(toolName) {
@@ -135,9 +147,9 @@ function main() {
         process.exit(0);
       }
 
-      // Write claim state for statusline
+      // Write claim state for statusline — always at main repo root so all sessions share it.
       try {
-        const xtrmDir = join(cwd, '.xtrm');
+        const xtrmDir = join(resolveMainRoot(cwd), '.xtrm');
         mkdirSync(xtrmDir, { recursive: true });
         writeFileSync(join(xtrmDir, 'statusline-claim'), issueId);
       } catch { /* non-fatal */ }
@@ -168,8 +180,8 @@ function main() {
     // Auto-commit before marking the gate (no-op if clean)
     const commit = closedIssueId ? autoCommit(cwd, closedIssueId, command) : null;
 
-    // Clear claim state for statusline
-    try { unlinkSync(join(cwd, '.xtrm', 'statusline-claim')); } catch { /* ok if missing */ }
+    // Clear claim state for statusline — use main root so worktree and main sessions agree.
+    try { unlinkSync(join(resolveMainRoot(cwd), '.xtrm', 'statusline-claim')); } catch { /* ok if missing */ }
 
     // Mark this issue as closed this session (memory gate reads this)
     if (closedIssueId) {

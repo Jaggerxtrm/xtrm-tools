@@ -113,8 +113,17 @@ export function createEndCommand(): Command {
 
             console.log(t.bold(`\n  xt end — closing session on ${branch}\n`));
 
-            // 3. Collect closed issues from commit log
-            const logResult = git(['log', 'origin/main..HEAD', '--oneline'], cwd);
+            // 3. Detect default branch (avoids hardcoding main vs master)
+            let defaultBranch = 'main';
+            const symRef = git(['symbolic-ref', 'refs/remotes/origin/HEAD', '--short'], cwd);
+            if (symRef.ok && symRef.out) {
+                defaultBranch = symRef.out.replace('origin/', '');
+            } else if (git(['rev-parse', '--verify', 'origin/master'], cwd).ok) {
+                defaultBranch = 'master';
+            }
+
+            // 4. Collect closed issues from commit log
+            const logResult = git(['log', `origin/${defaultBranch}..HEAD`, '--oneline'], cwd);
             const issueIds = extractIssueIds(logResult.out);
 
             const issues: Array<{ id: string; title: string; description: string; reason: string }> = [];
@@ -141,13 +150,13 @@ export function createEndCommand(): Command {
                 console.log(kleur.dim('  ○ No beads issues found in commit log'));
             }
 
-            // 4. Fetch to ensure origin/main is current
-            console.log(kleur.dim('  Fetching origin/main...'));
-            git(['fetch', 'origin', 'main'], cwd);
+            // 5. Fetch to ensure origin/<default> is current
+            console.log(kleur.dim(`  Fetching origin/${defaultBranch}...`));
+            git(['fetch', 'origin', defaultBranch], cwd);
 
-            // 5. Rebase
-            console.log(kleur.dim('  Rebasing onto origin/main...'));
-            const rebaseResult = git(['rebase', 'origin/main'], cwd);
+            // 6. Rebase
+            console.log(kleur.dim(`  Rebasing onto origin/${defaultBranch}...`));
+            const rebaseResult = git(['rebase', `origin/${defaultBranch}`], cwd);
             if (!rebaseResult.ok) {
                 const conflicts = git(['diff', '--name-only', '--diff-filter=U'], cwd).out;
                 console.error(kleur.red('\n  ✗ Rebase conflicts detected:\n'));
@@ -161,7 +170,7 @@ export function createEndCommand(): Command {
                 ));
                 process.exit(1);
             }
-            console.log(t.success('  ✓ Rebased onto origin/main'));
+            console.log(t.success(`  ✓ Rebased onto origin/${defaultBranch}`));
 
             // 6. Push (force-with-lease = safe after rebase)
             console.log(kleur.dim('  Pushing branch...'));
@@ -173,8 +182,8 @@ export function createEndCommand(): Command {
             console.log(t.success(`  ✓ Pushed ${branch}`));
 
             // 7. Build PR content
-            const fullLog = git(['log', 'origin/main..HEAD', '--oneline'], cwd).out;
-            const diffStat = git(['diff', 'origin/main', '--stat'], cwd).out;
+            const fullLog = git(['log', `origin/${defaultBranch}..HEAD`, '--oneline'], cwd).out;
+            const diffStat = git(['diff', `origin/${defaultBranch}`, '--stat'], cwd).out;
             const prTitle = buildPrTitle(issues);
             const prBody = buildPrBody(issues, fullLog, diffStat, branch);
 

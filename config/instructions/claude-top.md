@@ -8,7 +8,7 @@
 1. `bd prime` — load workflow context and active claims
 2. `bd memories <keyword>` — retrieve memories relevant to today's task
 3. `bd recall <key>` — retrieve a specific memory by key if needed
-4. `bd ready` — find available work
+4. `bv --robot-triage` — graph-aware triage: ranked picks, unblock targets, project health
 5. `bd update <id> --claim` — claim before any file edit
 
 ## Active Gates (hooks enforce these — not optional)
@@ -79,6 +79,35 @@ xt end                                       # push, PR, merge, worktree cleanup
 ```
 
 **Never** continue new work on a previously used branch.
+
+## bv — Graph-Aware Triage
+
+bv is a graph-aware triage engine for the beads issue board. Use it instead of `bd ready` when you need ranked picks, dependency-aware scheduling, or project health signals.
+
+> **CRITICAL: Use ONLY `--robot-*` flags. Bare `bv` launches an interactive TUI that blocks your session.**
+
+```bash
+bv --robot-triage             # THE entry point — ranked picks, quick wins, blockers, health
+bv --robot-next               # Single top pick + claim command (minimal output)
+bv --robot-triage --format toon  # Token-optimized output for lower context usage
+```
+
+**Scope boundary:** bv = *what to work on*. `bd` = creating, claiming, closing issues.
+
+| Command | Returns |
+|---------|---------|
+| `--robot-plan` | Parallel execution tracks with unblocks lists |
+| `--robot-insights` | PageRank, betweenness, HITS, cycles, critical path |
+| `--robot-forecast <id\|all>` | ETA predictions with dependency-aware scheduling |
+| `--robot-alerts` | Stale issues, blocking cascades, priority mismatches |
+| `--robot-diff --diff-since <ref>` | Changes since ref: new/closed/modified |
+
+```bash
+bv --recipe actionable --robot-plan    # Pre-filter: ready to work
+bv --robot-triage --robot-triage-by-track  # Group by parallel work streams
+bv --robot-triage | jq '.quick_ref'   # At-a-glance summary
+bv --robot-insights | jq '.Cycles'    # Circular deps — must fix
+```
 
 ## Code Intelligence (mandatory before edits)
 

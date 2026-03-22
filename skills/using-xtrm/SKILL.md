@@ -19,9 +19,11 @@ priority: high
 ```bash
 bd prime                          # load workflow context + active claims
 bd memories <today's topic>       # retrieve relevant past context
-bd ready                          # find available work
+bv --robot-triage                 # graph-ranked picks, quick wins, unblock targets
 bd update <id> --claim            # claim before any edit
 ```
+
+> Use `bv --robot-next` for the single top pick. Use `bv --robot-triage --format toon` to save context tokens. **Never run bare `bv` — it launches an interactive TUI.**
 
 ---
 
@@ -30,6 +32,7 @@ bd update <id> --claim            # claim before any edit
 | Situation | Action |
 |-----------|--------|
 | User prompt contains `?` | `bd memories <keywords>` before answering — check stored context first |
+| "What should I work on?" | `bv --robot-triage` — ranked picks with dependency context |
 | "What was I working on?" | `bd list --status=in_progress` |
 | Unfamiliar area of code | `gitnexus_query({query: "concept"})` before opening any file |
 | About to edit a symbol | `gitnexus_impact({target: "name", direction: "upstream"})` |

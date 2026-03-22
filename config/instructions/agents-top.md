@@ -8,7 +8,7 @@
 1. `bd prime` — load workflow context and active claims
 2. `bd memories <keyword>` — retrieve memories relevant to today's task
 3. `bd recall <key>` — retrieve a specific memory by key if needed
-4. `bd ready` — find available work
+4. `bv --robot-triage` — graph-aware triage: ranked picks, unblock targets, project health
 5. `bd update <id> --claim` — claim before any file edit
 
 ## Active Gates (extensions enforce these — not optional)
@@ -87,6 +87,53 @@ Run on every file edit via PostToolUse extension:
 - **Python**: ruff + mypy
 
 Gate output appears as extension context. Fix failures before proceeding — do not commit with lint errors.
+
+## bv — Graph-Aware Triage
+
+bv is a graph-aware triage engine for the beads issue board. Use it instead of `bd ready` when you need ranked picks, dependency-aware scheduling, or project health signals.
+
+> **CRITICAL: Use ONLY `--robot-*` flags. Bare `bv` launches an interactive TUI that blocks your session.**
+
+```bash
+bv --robot-triage             # THE entry point — ranked picks, quick wins, blockers, health
+bv --robot-next               # Single top pick + claim command (minimal output)
+bv --robot-triage --format toon  # Token-optimized output for lower context usage
+```
+
+**Scope boundary:** bv = *what to work on*. `bd` = creating, claiming, closing issues.
+
+### Planning & Analysis
+
+| Command | Returns |
+|---------|---------|
+| `--robot-plan` | Parallel execution tracks with unblocks lists |
+| `--robot-priority` | Priority misalignment detection |
+| `--robot-insights` | Full graph metrics: PageRank, betweenness, HITS, eigenvector, critical path, cycles |
+| `--robot-forecast <id\|all>` | ETA predictions with dependency-aware scheduling |
+| `--robot-alerts` | Stale issues, blocking cascades, priority mismatches |
+| `--robot-diff --diff-since <ref>` | Changes since ref: new/closed/modified, cycles introduced/resolved |
+
+### Scoping & Filtering
+
+```bash
+bv --robot-plan --label backend        # Scope to label's subgraph
+bv --recipe actionable --robot-plan    # Pre-filter: ready to work (no blockers)
+bv --recipe high-impact --robot-triage # Pre-filter: top PageRank scores
+bv --robot-triage --robot-triage-by-track  # Group by parallel work streams
+```
+
+### Understanding Output
+
+- `data_hash` — fingerprint of beads state (verify consistency across calls)
+- Phase 1 (instant): degree, topo sort, density
+- Phase 2 (async, 500ms): PageRank, betweenness, HITS, cycles — check `status` flags
+
+```bash
+bv --robot-triage | jq '.quick_ref'              # At-a-glance summary
+bv --robot-triage | jq '.recommendations[0]'     # Top recommendation
+bv --robot-plan | jq '.plan.summary.highest_impact'
+bv --robot-insights | jq '.Cycles'               # Circular deps — must fix
+```
 
 ## Worktree Sessions
 

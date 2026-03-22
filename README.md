@@ -2,7 +2,25 @@
 
 > **Dual-runtime workflow system** — Claude Code plugin + Pi extension suite for workflow enforcement, code quality gates, issue tracking, and development automation.
 
-**Version 0.5.29** | [Complete Guide](XTRM-GUIDE.md) | [Changelog](CHANGELOG.md)
+**Version 0.5.30** | [Complete Guide](XTRM-GUIDE.md) | [Changelog](CHANGELOG.md)
+
+---
+
+## Documentation
+
+| Doc | Contents |
+|-----|----------|
+| [XTRM-GUIDE.md](XTRM-GUIDE.md) | Complete reference — architecture, concepts, full workflow |
+| [docs/hooks.md](docs/hooks.md) | All hooks — event wiring, gate logic, order, authoring |
+| [docs/policies.md](docs/policies.md) | Policy system — compiler, schema, Claude/Pi parity |
+| [docs/skills.md](docs/skills.md) | Skills catalog — all skills, categories, how they load |
+| [docs/pi-extensions.md](docs/pi-extensions.md) | Pi extensions — managed sync, authoring, parity notes |
+| [docs/worktrees.md](docs/worktrees.md) | xt worktrees — `xt claude/pi`, `xt end`, isolation model |
+| [docs/mcp-servers.md](docs/mcp-servers.md) | MCP servers — gitnexus, github-grep, deepwiki, official plugins |
+| [docs/cli-architecture.md](docs/cli-architecture.md) | CLI internals — install flow, diff/sync engine, config merge |
+| [docs/project-skills.md](docs/project-skills.md) | Project-scoped skills — install, layout, Pi/Claude symlinks |
+| [docs/testing.md](docs/testing.md) | Live testing checklist — integration, gates, worktree flows |
+| [CHANGELOG.md](CHANGELOG.md) | Full version history |
 
 ---
 
@@ -17,7 +35,7 @@ xtrm install
 
 # Verify
 claude plugin list
-# → xtrm-tools@xtrm-tools  Version: 0.5.10  Status: ✔ enabled
+# → xtrm-tools@xtrm-tools  Version: 0.5.30  Status: enabled
 ```
 
 **One-line run:**
@@ -41,51 +59,77 @@ npx -y github:Jaggerxtrm/xtrm-tools install
 
 ### Skills
 
-Core: `using-xtrm` (session manual), `documenting` (SSOT docs), `delegating` (task routing), `orchestrating-agents` (multi-model).
+Skills are organized into two categories: **xtrm workflow** skills built specifically for the xtrm stack, and **general-purpose** expert skills that work in any project.
 
-Workflow: `xt-end` (close session), `xt-merge` (PR queue), `planning` (issue boards), `test-planning` (test coverage).
+#### xtrm Workflow Skills
 
-Service: `using-quality-gates`, `using-service-skills`, `creating-service-skills`, `scoping-service-skills`, `updating-service-skills`.
+These skills implement the xtrm-specific development workflow — session management, issue tracking, planning, quality, and documentation patterns.
 
----
+| Skill | Purpose |
+|-------|---------|
+| `using-xtrm` | Session operating manual — when to use which tool |
+| `using-quality-gates` | Quality gate workflow — TDD guard, lint/typecheck cycle |
+| `using-serena-lsp` | Code exploration and surgical edits via Serena LSP |
+| `using-tdd` | Test-driven development with 80%+ coverage enforcement |
+| `using-service-skills` | Service catalog discovery and expert persona activation |
+| `xt-end` | Autonomous session close — rebase, push, PR, cleanup |
+| `xt-merge` | FIFO PR merge queue for xt worktree sessions |
+| `planning` | Structured issue board from any spec, with phases and deps |
+| `test-planning` | Test coverage planning alongside implementation work |
+| `delegating` | Cost-optimized task delegation to background agents |
+| `orchestrating-agents` | Multi-model orchestration (Gemini, Qwen handshake) |
+| `documenting` | SSOT doc maintenance with drift detection |
+| `sync-docs` | Doc audit and structural sync across a sprint |
+| `skill-creator` | Create, improve, and evaluate skills |
+| `find-skills` | Discover and install skills on demand |
+| `creating-service-skills` | Generate operational service skill packages |
+| `scoping-service-skills` | Task intake and service routing |
+| `updating-service-skills` | Detect drift and sync expert persona docs |
+| `prompt-improving` | Apply Claude XML best practices to prompts |
 
-## Plugin Structure
+#### General-Purpose Expert Skills
 
-```
-plugins/xtrm-tools/
-├── .claude-plugin/plugin.json   # Manifest
-├── hooks → ../../hooks           # All hook scripts + hooks.json
-├── skills → ../../skills         # Auto-discovered skills
-└── .mcp.json → ../../.mcp.json   # MCP servers
-```
+Domain expert skills that can be used in any project, independent of the xtrm workflow.
 
-All hook paths use `${CLAUDE_PLUGIN_ROOT}` — works from any installation location.
+| Skill | Purpose |
+|-------|---------|
+| `senior-backend` | NodeJS, Express, Go, Python, Postgres, REST/GraphQL |
+| `senior-devops` | CI/CD, infrastructure as code, cloud platforms |
+| `senior-security` | AppSec, pen testing, threat modeling, crypto |
+| `senior-data-scientist` | Statistics, ML, A/B testing, causal inference |
+| `docker-expert` | Multi-stage builds, Compose, container security |
+| `python-testing` | pytest, TDD, fixtures, mocking, coverage |
+| `hook-development` | PreToolUse/PostToolUse hook authoring |
+| `clean-code` | Pragmatic coding standards, no over-engineering |
+| `gitnexus-exploring` | Navigate unfamiliar code via knowledge graph |
+| `gitnexus-impact-analysis` | Blast radius before making code changes |
+| `gitnexus-debugging` | Trace bugs through call chains |
+| `gitnexus-refactoring` | Plan safe refactors via dependency mapping |
+| `obsidian-cli` | Interact with Obsidian vaults via CLI |
 
 ---
 
 ## Policy System
 
-Policies are the **single source of truth** for all enforcement rules. Located in `policies/`, they compile to both Claude hooks and Pi extensions.
-
-### Policy Files
+Policies in `policies/` are the single source of truth for all enforcement rules. They compile to both Claude hooks and Pi extensions.
 
 | Policy | Runtime | Purpose |
 |--------|---------|---------|
-| `session-flow.json` | both | Claim sync, stop gate, `xt end` reminder |
 | `beads.json` | both | Issue tracking gates |
-| `quality-gates.json` | both | Linting/typechecking |
+| `session-flow.json` | both | Claim sync, stop gate, `xt end` reminder |
+| `quality-gates.json` | both | Linting/typechecking on file edits |
 | `quality-gates-env.json` | both | Warns if tsc/ruff/eslint missing at session start |
-| `using-xtrm.json` | claude | Injects using-xtrm session manual at SessionStart |
 | `gitnexus.json` | claude | Knowledge graph enrichment |
-| `worktree-boundary.json` | claude | Blocks edits outside worktree when in `.xtrm/worktrees` |
+| `using-xtrm.json` | claude | Injects session manual at SessionStart |
+| `worktree-boundary.json` | claude | Blocks edits outside active worktree |
 | `service-skills.json` | pi | Territory-based skill activation |
-
-### Compiler
 
 ```bash
 node scripts/compile-policies.mjs           # Generate hooks.json
 node scripts/compile-policies.mjs --check   # CI drift detection
 ```
+
+See [docs/policies.md](docs/policies.md) for full schema and authoring reference.
 
 ---
 
@@ -98,75 +142,46 @@ xtrm <command> [options]
 | Command | Description |
 |---------|-------------|
 | `install` | Install plugin + beads + gitnexus (interactive target selection) |
-| `init` | Initialize project data (bd, gitnexus, service-registry) |
+| `init` | Initialize project (bd, gitnexus, service-registry) |
 | `status` | Read-only diff view |
 | `clean` | Remove orphaned hooks |
 | `end` | Close worktree session: rebase, push, PR, cleanup |
 | `worktree list` | List all active `xt/*` worktrees |
-| `worktree clean` | Remove worktrees whose branch has been merged |
+| `worktree clean` | Remove merged worktrees |
 | `claude` | Launch Claude Code in a sandboxed worktree |
-| `pi` | Launch Pi in a sandboxed worktree; includes `install/setup/status/doctor/reload` runtime management |
+| `pi` | Launch Pi in a sandboxed worktree |
 | `docs show` | Display frontmatter for README, CHANGELOG, docs/*.md |
-| `debug` | Watch xtrm hook and bd lifecycle events in real time |
+| `debug` | Watch hook and bd lifecycle events in real time |
 
-### Pi Extension Loading
+**Flags:** `--yes / -y` (non-interactive), `--dry-run` (preview), `--prune` (force-replace hooks)
 
-- `xt pi setup`, `xt pi install`, and `xt pi reload` share the same managed extension sync behavior.
-- Extensions from `config/pi/extensions/<name>/` are synced to `~/.pi/agent/extensions/<name>/` and loaded by Pi auto-discovery.
-- Managed extensions are not re-registered with `pi install -l` (prevents duplicate command/flag/shortcut registration conflicts).
-- `custom-footer` now mirrors Claude statusline information density with a two-line parity layout (session metadata + claim/open issue row), while remaining compatible with `pi-dex` footer refresh behavior.
-
-### Flags
-
-| Flag | Description |
-|------|-------------|
-| `--yes`, `-y` | Non-interactive mode |
-| `--dry-run` | Preview only |
-| `--prune` | Force-replace hooks |
-
----
-
-## Hooks Reference
-
-Beads gates: **Edit** (claim required), **Commit** (close issue first), **Stop** (unclosed check), **Memory** (persist insights).
-
-See [docs/hooks.md](docs/hooks.md) for full reference.
+See [docs/cli-architecture.md](docs/cli-architecture.md) for internals.
 
 ---
 
 ## MCP Servers
 
-Configured in `.mcp.json` (xtrm-managed only):
-
 | Server | Purpose |
 |--------|---------|
 | `gitnexus` | Knowledge graph |
 | `github-grep` | Code search |
-| `deepwiki` | DeepWiki docs search |
+| `deepwiki` | Repository documentation |
 
-Official Claude plugins are installed during `xtrm install`:
-- `serena@claude-plugins-official`
-- `context7@claude-plugins-official`
-- `github@claude-plugins-official`
-- `ralph-loop@claude-plugins-official`
+Official Claude plugins installed by `xtrm install`: `serena`, `context7`, `github`, `ralph-loop`.
+
+See [docs/mcp-servers.md](docs/mcp-servers.md) for configuration details.
 
 ---
 
 ## Issue Tracking (Beads)
 
 ```bash
-bd ready                    # Find unblocked work
-bd update <id> --claim      # Claim an issue
-bd close <id> --reason "Done"  # Close when done
+bd ready                           # Find unblocked work
+bd update <id> --claim             # Claim an issue
+bd close <id> --reason "Done"      # Close when done
 ```
 
----
-
-## Documentation
-
-- **[XTRM-GUIDE.md](XTRM-GUIDE.md)** — Complete reference guide
-- **[CHANGELOG.md](CHANGELOG.md)** — Full version history
-- **[ROADMAP.md](ROADMAP.md)** — Planned features
+See [XTRM-GUIDE.md](XTRM-GUIDE.md) for the full `bd` command reference.
 
 ---
 
@@ -174,15 +189,13 @@ bd close <id> --reason "Done"  # Close when done
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 0.5.30 | 2026-03-22 | Fix statusline on fresh installs; `xt end --dry-run` |
 | 0.5.29 | 2026-03-22 | Statusline truecolor gradient; `--no-verify` autocommit; xt-merge skill |
 | 0.5.24 | 2026-03-21 | Hash-based docs drift detection; CLI docs cleanup |
-| 0.5.20 | 2026-03-21 | `xtrm docs show` command; worktree-boundary hook; statusline injection |
-| 0.5.10 | 2026-03-21 | Install cleanup; Qwen/Gemini dead code removed |
+| 0.5.20 | 2026-03-21 | `xtrm docs show`; worktree-boundary hook; statusline injection |
 
 See [CHANGELOG.md](CHANGELOG.md) for full history.
 
 ---
-
-## License
 
 MIT License

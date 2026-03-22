@@ -1,6 +1,32 @@
 # XTRM-Tools
 
-> **Dual-runtime workflow system** — Claude Code plugin + Pi extension suite for workflow enforcement, code quality gates, issue tracking, and development automation.
+**xtrm** (`xt`) is an agentic workflow system that turns Claude Code and Pi into disciplined, self-managing development agents. Every session is structured, every change is tracked, and every agent knows exactly what to do next.
+
+### Beads — issue tracking built for agents
+
+[Beads](https://github.com/Jaggerxtrm/beads) is a Dolt-backed issue tracker designed for agentic workflows. Issues are first-class citizens: agents claim them before editing, close them before committing, and carry context forward across sessions and machines via persistent memory. The full `bd` CLI is available inside every session — `bd ready`, `bd update <id> --claim`, `bd close <id>`, `bd remember`.
+
+### Hooks — enforcement gates that run automatically
+
+A policy compiler produces hooks for both Claude Code and Pi from a single source. These gates enforce the workflow without relying on the agent to remember: the **Edit gate** blocks writes without an active claim, the **Commit gate** blocks `git commit` until the issue is closed, the **Stop gate** checks for unclosed work at session end, and the **Memory gate** prompts the agent to persist insights before exiting. Quality gates run ESLint, tsc, ruff, and mypy automatically on every file save.
+
+### Skills — reusable agent behaviors
+
+A library of composable skills covers the full development lifecycle: session management (`using-xtrm`), structured planning (`planning`), test coverage strategy (`test-planning`), autonomous session close (`xt-end`), PR queue management (`xt-merge`), documentation maintenance (`documenting`), and domain expertise (backend, devops, security, data science). Skills are injected into the agent context on demand and work identically in Claude Code and Pi.
+
+### Planning mode
+
+The `planning` skill generates a structured issue board from any spec or idea — epics, tasks, dependencies, test coverage annotations — using `bd create` in parallel. Agents can pick up and continue planned work across sessions with full context. GitNexus impact analysis and Serena code intelligence are integrated into the planning flow so blast radius is assessed before a single line is written.
+
+### Statusline
+
+A live statusline renders in every Claude Code session: active claim, open issue count, model, context window health (color-coded truecolor gradient), and token usage — all in a single line below the prompt. No configuration required after `xtrm install`.
+
+### Specialists *(upcoming)*
+
+Native integration with the [specialists](https://github.com/Jaggerxtrm/specialists) framework — spawning purpose-built sub-agents for parallel workloads, code review, and long-running background tasks directly from within a session.
+
+---
 
 **Version 0.5.30** | [Complete Guide](XTRM-GUIDE.md) | [Changelog](CHANGELOG.md)
 

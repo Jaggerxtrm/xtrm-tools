@@ -32,9 +32,9 @@ export async function injectHookConfig(targetDir: string, repoRoot: string): Pro
                 events: ['userPromptSubmit'],
             },
             {
-                name: 'serena-workflow-reminder',
-                path: path.join(targetDir, 'hooks', 'serena-workflow-reminder.py'),
-                events: ['toolUse'],
+                name: 'using-xtrm-reminder',
+                path: path.join(targetDir, 'hooks', 'using-xtrm-reminder.mjs'),
+                events: ['sessionStart'],
             },
         ];
 

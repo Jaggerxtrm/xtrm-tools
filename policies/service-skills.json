@@ -5,7 +5,7 @@
   "runtime": "pi",
   "order": 40,
   "pi": {
-    "extension": "config/pi/extensions/service-skills.ts",
+    "extension": "config/pi/extensions/service-skills/index.ts",
     "events": ["before_agent_start", "tool_result"]
   }
 }

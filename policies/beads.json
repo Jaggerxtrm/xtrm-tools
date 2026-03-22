@@ -36,7 +36,7 @@
     ]
   },
   "pi": {
-    "extension": "config/pi/extensions/beads.ts",
+    "extension": "config/pi/extensions/beads/index.ts",
     "events": ["session_start", "tool_call", "tool_result", "agent_end", "session_shutdown"]
   }
 }

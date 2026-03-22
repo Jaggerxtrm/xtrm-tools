@@ -16,6 +16,11 @@
             "type": "command",
             "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/quality-check-env.mjs",
             "timeout": 5000
+          },
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/xtrm-session-logger.mjs",
+            "timeout": 3000
           }
         ]
       }
@@ -80,6 +85,15 @@
             "type": "command",
             "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/gitnexus/gitnexus-hook.cjs",
             "timeout": 10000
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/xtrm-tool-logger.mjs",
+            "timeout": 3000
           }
         ]
       }

@@ -2,7 +2,7 @@
   "id": "using-xtrm",
   "description": "Inject using-xtrm session operating manual into system prompt at session start.",
   "version": "1",
-  "runtime": "claude",
+  "runtime": "both",
   "order": 5,
   "claude": {
     "hooks": [
@@ -11,5 +11,9 @@
         "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/using-xtrm-reminder.mjs"
       }
     ]
+  },
+  "pi": {
+    "extension": "config/pi/extensions/xtrm-loader/index.ts",
+    "events": ["session_start", "before_agent_start"]
   }
 }

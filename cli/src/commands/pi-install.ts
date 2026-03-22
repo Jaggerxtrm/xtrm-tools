@@ -5,6 +5,7 @@ import { spawnSync } from 'node:child_process';
 import { homedir } from 'node:os';
 import { findRepoRoot } from '../utils/repo-root.js';
 import { t, sym } from '../utils/theme.js';
+import { syncManagedPiExtensions } from '../utils/pi-extensions.js';
 
 const PI_AGENT_DIR = process.env.PI_AGENT_DIR || path.join(homedir(), '.pi', 'agent');
 
@@ -17,24 +18,6 @@ interface InstallSchema {
 function isPiInstalled(): boolean {
     const r = spawnSync('pi', ['--version'], { encoding: 'utf8', stdio: 'pipe' });
     return r.status === 0;
-}
-
-/**
- * List extension directories (contain package.json) in a base directory.
- */
-async function listExtensionDirs(baseDir: string): Promise<string[]> {
-    if (!await fs.pathExists(baseDir)) return [];
-    const entries = await fs.readdir(baseDir, { withFileTypes: true });
-    const extDirs: string[] = [];
-    for (const entry of entries) {
-        if (!entry.isDirectory()) continue;
-        const extPath = path.join(baseDir, entry.name);
-        const pkgPath = path.join(extPath, 'package.json');
-        if (await fs.pathExists(pkgPath)) {
-            extDirs.push(extPath);
-        }
-    }
-    return extDirs;
 }
 
 /**
@@ -65,34 +48,17 @@ export async function runPiInstall(dryRun: boolean = false): Promise<void> {
         console.log(t.success(`  ✓ pi ${v.stdout.trim()} already installed`));
     }
 
-    // Copy extensions
+    // Sync managed extensions (Pi auto-discovers from ~/.pi/agent/extensions)
     const extensionsSrc = path.join(piConfigDir, 'extensions');
     const extensionsDst = path.join(PI_AGENT_DIR, 'extensions');
-    if (await fs.pathExists(extensionsSrc)) {
-        if (!dryRun) {
-            await fs.ensureDir(PI_AGENT_DIR);
-            await fs.copy(extensionsSrc, extensionsDst, { overwrite: true });
-        }
-        console.log(t.success(`  ${sym.ok} extensions synced`));
-
-        // Register each extension with pi install -l
-        const extDirs = await listExtensionDirs(extensionsDst);
-        if (extDirs.length > 0) {
-            console.log(kleur.dim(`  Registering ${extDirs.length} extensions...`));
-            for (const extPath of extDirs) {
-                const extName = path.basename(extPath);
-                if (dryRun) {
-                    console.log(kleur.cyan(`  [DRY RUN] pi install -l ~/.pi/agent/extensions/${extName}`));
-                    continue;
-                }
-                const r = spawnSync('pi', ['install', '-l', extPath], { stdio: 'pipe', encoding: 'utf8' });
-                if (r.status === 0) {
-                    console.log(t.success(`  ${sym.ok} ${extName} registered`));
-                } else {
-                    console.log(kleur.yellow(`  ⚠ ${extName} — registration failed`));
-                }
-            }
-        }
+    const managedPackages = await syncManagedPiExtensions({
+        sourceDir: extensionsSrc,
+        targetDir: extensionsDst,
+        dryRun,
+        log: (message) => console.log(kleur.dim(message)),
+    });
+    if (managedPackages > 0) {
+        console.log(t.success(`  ${sym.ok} extensions synced (${managedPackages} packages)`));
     }
 
     // Install npm packages from schema

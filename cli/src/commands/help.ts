@@ -1,157 +1,101 @@
 import { Command } from 'commander';
-import kleur from 'kleur';
 
-import path from 'path';
-import fs from 'fs-extra';
-import { findRepoRoot } from '../utils/repo-root.js';
-declare const __dirname: string;
-
-const HOOK_CATALOG: Array<{ file: string; event: string; desc: string; beads?: true; sessionFlow?: true }> = [
-    { file: 'using-xtrm-reminder.mjs',      event: 'SessionStart',     desc: 'Injects using-xtrm session operating manual into system prompt' },
-    { file: 'gitnexus/gitnexus-hook.cjs',   event: 'PostToolUse',      desc: 'Adds GitNexus context for search and Serena tooling' },
-    { file: 'quality-check.cjs',            event: 'PostToolUse',      desc: 'Runs JS/TS quality checks on mutating edits' },
-    { file: 'quality-check.py',             event: 'PostToolUse',      desc: 'Runs Python quality checks on mutating edits' },
-    { file: 'quality-check-env.mjs',        event: 'SessionStart',     desc: 'Warns if tsc/ruff/eslint are missing at session start' },
-    { file: 'worktree-boundary.mjs',        event: 'PreToolUse',       desc: 'Blocks edits outside .xtrm/worktrees when in worktree session' },
-    { file: 'statusline.mjs',               event: 'statusLine',       desc: 'Renders 2-line status: XTRM model branch + claim/open issues' },
-    { file: 'beads-edit-gate.mjs',          event: 'PreToolUse',       desc: 'Blocks file edits if no beads issue is claimed',           beads: true },
-    { file: 'beads-commit-gate.mjs',        event: 'PreToolUse',       desc: 'Blocks commits when no beads issue is in progress',        beads: true },
-    { file: 'beads-stop-gate.mjs',          event: 'Stop',             desc: 'Blocks stop when there is an unclosed in_progress claim',  beads: true },
-    { file: 'beads-memory-gate.mjs',        event: 'Stop',             desc: 'Prompts memory save when claim was closed this session',   beads: true },
-    { file: 'beads-compact-save.mjs',       event: 'PreCompact',       desc: 'Saves claim state across /compact',                        beads: true },
-    { file: 'beads-compact-restore.mjs',    event: 'SessionStart',     desc: 'Restores claim state after /compact',                      beads: true },
-    { file: 'beads-claim-sync.mjs',         event: 'PostToolUse',      desc: 'Notifies on bd update --claim; auto-commits on bd close',  sessionFlow: true },
-];
-
-async function readSkillsFromDir(dir: string): Promise<Array<{ name: string; desc: string }>> {
-    if (!(await fs.pathExists(dir))) return [];
-    const entries = await fs.readdir(dir);
-    const skills: Array<{ name: string; desc: string }> = [];
-    for (const name of entries.sort()) {
-        const skillMd = path.join(dir, name, 'SKILL.md');
-        if (!(await fs.pathExists(skillMd))) continue;
-        const content = await fs.readFile(skillMd, 'utf8');
-        const m = content.match(/^description:\s*(.+)$/m);
-        skills.push({ name, desc: m ? m[1].replace(/^["']|["']$/g, '').trim() : '' });
-    }
-    return skills;
-}
-
-async function readProjectSkillsFromDir(dir: string): Promise<Array<{ name: string; desc: string }>> {
-    if (!(await fs.pathExists(dir))) return [];
-    const entries = await fs.readdir(dir);
-    const skills: Array<{ name: string; desc: string }> = [];
-    for (const name of entries.sort()) {
-        const readme = path.join(dir, name, 'README.md');
-        if (!(await fs.pathExists(readme))) continue;
-        const content = await fs.readFile(readme, 'utf8');
-        const descLine = content.split('\n').find(line => {
-            const trimmed = line.trim();
-            return Boolean(trimmed) && !trimmed.startsWith('#') && !trimmed.startsWith('[') && !trimmed.startsWith('<');
-        }) || '';
-        skills.push({ name, desc: descLine.replace(/[*_`]/g, '').trim() });
-    }
-    return skills;
-}
-
-function resolvePkgRootFallback(): string | null {
-    const candidates = [
-        path.resolve(__dirname, '../..'),
-        path.resolve(__dirname, '../../..'),
-    ];
-    const match = candidates.find(candidate =>
-        fs.existsSync(path.join(candidate, 'skills')) || fs.existsSync(path.join(candidate, 'project-skills'))
-    );
-    return match || null;
-}
-
-function col(s: string, width: number): string {
-    return s.length >= width ? s.slice(0, width - 1) + '\u2026' : s.padEnd(width);
+function section(title: string, lines: string[]): string {
+    return [title, ...lines, ''].join('\n');
 }
 
 export function createHelpCommand(): Command {
     return new Command('help')
-        .description('Show help information and component catalogue')
+        .description('Show rich CLI help in a plain text format')
         .action(async () => {
-            let repoRoot: string;
-            try { repoRoot = await findRepoRoot(); } catch { repoRoot = ''; }
-            const pkgRoot = resolvePkgRootFallback();
+            const blocks: string[] = [];
 
-            const skillsRoot = repoRoot || pkgRoot || '';
-            const skills = skillsRoot ? await readSkillsFromDir(path.join(skillsRoot, 'skills')) : [];
+            blocks.push(section('XTRM CLI', [
+                '  xtrm and xt are equivalent commands.',
+                '  Use xt for short workflow commands (xt claude, xt pi, xt end).',
+            ]));
 
-            const W = 80;
-            const hr = kleur.dim('-'.repeat(W));
-            const section = (title: string) => `\n${kleur.bold().cyan(title)}\n${hr}`;
+            blocks.push(section('USAGE', [
+                '  xtrm <command> [subcommand] [options]',
+                '  xt <command> [subcommand] [options]',
+            ]));
 
-            const installSection = [
-                section('INSTALL COMMANDS'),
-                '',
-                `  ${kleur.bold('xtrm install')}`,
-                `    ${kleur.dim('Install plugin + skills + hooks + MCP servers.')}`,
-                `    ${kleur.dim('Checks for beads+dolt and prompts to install if missing.')}`,
-                '',
-                `  ${kleur.dim('Flags: --dry-run  --yes / -y  --no-mcp  --force  --prune  --backport')}`,
-            ].join('\n');
+            blocks.push(section('CORE WORKFLOW', [
+                '  1) Start a runtime session in a worktree:',
+                '     xt claude [name]   or   xt pi [name]',
+                '  2) Do your work in that worktree/branch.',
+                '  3) Finish with:',
+                '     xt end',
+                '  4) Manage old worktrees when needed:',
+                '     xt worktree list | xt worktree clean',
+            ]));
 
-            const general = HOOK_CATALOG.filter(h => !h.beads && !h.sessionFlow);
-            const beads = HOOK_CATALOG.filter(h => h.beads);
-            const sessionFlow = HOOK_CATALOG.filter(h => h.sessionFlow);
-            const hookRows = (hooks: typeof HOOK_CATALOG) =>
-                hooks.map(h =>
-                    `  ${kleur.white(col(h.file, 34))}${kleur.yellow(col(h.event, 20))}${kleur.dim(h.desc)}`
-                ).join('\n');
+            blocks.push(section('PRIMARY COMMANDS', [
+                '  xtrm install [target-selector] [options]',
+                '    Install/sync tools, hooks, skills, and MCP wiring.',
+                '    Options: --dry-run, --yes/-y, --prune, --backport',
+                '',
+                '  xtrm status [--json]',
+                '    Show pending changes for detected environments.',
+                '',
+                '  xtrm clean [options]',
+                '    Remove orphaned hooks/skills and stale hook wiring entries.',
+                '    Options: --dry-run, --hooks-only, --skills-only, --yes/-y',
+                '',
+                '  xtrm init',
+                '    Initialize project-level workflow setup.',
+                '',
+                '  xtrm docs show [filter] [--raw] [--json]',
+                '    Show frontmatter for README/CHANGELOG/docs/*.md.',
+                '',
+                '  xtrm debug [options]',
+                '    Stream xtrm event log (tool calls, gates, session/bd lifecycle).',
+                '    Options: --follow, --all, --session <id>, --type <domain>, --json',
+                '',
+                '  xtrm reset',
+                '    Clear saved CLI preferences.',
+                '',
+                '  xtrm help',
+                '    Show this help page.',
+            ]));
 
-            const hooksSection = [
-                section('GLOBAL HOOKS'),
+            blocks.push(section('RUNTIME COMMANDS', [
+                '  xt claude [name]',
+                '    Launch Claude in a sandboxed xt/<name> worktree.',
+                '  xt claude install [--dry-run]',
+                '    Install/refresh xtrm Claude plugin + official plugins.',
+                '  xt claude status | xt claude doctor | xt claude reload',
                 '',
-                kleur.dim('  ' + col('File', 34) + col('Event', 20) + 'Description'),
-                '',
-                hookRows(general),
-                '',
-                `  ${kleur.dim('beads gate hooks (xtrm install all -- require beads+dolt):')}`,
-                hookRows(beads),
-                '',
-                `  ${kleur.dim('session-flow hooks:')}`,
-                hookRows(sessionFlow),
-            ].join('\n');
+                '  xt pi [name]',
+                '    Launch Pi in a sandboxed xt/<name> worktree.',
+                '  xt pi install [--dry-run]',
+                '    Non-interactive extension sync + package install.',
+                '  xt pi setup',
+                '    Interactive first-time setup.',
+                '  xt pi status | xt pi doctor | xt pi reload',
+            ]));
 
-            const skillRows = skills.map(s => {
-                const desc = s.desc.length > 46 ? s.desc.slice(0, 45) + '\u2026' : s.desc;
-                return `  ${kleur.white(col(s.name, 30))}${kleur.dim(desc)}`;
-            }).join('\n');
+            blocks.push(section('WORKTREE COMMANDS', [
+                '  xt worktree list',
+                '    List active xt/* worktrees and merge status.',
+                '  xt worktree clean [--yes/-y]',
+                '    Remove worktrees already merged into main.',
+                '  xt worktree remove <name> [--yes/-y]',
+                '    Remove a specific xt worktree by name or path.',
+            ]));
 
-            const skillsSection = [
-                section(`SKILLS  ${kleur.dim('(' + skills.length + ' available)')}`),
-                '',
-                skills.length ? skillRows : kleur.dim('  (none found -- run from repo root to see skills)'),
-            ].join('\n');
+            blocks.push(section('SESSION CLOSE', [
+                '  xt end [options]',
+                '    Rebase to origin/main, push, open PR, link issues, and optionally clean worktree.',
+                '    Options: --draft, --keep, --yes/-y',
+            ]));
 
-            const otherSection = [
-                section('OTHER COMMANDS'),
-                '',
-                `  ${kleur.bold('xtrm status')}          ${kleur.dim('Show pending changes without applying them')}`,
-                `  ${kleur.bold('xtrm clean')}           ${kleur.dim('Remove orphaned hooks and skills not in canonical repo')}`,
-                `  ${kleur.bold('xtrm init')}            ${kleur.dim('Initialize project data (beads, gitnexus, service-registry)')}`,
-                `  ${kleur.bold('xtrm docs show')}       ${kleur.dim('Display frontmatter for README, CHANGELOG, docs/*.md')}`,
-                `  ${kleur.bold('xtrm debug')}           ${kleur.dim('Watch xtrm hook and bd lifecycle events in real time')}`,
-                `  ${kleur.bold('xtrm reset')}           ${kleur.dim('Clear saved preferences and start fresh')}`,
-                `  ${kleur.bold('xtrm end')}             ${kleur.dim('Close worktree session: rebase, push, PR, link issues, cleanup')}`,
-                `  ${kleur.bold('xtrm worktree list')}   ${kleur.dim('List all active xt/* worktrees with status')}`,
-                `  ${kleur.bold('xtrm worktree clean')}  ${kleur.dim('Remove worktrees whose branch has been merged into main')}`,
-                `  ${kleur.bold('xtrm help')}            ${kleur.dim('Show this overview')}`,
-            ].join('\n');
+            blocks.push(section('NOTES', [
+                '  - Banner is shown only for xtrm install.',
+                '  - For command-level details, run: xtrm <command> --help',
+                '  - For subcommand details, run: xtrm <command> <subcommand> --help',
+            ]));
 
-            const resourcesSection = [
-                section('RESOURCES'),
-                '',
-                `  Repository  https://github.com/Jaggerxtrm/xtrm-tools`,
-                `  Issues      https://github.com/Jaggerxtrm/xtrm-tools/issues`,
-                '',
-                `  ${kleur.dim("Run 'xtrm <command> --help' for command-specific options.")}`,
-                '',
-            ].join('\n');
-
-            console.log([installSection, hooksSection, skillsSection, otherSection, resourcesSection].join('\n'));
+            process.stdout.write(blocks.join('\n'));
         });
 }

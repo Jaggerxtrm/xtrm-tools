@@ -14,8 +14,39 @@ function isWorktree(cwd: string): boolean {
 	return cwd.includes("/.xtrm/worktrees/") || cwd.includes("/.claude/worktrees/");
 }
 
+function getSessionId(ctx: any): string {
+	return ctx?.sessionManager?.getSessionId?.() ?? ctx?.sessionId ?? ctx?.session_id ?? process.pid.toString();
+}
+
+async function getSessionClaim(cwd: string, sessionId: string): Promise<string | null> {
+	const claimResult = await SubprocessRunner.run("bd", ["kv", "get", `claimed:${sessionId}`], { cwd });
+	if (claimResult.code !== 0) return null;
+	const claimId = claimResult.stdout.trim();
+	return claimId.length > 0 ? claimId : null;
+}
+
+async function isClaimStillInProgress(cwd: string, issueId: string): Promise<boolean> {
+	const showResult = await SubprocessRunner.run("bd", ["show", issueId, "--json"], { cwd });
+	if (showResult.code === 0 && showResult.stdout.trim()) {
+		try {
+			const parsed = JSON.parse(showResult.stdout);
+			const record = Array.isArray(parsed) ? parsed[0] : parsed;
+			if (record?.status) return record.status === "in_progress";
+		} catch {
+			// fall back to text parsing below
+		}
+	}
+
+	const listResult = await SubprocessRunner.run("bd", ["list", "--status=in_progress"], { cwd });
+	if (listResult.code !== 0) return false;
+	const issuePattern = new RegExp(`^\\s*[◐●]?\\s*${issueId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "m");
+	return issuePattern.test(listResult.stdout);
+}
+
 export default function (pi: ExtensionAPI) {
 	const getCwd = (ctx: any) => ctx.cwd || process.cwd();
+	let lastStopNoticeIssue: string | null = null;
+	let lastWorktreeReminderCwd: string | null = null;
 
 	// Claim sync: notify when a bd update --claim command is run.
 	pi.on("tool_result", async (event, ctx) => {
@@ -31,35 +62,33 @@ export default function (pi: ExtensionAPI) {
 		return { content: [...event.content, { type: "text", text }] };
 	});
 
-	// Stop gate: block agent end if there is an in_progress claimed issue.
-	// Also remind to run `xt end` when session ends inside a worktree.
+	// Stop gate: warn (non-blocking) if this session's claimed issue is still in progress.
+	// IMPORTANT: never call sendUserMessage() from agent_end, it always triggers a new turn.
 	pi.on("agent_end", async (_event, ctx) => {
 		const cwd = getCwd(ctx);
 		if (!EventAdapter.isBeadsProject(cwd)) return undefined;
 
-		const inProgressResult = await SubprocessRunner.run(
-			"bd",
-			["list", "--status=in_progress"],
-			{ cwd },
-		);
-		if (inProgressResult.code === 0 && inProgressResult.stdout) {
-			const output = inProgressResult.stdout;
-			const m = output.match(/Total:\s*\d+\s+issues?\s*\((\d+)\s+open,\s*(\d+)\s+in progress\)/);
-			const inProgressCount = m ? parseInt(m[2], 10) : 0;
-			if (inProgressCount > 0) {
-				const idMatch = output.match(/^\s*([a-zA-Z0-9._-]+)\s+in_progress/m);
-				const issueId = idMatch ? idMatch[1] : "<id>";
-				pi.sendUserMessage(
-					`Stop blocked: close your issue first: bd close ${issueId}`,
-				);
+		const sessionId = getSessionId(ctx);
+		const claimId = await getSessionClaim(cwd, sessionId);
+
+		if (claimId) {
+			const inProgress = await isClaimStillInProgress(cwd, claimId);
+			if (inProgress) {
+				if (lastStopNoticeIssue !== claimId && ctx.hasUI) {
+					ctx.ui.notify(`Stop blocked: close your issue first: bd close ${claimId}`, "warning");
+					lastStopNoticeIssue = claimId;
+				}
 				return undefined;
+			}
+
+			if (lastStopNoticeIssue === claimId) {
+				lastStopNoticeIssue = null;
 			}
 		}
 
-		if (isWorktree(cwd)) {
-			pi.sendUserMessage(
-				"Run `xt end` to create a PR and clean up this worktree.",
-			);
+		if (isWorktree(cwd) && ctx.hasUI && lastWorktreeReminderCwd !== cwd) {
+			ctx.ui.notify("Run `xt end` to create a PR and clean up this worktree.", "info");
+			lastWorktreeReminderCwd = cwd;
 		}
 
 		return undefined;

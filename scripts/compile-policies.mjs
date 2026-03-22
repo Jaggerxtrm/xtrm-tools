@@ -98,10 +98,15 @@ for (const [key, hookEntries] of eventGroups) {
 
 const output = JSON.stringify({ hooks: hooksOutput }, null, 2) + '\n';
 
-function listTopLevelTsFiles(dir) {
+function listPiExtensionDirs(dir) {
   if (!existsSync(dir) || !statSync(dir).isDirectory()) return [];
   return readdirSync(dir)
-    .filter((name) => name.endsWith('.ts'))
+    .filter((name) => {
+      const extDir = join(dir, name);
+      return statSync(extDir).isDirectory()
+        && existsSync(join(extDir, 'index.ts'))
+        && existsSync(join(extDir, 'package.json'));
+    })
     .sort();
 }
 
@@ -120,31 +125,29 @@ function runPiCheck(policiesData) {
     process.exit(1);
   }
 
-  const expectedNames = policyExtPaths.map((p) => p.replace(/^config\/pi\/extensions\//, ''));
+  const expectedNames = policyExtPaths
+    .map((p) => p.replace(/^config\/pi\/extensions\//, ''))
+    .map((p) => p.replace(/\/index\.ts$/, ''));
   const expectedSet = new Set(expectedNames);
 
-  const deployedNames = listTopLevelTsFiles(PI_DEPLOYED_EXT_DIR);
+  const deployedNames = listPiExtensionDirs(PI_DEPLOYED_EXT_DIR);
   const deployedSet = new Set(deployedNames);
 
   const missingDeployed = expectedNames.filter((name) => !deployedSet.has(name));
   const extraDeployed = deployedNames.filter((name) => !expectedSet.has(name));
 
-  if (missingDeployed.length > 0 || extraDeployed.length > 0) {
+  if (missingDeployed.length > 0) {
     console.error('✗ Pi extension deployment drift detected');
     console.error(`  Expected (from policies): ${expectedNames.length}`);
     console.error(`  Deployed (~/.pi/agent/extensions): ${deployedNames.length}`);
-
-    if (missingDeployed.length > 0) {
-      console.error('  Missing deployed files:');
-      missingDeployed.forEach((file) => console.error(`    - ${file}`));
-    }
-
-    if (extraDeployed.length > 0) {
-      console.error('  Extra deployed files:');
-      extraDeployed.forEach((file) => console.error(`    - ${file}`));
-    }
-
+    console.error('  Missing deployed extensions:');
+    missingDeployed.forEach((file) => console.error(`    - ${file}`));
     process.exit(1);
+  }
+
+  if (extraDeployed.length > 0) {
+    console.log('ℹ Additional installed Pi extensions not policy-managed:');
+    extraDeployed.forEach((file) => console.log(`  - ${file}`));
   }
 
   console.log('✓ Pi extensions are in sync with policy declarations');

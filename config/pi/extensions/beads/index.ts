@@ -1,8 +1,8 @@
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import { isToolCallEventType, isBashToolResult } from "@mariozechner/pi-coding-agent";
-import { SubprocessRunner, EventAdapter, Logger } from "../core/lib";
-
-const logger = new Logger({ namespace: "beads" });
+import { existsSync, unlinkSync } from "node:fs";
+import { join } from "node:path";
+import { SubprocessRunner, EventAdapter } from "../core/lib";
 
 export default function (pi: ExtensionAPI) {
 	const getCwd = (ctx: any) => ctx.cwd || process.cwd();
@@ -21,8 +21,51 @@ export default function (pi: ExtensionAPI) {
 
 	const getSessionClaim = async (sessionId: string, cwd: string): Promise<string | null> => {
 		const result = await SubprocessRunner.run("bd", ["kv", "get", `claimed:${sessionId}`], { cwd });
-		if (result.code === 0) return result.stdout.trim();
-		return null;
+		if (result.code !== 0) return null;
+		const claim = result.stdout.trim();
+		return claim.length > 0 ? claim : null;
+	};
+
+	const clearClaimMarker = async (sessionId: string, cwd: string) => {
+		await SubprocessRunner.run("bd", ["kv", "clear", `claimed:${sessionId}`], { cwd });
+	};
+
+	const isIssueInProgress = async (issueId: string, cwd: string): Promise<boolean | null> => {
+		const result = await SubprocessRunner.run("bd", ["show", issueId, "--json"], { cwd });
+		if (result.code !== 0 || !result.stdout.trim()) return null;
+		try {
+			const parsed = JSON.parse(result.stdout);
+			const issue = Array.isArray(parsed) ? parsed[0] : parsed;
+			if (!issue?.status) return null;
+			return issue.status === "in_progress";
+		} catch {
+			return null;
+		}
+	};
+
+	const getActiveClaim = async (sessionId: string, cwd: string): Promise<string | null> => {
+		const claim = await getSessionClaim(sessionId, cwd);
+		if (!claim) return null;
+
+		const inProgress = await isIssueInProgress(claim, cwd);
+		if (inProgress === false) {
+			await clearClaimMarker(sessionId, cwd);
+			return null;
+		}
+
+		return claim;
+	};
+
+	const getClosedThisSession = async (sessionId: string, cwd: string): Promise<string | null> => {
+		const result = await SubprocessRunner.run("bd", ["kv", "get", `closed-this-session:${sessionId}`], { cwd });
+		if (result.code !== 0) return null;
+		const issue = result.stdout.trim();
+		return issue.length > 0 ? issue : null;
+	};
+
+	const clearSessionMarkers = async (sessionId: string, cwd: string) => {
+		await SubprocessRunner.run("bd", ["kv", "clear", `claimed:${sessionId}`], { cwd });
+		await SubprocessRunner.run("bd", ["kv", "clear", `closed-this-session:${sessionId}`], { cwd });
 	};
 
 	const hasTrackableWork = async (cwd: string): Promise<boolean> => {
@@ -30,15 +73,6 @@ export default function (pi: ExtensionAPI) {
 		if (result.code === 0) {
 			const counts = EventAdapter.parseBdCounts(result.stdout);
 			if (counts) return (counts.open + counts.inProgress) > 0;
-		}
-		return false;
-	};
-
-	const hasInProgressWork = async (cwd: string): Promise<boolean> => {
-		const result = await SubprocessRunner.run("bd", ["list"], { cwd });
-		if (result.code === 0 && result.stdout.includes("Total:")) {
-			const m = result.stdout.match(/Total:\s*\d+\s+issues?\s*\((\d+)\s+open,\s*(\d+)\s+in progress\)/);
-			if (m) return parseInt(m[2], 10) > 0;
 		}
 		return false;
 	};
@@ -54,33 +88,30 @@ export default function (pi: ExtensionAPI) {
 		const sessionId = getSessionId(ctx);
 
 		if (EventAdapter.isMutatingFileTool(event)) {
-			const claim = await getSessionClaim(sessionId, cwd);
+			const claim = await getActiveClaim(sessionId, cwd);
 			if (!claim) {
-			    const hasWork = await hasTrackableWork(cwd);
-			    if (hasWork) {
-			        if (ctx.hasUI) {
-				        ctx.ui.notify("Beads: Edit blocked. Claim an issue first.", "warning");
-			        }
-			        return {
-                        block: true,
-                        reason: `No active claim for session ${sessionId}.\n  bd update <id> --claim\n`,
-                    };
-                }
-            }
+				const hasWork = await hasTrackableWork(cwd);
+				if (hasWork) {
+					if (ctx.hasUI) {
+						ctx.ui.notify("Beads: Edit blocked. Claim an issue first.", "warning");
+					}
+					return {
+						block: true,
+						reason: `No active claim for session ${sessionId}.\n  bd update <id> --claim\n`,
+					};
+				}
+			}
 		}
 
 		if (isToolCallEventType("bash", event)) {
 			const command = event.input.command;
 			if (command && /\bgit\s+commit\b/.test(command)) {
-				const claim = await getSessionClaim(sessionId, cwd);
+				const claim = await getActiveClaim(sessionId, cwd);
 				if (claim) {
-					const inProgress = await hasInProgressWork(cwd);
-					if (inProgress) {
-						return {
-							block: true,
-							reason: `Active claim [${claim}] — close it first.\n  bd close ${claim}\n  (Pi workflow) publish/merge are external steps; do not rely on xtrm finish.\n`,
-						};
-					}
+					return {
+						block: true,
+						reason: `Active claim [${claim}] — close it first.\n  bd close ${claim}\n  (Pi workflow) publish/merge are external steps; do not rely on xtrm finish.\n`,
+					};
 				}
 			}
 		}
@@ -89,65 +120,61 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	pi.on("tool_result", async (event, ctx) => {
-		if (isBashToolResult(event)) {
-			const command = event.input.command;
-			const sessionId = getSessionId(ctx);
+		if (!isBashToolResult(event)) return undefined;
 
-			// Auto-claim on bd update --claim regardless of exit code.
-			// bd returns exit 1 with "already in_progress" when status unchanged — still a valid claim intent.
-			if (command && /\bbd\s+update\b/.test(command) && /--claim\b/.test(command)) {
-				const issueMatch = command.match(/\bbd\s+update\s+(\S+)/);
-				if (issueMatch) {
-					const issueId = issueMatch[1];
-					const cwd = getCwd(ctx);
-					await SubprocessRunner.run("bd", ["kv", "set", `claimed:${sessionId}`, issueId], { cwd });
-					const claimNotice = `\n\n✅ **Beads**: Session \`${sessionId}\` claimed issue \`${issueId}\`. File edits are now unblocked.`;
-					return { content: [...event.content, { type: "text", text: claimNotice }] };
-				}
-			}
+		const command = event.input.command || "";
+		const sessionId = getSessionId(ctx);
+		const cwd = getCwd(ctx);
 
-			if (command && /\bbd\s+close\b/.test(command) && !event.isError) {
-				const reminder = "\n\n**Beads Insight**: Work completed. Consider if this session produced insights worth persisting via `bd remember`.";
-				const newContent = [...event.content, { type: "text", text: reminder }];
-				return { content: newContent };
+		// Auto-claim on bd update --claim regardless of exit code.
+		if (/\bbd\s+update\b/.test(command) && /--claim\b/.test(command)) {
+			const issueMatch = command.match(/\bbd\s+update\s+(\S+)/);
+			if (issueMatch) {
+				const issueId = issueMatch[1];
+				await SubprocessRunner.run("bd", ["kv", "set", `claimed:${sessionId}`, issueId], { cwd });
+				memoryGateFired = false;
+				const claimNotice = `\n\n✅ **Beads**: Session \`${sessionId}\` claimed issue \`${issueId}\`. File edits are now unblocked.`;
+				return { content: [...event.content, { type: "text", text: claimNotice }] };
 			}
 		}
+
+		if (/\bbd\s+close\b/.test(command) && !event.isError) {
+			const closeMatch = command.match(/\bbd\s+close\s+(\S+)/);
+			const closedIssueId = closeMatch?.[1] ?? null;
+			if (closedIssueId) {
+				await SubprocessRunner.run("bd", ["kv", "set", `closed-this-session:${sessionId}`, closedIssueId], { cwd });
+				memoryGateFired = false;
+			}
+			const reminder = "\n\n**Beads Insight**: Work completed. Consider if this session produced insights worth persisting via `bd remember`.";
+			return { content: [...event.content, { type: "text", text: reminder }] };
+		}
+
 		return undefined;
 	});
 
-	// Dual safety net: warn about unclosed claims when session ends (non-blocking)
-	const notifySessionEnd = async (ctx: any) => {
-		const cwd = getCwd(ctx);
-		if (!EventAdapter.isBeadsProject(cwd)) return;
-		const sessionId = getSessionId(ctx);
-		const claim = await getSessionClaim(sessionId, cwd);
-		if (!claim) return;
-
-		const message = `Beads: session ending with active claim [${claim}]`;
-		if (ctx.hasUI) {
-			ctx.ui.notify(message, "warning");
-		} else {
-			logger.warn(message);
-		}
-	};
-
-	// Memory gate: if the session's claimed issue was closed, prompt for insights.
-	// Uses sendUserMessage to trigger a new agent turn (Pi has no blocking stop hook).
-	// memoryGateFired prevents re-triggering on the follow-up agent_end.
+	// Memory gate: if this session closed an issue, prompt for insight persistence.
+	// Uses sendUserMessage to trigger a new turn in Pi (non-blocking alternative to Claude Stop hook).
 	const triggerMemoryGateIfNeeded = async (ctx: any) => {
-		if (memoryGateFired) return;
 		const cwd = getCwd(ctx);
 		if (!EventAdapter.isBeadsProject(cwd)) return;
 		const sessionId = getSessionId(ctx);
-		const claimId = await getSessionClaim(sessionId, cwd);
-		if (!claimId) return;
 
-		const result = await SubprocessRunner.run("bd", ["list", "--status=closed"], { cwd });
-		if (result.code !== 0 || !result.stdout.includes(claimId)) return;
+		const markerPath = join(cwd, ".beads", ".memory-gate-done");
+		if (existsSync(markerPath)) {
+			try { unlinkSync(markerPath); } catch { /* ignore */ }
+			await clearSessionMarkers(sessionId, cwd);
+			memoryGateFired = false;
+			return;
+		}
+
+		if (memoryGateFired) return;
+
+		const closedIssueId = await getClosedThisSession(sessionId, cwd);
+		if (!closedIssueId) return;
 
 		memoryGateFired = true;
 		pi.sendUserMessage(
-			`🧠 Memory gate: claim \`${claimId}\` was closed this session.\n` +
+			`🧠 Memory gate: claim \`${closedIssueId}\` was closed this session.\n` +
 			`For each closed issue, worth persisting?\n` +
 			`  YES → \`bd remember "<insight>"\`\n` +
 			`  NO  → note "nothing to persist"\n` +
@@ -156,13 +183,12 @@ export default function (pi: ExtensionAPI) {
 	};
 
 	pi.on("agent_end", async (_event, ctx) => {
-		await notifySessionEnd(ctx);
 		await triggerMemoryGateIfNeeded(ctx);
 		return undefined;
 	});
 
 	pi.on("session_shutdown", async (_event, ctx) => {
-		await notifySessionEnd(ctx);
+		await triggerMemoryGateIfNeeded(ctx);
 		return undefined;
 	});
 }

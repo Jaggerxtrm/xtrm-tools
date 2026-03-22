@@ -21,7 +21,7 @@
     ]
   },
   "pi": {
-    "extension": "config/pi/extensions/quality-gates.ts",
+    "extension": "config/pi/extensions/quality-gates/index.ts",
     "events": ["tool_result"]
   }
 }

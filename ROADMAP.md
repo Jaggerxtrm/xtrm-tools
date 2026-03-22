@@ -14,6 +14,31 @@ Planned improvements and feature additions for Claude Code skills.
 
 ---
 
+## Pi UX Compatibility — `pi-dex` + XTRM Footer Coexistence
+
+### Current State
+
+`pi-dex` and `custom-footer` both call `ctx.ui.setFooter(...)`. The last extension to apply wins, so PIDEX chrome refresh can hide XTRM footer telemetry (bd claim chip, context %, branch metadata).
+
+### Short-Term Mitigation (implemented)
+
+- `custom-footer` now re-applies footer ownership on Pi chrome refresh events (`session_start`, `session_switch`, `session_fork`, `model_select`) with a delayed reclaim pass.
+
+### Long-Term Fix
+
+Add an explicit footer toggle in `pi-dex` preferences and command surface so users can keep PIDEX theme/header/tooling while delegating footer rendering to XTRM.
+
+**Proposed API:**
+- Preference: `showFooter: boolean` (default `true`)
+- Command: `/pidex-footer on|off`
+- Behavior: when `showFooter=false`, `pi-dex` skips `ctx.ui.setFooter(...)`
+
+**Priority:** 🟡 Medium
+
+**Timeline:** Next minor release after installer parity stabilization
+
+---
+
 ## `install-service-skills` — Include `AGENTS.md` in Installation
 
 ### Current State

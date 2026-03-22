@@ -99,11 +99,10 @@ export default function (pi: ExtensionAPI) {
 		return "";
 	};
 
-	pi.on("session_start", async (_event, ctx) => {
-		capturedCtx = ctx;
-		// Get session ID from sessionManager/context (prefer UUID, consistent with hooks)
-		sessionId = ctx.sessionManager?.getSessionId?.() ?? ctx.sessionId ?? ctx.session_id ?? process.pid.toString();
+	let footerReapplyTimer: ReturnType<typeof setTimeout> | null = null;
 
+	const applyCustomFooter = (ctx: any) => {
+		capturedCtx = ctx;
 		ctx.ui.setFooter((tui, theme, footerData) => {
 			requestRender = () => tui.requestRender();
 			const unsub = footerData.onBranchChange(() => tui.requestRender());
@@ -133,7 +132,6 @@ export default function (pi: ExtensionAPI) {
 					const modelChip = chip(modelId);
 
 					const sep = " ";
-
 					const brandModel = `${brand} ${modelChip}`;
 					const beadChip = buildBeadChip();
 					const leftParts = [brandModel, usageStr];
@@ -141,11 +139,46 @@ export default function (pi: ExtensionAPI) {
 					leftParts.push(cwdStr);
 					if (branchStr) leftParts.push(branchStr);
 
-					const left = leftParts.join(sep);
-					return [truncateToWidth(left, width)];
+					return [truncateToWidth(leftParts.join(sep), width)];
 				},
 			};
 		});
+	};
+
+	const scheduleFooterReapply = (ctx: any, delayMs = 40) => {
+		if (footerReapplyTimer) clearTimeout(footerReapplyTimer);
+		footerReapplyTimer = setTimeout(() => {
+			applyCustomFooter(ctx);
+			footerReapplyTimer = null;
+		}, delayMs);
+	};
+
+	pi.on("session_start", async (_event, ctx) => {
+		capturedCtx = ctx;
+		// Get session ID from sessionManager/context (prefer UUID, consistent with hooks)
+		sessionId = ctx.sessionManager?.getSessionId?.() ?? ctx.sessionId ?? ctx.session_id ?? process.pid.toString();
+		applyCustomFooter(ctx);
+		// pi-dex reapplies footer on session start with setTimeout(0); reclaim after that pass.
+		scheduleFooterReapply(ctx);
+	});
+
+	pi.on("session_switch", async (_event, ctx) => {
+		scheduleFooterReapply(ctx);
+	});
+
+	pi.on("session_fork", async (_event, ctx) => {
+		scheduleFooterReapply(ctx);
+	});
+
+	pi.on("model_select", async (_event, ctx) => {
+		scheduleFooterReapply(ctx);
+	});
+
+	pi.on("session_shutdown", async () => {
+		if (footerReapplyTimer) {
+			clearTimeout(footerReapplyTimer);
+			footerReapplyTimer = null;
+		}
 	});
 
 	// Bust the bead cache immediately after any bd write

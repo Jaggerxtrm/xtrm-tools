@@ -71,14 +71,14 @@ export class ExtensionHarness {
 
 	async emit(event: string, data: any) {
 		if (this.handlers[event]) {
-            let lastResult: any = undefined;
+			let lastResult: any = undefined;
 			for (const handler of this.handlers[event]) {
-				console.log("EXECUTING HANDLER"); const res = await handler(data, this.ctx); console.log("HANDLER RESULT", res);
+				const res = await handler(data, this.ctx);
 				if (res !== undefined) {
-                    lastResult = res; console.log("EMIT FOUND RESULT", res);
-                }
+					lastResult = res;
+				}
 			}
-            return lastResult;
+			return lastResult;
 		}
 		return undefined;
 	}

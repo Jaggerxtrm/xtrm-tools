@@ -66,7 +66,7 @@ Pi will silently ignore extensions that lack `package.json` with an `exports` fi
 | `plan-mode` | Planning phase UI with beads integration |
 | `quality-gates` | Quality gate enforcement hooks |
 | `service-skills` | Service skill catalog activation |
-| `session-flow` | Claim sync (notifies on bd update --claim), stop gate (blocks agent end with unclosed in_progress claim), xt end reminder when session ends in a worktree |
+| `session-flow` | Claim sync (notifies on bd update --claim), stop warnings for this session's claimed issue, xt end reminder when session ends in a worktree |
 | `todo` | Todo tracking extension |
 | `xtrm-loader` | xtrm config loading at session start |
 
@@ -86,6 +86,15 @@ Both paths:
 1. Copy `config/pi/extensions/` → `~/.pi/agent/extensions/` (overwrite)
 2. Register each extension: `pi install -l ~/.pi/agent/extensions/<name>`
 3. Install npm packages from `config/pi/install-schema.json`
+
+## Event Loop Safety
+
+When handling `agent_end`, avoid `pi.sendUserMessage(...)` unless you explicitly want to start a new turn. Per Pi extension docs, `sendUserMessage` always triggers a turn, which can create infinite stop/reminder loops if called from end-of-agent handlers.
+
+Preferred patterns in `agent_end`/`session_shutdown`:
+- Use `ctx.ui.notify(...)` for user-visible reminders.
+- If a reminder must be injected into chat, use `pi.sendMessage(...)` without `triggerTurn`.
+- De-duplicate repeated reminders (track last-issue or last-worktree in extension state).
 
 ## Drift Detection
 

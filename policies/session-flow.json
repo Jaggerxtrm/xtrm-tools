@@ -20,7 +20,7 @@
     ]
   },
   "pi": {
-    "extension": "config/pi/extensions/session-flow.ts",
+    "extension": "config/pi/extensions/session-flow/index.ts",
     "events": ["tool_result", "agent_end"]
   }
 }

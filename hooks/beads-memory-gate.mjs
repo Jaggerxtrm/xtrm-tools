@@ -8,8 +8,6 @@
 // Installed by: xtrm install
 
 import { execSync } from 'node:child_process';
-import { existsSync, unlinkSync } from 'node:fs';
-import { join } from 'node:path';
 import { readHookInput } from './beads-gate-core.mjs';
 import { resolveCwd, resolveSessionId, isBeadsProject, getSessionClaim, clearSessionClaim } from './beads-gate-utils.mjs';
 import { memoryPromptMessage } from './beads-gate-messages.mjs';
@@ -23,10 +21,25 @@ if (!cwd || !isBeadsProject(cwd)) process.exit(0);
 
 const sessionId = resolveSessionId(input);
 
-// Agent signals evaluation complete by touching this marker, then stops again
-const marker = join(cwd, '.beads', '.memory-gate-done');
-if (existsSync(marker)) {
-  try { unlinkSync(marker); } catch { /* ignore */ }
+// Agent signals evaluation complete via bd kv (works across worktree redirects)
+let memoryGateDone = false;
+try {
+  execSync(`bd kv get "memory-gate-done:${sessionId}"`, {
+    cwd,
+    stdio: ['pipe', 'pipe', 'pipe'],
+    timeout: 5000,
+  });
+  memoryGateDone = true;
+} catch { /* key not set → not done */ }
+
+if (memoryGateDone) {
+  try {
+    execSync(`bd kv clear "memory-gate-done:${sessionId}"`, {
+      cwd,
+      stdio: ['pipe', 'pipe', 'pipe'],
+      timeout: 5000,
+    });
+  } catch { /* ignore */ }
   // Clear the claim and closed-this-session marker
   clearSessionClaim(sessionId, cwd);
   try {
@@ -66,7 +79,7 @@ try {
 
 if (!closedIssueId) process.exit(0);
 
-const memoryMessage = memoryPromptMessage();
+const memoryMessage = memoryPromptMessage(closedIssueId, sessionId);
 logEvent({
   cwd,
   runtime: 'claude',

@@ -56,13 +56,16 @@ export function stopBlockMessage(summary, claimed) {
 
 // ── Memory gate messages ─────────────────────────────────────────
 
-export function memoryPromptMessage(claimId) {
+export function memoryPromptMessage(claimId, sessionId) {
   const claimLine = claimId ? `claim \`${claimId}\` was closed.\n` : '';
+  const ackCmd = sessionId
+    ? `bd kv set "memory-gate-done:${sessionId}" 1`
+    : 'touch .beads/.memory-gate-done';
   return (
     `\u25cf Memory gate: ${claimLine}` +
     'Ask: "Would this be useful in 14 days on a fresh session?"\n' +
     '  YES → `bd remember "<insight>"`\n' +
     '  NO  → note "nothing to persist"\n' +
-    '  Then: `touch .beads/.memory-gate-done`\n'
+    `  Then: \`${ackCmd}\`\n`
   );
 }

@@ -1,6 +1,6 @@
 {
   "name": "xtrm-tools",
-  "version": "0.5.35",
+  "version": "0.5.36",
   "description": "Claude Code tools installer (skills, hooks, MCP servers)",
   "license": "MIT",
   "type": "module",

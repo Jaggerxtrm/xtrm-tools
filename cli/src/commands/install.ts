@@ -63,7 +63,7 @@ function printNextSteps(): void {
     console.log(d('  In your project:'));
     console.log(`  xtrm init                     ${d('initialize beads + gitnexus for this repo')}`);
     console.log(`  bd prime                      ${d('load session context and available work')}`);
-    console.log(`  bd ready                      ${d('find unblocked issues to work on')}`);
+    console.log(`  bv --robot-triage             ${d('graph-aware triage — find highest-impact work')}`);
     console.log(`  bd update <id> --claim        ${d('claim an issue before editing any file')}`);
     console.log(`  bd close <id>                 ${d('close when done — auto-commits')}`);
 
@@ -499,6 +499,38 @@ export function createInstallCommand(): Command {
                         console.log('');
                     } else {
                         console.log(t.muted('  ℹ Skipped. Re-run after installing beads+dolt.\n'));
+                    }
+                }
+            }
+
+            // bv (beads_viewer)
+            if (!backport) {
+                console.log(t.bold('\n  ⚙  bv  (beads graph triage)'));
+
+                const bvOk = (() => { try { execSync('bv --version', { stdio: 'ignore' }); return true; } catch { return false; } })();
+
+                if (bvOk) {
+                    console.log(t.success('  ✓ bv already installed\n'));
+                } else {
+                    let doInstall = effectiveYes;
+                    if (!effectiveYes) {
+                        const { install } = await prompts({
+                            type: 'confirm',
+                            name: 'install',
+                            message: 'Install bv (beads_viewer)? — graph-aware triage for bd issues',
+                            initial: true,
+                        });
+                        doInstall = install;
+                    }
+
+                    if (doInstall) {
+                        console.log(t.muted('\n  Installing bv...'));
+                        spawnSync('bash', ['-c',
+                            'curl -fsSL https://raw.githubusercontent.com/Jaggerxtrm/beads_viewer/main/scripts/install-bv.sh | bash',
+                        ], { stdio: 'inherit' });
+                        console.log(t.success('  ✓ bv installed\n'));
+                    } else {
+                        console.log(t.muted('  ℹ Skipped.\n'));
                     }
                 }
             }

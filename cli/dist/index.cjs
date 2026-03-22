@@ -41050,7 +41050,7 @@ function printNextSteps() {
   console.log(d("  In your project:"));
   console.log(`  xtrm init                     ${d("initialize beads + gitnexus for this repo")}`);
   console.log(`  bd prime                      ${d("load session context and available work")}`);
-  console.log(`  bd ready                      ${d("find unblocked issues to work on")}`);
+  console.log(`  bv --robot-triage             ${d("graph-aware triage \u2014 find highest-impact work")}`);
   console.log(`  bd update <id> --claim        ${d("claim an issue before editing any file")}`);
   console.log(`  bd close <id>                 ${d("close when done \u2014 auto-commits")}`);
   console.log("");
@@ -41384,6 +41384,41 @@ function createInstallCommand() {
           console.log("");
         } else {
           console.log(t.muted("  \u2139 Skipped. Re-run after installing beads+dolt.\n"));
+        }
+      }
+    }
+    if (!backport) {
+      console.log(t.bold("\n  \u2699  bv  (beads graph triage)"));
+      const bvOk = (() => {
+        try {
+          (0, import_child_process2.execSync)("bv --version", { stdio: "ignore" });
+          return true;
+        } catch {
+          return false;
+        }
+      })();
+      if (bvOk) {
+        console.log(t.success("  \u2713 bv already installed\n"));
+      } else {
+        let doInstall = effectiveYes;
+        if (!effectiveYes) {
+          const { install } = await (0, import_prompts.default)({
+            type: "confirm",
+            name: "install",
+            message: "Install bv (beads_viewer)? \u2014 graph-aware triage for bd issues",
+            initial: true
+          });
+          doInstall = install;
+        }
+        if (doInstall) {
+          console.log(t.muted("\n  Installing bv..."));
+          (0, import_child_process3.spawnSync)("bash", [
+            "-c",
+            "curl -fsSL https://raw.githubusercontent.com/Jaggerxtrm/beads_viewer/main/scripts/install-bv.sh | bash"
+          ], { stdio: "inherit" });
+          console.log(t.success("  \u2713 bv installed\n"));
+        } else {
+          console.log(t.muted("  \u2139 Skipped.\n"));
         }
       }
     }

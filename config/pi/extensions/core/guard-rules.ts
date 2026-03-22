@@ -64,8 +64,6 @@ export const SAFE_BASH_PREFIXES = [
 	"stat",
 	"du",
 	"tree",
-	// Allowed writes (specific paths)
-	"touch .beads/",
 ];
 
 export const DANGEROUS_BASH_PATTERNS = [

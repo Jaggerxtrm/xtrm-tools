@@ -120,9 +120,9 @@ bd close <id> --reason "Done"
 - `beads-stop-gate` blocks session end while a claim is in_progress
 - `beads-memory-gate` fires at Stop if a claim was closed this session, prompting memory persistence
 
-Acknowledge the memory gate with:
+Acknowledge the memory gate by running the `bd kv set` command shown in the gate message (it includes the session ID):
 ```bash
-touch .beads/.memory-gate-done
+bd kv set "memory-gate-done:<session-id>" 1
 ```
 
 ## Compact / Resume Continuity

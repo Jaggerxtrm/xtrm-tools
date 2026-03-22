@@ -1,7 +1,5 @@
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import { isToolCallEventType, isBashToolResult } from "@mariozechner/pi-coding-agent";
-import { existsSync, unlinkSync } from "node:fs";
-import { join } from "node:path";
 import { SubprocessRunner, EventAdapter } from "../core/lib";
 
 // ─── Autocommit helpers (mirrors hooks/beads-claim-sync.mjs) ─────────────────
@@ -222,9 +220,9 @@ export default function (pi: ExtensionAPI) {
 		if (!EventAdapter.isBeadsProject(cwd)) return;
 		const sessionId = getSessionId(ctx);
 
-		const markerPath = join(cwd, ".beads", ".memory-gate-done");
-		if (existsSync(markerPath)) {
-			try { unlinkSync(markerPath); } catch { /* ignore */ }
+		const markerCheck = await SubprocessRunner.run("bd", ["kv", "get", `memory-gate-done:${sessionId}`], { cwd });
+		if (markerCheck.code === 0) {
+			await SubprocessRunner.run("bd", ["kv", "clear", `memory-gate-done:${sessionId}`], { cwd });
 			await clearSessionMarkers(sessionId, cwd);
 			memoryGateFired = false;
 			return;
@@ -241,7 +239,7 @@ export default function (pi: ExtensionAPI) {
 			`For each closed issue, worth persisting?\n` +
 			`  YES → \`bd remember "<insight>"\`\n` +
 			`  NO  → note "nothing to persist"\n` +
-			`  Then acknowledge: \`touch .beads/.memory-gate-done\``,
+			`  Then acknowledge: \`bd kv set "memory-gate-done:${sessionId}" 1\``,
 		);
 	};
 

@@ -18,7 +18,7 @@
 | **Edit** | Write/Edit without active claim | `bd update <id> --claim` |
 | **Commit** | `git commit` while claim is open | `bd close <id>` first, then commit |
 | **Stop** | Session end with unclosed claim | `bd close <id>` |
-| **Memory** | Auto-fires at session end if issue closed | `bd remember "<insight>"` then `touch .beads/.memory-gate-done` |
+| **Memory** | Auto-fires at session end if issue closed | `bd remember "<insight>"` then run the `bd kv set` command shown in the gate message |
 
 > `bd close` auto-commits via `git commit -am`. Do not double-commit after closing.
 

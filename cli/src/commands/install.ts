@@ -358,14 +358,10 @@ export async function installPlugin(repoRoot: string, dryRun: boolean): Promise<
 
 function installUserStatusLine(dryRun: boolean): void {
     try {
-        const pluginsFile = path.join(os.homedir(), '.claude', 'plugins', 'installed_plugins.json');
-        const plugins = JSON.parse(fs.readFileSync(pluginsFile, 'utf8'));
-        const entries: any[] = Object.entries(plugins?.plugins ?? {})
-            .filter(([k]) => k.startsWith('xtrm-tools@'))
-            .flatMap(([, v]) => v as any[]);
-        if (!entries.length) return;
-
-        const scriptPath = path.join(entries[0].installPath, 'hooks', 'statusline.mjs');
+        // Resolve statusline.mjs from the xtrm-tools package root — same pattern as xtrmPkgRoot.
+        // __dirname in the CJS bundle is cli/dist/, so ../../hooks/ is always the correct path.
+        // This avoids depending on installed_plugins.json which may be absent on fresh machines.
+        const scriptPath = path.resolve(__dirname, '..', '..', 'hooks', 'statusline.mjs');
         if (!fs.existsSync(scriptPath)) return;
 
         const settingsPath = path.join(os.homedir(), '.claude', 'settings.json');

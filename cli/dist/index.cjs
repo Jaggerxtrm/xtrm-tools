@@ -41283,11 +41283,7 @@ async function installPlugin(repoRoot, dryRun) {
 }
 function installUserStatusLine(dryRun) {
   try {
-    const pluginsFile = import_path12.default.join(import_os5.default.homedir(), ".claude", "plugins", "installed_plugins.json");
-    const plugins = JSON.parse(import_fs_extra12.default.readFileSync(pluginsFile, "utf8"));
-    const entries = Object.entries(plugins?.plugins ?? {}).filter(([k]) => k.startsWith("xtrm-tools@")).flatMap(([, v]) => v);
-    if (!entries.length) return;
-    const scriptPath = import_path12.default.join(entries[0].installPath, "hooks", "statusline.mjs");
+    const scriptPath = import_path12.default.resolve(__dirname, "..", "..", "hooks", "statusline.mjs");
     if (!import_fs_extra12.default.existsSync(scriptPath)) return;
     const settingsPath = import_path12.default.join(import_os5.default.homedir(), ".claude", "settings.json");
     const settings = import_fs_extra12.default.existsSync(settingsPath) ? JSON.parse(import_fs_extra12.default.readFileSync(settingsPath, "utf8")) : {};

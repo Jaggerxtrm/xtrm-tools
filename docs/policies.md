@@ -31,7 +31,7 @@ Each policy declares which runtime it targets (`claude`, `pi`, or `both`) and wh
 | `quality-gates-env.json` | both | Verifies tsc/eslint/ruff are available at session start; warns if enforcement would be silently degraded |
 | `service-skills.json` | pi | Injects service catalog + detects skill doc drift (only when `service-registry.json` present) |
 | `session-flow.json` | both | Claim sync (auto-commit on `bd close`), stop gate, `xt end` worktree reminder |
-| `using-xtrm.json` | claude | Injects `using-xtrm` session operating manual at session start |
+| `using-xtrm.json` | both | Injects `using-xtrm` session operating manual at session start (Claude hook + Pi xtrm-loader extension) |
 | `worktree-boundary.json` | claude | Blocks Write/Edit outside active worktree when inside `.xtrm/worktrees/<name>` |
 
 ## Adding a Policy

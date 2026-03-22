@@ -25,8 +25,18 @@ function findMarkdownFiles(dir: string, basePath: string = ""): string[] {
 	return results;
 }
 
-// Path to global xtrm skills
-const GLOBAL_SKILLS_DIR = path.join(homedir(), ".agents", "skills");
+function resolveUsingXtrmSkillPath(cwd: string): string | null {
+	const candidates = [
+		path.join(homedir(), ".agents", "skills", "using-xtrm", "SKILL.md"),
+		path.join(homedir(), ".pi", "agent", "skills", "using-xtrm", "SKILL.md"),
+		path.join(cwd, ".pi", "skills", "using-xtrm", "SKILL.md"),
+	];
+
+	for (const candidate of candidates) {
+		if (fs.existsSync(candidate)) return candidate;
+	}
+	return null;
+}
 
 /**
  * Load a skill file, stripping YAML frontmatter.
@@ -34,8 +44,7 @@ const GLOBAL_SKILLS_DIR = path.join(homedir(), ".agents", "skills");
 function loadSkillContent(skillPath: string): string | null {
 	try {
 		const content = fs.readFileSync(skillPath, "utf8");
-		// Strip YAML frontmatter (--- ... ---)
-		return content.replace(/^---\n[\s\S]*?\n---\n/, "").trim();
+		return content.replace(/^---[\s\S]*?---\n/, "").trim();
 	} catch {
 		return null;
 	}
@@ -49,18 +58,18 @@ export default function (pi: ExtensionAPI) {
 		const cwd = ctx.cwd;
 		const contextParts: string[] = [];
 
-		// 0. Load using-xtrm skill (global)
-		const usingXtrmPath = path.join(GLOBAL_SKILLS_DIR, "using-xtrm", "SKILL.md");
-		usingXtrmContent = loadSkillContent(usingXtrmPath);
-		if (usingXtrmContent && ctx.hasUI) {
-			logger.info("Loaded using-xtrm skill from global skills directory");
+		// 0. Load using-xtrm skill (global/project fallback paths)
+		const usingXtrmPath = resolveUsingXtrmSkillPath(cwd);
+		usingXtrmContent = usingXtrmPath ? loadSkillContent(usingXtrmPath) : null;
+		if (usingXtrmPath && usingXtrmContent) {
+			logger.info(`Loaded using-xtrm skill from ${usingXtrmPath}`);
 		}
 
 		// 1. Architecture & Roadmap
 		const roadmapPaths = [
 			path.join(cwd, "architecture", "project_roadmap.md"),
 			path.join(cwd, "ROADMAP.md"),
-			path.join(cwd, "architecture", "index.md")
+			path.join(cwd, "architecture", "index.md"),
 		];
 
 		for (const p of roadmapPaths) {
@@ -76,10 +85,14 @@ export default function (pi: ExtensionAPI) {
 		if (fs.existsSync(rulesDir)) {
 			const ruleFiles = findMarkdownFiles(rulesDir);
 			if (ruleFiles.length > 0) {
-				const rulesContent = (await Promise.all(ruleFiles.map(async f => {
-					const content = await fs.promises.readFile(path.join(rulesDir, f), "utf8");
-					return `### Rule: ${f}\n${content}`;
-				}))).join("\n\n");
+				const rulesContent = (
+					await Promise.all(
+						ruleFiles.map(async (f) => {
+							const content = await fs.promises.readFile(path.join(rulesDir, f), "utf8");
+							return `### Rule: ${f}\n${content}`;
+						}),
+					)
+				).join("\n\n");
 				contextParts.push(`## Project Rules\n\n${rulesContent}`);
 			}
 		}
@@ -89,16 +102,17 @@ export default function (pi: ExtensionAPI) {
 		if (fs.existsSync(skillsDir)) {
 			const skillFiles = findMarkdownFiles(skillsDir);
 			if (skillFiles.length > 0) {
-				const skillsContent = skillFiles.map(f => {
-					// We only want to list the paths/names so the agent knows what it can read
-					return `- ${f} (Path: .claude/skills/${f})`;
-				}).join("\n");
-				contextParts.push(`## Available Project Skills\n\nExisting service skills and workflows found in .claude/skills/:\n\n${skillsContent}\n\nUse the read tool to load any of these skills if relevant to the current task.`);
+				const skillsContent = skillFiles
+					.map((f) => `- ${f} (Path: .claude/skills/${f})`)
+					.join("\n");
+				contextParts.push(
+					`## Available Project Skills\n\nExisting service skills and workflows found in .claude/skills/:\n\n${skillsContent}\n\nUse the read tool to load any of these skills if relevant to the current task.`,
+				);
 			}
 		}
 
 		projectContext = contextParts.join("\n\n---\n\n");
-		
+
 		if (projectContext && ctx.hasUI) {
 			ctx.ui.notify("XTRM-Loader: Project context and skills indexed", "info");
 		}
@@ -106,21 +120,21 @@ export default function (pi: ExtensionAPI) {
 
 	pi.on("before_agent_start", async (event) => {
 		const parts: string[] = [];
-		
+
 		// Prepend using-xtrm skill (session operating manual)
 		if (usingXtrmContent) {
 			parts.push("# XTRM Session Operating Manual\n\n" + usingXtrmContent);
 		}
-		
+
 		// Append project context
 		if (projectContext) {
 			parts.push("# Project Intelligence Context\n\n" + projectContext);
 		}
-		
+
 		if (parts.length === 0) return undefined;
 
 		return {
-			systemPrompt: event.systemPrompt + "\n\n" + parts.join("\n\n---\n\n")
+			systemPrompt: event.systemPrompt + "\n\n" + parts.join("\n\n---\n\n"),
 		};
 	});
 }

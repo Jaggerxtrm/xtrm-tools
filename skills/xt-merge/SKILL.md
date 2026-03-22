@@ -1,5 +1,5 @@
 ---
-name: merge-prs
+name: xt-merge
 description: |
   Merges queued PRs from xt worktree sessions in the correct order (FIFO), maintaining linear
   history by rebasing remaining PRs after each merge. Use this skill whenever the user has

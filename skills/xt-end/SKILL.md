@@ -60,7 +60,7 @@ xt end
 
 ### If it succeeds
 You'll see:
-- ✓ Rebased onto origin/main
+- ✓ Rebased onto origin/<default-branch>
 - ✓ Pushed branch
 - ✓ PR created: <url>
 - ✓ Linked PR to N issue(s)
@@ -84,7 +84,7 @@ Then re-run `xt end`. If the conflicts are complex, explain what each file confl
 
 Usually a stale remote ref. Try:
 ```bash
-git fetch origin main
+git fetch origin
 xt end
 ```
 
@@ -117,9 +117,9 @@ If the worktree was removed: confirm that too.
 
 ## Edge cases
 
-**Already on main branch**: `xt end` will error — you're not in an xt session. Don't run it from main.
+**Already on main/master branch**: `xt end` will error — you're not in an xt session. Don't run it from the default branch.
 
-**No commits yet on branch**: The PR will have no changes. This usually means something went wrong earlier. Verify with `git log origin/main..HEAD`.
+**No commits yet on branch**: The PR will have no changes. This usually means something went wrong earlier. Verify with `git log origin/<default-branch>..HEAD` (where default-branch is main or master).
 
 **`gh` CLI not authenticated**: `gh pr create` will fail. Fix: `gh auth login`, then re-run `xt end`.
 

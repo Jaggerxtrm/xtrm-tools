@@ -37,6 +37,7 @@
     "npm:pi-dex",
     "npm:pi-gitnexus",
     "npm:pi-serena-tools",
+    "npm:lsp-pi",
     "npm:@zenobius/pi-worktrees",
     "npm:@robhowley/pi-structured-return",
     "npm:@aliou/pi-guardrails"

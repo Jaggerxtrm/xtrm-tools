@@ -48,11 +48,33 @@ const D  = '\x1b[2m';   // dim on
 const I  = '\x1b[3m';   // italic on
 const I_ = '\x1b[23m';  // italic off
 
+// True-color gradient for XTRM label: light blue (0%) → gold (50%) → orange-red (100%)
+// Two-segment interpolation avoids the gray dead-zone of direct blue↔orange RGB lerp.
+function xtrmColor(pct) {
+  if (pct == null) return null;
+  const t = Math.min(Math.max(pct, 0), 100) / 100;
+  let r, g, b;
+  if (t <= 0.5) {
+    const s = t * 2;
+    r = Math.round(60  + s * (255 - 60));
+    g = Math.round(160 + s * (210 - 160));
+    b = Math.round(255 * (1 - s));
+  } else {
+    const s = (t - 0.5) * 2;
+    r = 255;
+    g = Math.round(210 - s * 150);
+    b = 0;
+  }
+  return `\x1b[38;2;${r};${g};${b}m`;
+}
+
+// pct is always fresh from ctx (not cached) — needed for the color gradient on every render
+const pct = ctx?.context_window?.used_percentage;
+
 let data = getCached();
 if (!data) {
   // Model + token %
   const modelId = ctx?.model?.display_name ?? ctx?.model?.id ?? null;
-  const pct = ctx?.context_window?.used_percentage;
   const modelStr = modelId ? `${modelId}${pct != null ? ` [${Math.round(pct)}%]` : ''}` : null;
 
   // Short hostname
@@ -132,7 +154,9 @@ if (!data) {
 const { modelStr, host, displayDir, branch, gitStatus, venv, claimId, claimTitle, openCount } = data;
 
 // Line 1 — matches global format, XTRM prepended
-const parts = [`${B}XTRM${B_}`];
+const col = xtrmColor(pct);
+const xtrmLabel = col ? `${col}${B}XTRM${B_}${R}` : `${B}XTRM${B_}`;
+const parts = [xtrmLabel];
 if (modelStr) parts.push(`${D}${modelStr}${R}`);
 parts.push(host);
 if (displayDir) parts.push(`${B}${displayDir}${B_}`);

@@ -2,46 +2,48 @@
 title: Policy Reference
 scope: policies
 category: reference
-version: 1.2.0
-updated: 2026-03-21
-synced_at: b933f0d
+version: 1.3.0
+updated: 2026-03-22
 source_of_truth_for:
   - "policies/*.json"
+  - "hooks/hooks.json"
 domain: [hooks, enforcement]
 ---
 
 # Policy Reference
 
-Policies in `policies/*.json` are the single source of truth for hook wiring. They are compiled into `hooks/hooks.json` via:
+Policies in `policies/*.json` are the source of truth for Claude hook wiring and Pi extension mapping.
+
+Compile policies to Claude hook output with:
 
 ```bash
-node scripts/compile-policies.mjs           # regenerate
-node scripts/compile-policies.mjs --check   # CI drift detection
+node scripts/compile-policies.mjs
+node scripts/compile-policies.mjs --check
 ```
 
-Each policy declares which runtime it targets (`claude`, `pi`, or `both`) and which hooks/events to wire.
-
-## Policies
+## Active Policies
 
 | Policy | Runtime | Description |
-|--------|---------|-------------|
-| `beads.json` | both | Issue tracking enforcement — edit gate, commit gate, stop gate, memory gate, compact save/restore |
-| `gitnexus.json` | claude | Auto-augments Bash/Grep/Read/Glob/Serena tool results with GitNexus graph context |
-| `quality-gates.json` | both | Runs tsc/ESLint/ruff/mypy after mutating file edits (JS/TS/CJS/MJS + Python) |
-| `quality-gates-env.json` | both | Verifies tsc/eslint/ruff are available at session start; warns if enforcement would be silently degraded |
-| `service-skills.json` | pi | Injects service catalog + detects skill doc drift (only when `service-registry.json` present) |
-| `session-flow.json` | both | Claim sync (auto-commit on `bd close`), stop gate, `xt end` worktree reminder |
-| `using-xtrm.json` | both | Injects `using-xtrm` session operating manual at session start (Claude hook + Pi xtrm-loader extension) |
-| `worktree-boundary.json` | claude | Blocks Write/Edit outside active worktree when inside `.xtrm/worktrees/<name>` |
+|---|---|---|
+| `using-xtrm.json` | claude | Injects the using-xtrm operating manual at `SessionStart` |
+| `worktree-boundary.json` | claude | Blocks write/edit tools outside active `.xtrm/worktrees/<name>` |
+| `session-flow.json` | both | Claim sync + stop gate + worktree session end workflow |
+| `beads.json` | both | Edit/commit/memory/compact enforcement |
+| `quality-gates.json` | both | JS/TS + Python quality checks after mutating edits |
+| `quality-gates-env.json` | claude | Session-start check for required quality binaries |
+| `gitnexus.json` | claude | GitNexus augmentation for Bash/Grep/Read/Glob + Serena tools |
+| `xtrm-debug-logger.json` | claude | Session/tool lifecycle logging into `.xtrm/debug.db` |
+| `service-skills.json` | pi | Service skill catalog + drift checks in Pi extension runtime |
 
-## Adding a Policy
+## Add / Update Workflow
 
-1. Create `policies/<id>.json` following the schema in `policies/schema.json`
-2. Run `node scripts/compile-policies.mjs`
-3. Add the hook script to `CANONICAL_HOOKS` in `cli/src/commands/clean.ts`
-4. Commit both `policies/<id>.json` and the regenerated `hooks/hooks.json`
+1. Edit or add `policies/<id>.json`
+2. Recompile: `node scripts/compile-policies.mjs`
+3. Verify: `node scripts/compile-policies.mjs --check`
+4. Ensure docs and canonical hook list are aligned (`docs/hooks.md`, `cli/src/commands/clean.ts`)
 
 ## Related Docs
 
-- [hooks.md](hooks.md) — Hook scripts reference
-- [pi-extensions.md](pi-extensions.md) — Pi-side policy equivalents
+- [hooks.md](hooks.md)
+- [pi-extensions.md](pi-extensions.md)
+- [XTRM-GUIDE.md](XTRM-GUIDE.md)

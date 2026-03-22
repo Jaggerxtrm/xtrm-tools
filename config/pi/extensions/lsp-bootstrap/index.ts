@@ -114,7 +114,7 @@ function runInstall(target: LspTarget, ctx: any): void {
 }
 
 export default function register(api: ExtensionAPI) {
-    api.on("before_agent_start", async (ctx: any) => {
+    api.on("before_agent_start", async (_event: any, ctx: any) => {
         const cwd = process.cwd();
         const detected = detectTargets(cwd);
         if (detected.length === 0) return;

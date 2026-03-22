@@ -1,3 +1,12 @@
+---
+title: Service Skill Improvement
+scope: plans
+category: plan
+version: 1.0.0
+updated: 2026-03-22
+description: "Planning document"
+---
+
 # DESCRIZIONE
 Attualmente la skill ha un design monolitico. La singola skill si occupa di:
     - Generare lo scheletro, fare la parte expert enhancement

@@ -1,3 +1,12 @@
+---
+title: 2026 03 04 Install Service Skills
+scope: plans
+category: plan
+version: 1.0.0
+updated: 2026-03-22
+description: "Planning document (complete)"
+---
+
 # install-service-skills Subcommand Implementation Plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.

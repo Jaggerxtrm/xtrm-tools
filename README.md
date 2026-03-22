@@ -2,7 +2,7 @@
 
 > **Dual-runtime workflow system** — Claude Code plugin + Pi extension suite for workflow enforcement, code quality gates, issue tracking, and development automation.
 
-**Version 0.5.24** | [Complete Guide](XTRM-GUIDE.md) | [Changelog](CHANGELOG.md)
+**Version 0.5.29** | [Complete Guide](XTRM-GUIDE.md) | [Changelog](CHANGELOG.md)
 
 ---
 
@@ -41,17 +41,11 @@ npx -y github:Jaggerxtrm/xtrm-tools install
 
 ### Skills
 
-| Skill | Type | Purpose |
-|-------|------|---------|
-| `using-xtrm` | Global | Session operating manual |
-| `documenting` | Global | SSOT documentation with drift detection |
-| `delegating` | Global | Task delegation to cost-optimized agents |
-| `orchestrating-agents` | Global | Multi-model collaboration |
-| `using-quality-gates` | Global | Quality gate configuration and usage guide |
-| `using-service-skills` | Global | Territory-based service skill activation |
-| `creating-service-skills` | Global | Scaffold new service skills via Serena LSP deep dive |
-| `scoping-service-skills` | Global | Define territory globs for service skill routing |
-| `updating-service-skills` | Global | Drift detection and sync for service skill definitions |
+Core: `using-xtrm` (session manual), `documenting` (SSOT docs), `delegating` (task routing), `orchestrating-agents` (multi-model).
+
+Workflow: `xt-end` (close session), `xt-merge` (PR queue), `planning` (issue boards), `test-planning` (test coverage).
+
+Service: `using-quality-gates`, `using-service-skills`, `creating-service-skills`, `scoping-service-skills`, `updating-service-skills`.
 
 ---
 
@@ -134,25 +128,9 @@ xtrm <command> [options]
 
 ## Hooks Reference
 
-### Event Types
+Beads gates: **Edit** (claim required), **Commit** (close issue first), **Stop** (unclosed check), **Memory** (persist insights).
 
-| Event | When |
-|-------|------|
-| `SessionStart` | Session begins |
-| `UserPromptSubmit` | After user submits prompt |
-| `PreToolUse` | Before tool invocation |
-| `PostToolUse` | After tool completes |
-| `Stop` | Session ends |
-| `PreCompact` | Before compaction |
-
-### Beads Gates
-
-| Hook | Behavior |
-|------|----------|
-| Edit Gate | Requires claimed issue to edit files |
-| Commit Gate | Prompts to close issue before commit |
-| Stop Gate | Blocks session end with unclosed issues |
-| Memory Gate | Prompts to persist insights when closing |
+See [docs/hooks.md](docs/hooks.md) for full reference.
 
 ---
 
@@ -196,14 +174,12 @@ bd close <id> --reason "Done"  # Close when done
 
 | Version | Date | Highlights |
 |---------|------|------------|
-| 0.5.24 | 2026-03-21 | Hash-based docs drift detection; CLI docs cleanup; `docs` and `debug` commands documented |
-| 0.5.23 | 2026-03-21 | `xtrm debug` command for real-time event monitoring |
+| 0.5.29 | 2026-03-22 | Statusline truecolor gradient; `--no-verify` autocommit; xt-merge skill |
+| 0.5.24 | 2026-03-21 | Hash-based docs drift detection; CLI docs cleanup |
 | 0.5.20 | 2026-03-21 | `xtrm docs show` command; worktree-boundary hook; statusline injection |
-| 0.5.10 | 2026-03-21 | Install cleanup: removes stale `~/.claude/hooks/` + `~/.claude/skills/`; Qwen/Gemini dead code removed |
-| 0.5.9 | 2026-03-20 | Worktrees moved inside repo under `.xtrm/worktrees/` |
-| 0.5.8 | 2026-03-20 | session-flow rewrite: claim sync, stop gate, `xt end` reminder |
-| 0.5.7 | 2026-03-20 | Dead hooks removed; dead CLI removed (`finish.ts`, `session-state.ts`) |
-| 0.5.6 | 2026-03-20 | `xt` CLI commands; plugin-only delivery for Claude; deprecated `xtrm finish` |
+| 0.5.10 | 2026-03-21 | Install cleanup; Qwen/Gemini dead code removed |
+
+See [CHANGELOG.md](CHANGELOG.md) for full history.
 
 ---
 

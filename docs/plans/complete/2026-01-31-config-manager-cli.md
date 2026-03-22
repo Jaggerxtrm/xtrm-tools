@@ -1,3 +1,12 @@
+---
+title: 2026 01 31 Config Manager Cli
+scope: plans
+category: plan
+version: 1.0.0
+updated: 2026-03-22
+description: "Planning document (complete)"
+---
+
 # Config Manager CLI Implementation Plan
 
 > **For Gemini:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.

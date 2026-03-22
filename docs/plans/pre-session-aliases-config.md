@@ -1,3 +1,12 @@
+---
+title: Pre Session Aliases Config
+scope: plans
+category: plan
+version: 1.0.0
+updated: 2026-03-22
+description: "Planning document"
+---
+
 # IDEA
 A custom CLI that runs system-prompts injection based on a predefined templates set, as system prompt has higher authority.
 Can also customize an enforced set of skills, agents, general requirements as needed.

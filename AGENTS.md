@@ -234,7 +234,7 @@ bd prime                         # AI-optimized workflow context (full reference
 | Need to survive conversation compaction | All context in current conversation |
 | Team collaboration / git sync | Local to session |
 
-<!-- BEGIN BEADS INTEGRATION -->
+<!-- BEGIN BEADS INTEGRATION v:1 profile:full hash:d4f96305 -->
 ## Issue Tracking with bd (beads)
 
 **IMPORTANT**: This project uses **bd (beads)** for ALL issue tracking. Do NOT use markdown TODOs, task lists, or other tracking methods.
@@ -319,65 +319,6 @@ bd automatically syncs via Dolt:
 
 For more details, see README.md and docs/QUICKSTART.md.
 
-## Feature-Branch Workflow
-
-**ALL changes go through a feature branch and PR. Direct commits or pushes to `main`/`master` are blocked by hooks.**
-
-### Why Feature Branches?
-
-- **Traceability**: Every change is linked to a PR with context, review, and CI checks
-- **Rollback safety**: Squash merges keep history linear and easy to revert
-- **CI enforcement**: Tests and linters run on every PR before merge
-
-### Full Workflow
-
-```bash
-# 1. Start from main — always create a fresh branch
-git checkout main
-git checkout -b feature/<issue-id>-<short-description>
-
-# 2. Track your work with beads
-bd update <issue-id> --claim          # Claim the issue
-
-# 3. Make your changes
-# ... edit files, write tests ...
-
-# 4. Commit your work
-bd close <issue-id> --reason "Done"   # Close the issue
-git add -A && git commit -m "Brief description"
-
-# 5. Push and create PR
-git push -u origin feature/<branch-name>
-gh pr create --fill                    # Creates PR with auto-filled title/body
-
-# 6. Merge via squash
-gh pr merge --squash                   # Squash merge keeps history clean
-
-# 7. Sync main — use reset, not pull
-git checkout main
-git reset --hard origin/main           # Match remote exactly
-```
-
-### Why `git reset --hard` Instead of `git pull`?
-
-After a squash merge, `git pull` creates a merge commit because your local `main` has diverged from the remote (your local has the feature branch commits, but remote has the squashed single commit). `reset --hard` discards the local feature branch state and matches the remote exactly — no merge noise, no conflicts.
-
-### Key Rules
-
-| ✅ Do | ❌ Don't |
-|-------|----------|
-| `git checkout -b feature/<name>` from main | Commit directly on main |
-| `gh pr merge --squash` | `gh pr merge --merge` or `--rebase` |
-| `git reset --hard origin/main` after merge | `git pull` after squash merge |
-| Create PR before merging | Push directly to main |
-
-### Branch Naming Convention
-
-Use descriptive names that include the issue ID:
-- `feature/jaggers-agent-tools-123-add-login-flow`
-- `fix/jaggers-agent-tools-456-null-pointer`
-- `chore/jaggers-agent-tools-789-update-deps`
-
 ## Landing the Plane (Session Completion)
 
 **When ending a work session**, you MUST complete ALL steps below. Work is NOT complete until `git push` succeeds.
@@ -390,7 +331,7 @@ Use descriptive names that include the issue ID:
 4. **PUSH TO REMOTE** - This is MANDATORY:
    ```bash
    git pull --rebase
-   bd sync
+   bd dolt push
    git push
    git status  # MUST show "up to date with origin"
    ```

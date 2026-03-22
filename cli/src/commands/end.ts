@@ -8,6 +8,7 @@ interface EndOptions {
     draft: boolean;
     keep: boolean;
     yes: boolean;
+    dryRun: boolean;
 }
 
 function git(args: string[], cwd: string): { ok: boolean; out: string; err: string } {
@@ -86,6 +87,7 @@ export function createEndCommand(): Command {
         .option('--draft', 'Open PR as draft', false)
         .option('--keep', 'Keep worktree after PR creation (default: prompt)', false)
         .option('-y, --yes', 'Skip confirmation prompts', false)
+        .option('--dry-run', 'Preview PR title, body, and linked issues without pushing or creating PR', false)
         .action(async (opts: EndOptions) => {
             const cwd = process.cwd();
 
@@ -150,11 +152,31 @@ export function createEndCommand(): Command {
                 console.log(kleur.dim('  ○ No beads issues found in commit log'));
             }
 
-            // 5. Fetch to ensure origin/<default> is current
+            // 5. Dry-run: build PR preview from local state and exit before any destructive steps
+            if (opts.dryRun) {
+                const fullLog = git(['log', `origin/${defaultBranch}..HEAD`, '--oneline'], cwd).out;
+                const diffStat = git(['diff', `origin/${defaultBranch}`, '--stat'], cwd).out;
+                const prTitle = buildPrTitle(issues);
+                const prBody = buildPrBody(issues, fullLog, diffStat, branch);
+
+                console.log(t.bold('\n  [DRY RUN] PR preview\n'));
+                console.log(`  ${kleur.bold('Title:')} ${prTitle}`);
+                if (issues.length > 0) {
+                    console.log(`  ${kleur.bold('Issues:')} ${issueIds.join(', ')}`);
+                }
+                console.log(`\n  ${kleur.bold('Body:')}`);
+                for (const line of prBody.split('\n')) {
+                    console.log(`  ${kleur.dim(line)}`);
+                }
+                console.log(t.accent('\n  [DRY RUN] No changes made — re-run without --dry-run to push and create PR\n'));
+                return;
+            }
+
+            // 6. Fetch to ensure origin/<default> is current
             console.log(kleur.dim(`  Fetching origin/${defaultBranch}...`));
             git(['fetch', 'origin', defaultBranch], cwd);
 
-            // 6. Rebase
+            // 7. Rebase
             console.log(kleur.dim(`  Rebasing onto origin/${defaultBranch}...`));
             const rebaseResult = git(['rebase', `origin/${defaultBranch}`], cwd);
             if (!rebaseResult.ok) {
@@ -172,7 +194,7 @@ export function createEndCommand(): Command {
             }
             console.log(t.success(`  ✓ Rebased onto origin/${defaultBranch}`));
 
-            // 6. Push (force-with-lease = safe after rebase)
+            // 8. Push (force-with-lease = safe after rebase)
             console.log(kleur.dim('  Pushing branch...'));
             const pushResult = git(['push', 'origin', branch, '--force-with-lease'], cwd);
             if (!pushResult.ok) {
@@ -181,13 +203,13 @@ export function createEndCommand(): Command {
             }
             console.log(t.success(`  ✓ Pushed ${branch}`));
 
-            // 7. Build PR content
+            // 9. Build PR content
             const fullLog = git(['log', `origin/${defaultBranch}..HEAD`, '--oneline'], cwd).out;
             const diffStat = git(['diff', `origin/${defaultBranch}`, '--stat'], cwd).out;
             const prTitle = buildPrTitle(issues);
             const prBody = buildPrBody(issues, fullLog, diffStat, branch);
 
-            // 8. Create PR
+            // 10. Create PR
             console.log(kleur.dim('  Creating PR...'));
             const prArgs = ['pr', 'create', '--title', prTitle, '--body', prBody];
             if (opts.draft) prArgs.push('--draft');
@@ -200,7 +222,7 @@ export function createEndCommand(): Command {
             const prUrl = prResult.stdout.trim();
             console.log(t.success(`  ✓ PR created: ${prUrl}`));
 
-            // 9. Beads linkage: add PR URL to each closed issue's notes
+            // 11. Beads linkage: add PR URL to each closed issue's notes
             for (const issue of issues) {
                 bd(['update', issue.id, '--notes', `PR: ${prUrl}`], cwd);
             }
@@ -208,7 +230,7 @@ export function createEndCommand(): Command {
                 console.log(t.success(`  ✓ Linked PR to ${issues.length} issue(s)`));
             }
 
-            // 10. Worktree cleanup
+            // 12. Worktree cleanup
             if (!opts.keep) {
                 let doRemove = opts.yes;
                 if (!opts.yes) {

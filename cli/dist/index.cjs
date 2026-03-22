@@ -56556,7 +56556,7 @@ function buildPrBody(issues, commitLog, diffStat, branch) {
   return lines.join("\n");
 }
 function createEndCommand() {
-  return new Command("end").description("Close session: rebase, push, open PR, link beads issues, clean up worktree").option("--draft", "Open PR as draft", false).option("--keep", "Keep worktree after PR creation (default: prompt)", false).option("-y, --yes", "Skip confirmation prompts", false).action(async (opts) => {
+  return new Command("end").description("Close session: rebase, push, open PR, link beads issues, clean up worktree").option("--draft", "Open PR as draft", false).option("--keep", "Keep worktree after PR creation (default: prompt)", false).option("-y, --yes", "Skip confirmation prompts", false).option("--dry-run", "Preview PR title, body, and linked issues without pushing or creating PR", false).action(async (opts) => {
     const cwd = process.cwd();
     const branchResult = git(["rev-parse", "--abbrev-ref", "HEAD"], cwd);
     const branch = branchResult.out;
@@ -56610,6 +56610,24 @@ function createEndCommand() {
       console.log(t.success(`  \u2713 Found ${issues.length} closed issue(s): ${issueIds.join(", ")}`));
     } else {
       console.log(kleur_default.dim("  \u25CB No beads issues found in commit log"));
+    }
+    if (opts.dryRun) {
+      const fullLog2 = git(["log", `origin/${defaultBranch}..HEAD`, "--oneline"], cwd).out;
+      const diffStat2 = git(["diff", `origin/${defaultBranch}`, "--stat"], cwd).out;
+      const prTitle2 = buildPrTitle(issues);
+      const prBody2 = buildPrBody(issues, fullLog2, diffStat2, branch);
+      console.log(t.bold("\n  [DRY RUN] PR preview\n"));
+      console.log(`  ${kleur_default.bold("Title:")} ${prTitle2}`);
+      if (issues.length > 0) {
+        console.log(`  ${kleur_default.bold("Issues:")} ${issueIds.join(", ")}`);
+      }
+      console.log(`
+  ${kleur_default.bold("Body:")}`);
+      for (const line of prBody2.split("\n")) {
+        console.log(`  ${kleur_default.dim(line)}`);
+      }
+      console.log(t.accent("\n  [DRY RUN] No changes made \u2014 re-run without --dry-run to push and create PR\n"));
+      return;
     }
     console.log(kleur_default.dim(`  Fetching origin/${defaultBranch}...`));
     git(["fetch", "origin", defaultBranch], cwd);

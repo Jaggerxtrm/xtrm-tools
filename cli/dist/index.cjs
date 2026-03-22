@@ -41238,8 +41238,30 @@ async function cleanStalePrePluginFiles(repoRoot, dryRun) {
     console.log(t.success("  \u2713 No stale pre-plugin files found"));
   }
 }
+function warnIfOutdated() {
+  try {
+    const localPkg = JSON.parse(import_fs_extra12.default.readFileSync(import_path12.default.resolve(__dirname, "../package.json"), "utf8"));
+    const result = (0, import_child_process3.spawnSync)("npm", ["show", "xtrm-tools", "version", "--json"], {
+      encoding: "utf8",
+      stdio: "pipe",
+      timeout: 5e3
+    });
+    if (result.status !== 0 || !result.stdout) return;
+    const npmVersion = JSON.parse(result.stdout.trim());
+    const parse4 = (v) => v.split(".").map(Number);
+    const [lMaj, lMin, lPat] = parse4(localPkg.version);
+    const [rMaj, rMin, rPat] = parse4(npmVersion);
+    const isNewer = rMaj > lMaj || rMaj === lMaj && rMin > lMin || rMaj === lMaj && rMin === lMin && rPat > lPat;
+    if (isNewer) {
+      console.log(t.warning(`  \u26A0  npm has a newer version (${npmVersion} > ${localPkg.version})`));
+      console.log(t.label("     Run: npm install -g xtrm-tools@latest"));
+    }
+  } catch {
+  }
+}
 async function installPlugin(repoRoot, dryRun) {
   console.log(t.bold("\n  \u2699  xtrm-tools  (Claude Code plugin)"));
+  warnIfOutdated();
   if (dryRun) {
     console.log(t.accent("  [DRY RUN] Would register xtrm-tools marketplace and install plugin\n"));
     await cleanStalePrePluginFiles(repoRoot, true);

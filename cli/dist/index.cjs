@@ -30319,10 +30319,10 @@ var require_stringify = __commonJS({
       replacer = null;
       indent2 = EMPTY;
     };
-    var join6 = (one, two, gap) => one ? two ? one + two.trim() + LF + gap : one.trimRight() + LF + gap : two ? two.trimRight() + LF + gap : EMPTY;
+    var join7 = (one, two, gap) => one ? two ? one + two.trim() + LF + gap : one.trimRight() + LF + gap : two ? two.trimRight() + LF + gap : EMPTY;
     var join_content = (inside, value, gap) => {
       const comment = process_comments(value, PREFIX_BEFORE, gap + indent2, true);
-      return join6(comment, inside, gap);
+      return join7(comment, inside, gap);
     };
     var array_stringify = (value, gap) => {
       const deeper_gap = gap + indent2;
@@ -30333,7 +30333,7 @@ var require_stringify = __commonJS({
         if (i !== 0) {
           inside += COMMA;
         }
-        const before = join6(
+        const before = join7(
           after_comma,
           process_comments(value, BEFORE(i), deeper_gap),
           deeper_gap
@@ -30343,7 +30343,7 @@ var require_stringify = __commonJS({
         inside += process_comments(value, AFTER_VALUE(i), deeper_gap);
         after_comma = process_comments(value, AFTER(i), deeper_gap);
       }
-      inside += join6(
+      inside += join7(
         after_comma,
         process_comments(value, PREFIX_AFTER, deeper_gap),
         deeper_gap
@@ -30368,7 +30368,7 @@ var require_stringify = __commonJS({
           inside += COMMA;
         }
         first = false;
-        const before = join6(
+        const before = join7(
           after_comma,
           process_comments(value, BEFORE(key), deeper_gap),
           deeper_gap
@@ -30378,7 +30378,7 @@ var require_stringify = __commonJS({
         after_comma = process_comments(value, AFTER(key), deeper_gap);
       };
       keys.forEach(iteratee);
-      inside += join6(
+      inside += join7(
         after_comma,
         process_comments(value, PREFIX_AFTER, deeper_gap),
         deeper_gap
@@ -33827,8 +33827,8 @@ var init_boxen = __esm({
 });
 
 // src/index.ts
-var import_node_fs6 = require("fs");
-var import_node_path7 = require("path");
+var import_node_fs7 = require("fs");
+var import_node_path8 = require("path");
 
 // ../node_modules/commander/esm.mjs
 var import_index = __toESM(require_commander(), 1);
@@ -41279,6 +41279,27 @@ async function installPlugin(repoRoot, dryRun) {
   console.log(t.warning("  \u21BB Restart Claude Code for the new plugin hooks to take effect"));
   await cleanStalePrePluginFiles(repoRoot, dryRun);
   await installOfficialClaudePlugins(false);
+  installUserStatusLine(dryRun);
+}
+function installUserStatusLine(dryRun) {
+  try {
+    const pluginsFile = import_path12.default.join(import_os5.default.homedir(), ".claude", "plugins", "installed_plugins.json");
+    const plugins = JSON.parse(import_fs_extra12.default.readFileSync(pluginsFile, "utf8"));
+    const entries = Object.entries(plugins?.plugins ?? {}).filter(([k]) => k.startsWith("xtrm-tools@")).flatMap(([, v]) => v);
+    if (!entries.length) return;
+    const scriptPath = import_path12.default.join(entries[0].installPath, "hooks", "statusline.mjs");
+    if (!import_fs_extra12.default.existsSync(scriptPath)) return;
+    const settingsPath = import_path12.default.join(import_os5.default.homedir(), ".claude", "settings.json");
+    const settings = import_fs_extra12.default.existsSync(settingsPath) ? JSON.parse(import_fs_extra12.default.readFileSync(settingsPath, "utf8")) : {};
+    if (dryRun) {
+      console.log(t.accent(`  [DRY RUN] Would write statusLine \u2192 ${scriptPath}`));
+      return;
+    }
+    settings.statusLine = { type: "command", command: `node ${scriptPath}`, padding: 1 };
+    import_fs_extra12.default.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + "\n");
+    console.log(t.success(`  \u2713 statusLine registered in ~/.claude/settings.json`));
+  } catch {
+  }
 }
 function createInstallAllCommand() {
   return new Command("all").description("[deprecated] Use xtrm install").option("--dry-run", "Preview changes without making any modifications", false).option("-y, --yes", "Skip confirmation prompts", false).option("--no-mcp", "Skip MCP server registration", false).option("--force", "Overwrite locally drifted files", false).action(async (_opts) => {
@@ -56682,6 +56703,8 @@ function createEndCommand() {
 // src/commands/worktree.ts
 var import_prompts5 = __toESM(require_prompts3(), 1);
 var import_node_child_process8 = require("child_process");
+var import_node_fs5 = require("fs");
+var import_node_path6 = require("path");
 function listXtWorktrees(repoRoot) {
   const r = (0, import_node_child_process8.spawnSync)("git", ["worktree", "list", "--porcelain"], {
     cwd: repoRoot,
@@ -56781,6 +56804,7 @@ function createWorktreeCommand() {
       });
       if (r.status === 0) {
         console.log(t.success(`  \u2713 Removed ${wt.path}`));
+        clearStatuslineClaim(repoRoot);
       } else {
         console.log(kleur_default.yellow(`  \u26A0 Could not remove ${wt.path}: ${(r.stderr ?? "").trim()}`));
       }
@@ -56820,6 +56844,7 @@ function createWorktreeCommand() {
       stdio: "pipe"
     });
     if (r.status === 0) {
+      clearStatuslineClaim(repoRoot);
       console.log(t.success(`
   \u2713 Removed ${target.path}
 `));
@@ -56831,6 +56856,13 @@ function createWorktreeCommand() {
     }
   });
   return cmd;
+}
+function clearStatuslineClaim(repoRoot) {
+  try {
+    const claimFile = (0, import_node_path6.join)(repoRoot, ".xtrm", "statusline-claim");
+    if ((0, import_node_fs5.existsSync)(claimFile)) (0, import_node_fs5.unlinkSync)(claimFile);
+  } catch {
+  }
 }
 
 // src/commands/docs.ts
@@ -56963,8 +56995,8 @@ function createDocsCommand() {
 
 // src/commands/debug.ts
 var import_node_child_process9 = require("child_process");
-var import_node_fs5 = require("fs");
-var import_node_path6 = require("path");
+var import_node_fs6 = require("fs");
+var import_node_path7 = require("path");
 var KIND_LABELS = {
   "session.start": { label: "SESS+", color: kleur_default.green },
   "session.end": { label: "SESS-", color: kleur_default.white },
@@ -57064,14 +57096,14 @@ function buildDetail(event) {
   }
   if (event.kind === "tool.call") {
     if (d?.cmd) parts.push(kleur_default.dim(d.cmd.slice(0, 72)));
-    if (d?.file) parts.push(kleur_default.dim((0, import_node_path6.basename)(d.file)));
+    if (d?.file) parts.push(kleur_default.dim((0, import_node_path7.basename)(d.file)));
     if (d?.pattern) parts.push(kleur_default.dim(`/${d.pattern}/`));
     if (d?.url) parts.push(kleur_default.dim(d.url.slice(0, 72)));
     if (d?.query) parts.push(kleur_default.dim(d.query.slice(0, 72)));
     if (d?.prompt) parts.push(kleur_default.dim(d.prompt.slice(0, 72)));
   } else {
     if (event.issue_id) parts.push(kleur_default.yellow(event.issue_id));
-    if (d?.file) parts.push(kleur_default.dim((0, import_node_path6.basename)(d.file)));
+    if (d?.file) parts.push(kleur_default.dim((0, import_node_path7.basename)(d.file)));
     if (d?.reason_code) parts.push(kleur_default.dim(`[${d.reason_code}]`));
     if (event.worktree) parts.push(kleur_default.dim(`wt:${event.worktree}`));
   }
@@ -57088,8 +57120,8 @@ function formatLine(event, colorMap) {
 function findDbPath(cwd) {
   let dir = cwd;
   for (let i = 0; i < 10; i++) {
-    if ((0, import_node_fs5.existsSync)((0, import_node_path6.join)(dir, ".beads"))) return (0, import_node_path6.join)(dir, ".xtrm", "debug.db");
-    const parent = (0, import_node_path6.join)(dir, "..");
+    if ((0, import_node_fs6.existsSync)((0, import_node_path7.join)(dir, ".beads"))) return (0, import_node_path7.join)(dir, ".xtrm", "debug.db");
+    const parent = (0, import_node_path7.join)(dir, "..");
     if (parent === dir) break;
     dir = parent;
   }
@@ -57150,7 +57182,7 @@ function createDebugCommand() {
   return new Command("debug").description("Watch xtrm events: tool calls, gate decisions, bd lifecycle").option("-f, --follow", "Follow new events (default)", false).option("--all", "Show full history and exit", false).option("--session <id>", "Filter by session ID (prefix match)").option("--type <domain>", "Filter by domain: tool | gate | bd | session").option("--json", "Output raw JSON lines", false).action((opts) => {
     const cwd = process.cwd();
     const dbPath = findDbPath(cwd);
-    if (!dbPath || !(0, import_node_fs5.existsSync)(dbPath)) return;
+    if (!dbPath || !(0, import_node_fs6.existsSync)(dbPath)) return;
     if (opts.all) {
       const events = queryEvents(dbPath, buildWhere(opts, ""), 1e3);
       const colorMap = buildColorMap(events);
@@ -57335,7 +57367,7 @@ async function printBanner(version3) {
 // src/index.ts
 var version2 = "0.0.0";
 try {
-  version2 = JSON.parse((0, import_node_fs6.readFileSync)((0, import_node_path7.resolve)(__dirname, "../package.json"), "utf8")).version;
+  version2 = JSON.parse((0, import_node_fs7.readFileSync)((0, import_node_path8.resolve)(__dirname, "../package.json"), "utf8")).version;
 } catch {
 }
 var program2 = new Command();

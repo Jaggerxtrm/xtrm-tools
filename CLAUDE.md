@@ -9,7 +9,7 @@
 1. `bd prime` — load workflow context and active claims
 2. `bd memories <keyword>` — retrieve memories relevant to today's task
 3. `bd recall <key>` — retrieve a specific memory by key if needed
-4. `bd ready` — find available work
+4. `bv --robot-triage` — graph-aware triage: ranked picks, unblock targets, project health
 5. `bd update <id> --claim` — claim before any file edit
 
 ## Active Gates (hooks enforce these — not optional)
@@ -19,7 +19,7 @@
 | **Edit** | Write/Edit without active claim | `bd update <id> --claim` |
 | **Commit** | `git commit` while claim is open | `bd close <id>` first, then commit |
 | **Stop** | Session end with unclosed claim | `bd close <id>` |
-| **Memory** | Auto-fires at Stop if issue closed this session | `bd remember "<insight>"` then `touch .beads/.memory-gate-done` |
+| **Memory** | Auto-fires at Stop if issue closed this session | `bd remember "<insight>"` then run the `bd kv set` command shown in the gate message |
 
 > `bd close` auto-commits via `git commit -am`. Do not double-commit after closing.
 
@@ -80,6 +80,35 @@ xt end                                       # push, PR, merge, worktree cleanup
 ```
 
 **Never** continue new work on a previously used branch.
+
+## bv — Graph-Aware Triage
+
+bv is a graph-aware triage engine for the beads issue board. Use it instead of `bd ready` when you need ranked picks, dependency-aware scheduling, or project health signals.
+
+> **CRITICAL: Use ONLY `--robot-*` flags. Bare `bv` launches an interactive TUI that blocks your session.**
+
+```bash
+bv --robot-triage             # THE entry point — ranked picks, quick wins, blockers, health
+bv --robot-next               # Single top pick + claim command (minimal output)
+bv --robot-triage --format toon  # Token-optimized output for lower context usage
+```
+
+**Scope boundary:** bv = *what to work on*. `bd` = creating, claiming, closing issues.
+
+| Command | Returns |
+|---------|---------|
+| `--robot-plan` | Parallel execution tracks with unblocks lists |
+| `--robot-insights` | PageRank, betweenness, HITS, cycles, critical path |
+| `--robot-forecast <id\|all>` | ETA predictions with dependency-aware scheduling |
+| `--robot-alerts` | Stale issues, blocking cascades, priority mismatches |
+| `--robot-diff --diff-since <ref>` | Changes since ref: new/closed/modified |
+
+```bash
+bv --recipe actionable --robot-plan    # Pre-filter: ready to work
+bv --robot-triage --robot-triage-by-track  # Group by parallel work streams
+bv --robot-triage | jq '.quick_ref'   # At-a-glance summary
+bv --robot-insights | jq '.Cycles'    # Circular deps — must fix
+```
 
 ## Code Intelligence (mandatory before edits)
 
@@ -163,7 +192,7 @@ Gate output appears as hook context. Fix failures before proceeding — do not c
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **xtrm-tools** (3523 symbols, 9704 relationships, 258 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **xtrm-tools** (3616 symbols, 9941 relationships, 265 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 

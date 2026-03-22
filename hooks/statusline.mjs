@@ -75,7 +75,7 @@ let data = getCached();
 if (!data) {
   // Model + token %
   const modelId = ctx?.model?.display_name ?? ctx?.model?.id ?? null;
-  const modelStr = modelId ? `${modelId}${pct != null ? ` [${Math.round(pct)}%]` : ''}` : null;
+  const modelStr = modelId ?? null;
 
   // Short hostname
   const host = hostname().split('.')[0];

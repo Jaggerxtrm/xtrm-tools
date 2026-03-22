@@ -40,7 +40,7 @@ export async function runPiInstall(dryRun: boolean = false): Promise<void> {
                 return;
             }
         } else {
-            console.log(kleur.cyan('  [DRY RUN] npm install -g oh-pi'));
+            console.log(kleur.dim('  [DRY RUN] npm install -g oh-pi'));
         }
         console.log(t.success('  ✓ pi installed'));
     } else {
@@ -86,7 +86,7 @@ export async function runPiInstall(dryRun: boolean = false): Promise<void> {
         } else {
             for (const pkg of preCheck.packages.needed) {
                 if (dryRun) {
-                    console.log(kleur.cyan(`    [DRY RUN] pi install ${pkg}`));
+                    console.log(kleur.dim(`    [DRY RUN] pi install ${pkg}`));
                     continue;
                 }
                 const r = spawnSync('pi', ['install', pkg], { stdio: 'pipe', encoding: 'utf8' });

@@ -32,8 +32,8 @@ function renderPlanTable(allChanges: TargetChanges[]): void {
     const table = new Table({
         head: [
             t.header('Target'),
-            t.header(kleur.green('+ New')),
-            t.header(kleur.yellow('↑ Update')),
+            t.header('+ New'),
+            t.header('↑ Update'),
             t.header('Total'),
         ],
         style: { head: [], border: [] },
@@ -44,10 +44,10 @@ function renderPlanTable(allChanges: TargetChanges[]): void {
         const outdated = Object.values(changeSet).reduce((s: number, c: any) => s + c.outdated.length, 0) as number;
 
         table.push([
-            kleur.white(formatTargetLabel(target)),
-            missing > 0 ? kleur.green(String(missing)) : t.label('—'),
-            outdated > 0 ? kleur.yellow(String(outdated)) : t.label('—'),
-            kleur.bold().white(String(totalChanges)),
+            formatTargetLabel(target),
+            missing > 0 ? String(missing) : t.label('—'),
+            outdated > 0 ? String(outdated) : t.label('—'),
+            kleur.bold(String(totalChanges)),
         ]);
     }
 
@@ -55,29 +55,28 @@ function renderPlanTable(allChanges: TargetChanges[]): void {
 }
 
 function printNextSteps(): void {
-    const c = (s: string) => kleur.cyan(s);
     const d = (s: string) => kleur.dim(s);
     const b = (s: string) => kleur.bold(s);
 
     console.log(b('  Next steps\n'));
 
     console.log(d('  In your project:'));
-    console.log(`  ${c('xtrm init')}                     ${d('initialize beads + gitnexus for this repo')}`);
-    console.log(`  ${c('bd prime')}                      ${d('load session context and available work')}`);
-    console.log(`  ${c('bd ready')}                      ${d('find unblocked issues to work on')}`);
-    console.log(`  ${c('bd update <id> --claim')}        ${d('claim an issue before editing any file')}`);
-    console.log(`  ${c('bd close <id>')}                 ${d('close when done — auto-commits')}`);
+    console.log(`  xtrm init                     ${d('initialize beads + gitnexus for this repo')}`);
+    console.log(`  bd prime                      ${d('load session context and available work')}`);
+    console.log(`  bd ready                      ${d('find unblocked issues to work on')}`);
+    console.log(`  bd update <id> --claim        ${d('claim an issue before editing any file')}`);
+    console.log(`  bd close <id>                 ${d('close when done — auto-commits')}`);
 
     console.log('');
     console.log(d('  Worktree workflow:'));
-    console.log(`  ${c('xt claude')}                     ${d('launch Claude Code in a sandboxed worktree')}`);
-    console.log(`  ${c('xt end --dry-run')}              ${d('preview PR title, body, and linked issues')}`);
-    console.log(`  ${c('xt end')}                        ${d('push branch, open PR, clean up worktree')}`);
+    console.log(`  xt claude                     ${d('launch Claude Code in a sandboxed worktree')}`);
+    console.log(`  xt end --dry-run              ${d('preview PR title, body, and linked issues')}`);
+    console.log(`  xt end                        ${d('push branch, open PR, clean up worktree')}`);
 
     console.log('');
     console.log(d('  Reference:'));
-    console.log(`  ${c('xtrm status')}                   ${d('check installed vs repo')}`);
-    console.log(`  ${c('xtrm docs show')}                ${d('browse all documentation')}`);
+    console.log(`  xtrm status                   ${d('check installed vs repo')}`);
+    console.log(`  xtrm docs show                ${d('browse all documentation')}`);
     console.log('');
 }
 
@@ -91,21 +90,21 @@ async function renderSummaryCard(
 
     const hasDrift = allSkipped.length > 0;
     const lines = [
-        hasDrift ? t.boldGreen('  ✓ Install complete') + t.warning('  (with skipped drift)') : t.boldGreen('  ✓ Install complete'),
+        kleur.bold('  ✓ Install complete') + (hasDrift ? kleur.dim('  (with skipped drift)') : ''),
         '',
         `  ${t.label('Targets')}   ${allChanges.length} environment${allChanges.length !== 1 ? 's' : ''}`,
         `  ${t.label('Installed')} ${totalCount} item${totalCount !== 1 ? 's' : ''}`,
         ...(hasDrift ? [
-            `  ${t.label('Skipped')}   ${kleur.yellow(String(allSkipped.length))} drifted (local changes preserved)`,
-            `  ${t.label('Hint')}      run ${t.accent('xtrm install --backport')} to push them back`,
+            `  ${t.label('Skipped')}   ${allSkipped.length} drifted (local changes preserved)`,
+            `  ${t.label('Hint')}      run xtrm install --backport to push them back`,
         ] : []),
-        ...(isDryRun ? ['', t.accent('  Dry run — no changes written')] : []),
+        ...(isDryRun ? ['', kleur.dim('  Dry run — no changes written')] : []),
     ];
 
     console.log('\n' + boxen(lines.join('\n'), {
         padding: { top: 1, bottom: 1, left: 1, right: 3 },
         borderStyle: 'round',
-        borderColor: hasDrift ? 'yellow' : 'green',
+        borderColor: 'gray',
     }) + '\n');
 }
 
@@ -198,7 +197,7 @@ export async function installOfficialClaudePlugins(dryRun: boolean): Promise<voi
     console.log(t.bold('\n  ⚙  official Claude plugins  (serena/context7/github/ralph-loop)'));
 
     if (dryRun) {
-        console.log(t.accent('  [DRY RUN] Would register claude-plugins-official marketplace and install official plugins\n'));
+        console.log(kleur.dim('  [DRY RUN] Would register claude-plugins-official marketplace and install official plugins\n'));
         return;
     }
 
@@ -244,7 +243,7 @@ async function cleanStalePrePluginFiles(repoRoot: string, dryRun: boolean): Prom
             const staleFile = path.join(staleHooksDir, name);
             if (await fs.pathExists(staleFile)) {
                 if (dryRun) {
-                    console.log(t.accent(`  [DRY RUN] Would remove stale hook: ~/.claude/hooks/${name}`));
+                    console.log(kleur.dim(`  [DRY RUN] Would remove stale hook: ~/.claude/hooks/${name}`));
                 } else {
                     await fs.remove(staleFile);
                     console.log(t.muted(`  ✗ Removed stale hook: ~/.claude/hooks/${name}`));
@@ -262,7 +261,7 @@ async function cleanStalePrePluginFiles(repoRoot: string, dryRun: boolean): Prom
             const staleDir = path.join(staleSkillsDir, name);
             if (await fs.pathExists(staleDir)) {
                 if (dryRun) {
-                    console.log(t.accent(`  [DRY RUN] Would remove stale skill: ~/.claude/skills/${name}`));
+                    console.log(kleur.dim(`  [DRY RUN] Would remove stale skill: ~/.claude/skills/${name}`));
                 } else {
                     await fs.remove(staleDir);
                     console.log(t.muted(`  ✗ Removed stale skill: ~/.claude/skills/${name}`));
@@ -294,7 +293,7 @@ async function cleanStalePrePluginFiles(repoRoot: string, dryRun: boolean): Prom
                         for (const h of staleHooks) {
                             const msg = `settings.json [${event}] hook: ${h.command}`;
                             if (dryRun) {
-                                console.log(t.accent(`  [DRY RUN] Would remove stale ${msg}`));
+                                console.log(kleur.dim(`  [DRY RUN] Would remove stale ${msg}`));
                             } else {
                                 console.log(t.muted(`  ✗ Removed stale ${msg}`));
                             }
@@ -352,7 +351,7 @@ export async function installPlugin(repoRoot: string, dryRun: boolean): Promise<
     warnIfOutdated();
 
     if (dryRun) {
-        console.log(t.accent('  [DRY RUN] Would register xtrm-tools marketplace and install plugin\n'));
+        console.log(kleur.dim('  [DRY RUN] Would register xtrm-tools marketplace and install plugin\n'));
         await cleanStalePrePluginFiles(repoRoot, true);
         await installOfficialClaudePlugins(true);
         return;
@@ -397,7 +396,7 @@ function installUserStatusLine(dryRun: boolean): void {
             : {};
 
         if (dryRun) {
-            console.log(t.accent(`  [DRY RUN] Would write statusLine → ${scriptPath}`));
+            console.log(kleur.dim(`  [DRY RUN] Would write statusLine → ${scriptPath}`));
             return;
         }
 
@@ -590,7 +589,7 @@ export function createInstallCommand(): Command {
             }
 
             if (allChanges.length === 0) {
-                console.log('\n' + t.boldGreen('✓ Files are up-to-date') + '\n');
+                console.log('\n' + kleur.bold('✓ Files are up-to-date') + '\n');
                 return;
             }
 
@@ -598,7 +597,7 @@ export function createInstallCommand(): Command {
             renderPlanTable(allChanges);
 
             if (dryRun) {
-                console.log(t.accent('💡 Dry run — no changes written\n'));
+                console.log(kleur.dim('  Dry run — no changes written\n'));
                 return;
             }
 

@@ -40968,7 +40968,7 @@ async function runPiInstall(dryRun = false) {
         return;
       }
     } else {
-      console.log(kleur_default.cyan("  [DRY RUN] npm install -g oh-pi"));
+      console.log(kleur_default.dim("  [DRY RUN] npm install -g oh-pi"));
     }
     console.log(t.success("  \u2713 pi installed"));
   } else {
@@ -41002,7 +41002,7 @@ async function runPiInstall(dryRun = false) {
     } else {
       for (const pkg of preCheck.packages.needed) {
         if (dryRun) {
-          console.log(kleur_default.cyan(`    [DRY RUN] pi install ${pkg}`));
+          console.log(kleur_default.dim(`    [DRY RUN] pi install ${pkg}`));
           continue;
         }
         const r = (0, import_node_child_process2.spawnSync)("pi", ["install", pkg], { stdio: "pipe", encoding: "utf8" });
@@ -41025,8 +41025,8 @@ function renderPlanTable(allChanges) {
   const table = new Table({
     head: [
       t.header("Target"),
-      t.header(kleur_default.green("+ New")),
-      t.header(kleur_default.yellow("\u2191 Update")),
+      t.header("+ New"),
+      t.header("\u2191 Update"),
       t.header("Total")
     ],
     style: { head: [], border: [] }
@@ -41035,54 +41035,53 @@ function renderPlanTable(allChanges) {
     const missing = Object.values(changeSet).reduce((s, c) => s + c.missing.length, 0);
     const outdated = Object.values(changeSet).reduce((s, c) => s + c.outdated.length, 0);
     table.push([
-      kleur_default.white(formatTargetLabel(target)),
-      missing > 0 ? kleur_default.green(String(missing)) : t.label("\u2014"),
-      outdated > 0 ? kleur_default.yellow(String(outdated)) : t.label("\u2014"),
-      kleur_default.bold().white(String(totalChanges))
+      formatTargetLabel(target),
+      missing > 0 ? String(missing) : t.label("\u2014"),
+      outdated > 0 ? String(outdated) : t.label("\u2014"),
+      kleur_default.bold(String(totalChanges))
     ]);
   }
   console.log("\n" + table.toString() + "\n");
 }
 function printNextSteps() {
-  const c = (s) => kleur_default.cyan(s);
   const d = (s) => kleur_default.dim(s);
   const b = (s) => kleur_default.bold(s);
   console.log(b("  Next steps\n"));
   console.log(d("  In your project:"));
-  console.log(`  ${c("xtrm init")}                     ${d("initialize beads + gitnexus for this repo")}`);
-  console.log(`  ${c("bd prime")}                      ${d("load session context and available work")}`);
-  console.log(`  ${c("bd ready")}                      ${d("find unblocked issues to work on")}`);
-  console.log(`  ${c("bd update <id> --claim")}        ${d("claim an issue before editing any file")}`);
-  console.log(`  ${c("bd close <id>")}                 ${d("close when done \u2014 auto-commits")}`);
+  console.log(`  xtrm init                     ${d("initialize beads + gitnexus for this repo")}`);
+  console.log(`  bd prime                      ${d("load session context and available work")}`);
+  console.log(`  bd ready                      ${d("find unblocked issues to work on")}`);
+  console.log(`  bd update <id> --claim        ${d("claim an issue before editing any file")}`);
+  console.log(`  bd close <id>                 ${d("close when done \u2014 auto-commits")}`);
   console.log("");
   console.log(d("  Worktree workflow:"));
-  console.log(`  ${c("xt claude")}                     ${d("launch Claude Code in a sandboxed worktree")}`);
-  console.log(`  ${c("xt end --dry-run")}              ${d("preview PR title, body, and linked issues")}`);
-  console.log(`  ${c("xt end")}                        ${d("push branch, open PR, clean up worktree")}`);
+  console.log(`  xt claude                     ${d("launch Claude Code in a sandboxed worktree")}`);
+  console.log(`  xt end --dry-run              ${d("preview PR title, body, and linked issues")}`);
+  console.log(`  xt end                        ${d("push branch, open PR, clean up worktree")}`);
   console.log("");
   console.log(d("  Reference:"));
-  console.log(`  ${c("xtrm status")}                   ${d("check installed vs repo")}`);
-  console.log(`  ${c("xtrm docs show")}                ${d("browse all documentation")}`);
+  console.log(`  xtrm status                   ${d("check installed vs repo")}`);
+  console.log(`  xtrm docs show                ${d("browse all documentation")}`);
   console.log("");
 }
 async function renderSummaryCard(allChanges, totalCount, allSkipped, isDryRun) {
   const boxen2 = (await Promise.resolve().then(() => (init_boxen(), boxen_exports))).default;
   const hasDrift = allSkipped.length > 0;
   const lines = [
-    hasDrift ? t.boldGreen("  \u2713 Install complete") + t.warning("  (with skipped drift)") : t.boldGreen("  \u2713 Install complete"),
+    kleur_default.bold("  \u2713 Install complete") + (hasDrift ? kleur_default.dim("  (with skipped drift)") : ""),
     "",
     `  ${t.label("Targets")}   ${allChanges.length} environment${allChanges.length !== 1 ? "s" : ""}`,
     `  ${t.label("Installed")} ${totalCount} item${totalCount !== 1 ? "s" : ""}`,
     ...hasDrift ? [
-      `  ${t.label("Skipped")}   ${kleur_default.yellow(String(allSkipped.length))} drifted (local changes preserved)`,
-      `  ${t.label("Hint")}      run ${t.accent("xtrm install --backport")} to push them back`
+      `  ${t.label("Skipped")}   ${allSkipped.length} drifted (local changes preserved)`,
+      `  ${t.label("Hint")}      run xtrm install --backport to push them back`
     ] : [],
-    ...isDryRun ? ["", t.accent("  Dry run \u2014 no changes written")] : []
+    ...isDryRun ? ["", kleur_default.dim("  Dry run \u2014 no changes written")] : []
   ];
   console.log("\n" + boxen2(lines.join("\n"), {
     padding: { top: 1, bottom: 1, left: 1, right: 3 },
     borderStyle: "round",
-    borderColor: hasDrift ? "yellow" : "green"
+    borderColor: "gray"
   }) + "\n");
 }
 function formatTargetLabel(target) {
@@ -41147,7 +41146,7 @@ var OFFICIAL_CLAUDE_PLUGINS = [
 async function installOfficialClaudePlugins(dryRun) {
   console.log(t.bold("\n  \u2699  official Claude plugins  (serena/context7/github/ralph-loop)"));
   if (dryRun) {
-    console.log(t.accent("  [DRY RUN] Would register claude-plugins-official marketplace and install official plugins\n"));
+    console.log(kleur_default.dim("  [DRY RUN] Would register claude-plugins-official marketplace and install official plugins\n"));
     return;
   }
   (0, import_child_process3.spawnSync)("claude", ["plugin", "marketplace", "add", OFFICIAL_CLAUDE_MARKETPLACE, "--scope", "user"], { stdio: "pipe" });
@@ -41183,7 +41182,7 @@ async function cleanStalePrePluginFiles(repoRoot, dryRun) {
       const staleFile = import_path12.default.join(staleHooksDir, name);
       if (await import_fs_extra12.default.pathExists(staleFile)) {
         if (dryRun) {
-          console.log(t.accent(`  [DRY RUN] Would remove stale hook: ~/.claude/hooks/${name}`));
+          console.log(kleur_default.dim(`  [DRY RUN] Would remove stale hook: ~/.claude/hooks/${name}`));
         } else {
           await import_fs_extra12.default.remove(staleFile);
           console.log(t.muted(`  \u2717 Removed stale hook: ~/.claude/hooks/${name}`));
@@ -41199,7 +41198,7 @@ async function cleanStalePrePluginFiles(repoRoot, dryRun) {
       const staleDir = import_path12.default.join(staleSkillsDir, name);
       if (await import_fs_extra12.default.pathExists(staleDir)) {
         if (dryRun) {
-          console.log(t.accent(`  [DRY RUN] Would remove stale skill: ~/.claude/skills/${name}`));
+          console.log(kleur_default.dim(`  [DRY RUN] Would remove stale skill: ~/.claude/skills/${name}`));
         } else {
           await import_fs_extra12.default.remove(staleDir);
           console.log(t.muted(`  \u2717 Removed stale skill: ~/.claude/skills/${name}`));
@@ -41229,7 +41228,7 @@ async function cleanStalePrePluginFiles(repoRoot, dryRun) {
             for (const h of staleHooks) {
               const msg = `settings.json [${event}] hook: ${h.command}`;
               if (dryRun) {
-                console.log(t.accent(`  [DRY RUN] Would remove stale ${msg}`));
+                console.log(kleur_default.dim(`  [DRY RUN] Would remove stale ${msg}`));
               } else {
                 console.log(t.muted(`  \u2717 Removed stale ${msg}`));
               }
@@ -41285,7 +41284,7 @@ async function installPlugin(repoRoot, dryRun) {
   console.log(t.bold("\n  \u2699  xtrm-tools  (Claude Code plugin)"));
   warnIfOutdated();
   if (dryRun) {
-    console.log(t.accent("  [DRY RUN] Would register xtrm-tools marketplace and install plugin\n"));
+    console.log(kleur_default.dim("  [DRY RUN] Would register xtrm-tools marketplace and install plugin\n"));
     await cleanStalePrePluginFiles(repoRoot, true);
     await installOfficialClaudePlugins(true);
     return;
@@ -41310,7 +41309,7 @@ function installUserStatusLine(dryRun) {
     const settingsPath = import_path12.default.join(import_os5.default.homedir(), ".claude", "settings.json");
     const settings = import_fs_extra12.default.existsSync(settingsPath) ? JSON.parse(import_fs_extra12.default.readFileSync(settingsPath, "utf8")) : {};
     if (dryRun) {
-      console.log(t.accent(`  [DRY RUN] Would write statusLine \u2192 ${scriptPath}`));
+      console.log(kleur_default.dim(`  [DRY RUN] Would write statusLine \u2192 ${scriptPath}`));
       return;
     }
     settings.statusLine = { type: "command", command: `node ${scriptPath}`, padding: 1 };
@@ -41456,12 +41455,12 @@ function createInstallCommand() {
       await syncMcpForTargets(repoRoot, otherTargets, dryRun);
     }
     if (allChanges.length === 0) {
-      console.log("\n" + t.boldGreen("\u2713 Files are up-to-date") + "\n");
+      console.log("\n" + kleur_default.bold("\u2713 Files are up-to-date") + "\n");
       return;
     }
     renderPlanTable(allChanges);
     if (dryRun) {
-      console.log(t.accent("\u{1F4A1} Dry run \u2014 no changes written\n"));
+      console.log(kleur_default.dim("  Dry run \u2014 no changes written\n"));
       return;
     }
     if (!effectiveYes) {

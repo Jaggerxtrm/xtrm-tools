@@ -20,6 +20,29 @@ function isPiInstalled(): boolean {
     return r.status === 0;
 }
 
+function isPnpmInstalled(): boolean {
+    return spawnSync('pnpm', ['--version'], { encoding: 'utf8', stdio: 'pipe' }).status === 0;
+}
+
+function ensurePnpm(dryRun: boolean): void {
+    if (isPnpmInstalled()) {
+        const v = spawnSync('pnpm', ['--version'], { encoding: 'utf8', stdio: 'pipe' });
+        console.log(t.success(`  ✓ pnpm ${v.stdout.trim()} already installed`));
+        return;
+    }
+    console.log(kleur.yellow('  pnpm not found — installing via npm...'));
+    if (dryRun) {
+        console.log(kleur.dim('  [DRY RUN] npm install -g pnpm'));
+        return;
+    }
+    const r = spawnSync('npm', ['install', '-g', 'pnpm'], { stdio: 'inherit' });
+    if (r.status !== 0) {
+        console.log(kleur.yellow('  ⚠ Failed to install pnpm. Run: npm install -g pnpm'));
+    } else {
+        console.log(t.success('  ✓ pnpm installed'));
+    }
+}
+
 /**
  * Non-interactive Pi install: copies extensions + installs npm packages.
  * Called automatically as part of `xtrm install`.
@@ -47,6 +70,8 @@ export async function runPiInstall(dryRun: boolean = false): Promise<void> {
         const v = spawnSync('pi', ['--version'], { encoding: 'utf8' });
         console.log(t.success(`  ✓ pi ${v.stdout.trim()} already installed`));
     }
+
+    ensurePnpm(dryRun);
 
     // Load schema for packages
     let packages: string[] = [];

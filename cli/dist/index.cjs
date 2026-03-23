@@ -40954,6 +40954,27 @@ function isPiInstalled() {
   const r = (0, import_node_child_process2.spawnSync)("pi", ["--version"], { encoding: "utf8", stdio: "pipe" });
   return r.status === 0;
 }
+function isPnpmInstalled() {
+  return (0, import_node_child_process2.spawnSync)("pnpm", ["--version"], { encoding: "utf8", stdio: "pipe" }).status === 0;
+}
+function ensurePnpm2(dryRun) {
+  if (isPnpmInstalled()) {
+    const v = (0, import_node_child_process2.spawnSync)("pnpm", ["--version"], { encoding: "utf8", stdio: "pipe" });
+    console.log(t.success(`  \u2713 pnpm ${v.stdout.trim()} already installed`));
+    return;
+  }
+  console.log(kleur_default.yellow("  pnpm not found \u2014 installing via npm..."));
+  if (dryRun) {
+    console.log(kleur_default.dim("  [DRY RUN] npm install -g pnpm"));
+    return;
+  }
+  const r = (0, import_node_child_process2.spawnSync)("npm", ["install", "-g", "pnpm"], { stdio: "inherit" });
+  if (r.status !== 0) {
+    console.log(kleur_default.yellow("  \u26A0 Failed to install pnpm. Run: npm install -g pnpm"));
+  } else {
+    console.log(t.success("  \u2713 pnpm installed"));
+  }
+}
 async function runPiInstall(dryRun = false) {
   const repoRoot = await findRepoRoot();
   const piConfigDir = import_path11.default.join(repoRoot, "config", "pi");
@@ -40975,6 +40996,7 @@ async function runPiInstall(dryRun = false) {
     const v = (0, import_node_child_process2.spawnSync)("pi", ["--version"], { encoding: "utf8" });
     console.log(t.success(`  \u2713 pi ${v.stdout.trim()} already installed`));
   }
+  ensurePnpm2(dryRun);
   let packages = [];
   if (await import_fs_extra11.default.pathExists(schemaPath)) {
     const schema = await import_fs_extra11.default.readJson(schemaPath);
@@ -41762,24 +41784,6 @@ function readExistingPiValues(piAgentDir) {
 }
 function isPiInstalled2() {
   return (0, import_node_child_process5.spawnSync)("pi", ["--version"], { encoding: "utf8" }).status === 0;
-}
-function isPnpmInstalled() {
-  return (0, import_node_child_process5.spawnSync)("pnpm", ["--version"], { encoding: "utf8" }).status === 0;
-}
-function ensurePnpm() {
-  if (isPnpmInstalled()) {
-    const v = (0, import_node_child_process5.spawnSync)("pnpm", ["--version"], { encoding: "utf8" });
-    console.log(t.success(`  pnpm ${v.stdout.trim()} already installed
-`));
-    return;
-  }
-  console.log(kleur_default.yellow("  pnpm not found \u2014 installing via npm...\n"));
-  const r = (0, import_node_child_process5.spawnSync)("npm", ["install", "-g", "pnpm"], { stdio: "inherit" });
-  if (r.status !== 0) {
-    console.log(kleur_default.yellow("  Failed to install pnpm. Run: npm install -g pnpm\n"));
-  } else {
-    console.log(t.success("  pnpm installed\n"));
-  }
 }
 function printPiCheckSummary(diff) {
   const totalDiff = diff.missing.length + diff.stale.length;

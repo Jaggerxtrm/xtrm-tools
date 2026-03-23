@@ -107,7 +107,7 @@ describe('xtrm docs cross-check — human output', () => {
         const r = runCrossCheck(['--days', '30']);
         // Should have warning or info symbols if findings exist
         // If no findings, shows "All docs current"
-        if (r.stdout.includes('finding')) {
+        if (r.stdout.match(/[1-9]\d* finding/)) {
             expect(r.stdout).toMatch(/⚠|ℹ|✗/);
         } else {
             expect(r.stdout).toMatch(/current|✓/i);

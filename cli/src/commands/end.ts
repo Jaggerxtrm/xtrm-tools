@@ -179,20 +179,25 @@ export function createEndCommand(): Command {
 
             const issues: EndIssue[] = [];
             for (const id of issueIds) {
-                const showResult = bd(['show', id, '--json'], cwd);
-                if (showResult.ok) {
+                const queryResult = bd(['query', `id=${id}`, '--json'], cwd);
+                if (queryResult.ok) {
                     try {
-                        const data = JSON.parse(showResult.out);
-                        issues.push({
-                            id,
-                            title: data.title ?? id,
-                            description: data.description ?? '',
-                            reason: data.close_reason ?? '',
-                        });
+                        const data = JSON.parse(queryResult.out);
+                        const first = Array.isArray(data) ? data[0] : data;
+                        if (first) {
+                            issues.push({
+                                id,
+                                title: first.title ?? id,
+                                description: first.description ?? '',
+                                reason: first.close_reason ?? '',
+                            });
+                            continue;
+                        }
                     } catch {
-                        issues.push({ id, title: id, description: '', reason: '' });
+                        // fall through to id-only record
                     }
                 }
+                issues.push({ id, title: id, description: '', reason: '' });
             }
 
             if (issues.length > 0) {

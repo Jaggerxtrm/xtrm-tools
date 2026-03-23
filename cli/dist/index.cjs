@@ -57778,13 +57778,44 @@ function bd(args, cwd) {
   return { ok: r.status === 0, out: (r.stdout ?? "").trim() };
 }
 function extractIssueIds(commitLog) {
-  const matches = commitLog.matchAll(/\(([a-z0-9]+-[a-z0-9]+-[a-z0-9]+)\)/g);
-  return [...new Set([...matches].map((m) => m[1]))];
+  const matches = commitLog.matchAll(/\(([a-z0-9]+(?:-[a-z0-9]+)*(?:\.[0-9]+)?)\)/gi);
+  return [...new Set([...matches].map((m) => m[1].toLowerCase()))];
 }
-function buildPrTitle(issues) {
-  if (issues.length === 0) return "session changes";
-  if (issues.length === 1) return issues[0].reason || issues[0].title;
-  return `${issues[0].reason || issues[0].title} (+${issues.length - 1} more)`;
+function normalizePrTitle(input) {
+  const trimmed = input.trim().replace(/[.\s]+$/g, "");
+  if (!trimmed) return "Update worktree session";
+  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+}
+function isGenericPrTitle(title) {
+  return /^(session changes|update|updates|misc|wip|work in progress)$/i.test(title.trim());
+}
+function inferTitleFromChangedFiles(changedFiles) {
+  const hasDocsCrossCheck = changedFiles.some((f) => f.includes("docs-cross-check"));
+  const hasDocsCommand = changedFiles.some((f) => f === "cli/src/commands/docs.ts" || f === "cli/src/commands/help.ts");
+  const hasSyncDocsSkill = changedFiles.some((f) => f === "skills/sync-docs/SKILL.md");
+  const hasDocsPages = changedFiles.some((f) => f.startsWith("docs/") || f === "README.md" || f === "XTRM-GUIDE.md");
+  const hasTests = changedFiles.some((f) => f.startsWith("cli/test/"));
+  if (hasDocsCrossCheck && hasSyncDocsSkill) return "Add docs cross-check and integrate sync-docs workflow";
+  if (hasDocsCrossCheck && hasTests) return "Add docs cross-check command and tests";
+  if (hasDocsCommand && hasDocsPages && hasSyncDocsSkill) return "Integrate docs workflow across CLI, docs, and sync-docs";
+  if (hasDocsCommand && hasDocsPages) return "Update docs workflow and CLI help";
+  if (hasDocsPages) return "Update documentation";
+  return "Update worktree session";
+}
+function buildPrTitle(issues, changedFiles) {
+  if (issues.length === 0) return inferTitleFromChangedFiles(changedFiles);
+  if (issues.length === 1) {
+    const single = normalizePrTitle(issues[0].title || issues[0].reason || issues[0].id);
+    return isGenericPrTitle(single) ? inferTitleFromChangedFiles(changedFiles) : single;
+  }
+  const titles = issues.map((i) => `${i.title} ${i.reason}`.toLowerCase());
+  const hasCrossCheck = titles.some((t2) => t2.includes("cross-check"));
+  const hasSyncDocs = titles.some((t2) => t2.includes("sync-docs"));
+  const hasDocs = titles.some((t2) => t2.includes("docs"));
+  if (hasCrossCheck && hasSyncDocs) return "Add docs cross-check and integrate sync-docs workflow";
+  if (hasDocs) return "Update docs workflow and command surfaces";
+  const multi = normalizePrTitle(issues[0].title || issues[0].reason || issues[0].id);
+  return isGenericPrTitle(multi) ? inferTitleFromChangedFiles(changedFiles) : `${multi} (+${issues.length - 1} more)`;
 }
 function buildPrBody(issues, commitLog, diffStat, branch) {
   const lines = [];
@@ -57873,13 +57904,16 @@ function createEndCommand() {
     }
     if (issues.length > 0) {
       console.log(t.success(`  \u2713 Found ${issues.length} closed issue(s): ${issueIds.join(", ")}`));
+    } else if (issueIds.length > 0) {
+      console.log(kleur_default.yellow(`  \u26A0 Found issue references in commits but could not load bead details: ${issueIds.join(", ")}`));
     } else {
       console.log(kleur_default.dim("  \u25CB No beads issues found in commit log"));
     }
     if (opts.dryRun) {
       const fullLog2 = git(["log", `origin/${defaultBranch}..HEAD`, "--oneline"], cwd).out;
       const diffStat2 = git(["diff", `origin/${defaultBranch}`, "--stat"], cwd).out;
-      const prTitle2 = buildPrTitle(issues);
+      const changedFiles2 = git(["diff", `origin/${defaultBranch}`, "--name-only"], cwd).out.split("\n").filter(Boolean);
+      const prTitle2 = buildPrTitle(issues, changedFiles2);
       const prBody2 = buildPrBody(issues, fullLog2, diffStat2, branch);
       console.log(t.bold("\n  [DRY RUN] PR preview\n"));
       console.log(`  ${kleur_default.bold("Title:")} ${prTitle2}`);
@@ -57922,7 +57956,8 @@ function createEndCommand() {
     console.log(t.success(`  \u2713 Pushed ${branch}`));
     const fullLog = git(["log", `origin/${defaultBranch}..HEAD`, "--oneline"], cwd).out;
     const diffStat = git(["diff", `origin/${defaultBranch}`, "--stat"], cwd).out;
-    const prTitle = buildPrTitle(issues);
+    const changedFiles = git(["diff", `origin/${defaultBranch}`, "--name-only"], cwd).out.split("\n").filter(Boolean);
+    const prTitle = buildPrTitle(issues, changedFiles);
     const prBody = buildPrBody(issues, fullLog, diffStat, branch);
     console.log(kleur_default.dim("  Creating PR..."));
     const prArgs = ["pr", "create", "--title", prTitle, "--body", prBody];

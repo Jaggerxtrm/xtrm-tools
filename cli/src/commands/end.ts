@@ -11,6 +11,13 @@ interface EndOptions {
     dryRun: boolean;
 }
 
+interface EndIssue {
+    id: string;
+    title: string;
+    description: string;
+    reason: string;
+}
+
 function git(args: string[], cwd: string): { ok: boolean; out: string; err: string } {
     const r = spawnSync('git', args, { cwd, encoding: 'utf8', stdio: 'pipe' });
     return { ok: r.status === 0, out: (r.stdout ?? '').trim(), err: (r.stderr ?? '').trim() };
@@ -21,17 +28,59 @@ function bd(args: string[], cwd: string): { ok: boolean; out: string } {
     return { ok: r.status === 0, out: (r.stdout ?? '').trim() };
 }
 
-/** Extract issue IDs from commit messages like "reason (jaggers-agent-tools-xxxx)" */
+/** Extract issue IDs from commit messages like "reason (xtrm-skg2)" or "reason (8jr5.8)" */
 function extractIssueIds(commitLog: string): string[] {
-    const matches = commitLog.matchAll(/\(([a-z0-9]+-[a-z0-9]+-[a-z0-9]+)\)/g);
-    return [...new Set([...matches].map(m => m[1]))];
+    const matches = commitLog.matchAll(/\(([a-z0-9]+(?:-[a-z0-9]+)*(?:\.[0-9]+)?)\)/gi);
+    return [...new Set([...matches].map(m => m[1].toLowerCase()))];
 }
 
-/** Generate PR title from issue data */
-function buildPrTitle(issues: Array<{ id: string; reason: string; title: string }>): string {
-    if (issues.length === 0) return 'session changes';
-    if (issues.length === 1) return issues[0].reason || issues[0].title;
-    return `${issues[0].reason || issues[0].title} (+${issues.length - 1} more)`;
+function normalizePrTitle(input: string): string {
+    const trimmed = input.trim().replace(/[.\s]+$/g, '');
+    if (!trimmed) return 'Update worktree session';
+    return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+}
+
+function isGenericPrTitle(title: string): boolean {
+    return /^(session changes|update|updates|misc|wip|work in progress)$/i.test(title.trim());
+}
+
+function inferTitleFromChangedFiles(changedFiles: string[]): string {
+    const hasDocsCrossCheck = changedFiles.some(f => f.includes('docs-cross-check'));
+    const hasDocsCommand = changedFiles.some(f => f === 'cli/src/commands/docs.ts' || f === 'cli/src/commands/help.ts');
+    const hasSyncDocsSkill = changedFiles.some(f => f === 'skills/sync-docs/SKILL.md');
+    const hasDocsPages = changedFiles.some(f => f.startsWith('docs/') || f === 'README.md' || f === 'XTRM-GUIDE.md');
+    const hasTests = changedFiles.some(f => f.startsWith('cli/test/'));
+
+    if (hasDocsCrossCheck && hasSyncDocsSkill) return 'Add docs cross-check and integrate sync-docs workflow';
+    if (hasDocsCrossCheck && hasTests) return 'Add docs cross-check command and tests';
+    if (hasDocsCommand && hasDocsPages && hasSyncDocsSkill) return 'Integrate docs workflow across CLI, docs, and sync-docs';
+    if (hasDocsCommand && hasDocsPages) return 'Update docs workflow and CLI help';
+    if (hasDocsPages) return 'Update documentation';
+
+    return 'Update worktree session';
+}
+
+/** Generate PR title from issue data, with deterministic fallback if issue-derived titles are too generic. */
+function buildPrTitle(issues: EndIssue[], changedFiles: string[]): string {
+    if (issues.length === 0) return inferTitleFromChangedFiles(changedFiles);
+
+    if (issues.length === 1) {
+        const single = normalizePrTitle(issues[0].title || issues[0].reason || issues[0].id);
+        return isGenericPrTitle(single) ? inferTitleFromChangedFiles(changedFiles) : single;
+    }
+
+    const titles = issues.map(i => `${i.title} ${i.reason}`.toLowerCase());
+    const hasCrossCheck = titles.some(t => t.includes('cross-check'));
+    const hasSyncDocs = titles.some(t => t.includes('sync-docs'));
+    const hasDocs = titles.some(t => t.includes('docs'));
+
+    if (hasCrossCheck && hasSyncDocs) return 'Add docs cross-check and integrate sync-docs workflow';
+    if (hasDocs) return 'Update docs workflow and command surfaces';
+
+    const multi = normalizePrTitle(issues[0].title || issues[0].reason || issues[0].id);
+    return isGenericPrTitle(multi)
+        ? inferTitleFromChangedFiles(changedFiles)
+        : `${multi} (+${issues.length - 1} more)`;
 }
 
 /** Generate PR body from issues, commit log, diff stat */
@@ -128,7 +177,7 @@ export function createEndCommand(): Command {
             const logResult = git(['log', `origin/${defaultBranch}..HEAD`, '--oneline'], cwd);
             const issueIds = extractIssueIds(logResult.out);
 
-            const issues: Array<{ id: string; title: string; description: string; reason: string }> = [];
+            const issues: EndIssue[] = [];
             for (const id of issueIds) {
                 const showResult = bd(['show', id, '--json'], cwd);
                 if (showResult.ok) {
@@ -148,6 +197,8 @@ export function createEndCommand(): Command {
 
             if (issues.length > 0) {
                 console.log(t.success(`  ✓ Found ${issues.length} closed issue(s): ${issueIds.join(', ')}`));
+            } else if (issueIds.length > 0) {
+                console.log(kleur.yellow(`  ⚠ Found issue references in commits but could not load bead details: ${issueIds.join(', ')}`));
             } else {
                 console.log(kleur.dim('  ○ No beads issues found in commit log'));
             }
@@ -156,7 +207,8 @@ export function createEndCommand(): Command {
             if (opts.dryRun) {
                 const fullLog = git(['log', `origin/${defaultBranch}..HEAD`, '--oneline'], cwd).out;
                 const diffStat = git(['diff', `origin/${defaultBranch}`, '--stat'], cwd).out;
-                const prTitle = buildPrTitle(issues);
+                const changedFiles = git(['diff', `origin/${defaultBranch}`, '--name-only'], cwd).out.split('\n').filter(Boolean);
+                const prTitle = buildPrTitle(issues, changedFiles);
                 const prBody = buildPrBody(issues, fullLog, diffStat, branch);
 
                 console.log(t.bold('\n  [DRY RUN] PR preview\n'));
@@ -206,7 +258,8 @@ export function createEndCommand(): Command {
             // 9. Build PR content
             const fullLog = git(['log', `origin/${defaultBranch}..HEAD`, '--oneline'], cwd).out;
             const diffStat = git(['diff', `origin/${defaultBranch}`, '--stat'], cwd).out;
-            const prTitle = buildPrTitle(issues);
+            const changedFiles = git(['diff', `origin/${defaultBranch}`, '--name-only'], cwd).out.split('\n').filter(Boolean);
+            const prTitle = buildPrTitle(issues, changedFiles);
             const prBody = buildPrBody(issues, fullLog, diffStat, branch);
 
             // 10. Create PR

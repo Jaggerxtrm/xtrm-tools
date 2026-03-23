@@ -274,7 +274,10 @@ Enriches tool output with knowledge graph context via `gitnexus augment`.
 | `worktree list` | List all active worktrees |
 | `worktree clean` | Remove stale/merged worktrees |
 | `worktree remove` | Remove a specific worktree |
+| `docs` | Documentation inspection and drift-check suite (`xtrm docs --help`) |
 | `docs show` | Display frontmatter for README, CHANGELOG, docs/*.md |
+| `docs list` | Inventory markdown docs with summaries, filters, and JSON output |
+| `docs cross-check` | Validate docs against recent PR activity and closed bd issues |
 | `debug` | Watch xtrm hook and bd lifecycle events in real time |
 
 ### Flags
@@ -285,6 +288,11 @@ Enriches tool output with knowledge graph context via `gitnexus augment`.
 | `--dry-run` | Preview only |
 | `--prune` | Force-replace hooks |
 | `--force` | Overwrite existing |
+
+For the docs command suite, use:
+- `xtrm docs --help` for the submenu
+- `xtrm docs cross-check --help` for drift-check flags and output modes
+- [docs/docs-commands.md](docs/docs-commands.md) for the detailed reference
 
 ---
 

@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - gitnexus hook now fires on Grep/Read/Glob tools (parity with Pi); quality-check covers .cjs/.mjs files; quality gate env pre-check at SessionStart; policies.md rewritten from scaffold; using-xtrm SKILL.md rewritten; worktree-session migrated to bd worktree; branch state + xt end reminders in gate messages
+- `xtrm docs cross-check` command suite documentation across README, guides, CLI help, and detailed docs reference
 
 - **pi-serena-compact**: Pi extension that compacts verbose output from Serena/GitNexus MCP tools (6 lines default, 12 for read_file/shell commands, respects expanded view toggle)
 ### Changed

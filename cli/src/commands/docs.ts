@@ -156,7 +156,7 @@ function printCrossCheckReport(findings: CrossCheckFinding[], docsChecked: numbe
 
 export function createDocsCommand(): Command {
     const docs = new Command('docs')
-        .description('Documentation management commands');
+        .description('Documentation inspection and drift-check commands');
 
     docs
         .command('show [filter]')
@@ -198,7 +198,7 @@ export function createDocsCommand(): Command {
 
     docs
         .command('list')
-        .description('List all .md files in the project with frontmatter summary')
+        .description('List markdown docs with metadata summary, filters, and optional cache bypass')
         .option('--dir <path>', 'Filter to files under this directory')
         .option('--pattern <glob>', 'Filter by filename substring')
         .option('--filter <field=value>', 'Filter by frontmatter field, e.g. --filter type=service')
@@ -289,7 +289,7 @@ export function createDocsCommand(): Command {
     // ── cross-check subcommand ────────────────────────────────────────────────
     docs
         .command('cross-check')
-        .description('Validate docs against recent PR activity and bd issues')
+        .description('Validate docs against recent PR activity, issue coverage, and open issue refs')
         .option('--days <n>', 'Look-back window in days', '30')
         .option('--json', 'Output JSON', false)
         .action(async (opts: { days: string; json: boolean }) => {

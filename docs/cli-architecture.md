@@ -3,7 +3,7 @@ title: CLI Architecture
 scope: cli-architecture
 category: reference
 version: 1.1.0
-updated: 2026-03-22
+updated: 2026-03-23
 synced_at: 8e2f93c
 source_of_truth_for:
   - "cli/src/**/*.ts"
@@ -41,10 +41,19 @@ xt / xtrm
 ├── clean            → commands/clean.ts
 ├── status           → commands/status.ts
 ├── docs             → commands/docs.ts
-│   └── docs show    → displays frontmatter for README, CHANGELOG, docs/*.md
+│   ├── docs show         → displays frontmatter for README, CHANGELOG, docs/*.md
+│   ├── docs list         → inventories markdown docs with metadata and cache support
+│   └── docs cross-check  → compares docs against recent PRs and closed bd issues
 ├── debug            → commands/debug.ts   → real-time hook/bd event monitoring
 └── help             → commands/help.ts
 ```
+
+The `docs` command family is intentionally split into:
+- `show` for direct frontmatter inspection
+- `list` for inventory/filtering views over markdown docs
+- `cross-check` for drift detection against recent GitHub and bd activity
+
+For user-facing command examples, see [docs/docs-commands.md](docs-commands.md).
 
 `xtrm finish` was removed in v0.5.x — `commands/finish.ts` and
 `core/xtrm-finish.ts` are dead code kept for reference only.

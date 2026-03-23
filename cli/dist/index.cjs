@@ -57412,8 +57412,12 @@ function createHelpCommand() {
       "  xtrm init",
       "    Initialize project-level workflow setup.",
       "",
-      "  xtrm docs show [filter] [--raw] [--json]",
-      "    Show frontmatter for README/CHANGELOG/docs/*.md.",
+      "  xtrm docs --help",
+      "    Documentation inspection and drift-check submenu.",
+      "    Subcommands: show, list, cross-check",
+      "",
+      "  xtrm docs cross-check [--days <n>] [--json]",
+      "    Validate docs against recent PR activity and closed bd issues.",
       "",
       "  xtrm debug [options]",
       "    Stream xtrm event log (tool calls, gates, session/bd lifecycle).",
@@ -57462,7 +57466,8 @@ function createHelpCommand() {
     blocks.push(section("NOTES", [
       "  - Banner is shown only for xtrm install.",
       "  - For command-level details, run: xtrm <command> --help",
-      "  - For subcommand details, run: xtrm <command> <subcommand> --help"
+      "  - For subcommand details, run: xtrm <command> <subcommand> --help",
+      "  - For docs workflow details, run: xtrm docs --help"
     ]));
     process.stdout.write(blocks.join("\n"));
   });
@@ -58714,7 +58719,7 @@ function printCrossCheckReport(findings, docsChecked, total) {
 `));
 }
 function createDocsCommand() {
-  const docs = new Command("docs").description("Documentation management commands");
+  const docs = new Command("docs").description("Documentation inspection and drift-check commands");
   docs.command("show [filter]").description("Display frontmatters for README, CHANGELOG, and docs/ files").option("--raw", "Output raw YAML frontmatter", false).option("--json", "Output JSON", false).action(async (filter, opts) => {
     const repoRoot = await findRepoRoot();
     const entries = await collectDocFiles(repoRoot, filter);
@@ -58742,7 +58747,7 @@ function createDocsCommand() {
   ${sym.ok} ${entries.length} file${entries.length !== 1 ? "s" : ""}` + (without > 0 ? kleur_default.gray(`  (${without} without frontmatter)`) : "") + "\n"
     );
   });
-  docs.command("list").description("List all .md files in the project with frontmatter summary").option("--dir <path>", "Filter to files under this directory").option("--pattern <glob>", "Filter by filename substring").option("--filter <field=value>", "Filter by frontmatter field, e.g. --filter type=service").option("--json", "Output JSON array", false).option("--no-cache", "Bypass cache and force fresh scan").action(async (opts) => {
+  docs.command("list").description("List markdown docs with metadata summary, filters, and optional cache bypass").option("--dir <path>", "Filter to files under this directory").option("--pattern <glob>", "Filter by filename substring").option("--filter <field=value>", "Filter by frontmatter field, e.g. --filter type=service").option("--json", "Output JSON array", false).option("--no-cache", "Bypass cache and force fresh scan").action(async (opts) => {
     const repoRoot = await findRepoRoot();
     let fmFilter;
     if (opts.filter) {
@@ -58813,7 +58818,7 @@ function createDocsCommand() {
   ${sym.ok} ${entries.length} file${entries.length !== 1 ? "s" : ""}${withoutNote}${cacheNote}
 `);
   });
-  docs.command("cross-check").description("Validate docs against recent PR activity and bd issues").option("--days <n>", "Look-back window in days", "30").option("--json", "Output JSON", false).action(async (opts) => {
+  docs.command("cross-check").description("Validate docs against recent PR activity, issue coverage, and open issue refs").option("--days <n>", "Look-back window in days", "30").option("--json", "Output JSON", false).action(async (opts) => {
     try {
       const days = parseInt(opts.days, 10) || 30;
       const repoRoot = await findRepoRoot();

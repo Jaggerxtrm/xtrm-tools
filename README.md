@@ -44,6 +44,7 @@ Native integration with the [specialists](https://github.com/Jaggerxtrm/speciali
 | [docs/worktrees.md](docs/worktrees.md) | xt worktrees — `xt claude/pi`, `xt attach`, `xt end`, isolation model |
 | [docs/mcp-servers.md](docs/mcp-servers.md) | MCP servers — gitnexus, github-grep, deepwiki, official plugins |
 | [docs/cli-architecture.md](docs/cli-architecture.md) | CLI internals — install flow, diff/sync engine, config merge |
+| [docs/docs-commands.md](docs/docs-commands.md) | Docs command suite — `show`, `list`, `cross-check`, output modes, drift checks |
 | [docs/project-skills.md](docs/project-skills.md) | Project-scoped skills — install, layout, Pi/Claude symlinks |
 | [docs/testing.md](docs/testing.md) | Live testing checklist — integration, gates, worktree flows |
 | [CHANGELOG.md](CHANGELOG.md) | Full version history |
@@ -177,10 +178,15 @@ xtrm <command> [options]
 | `end` | Close worktree session: rebase, push, PR, cleanup |
 | `worktree list` | List active `xt/*` worktrees with runtime, last activity, and resume hint |
 | `worktree clean` | Remove merged worktrees |
+| `docs` | Documentation inspection and drift-check suite (`xtrm docs --help`) |
 | `docs show` | Display frontmatter for README, CHANGELOG, docs/*.md |
+| `docs list` | Inventory markdown docs with filters, summaries, and optional cache bypass |
+| `docs cross-check` | Compare docs against recent PR activity and closed bd issues |
 | `debug` | Watch hook and bd lifecycle events in real time |
 
 **Flags:** `--yes / -y` (non-interactive), `--dry-run` (preview), `--prune` (force-replace hooks)
+
+For detailed docs command usage, see [docs/docs-commands.md](docs/docs-commands.md) or run `xtrm docs --help` / `xtrm docs cross-check --help`.
 
 See [docs/cli-architecture.md](docs/cli-architecture.md) for internals.
 

@@ -47,8 +47,12 @@ export function createHelpCommand(): Command {
                 '  xtrm init',
                 '    Initialize project-level workflow setup.',
                 '',
-                '  xtrm docs show [filter] [--raw] [--json]',
-                '    Show frontmatter for README/CHANGELOG/docs/*.md.',
+                '  xtrm docs --help',
+                '    Documentation inspection and drift-check submenu.',
+                '    Subcommands: show, list, cross-check',
+                '',
+                '  xtrm docs cross-check [--days <n>] [--json]',
+                '    Validate docs against recent PR activity and closed bd issues.',
                 '',
                 '  xtrm debug [options]',
                 '    Stream xtrm event log (tool calls, gates, session/bd lifecycle).',
@@ -102,6 +106,7 @@ export function createHelpCommand(): Command {
                 '  - Banner is shown only for xtrm install.',
                 '  - For command-level details, run: xtrm <command> --help',
                 '  - For subcommand details, run: xtrm <command> <subcommand> --help',
+                '  - For docs workflow details, run: xtrm docs --help',
             ]));
 
             process.stdout.write(blocks.join('\n'));

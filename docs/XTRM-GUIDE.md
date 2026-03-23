@@ -3,7 +3,7 @@ title: XTRM-Tools Complete Guide
 scope: xtrm-guide
 category: reference
 version: 1.0.0
-updated: 2026-03-22
+updated: 2026-03-23
 domain: []
 ---
 
@@ -58,6 +58,24 @@ xt worktree clean
 ```
 
 `xt` and `xtrm` are equivalent command names.
+
+## Documentation Commands
+
+Use the docs submenu for metadata inspection and drift checks:
+
+```bash
+xtrm docs --help
+xtrm docs show
+xtrm docs list
+xtrm docs cross-check --days 14
+```
+
+Broad guidance:
+- use `show` for frontmatter inspection
+- use `list` for docs inventory and filtering
+- use `cross-check` after feature work to catch stale docs and coverage gaps
+
+For the detailed reference, see [docs/docs-commands.md](docs-commands.md).
 
 ## Help and Banner Behavior
 
@@ -130,9 +148,17 @@ Current extension layout is **directory-based** under `config/pi/extensions/<nam
 When changing hooks/policies/runtime behavior, update these docs together:
 
 - `docs/XTRM-GUIDE.md`
+- `docs/docs-commands.md` (if docs command behavior changed)
 - `docs/hooks.md`
 - `docs/policies.md`
 - `docs/pi-extensions.md` (if Pi behavior changed)
+
+For docs workflow checks, run:
+
+```bash
+xtrm docs list
+xtrm docs cross-check --days 14
+```
 
 ## Troubleshooting
 

@@ -1,0 +1,116 @@
+---
+title: Documentation Commands
+scope: docs-commands
+category: reference
+version: 1.0.0
+updated: 2026-03-23
+description: "Reference for xtrm docs subcommands: show, list, and cross-check"
+domain: [docs, cli]
+---
+
+# Documentation Commands
+
+Use `xtrm docs --help` for the command menu and `xtrm docs <subcommand> --help` for exact flags.
+
+## Command Suite
+
+| Command | Purpose |
+|---|---|
+| `xtrm docs show [filter] [--raw] [--json]` | Inspect frontmatter for `README.md`, `CHANGELOG.md`, and `docs/*.md` |
+| `xtrm docs list [--dir <path>] [--pattern <text>] [--filter <field=value>] [--json] [--no-cache]` | Inventory markdown docs with summary metadata and optional filters |
+| `xtrm docs cross-check [--days <n>] [--json]` | Validate docs against recent merged PR activity and closed bd issues |
+
+## `xtrm docs show`
+
+Best for quick metadata inspection.
+
+```bash
+xtrm docs show
+xtrm docs show hooks
+xtrm docs show --raw
+xtrm docs show --json
+```
+
+What it does:
+- scans `README.md`, `CHANGELOG.md`, and top-level `docs/*.md`
+- parses YAML frontmatter when present
+- prints either readable field output or JSON
+
+## `xtrm docs list`
+
+Best for inventory and filtering.
+
+```bash
+xtrm docs list
+xtrm docs list --filter type=service
+xtrm docs list --pattern policy
+xtrm docs list --json
+```
+
+What it does:
+- scans markdown files using the docs scanner
+- shows file path, size, modified time, title, and type
+- supports cached scans by default
+- supports `--no-cache` for a fresh pass
+
+## `xtrm docs cross-check`
+
+Best for detecting documentation drift after feature work.
+
+```bash
+xtrm docs cross-check
+xtrm docs cross-check --days 7
+xtrm docs cross-check --json
+```
+
+What it checks:
+- **stale docs** — docs older than recent merged PR activity
+- **coverage gaps** — recently closed `feature` or `task` bd issues with no doc mention
+- **reference validity** — docs that mention issue IDs still open in bd
+- **frontmatter drift** — `updated_at` significantly different from file mtime
+
+Data sources:
+- `gh pr list` for recent merged PRs
+- `bd query` for recently closed issues
+- file mtimes and doc frontmatter/content
+
+Graceful degradation:
+- if `gh` is unavailable, cross-check still runs with empty PR data
+- if `bd` is unavailable, cross-check still runs with empty issue data
+- unavailable boundary tools emit warnings, not fatal errors
+
+Human-readable output:
+- header with docs checked and findings total
+- findings grouped by severity
+- summary footer with warning/info totals
+
+JSON output shape:
+
+```json
+{
+  "docsChecked": 17,
+  "findingsTotal": 3,
+  "findings": [
+    {
+      "severity": "warning",
+      "kind": "coverage-gap",
+      "docPath": "",
+      "message": "Feature issue xtrm-1234 has no doc coverage"
+    }
+  ],
+  "generatedAt": "2026-03-23T00:00:00.000Z"
+}
+```
+
+## Recommended Usage
+
+- after shipping a feature: `xtrm docs cross-check --days 14`
+- when auditing metadata: `xtrm docs show --json`
+- when exploring docs inventory: `xtrm docs list --json`
+
+## See Also
+
+- `xtrm docs --help`
+- `xtrm docs cross-check --help`
+- [docs/cli-architecture.md](cli-architecture.md)
+- [XTRM-GUIDE.md](../XTRM-GUIDE.md)

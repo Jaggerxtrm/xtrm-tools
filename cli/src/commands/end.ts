@@ -179,7 +179,7 @@ export function createEndCommand(): Command {
 
             const issues: EndIssue[] = [];
             for (const id of issueIds) {
-                const queryResult = bd(['query', `id=${id}`, '--json'], cwd);
+                const queryResult = bd(['query', `id=${id}`, '--all', '--json'], cwd);
                 if (queryResult.ok) {
                     try {
                         const data = JSON.parse(queryResult.out);

@@ -15255,7 +15255,7 @@ var require_dataType = __commonJS({
     exports2.coerceAndCheckDataType = coerceAndCheckDataType;
     var COERCIBLE = /* @__PURE__ */ new Set(["string", "number", "integer", "boolean", "null"]);
     function coerceToTypes(types, coerceTypes) {
-      return coerceTypes ? types.filter((t3) => COERCIBLE.has(t3) || coerceTypes === "array" && t3 === "array") : [];
+      return coerceTypes ? types.filter((t2) => COERCIBLE.has(t2) || coerceTypes === "array" && t2 === "array") : [];
     }
     function coerceData(it, types, coerceTo) {
       const { gen, data, opts } = it;
@@ -15265,9 +15265,9 @@ var require_dataType = __commonJS({
         gen.if((0, codegen_1._)`${dataType} == 'object' && Array.isArray(${data}) && ${data}.length == 1`, () => gen.assign(data, (0, codegen_1._)`${data}[0]`).assign(dataType, (0, codegen_1._)`typeof ${data}`).if(checkDataTypes(types, data, opts.strictNumbers), () => gen.assign(coerced, data)));
       }
       gen.if((0, codegen_1._)`${coerced} !== undefined`);
-      for (const t3 of coerceTo) {
-        if (COERCIBLE.has(t3) || t3 === "array" && opts.coerceTypes === "array") {
-          coerceSpecificType(t3);
+      for (const t2 of coerceTo) {
+        if (COERCIBLE.has(t2) || t2 === "array" && opts.coerceTypes === "array") {
+          coerceSpecificType(t2);
         }
       }
       gen.else();
@@ -15277,8 +15277,8 @@ var require_dataType = __commonJS({
         gen.assign(data, coerced);
         assignParentData(it, coerced);
       });
-      function coerceSpecificType(t3) {
-        switch (t3) {
+      function coerceSpecificType(t2) {
+        switch (t2) {
           case "string":
             gen.elseIf((0, codegen_1._)`${dataType} == "number" || ${dataType} == "boolean"`).assign(coerced, (0, codegen_1._)`"" + ${data}`).elseIf((0, codegen_1._)`${data} === null`).assign(coerced, (0, codegen_1._)`""`);
             return;
@@ -15350,8 +15350,8 @@ var require_dataType = __commonJS({
       }
       if (types.number)
         delete types.integer;
-      for (const t3 in types)
-        cond = (0, codegen_1.and)(cond, checkDataType(t3, data, strictNums, correct));
+      for (const t2 in types)
+        cond = (0, codegen_1.and)(cond, checkDataType(t2, data, strictNums, correct));
       return cond;
     }
     exports2.checkDataTypes = checkDataTypes;
@@ -16266,9 +16266,9 @@ var require_validate = __commonJS({
         it.dataTypes = types;
         return;
       }
-      types.forEach((t3) => {
-        if (!includesType(it.dataTypes, t3)) {
-          strictTypesError(it, `type "${t3}" not allowed by context "${it.dataTypes.join(",")}"`);
+      types.forEach((t2) => {
+        if (!includesType(it.dataTypes, t2)) {
+          strictTypesError(it, `type "${t2}" not allowed by context "${it.dataTypes.join(",")}"`);
         }
       });
       narrowSchemaTypes(it, types);
@@ -16284,7 +16284,7 @@ var require_validate = __commonJS({
         const rule = rules[keyword];
         if (typeof rule == "object" && (0, applicability_1.shouldUseRule)(it.schema, rule)) {
           const { type } = rule.definition;
-          if (type.length && !type.some((t3) => hasApplicableType(ts, t3))) {
+          if (type.length && !type.some((t2) => hasApplicableType(ts, t2))) {
             strictTypesError(it, `missing type "${type.join(",")}" for keyword "${keyword}"`);
           }
         }
@@ -16293,15 +16293,15 @@ var require_validate = __commonJS({
     function hasApplicableType(schTs, kwdT) {
       return schTs.includes(kwdT) || kwdT === "number" && schTs.includes("integer");
     }
-    function includesType(ts, t3) {
-      return ts.includes(t3) || t3 === "integer" && ts.includes("number");
+    function includesType(ts, t2) {
+      return ts.includes(t2) || t2 === "integer" && ts.includes("number");
     }
     function narrowSchemaTypes(it, withTypes) {
       const ts = [];
-      for (const t3 of it.dataTypes) {
-        if (includesType(withTypes, t3))
-          ts.push(t3);
-        else if (withTypes.includes("integer") && t3 === "number")
+      for (const t2 of it.dataTypes) {
+        if (includesType(withTypes, t2))
+          ts.push(t2);
+        else if (withTypes.includes("integer") && t2 === "number")
           ts.push("integer");
       }
       it.dataTypes = ts;
@@ -17912,7 +17912,7 @@ var require_core = __commonJS({
           type: (0, dataType_1.getJSONTypes)(def.type),
           schemaType: (0, dataType_1.getJSONTypes)(def.schemaType)
         };
-        (0, util_1.eachItem)(keyword, definition.type.length === 0 ? (k) => addRule.call(this, k, definition) : (k) => definition.type.forEach((t3) => addRule.call(this, k, definition, t3)));
+        (0, util_1.eachItem)(keyword, definition.type.length === 0 ? (k) => addRule.call(this, k, definition) : (k) => definition.type.forEach((t2) => addRule.call(this, k, definition, t2)));
         return this;
       }
       getKeyword(keyword) {
@@ -18111,7 +18111,7 @@ var require_core = __commonJS({
       if (dataType && post)
         throw new Error('keyword with "post" flag cannot have "type"');
       const { RULES } = this;
-      let ruleGroup = post ? RULES.post : RULES.rules.find(({ type: t3 }) => t3 === dataType);
+      let ruleGroup = post ? RULES.post : RULES.rules.find(({ type: t2 }) => t2 === dataType);
       if (!ruleGroup) {
         ruleGroup = { type: dataType, rules: [] };
         RULES.rules.push(ruleGroup);
@@ -18659,7 +18659,7 @@ var require_uniqueItems = __commonJS({
           gen.if((0, codegen_1._)`${i} > 1`, () => (canOptimize() ? loopN : loopN2)(i, j));
         }
         function canOptimize() {
-          return itemTypes.length > 0 && !itemTypes.some((t3) => t3 === "object" || t3 === "array");
+          return itemTypes.length > 0 && !itemTypes.some((t2) => t2 === "object" || t2 === "array");
         }
         function loopN(i, j) {
           const item = gen.name("item");
@@ -20894,23 +20894,23 @@ var require_formats = __commonJS({
       if (!(s1 && s2))
         return void 0;
       const t1 = (/* @__PURE__ */ new Date("2020-01-01T" + s1)).valueOf();
-      const t22 = (/* @__PURE__ */ new Date("2020-01-01T" + s2)).valueOf();
-      if (!(t1 && t22))
+      const t2 = (/* @__PURE__ */ new Date("2020-01-01T" + s2)).valueOf();
+      if (!(t1 && t2))
         return void 0;
-      return t1 - t22;
+      return t1 - t2;
     }
-    function compareIsoTime(t1, t22) {
-      if (!(t1 && t22))
+    function compareIsoTime(t1, t2) {
+      if (!(t1 && t2))
         return void 0;
       const a1 = TIME.exec(t1);
-      const a2 = TIME.exec(t22);
+      const a2 = TIME.exec(t2);
       if (!(a1 && a2))
         return void 0;
       t1 = a1[1] + a1[2] + a1[3];
-      t22 = a2[1] + a2[2] + a2[3];
-      if (t1 > t22)
+      t2 = a2[1] + a2[2] + a2[3];
+      if (t1 > t2)
         return 1;
-      if (t1 < t22)
+      if (t1 < t2)
         return -1;
       return 0;
     }
@@ -20935,11 +20935,11 @@ var require_formats = __commonJS({
       if (!(dt1 && dt2))
         return void 0;
       const [d1, t1] = dt1.split(DATE_TIME_SEPARATOR);
-      const [d2, t22] = dt2.split(DATE_TIME_SEPARATOR);
+      const [d2, t2] = dt2.split(DATE_TIME_SEPARATOR);
       const res = compareDate(d1, d2);
       if (res === void 0)
         return void 0;
-      return res || compareTime(t1, t22);
+      return res || compareTime(t1, t2);
     }
     var NOT_URI_FRAGMENT = /\/|:/;
     var URI = /^(?:[a-z][a-z0-9+\-.]*:)(?:\/?\/(?:(?:[a-z0-9\-._~!$&'()*+,;=:]|%[0-9a-f]{2})*@)?(?:\[(?:(?:(?:(?:[0-9a-f]{1,4}:){6}|::(?:[0-9a-f]{1,4}:){5}|(?:[0-9a-f]{1,4})?::(?:[0-9a-f]{1,4}:){4}|(?:(?:[0-9a-f]{1,4}:){0,1}[0-9a-f]{1,4})?::(?:[0-9a-f]{1,4}:){3}|(?:(?:[0-9a-f]{1,4}:){0,2}[0-9a-f]{1,4})?::(?:[0-9a-f]{1,4}:){2}|(?:(?:[0-9a-f]{1,4}:){0,3}[0-9a-f]{1,4})?::[0-9a-f]{1,4}:|(?:(?:[0-9a-f]{1,4}:){0,4}[0-9a-f]{1,4})?::)(?:[0-9a-f]{1,4}:[0-9a-f]{1,4}|(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?))|(?:(?:[0-9a-f]{1,4}:){0,5}[0-9a-f]{1,4})?::[0-9a-f]{1,4}|(?:(?:[0-9a-f]{1,4}:){0,6}[0-9a-f]{1,4})?::)|[Vv][0-9a-f]+\.[a-z0-9\-._~!$&'()*+,;=:]+)\]|(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)|(?:[a-z0-9\-._~!$&'()*+,;=]|%[0-9a-f]{2})*)(?::\d*)?(?:\/(?:[a-z0-9\-._~!$&'()*+,;=:@]|%[0-9a-f]{2})*)*|\/(?:(?:[a-z0-9\-._~!$&'()*+,;=:@]|%[0-9a-f]{2})+(?:\/(?:[a-z0-9\-._~!$&'()*+,;=:@]|%[0-9a-f]{2})*)*)?|(?:[a-z0-9\-._~!$&'()*+,;=:@]|%[0-9a-f]{2})+(?:\/(?:[a-z0-9\-._~!$&'()*+,;=:@]|%[0-9a-f]{2})*)*)(?:\?(?:[a-z0-9\-._~!$&'()*+,;=:@/?]|%[0-9a-f]{2})*)?(?:#(?:[a-z0-9\-._~!$&'()*+,;=:@/?]|%[0-9a-f]{2})*)?$/i;
@@ -21396,7 +21396,7 @@ var require_re = __commonJS({
     var safeRe = exports2.safeRe = [];
     var src = exports2.src = [];
     var safeSrc = exports2.safeSrc = [];
-    var t3 = exports2.t = {};
+    var t2 = exports2.t = {};
     var R = 0;
     var LETTERDASHNUMBER = "[a-zA-Z0-9-]";
     var safeRegexReplacements = [
@@ -21414,7 +21414,7 @@ var require_re = __commonJS({
       const safe = makeSafeRegex(value);
       const index = R++;
       debug(name, index, value);
-      t3[name] = index;
+      t2[name] = index;
       src[index] = value;
       safeSrc[index] = safe;
       re[index] = new RegExp(value, isGlobal ? "g" : void 0);
@@ -21423,46 +21423,46 @@ var require_re = __commonJS({
     createToken("NUMERICIDENTIFIER", "0|[1-9]\\d*");
     createToken("NUMERICIDENTIFIERLOOSE", "\\d+");
     createToken("NONNUMERICIDENTIFIER", `\\d*[a-zA-Z-]${LETTERDASHNUMBER}*`);
-    createToken("MAINVERSION", `(${src[t3.NUMERICIDENTIFIER]})\\.(${src[t3.NUMERICIDENTIFIER]})\\.(${src[t3.NUMERICIDENTIFIER]})`);
-    createToken("MAINVERSIONLOOSE", `(${src[t3.NUMERICIDENTIFIERLOOSE]})\\.(${src[t3.NUMERICIDENTIFIERLOOSE]})\\.(${src[t3.NUMERICIDENTIFIERLOOSE]})`);
-    createToken("PRERELEASEIDENTIFIER", `(?:${src[t3.NONNUMERICIDENTIFIER]}|${src[t3.NUMERICIDENTIFIER]})`);
-    createToken("PRERELEASEIDENTIFIERLOOSE", `(?:${src[t3.NONNUMERICIDENTIFIER]}|${src[t3.NUMERICIDENTIFIERLOOSE]})`);
-    createToken("PRERELEASE", `(?:-(${src[t3.PRERELEASEIDENTIFIER]}(?:\\.${src[t3.PRERELEASEIDENTIFIER]})*))`);
-    createToken("PRERELEASELOOSE", `(?:-?(${src[t3.PRERELEASEIDENTIFIERLOOSE]}(?:\\.${src[t3.PRERELEASEIDENTIFIERLOOSE]})*))`);
+    createToken("MAINVERSION", `(${src[t2.NUMERICIDENTIFIER]})\\.(${src[t2.NUMERICIDENTIFIER]})\\.(${src[t2.NUMERICIDENTIFIER]})`);
+    createToken("MAINVERSIONLOOSE", `(${src[t2.NUMERICIDENTIFIERLOOSE]})\\.(${src[t2.NUMERICIDENTIFIERLOOSE]})\\.(${src[t2.NUMERICIDENTIFIERLOOSE]})`);
+    createToken("PRERELEASEIDENTIFIER", `(?:${src[t2.NONNUMERICIDENTIFIER]}|${src[t2.NUMERICIDENTIFIER]})`);
+    createToken("PRERELEASEIDENTIFIERLOOSE", `(?:${src[t2.NONNUMERICIDENTIFIER]}|${src[t2.NUMERICIDENTIFIERLOOSE]})`);
+    createToken("PRERELEASE", `(?:-(${src[t2.PRERELEASEIDENTIFIER]}(?:\\.${src[t2.PRERELEASEIDENTIFIER]})*))`);
+    createToken("PRERELEASELOOSE", `(?:-?(${src[t2.PRERELEASEIDENTIFIERLOOSE]}(?:\\.${src[t2.PRERELEASEIDENTIFIERLOOSE]})*))`);
     createToken("BUILDIDENTIFIER", `${LETTERDASHNUMBER}+`);
-    createToken("BUILD", `(?:\\+(${src[t3.BUILDIDENTIFIER]}(?:\\.${src[t3.BUILDIDENTIFIER]})*))`);
-    createToken("FULLPLAIN", `v?${src[t3.MAINVERSION]}${src[t3.PRERELEASE]}?${src[t3.BUILD]}?`);
-    createToken("FULL", `^${src[t3.FULLPLAIN]}$`);
-    createToken("LOOSEPLAIN", `[v=\\s]*${src[t3.MAINVERSIONLOOSE]}${src[t3.PRERELEASELOOSE]}?${src[t3.BUILD]}?`);
-    createToken("LOOSE", `^${src[t3.LOOSEPLAIN]}$`);
+    createToken("BUILD", `(?:\\+(${src[t2.BUILDIDENTIFIER]}(?:\\.${src[t2.BUILDIDENTIFIER]})*))`);
+    createToken("FULLPLAIN", `v?${src[t2.MAINVERSION]}${src[t2.PRERELEASE]}?${src[t2.BUILD]}?`);
+    createToken("FULL", `^${src[t2.FULLPLAIN]}$`);
+    createToken("LOOSEPLAIN", `[v=\\s]*${src[t2.MAINVERSIONLOOSE]}${src[t2.PRERELEASELOOSE]}?${src[t2.BUILD]}?`);
+    createToken("LOOSE", `^${src[t2.LOOSEPLAIN]}$`);
     createToken("GTLT", "((?:<|>)?=?)");
-    createToken("XRANGEIDENTIFIERLOOSE", `${src[t3.NUMERICIDENTIFIERLOOSE]}|x|X|\\*`);
-    createToken("XRANGEIDENTIFIER", `${src[t3.NUMERICIDENTIFIER]}|x|X|\\*`);
-    createToken("XRANGEPLAIN", `[v=\\s]*(${src[t3.XRANGEIDENTIFIER]})(?:\\.(${src[t3.XRANGEIDENTIFIER]})(?:\\.(${src[t3.XRANGEIDENTIFIER]})(?:${src[t3.PRERELEASE]})?${src[t3.BUILD]}?)?)?`);
-    createToken("XRANGEPLAINLOOSE", `[v=\\s]*(${src[t3.XRANGEIDENTIFIERLOOSE]})(?:\\.(${src[t3.XRANGEIDENTIFIERLOOSE]})(?:\\.(${src[t3.XRANGEIDENTIFIERLOOSE]})(?:${src[t3.PRERELEASELOOSE]})?${src[t3.BUILD]}?)?)?`);
-    createToken("XRANGE", `^${src[t3.GTLT]}\\s*${src[t3.XRANGEPLAIN]}$`);
-    createToken("XRANGELOOSE", `^${src[t3.GTLT]}\\s*${src[t3.XRANGEPLAINLOOSE]}$`);
+    createToken("XRANGEIDENTIFIERLOOSE", `${src[t2.NUMERICIDENTIFIERLOOSE]}|x|X|\\*`);
+    createToken("XRANGEIDENTIFIER", `${src[t2.NUMERICIDENTIFIER]}|x|X|\\*`);
+    createToken("XRANGEPLAIN", `[v=\\s]*(${src[t2.XRANGEIDENTIFIER]})(?:\\.(${src[t2.XRANGEIDENTIFIER]})(?:\\.(${src[t2.XRANGEIDENTIFIER]})(?:${src[t2.PRERELEASE]})?${src[t2.BUILD]}?)?)?`);
+    createToken("XRANGEPLAINLOOSE", `[v=\\s]*(${src[t2.XRANGEIDENTIFIERLOOSE]})(?:\\.(${src[t2.XRANGEIDENTIFIERLOOSE]})(?:\\.(${src[t2.XRANGEIDENTIFIERLOOSE]})(?:${src[t2.PRERELEASELOOSE]})?${src[t2.BUILD]}?)?)?`);
+    createToken("XRANGE", `^${src[t2.GTLT]}\\s*${src[t2.XRANGEPLAIN]}$`);
+    createToken("XRANGELOOSE", `^${src[t2.GTLT]}\\s*${src[t2.XRANGEPLAINLOOSE]}$`);
     createToken("COERCEPLAIN", `${"(^|[^\\d])(\\d{1,"}${MAX_SAFE_COMPONENT_LENGTH}})(?:\\.(\\d{1,${MAX_SAFE_COMPONENT_LENGTH}}))?(?:\\.(\\d{1,${MAX_SAFE_COMPONENT_LENGTH}}))?`);
-    createToken("COERCE", `${src[t3.COERCEPLAIN]}(?:$|[^\\d])`);
-    createToken("COERCEFULL", src[t3.COERCEPLAIN] + `(?:${src[t3.PRERELEASE]})?(?:${src[t3.BUILD]})?(?:$|[^\\d])`);
-    createToken("COERCERTL", src[t3.COERCE], true);
-    createToken("COERCERTLFULL", src[t3.COERCEFULL], true);
+    createToken("COERCE", `${src[t2.COERCEPLAIN]}(?:$|[^\\d])`);
+    createToken("COERCEFULL", src[t2.COERCEPLAIN] + `(?:${src[t2.PRERELEASE]})?(?:${src[t2.BUILD]})?(?:$|[^\\d])`);
+    createToken("COERCERTL", src[t2.COERCE], true);
+    createToken("COERCERTLFULL", src[t2.COERCEFULL], true);
     createToken("LONETILDE", "(?:~>?)");
-    createToken("TILDETRIM", `(\\s*)${src[t3.LONETILDE]}\\s+`, true);
+    createToken("TILDETRIM", `(\\s*)${src[t2.LONETILDE]}\\s+`, true);
     exports2.tildeTrimReplace = "$1~";
-    createToken("TILDE", `^${src[t3.LONETILDE]}${src[t3.XRANGEPLAIN]}$`);
-    createToken("TILDELOOSE", `^${src[t3.LONETILDE]}${src[t3.XRANGEPLAINLOOSE]}$`);
+    createToken("TILDE", `^${src[t2.LONETILDE]}${src[t2.XRANGEPLAIN]}$`);
+    createToken("TILDELOOSE", `^${src[t2.LONETILDE]}${src[t2.XRANGEPLAINLOOSE]}$`);
     createToken("LONECARET", "(?:\\^)");
-    createToken("CARETTRIM", `(\\s*)${src[t3.LONECARET]}\\s+`, true);
+    createToken("CARETTRIM", `(\\s*)${src[t2.LONECARET]}\\s+`, true);
     exports2.caretTrimReplace = "$1^";
-    createToken("CARET", `^${src[t3.LONECARET]}${src[t3.XRANGEPLAIN]}$`);
-    createToken("CARETLOOSE", `^${src[t3.LONECARET]}${src[t3.XRANGEPLAINLOOSE]}$`);
-    createToken("COMPARATORLOOSE", `^${src[t3.GTLT]}\\s*(${src[t3.LOOSEPLAIN]})$|^$`);
-    createToken("COMPARATOR", `^${src[t3.GTLT]}\\s*(${src[t3.FULLPLAIN]})$|^$`);
-    createToken("COMPARATORTRIM", `(\\s*)${src[t3.GTLT]}\\s*(${src[t3.LOOSEPLAIN]}|${src[t3.XRANGEPLAIN]})`, true);
+    createToken("CARET", `^${src[t2.LONECARET]}${src[t2.XRANGEPLAIN]}$`);
+    createToken("CARETLOOSE", `^${src[t2.LONECARET]}${src[t2.XRANGEPLAINLOOSE]}$`);
+    createToken("COMPARATORLOOSE", `^${src[t2.GTLT]}\\s*(${src[t2.LOOSEPLAIN]})$|^$`);
+    createToken("COMPARATOR", `^${src[t2.GTLT]}\\s*(${src[t2.FULLPLAIN]})$|^$`);
+    createToken("COMPARATORTRIM", `(\\s*)${src[t2.GTLT]}\\s*(${src[t2.LOOSEPLAIN]}|${src[t2.XRANGEPLAIN]})`, true);
     exports2.comparatorTrimReplace = "$1$2$3";
-    createToken("HYPHENRANGE", `^\\s*(${src[t3.XRANGEPLAIN]})\\s+-\\s+(${src[t3.XRANGEPLAIN]})\\s*$`);
-    createToken("HYPHENRANGELOOSE", `^\\s*(${src[t3.XRANGEPLAINLOOSE]})\\s+-\\s+(${src[t3.XRANGEPLAINLOOSE]})\\s*$`);
+    createToken("HYPHENRANGE", `^\\s*(${src[t2.XRANGEPLAIN]})\\s+-\\s+(${src[t2.XRANGEPLAIN]})\\s*$`);
+    createToken("HYPHENRANGELOOSE", `^\\s*(${src[t2.XRANGEPLAINLOOSE]})\\s+-\\s+(${src[t2.XRANGEPLAINLOOSE]})\\s*$`);
     createToken("STAR", "(<|>)?=?\\s*\\*");
     createToken("GTE0", "^\\s*>=\\s*0\\.0\\.0\\s*$");
     createToken("GTE0PRE", "^\\s*>=\\s*0\\.0\\.0-0\\s*$");
@@ -21519,7 +21519,7 @@ var require_semver = __commonJS({
     "use strict";
     var debug = require_debug();
     var { MAX_LENGTH, MAX_SAFE_INTEGER } = require_constants();
-    var { safeRe: re, t: t3 } = require_re();
+    var { safeRe: re, t: t2 } = require_re();
     var parseOptions = require_parse_options();
     var { compareIdentifiers } = require_identifiers();
     var SemVer = class _SemVer {
@@ -21543,7 +21543,7 @@ var require_semver = __commonJS({
         this.options = options;
         this.loose = !!options.loose;
         this.includePrerelease = !!options.includePrerelease;
-        const m = version3.trim().match(options.loose ? re[t3.LOOSE] : re[t3.FULL]);
+        const m = version3.trim().match(options.loose ? re[t2.LOOSE] : re[t2.FULL]);
         if (!m) {
           throw new TypeError(`Invalid Version: ${version3}`);
         }
@@ -21682,7 +21682,7 @@ var require_semver = __commonJS({
             throw new Error("invalid increment argument: identifier is empty");
           }
           if (identifier) {
-            const match = `-${identifier}`.match(this.options.loose ? re[t3.PRERELEASELOOSE] : re[t3.PRERELEASE]);
+            const match = `-${identifier}`.match(this.options.loose ? re[t2.PRERELEASELOOSE] : re[t2.PRERELEASE]);
             if (!match || match[1] !== identifier) {
               throw new Error(`invalid identifier: ${identifier}`);
             }
@@ -22131,7 +22131,7 @@ var require_coerce = __commonJS({
     "use strict";
     var SemVer = require_semver();
     var parse4 = require_parse();
-    var { safeRe: re, t: t3 } = require_re();
+    var { safeRe: re, t: t2 } = require_re();
     var coerce = (version3, options) => {
       if (version3 instanceof SemVer) {
         return version3;
@@ -22145,9 +22145,9 @@ var require_coerce = __commonJS({
       options = options || {};
       let match = null;
       if (!options.rtl) {
-        match = version3.match(options.includePrerelease ? re[t3.COERCEFULL] : re[t3.COERCE]);
+        match = version3.match(options.includePrerelease ? re[t2.COERCEFULL] : re[t2.COERCE]);
       } else {
-        const coerceRtlRegex = options.includePrerelease ? re[t3.COERCERTLFULL] : re[t3.COERCERTL];
+        const coerceRtlRegex = options.includePrerelease ? re[t2.COERCERTLFULL] : re[t2.COERCERTL];
         let next;
         while ((next = coerceRtlRegex.exec(version3)) && (!match || match.index + match[0].length !== version3.length)) {
           if (!match || next.index + next[0].length !== match.index + match[0].length) {
@@ -22286,20 +22286,20 @@ var require_range = __commonJS({
           return cached2;
         }
         const loose = this.options.loose;
-        const hr = loose ? re[t3.HYPHENRANGELOOSE] : re[t3.HYPHENRANGE];
+        const hr = loose ? re[t2.HYPHENRANGELOOSE] : re[t2.HYPHENRANGE];
         range = range.replace(hr, hyphenReplace(this.options.includePrerelease));
         debug("hyphen replace", range);
-        range = range.replace(re[t3.COMPARATORTRIM], comparatorTrimReplace);
+        range = range.replace(re[t2.COMPARATORTRIM], comparatorTrimReplace);
         debug("comparator trim", range);
-        range = range.replace(re[t3.TILDETRIM], tildeTrimReplace);
+        range = range.replace(re[t2.TILDETRIM], tildeTrimReplace);
         debug("tilde trim", range);
-        range = range.replace(re[t3.CARETTRIM], caretTrimReplace);
+        range = range.replace(re[t2.CARETTRIM], caretTrimReplace);
         debug("caret trim", range);
         let rangeList = range.split(" ").map((comp) => parseComparator(comp, this.options)).join(" ").split(/\s+/).map((comp) => replaceGTE0(comp, this.options));
         if (loose) {
           rangeList = rangeList.filter((comp) => {
             debug("loose invalid filter", comp, this.options);
-            return !!comp.match(re[t3.COMPARATORLOOSE]);
+            return !!comp.match(re[t2.COMPARATORLOOSE]);
           });
         }
         debug("range list", rangeList);
@@ -22361,7 +22361,7 @@ var require_range = __commonJS({
     var SemVer = require_semver();
     var {
       safeRe: re,
-      t: t3,
+      t: t2,
       comparatorTrimReplace,
       tildeTrimReplace,
       caretTrimReplace
@@ -22382,7 +22382,7 @@ var require_range = __commonJS({
       return result;
     };
     var parseComparator = (comp, options) => {
-      comp = comp.replace(re[t3.BUILD], "");
+      comp = comp.replace(re[t2.BUILD], "");
       debug("comp", comp, options);
       comp = replaceCarets(comp, options);
       debug("caret", comp);
@@ -22399,7 +22399,7 @@ var require_range = __commonJS({
       return comp.trim().split(/\s+/).map((c) => replaceTilde(c, options)).join(" ");
     };
     var replaceTilde = (comp, options) => {
-      const r = options.loose ? re[t3.TILDELOOSE] : re[t3.TILDE];
+      const r = options.loose ? re[t2.TILDELOOSE] : re[t2.TILDE];
       return comp.replace(r, (_, M, m, p, pr) => {
         debug("tilde", comp, _, M, m, p, pr);
         let ret;
@@ -22424,7 +22424,7 @@ var require_range = __commonJS({
     };
     var replaceCaret = (comp, options) => {
       debug("caret", comp, options);
-      const r = options.loose ? re[t3.CARETLOOSE] : re[t3.CARET];
+      const r = options.loose ? re[t2.CARETLOOSE] : re[t2.CARET];
       const z2 = options.includePrerelease ? "-0" : "";
       return comp.replace(r, (_, M, m, p, pr) => {
         debug("caret", comp, _, M, m, p, pr);
@@ -22472,7 +22472,7 @@ var require_range = __commonJS({
     };
     var replaceXRange = (comp, options) => {
       comp = comp.trim();
-      const r = options.loose ? re[t3.XRANGELOOSE] : re[t3.XRANGE];
+      const r = options.loose ? re[t2.XRANGELOOSE] : re[t2.XRANGE];
       return comp.replace(r, (ret, gtlt, M, m, p, pr) => {
         debug("xRange", comp, ret, gtlt, M, m, p, pr);
         const xM = isX(M);
@@ -22527,11 +22527,11 @@ var require_range = __commonJS({
     };
     var replaceStars = (comp, options) => {
       debug("replaceStars", comp, options);
-      return comp.trim().replace(re[t3.STAR], "");
+      return comp.trim().replace(re[t2.STAR], "");
     };
     var replaceGTE0 = (comp, options) => {
       debug("replaceGTE0", comp, options);
-      return comp.trim().replace(re[options.includePrerelease ? t3.GTE0PRE : t3.GTE0], "");
+      return comp.trim().replace(re[options.includePrerelease ? t2.GTE0PRE : t2.GTE0], "");
     };
     var hyphenReplace = (incPr) => ($0, from, fM, fm, fp, fpr, fb, to, tM, tm, tp, tpr) => {
       if (isX(fM)) {
@@ -22617,7 +22617,7 @@ var require_comparator = __commonJS({
         debug("comp", this);
       }
       parse(comp) {
-        const r = this.options.loose ? re[t3.COMPARATORLOOSE] : re[t3.COMPARATOR];
+        const r = this.options.loose ? re[t2.COMPARATORLOOSE] : re[t2.COMPARATOR];
         const m = comp.match(r);
         if (!m) {
           throw new TypeError(`Invalid comparator: ${comp}`);
@@ -22691,7 +22691,7 @@ var require_comparator = __commonJS({
     };
     module2.exports = Comparator;
     var parseOptions = require_parse_options();
-    var { safeRe: re, t: t3 } = require_re();
+    var { safeRe: re, t: t2 } = require_re();
     var cmp = require_cmp();
     var debug = require_debug();
     var SemVer = require_semver();
@@ -25194,15 +25194,15 @@ var require_esprima = __commonJS({
                 return this.scanner.source.slice(token.start, token.end);
               };
               Parser2.prototype.convertToken = function(token) {
-                var t3 = {
+                var t2 = {
                   type: token_1.TokenName[token.type],
                   value: this.getTokenRaw(token)
                 };
                 if (this.config.range) {
-                  t3.range = [token.start, token.end];
+                  t2.range = [token.start, token.end];
                 }
                 if (this.config.loc) {
-                  t3.loc = {
+                  t2.loc = {
                     start: {
                       line: this.startMarker.line,
                       column: this.startMarker.column
@@ -25216,9 +25216,9 @@ var require_esprima = __commonJS({
                 if (token.type === 9) {
                   var pattern = token.pattern;
                   var flags = token.flags;
-                  t3.regex = { pattern, flags };
+                  t2.regex = { pattern, flags };
                 }
-                return t3;
+                return t2;
               };
               Parser2.prototype.nextToken = function() {
                 var token = this.lookahead;
@@ -29321,7 +29321,7 @@ var require_esprima = __commonJS({
                 this.values = [];
                 this.curly = this.paren = -1;
               }
-              Reader2.prototype.beforeFunctionExpression = function(t3) {
+              Reader2.prototype.beforeFunctionExpression = function(t2) {
                 return [
                   "(",
                   "{",
@@ -29379,7 +29379,7 @@ var require_esprima = __commonJS({
                   ">",
                   "!=",
                   "!=="
-                ].indexOf(t3) >= 0;
+                ].indexOf(t2) >= 0;
               };
               Reader2.prototype.isRegexStart = function() {
                 var previous = this.values[this.values.length - 1];
@@ -29606,18 +29606,18 @@ var require_src2 = __commonJS({
         }
         const al = log10(a);
         const bl = log10(b);
-        let t3 = 0;
+        let t2 = 0;
         if (al < bl) {
           a *= POWERS_OF_TEN[bl - al - 1];
           b /= 10;
-          t3 = -1;
+          t2 = -1;
         } else if (al > bl) {
           b *= POWERS_OF_TEN[al - bl - 1];
           a /= 10;
-          t3 = 1;
+          t2 = 1;
         }
         if (a === b) {
-          return t3;
+          return t2;
         }
         return a < b ? -1 : 1;
       }
@@ -29657,9 +29657,9 @@ var require_src2 = __commonJS({
     function reverseRun(array2, lo, hi) {
       hi--;
       while (lo < hi) {
-        const t3 = array2[lo];
+        const t2 = array2[lo];
         array2[lo++] = array2[hi];
-        array2[hi--] = t3;
+        array2[hi--] = t2;
       }
     }
     function binaryInsertionSort(array2, lo, hi, start, compare) {
@@ -30866,7 +30866,7 @@ var require_parse2 = __commonJS({
       }
       return current.type === "Punctuator" ? current.value : current.type;
     };
-    var is = (t3) => type() === t3;
+    var is = (t2) => type() === t2;
     var expect = (a) => {
       if (!is(a)) {
         unexpected();
@@ -35807,12 +35807,12 @@ var TestRendererSerializer = class {
       data
     };
     if (typeof this.options?.task !== "boolean") {
-      const t3 = Object.fromEntries(this.options.task.map((entity) => {
+      const t2 = Object.fromEntries(this.options.task.map((entity) => {
         const property = task[entity];
         if (typeof property === "function") return [entity, property.call(task)];
         return [entity, property];
       }));
-      if (Object.keys(task).length > 0) output.task = t3;
+      if (Object.keys(task).length > 0) output.task = t2;
     }
     return output;
   }
@@ -38517,7 +38517,7 @@ function mergeHookWrappers(existing, incoming) {
       if (!existingCommands.some((c) => incomingKeys.has(commandKey(c)))) return false;
       if (typeof existingWrapper2.matcher === "string" && typeof incomingWrapper.matcher === "string" && incomingTokens.size > 0) {
         const existingTokens = existingWrapper2.matcher.split("|").map((s) => s.trim()).filter(Boolean);
-        const hasOverlap = existingTokens.some((t3) => incomingTokens.has(t3));
+        const hasOverlap = existingTokens.some((t2) => incomingTokens.has(t2));
         if (!hasOverlap) return false;
       }
       return true;
@@ -42523,8 +42523,8 @@ function createInstallCommand() {
       createMissingDirs: !dryRun
     });
     const { targets, syncMode } = ctx;
-    const claudeTargets = targets.filter((t3) => detectAgent(t3) === "claude");
-    const otherTargets = targets.filter((t3) => detectAgent(t3) !== "claude");
+    const claudeTargets = targets.filter((t2) => detectAgent(t2) === "claude");
+    const otherTargets = targets.filter((t2) => detectAgent(t2) !== "claude");
     if (!backport) {
       console.log(t.bold("\n  \u2699  beads + dolt  (workflow enforcement backend)"));
       console.log(t.muted("  beads is a git-backed issue tracker; dolt is its SQL+git storage backend."));
@@ -44278,8 +44278,8 @@ function numKeys(data) {
   return keyCount;
 }
 var getParsedType = (data) => {
-  const t3 = typeof data;
-  switch (t3) {
+  const t2 = typeof data;
+  switch (t2) {
     case "undefined":
       return "undefined";
     case "string":
@@ -44318,7 +44318,7 @@ var getParsedType = (data) => {
       }
       return "object";
     default:
-      throw new Error(`Unknown data type: ${t3}`);
+      throw new Error(`Unknown data type: ${t2}`);
   }
 };
 var propertyKeyTypes = /* @__PURE__ */ new Set(["string", "number", "symbol"]);
@@ -44625,8 +44625,8 @@ function getLengthableOrigin(input) {
   return "unknown";
 }
 function parsedType(data) {
-  const t3 = typeof data;
-  switch (t3) {
+  const t2 = typeof data;
+  switch (t2) {
     case "number": {
       return Number.isNaN(data) ? "nan" : "number";
     }
@@ -44643,7 +44643,7 @@ function parsedType(data) {
       }
     }
   }
-  return t3;
+  return t2;
 }
 function issue(...args) {
   const [iss, input, inst] = args;
@@ -46353,12 +46353,12 @@ function handleCatchall(proms, input, payload, ctx, def, inst) {
   const unrecognized = [];
   const keySet = def.keySet;
   const _catchall = def.catchall._zod;
-  const t3 = _catchall.def.type;
+  const t2 = _catchall.def.type;
   const isOptionalOut = _catchall.optout === "optional";
   for (const key in input) {
     if (keySet.has(key))
       continue;
-    if (t3 === "never") {
+    if (t2 === "never") {
       unrecognized.push(key);
       continue;
     }
@@ -49465,16 +49465,16 @@ var error17 = () => {
     number: { unit: "", shortLabel: "\u05E7\u05D8\u05DF", longLabel: "\u05D2\u05D3\u05D5\u05DC" }
     // no unit
   };
-  const typeEntry = (t3) => t3 ? TypeNames[t3] : void 0;
-  const typeLabel = (t3) => {
-    const e = typeEntry(t3);
+  const typeEntry = (t2) => t2 ? TypeNames[t2] : void 0;
+  const typeLabel = (t2) => {
+    const e = typeEntry(t2);
     if (e)
       return e.label;
-    return t3 ?? TypeNames.unknown.label;
+    return t2 ?? TypeNames.unknown.label;
   };
-  const withDefinite = (t3) => `\u05D4${typeLabel(t3)}`;
-  const verbFor = (t3) => {
-    const e = typeEntry(t3);
+  const withDefinite = (t2) => `\u05D4${typeLabel(t2)}`;
+  const verbFor = (t2) => {
+    const e = typeEntry(t2);
     const gender = e?.gender ?? "m";
     return gender === "f" ? "\u05E6\u05E8\u05D9\u05DB\u05D4 \u05DC\u05D4\u05D9\u05D5\u05EA" : "\u05E6\u05E8\u05D9\u05DA \u05DC\u05D4\u05D9\u05D5\u05EA";
   };
@@ -56869,8 +56869,8 @@ function convertBaseSchema(schema, ctx) {
   }
   const type = schema.type;
   if (Array.isArray(type)) {
-    const typeSchemas = type.map((t3) => {
-      const typeSchema = { ...schema, type: t3 };
+    const typeSchemas = type.map((t2) => {
+      const typeSchema = { ...schema, type: t2 };
       return convertBaseSchema(typeSchema, ctx);
     });
     if (typeSchemas.length === 0) {
@@ -58384,6 +58384,219 @@ function isCacheValid(cache, entries, ttlMs = DEFAULT_TTL_MS) {
   return true;
 }
 
+// src/commands/docs-cross-check-gh.ts
+var import_node_child_process10 = require("child_process");
+var _ghAvailable = null;
+function isGhAvailable() {
+  if (_ghAvailable !== null) return _ghAvailable;
+  const r = (0, import_node_child_process10.spawnSync)("gh", ["--version"], { stdio: "pipe" });
+  _ghAvailable = r.status === 0;
+  return _ghAvailable;
+}
+function logGhWarning(message) {
+  console.error(kleur_default.yellow(`[gh] ${message}`));
+}
+function handleGhError(context, result) {
+  if (result.status === 4) {
+    logGhWarning(`${context}: Authentication failed. Run 'gh auth login' first.`);
+  } else if (result.status !== 0) {
+    const hint = result.stderr?.trim() || `exit code ${result.status}`;
+    logGhWarning(`${context}: gh CLI failed (${hint})`);
+  }
+}
+function fetchRecentPrs(repoRoot, days) {
+  if (!isGhAvailable()) {
+    logGhWarning("fetchRecentPrs: gh CLI not available, skipping PR fetch");
+    return [];
+  }
+  const r = (0, import_node_child_process10.spawnSync)("gh", [
+    "pr",
+    "list",
+    "--state",
+    "merged",
+    "--limit",
+    "100",
+    "--json",
+    "number,title,mergedAt,url,headRefName"
+  ], {
+    cwd: repoRoot,
+    encoding: "utf8",
+    stdio: "pipe"
+  });
+  if (r.status !== 0) {
+    handleGhError("fetchRecentPrs", r);
+    return [];
+  }
+  try {
+    const data = JSON.parse(r.stdout ?? "[]");
+    const cutoff = new Date(Date.now() - days * 864e5);
+    return data.filter((pr) => {
+      if (!pr.mergedAt) return false;
+      return new Date(pr.mergedAt) >= cutoff;
+    });
+  } catch (e) {
+    logGhWarning(`fetchRecentPrs: JSON parse failed (${e instanceof Error ? e.message : "unknown error"})`);
+    return [];
+  }
+}
+
+// src/commands/docs-cross-check-bd.ts
+var import_node_child_process11 = require("child_process");
+var _bdAvailable = null;
+function isBdAvailable() {
+  if (_bdAvailable !== null) return _bdAvailable;
+  const r = (0, import_node_child_process11.spawnSync)("bd", ["--version"], { stdio: "pipe", encoding: "utf8" });
+  _bdAvailable = r.status === 0;
+  return _bdAvailable;
+}
+function logBdWarning(message) {
+  console.error(kleur_default.yellow(`[bd] ${message}`));
+}
+function fetchClosedBdIssues(days) {
+  if (!isBdAvailable()) {
+    logBdWarning("fetchClosedBdIssues: bd CLI not available, skipping issue fetch");
+    return [];
+  }
+  const r = (0, import_node_child_process11.spawnSync)("bd", [
+    "query",
+    `status=closed AND updated>${days}d`,
+    "--json"
+  ], {
+    encoding: "utf8",
+    stdio: "pipe"
+  });
+  if (r.status !== 0) {
+    const hint = r.stderr?.trim() || `exit code ${r.status}`;
+    logBdWarning(`fetchClosedBdIssues: bd query failed (${hint})`);
+    return [];
+  }
+  try {
+    const data = JSON.parse(r.stdout ?? "[]");
+    return data.map((issue2) => ({
+      id: issue2.id,
+      title: issue2.title,
+      status: issue2.status,
+      type: issue2.issue_type,
+      closedAt: issue2.closed_at
+    }));
+  } catch (e) {
+    logBdWarning(`fetchClosedBdIssues: JSON parse failed (${e instanceof Error ? e.message : "unknown error"})`);
+    return [];
+  }
+}
+
+// src/commands/docs-cross-check-core.ts
+function detectStaleDocs(docs, prs, _days) {
+  const findings = [];
+  for (const doc of docs) {
+    if (doc.parseError) continue;
+    const docDate = doc.lastModified;
+    const mergedAfter = prs.filter((pr) => {
+      if (!pr.mergedAt) return false;
+      return new Date(pr.mergedAt) > docDate;
+    });
+    if (mergedAfter.length > 0) {
+      findings.push({
+        severity: "warning",
+        kind: "stale",
+        docPath: doc.relativePath,
+        message: `Doc not updated since ${mergedAfter.length} PR${mergedAfter.length > 1 ? "s" : ""} merged`,
+        detail: mergedAfter.slice(0, 3).map((pr) => `#${pr.number}: ${pr.title}`).join("; ")
+      });
+    }
+    const updatedAtStr = doc.frontmatter?.updated_at;
+    if (updatedAtStr) {
+      const updatedAt = new Date(updatedAtStr);
+      if (!isNaN(updatedAt.getTime())) {
+        const diffDays = Math.abs(docDate.getTime() - updatedAt.getTime()) / 864e5;
+        if (diffDays > 7) {
+          findings.push({
+            severity: "info",
+            kind: "stale",
+            docPath: doc.relativePath,
+            message: `Frontmatter updated_at differs from file mtime by ${Math.round(diffDays)} days`
+          });
+        }
+      }
+    }
+  }
+  return findings;
+}
+var BD_ISSUE_ID_REGEX = /[a-z0-9]+-[a-z0-9]{4}/gi;
+function detectCoverageGaps(docs, bdIssues, docContents) {
+  const findings = [];
+  const relevantIssues = bdIssues.filter(
+    (issue2) => issue2.status === "closed" && (issue2.type === "feature" || issue2.type === "task")
+  );
+  if (relevantIssues.length === 0) return findings;
+  const mentionedIds = /* @__PURE__ */ new Set();
+  for (const doc of docs) {
+    const fmStr = JSON.stringify(doc.frontmatter ?? {});
+    for (const match of fmStr.matchAll(BD_ISSUE_ID_REGEX)) {
+      mentionedIds.add(match[0].toLowerCase());
+    }
+    const content = docContents.get(doc.relativePath) ?? "";
+    for (const match of content.matchAll(BD_ISSUE_ID_REGEX)) {
+      mentionedIds.add(match[0].toLowerCase());
+    }
+  }
+  for (const issue2 of relevantIssues) {
+    const issueIdLower = issue2.id.toLowerCase();
+    if (!mentionedIds.has(issueIdLower)) {
+      findings.push({
+        severity: "warning",
+        kind: "coverage-gap",
+        docPath: "",
+        message: `Feature issue ${issue2.id} has no doc coverage`,
+        detail: issue2.title
+      });
+    }
+  }
+  return findings;
+}
+function validateIssueReferences(docs, bdIssues, docContents) {
+  const findings = [];
+  const issueStatus = /* @__PURE__ */ new Map();
+  for (const issue2 of bdIssues) {
+    issueStatus.set(issue2.id.toLowerCase(), issue2.status);
+  }
+  for (const doc of docs) {
+    const content = docContents.get(doc.relativePath) ?? "";
+    const seenIds = /* @__PURE__ */ new Set();
+    for (const match of content.matchAll(BD_ISSUE_ID_REGEX)) {
+      const id = match[0].toLowerCase();
+      if (seenIds.has(id)) continue;
+      seenIds.add(id);
+      const status = issueStatus.get(id);
+      if (status && status !== "closed") {
+        findings.push({
+          severity: "info",
+          kind: "ref-invalid",
+          docPath: doc.relativePath,
+          message: `References open issue ${id}`
+        });
+      }
+    }
+  }
+  return findings;
+}
+var SEVERITY_ORDER = {
+  critical: 0,
+  warning: 1,
+  info: 2
+};
+function buildReport(findings, docsChecked) {
+  const sorted = [...findings].sort(
+    (a, b) => (SEVERITY_ORDER[a.severity] ?? 2) - (SEVERITY_ORDER[b.severity] ?? 2)
+  );
+  return {
+    docsChecked,
+    findingsTotal: sorted.length,
+    findings: sorted,
+    generatedAt: (/* @__PURE__ */ new Date()).toISOString()
+  };
+}
+
 // src/commands/docs.ts
 var REQUIRED_FIELDS = /* @__PURE__ */ new Set(["title", "type", "status", "updated_at", "version"]);
 async function collectDocFiles(repoRoot, filterPattern) {
@@ -58464,6 +58677,41 @@ ${header}${meta3}`);
     const valStr = v ?? "";
     console.log(`  ${keyStr}  ${valStr}`);
   }
+}
+function printCrossCheckReport(findings, docsChecked, total) {
+  console.log(t.bold(`
+  Docs cross-check
+`));
+  console.log(kleur_default.gray(`  ${docsChecked} docs checked, ${total} finding${total !== 1 ? "s" : ""}
+`));
+  if (findings.length === 0) {
+    console.log(`  ${sym.ok} All docs current
+`);
+    return;
+  }
+  const bySeverity = {
+    critical: findings.filter((f) => f.severity === "critical"),
+    warning: findings.filter((f) => f.severity === "warning"),
+    info: findings.filter((f) => f.severity === "info")
+  };
+  for (const f of bySeverity.critical) {
+    console.log(`  ${kleur_default.red("\u2717")} ${kleur_default.red(f.docPath || "(coverage gap)")}  ${f.message}`);
+    if (f.detail) console.log(kleur_default.gray(`      ${f.detail}`));
+  }
+  for (const f of bySeverity.warning) {
+    console.log(`  ${kleur_default.yellow("\u26A0")} ${kleur_default.yellow(f.docPath || "(coverage gap)")}  ${f.message}`);
+    if (f.detail) console.log(kleur_default.gray(`      ${f.detail}`));
+  }
+  for (const f of bySeverity.info) {
+    console.log(`  ${kleur_default.gray("\u2139")} ${kleur_default.gray(f.docPath)}  ${kleur_default.gray(f.message)}`);
+  }
+  const parts = [];
+  if (bySeverity.critical.length > 0) parts.push(kleur_default.red(`${bySeverity.critical.length} critical`));
+  if (bySeverity.warning.length > 0) parts.push(kleur_default.yellow(`${bySeverity.warning.length} warning${bySeverity.warning.length > 1 ? "s" : ""}`));
+  if (bySeverity.info.length > 0) parts.push(kleur_default.gray(`${bySeverity.info.length} info`));
+  console.log(kleur_default.gray(`
+  ${parts.join(", ")}
+`));
 }
 function createDocsCommand() {
   const docs = new Command("docs").description("Documentation management commands");
@@ -58565,11 +58813,51 @@ function createDocsCommand() {
   ${sym.ok} ${entries.length} file${entries.length !== 1 ? "s" : ""}${withoutNote}${cacheNote}
 `);
   });
+  docs.command("cross-check").description("Validate docs against recent PR activity and bd issues").option("--days <n>", "Look-back window in days", "30").option("--json", "Output JSON", false).action(async (opts) => {
+    try {
+      const days = parseInt(opts.days, 10) || 30;
+      const repoRoot = await findRepoRoot();
+      const ghOk = isGhAvailable();
+      const bdOk = isBdAvailable();
+      if (!ghOk) {
+        console.error(kleur_default.yellow("[gh] GitHub CLI not available, PR data will be empty"));
+      }
+      if (!bdOk) {
+        console.error(kleur_default.yellow("[bd] bd CLI not available, issue data will be empty"));
+      }
+      const docEntries = await collectDocFiles(repoRoot);
+      const docContents = /* @__PURE__ */ new Map();
+      for (const doc of docEntries) {
+        try {
+          const content = await import_fs_extra21.default.readFile(doc.filePath, "utf8");
+          docContents.set(doc.relativePath, content);
+        } catch {
+        }
+      }
+      const [prs, issues] = await Promise.all([
+        Promise.resolve(fetchRecentPrs(repoRoot, days)),
+        Promise.resolve(fetchClosedBdIssues(days))
+      ]);
+      const staleFindings = detectStaleDocs(docEntries, prs, days);
+      const gapFindings = detectCoverageGaps(docEntries, issues, docContents);
+      const refFindings = validateIssueReferences(docEntries, issues, docContents);
+      const report = buildReport([...staleFindings, ...gapFindings, ...refFindings], docEntries.length);
+      if (opts.json) {
+        console.log(JSON.stringify(report, null, 2));
+      } else {
+        printCrossCheckReport(report.findings, report.docsChecked, report.findingsTotal);
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(kleur_default.red(`\u2717 Cross-check failed: ${msg}`));
+      process.exit(1);
+    }
+  });
   return docs;
 }
 
 // src/commands/debug.ts
-var import_node_child_process10 = require("child_process");
+var import_node_child_process12 = require("child_process");
 var import_node_fs6 = require("fs");
 var import_node_path7 = require("path");
 var KIND_LABELS = {
@@ -58710,14 +58998,14 @@ function buildWhere(opts, base) {
     clauses.push(`session_id LIKE '${s}%'`);
   }
   if (opts.type) {
-    const t3 = opts.type.replace(/'/g, "''");
-    clauses.push(`kind LIKE '${t3}.%' OR kind = '${t3}'`);
+    const t2 = opts.type.replace(/'/g, "''");
+    clauses.push(`kind LIKE '${t2}.%' OR kind = '${t2}'`);
   }
   return clauses.length ? clauses.join(" AND ") : "";
 }
 function queryEvents(dbPath, where, limit) {
   const sql = `SELECT id,ts,session_id,runtime,worktree,kind,tool_name,outcome,issue_id,duration_ms,data FROM events${where ? ` WHERE ${where}` : ""} ORDER BY id ASC LIMIT ${limit}`;
-  const result = (0, import_node_child_process10.spawnSync)("sqlite3", [dbPath, "-json", sql], {
+  const result = (0, import_node_child_process12.spawnSync)("sqlite3", [dbPath, "-json", sql], {
     stdio: ["pipe", "pipe", "pipe"],
     encoding: "utf8",
     timeout: 5e3
@@ -58868,8 +59156,8 @@ function gradientLine(line) {
   let out = "";
   const len = line.length;
   for (let i = 0; i < len; i++) {
-    const t3 = len > 1 ? i / (len - 1) : 0;
-    const hue = HUE_START + t3 * (HUE_END - HUE_START);
+    const t2 = len > 1 ? i / (len - 1) : 0;
+    const hue = HUE_START + t2 * (HUE_END - HUE_START);
     const [r, g, b] = hslToRgb(hue, SAT, LIG);
     out += `\x1B[38;2;${r};${g};${b}m` + line[i];
   }

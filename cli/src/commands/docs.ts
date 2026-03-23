@@ -6,6 +6,10 @@ import { findRepoRoot } from '../utils/repo-root.js';
 import { t, sym } from '../utils/theme.js';
 import { parseFrontmatter, DocEntry, scanDocFiles } from '../utils/docs-scanner.js';
 import { readCache, writeCache, isCacheValid } from '../utils/docs-cache.js';
+import { isGhAvailable, fetchRecentPrs, fetchRecentIssues } from './docs-cross-check-gh.js';
+import { isBdAvailable, fetchClosedBdIssues } from './docs-cross-check-bd.js';
+import { detectStaleDocs, detectCoverageGaps, validateIssueReferences, buildReport } from './docs-cross-check-core.js';
+import type { CrossCheckFinding } from './docs-cross-check-types.js';
 
 const REQUIRED_FIELDS = new Set(['title', 'type', 'status', 'updated_at', 'version']);
 
@@ -105,6 +109,49 @@ function printEntry(entry: DocEntry, raw: boolean): void {
         const valStr = v ?? '';
         console.log(`  ${keyStr}  ${valStr}`);
     }
+}
+
+/** Print human-readable cross-check report. */
+function printCrossCheckReport(findings: CrossCheckFinding[], docsChecked: number, total: number): void {
+    console.log(t.bold(`\n  Docs cross-check\n`));
+    console.log(kleur.gray(`  ${docsChecked} docs checked, ${total} finding${total !== 1 ? 's' : ''}\n`));
+
+    if (findings.length === 0) {
+        console.log(`  ${sym.ok} All docs current\n`);
+        return;
+    }
+
+    // Group by severity
+    const bySeverity = {
+        critical: findings.filter(f => f.severity === 'critical'),
+        warning: findings.filter(f => f.severity === 'warning'),
+        info: findings.filter(f => f.severity === 'info'),
+    };
+
+    // Print critical
+    for (const f of bySeverity.critical) {
+        console.log(`  ${kleur.red('✗')} ${kleur.red(f.docPath || '(coverage gap)')}  ${f.message}`);
+        if (f.detail) console.log(kleur.gray(`      ${f.detail}`));
+    }
+
+    // Print warnings
+    for (const f of bySeverity.warning) {
+        console.log(`  ${kleur.yellow('⚠')} ${kleur.yellow(f.docPath || '(coverage gap)')}  ${f.message}`);
+        if (f.detail) console.log(kleur.gray(`      ${f.detail}`));
+    }
+
+    // Print info
+    for (const f of bySeverity.info) {
+        console.log(`  ${kleur.gray('ℹ')} ${kleur.gray(f.docPath)}  ${kleur.gray(f.message)}`);
+    }
+
+    // Summary
+    const parts: string[] = [];
+    if (bySeverity.critical.length > 0) parts.push(kleur.red(`${bySeverity.critical.length} critical`));
+    if (bySeverity.warning.length > 0) parts.push(kleur.yellow(`${bySeverity.warning.length} warning${bySeverity.warning.length > 1 ? 's' : ''}`));
+    if (bySeverity.info.length > 0) parts.push(kleur.gray(`${bySeverity.info.length} info`));
+
+    console.log(kleur.gray(`\n  ${parts.join(', ')}\n`));
 }
 
 export function createDocsCommand(): Command {
@@ -237,6 +284,69 @@ export function createDocsCommand(): Command {
             const cacheNote = fromCache ? kleur.dim('  (cached)') : '';
             const withoutNote = withoutFm > 0 ? kleur.gray(`  (${withoutFm} without frontmatter)`) : '';
             console.log(`\n  ${sym.ok} ${entries.length} file${entries.length !== 1 ? 's' : ''}${withoutNote}${cacheNote}\n`);
+        });
+
+    // ── cross-check subcommand ────────────────────────────────────────────────
+    docs
+        .command('cross-check')
+        .description('Validate docs against recent PR activity and bd issues')
+        .option('--days <n>', 'Look-back window in days', '30')
+        .option('--json', 'Output JSON', false)
+        .action(async (opts: { days: string; json: boolean }) => {
+            try {
+                const days = parseInt(opts.days, 10) || 30;
+                const repoRoot = await findRepoRoot();
+
+                // Check availability of external tools
+                const ghOk = isGhAvailable();
+                const bdOk = isBdAvailable();
+
+                if (!ghOk) {
+                    console.error(kleur.yellow('[gh] GitHub CLI not available, PR data will be empty'));
+                }
+                if (!bdOk) {
+                    console.error(kleur.yellow('[bd] bd CLI not available, issue data will be empty'));
+                }
+
+                // Collect doc files
+                const docEntries = await collectDocFiles(repoRoot);
+
+                // Read doc contents for reference scanning
+                const docContents = new Map<string, string>();
+                for (const doc of docEntries) {
+                    try {
+                        const content = await fs.readFile(doc.filePath, 'utf8');
+                        docContents.set(doc.relativePath, content);
+                    } catch {
+                        // Skip files that can't be read
+                    }
+                }
+
+                // Fetch data from gh and bd in parallel
+                const [prs, issues] = await Promise.all([
+                    Promise.resolve(fetchRecentPrs(repoRoot, days)),
+                    Promise.resolve(fetchClosedBdIssues(days)),
+                ]);
+
+                // Run detectors
+                const staleFindings = detectStaleDocs(docEntries, prs, days);
+                const gapFindings = detectCoverageGaps(docEntries, issues, docContents);
+                const refFindings = validateIssueReferences(docEntries, issues, docContents);
+
+                // Build report
+                const report = buildReport([...staleFindings, ...gapFindings, ...refFindings], docEntries.length);
+
+                // Output
+                if (opts.json) {
+                    console.log(JSON.stringify(report, null, 2));
+                } else {
+                    printCrossCheckReport(report.findings, report.docsChecked, report.findingsTotal);
+                }
+            } catch (err) {
+                const msg = err instanceof Error ? err.message : String(err);
+                console.error(kleur.red(`✗ Cross-check failed: ${msg}`));
+                process.exit(1);
+            }
         });
 
     return docs;

@@ -41036,7 +41036,16 @@ async function runPiInstall(dryRun = false) {
       }
     }
   }
-  console.log("");
+  const configFiles = ["models.json", "auth.json", "settings.json"];
+  const missingConfig = configFiles.filter((f) => !require("fs").existsSync(import_path11.default.join(PI_AGENT_DIR, f)));
+  if (missingConfig.length > 0) {
+    console.log(kleur_default.yellow(`
+  \u26A0 Pi is not fully configured (missing: ${missingConfig.join(", ")})`));
+    console.log(kleur_default.yellow("    Run: xt pi setup   to complete first-time configuration"));
+    console.log(kleur_default.dim("    (API keys, model defaults, OAuth providers)\n"));
+  } else {
+    console.log("");
+  }
 }
 
 // src/commands/install.ts

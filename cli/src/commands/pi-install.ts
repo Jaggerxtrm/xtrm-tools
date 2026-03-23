@@ -124,5 +124,14 @@ export async function runPiInstall(dryRun: boolean = false): Promise<void> {
         }
     }
 
-    console.log('');
+    // Detect unconfigured Pi — nudge to run setup
+    const configFiles = ['models.json', 'auth.json', 'settings.json'];
+    const missingConfig = configFiles.filter(f => !require('fs').existsSync(path.join(PI_AGENT_DIR, f)));
+    if (missingConfig.length > 0) {
+        console.log(kleur.yellow(`\n  ⚠ Pi is not fully configured (missing: ${missingConfig.join(', ')})`));
+        console.log(kleur.yellow('    Run: xt pi setup   to complete first-time configuration'));
+        console.log(kleur.dim('    (API keys, model defaults, OAuth providers)\n'));
+    } else {
+        console.log('');
+    }
 }

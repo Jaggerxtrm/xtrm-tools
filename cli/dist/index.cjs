@@ -41763,6 +41763,24 @@ function readExistingPiValues(piAgentDir) {
 function isPiInstalled2() {
   return (0, import_node_child_process5.spawnSync)("pi", ["--version"], { encoding: "utf8" }).status === 0;
 }
+function isPnpmInstalled() {
+  return (0, import_node_child_process5.spawnSync)("pnpm", ["--version"], { encoding: "utf8" }).status === 0;
+}
+function ensurePnpm() {
+  if (isPnpmInstalled()) {
+    const v = (0, import_node_child_process5.spawnSync)("pnpm", ["--version"], { encoding: "utf8" });
+    console.log(t.success(`  pnpm ${v.stdout.trim()} already installed
+`));
+    return;
+  }
+  console.log(kleur_default.yellow("  pnpm not found \u2014 installing via npm...\n"));
+  const r = (0, import_node_child_process5.spawnSync)("npm", ["install", "-g", "pnpm"], { stdio: "inherit" });
+  if (r.status !== 0) {
+    console.log(kleur_default.yellow("  Failed to install pnpm. Run: npm install -g pnpm\n"));
+  } else {
+    console.log(t.success("  pnpm installed\n"));
+  }
+}
 function printPiCheckSummary(diff) {
   const totalDiff = diff.missing.length + diff.stale.length;
   console.log(t.bold("\n  Pi extension drift check\n"));
@@ -41812,6 +41830,8 @@ function createInstallPiCommand() {
       console.log(t.success(`  pi ${v.stdout.trim()} already installed
 `));
     }
+    console.log(t.bold("  pnpm\n"));
+    ensurePnpm();
     const schema = await import_fs_extra13.default.readJson(import_path13.default.join(piConfigDir, "install-schema.json"));
     const existing = readExistingPiValues(PI_AGENT_DIR2);
     const values = { ...existing };

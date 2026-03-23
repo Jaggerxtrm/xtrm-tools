@@ -38,6 +38,7 @@ describe('config schema integrity', () => {
                 'npm:pi-serena-tools',
                 'npm:@zenobius/pi-worktrees',
                 'npm:@robhowley/pi-structured-return',
+                'npm:@aliou/pi-processes',
             ];
             for (const pkg of expected) {
                 expect(schema.packages).toContain(pkg);

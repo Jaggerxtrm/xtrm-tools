@@ -52,6 +52,25 @@ function isPiInstalled(): boolean {
     return spawnSync('pi', ['--version'], { encoding: 'utf8' }).status === 0;
 }
 
+function isPnpmInstalled(): boolean {
+    return spawnSync('pnpm', ['--version'], { encoding: 'utf8' }).status === 0;
+}
+
+function ensurePnpm(): void {
+    if (isPnpmInstalled()) {
+        const v = spawnSync('pnpm', ['--version'], { encoding: 'utf8' });
+        console.log(t.success(`  pnpm ${v.stdout.trim()} already installed\n`));
+        return;
+    }
+    console.log(kleur.yellow('  pnpm not found — installing via npm...\n'));
+    const r = spawnSync('npm', ['install', '-g', 'pnpm'], { stdio: 'inherit' });
+    if (r.status !== 0) {
+        console.log(kleur.yellow('  Failed to install pnpm. Run: npm install -g pnpm\n'));
+    } else {
+        console.log(t.success('  pnpm installed\n'));
+    }
+}
+
 function printPiCheckSummary(diff: Awaited<ReturnType<typeof diffPiExtensions>>): void {
     const totalDiff = diff.missing.length + diff.stale.length;
 
@@ -113,6 +132,9 @@ export function createInstallPiCommand(): Command {
                 const v = spawnSync('pi', ['--version'], { encoding: 'utf8' });
                 console.log(t.success(`  pi ${v.stdout.trim()} already installed\n`));
             }
+
+            console.log(t.bold('  pnpm\n'));
+            ensurePnpm();
 
             const schema: InstallSchema = await fs.readJson(path.join(piConfigDir, 'install-schema.json'));
             const existing = readExistingPiValues(PI_AGENT_DIR);

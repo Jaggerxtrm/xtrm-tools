@@ -57082,7 +57082,8 @@ async function pickRuntime() {
 // src/commands/docs.ts
 var import_fs_extra19 = __toESM(require_lib2(), 1);
 var import_path20 = __toESM(require("path"), 1);
-var REQUIRED_FIELDS = /* @__PURE__ */ new Set(["title", "type", "status", "updated_at", "version"]);
+
+// src/utils/docs-scanner.ts
 function parseFrontmatter(content) {
   const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
   if (!match) return null;
@@ -57094,8 +57095,16 @@ function parseFrontmatter(content) {
     const value = line.slice(colon + 1).trim().replace(/^["']|["']$/g, "");
     if (key) fm[key] = value;
   }
+  const afterFrontmatter = content.slice(match[0].length).replace(/^\r?\n/, "");
+  const firstPara = afterFrontmatter.split(/\r?\n\r?\n/)[0].replace(/\r?\n/g, " ").trim();
+  if (firstPara && !firstPara.startsWith("#")) {
+    fm.summary = firstPara.slice(0, 120);
+  }
   return fm;
 }
+
+// src/commands/docs.ts
+var REQUIRED_FIELDS = /* @__PURE__ */ new Set(["title", "type", "status", "updated_at", "version"]);
 async function collectDocFiles(repoRoot, filterPattern) {
   const candidates = [];
   for (const name of ["README.md", "CHANGELOG.md"]) {

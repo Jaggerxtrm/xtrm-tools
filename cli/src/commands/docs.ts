@@ -4,37 +4,9 @@ import fs from 'fs-extra';
 import path from 'path';
 import { findRepoRoot } from '../utils/repo-root.js';
 import { t, sym } from '../utils/theme.js';
-
-interface Frontmatter {
-    [key: string]: string | undefined;
-}
-
-interface DocEntry {
-    filePath: string;
-    relativePath: string;
-    frontmatter: Frontmatter | null;
-    sizeBytes: number;
-    lastModified: Date;
-    parseError?: string;
-}
+import { parseFrontmatter, DocEntry } from '../utils/docs-scanner.js';
 
 const REQUIRED_FIELDS = new Set(['title', 'type', 'status', 'updated_at', 'version']);
-
-/** Parse YAML frontmatter from a markdown file (--- delimited block). */
-function parseFrontmatter(content: string): Frontmatter | null {
-    const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
-    if (!match) return null;
-
-    const fm: Frontmatter = {};
-    for (const line of match[1].split('\n')) {
-        const colon = line.indexOf(':');
-        if (colon === -1) continue;
-        const key = line.slice(0, colon).trim();
-        const value = line.slice(colon + 1).trim().replace(/^["']|["']$/g, '');
-        if (key) fm[key] = value;
-    }
-    return fm;
-}
 
 /** Collect all target doc files in a repo. */
 async function collectDocFiles(repoRoot: string, filterPattern?: string): Promise<DocEntry[]> {

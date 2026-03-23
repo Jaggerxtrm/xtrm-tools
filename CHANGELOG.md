@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - gitnexus hook now fires on Grep/Read/Glob tools (parity with Pi); quality-check covers .cjs/.mjs files; quality gate env pre-check at SessionStart; policies.md rewritten from scaffold; using-xtrm SKILL.md rewritten; worktree-session migrated to bd worktree; branch state + xt end reminders in gate messages
 
+- **pi-serena-compact**: Pi extension that compacts verbose output from Serena/GitNexus MCP tools (6 lines default, 12 for read_file/shell commands, respects expanded view toggle)
 ### Changed
 - v0.5.26 docs sync and Pi parity updates: quality gates, beads/session-flow lifecycle, using-xtrm loader parity, and policy-path normalization
 - Pi installer parity: `xt pi setup` now matches `xt pi install/reload` for extension deployment; managed extensions use sync + auto-discovery and no longer use duplicate `pi install -l` registration
@@ -25,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `skills/merge-prs/SKILL.md` and `specialists/merge-prs.specialist.yaml` for PR merge workflow
 - Release script now encodes `--tag latest` for npm publish
 
+- **pi-serena-compact**: Pi extension that compacts verbose output from Serena/GitNexus MCP tools (6 lines default, 12 for read_file/shell commands, respects expanded view toggle)
 ### Changed
 - Detect default branch via `symbolic-ref` + master fallback, replaced 9 hardcoded `origin/main` references
 - Optimized Pi installer with pre-check and diff-based sync
@@ -43,6 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`worktree-boundary.json`**: Policy for worktree boundary enforcement
 - **`statusline.mjs`**: Two-line status injection showing XTRM, model, branch, and claim state
 
+- **pi-serena-compact**: Pi extension that compacts verbose output from Serena/GitNexus MCP tools (6 lines default, 12 for read_file/shell commands, respects expanded view toggle)
 ### Changed
 - **`beads-claim-sync.mjs`**: Now stages untracked files before auto-commit on `bd close`
 - **Statusline format**: XTRM bold prepended, no hardcoded colors (theme-adaptive), issue ID shown before title in claim line
@@ -73,6 +76,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `xtrm pi install` now registers each extension via `pi install -l <path>` after copying
 - `diffPiExtensions` now compares extension directories using `sha256(package.json + index.ts)`
 
+- **pi-serena-compact**: Pi extension that compacts verbose output from Serena/GitNexus MCP tools (6 lines default, 12 for read_file/shell commands, respects expanded view toggle)
 ### Changed
 
 - **`xtrm install all` / `basic`** now print a deprecation notice; primary entry point is `xtrm install`
@@ -118,6 +122,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`xtrm install project <tool-name>`**: Install project-specific skill package
 - **`xtrm install project list`**: List available project skills with descriptions
 
+- **pi-serena-compact**: Pi extension that compacts verbose output from Serena/GitNexus MCP tools (6 lines default, 12 for read_file/shell commands, respects expanded view toggle)
 ### Changed
 
 #### CLI Rebranding
@@ -201,6 +206,7 @@ Automated hook translation is no longer supported. See README.md "Manual Setup f
 - **Env file management**: `~/.config/jaggers-agent-tools/.env` — auto-created on first sync, validates required env vars (e.g. `CONTEXT7_API_KEY`), preserves existing values.
 - **ConfigAdapter enhancements**: Qwen and Antigravity support added; `type` field auto-handled per agent; `EnvVarTransformer` extended for cross-agent compatibility.
 
+- **pi-serena-compact**: Pi extension that compacts verbose output from Serena/GitNexus MCP tools (6 lines default, 12 for read_file/shell commands, respects expanded view toggle)
 ### Changed
 
 #### Sync Command — 3-Phase Rewrite
@@ -254,6 +260,7 @@ Automated hook translation is no longer supported. See README.md "Manual Setup f
 - **Stop hook**: `config/settings.json` wired with Stop hook → `drift_detector.py hook`; fires at session end, injects a one-line reminder only when stale memories detected (zero token cost when clean)
 - **23 tests**: `test_validate_metadata.py` (4) and `test_drift_detector.py` (8, including `**` glob regression tests) added to existing suite
 
+- **pi-serena-compact**: Pi extension that compacts verbose output from Serena/GitNexus MCP tools (6 lines default, 12 for read_file/shell commands, respects expanded view toggle)
 ### Changed
 - **`validate_metadata.py`**: INDEX generation now unconditional (no longer blocked by schema validation errors)
 - **`SKILL.md` workflow**: Rewritten with drift-first 5-step protocol and decision table (new feature → SSOT, bug fix → changelog only, etc.)
@@ -292,6 +299,7 @@ Automated hook translation is no longer supported. See README.md "Manual Setup f
 - **Installer** (`install-service-skills.py`): single-purpose ~90-line script; copies trinity, merges settings.json hooks, activates git hooks; idempotent
 - **Phase 3 — Hook Registration**: new phase in `creating-service-skills` workflow verifies PreToolUse wiring, confirms territory globs in registry, communicates auto-activation to user
 
+- **pi-serena-compact**: Pi extension that compacts verbose output from Serena/GitNexus MCP tools (6 lines default, 12 for read_file/shell commands, respects expanded view toggle)
 ### Changed
 - Project structure: moved into `project-skills/service-skills-set/` with `.claude/` subdirectory
 - `settings.json` PostToolUse hook moved to project-level (was only in skill frontmatter — now always-on)
@@ -344,6 +352,7 @@ Automated hook translation is no longer supported. See README.md "Manual Setup f
 - **Single Confirmation**: Collect all changesets, display full plan, ask once
 - **Drifted Items Feedback**: Report skipped drifted items post-sync with backport hint
 
+- **pi-serena-compact**: Pi extension that compacts verbose output from Serena/GitNexus MCP tools (6 lines default, 12 for read_file/shell commands, respects expanded view toggle)
 ### Changed
 
 #### Safety Improvements
@@ -394,6 +403,7 @@ Automated hook translation is no longer supported. See README.md "Manual Setup f
 - `config-adapter.ts` uses `python` (not `python3`) on Windows for hook scripts
 - `sync-executor.ts` falls back from symlinks to copy on Windows with a user warning
 
+- **pi-serena-compact**: Pi extension that compacts verbose output from Serena/GitNexus MCP tools (6 lines default, 12 for read_file/shell commands, respects expanded view toggle)
 ### Changed
 - `cli/package.json` `bin` and root `package.json` `bin` now point to `cli/dist/index.js` (compiled output)
 - `cli/package.json` `scripts` updated: `build` (tsup), `dev` (tsx), `typecheck` (tsc), `test` (vitest), `start` (node dist)
@@ -416,6 +426,7 @@ Automated hook translation is no longer supported. See README.md "Manual Setup f
 - Implement Vault Sync Architecture for non-destructive settings management. Protects local secrets, MCP servers, and auth data during sync. Includes atomic writes and dry-run mode.
 - **Architecture Roadmap**: Document CLI architectural improvements in ROADMAP.md based on multi-agent orchestration findings (Transactional Sync, Manifest Versioning, Namespace Prefixes, Observability).
 
+- **pi-serena-compact**: Pi extension that compacts verbose output from Serena/GitNexus MCP tools (6 lines default, 12 for read_file/shell commands, respects expanded view toggle)
 ### Changed
 - **CLI Enhancement**: Automatically transforms `SKILL.md` into Gemini `.toml` command files during sync.
 - **Hook Migration**: Refined hook transformation logic for cross-agent compatibility.
@@ -448,6 +459,7 @@ Automated hook translation is no longer supported. See README.md "Manual Setup f
 - **Deprecated**: Fully replaced by `delegating` skill
 - **Removed**: `skills/ccs-delegation` directory deleted
 
+- **pi-serena-compact**: Pi extension that compacts verbose output from Serena/GitNexus MCP tools (6 lines default, 12 for read_file/shell commands, respects expanded view toggle)
 ### Changed
 
 #### Skill Suggestions Hook
@@ -512,6 +524,7 @@ ln -s ~/.claude/skills/prompt-improving ~/.claude/skills/p
 - **AskUserQuestion dialogs** in `ccs-delegation` skill for interactive delegation choice
 - **AskUserQuestion clarification** in `p` skill for ambiguous prompts (<8 words)
 
+- **pi-serena-compact**: Pi extension that compacts verbose output from Serena/GitNexus MCP tools (6 lines default, 12 for read_file/shell commands, respects expanded view toggle)
 ### Changed
 
 #### Skill `p` (Prompt Improver)

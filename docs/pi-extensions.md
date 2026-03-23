@@ -2,7 +2,7 @@
 title: Pi Extensions Reference
 scope: pi-extensions
 category: reference
-version: 1.2.0
+version: 1.3.0
 updated: 2026-03-22
 synced_at: 8e2f93c
 source_of_truth_for:
@@ -71,6 +71,34 @@ Session lifecycle tracking with worktree awareness:
 - Claim sync notifications
 - Stop-gate warnings for unclosed claims
 - Worktree cleanup reminders (`xt end`)
+
+### `pi-serena-compact`
+
+Compacts verbose output from Serena/GitNexus MCP tools, reducing CLI bloat while preserving essential information.
+
+**Problem:** Serena MCP tools (`find_symbol`, `get_symbols_overview`, `gitnexus_query`, etc.) produce detailed output that spans dozens of lines. Unlike native Pi tools which get compacted by pi-dex, MCP tool output appeared in full.
+
+**Solution:** Intercepts `tool_result` events for Serena/GitNexus tools and truncates output:
+
+| Tool Type | Max Lines | Max Line Length |
+|-----------|-----------|-----------------|
+| Default | 6 | 180 chars |
+| `read_file`, `execute_shell_command`, `structured_return` | 12 | 180 chars |
+
+Adds `… +N more lines` indicator when truncated. Respects expanded view toggle (press `e` in TUI).
+
+**Covered tools:**
+
+- **Serena symbols**: `find_symbol`, `find_referencing_symbols`, `get_symbols_overview`, `jet_brains_*`
+- **Serena files**: `read_file`, `create_text_file`, `replace_content`, `replace_lines`, `delete_lines`, `insert_at_line`
+- **Serena search**: `search_for_pattern`, `list_dir`, `find_file`
+- **Serena editing**: `replace_symbol_body`, `insert_after_symbol`, `insert_before_symbol`, `rename_symbol`
+- **GitNexus**: `gitnexus_query`, `gitnexus_context`, `gitnexus_impact`, `gitnexus_detect_changes`, `gitnexus_list_repos`
+- **Memory**: `read_memory`, `write_memory`, `list_memories`
+
+**Configuration:** Edit `config/pi/extensions/pi-serena-compact/index.ts` to add tools to `COMPACT_TOOLS` or `PRESERVE_OUTPUT_TOOLS` sets.
+
+**Limitation:** The `tool_result` event modifies content before it reaches both the UI and LLM context. A Pi SDK feature for UI-only renderers would enable compaction without affecting the LLM.
 
 ### Other Extensions
 

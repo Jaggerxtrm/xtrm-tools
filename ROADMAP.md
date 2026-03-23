@@ -2,7 +2,7 @@
 
 Planned improvements and feature additions for Claude Code skills.
 
----
+
 
 ## Completed in v2.1.9 (2026-03-15)
 
@@ -12,7 +12,29 @@ Planned improvements and feature additions for Claude Code skills.
 - ✅ Documentation audit and updates (README.md, testing.md)
 - ✅ Removed obsolete `vault-pattern-implementation.md`
 
----
+
+
+
+
+## Serena MCP Tool Compaction — `pi-serena-compact`
+
+### Status: ✅ Completed (2026-03-22)
+
+Created a Pi extension that compacts verbose output from Serena/GitNexus MCP tools, reducing CLI bloat while preserving essential information.
+
+**Problem:** Serena MCP tools produce detailed output that spans dozens of lines. Unlike native Pi tools which get compacted by pi-dex, MCP tool output appeared in full.
+
+**Solution:** `pi-serena-compact` intercepts `tool_result` events for Serena/GitNexus tools and truncates output:
+- Default: 6 lines max, 180 chars per line
+- Preserved tools (`read_file`, `execute_shell_command`): 12 lines max
+- Respects expanded view toggle (press `e` in TUI)
+
+**Location:** `config/pi/extensions/pi-serena-compact/`
+
+**Documentation:** [pi-extensions.md](docs/pi-extensions.md#pi-serena-compact)
+
+**Survives reinstalls:** Synced from `config/pi/extensions/` → `~/.pi/agent/extensions/` during `xtrm install`.
+
 
 ## Pi UX Compatibility — `pi-dex` + XTRM Footer Coexistence
 
@@ -37,7 +59,7 @@ Add an explicit footer toggle in `pi-dex` preferences and command surface so use
 
 **Timeline:** Next minor release after installer parity stabilization
 
----
+
 
 ## `install-service-skills` — Include `AGENTS.md` in Installation
 
@@ -62,7 +84,7 @@ Include `AGENTS.md` (or a project-scoped variant) as part of the `install-servic
 
 **Timeline:** Next minor release
 
----
+
 
 ## `prompt-improving` Skill
 
@@ -118,7 +140,7 @@ for prompt in prompts:
 
 **Timeline:** Q2 2026 (when PTC exits beta)
 
----
+
 
 #### Phase 2: Quality Scoring Restoration (v6.1.0)
 
@@ -147,7 +169,7 @@ for prompt in prompts:
 
 **Timeline:** Q3 2026
 
----
+
 
 #### Phase 3: Template Library (v7.0.0)
 
@@ -176,7 +198,7 @@ for prompt in prompts:
 
 **Timeline:** Q4 2026
 
----
+
 
 #### Phase 4: Chain-of-Thought Auto-Detection (v7.1.0)
 
@@ -208,7 +230,7 @@ After:
 
 **Timeline:** Q1 2027
 
----
+
 
 #### Phase 5: Contextual Prefill Suggestions (v8.0.0)
 
@@ -246,7 +268,7 @@ AskUserQuestion({
 
 **Timeline:** Q2 2027
 
----
+
 
 ## `documenting` Skill
 
@@ -275,7 +297,7 @@ Add more metadata for clear identification of involved scripts/files in the docu
 
 **Timeline:** Q2 2026
 
----
+
 
 #### Phase 2: Custom Profile Management (v6.0.0)
 
@@ -289,7 +311,7 @@ Add more metadata for clear identification of involved scripts/files in the docu
 
 **Timeline:** Q3 2026
 
----
+
 
 ## Cross-Skill Features
 
@@ -305,7 +327,7 @@ Add more metadata for clear identification of involved scripts/files in the docu
 
 **Timeline:** Q2 2026
 
----
+
 
 ### Skill Composition (v6.0.0)
 
@@ -326,7 +348,7 @@ Add more metadata for clear identification of involved scripts/files in the docu
 
 **Timeline:** Q4 2026
 
----
+
 
 ## Deprecation Timeline
 
@@ -342,7 +364,7 @@ Add more metadata for clear identification of involved scripts/files in the docu
 
 **Reasoning:** 90% token overhead for <5% usage. Core functionality preserved.
 
----
+
 
 ## MCP Integration
 
@@ -363,7 +385,7 @@ Add more metadata for clear identification of involved scripts/files in the docu
 
 **Timeline:** 2028+
 
----
+
 
 ## Version History
 
@@ -373,7 +395,7 @@ Add more metadata for clear identification of involved scripts/files in the docu
 | 5.0.0   | 2026-01-30 | Major refactoring, 90% token reduction |
 | 4.2.0   | Pre-2026   | Feature-rich baseline (155KB)          |
 
----
+
 
 ## Contributing
 
@@ -382,7 +404,7 @@ Suggest roadmap items by creating issues in:
 - `ROADMAP.md` (this file)
 - Or discuss in `.serena/memories/skills-evolution.md`
 
----
+
 
 ## CLI Architecture Improvements
 
@@ -411,7 +433,7 @@ Removed multi-agent hook translation for Gemini/Qwen due to:
 - Technical debt from maintaining translations
 - Focus on robust, well-tested Claude Code support
 
----
+
 
 ### Phase 1: Universal Configuration Hub (COMPLETED v1.5.0)
 
@@ -424,7 +446,7 @@ Removed multi-agent hook translation for Gemini/Qwen due to:
 - ✅ **Dynamic Injection**: Unified handling of `settings.json` for Claude, Gemini, and Qwen.
 - ✅ **Manifest Tracking**: Initial implementation of `.jaggers-sync-manifest.json`.
 
----
+
 
 ### Phase 2: Advanced Env Var & Path Resolution (COMPLETED v1.5.1)
 
@@ -434,7 +456,7 @@ Removed multi-agent hook translation for Gemini/Qwen due to:
 - ✅ **EnvVarTransformer**: Recursive transformation between `${VAR}`, `${env:VAR}`, and `{env:VAR}`.
 - ✅ **Safe Path Expansion**: Intelligent resolution of `~/` and `${HOME}` across all config fields.
 
----
+
 
 ### Phase 3: Transactional Sync & Rollback (HIGH PRIORITY)
 
@@ -444,7 +466,7 @@ Removed multi-agent hook translation for Gemini/Qwen due to:
 
 **Timeline:** Q2 2026
 
----
+
 
 ### Phase 4: Full Multi-Tool Support (Cursor & VS Code) (MEDIUM PRIORITY)
 
@@ -457,7 +479,7 @@ Removed multi-agent hook translation for Gemini/Qwen due to:
 
 **Timeline:** Q3 2026
 
----
+
 
 ### Phase 5: Manifest-Based Versioning (HIGH PRIORITY)
 
@@ -507,7 +529,7 @@ Removed multi-agent hook translation for Gemini/Qwen due to:
 
 **Timeline:** Q2 2026
 
----
+
 
 ### Phase 3: Namespace Prefixes & Collision Detection (MEDIUM PRIORITY)
 
@@ -553,7 +575,7 @@ function transformSkillToCommand(skill) {
 
 **Timeline:** Q3 2026
 
----
+
 
 ### Phase 4: Observability & Validation (MEDIUM PRIORITY)
 
@@ -606,7 +628,7 @@ npx ./cli --strict
 
 **Timeline:** Q3 2026
 
----
+
 
 ### Phase 5: Transformation Logic Refactoring (LOW PRIORITY)
 
@@ -652,7 +674,7 @@ class ConfigResolver {
 
 **Timeline:** Q4 2026
 
----
+
 
 ### Acceptable Trade-offs
 
@@ -673,7 +695,7 @@ class ConfigResolver {
    - **Rationale:** Enables single-repo, multi-agent support without code duplication
    - **Accept:** 75-80% token efficiency gains outweigh transformation cost
 
----
+
 
 ### Implementation Priority
 
@@ -685,7 +707,7 @@ class ConfigResolver {
 | 🟡 MEDIUM | Observability           | Improves debugging  | Low    | Q3 2026  |
 | 🟢 LOW    | Transformation Refactor | Code quality        | Medium | Q4 2026  |
 
----
+
 
 ### Multi-Agent Collaboration Insights
 
@@ -699,7 +721,7 @@ class ConfigResolver {
 
 **Recommendation:** Use `/orchestrating-agents` skill for complex architectural reviews.
 
----
+
 
 ## References
 

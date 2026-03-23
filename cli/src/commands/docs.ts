@@ -4,7 +4,8 @@ import fs from 'fs-extra';
 import path from 'path';
 import { findRepoRoot } from '../utils/repo-root.js';
 import { t, sym } from '../utils/theme.js';
-import { parseFrontmatter, DocEntry } from '../utils/docs-scanner.js';
+import { parseFrontmatter, DocEntry, scanDocFiles } from '../utils/docs-scanner.js';
+import { readCache, writeCache, isCacheValid } from '../utils/docs-cache.js';
 
 const REQUIRED_FIELDS = new Set(['title', 'type', 'status', 'updated_at', 'version']);
 
@@ -146,6 +147,96 @@ export function createDocsCommand(): Command {
                 (without > 0 ? kleur.gray(`  (${without} without frontmatter)`) : '') +
                 '\n'
             );
+        });
+
+    docs
+        .command('list')
+        .description('List all .md files in the project with frontmatter summary')
+        .option('--dir <path>', 'Filter to files under this directory')
+        .option('--pattern <glob>', 'Filter by filename substring')
+        .option('--filter <field=value>', 'Filter by frontmatter field, e.g. --filter type=service')
+        .option('--json', 'Output JSON array', false)
+        .option('--no-cache', 'Bypass cache and force fresh scan')
+        .action(async (opts: { dir?: string; pattern?: string; filter?: string; json: boolean; cache: boolean }) => {
+            const repoRoot = await findRepoRoot();
+
+            // Parse --filter field=value
+            let fmFilter: { field: string; value: string } | undefined;
+            if (opts.filter) {
+                const sep = opts.filter.indexOf('=');
+                if (sep !== -1) {
+                    fmFilter = { field: opts.filter.slice(0, sep), value: opts.filter.slice(sep + 1) };
+                }
+            }
+
+            const scanOpts = { dir: opts.dir, pattern: opts.pattern, filter: fmFilter };
+
+            // Try cache first
+            let entries: DocEntry[] = [];
+            let fromCache = false;
+
+            if (opts.cache !== false) {
+                const cached = await readCache(repoRoot);
+                const fresh = await scanDocFiles(repoRoot, scanOpts);
+                if (cached && isCacheValid(cached, fresh)) {
+                    entries = fresh; // mtime-checked entries are already fresh
+                    fromCache = true;
+                } else {
+                    entries = fresh;
+                    await writeCache(repoRoot, fresh);
+                }
+            } else {
+                entries = await scanDocFiles(repoRoot, scanOpts);
+            }
+
+            if (entries.length === 0) {
+                console.log(kleur.yellow('\n  No documentation files found.\n'));
+                return;
+            }
+
+            if (opts.json) {
+                const output = entries.map(e => ({
+                    path: e.relativePath,
+                    sizeBytes: e.sizeBytes,
+                    lastModified: e.lastModified.toISOString(),
+                    frontmatter: e.frontmatter,
+                    parseError: e.parseError ?? null,
+                }));
+                console.log(JSON.stringify(output, null, 2));
+                return;
+            }
+
+            const Table = require('cli-table3');
+            const table = new Table({
+                head: [
+                    kleur.bold('Path'),
+                    kleur.bold('Size'),
+                    kleur.bold('Modified'),
+                    kleur.bold('Title'),
+                    kleur.bold('Type'),
+                ],
+                style: { head: [], border: [] },
+            });
+
+            let withoutFm = 0;
+            for (const e of entries) {
+                const hasFm = e.frontmatter && Object.keys(e.frontmatter).length > 0;
+                if (!hasFm) withoutFm++;
+                const row = [
+                    hasFm ? e.relativePath : kleur.gray(e.relativePath),
+                    kleur.dim(formatSize(e.sizeBytes)),
+                    kleur.dim(formatDate(e.lastModified)),
+                    hasFm ? (e.frontmatter?.title ?? kleur.gray('—')) : kleur.gray('—'),
+                    hasFm ? (e.frontmatter?.type ?? kleur.gray('—')) : kleur.gray('—'),
+                ];
+                table.push(row);
+            }
+
+            console.log('\n' + table.toString());
+
+            const cacheNote = fromCache ? kleur.dim('  (cached)') : '';
+            const withoutNote = withoutFm > 0 ? kleur.gray(`  (${withoutFm} without frontmatter)`) : '';
+            console.log(`\n  ${sym.ok} ${entries.length} file${entries.length !== 1 ? 's' : ''}${withoutNote}${cacheNote}\n`);
         });
 
     return docs;

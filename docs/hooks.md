@@ -18,7 +18,7 @@ domain: [hooks, claude, enforcement]
 |---|---|
 | [Event Model](#event-model) | Always installed (`xtrm install`) |
 | [Hook Groups](#hook-groups) | Always installed (`xtrm install`) |
-| [Claim Workflow](#claim-workflow) | Acknowledge the memory gate with: |
+| [Claim Workflow](#claim-workflow) | Acknowledge the memory gate by running the `bd kv set` command shown in the gate message (it includes the session ID): |
 | [Compact / Resume Continuity](#compact-resume-continuity) | `beads-compact-save |
 | [Installation](#installation) | Gates that depend on `bd` + `dolt` are skipped automatically if those binaries are not present |
 | [Policy Source](#policy-source) | Hook wiring is compiled from `policies/* |

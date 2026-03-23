@@ -13,6 +13,7 @@ domain: []
 | [Overview](#overview) | XTRM is a policy-driven workflow layer |
 | [Installation](#installation) | `xt` and `xtrm` are equivalent command names |
 | [Runtime Commands](#runtime-commands) | `xt` and `xtrm` are equivalent command names |
+| [Documentation Commands](#documentation-commands) | Use the docs submenu for metadata inspection and drift checks: |
 | [Help and Banner Behavior](#help-and-banner-behavior) | Compile and verify policy output: |
 | [Policy System](#policy-system) | Compile and verify policy output: |
 | [Hook Wiring (Claude)](#hook-wiring-claude) | Generated output: `hooks/hooks |

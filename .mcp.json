@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "specialists": {
+      "type": "stdio",
+      "command": "specialists",
+      "args": [],
+      "env": {}
+    }
+  }
+}

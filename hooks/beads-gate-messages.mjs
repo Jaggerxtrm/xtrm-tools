@@ -59,13 +59,19 @@ export function stopBlockMessage(summary, claimed) {
 export function memoryPromptMessage(claimId, sessionId) {
   const claimLine = claimId ? `claim \`${claimId}\` was closed.\n` : '';
   const ackCmd = sessionId
-    ? `bd kv set "memory-gate-done:${sessionId}" 1`
+    ? `bd kv set "memory-gate-done:${sessionId}"`
     : 'touch .beads/.memory-gate-done';
   return (
     `\u25cf Memory gate: ${claimLine}` +
-    'Ask: "Would this be useful in 14 days on a fresh session?"\n' +
-    '  YES → `bd remember "<insight>"`\n' +
-    '  NO  → note "nothing to persist"\n' +
-    `  Then: \`${ackCmd}\`\n`
+    'For each candidate insight, check ALL 4:\n' +
+    '  1. Hard to rediscover from code/docs?\n' +
+    '  2. Not obvious from the current implementation?\n' +
+    '  3. Will affect a future decision?\n' +
+    '  4. Still relevant in ~14 days?\n' +
+    'KEEP (all 4 yes) → `bd remember "<insight>"`\n' +
+    'SKIP examples: file maps, flag inventories, per-issue summaries,\n' +
+    '  wording tweaks, facts obvious from reading the source.\n' +
+    `KEEP: \`${ackCmd} "saved: <key>"\`\n` +
+    `SKIP: \`${ackCmd} "nothing novel — <one-line reason>"\`\n`
   );
 }

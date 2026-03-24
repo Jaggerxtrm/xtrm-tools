@@ -45,3 +45,4 @@ plugins/xtrm-tools/skills/
 
 # bv (beads viewer) local config and caches
 .bv/
+.specialists/

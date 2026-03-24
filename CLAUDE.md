@@ -267,3 +267,136 @@ Before completing any code modification task, verify:
 - Generate docs: `npx gitnexus wiki`
 
 <!-- gitnexus:end -->
+
+<!-- specialists:start -->
+## Specialists Workflow
+
+> Injected by `specialists init`. Keep this section — agents use it for context.
+
+### When to use specialists
+
+Specialists are autonomous AI agents optimized for heavy tasks: code review, bug analysis, test generation, architecture design. Use them instead of doing the work yourself when the task benefits from specialist focus.
+
+### Tracked vs ad-hoc work
+
+**Tracked work (primary workflow):**
+- Use `--bead <id>` when the specialist is executing a tracked work item.
+- The bead is the prompt source.
+- The orchestrator owns the bead lifecycle.
+
+**Ad-hoc work:**
+- Use `--prompt "..."` for quick, untracked runs.
+- No bead is created or linked.
+
+### Canonical workflow
+
+**1. Create or identify the bead first**
+
+The bead is the work unit. Always start from bd when work should be tracked.
+
+```bash
+bd create "Investigate X" -t task -p 1 --json
+```
+
+- Use an existing bead ID if the work item already exists.
+- The bead represents a single unit of tracked work in your issue tracker.
+
+**2. Model dependencies in bd**
+
+If this task depends on earlier work, add blocker relationships. The dependency graph powers automatic context injection.
+
+```bash
+bd dep add <this-bead-id> <blocker-bead-id>
+```
+
+- Blockers must be completed before context is injected.
+- Context injection depth is controlled via --context-depth.
+
+**3. Run the specialist with the bead as input**
+
+Use --bead to attach the specialist run to a tracked work item.
+
+```bash
+specialists run <name> --bead <id>
+```
+
+```bash
+specialists run <name> --bead <id> --background
+```
+
+- With --bead, the bead is the prompt source.
+- The runner does not create a second bead.
+- The orchestrator/bead owner keeps lifecycle ownership.
+
+**4. Observe the run**
+
+Track progress and retrieve results.
+
+```bash
+specialists feed <job-id>
+```
+
+```bash
+specialists feed -f
+```
+
+```bash
+specialists status
+```
+
+```bash
+specialists result <job-id>
+```
+
+- Use feed -f for live global follow across all jobs.
+- status shows system health and active jobs.
+
+**5. Close or update the bead in the orchestrator layer**
+
+The orchestrator owns the bead lifecycle when using --bead.
+
+```bash
+bd close <id> --reason "Completed"
+```
+
+- The specialist does not close beads it did not create.
+- Internally this is the ownsBead = false path.
+
+### --context-depth
+
+Controls how many levels of completed blockers are injected as context when using --bead. Default: 1.
+
+- **depth=0**: No dependency context injection. Only the bead itself is used.
+- **depth=1**: Inject immediate completed blockers only. This is the default.
+- **depth=2**: Inject completed blockers and their completed blockers.
+- **depth=N**: Walk N levels up the blocker chain.
+
+### --no-beads
+
+Suppresses creating/tracking a new bead for the run.
+
+- --no-beads does NOT disable bead reading.
+- If --bead <id> is provided, the bead is still read and used as the prompt source.
+- --no-beads only affects whether the specialist creates a new tracking bead.
+
+### Orchestrator-owned bead lifecycle
+
+When using --bead <id>, the specialist run uses an existing bead owned by the orchestrator.
+
+- The bead is the prompt source.
+- The runner does NOT create a second bead.
+- The runner does NOT close the bead on completion.
+- The orchestrator (bd layer) is responsible for closing/updating the bead.
+
+### Key commands
+
+```bash
+specialists init                    # Bootstrap project
+specialists run <name> --bead <id>  # Tracked work
+specialists run <name> --prompt "..."  # Ad-hoc work
+specialists feed -f                 # Follow all jobs
+specialists status                  # System health
+specialists list                    # Available specialists
+```
+
+<!-- specialists:end -->

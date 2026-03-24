@@ -86,9 +86,9 @@ logEvent({
   sessionId,
   layer: 'gate',
   kind: 'gate.memory.triggered',
-  outcome: 'block',
+  outcome: 'nudge',
   issueId: closedIssueId,
   message: memoryMessage,
 });
-process.stderr.write(memoryMessage);
-process.exit(2);
+process.stdout.write(JSON.stringify({ additionalContext: memoryMessage }) + '\n');
+process.exit(0);

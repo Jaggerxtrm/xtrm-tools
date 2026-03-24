@@ -57278,27 +57278,12 @@ function isCacheValid(cache, entries, ttlMs = DEFAULT_TTL_MS) {
 
 // src/commands/docs-cross-check-gh.ts
 var import_node_child_process10 = require("child_process");
-var _ghAvailable = null;
 function isGhAvailable() {
-  if (_ghAvailable !== null) return _ghAvailable;
-  const r = (0, import_node_child_process10.spawnSync)("gh", ["--version"], { stdio: "pipe" });
-  _ghAvailable = r.status === 0;
-  return _ghAvailable;
-}
-function logGhWarning(message) {
-  console.error(kleur_default.yellow(`[gh] ${message}`));
-}
-function handleGhError(context, result) {
-  if (result.status === 4) {
-    logGhWarning(`${context}: Authentication failed. Run 'gh auth login' first.`);
-  } else if (result.status !== 0) {
-    const hint = result.stderr?.trim() || `exit code ${result.status}`;
-    logGhWarning(`${context}: gh CLI failed (${hint})`);
-  }
+  return (0, import_node_child_process10.spawnSync)("gh", ["--version"], { stdio: "pipe", encoding: "utf8" }).status === 0;
 }
 function fetchRecentPrs(repoRoot, days) {
   if (!isGhAvailable()) {
-    logGhWarning("fetchRecentPrs: gh CLI not available, skipping PR fetch");
+    console.log(kleur_default.yellow("  \u26A0 gh CLI not found \u2014 skipping PR data (install gh to enable cross-check)"));
     return [];
   }
   const r = (0, import_node_child_process10.spawnSync)("gh", [
@@ -57310,26 +57295,24 @@ function fetchRecentPrs(repoRoot, days) {
     "100",
     "--json",
     "number,title,mergedAt,url,headRefName"
-  ], {
-    cwd: repoRoot,
-    encoding: "utf8",
-    stdio: "pipe"
-  });
+  ], { stdio: "pipe", encoding: "utf8", cwd: repoRoot });
+  if (r.status === 4) {
+    console.log(kleur_default.yellow("  \u26A0 gh auth error \u2014 run: gh auth login"));
+    return [];
+  }
   if (r.status !== 0) {
-    handleGhError("fetchRecentPrs", r);
+    console.log(kleur_default.yellow(`  \u26A0 gh pr list failed (exit ${r.status}) \u2014 skipping PR data`));
     return [];
   }
+  let prs;
   try {
-    const data = JSON.parse(r.stdout ?? "[]");
-    const cutoff = new Date(Date.now() - days * 864e5);
-    return data.filter((pr) => {
-      if (!pr.mergedAt) return false;
-      return new Date(pr.mergedAt) >= cutoff;
-    });
-  } catch (e) {
-    logGhWarning(`fetchRecentPrs: JSON parse failed (${e instanceof Error ? e.message : "unknown error"})`);
+    prs = JSON.parse(r.stdout);
+  } catch {
+    console.log(kleur_default.yellow("  \u26A0 Failed to parse gh pr list output \u2014 skipping PR data"));
     return [];
   }
+  const cutoff = Date.now() - days * 864e5;
+  return prs.filter((pr) => pr.mergedAt && new Date(pr.mergedAt).getTime() >= cutoff);
 }
 
 // src/commands/docs-cross-check-bd.ts

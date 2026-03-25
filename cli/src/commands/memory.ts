@@ -1,8 +1,9 @@
 import { Command } from 'commander';
 import kleur from 'kleur';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+import ora from 'ora';
 
 export function createMemoryCommand(): Command {
     return new Command('memory')
@@ -15,7 +16,7 @@ function createMemoryUpdateCommand(): Command {
         .description('Run memory-processor specialist to synthesize bd memories into .xtrm/memory.md')
         .option('--dry-run', 'Report only — do not modify memories or write memory.md', false)
         .option('--no-beads', 'Skip creating a tracking bead for this run', false)
-        .action((opts: { dryRun: boolean; beads: boolean }) => {
+        .action(async (opts: { dryRun: boolean; beads: boolean }) => {
             const cwd = process.cwd();
 
             // Gate: specialists CLI must be available
@@ -50,14 +51,34 @@ function createMemoryUpdateCommand(): Command {
             const args = ['run', 'memory-processor', '--prompt', prompt];
             if (!opts.beads) args.push('--no-beads');
 
+            const memPath = join(cwd, '.xtrm', 'memory.md');
+            const spinnerText = opts.dryRun
+                ? 'Analyzing memories...'
+                : `${existsSync(memPath) ? 'Updating' : 'Creating'} .xtrm/memory.md...`;
+
             console.log(kleur.bold(`\n  xt memory update${opts.dryRun ? ' (dry run)' : ''}\n`));
-            if (!opts.dryRun) {
-                const memPath = join(cwd, '.xtrm', 'memory.md');
-                const action = existsSync(memPath) ? 'Updating' : 'Creating';
-                console.log(kleur.dim(`  ${action} .xtrm/memory.md...\n`));
+
+            const spinner = ora({ text: spinnerText, color: 'cyan' }).start();
+            const chunks: string[] = [];
+
+            const exitCode = await new Promise<number>((resolve) => {
+                const proc = spawn('specialists', args, { cwd, stdio: ['inherit', 'pipe', 'pipe'] });
+                proc.stdout.on('data', (d: Buffer) => chunks.push(d.toString()));
+                proc.stderr.on('data', (d: Buffer) => chunks.push(d.toString()));
+                proc.on('close', (code) => resolve(code ?? 0));
+            });
+
+            if (exitCode === 0) {
+                spinner.succeed(opts.dryRun ? 'Analysis complete.' : '.xtrm/memory.md written.');
+            } else {
+                spinner.fail('memory-processor failed.');
             }
 
-            const result = spawnSync('specialists', args, { cwd, stdio: 'inherit', encoding: 'utf8' });
-            process.exit(result.status ?? 0);
+            // Show the final output — last meaningful lines
+            const lines = chunks.join('').split('\n').filter(l => l.trim());
+            const tail = lines.slice(-10).map(l => kleur.dim('  ' + l)).join('\n');
+            if (tail) console.log('\n' + tail + '\n');
+
+            process.exit(exitCode);
         });
 }

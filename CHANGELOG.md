@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.5.43] - 2026-03-25
+
+### Fixed
+- Restore specialists project hooks in `.claude/settings.json` — incorrectly removed in 0.5.42
+
+---
+
+## [0.5.42] - 2026-03-25
+
+### Fixed
+- Remove accidentally committed specialists hooks from `.claude/settings.json` (reverted in 0.5.43 — see note)
+
+---
+
+## [0.5.41] - 2026-03-25
+
+### Added
+- **`xt memory update`**: New CLI command that shells out to the `memory-processor` specialist to synthesize bd memories + project state into `.xtrm/memory.md`. Supports `--dry-run` (report only) and `--no-beads` flags.
+- **`memory-processor` specialist** (`specialists/memory-processor.specialist.yaml`): Autonomous specialist that cross-references bd memories against current source code, writes a condensed `.xtrm/memory.md` (100–200 lines, 3 sections: Architecture & Decisions, Non-obvious Gotchas, Process & Workflow Rules), and prunes stale/redundant/contradicted memories from bd.
+- **`.xtrm/memory.md` injection at SessionStart**: `using-xtrm-reminder.mjs` now appends `.xtrm/memory.md` to the system prompt when present — synthesized project context is available from turn 1.
+- **Pi parity — memory.md injection**: `xtrm-loader` Pi extension now injects `.xtrm/memory.md` in `before_agent_start` (same semantics as Claude Code SessionStart injection).
+- **Pi parity — memory gate prompt**: `beads` Pi extension memory gate now uses the same 4-criteria checklist and articulated ack format as the Claude hook.
+
+### Changed
+- **`beads-memory-gate.mjs`**: Switched from blocking (exit 2 + stderr) to non-blocking (`additionalContext` + exit 0) — memory gate is advisory, not a hard stop.
+- **`beads-stop-gate.mjs`**: Switched from blocking to non-blocking (`additionalContext` + exit 0) — eliminates spurious stop-gate noise between conversational turns.
+- **Memory gate prompt** (`beads-gate-messages.mjs`): Now uses 4-criteria quality filter (hard to rediscover, non-obvious from source, will affect future decisions, still relevant in ~14 days) with mandatory articulated ack (not just `1`).
+
+---
+
 ## [Unreleased]
 
 ### Added

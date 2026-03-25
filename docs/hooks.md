@@ -2,9 +2,9 @@
 title: Hooks Reference
 scope: hooks
 category: reference
-version: 1.3.0
-updated: 2026-03-22
-synced_at: 8e2f93c
+version: 1.4.0
+updated: 2026-03-25
+synced_at: ce0f13d
 description: "All hook events, scripts, and behavior for the xtrm plugin"
 source_of_truth_for:
   - "hooks/**/*.mjs"
@@ -50,7 +50,7 @@ Always installed (`xtrm install`).
 
 | Hook | Event | Behavior |
 |------|-------|----------|
-| `using-xtrm-reminder.mjs` | SessionStart | Injects the xtrm operating manual into system prompt |
+| `using-xtrm-reminder.mjs` | SessionStart | Injects the xtrm operating manual + `.xtrm/memory.md` (if present) into system prompt |
 | `gitnexus/gitnexus-hook.cjs` | PostToolUse | Enriches Bash/Grep/Read/Glob/Serena tool output with GitNexus graph context |
 | `quality-check.cjs` | PostToolUse | Runs tsc/ESLint checks after JS/TS/CJS/MJS file edits |
 | `quality-check.py` | PostToolUse | Runs ruff/mypy checks after Python file edits |
@@ -66,8 +66,8 @@ Installed with `xtrm install` when beads + dolt are present.
 |------|-------|----------|
 | `beads-edit-gate.mjs` | PreToolUse | Blocks file edits when no beads issue is claimed |
 | `beads-commit-gate.mjs` | PreToolUse | Blocks `git commit` when claimed issue is still in_progress |
-| `beads-stop-gate.mjs` | Stop | Blocks session end when there is an unclosed in_progress claim |
-| `beads-memory-gate.mjs` | Stop | Prompts to persist insights when a claim was closed this session |
+| `beads-stop-gate.mjs` | Stop | Nudges (non-blocking) when there is an unclosed in_progress claim |
+| `beads-memory-gate.mjs` | Stop | Nudges (non-blocking) with 4-criteria memory gate when a claim was closed this session |
 | `beads-compact-save.mjs` | PreCompact | Saves claim state before `/compact` |
 | `beads-compact-restore.mjs` | SessionStart | Restores claim state after `/compact` or session resume |
 
@@ -99,7 +99,7 @@ Runs via Claude Code's `statusLine` injection. Reads claim state from `.xtrm/sta
 |------|---------|
 | `beads-gate-core.mjs` | Core gate decision logic (commit gate, stop gate) |
 | `beads-gate-utils.mjs` | Claim resolution, work-state helpers |
-| `beads-gate-messages.mjs` | Shared message formatting for gate blocks |
+| `beads-gate-messages.mjs` | Shared message formatting for gate blocks; memory gate uses 4-criteria filter (hard to rediscover, non-obvious, future-relevant, still relevant in 14 days) |
 | `xtrm-logger.mjs` | Event logger for hooks/bd lifecycle — writes to `xtrm_events` table in beads Dolt DB |
 
 ## Claim Workflow
@@ -117,12 +117,17 @@ bd close <id> --reason "Done"
 
 - `beads-edit-gate` blocks edits until an issue is claimed
 - `beads-commit-gate` blocks commits until the claimed issue is closed
-- `beads-stop-gate` blocks session end while a claim is in_progress
-- `beads-memory-gate` fires at Stop if a claim was closed this session, prompting memory persistence
+- `beads-stop-gate` nudges (non-blocking `additionalContext`) if a claim is still in_progress at Stop
+- `beads-memory-gate` nudges (non-blocking `additionalContext`) at Stop if a claim was closed this session
 
-Acknowledge the memory gate by running the `bd kv set` command shown in the gate message (it includes the session ID):
+The memory gate uses a 4-criteria filter — only persist insights that are all of: hard to rediscover, non-obvious from the source, will affect a future decision, still relevant in ~14 days.
+
+Acknowledge the memory gate by running the `bd kv set` command shown in the gate message:
 ```bash
-bd kv set "memory-gate-done:<session-id>" 1
+# After saving an insight:
+bd kv set "memory-gate-done:<session-id>" "saved: <key>"
+# If nothing novel:
+bd kv set "memory-gate-done:<session-id>" "nothing novel — <one-line reason>"
 ```
 
 ## Compact / Resume Continuity

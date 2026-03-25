@@ -2,9 +2,9 @@
 title: Pi Extensions Reference
 scope: pi-extensions
 category: reference
-version: 1.3.0
-updated: 2026-03-22
-synced_at: 8e2f93c
+version: 1.4.0
+updated: 2026-03-25
+synced_at: ce0f13d
 source_of_truth_for:
   - "config/pi/extensions/**/index.ts"
   - "config/pi/extensions/**/package.json"
@@ -62,7 +62,7 @@ Beads workflow enforcement for Pi. Implements claim-based edit gates and session
 - **Edit gate**: Blocks file edits when no beads issue is claimed
 - **Commit gate**: Blocks `git commit` when claimed issue is still in_progress  
 - **Auto-commit**: On `bd close`, automatically commits staged changes with `--no-verify` (stages untracked files first)
-- **Memory gate**: Prompts insight persistence when a claim was closed this session
+- **Memory gate**: Nudges (non-blocking `sendUserMessage`) with 4-criteria filter when a claim was closed this session; requires articulated `bd kv set memory-gate-done:<sessionId>` ack
 
 ### `session-flow`
 
@@ -105,7 +105,7 @@ Adds `… +N more lines` indicator when truncated. Respects expanded view toggle
 - `quality-gates` — TypeScript/Python linting on file edit
 - `service-skills` — Service skill routing and activation
 - `custom-footer` — 2-line status bar with claim/open issues
-- `xtrm-loader` — XTRM context injection
+- `xtrm-loader` — XTRM context injection (using-xtrm skill + `.xtrm/memory.md` + project context injected at `before_agent_start`)
 - `plan-mode` — Plan-mode workflow support
 
 ## Notes

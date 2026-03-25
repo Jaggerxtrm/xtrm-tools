@@ -118,12 +118,24 @@ export default function (pi: ExtensionAPI) {
 		}
 	});
 
-	pi.on("before_agent_start", async (event) => {
+	pi.on("before_agent_start", async (event, ctx) => {
 		const parts: string[] = [];
 
 		// Prepend using-xtrm skill (session operating manual)
 		if (usingXtrmContent) {
 			parts.push("# XTRM Session Operating Manual\n\n" + usingXtrmContent);
+		}
+
+		// Inject .xtrm/memory.md if present (synthesized project context)
+		const memoryPath = path.join(ctx.cwd, ".xtrm", "memory.md");
+		if (fs.existsSync(memoryPath)) {
+			try {
+				const memoryContent = fs.readFileSync(memoryPath, "utf8").trim();
+				if (memoryContent) {
+					parts.push(memoryContent);
+					logger.info(`Injected .xtrm/memory.md (${memoryContent.length} chars)`);
+				}
+			} catch { /* fail open */ }
 		}
 
 		// Append project context

@@ -236,10 +236,16 @@ export default function (pi: ExtensionAPI) {
 		memoryGateFired = true;
 		pi.sendUserMessage(
 			`🧠 Memory gate: claim \`${closedIssueId}\` was closed this session.\n` +
-			`For each closed issue, worth persisting?\n` +
-			`  YES → \`bd remember "<insight>"\`\n` +
-			`  NO  → note "nothing to persist"\n` +
-			`  Then acknowledge: \`bd kv set "memory-gate-done:${sessionId}" 1\``,
+			`For each candidate insight, check ALL 4:\n` +
+			`  1. Hard to rediscover from code/docs?\n` +
+			`  2. Not obvious from the current implementation?\n` +
+			`  3. Will affect a future decision?\n` +
+			`  4. Still relevant in ~14 days?\n` +
+			`KEEP (all 4 yes) → \`bd remember "<insight>"\`\n` +
+			`SKIP examples: file maps, flag inventories, per-issue summaries,\n` +
+			`  wording tweaks, facts obvious from reading the source.\n` +
+			`KEEP: \`bd kv set "memory-gate-done:${sessionId}" "saved: <key>"\`\n` +
+			`SKIP: \`bd kv set "memory-gate-done:${sessionId}" "nothing novel — <one-line reason>"\``,
 		);
 	};
 

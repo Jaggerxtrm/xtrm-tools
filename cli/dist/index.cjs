@@ -57793,8 +57793,62 @@ function createMemoryUpdateCommand() {
   });
 }
 
-// src/commands/debug.ts
+// src/commands/merge.ts
 var import_node_child_process13 = require("child_process");
+function createMergeCommand() {
+  return new Command("merge").description("Drain the xt worktree PR merge queue via the xt-merge specialist").option("--dry-run", "List queue and CI status without merging", false).option("--no-beads", "Skip creating a tracking bead for this run", false).action(async (opts) => {
+    const cwd = process.cwd();
+    const check2 = (0, import_node_child_process13.spawnSync)("specialists", ["--version"], { encoding: "utf8", stdio: "pipe" });
+    if (check2.status !== 0) {
+      console.error(kleur_default.red(
+        "\n  \u2717 specialists CLI not found.\n  Install with: npm install -g @jaggerxtrm/specialists\n"
+      ));
+      process.exit(1);
+    }
+    const list = (0, import_node_child_process13.spawnSync)("specialists", ["list", "--json"], { cwd, encoding: "utf8", stdio: "pipe" });
+    if (list.status === 0) {
+      try {
+        const specialists = JSON.parse(list.stdout);
+        if (!specialists.some((s) => s.name === "xt-merge")) {
+          console.error(kleur_default.red(
+            "\n  \u2717 xt-merge specialist not found.\n  Add xt-merge.specialist.yaml to ~/.agents/specialists/ or specialists/.\n"
+          ));
+          process.exit(1);
+        }
+      } catch {
+      }
+    }
+    const prompt = opts.dryRun ? "List all open xt/ PRs sorted by creation time and check CI status on each. Do not merge anything." : "Drain the xt worktree PR merge queue.";
+    const args = ["run", "xt-merge", "--prompt", prompt];
+    if (!opts.beads) args.push("--no-beads");
+    console.log(kleur_default.bold(`
+  xt merge${opts.dryRun ? " (dry run)" : ""}
+`));
+    const spinner = ora({
+      text: opts.dryRun ? "Checking PR queue..." : "Merging PR queue...",
+      color: "cyan"
+    }).start();
+    const chunks = [];
+    const exitCode = await new Promise((resolve2) => {
+      const proc = (0, import_node_child_process13.spawn)("specialists", args, { cwd, stdio: ["inherit", "pipe", "pipe"] });
+      proc.stdout.on("data", (d) => chunks.push(d.toString()));
+      proc.stderr.on("data", (d) => chunks.push(d.toString()));
+      proc.on("close", (code) => resolve2(code ?? 0));
+    });
+    if (exitCode === 0) {
+      spinner.succeed(opts.dryRun ? "Queue check complete." : "PR queue drained.");
+    } else {
+      spinner.fail("xt-merge failed.");
+    }
+    const lines = chunks.join("").split("\n").filter((l) => l.trim());
+    const tail = lines.slice(-10).map((l) => kleur_default.dim("  " + l)).join("\n");
+    if (tail) console.log("\n" + tail + "\n");
+    process.exit(exitCode);
+  });
+}
+
+// src/commands/debug.ts
+var import_node_child_process14 = require("child_process");
 var import_node_fs7 = require("fs");
 var import_node_path8 = require("path");
 var KIND_LABELS = {
@@ -57942,7 +57996,7 @@ function buildWhere(opts, base) {
 }
 function queryEvents(dbPath, where, limit) {
   const sql = `SELECT id,ts,session_id,runtime,worktree,kind,tool_name,outcome,issue_id,duration_ms,data FROM events${where ? ` WHERE ${where}` : ""} ORDER BY id ASC LIMIT ${limit}`;
-  const result = (0, import_node_child_process13.spawnSync)("sqlite3", [dbPath, "-json", sql], {
+  const result = (0, import_node_child_process14.spawnSync)("sqlite3", [dbPath, "-json", sql], {
     stdio: ["pipe", "pipe", "pipe"],
     encoding: "utf8",
     timeout: 5e3
@@ -58195,6 +58249,7 @@ program2.addCommand(createWorktreeCommand());
 program2.addCommand(createAttachCommand());
 program2.addCommand(createDocsCommand());
 program2.addCommand(createMemoryCommand());
+program2.addCommand(createMergeCommand());
 program2.addCommand(createDebugCommand());
 program2.addCommand(createHelpCommand());
 program2.action(async () => {

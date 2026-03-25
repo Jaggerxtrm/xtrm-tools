@@ -29,7 +29,7 @@ export function createMergeCommand(): Command {
                     if (!specialists.some(s => s.name === 'xt-merge')) {
                         console.error(kleur.red(
                             '\n  ✗ xt-merge specialist not found.\n' +
-                            '  Add xt-merge.specialist.yaml to ~/.agents/specialists/ or specialists/.\n'
+                            '  Run `specialists init` to install canonical specialists.\n'
                         ));
                         process.exit(1);
                     }

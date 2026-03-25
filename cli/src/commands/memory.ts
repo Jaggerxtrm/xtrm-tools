@@ -37,7 +37,7 @@ function createMemoryUpdateCommand(): Command {
                     if (!specialists.some(s => s.name === 'memory-processor')) {
                         console.error(kleur.red(
                             '\n  ✗ memory-processor specialist not found.\n' +
-                            '  Add specialists/memory-processor.specialist.yaml to this project.\n'
+                            '  Run `specialists init` to install canonical specialists.\n'
                         ));
                         process.exit(1);
                     }

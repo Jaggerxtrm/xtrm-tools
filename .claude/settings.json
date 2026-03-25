@@ -31,5 +31,27 @@
         ]
       }
     ]
-  }
+  },
+  "UserPromptSubmit": [
+    {
+      "matcher": "",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node .specialists/default/hooks/specialists-complete.mjs"
+        }
+      ]
+    }
+  ],
+  "SessionStart": [
+    {
+      "matcher": "",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node .specialists/default/hooks/specialists-session-start.mjs"
+        }
+      ]
+    }
+  ]
 }

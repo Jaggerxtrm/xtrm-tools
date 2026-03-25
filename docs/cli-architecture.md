@@ -44,8 +44,8 @@ xt / xtrm
 │   ├── docs show         → displays frontmatter for README, CHANGELOG, docs/*.md
 │   ├── docs list         → inventories markdown docs with metadata and cache support
 │   └── docs cross-check  → compares docs against recent PRs and closed bd issues
-├── memory           → commands/memory.ts  → specialists/memory-processor
-├── merge            → commands/merge.ts   → specialists/xt-merge
+├── memory           → commands/memory.ts  → .specialists/default/specialists/memory-processor
+├── merge            → commands/merge.ts   → .specialists/default/specialists/xt-merge
 ├── debug            → commands/debug.ts   → real-time hook/bd event monitoring
 └── help             → commands/help.ts
 ```

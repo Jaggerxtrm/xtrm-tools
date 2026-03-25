@@ -26,9 +26,12 @@ export function createHelpCommand(): Command {
                 '  2) Do your work in that worktree/branch.',
                 '  3) If the session closes unexpectedly, re-attach:',
                 '     xt attach [slug]',
-                '  4) Finish with:',
+                '  4) Publish that worktree with:',
                 '     xt end',
-                '  5) Manage old worktrees when needed:',
+                '  5) Optional follow-up operators:',
+                '     xt memory update   (refresh .xtrm/memory.md from bd memories + repo state)',
+                '     xt merge           (drain queued xt/* PRs oldest-first after CI passes)',
+                '  6) Manage old worktrees when needed:',
                 '     xt worktree list | xt worktree clean',
             ]));
 
@@ -108,6 +111,12 @@ export function createHelpCommand(): Command {
                 '  xt end [options]',
                 '    Rebase to origin/main, push, open PR, link issues, and optionally clean worktree.',
                 '    Options: --draft, --keep, --yes/-y',
+                '',
+                '  xt memory update [--dry-run] [--no-beads]',
+                '    Run memory-processor to synthesize .xtrm/memory.md from bd memories + repo state.',
+                '',
+                '  xt merge [--dry-run] [--no-beads]',
+                '    Run xt-merge to drain queued xt/* PRs FIFO: CI gate → rebase merge → rebase cascade.',
             ]));
 
             blocks.push(section('NOTES', [

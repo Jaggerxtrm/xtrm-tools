@@ -70,6 +70,23 @@ claude plugin list
 npx -y github:Jaggerxtrm/xtrm-tools install
 ```
 
+**Typical workflow after install:**
+```bash
+# Start a sandboxed session in a worktree
+xt claude my-feature
+
+# Publish that worktree: rebase, push, open PR, optional cleanup
+xt end
+
+# Refresh project memory from bd memories + current repo state
+xt memory update
+
+# If multiple xt/* PRs are open, drain the merge queue oldest-first
+xt merge
+```
+
+`xt end` handles one worktree session at a time. `xt merge` is the follow-up queue operator: it inspects open `xt/*` PRs, processes them FIFO, waits for green CI on the oldest PR, merges it with `--rebase`, then rebases the remaining queued xt branches and repeats. `xt memory update` shells out to the `memory-processor` specialist, which condenses bd memories and current project state into `.xtrm/memory.md`; use `--dry-run` to inspect without writing.
+
 ---
 
 ## What's Included
@@ -176,6 +193,8 @@ xtrm <command> [options]
 | `pi [name]` | Launch Pi in a sandboxed `xt/<name>` worktree |
 | `attach [slug]` | Re-attach to an existing worktree and resume the Claude or Pi session |
 | `end` | Close worktree session: rebase, push, PR, cleanup |
+| `memory update` | Run `memory-processor` to synthesize bd memories + repo state into `.xtrm/memory.md` |
+| `merge` | Drain queued `xt/*` PRs via `xt-merge`: FIFO CI gate → rebase merge → rebase cascade |
 | `worktree list` | List active `xt/*` worktrees with runtime, last activity, and resume hint |
 | `worktree clean` | Remove merged worktrees |
 | `docs` | Documentation inspection and drift-check suite (`xtrm docs --help`) |

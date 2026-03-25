@@ -3,7 +3,7 @@ title: xt Worktrees
 scope: worktrees
 category: reference
 version: 1.0.0
-updated: 2026-03-22
+updated: 2026-03-25
 synced_at: 66b408d
 source_of_truth_for:
   - "cli/src/commands/worktree.ts"
@@ -46,7 +46,18 @@ xt claude --name my-feature
 # Session closed unexpectedly? Re-attach and resume
 xt attach          # most recent worktree
 xt attach ab3k     # specific worktree by slug
+
+# Publish the worktree branch as a PR
+xt end
+
+# Refresh shared project memory after a burst of work
+xt memory update
+
+# If several xt/* PRs are open, drain the queue safely oldest-first
+xt merge
 ```
+
+`xt end` is the publish step for one worktree: it rebases the branch onto the current target branch, pushes it, opens the PR, and can clean up the local worktree. `xt merge` is the queue-drain operator for the next stage: it delegates to the `xt-merge` specialist, processes open `xt/*` PRs FIFO, waits for green CI on the oldest PR, merges it with `--rebase --delete-branch`, then rebases and force-pushes the remaining queued branches before repeating. `xt memory update` delegates to the `memory-processor` specialist, which condenses bd memories and current repo state into `.xtrm/memory.md`; use `--dry-run` to review the plan without writing or pruning memories.
 
 ## What Happens on Launch
 
@@ -136,6 +147,12 @@ xt worktree remove xt/ab3k
 ```
 
 `xt worktree list` shows each worktree's runtime badge `[claude]`/`[pi]`, last activity timestamp, last commit message, and a `xt attach <slug>` hint.
+
+`xt end` belongs to the same lifecycle even though it is not a `worktree` subcommand: it is the publish step for a single worktree session. Run it from inside the worktree when you are ready to rebase, push, open the PR, and optionally remove that worktree.
+
+When multiple `xt/*` PRs are open at once, run `xt merge` from a normal checkout to drain the queue safely. `xt merge` wraps the `xt-merge` specialist: oldest PR first, CI must be green, merge with `--rebase --delete-branch`, then rebase the remaining queued xt branches onto the updated target branch and push them with `--force-with-lease`. Use `xt merge --dry-run` when you want queue order and CI status without performing any merge.
+
+If you want a fresh operator memory snapshot after several worktree sessions, run `xt memory update`. That command wraps the `memory-processor` specialist, which synthesizes `.xtrm/memory.md` from bd memories plus current repo state. Use `xt memory update --dry-run` to review the report only.
 
 ## Beads / Dolt Architecture
 

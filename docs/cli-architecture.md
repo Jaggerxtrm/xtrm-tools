@@ -3,7 +3,7 @@ title: CLI Architecture
 scope: cli-architecture
 category: reference
 version: 1.1.0
-updated: 2026-03-23
+updated: 2026-03-25
 synced_at: a0936a7
 source_of_truth_for:
   - "cli/src/**/*.ts"
@@ -44,6 +44,8 @@ xt / xtrm
 │   ├── docs show         → displays frontmatter for README, CHANGELOG, docs/*.md
 │   ├── docs list         → inventories markdown docs with metadata and cache support
 │   └── docs cross-check  → compares docs against recent PRs and closed bd issues
+├── memory           → commands/memory.ts  → specialists/memory-processor
+├── merge            → commands/merge.ts   → specialists/xt-merge
 ├── debug            → commands/debug.ts   → real-time hook/bd event monitoring
 └── help             → commands/help.ts
 ```
@@ -54,6 +56,8 @@ The `docs` command family is intentionally split into:
 - `cross-check` for drift detection against recent GitHub and bd activity
 
 For user-facing command examples, see [docs/docs-commands.md](docs-commands.md).
+
+`memory` and `merge` are intentionally thin wrappers around specialists. The CLI owns dependency checks, flags, and operator UX (`specialists --version`, `specialists list --json`, `ora` spinner, tail summary), while the higher-level workflow logic stays in `memory-processor` and `xt-merge`.
 
 `xtrm finish` was removed in v0.5.x — `commands/finish.ts` and
 `core/xtrm-finish.ts` are dead code kept for reference only.
@@ -91,6 +95,30 @@ createInstallCommand()          commands/install.ts
 ---
 
 ## Module Reference
+
+### `commands/memory.ts`
+
+**`createMemoryCommand()` / `createMemoryUpdateCommand()`**
+
+Registers `xt memory update`, a specialist-backed CLI wrapper for project memory synthesis.
+
+- verifies the `specialists` CLI is installed before doing anything
+- checks that `memory-processor` is discoverable via `specialists list --json`
+- maps `--dry-run` to a report-only prompt (no write, no pruning)
+- maps `--no-beads` to a beadless specialist run
+- uses `ora` plus a captured output tail so the operator gets a compact success/failure summary instead of raw streaming logs
+
+### `commands/merge.ts`
+
+**`createMergeCommand()`**
+
+Registers `xt merge`, another specialist-backed wrapper.
+
+- verifies the `specialists` CLI and `xt-merge` specialist are available
+- maps `--dry-run` to queue inspection / CI-status-only behavior
+- maps `--no-beads` to a beadless specialist run
+- leaves queue semantics to the specialist: find open `xt/*` PRs, sort FIFO, gate on CI, merge the head PR with rebase, then rebase and force-push the remaining queued branches
+- uses `ora` plus a captured tail so the merge queue can be monitored without dumping the full specialist transcript into the terminal
 
 ### `core/preflight.ts`
 

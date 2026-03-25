@@ -3,7 +3,7 @@ title: XTRM-Tools Complete Guide
 scope: xtrm-guide
 category: reference
 version: 1.0.0
-updated: 2026-03-23
+updated: 2026-03-25
 domain: []
 ---
 
@@ -53,12 +53,18 @@ xtrm pi install
 ```bash
 xt claude [name]      # open Claude in worktree
 xt pi [name]          # open Pi in worktree
-xt end                # close session (rebase/push/pr/cleanup)
+xt end                # close one worktree session (rebase/push/pr/cleanup)
+xt memory update      # synthesize .xtrm/memory.md from bd memories + repo state
+xt merge              # drain queued xt/* PRs FIFO via xt-merge specialist
 xt worktree list
 xt worktree clean
 ```
 
 `xt` and `xtrm` are equivalent command names.
+
+- `xt end` handles the publish step for a single worktree session: rebase onto the current target branch, push, open the PR, and optionally clean up the local worktree.
+- `xt merge` is the queue-drain follow-up when multiple `xt/*` PRs are open. It delegates to the `xt-merge` specialist, sorts queued PRs FIFO by creation time, waits for green CI on the head PR, merges with `--rebase --delete-branch`, then rebases and force-pushes the remaining queued branches before repeating. Use `xt merge --dry-run` to inspect queue order and CI state without merging.
+- `xt memory update` delegates to the `memory-processor` specialist. It synthesizes `.xtrm/memory.md` from bd memories plus current project state, shows a spinner while the specialist runs, then prints the final summary tail. Use `--dry-run` to classify/report without writing and `--no-beads` to skip creating a tracking bead.
 
 ## Documentation Commands
 

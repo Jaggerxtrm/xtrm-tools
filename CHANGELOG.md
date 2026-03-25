@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.5.45] - 2026-03-25
+
+### Changed
+- **`xt memory update`**: Replaced raw specialist stream with ora spinner + final summary output. Shows animated spinner while specialist runs; on finish prints `✓ .xtrm/memory.md written.` (or `✗`) followed by the last 10 meaningful lines dimmed.
+
+---
+
+## [0.5.44] - 2026-03-25
+
+### Added
+- **`xt help`**: `xtrm memory update` entry added to PRIMARY COMMANDS section.
+
+---
+
 ## [0.5.43] - 2026-03-25
 
 ### Fixed

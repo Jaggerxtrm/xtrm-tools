@@ -8,8 +8,20 @@ export function createMergeCommand(): Command {
         .description('Drain the xt worktree PR merge queue via the xt-merge specialist')
         .option('--dry-run', 'List queue and CI status without merging', false)
         .option('--no-beads', 'Skip creating a tracking bead for this run', false)
-        .action(async (opts: { dryRun: boolean; beads: boolean }) => {
+        .option('--skip-ci', 'Skip local CI check before merging', false)
+        .action(async (opts: { dryRun: boolean; beads: boolean; skipCi: boolean }) => {
             const cwd = process.cwd();
+
+            // Run local CI first to catch failures early
+            if (!opts.skipCi) {
+                console.log(kleur.bold('\n  Running local CI...\n'));
+                const localCi = spawnSync('make', ['ci'], { cwd, encoding: 'utf8', stdio: 'inherit' });
+                if (localCi.status !== 0) {
+                    console.error(kleur.red('\n  ✗ Local CI failed. Fix issues before merging.\n'));
+                    process.exit(1);
+                }
+                console.log(kleur.green('\n  ✓ Local CI passed.\n'));
+            }
 
             // Gate: specialists CLI must be available
             const check = spawnSync('specialists', ['--version'], { encoding: 'utf8', stdio: 'pipe' });

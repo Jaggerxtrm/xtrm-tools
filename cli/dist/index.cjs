@@ -57809,8 +57809,17 @@ function createMemoryUpdateCommand() {
 // src/commands/merge.ts
 var import_node_child_process13 = require("child_process");
 function createMergeCommand() {
-  return new Command("merge").description("Drain the xt worktree PR merge queue via the xt-merge specialist").option("--dry-run", "List queue and CI status without merging", false).option("--no-beads", "Skip creating a tracking bead for this run", false).action(async (opts) => {
+  return new Command("merge").description("Drain the xt worktree PR merge queue via the xt-merge specialist").option("--dry-run", "List queue and CI status without merging", false).option("--no-beads", "Skip creating a tracking bead for this run", false).option("--skip-ci", "Skip local CI check before merging", false).action(async (opts) => {
     const cwd = process.cwd();
+    if (!opts.skipCi) {
+      console.log(kleur_default.bold("\n  Running local CI...\n"));
+      const localCi = (0, import_node_child_process13.spawnSync)("make", ["ci"], { cwd, encoding: "utf8", stdio: "inherit" });
+      if (localCi.status !== 0) {
+        console.error(kleur_default.red("\n  \u2717 Local CI failed. Fix issues before merging.\n"));
+        process.exit(1);
+      }
+      console.log(kleur_default.green("\n  \u2713 Local CI passed.\n"));
+    }
     const check2 = (0, import_node_child_process13.spawnSync)("specialists", ["--version"], { encoding: "utf8", stdio: "pipe" });
     if (check2.status !== 0) {
       console.error(kleur_default.red(

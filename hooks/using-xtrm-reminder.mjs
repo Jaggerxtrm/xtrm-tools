@@ -4,7 +4,7 @@
 // so the agent starts every session already oriented on the xtrm workflow.
 // Exit 0 in all paths (fail open).
 
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 let input;
@@ -23,6 +23,18 @@ try {
 
 // Strip YAML frontmatter (--- ... ---\n)
 content = content.replace(/^---[\s\S]*?---\n/, '').trim();
+
+// Append .xtrm/memory.md if it exists in the project
+const cwd = input?.cwd ?? process.env.CLAUDE_PROJECT_DIR ?? process.cwd();
+const memoryPath = join(cwd, '.xtrm', 'memory.md');
+if (existsSync(memoryPath)) {
+  try {
+    const memory = readFileSync(memoryPath, 'utf8').trim();
+    if (memory) {
+      content += '\n\n---\n\n' + memory;
+    }
+  } catch { /* fail open */ }
+}
 
 process.stdout.write(
   JSON.stringify({

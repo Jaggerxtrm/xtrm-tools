@@ -57771,7 +57771,7 @@ function createMemoryUpdateCommand() {
         const specialists = JSON.parse(list.stdout);
         if (!specialists.some((s) => s.name === "memory-processor")) {
           console.error(kleur_default.red(
-            "\n  \u2717 memory-processor specialist not found.\n  Add specialists/memory-processor.specialist.yaml to this project.\n"
+            "\n  \u2717 memory-processor specialist not found.\n  Run `specialists init` to install canonical specialists.\n"
           ));
           process.exit(1);
         }
@@ -57824,7 +57824,7 @@ function createMergeCommand() {
         const specialists = JSON.parse(list.stdout);
         if (!specialists.some((s) => s.name === "xt-merge")) {
           console.error(kleur_default.red(
-            "\n  \u2717 xt-merge specialist not found.\n  Add xt-merge.specialist.yaml to ~/.agents/specialists/ or specialists/.\n"
+            "\n  \u2717 xt-merge specialist not found.\n  Run `specialists init` to install canonical specialists.\n"
           ));
           process.exit(1);
         }

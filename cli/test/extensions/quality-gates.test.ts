@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ExtensionHarness } from "./extension-harness";
-import qualityGatesExtension from "../../extensions/quality-gates";
-import { SubprocessRunner } from "../../extensions/core/lib";
+import qualityGatesExtension from "../../../config/pi/extensions/quality-gates/index";
+import { SubprocessRunner } from "../../../config/pi/extensions/core/lib";
 import * as fs from "node:fs";
 
-vi.mock("../../extensions/core/lib", async () => {
+vi.mock("../../../config/pi/extensions/core/lib", async () => {
 	return {
 		SubprocessRunner: {
 			run: vi.fn(),

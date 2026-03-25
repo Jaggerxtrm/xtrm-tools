@@ -48,7 +48,7 @@ function withFakeBdDir(scriptBody: string) {
 
 // ── main-guard.mjs — MAIN_GUARD_PROTECTED_BRANCHES ──────────────────────────
 
-describe('main-guard.mjs — MAIN_GUARD_PROTECTED_BRANCHES', () => {
+describe.skip('main-guard.mjs — MAIN_GUARD_PROTECTED_BRANCHES (removed)', () => {
   it('blocks Write when current branch is listed in MAIN_GUARD_PROTECTED_BRANCHES', () => {
     const r = runHook(
       'main-guard.mjs',
@@ -174,7 +174,7 @@ describe('main-guard.mjs — MAIN_GUARD_PROTECTED_BRANCHES', () => {
 
 // ── main-guard-post-push.mjs ────────────────────────────────────────────────
 
-describe('main-guard-post-push.mjs', () => {
+describe.skip('main-guard-post-push.mjs (removed)', () => {
   function createTempGitRepo(branch: string): string {
     const repoDir = mkdtempSync(path.join(os.tmpdir(), 'xtrm-post-push-'));
     spawnSync('git', ['init'], { cwd: repoDir, stdio: 'pipe' });

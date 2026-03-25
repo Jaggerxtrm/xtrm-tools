@@ -9,8 +9,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { readFileSync, existsSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
-import { join, resolve, basename } from 'node:path';
+import { readFileSync, existsSync, readdirSync, mkdtempSync, mkdirSync, writeFileSync, rmSync, cpSync } from 'node:fs';
+import { join, resolve, basename, dirname } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
 
@@ -127,19 +127,6 @@ describe('referenced files exist', () => {
   });
 });
 
-describe('pi extension guard-rules imports', () => {
-  it('main-guard and adapter use shared guard-rules constants', () => {
-    const mainGuard = readFileSync(join(ROOT, 'config', 'pi', 'extensions', 'main-guard.ts'), 'utf8');
-    const adapter = readFileSync(join(ROOT, 'config', 'pi', 'extensions', 'core', 'adapter.ts'), 'utf8');
-
-    expect(mainGuard).toContain('from "./core/guard-rules"');
-    expect(adapter).toContain('from "./guard-rules"');
-
-    expect(mainGuard).not.toMatch(/^\s*const\s+SAFE_BASH_PREFIXES\s*=\s*\[/m);
-    expect(mainGuard).not.toMatch(/^\s*const\s+DANGEROUS_BASH_PATTERNS\s*=\s*\[/m);
-    expect(adapter).not.toMatch(/const\s+tools\s*=\s*\[/m);
-  });
-});
 
 // ── Compiler consistency ──────────────────────────────────────────────────────
 
@@ -167,10 +154,13 @@ describe('compiler', () => {
         .map(({ policy }) => policy.pi?.extension)
         .filter(Boolean) as string[];
 
-      for (const rel of declared) {
+      // Extension paths point to index.ts, but we need the parent directory
+      const extDirs = new Set(declared.map(rel => dirname(rel)));
+      for (const rel of extDirs) {
         const src = join(ROOT, rel);
         const dst = join(tmpExtDir, basename(rel));
-        writeFileSync(dst, readFileSync(src));
+        // Copy directory recursively (extensions are subdirectories with index.ts + package.json)
+        cpSync(src, dst, { recursive: true });
       }
 
       const result = spawnSync(

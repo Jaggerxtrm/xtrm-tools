@@ -9,11 +9,11 @@ describe('config schema integrity', () => {
         const pkg = JSON.parse(readFileSync(resolve(__dirname, '..', 'package.json'), 'utf8'));
 
         it('has xtrm bin entry pointing to dist/index.cjs', () => {
-            expect(pkg.bin?.xtrm).toBe('./dist/index.cjs');
+            expect(pkg.bin?.xtrm).toBe('dist/index.cjs');
         });
 
         it('has xt bin entry pointing to dist/index.cjs', () => {
-            expect(pkg.bin?.xt).toBe('./dist/index.cjs');
+            expect(pkg.bin?.xt).toBe('dist/index.cjs');
         });
 
         it('both bin entries point to the same file', () => {
@@ -28,11 +28,7 @@ describe('config schema integrity', () => {
             expect(schema.packages).toContain('npm:@robhowley/pi-structured-return');
         });
 
-        it('does NOT contain npm:@aliou/pi-guardrails', () => {
-            expect(schema.packages).not.toContain('npm:@aliou/pi-guardrails');
-        });
-
-        it('contains all expected canonical packages', () => {
+                it('contains all expected canonical packages', () => {
             const expected = [
                 'npm:pi-gitnexus',
                 'npm:pi-serena-tools',

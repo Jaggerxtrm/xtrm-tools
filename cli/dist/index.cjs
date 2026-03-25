@@ -30319,10 +30319,10 @@ var require_stringify = __commonJS({
       replacer = null;
       indent2 = EMPTY;
     };
-    var join7 = (one, two, gap) => one ? two ? one + two.trim() + LF + gap : one.trimRight() + LF + gap : two ? two.trimRight() + LF + gap : EMPTY;
+    var join8 = (one, two, gap) => one ? two ? one + two.trim() + LF + gap : one.trimRight() + LF + gap : two ? two.trimRight() + LF + gap : EMPTY;
     var join_content = (inside, value, gap) => {
       const comment = process_comments(value, PREFIX_BEFORE, gap + indent2, true);
-      return join7(comment, inside, gap);
+      return join8(comment, inside, gap);
     };
     var array_stringify = (value, gap) => {
       const deeper_gap = gap + indent2;
@@ -30333,7 +30333,7 @@ var require_stringify = __commonJS({
         if (i !== 0) {
           inside += COMMA;
         }
-        const before = join7(
+        const before = join8(
           after_comma,
           process_comments(value, BEFORE(i), deeper_gap),
           deeper_gap
@@ -30343,7 +30343,7 @@ var require_stringify = __commonJS({
         inside += process_comments(value, AFTER_VALUE(i), deeper_gap);
         after_comma = process_comments(value, AFTER(i), deeper_gap);
       }
-      inside += join7(
+      inside += join8(
         after_comma,
         process_comments(value, PREFIX_AFTER, deeper_gap),
         deeper_gap
@@ -30368,7 +30368,7 @@ var require_stringify = __commonJS({
           inside += COMMA;
         }
         first = false;
-        const before = join7(
+        const before = join8(
           after_comma,
           process_comments(value, BEFORE(key), deeper_gap),
           deeper_gap
@@ -30378,7 +30378,7 @@ var require_stringify = __commonJS({
         after_comma = process_comments(value, AFTER(key), deeper_gap);
       };
       keys.forEach(iteratee);
-      inside += join7(
+      inside += join8(
         after_comma,
         process_comments(value, PREFIX_AFTER, deeper_gap),
         deeper_gap
@@ -33827,8 +33827,8 @@ var init_boxen = __esm({
 });
 
 // src/index.ts
-var import_node_fs7 = require("fs");
-var import_node_path8 = require("path");
+var import_node_fs8 = require("fs");
+var import_node_path9 = require("path");
 
 // ../node_modules/commander/esm.mjs
 var import_index = __toESM(require_commander(), 1);
@@ -57731,10 +57731,57 @@ function createDocsCommand() {
   return docs;
 }
 
-// src/commands/debug.ts
+// src/commands/memory.ts
 var import_node_child_process12 = require("child_process");
 var import_node_fs6 = require("fs");
 var import_node_path7 = require("path");
+function createMemoryCommand() {
+  return new Command("memory").description("Manage project memory (.xtrm/memory.md)").addCommand(createMemoryUpdateCommand());
+}
+function createMemoryUpdateCommand() {
+  return new Command("update").description("Run memory-processor specialist to synthesize bd memories into .xtrm/memory.md").option("--dry-run", "Report only \u2014 do not modify memories or write memory.md", false).option("--no-beads", "Skip creating a tracking bead for this run", false).action((opts) => {
+    const cwd = process.cwd();
+    const check2 = (0, import_node_child_process12.spawnSync)("specialists", ["--version"], { encoding: "utf8", stdio: "pipe" });
+    if (check2.status !== 0) {
+      console.error(kleur_default.red(
+        "\n  \u2717 specialists CLI not found.\n  Install with: npm install -g @jaggerxtrm/specialists\n"
+      ));
+      process.exit(1);
+    }
+    const list = (0, import_node_child_process12.spawnSync)("specialists", ["list", "--json"], { cwd, encoding: "utf8", stdio: "pipe" });
+    if (list.status === 0) {
+      try {
+        const specialists = JSON.parse(list.stdout);
+        if (!specialists.some((s) => s.name === "memory-processor")) {
+          console.error(kleur_default.red(
+            "\n  \u2717 memory-processor specialist not found.\n  Add specialists/memory-processor.specialist.yaml to this project.\n"
+          ));
+          process.exit(1);
+        }
+      } catch {
+      }
+    }
+    const prompt = opts.dryRun ? "Dry run: classify all memories and show the full report. Do not call bd forget or write .xtrm/memory.md." : "Run the full memory processor workflow.";
+    const args = ["run", "memory-processor", "--prompt", prompt];
+    if (!opts.beads) args.push("--no-beads");
+    console.log(kleur_default.bold(`
+  xt memory update${opts.dryRun ? " (dry run)" : ""}
+`));
+    if (!opts.dryRun) {
+      const memPath = (0, import_node_path7.join)(cwd, ".xtrm", "memory.md");
+      const action = (0, import_node_fs6.existsSync)(memPath) ? "Updating" : "Creating";
+      console.log(kleur_default.dim(`  ${action} .xtrm/memory.md...
+`));
+    }
+    const result = (0, import_node_child_process12.spawnSync)("specialists", args, { cwd, stdio: "inherit", encoding: "utf8" });
+    process.exit(result.status ?? 0);
+  });
+}
+
+// src/commands/debug.ts
+var import_node_child_process13 = require("child_process");
+var import_node_fs7 = require("fs");
+var import_node_path8 = require("path");
 var KIND_LABELS = {
   "session.start": { label: "SESS+", color: kleur_default.green },
   "session.end": { label: "SESS-", color: kleur_default.white },
@@ -57834,14 +57881,14 @@ function buildDetail(event) {
   }
   if (event.kind === "tool.call") {
     if (d?.cmd) parts.push(kleur_default.dim(d.cmd.slice(0, 72)));
-    if (d?.file) parts.push(kleur_default.dim((0, import_node_path7.basename)(d.file)));
+    if (d?.file) parts.push(kleur_default.dim((0, import_node_path8.basename)(d.file)));
     if (d?.pattern) parts.push(kleur_default.dim(`/${d.pattern}/`));
     if (d?.url) parts.push(kleur_default.dim(d.url.slice(0, 72)));
     if (d?.query) parts.push(kleur_default.dim(d.query.slice(0, 72)));
     if (d?.prompt) parts.push(kleur_default.dim(d.prompt.slice(0, 72)));
   } else {
     if (event.issue_id) parts.push(kleur_default.yellow(event.issue_id));
-    if (d?.file) parts.push(kleur_default.dim((0, import_node_path7.basename)(d.file)));
+    if (d?.file) parts.push(kleur_default.dim((0, import_node_path8.basename)(d.file)));
     if (d?.reason_code) parts.push(kleur_default.dim(`[${d.reason_code}]`));
     if (event.worktree) parts.push(kleur_default.dim(`wt:${event.worktree}`));
   }
@@ -57858,8 +57905,8 @@ function formatLine(event, colorMap) {
 function findDbPath(cwd) {
   let dir = cwd;
   for (let i = 0; i < 10; i++) {
-    if ((0, import_node_fs6.existsSync)((0, import_node_path7.join)(dir, ".beads"))) return (0, import_node_path7.join)(dir, ".xtrm", "debug.db");
-    const parent = (0, import_node_path7.join)(dir, "..");
+    if ((0, import_node_fs7.existsSync)((0, import_node_path8.join)(dir, ".beads"))) return (0, import_node_path8.join)(dir, ".xtrm", "debug.db");
+    const parent = (0, import_node_path8.join)(dir, "..");
     if (parent === dir) break;
     dir = parent;
   }
@@ -57880,7 +57927,7 @@ function buildWhere(opts, base) {
 }
 function queryEvents(dbPath, where, limit) {
   const sql = `SELECT id,ts,session_id,runtime,worktree,kind,tool_name,outcome,issue_id,duration_ms,data FROM events${where ? ` WHERE ${where}` : ""} ORDER BY id ASC LIMIT ${limit}`;
-  const result = (0, import_node_child_process12.spawnSync)("sqlite3", [dbPath, "-json", sql], {
+  const result = (0, import_node_child_process13.spawnSync)("sqlite3", [dbPath, "-json", sql], {
     stdio: ["pipe", "pipe", "pipe"],
     encoding: "utf8",
     timeout: 5e3
@@ -57920,7 +57967,7 @@ function createDebugCommand() {
   return new Command("debug").description("Watch xtrm events: tool calls, gate decisions, bd lifecycle").option("-f, --follow", "Follow new events (default)", false).option("--all", "Show full history and exit", false).option("--session <id>", "Filter by session ID (prefix match)").option("--type <domain>", "Filter by domain: tool | gate | bd | session").option("--json", "Output raw JSON lines", false).action((opts) => {
     const cwd = process.cwd();
     const dbPath = findDbPath(cwd);
-    if (!dbPath || !(0, import_node_fs6.existsSync)(dbPath)) return;
+    if (!dbPath || !(0, import_node_fs7.existsSync)(dbPath)) return;
     if (opts.all) {
       const events = queryEvents(dbPath, buildWhere(opts, ""), 1e3);
       const colorMap = buildColorMap(events);
@@ -58105,7 +58152,7 @@ async function printBanner(version3) {
 // src/index.ts
 var version2 = "0.0.0";
 try {
-  version2 = JSON.parse((0, import_node_fs7.readFileSync)((0, import_node_path8.resolve)(__dirname, "../package.json"), "utf8")).version;
+  version2 = JSON.parse((0, import_node_fs8.readFileSync)((0, import_node_path9.resolve)(__dirname, "../package.json"), "utf8")).version;
 } catch {
 }
 var program2 = new Command();
@@ -58132,6 +58179,7 @@ program2.addCommand(createEndCommand());
 program2.addCommand(createWorktreeCommand());
 program2.addCommand(createAttachCommand());
 program2.addCommand(createDocsCommand());
+program2.addCommand(createMemoryCommand());
 program2.addCommand(createDebugCommand());
 program2.addCommand(createHelpCommand());
 program2.action(async () => {

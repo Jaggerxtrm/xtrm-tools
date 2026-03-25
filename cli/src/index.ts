@@ -20,6 +20,7 @@ import { createEndCommand } from './commands/end.js';
 import { createWorktreeCommand } from './commands/worktree.js';
 import { createAttachCommand } from './commands/attach.js';
 import { createDocsCommand } from './commands/docs.js';
+import { createMemoryCommand } from './commands/memory.js';
 import { createDebugCommand } from './commands/debug.js';
 import { printBanner } from './utils/banner.js';
 
@@ -57,6 +58,7 @@ program.addCommand(createEndCommand());
 program.addCommand(createWorktreeCommand());
 program.addCommand(createAttachCommand());
 program.addCommand(createDocsCommand());
+program.addCommand(createMemoryCommand());
 program.addCommand(createDebugCommand());
 program.addCommand(createHelpCommand());
 

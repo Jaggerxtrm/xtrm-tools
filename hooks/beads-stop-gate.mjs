@@ -31,14 +31,14 @@ withSafeBdContext(() => {
       runtime: 'claude',
       sessionId: ctx.sessionId,
       layer: 'gate',
-      kind: 'gate.stop.block',
-      outcome: 'block',
+      kind: 'gate.stop.nudge',
+      outcome: 'nudge',
       issueId: decision.claimed ?? null,
       message,
       extra: { reason_code: decision.reason },
     });
-    process.stderr.write(message);
-    process.exit(2);
+    process.stdout.write(JSON.stringify({ additionalContext: message }) + '\n');
+    process.exit(0);
   }
 
   logEvent({

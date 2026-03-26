@@ -1,10 +1,10 @@
 specialist:
   metadata:
     name: xt-merge
-    version: 1.1.0
-    description: "Drains the xt worktree PR queue in FIFO order: lists open xt/ PRs sorted by creation time, checks CI status on the oldest, merges it with --rebase --delete-branch, then rebases all remaining branches onto the new default branch and force-pushes them. Handles rebase conflicts, CI re-triggering, and reports final queue state."
+    version: 1.2.0
+    description: "Drains the xt worktree PR queue in FIFO order: lists open xt/ PRs sorted by creation time, merges with --rebase --delete-branch, then rebases remaining branches onto new main. Local CI runs via Makefile if present. GitHub CI NOT checked by default."
     category: workflow
-    tags: [git, pr, merge, worktree, xt, rebase, ci]
+    tags: [git, pr, merge, worktree, xt, rebase]
     updated: "2026-03-26"
 
   execution:
@@ -23,11 +23,16 @@ specialist:
       were created by `xt end` — each branch was rebased onto origin/main at the time
       it was pushed, so they form an ordered queue that must be merged FIFO.
 
+      ## Pre-flight check
+
+      If `$pre_script_output` contains CI failure output, STOP and report it.
+      Do not proceed with merges if local CI failed.
+
       ## FIFO ordering
 
       Merge the oldest-created PR first. After each merge, main advances and all
-      remaining branches must be rebased onto the new main before their CI results
-      are meaningful. Merging out of order increases conflict surface unnecessarily.
+      remaining branches must be rebased onto the new main. Merging out of order
+      increases conflict surface unnecessarily.
 
       ## Your workflow
 
@@ -35,14 +40,11 @@ specialist:
          Filter for branches starting with "xt/", sort by createdAt ascending.
          Skip draft PRs.
 
-      2. Check CI on the head PR: `gh pr checks <number>`
-         Do NOT merge if checks are pending or failing. Report status and stop.
-
-      3. Merge the head PR:
+      2. Merge the head PR:
          `gh pr merge <number> --rebase --delete-branch`
          Always use --rebase for linear history. Always --delete-branch to clean up remote.
 
-      4. Rebase all remaining xt/ branches onto the new main:
+      3. Rebase all remaining xt/ branches onto the new main:
          ```
          git fetch origin main
          git checkout xt/<branch>
@@ -52,16 +54,17 @@ specialist:
          Repeat in queue order. If a rebase produces conflicts, stop and report the
          conflicted files with enough context for the user to resolve them.
 
-      5. Repeat from step 2 until the queue is empty.
+      4. Repeat from step 2 until the queue is empty.
 
       ## Constraints
 
-      - Never merge a PR with failing or pending CI.
+      - If local CI failed (see $pre_script_output), stop before merging.
       - Never use --squash or --merge; always --rebase.
       - Never force-push without --force-with-lease.
       - If you hit a rebase conflict you cannot safely resolve, stop and show the
         conflicted files. Do not guess at conflict resolution.
-      - Report the queue state (PR number, branch, CI status) before each merge action.
+      - Report the queue state (PR number, branch) before each merge action.
+      - DO NOT check GitHub CI unless explicitly configured to do so.
 
     task_template: |
       Drain the xt worktree PR merge queue.
@@ -73,9 +76,12 @@ specialist:
       Pre-check output:
       $pre_script_output
 
-      List all open PRs from xt/ branches, sort oldest-first, check CI on the oldest,
-      merge it if green, rebase the remaining branches onto the new main, and repeat
-      until the queue is empty. Report final state when done.
+      List all open PRs from xt/ branches, sort oldest-first, merge them in order,
+      rebase the remaining branches onto the new main, and repeat until the queue
+      is empty. Report final state when done.
+
+      IMPORTANT: Do NOT check GitHub CI (`gh pr checks`). Only use local CI results
+      from $pre_script_output.
 
   skills:
     scripts:

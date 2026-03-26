@@ -10,12 +10,6 @@ function isClaimCommand(command: string): { isClaim: boolean; issueId: string | 
 	return { isClaim: true, issueId: match?.[1] ?? null };
 }
 
-function isCloseCommand(command: string): { isClose: boolean; issueId: string | null } {
-	if (!/\bbd\s+close\b/.test(command)) return { isClose: false, issueId: null };
-	const match = command.match(/\bbd\s+close\s+(\S+)/);
-	return { isClose: true, issueId: match?.[1] ?? null };
-}
-
 function isWorktree(cwd: string): boolean {
 	return cwd.includes("/.xtrm/worktrees/") || cwd.includes("/.claude/worktrees/");
 }
@@ -49,63 +43,34 @@ async function isClaimStillInProgress(cwd: string, issueId: string): Promise<boo
 	return issuePattern.test(listResult.stdout);
 }
 
-function memoryPromptMessage(claimId: string | null, sessionId: string): string {
-	const claimLine = claimId ? `claim \`${claimId}\` was closed.\n` : "";
-	const ackCmd = `bd kv set "memory-gate-done:${sessionId}"`;
-	return (
-		`● Memory gate: ${claimLine}` +
-		"For each candidate insight, check ALL 4:\n" +
-		"  1. Hard to rediscover from code/docs?\n" +
-		"  2. Not obvious from the current implementation?\n" +
-		"  3. Will affect a future decision?\n" +
-		"  4. Still relevant in ~14 days?\n" +
-		'KEEP (all 4 yes) → `bd remember "<insight>"`\n' +
-		"SKIP examples: file maps, flag inventories, per-issue summaries,\n" +
-		"  wording tweaks, facts obvious from reading the source.\n" +
-		`KEEP: \`${ackCmd} "saved: <key>"\`\n` +
-		`SKIP: \`${ackCmd} "nothing novel — <one-line reason>"\`\n`
-	);
-}
-
 export default function (pi: ExtensionAPI) {
 	const getCwd = (ctx: any) => ctx.cwd || process.cwd();
 	let lastStopNoticeIssue: string | null = null;
 	let lastWorktreeReminderCwd: string | null = null;
 
-	// Claim sync + close tracking: fire on relevant bd commands.
+	// Claim sync: notify when a bd update --claim command is run.
 	pi.on("tool_result", async (event, ctx) => {
 		if (!isBashToolResult(event)) return undefined;
 		const cwd = getCwd(ctx);
 		if (!EventAdapter.isBeadsProject(cwd)) return undefined;
 
 		const command = event.input.command || "";
+		const { isClaim, issueId } = isClaimCommand(command);
+		if (!isClaim || !issueId) return undefined;
 
-		// Claim: notify when bd update --claim runs
-		const { isClaim, issueId: claimIssueId } = isClaimCommand(command);
-		if (isClaim && claimIssueId) {
-			const text = `\n\nSession Flow: claimed ${claimIssueId}. Work in this session is tracked.`;
-			return { content: [...event.content, { type: "text", text }] };
-		}
-
-		// Close: mark closed-this-session for the memory gate
-		const { isClose, issueId: closedIssueId } = isCloseCommand(command);
-		if (isClose && closedIssueId) {
-			const sessionId = getSessionId(ctx);
-			await SubprocessRunner.run("bd", ["kv", "set", `closed-this-session:${sessionId}`, closedIssueId], { cwd });
-		}
-
-		return undefined;
+		const text = `\n\nSession Flow: claimed ${issueId}. Work in this session is tracked.`;
+		return { content: [...event.content, { type: "text", text }] };
 	});
 
-	// Stop gate + memory gate: runs at agent_end (non-blocking — notify only).
+	// Stop gate: warn (non-blocking) if this session's claimed issue is still in progress.
+	// IMPORTANT: never call sendUserMessage() from agent_end, it always triggers a new turn.
 	pi.on("agent_end", async (_event, ctx) => {
 		const cwd = getCwd(ctx);
 		if (!EventAdapter.isBeadsProject(cwd)) return undefined;
 
 		const sessionId = getSessionId(ctx);
-
-		// Stop gate: warn if claimed issue is still in progress
 		const claimId = await getSessionClaim(cwd, sessionId);
+
 		if (claimId) {
 			const inProgress = await isClaimStillInProgress(cwd, claimId);
 			if (inProgress) {
@@ -115,27 +80,9 @@ export default function (pi: ExtensionAPI) {
 				}
 				return undefined;
 			}
-			if (lastStopNoticeIssue === claimId) lastStopNoticeIssue = null;
-		}
 
-		// Memory gate: nudge if an issue was closed this session
-		const memGateDoneResult = await SubprocessRunner.run(
-			"bd", ["kv", "get", `memory-gate-done:${sessionId}`], { cwd }
-		);
-		if (memGateDoneResult.code === 0 && memGateDoneResult.stdout.trim()) {
-			// Agent already acked — clear all markers and move on
-			await SubprocessRunner.run("bd", ["kv", "clear", `memory-gate-done:${sessionId}`], { cwd });
-			await SubprocessRunner.run("bd", ["kv", "clear", `closed-this-session:${sessionId}`], { cwd });
-			await SubprocessRunner.run("bd", ["kv", "clear", `claimed:${sessionId}`], { cwd });
-		} else {
-			const closedResult = await SubprocessRunner.run(
-				"bd", ["kv", "get", `closed-this-session:${sessionId}`], { cwd }
-			);
-			if (closedResult.code === 0 && closedResult.stdout.trim()) {
-				const closedIssueId = closedResult.stdout.trim();
-				if (ctx.hasUI) {
-					ctx.ui.notify(memoryPromptMessage(closedIssueId, sessionId), "info");
-				}
+			if (lastStopNoticeIssue === claimId) {
+				lastStopNoticeIssue = null;
 			}
 		}
 

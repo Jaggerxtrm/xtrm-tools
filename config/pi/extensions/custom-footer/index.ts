@@ -264,12 +264,11 @@ export default function (pi: ExtensionAPI) {
 
 					const BOLD = "\x1b[1m";
 					const BOLD_OFF = "\x1b[22m";
-					const brand = `${BOLD}${theme.fg("accent", "XTRM")}${BOLD_OFF}`;
+					const brand = `${BOLD}${theme.fg("dim", "XTRM")}${BOLD_OFF}`;
 
 					const usage = ctx.getContextUsage();
 					const pct = usage?.percent ?? 0;
-					const pctColor = pct > 75 ? "error" : pct > 50 ? "warning" : "success";
-					const usageStr = theme.fg(pctColor, `[${pct.toFixed(0)}%]`);
+					const usageStr = theme.fg("dim", `[${pct.toFixed(0)}%]`);
 
 					const modelId = ctx.model?.id || "no-model";
 					const modelStr = `${modelId} ${usageStr}`;

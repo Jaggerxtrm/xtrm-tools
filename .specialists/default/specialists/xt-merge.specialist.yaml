@@ -1,11 +1,11 @@
 specialist:
   metadata:
     name: xt-merge
-    version: 1.0.0
+    version: 1.1.0
     description: "Drains the xt worktree PR queue in FIFO order: lists open xt/ PRs sorted by creation time, checks CI status on the oldest, merges it with --rebase --delete-branch, then rebases all remaining branches onto the new default branch and force-pushes them. Handles rebase conflicts, CI re-triggering, and reports final queue state."
     category: workflow
     tags: [git, pr, merge, worktree, xt, rebase, ci]
-    updated: "2026-03-22"
+    updated: "2026-03-26"
 
   execution:
     mode: tool
@@ -70,9 +70,18 @@ specialist:
 
       Working directory: $cwd
 
+      Pre-check output:
+      $pre_script_output
+
       List all open PRs from xt/ branches, sort oldest-first, check CI on the oldest,
       merge it if green, rebase the remaining branches onto the new main, and repeat
       until the queue is empty. Report final state when done.
+
+  skills:
+    scripts:
+      - run: "test -f Makefile && make ci || echo 'No Makefile found, skipping local CI'"
+        phase: pre
+        inject_output: true
 
   communication:
     output_to: .specialists/merge-prs-result.md

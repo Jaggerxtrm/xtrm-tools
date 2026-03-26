@@ -1,0 +1,6 @@
+{"id":"int-b2d17892","kind":"tool_call","created_at":"2026-03-26T10:48:51.342763447Z","actor":"you@example.com","issue_id":"xtrm-5wbp","model":"anthropic/claude-sonnet-4-6","tool_name":"planner","exit_code":0}
+{"id":"int-13aae4d9","kind":"tool_call","created_at":"2026-03-26T10:56:10.897822822Z","actor":"you@example.com","issue_id":"xtrm-gywk","model":"anthropic/claude-sonnet-4-6","tool_name":"planner","exit_code":0}
+{"id":"int-8f5d42ac","kind":"tool_call","created_at":"2026-03-26T11:02:21.308558438Z","actor":"you@example.com","issue_id":"xtrm-30qm","model":"anthropic/claude-sonnet-4-6","tool_name":"planner","exit_code":0}
+{"id":"int-b3f596e1","kind":"tool_call","created_at":"2026-03-26T11:07:48.376305216Z","actor":"you@example.com","issue_id":"xtrm-7zjy","model":"anthropic/claude-sonnet-4-6","tool_name":"planner","exit_code":0}
+{"id":"int-678fdec9","kind":"tool_call","created_at":"2026-03-26T11:09:06.087447893Z","actor":"you@example.com","issue_id":"xtrm-xeq1","model":"anthropic/claude-sonnet-4-6","tool_name":"planner","exit_code":0}
+{"id":"int-f8cf28b8","kind":"tool_call","created_at":"2026-03-26T11:12:21.086448917Z","actor":"you@example.com","issue_id":"xtrm-gwa7","model":"anthropic/claude-sonnet-4-6","tool_name":"planner","exit_code":0}

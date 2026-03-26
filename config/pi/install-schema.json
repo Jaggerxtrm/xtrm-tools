@@ -34,7 +34,6 @@
     }
   ],
   "packages": [
-    "npm:pi-dex",
     "npm:pi-gitnexus",
     "npm:pi-serena-tools",
     "npm:lsp-pi",

@@ -4,3 +4,5 @@
 {"id":"int-b3f596e1","kind":"tool_call","created_at":"2026-03-26T11:07:48.376305216Z","actor":"you@example.com","issue_id":"xtrm-7zjy","model":"anthropic/claude-sonnet-4-6","tool_name":"planner","exit_code":0}
 {"id":"int-678fdec9","kind":"tool_call","created_at":"2026-03-26T11:09:06.087447893Z","actor":"you@example.com","issue_id":"xtrm-xeq1","model":"anthropic/claude-sonnet-4-6","tool_name":"planner","exit_code":0}
 {"id":"int-f8cf28b8","kind":"tool_call","created_at":"2026-03-26T11:12:21.086448917Z","actor":"you@example.com","issue_id":"xtrm-gwa7","model":"anthropic/claude-sonnet-4-6","tool_name":"planner","exit_code":0}
+{"id":"int-98fdfce0","kind":"tool_call","created_at":"2026-03-26T12:20:31.058465805Z","actor":"you@example.com","issue_id":"xtrm-p38n.1","model":"anthropic/claude-sonnet-4-6","tool_name":"planner","exit_code":0}
+{"id":"int-e728104b","kind":"tool_call","created_at":"2026-03-26T12:28:55.218429714Z","actor":"you@example.com","issue_id":"xtrm-p38n.1","model":"anthropic/claude-sonnet-4-6","tool_name":"planner","exit_code":0}

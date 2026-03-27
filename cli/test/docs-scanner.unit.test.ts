@@ -63,6 +63,18 @@ describe('parseFrontmatter', () => {
         expect(fm!.summary).toBeUndefined();
     });
 
+    it('skips HTML comment block before real summary', () => {
+        const content = '---\ntitle: X\n---\n\n<!-- INDEX: some metadata -->\n\nReal summary paragraph.';
+        const fm = parseFrontmatter(content);
+        expect(fm!.summary).toBe('Real summary paragraph.');
+    });
+
+    it('skips multiline HTML comment block before real summary', () => {
+        const content = '---\ntitle: X\n---\n\n<!-- INDEX:\n  key: value\n  other: stuff\n-->\n\nActual content.';
+        const fm = parseFrontmatter(content);
+        expect(fm!.summary).toBe('Actual content.');
+    });
+
     it('FrontmatterFilter type is exported and structurally correct', () => {
         const filter: FrontmatterFilter = { field: 'type', value: 'service' };
         expect(filter.field).toBe('type');

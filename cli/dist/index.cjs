@@ -57196,7 +57196,8 @@ function parseFrontmatter(content) {
     if (key) fm[key] = value;
   }
   const afterFrontmatter = content.slice(match[0].length).replace(/^\r?\n/, "");
-  const firstPara = afterFrontmatter.split(/\r?\n\r?\n/)[0].replace(/\r?\n/g, " ").trim();
+  const stripped = afterFrontmatter.replace(/<!--[\s\S]*?-->/g, "").trimStart();
+  const firstPara = stripped.split(/\r?\n\r?\n/)[0].replace(/\r?\n/g, " ").trim();
   if (firstPara && !firstPara.startsWith("#")) {
     fm.summary = firstPara.slice(0, 120);
   }
@@ -57768,6 +57769,137 @@ function createDocsCommand() {
       console.error(kleur_default.red(`\u2717 Cross-check failed: ${msg}`));
       process.exit(1);
     }
+  });
+  docs.command("verify [filter]").description("Verify frontmatter schema compliance and detect drift across doc files").option("--fix", "Auto-fix simple issues (add missing updated_at)", false).option("--json", "Output JSON", false).action(async (filter, opts) => {
+    const repoRoot = await findRepoRoot();
+    const entries = await collectDocFiles(repoRoot, filter);
+    if (entries.length === 0) {
+      console.log(kleur_default.yellow("\n  No documentation files found.\n"));
+      return;
+    }
+    const VERIFY_REQUIRED = ["title", "description", "updated_at"];
+    const VALID_TYPES = /* @__PURE__ */ new Set(["api", "architecture", "guide", "overview", "plan", "reference"]);
+    const findings = [];
+    const autoFixed = [];
+    const knownPaths = new Set(entries.map((e) => e.relativePath));
+    for (const entry of entries) {
+      const rel = entry.relativePath;
+      if (entry.parseError) {
+        findings.push({ severity: "error", file: rel, message: `Parse error: ${entry.parseError}` });
+        continue;
+      }
+      const fm = entry.frontmatter;
+      for (const field of VERIFY_REQUIRED) {
+        if (!fm || !fm[field]) {
+          if (opts.fix && field === "updated_at") {
+            try {
+              const content = await import_fs_extra21.default.readFile(entry.filePath, "utf8");
+              const today = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
+              let fixed;
+              if (content.startsWith("---")) {
+                fixed = content.replace(/^(---[\s\S]*?)(---)/m, `$1updated_at: ${today}
+$2`);
+              } else {
+                fixed = `---
+updated_at: ${today}
+---
+
+${content}`;
+              }
+              await import_fs_extra21.default.writeFile(entry.filePath, fixed, "utf8");
+              autoFixed.push(`${rel}: added updated_at: ${today}`);
+            } catch {
+              findings.push({ severity: "error", file: rel, message: `Missing required field: ${field}` });
+            }
+          } else {
+            findings.push({
+              severity: "error",
+              file: rel,
+              message: `Missing required field: ${field}`,
+              fix: field === "updated_at" ? "Run with --fix to auto-add updated_at" : void 0
+            });
+          }
+        }
+      }
+      if (fm?.updated_at) {
+        const fmDate = new Date(fm.updated_at);
+        const mtime = entry.lastModified;
+        const diffDays = (mtime.getTime() - fmDate.getTime()) / (1e3 * 60 * 60 * 24);
+        if (!isNaN(fmDate.getTime()) && diffDays > 1) {
+          findings.push({
+            severity: "warning",
+            file: rel,
+            message: `updated_at (${fm.updated_at}) is older than file mtime (${formatDate(mtime)})`,
+            fix: `Update updated_at to ${formatDate(mtime)}`
+          });
+        }
+      }
+      if (fm?.type && !VALID_TYPES.has(fm.type)) {
+        findings.push({
+          severity: "warning",
+          file: rel,
+          message: `Unknown type: "${fm.type}" \u2014 valid: ${[...VALID_TYPES].join(", ")}`
+        });
+      }
+      try {
+        const content = await import_fs_extra21.default.readFile(entry.filePath, "utf8");
+        const linkRe = /\[([^\]]+)\]\(([^)]+)\)/g;
+        let m;
+        while ((m = linkRe.exec(content)) !== null) {
+          const href = m[2];
+          if (href.startsWith("#") || href.startsWith("http") || href.startsWith("mailto:")) continue;
+          const target = href.split("#")[0];
+          if (!target.endsWith(".md")) continue;
+          const resolved = import_path22.default.join(import_path22.default.dirname(rel), target).replace(/\\/g, "/");
+          if (!knownPaths.has(resolved)) {
+            findings.push({
+              severity: "warning",
+              file: rel,
+              message: `Broken internal link: [${m[1]}](${href})`
+            });
+          }
+        }
+      } catch {
+      }
+    }
+    if (opts.json) {
+      console.log(JSON.stringify({ files: entries.length, autoFixed, findings }, null, 2));
+      process.exit(findings.length > 0 ? 1 : 0);
+    }
+    console.log(t.bold(`
+  xtrm docs verify
+`));
+    console.log(kleur_default.gray(`  ${entries.length} file${entries.length !== 1 ? "s" : ""} checked
+`));
+    if (autoFixed.length > 0) {
+      console.log(kleur_default.green(`  ${sym.ok} Auto-fixed ${autoFixed.length} issue${autoFixed.length !== 1 ? "s" : ""}:`));
+      for (const msg of autoFixed) console.log(kleur_default.dim(`    ${msg}`));
+      console.log("");
+    }
+    if (findings.length === 0) {
+      console.log(`  ${sym.ok} All docs pass frontmatter verification
+`);
+      return;
+    }
+    const errors = findings.filter((f) => f.severity === "error");
+    const warnings = findings.filter((f) => f.severity === "warning");
+    for (const f of errors) {
+      console.log(`  ${kleur_default.red("\u2717")} ${kleur_default.red(f.file)}`);
+      console.log(kleur_default.gray(`      ${f.message}`));
+      if (f.fix) console.log(kleur_default.dim(`      \u2192 ${f.fix}`));
+    }
+    for (const f of warnings) {
+      console.log(`  ${kleur_default.yellow("\u26A0")} ${kleur_default.yellow(f.file)}`);
+      console.log(kleur_default.gray(`      ${f.message}`));
+      if (f.fix) console.log(kleur_default.dim(`      \u2192 ${f.fix}`));
+    }
+    const parts = [];
+    if (errors.length > 0) parts.push(kleur_default.red(`${errors.length} error${errors.length !== 1 ? "s" : ""}`));
+    if (warnings.length > 0) parts.push(kleur_default.yellow(`${warnings.length} warning${warnings.length !== 1 ? "s" : ""}`));
+    console.log(kleur_default.gray(`
+  ${parts.join(", ")}
+`));
+    if (errors.length > 0) process.exit(1);
   });
   return docs;
 }

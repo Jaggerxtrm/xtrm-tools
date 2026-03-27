@@ -38,9 +38,11 @@ export function parseFrontmatter(content: string): Frontmatter | null {
         if (key) fm[key] = value;
     }
 
-    // Extract summary: first non-empty paragraph after the closing --- block
+    // Extract summary: first non-empty paragraph after the closing --- block,
+    // skipping HTML comment blocks (e.g. <!-- INDEX: ... --> from sync-docs)
     const afterFrontmatter = content.slice(match[0].length).replace(/^\r?\n/, '');
-    const firstPara = afterFrontmatter.split(/\r?\n\r?\n/)[0].replace(/\r?\n/g, ' ').trim();
+    const stripped = afterFrontmatter.replace(/<!--[\s\S]*?-->/g, '').trimStart();
+    const firstPara = stripped.split(/\r?\n\r?\n/)[0].replace(/\r?\n/g, ' ').trim();
     if (firstPara && !firstPara.startsWith('#')) {
         fm.summary = firstPara.slice(0, 120);
     }

@@ -349,5 +349,163 @@ export function createDocsCommand(): Command {
             }
         });
 
+    // ── verify subcommand ─────────────────────────────────────────────────────
+    docs
+        .command('verify [filter]')
+        .description('Verify frontmatter schema compliance and detect drift across doc files')
+        .option('--fix', 'Auto-fix simple issues (add missing updated_at)', false)
+        .option('--json', 'Output JSON', false)
+        .action(async (filter: string | undefined, opts: { fix: boolean; json: boolean }) => {
+            const repoRoot = await findRepoRoot();
+            const entries = await collectDocFiles(repoRoot, filter);
+
+            if (entries.length === 0) {
+                console.log(kleur.yellow('\n  No documentation files found.\n'));
+                return;
+            }
+
+            const VERIFY_REQUIRED = ['title', 'description', 'updated_at'];
+            const VALID_TYPES = new Set(['api', 'architecture', 'guide', 'overview', 'plan', 'reference']);
+
+            interface VerifyFinding {
+                severity: 'error' | 'warning' | 'info';
+                file: string;
+                message: string;
+                fix?: string;
+            }
+
+            const findings: VerifyFinding[] = [];
+            const autoFixed: string[] = [];
+
+            // Collect all relative paths for internal link validation
+            const knownPaths = new Set(entries.map(e => e.relativePath));
+
+            for (const entry of entries) {
+                const rel = entry.relativePath;
+
+                if (entry.parseError) {
+                    findings.push({ severity: 'error', file: rel, message: `Parse error: ${entry.parseError}` });
+                    continue;
+                }
+
+                const fm = entry.frontmatter;
+
+                // ── Missing required fields ───────────────────────────────────
+                for (const field of VERIFY_REQUIRED) {
+                    if (!fm || !fm[field]) {
+                        if (opts.fix && field === 'updated_at') {
+                            try {
+                                const content = await fs.readFile(entry.filePath, 'utf8');
+                                const today = new Date().toISOString().slice(0, 10);
+                                let fixed: string;
+                                if (content.startsWith('---')) {
+                                    fixed = content.replace(/^(---[\s\S]*?)(---)/m, `$1updated_at: ${today}\n$2`);
+                                } else {
+                                    fixed = `---\nupdated_at: ${today}\n---\n\n${content}`;
+                                }
+                                await fs.writeFile(entry.filePath, fixed, 'utf8');
+                                autoFixed.push(`${rel}: added updated_at: ${today}`);
+                            } catch {
+                                findings.push({ severity: 'error', file: rel, message: `Missing required field: ${field}` });
+                            }
+                        } else {
+                            findings.push({
+                                severity: 'error',
+                                file: rel,
+                                message: `Missing required field: ${field}`,
+                                fix: field === 'updated_at' ? 'Run with --fix to auto-add updated_at' : undefined,
+                            });
+                        }
+                    }
+                }
+
+                // ── Drift: updated_at older than file mtime ───────────────────
+                if (fm?.updated_at) {
+                    const fmDate = new Date(fm.updated_at);
+                    const mtime = entry.lastModified;
+                    const diffDays = (mtime.getTime() - fmDate.getTime()) / (1000 * 60 * 60 * 24);
+                    if (!isNaN(fmDate.getTime()) && diffDays > 1) {
+                        findings.push({
+                            severity: 'warning',
+                            file: rel,
+                            message: `updated_at (${fm.updated_at}) is older than file mtime (${formatDate(mtime)})`,
+                            fix: `Update updated_at to ${formatDate(mtime)}`,
+                        });
+                    }
+                }
+
+                // ── Type vocabulary ───────────────────────────────────────────
+                if (fm?.type && !VALID_TYPES.has(fm.type)) {
+                    findings.push({
+                        severity: 'warning',
+                        file: rel,
+                        message: `Unknown type: "${fm.type}" — valid: ${[...VALID_TYPES].join(', ')}`,
+                    });
+                }
+
+                // ── Broken internal .md links ─────────────────────────────────
+                try {
+                    const content = await fs.readFile(entry.filePath, 'utf8');
+                    const linkRe = /\[([^\]]+)\]\(([^)]+)\)/g;
+                    let m: RegExpExecArray | null;
+                    while ((m = linkRe.exec(content)) !== null) {
+                        const href = m[2];
+                        if (href.startsWith('#') || href.startsWith('http') || href.startsWith('mailto:')) continue;
+                        const target = href.split('#')[0];
+                        if (!target.endsWith('.md')) continue;
+                        const resolved = path.join(path.dirname(rel), target).replace(/\\/g, '/');
+                        if (!knownPaths.has(resolved)) {
+                            findings.push({
+                                severity: 'warning',
+                                file: rel,
+                                message: `Broken internal link: [${m[1]}](${href})`,
+                            });
+                        }
+                    }
+                } catch { /* skip link check if unreadable */ }
+            }
+
+            // ── Output ────────────────────────────────────────────────────────
+            if (opts.json) {
+                console.log(JSON.stringify({ files: entries.length, autoFixed, findings }, null, 2));
+                process.exit(findings.length > 0 ? 1 : 0);
+            }
+
+            console.log(t.bold(`\n  xtrm docs verify\n`));
+            console.log(kleur.gray(`  ${entries.length} file${entries.length !== 1 ? 's' : ''} checked\n`));
+
+            if (autoFixed.length > 0) {
+                console.log(kleur.green(`  ${sym.ok} Auto-fixed ${autoFixed.length} issue${autoFixed.length !== 1 ? 's' : ''}:`));
+                for (const msg of autoFixed) console.log(kleur.dim(`    ${msg}`));
+                console.log('');
+            }
+
+            if (findings.length === 0) {
+                console.log(`  ${sym.ok} All docs pass frontmatter verification\n`);
+                return;
+            }
+
+            const errors = findings.filter(f => f.severity === 'error');
+            const warnings = findings.filter(f => f.severity === 'warning');
+
+            for (const f of errors) {
+                console.log(`  ${kleur.red('✗')} ${kleur.red(f.file)}`);
+                console.log(kleur.gray(`      ${f.message}`));
+                if (f.fix) console.log(kleur.dim(`      → ${f.fix}`));
+            }
+            for (const f of warnings) {
+                console.log(`  ${kleur.yellow('⚠')} ${kleur.yellow(f.file)}`);
+                console.log(kleur.gray(`      ${f.message}`));
+                if (f.fix) console.log(kleur.dim(`      → ${f.fix}`));
+            }
+
+            const parts: string[] = [];
+            if (errors.length > 0) parts.push(kleur.red(`${errors.length} error${errors.length !== 1 ? 's' : ''}`));
+            if (warnings.length > 0) parts.push(kleur.yellow(`${warnings.length} warning${warnings.length !== 1 ? 's' : ''}`));
+            console.log(kleur.gray(`\n  ${parts.join(', ')}\n`));
+
+            if (errors.length > 0) process.exit(1);
+        });
+
     return docs;
 }

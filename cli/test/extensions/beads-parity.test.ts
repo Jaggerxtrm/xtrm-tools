@@ -71,8 +71,8 @@ describe("Pi beads extension parity", () => {
 		await harness.emit("agent_end", { messages: [] });
 		await harness.emit("agent_end", { messages: [] });
 
-		expect(harness.pi.sendUserMessage).toHaveBeenCalledTimes(1);
-		expect(harness.pi.sendUserMessage).toHaveBeenCalledWith(expect.stringContaining("claim `xtrm-123` was closed this session"));
+		expect(harness.ctx.ui.notify).toHaveBeenCalledTimes(1);
+		expect(harness.ctx.ui.notify).toHaveBeenCalledWith(expect.stringContaining("claim `xtrm-123` was closed this session"), "info");
 	});
 
 	it.skip("consumes .memory-gate-done marker and clears session markers (test environment issue)", async () => {
@@ -89,6 +89,6 @@ describe("Pi beads extension parity", () => {
 		expect(fs.unlinkSync).toHaveBeenCalled();
 		expect(calls.some((a) => a[0] === "kv" && a[1] === "clear" && `${a[2]}`.startsWith("claimed:"))).toBe(true);
 		expect(calls.some((a) => a[0] === "kv" && a[1] === "clear" && `${a[2]}`.startsWith("closed-this-session:"))).toBe(true);
-		expect(harness.pi.sendUserMessage).not.toHaveBeenCalled();
+		expect(harness.ctx.ui.notify).not.toHaveBeenCalled();
 	});
 });

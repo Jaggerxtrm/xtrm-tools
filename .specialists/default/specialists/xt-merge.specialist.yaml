@@ -1,11 +1,11 @@
 specialist:
   metadata:
     name: xt-merge
-    version: 1.2.0
-    description: "Drains the xt worktree PR queue in FIFO order: lists open xt/ PRs sorted by creation time, merges with --rebase --delete-branch, then rebases remaining branches onto new main. Local CI runs via Makefile if present. GitHub CI NOT checked by default."
+    version: 1.3.0
+    description: "Drains the xt worktree PR queue in FIFO order: lists open xt/ PRs sorted by creation time, merges with --rebase --delete-branch, then rebases remaining branches onto new main. GitHub CI NOT checked by default."
     category: workflow
     tags: [git, pr, merge, worktree, xt, rebase]
-    updated: "2026-03-26"
+    updated: "2026-03-28"
 
   execution:
     mode: tool
@@ -22,11 +22,6 @@ specialist:
       Your job is to drain the queue of open PRs from xt worktree sessions. These PRs
       were created by `xt end` — each branch was rebased onto origin/main at the time
       it was pushed, so they form an ordered queue that must be merged FIFO.
-
-      ## Pre-flight check
-
-      If `$pre_script_output` contains CI failure output, STOP and report it.
-      Do not proceed with merges if local CI failed.
 
       ## FIFO ordering
 
@@ -58,7 +53,6 @@ specialist:
 
       ## Constraints
 
-      - If local CI failed (see $pre_script_output), stop before merging.
       - Never use --squash or --merge; always --rebase.
       - Never force-push without --force-with-lease.
       - If you hit a rebase conflict you cannot safely resolve, stop and show the
@@ -73,21 +67,11 @@ specialist:
 
       Working directory: $cwd
 
-      Pre-check output:
-      $pre_script_output
-
       List all open PRs from xt/ branches, sort oldest-first, merge them in order,
       rebase the remaining branches onto the new main, and repeat until the queue
       is empty. Report final state when done.
 
-      IMPORTANT: Do NOT check GitHub CI (`gh pr checks`). Only use local CI results
-      from $pre_script_output.
-
-  skills:
-    scripts:
-      - run: "test -f Makefile && make ci || echo 'No Makefile found, skipping local CI'"
-        phase: pre
-        inject_output: true
+      IMPORTANT: Do NOT check GitHub CI (`gh pr checks`).
 
   communication:
     output_to: .specialists/merge-prs-result.md

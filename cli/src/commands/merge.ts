@@ -1,7 +1,6 @@
 import { Command } from 'commander';
 import kleur from 'kleur';
 import { spawn, spawnSync } from 'node:child_process';
-import ora from 'ora';
 
 export function createMergeCommand(): Command {
     return new Command('merge')
@@ -45,29 +44,16 @@ export function createMergeCommand(): Command {
 
             console.log(kleur.bold(`\n  xt merge${opts.dryRun ? ' (dry run)' : ''}\n`));
 
-            const spinner = ora({
-                text: opts.dryRun ? 'Checking PR queue...' : 'Merging PR queue...',
-                color: 'cyan',
-            }).start();
-            const chunks: string[] = [];
-
+            // Pass stdio: 'inherit' so specialists gets a proper TTY — piping stdout causes
+            // the specialists process to hang after job completion (it waits for TTY close).
             const exitCode = await new Promise<number>((resolve) => {
-                const proc = spawn('specialists', args, { cwd, stdio: ['inherit', 'pipe', 'pipe'] });
-                proc.stdout.on('data', (d: Buffer) => chunks.push(d.toString()));
-                proc.stderr.on('data', (d: Buffer) => chunks.push(d.toString()));
+                const proc = spawn('specialists', args, { cwd, stdio: 'inherit' });
                 proc.on('close', (code) => resolve(code ?? 0));
             });
 
-            if (exitCode === 0) {
-                spinner.succeed(opts.dryRun ? 'Queue check complete.' : 'PR queue drained.');
-            } else {
-                spinner.fail('xt-merge failed.');
+            if (exitCode !== 0) {
+                console.error(kleur.red('\n  ✗ xt-merge failed.\n'));
             }
-
-            // Show the final output — last meaningful lines
-            const lines = chunks.join('').split('\n').filter(l => l.trim());
-            const tail = lines.slice(-10).map(l => kleur.dim('  ' + l)).join('\n');
-            if (tail) console.log('\n' + tail + '\n');
 
             process.exit(exitCode);
         });

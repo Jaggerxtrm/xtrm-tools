@@ -56952,6 +56952,22 @@ function isMergedIntoMain(branch, repoRoot) {
   });
   return (r.stdout ?? "").includes(branchShort);
 }
+function getPrStatus(branch, repoRoot) {
+  const branchShort = branch.replace("refs/heads/", "");
+  const r = (0, import_node_child_process8.spawnSync)("gh", ["pr", "list", "--head", branchShort, "--state", "all", "--json", "state,url", "--limit", "1"], {
+    cwd: repoRoot,
+    encoding: "utf8",
+    stdio: "pipe"
+  });
+  if (r.status !== 0) return "unknown";
+  try {
+    const data = JSON.parse(r.stdout ?? "[]");
+    if (data.length === 0) return "no PR";
+    return `${data[0].state.toLowerCase()} (${data[0].url})`;
+  } catch {
+    return "unknown";
+  }
+}
 function getRepoRoot(cwd) {
   const r = (0, import_node_child_process8.spawnSync)("git", ["rev-parse", "--show-toplevel"], { cwd, encoding: "utf8", stdio: "pipe" });
   return r.ok ? r.stdout.trim() : cwd;
@@ -56987,7 +57003,9 @@ function createWorktreeCommand() {
   cmd.command("clean").description("Remove worktrees whose branch has been merged into main").option("-y, --yes", "Skip confirmation prompt", false).action(async (opts) => {
     const repoRoot = getRepoRoot(process.cwd());
     const worktrees = listXtWorktrees(repoRoot);
-    const merged = worktrees.filter((wt) => isMergedIntoMain(wt.branch, repoRoot));
+    const merged = worktrees.filter(
+      (wt) => isMergedIntoMain(wt.branch, repoRoot) || getPrStatus(wt.branch, repoRoot).startsWith("merged")
+    );
     if (merged.length === 0) {
       console.log(kleur_default.dim("\n  No merged xt worktrees to clean\n"));
       return;

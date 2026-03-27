@@ -147,7 +147,10 @@ export function createWorktreeCommand(): Command {
         .action(async (opts) => {
             const repoRoot = getRepoRoot(process.cwd());
             const worktrees = listXtWorktrees(repoRoot);
-            const merged = worktrees.filter(wt => isMergedIntoMain(wt.branch, repoRoot));
+            const merged = worktrees.filter(wt =>
+                isMergedIntoMain(wt.branch, repoRoot) ||
+                getPrStatus(wt.branch, repoRoot).startsWith('merged')
+            );
 
             if (merged.length === 0) {
                 console.log(kleur.dim('\n  No merged xt worktrees to clean\n'));

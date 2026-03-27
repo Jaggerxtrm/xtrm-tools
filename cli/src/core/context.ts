@@ -14,8 +14,9 @@ export interface Context {
 }
 
 export interface GetContextOptions {
-    selector?: string;
     createMissingDirs?: boolean;
+    isGlobal?: boolean;
+    projectRoot?: string;
 }
 
 let config: Conf | null = null;
@@ -33,46 +34,26 @@ function getConfig(): Conf {
     return config;
 }
 
-export function getCandidatePaths(): Array<{ label: string; path: string }> {
+/**
+ * Returns skill sync targets.
+ * Claude is handled entirely by the plugin — no file-sync target needed.
+ * Only returns the skills target (.agents/skills project-local or ~/.agents/skills global).
+ */
+export function getCandidatePaths(isGlobal: boolean = false, projectRoot?: string): Array<{ label: string; path: string }> {
     const home = os.homedir();
-    const appData = process.env.APPDATA;
-    const isWindows = process.platform === 'win32';
+    const skillsPath = isGlobal || !projectRoot
+        ? path.join(home, '.agents', 'skills')
+        : path.join(projectRoot, '.agents', 'skills');
+    const skillsLabel = isGlobal ? '~/.agents/skills' : '.agents/skills';
 
-    const paths = [
-        { label: '~/.claude (hooks + skills)', path: path.join(home, '.claude') },
-        { label: '~/.agents/skills', path: path.join(home, '.agents', 'skills') },
-    ];
-
-    if (isWindows && appData) {
-        paths.push({ label: 'Claude (AppData)', path: path.join(appData, 'Claude') });
-    }
-
-    return paths;
-}
-
-export function resolveTargets(
-    selector: string | undefined,
-    candidates: Array<{ label: string; path: string }>,
-): string[] | null {
-    if (!selector) return null;
-
-    const normalized = selector.trim().toLowerCase();
-    if (normalized === '*' || normalized === 'all') {
-        return candidates.map(candidate => candidate.path);
-    }
-
-    throw new Error(`Unknown install target selector '${selector}'. Use '*' or 'all'.`);
+    return [{ label: skillsLabel, path: skillsPath }];
 }
 
 export async function getContext(options: GetContextOptions = {}): Promise<Context> {
-    const { selector, createMissingDirs = true } = options;
-    const candidates = getCandidatePaths();
-    const directTargets = resolveTargets(selector, candidates);
-
+    const { createMissingDirs = true, isGlobal = false, projectRoot } = options;
+    const candidates = getCandidatePaths(isGlobal, projectRoot);
     const activeConfig = getConfig();
-
-    // Use explicitly specified targets, or default to all candidates
-    const selectedPaths = directTargets ?? candidates.map(c => c.path);
+    const selectedPaths = candidates.map(c => c.path);
 
     if (createMissingDirs) {
         for (const target of selectedPaths) {
@@ -85,7 +66,6 @@ export async function getContext(options: GetContextOptions = {}): Promise<Conte
         syncMode: activeConfig.get('syncMode') as SyncMode,
         config: activeConfig,
     };
-
 }
 export function resetContext(): void {
     getConfig().clear();

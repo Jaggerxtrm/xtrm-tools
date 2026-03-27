@@ -111,15 +111,13 @@ export async function executeSync(
 ): Promise<number> {
     const normalizedRoot = path.normalize(systemRoot).replace(/\\/g, '/');
     const isAgentsSkills = normalizedRoot.includes('.agents/skills');
-    const isClaude = systemRoot.includes('.claude') || systemRoot.includes('Claude');
 
-    // ~/.agents/skills: skills-only, written directly into systemRoot (no subdirectory)
+    // .agents/skills: skills-only, written directly into systemRoot (no subdirectory)
     if (isAgentsSkills) {
         return executeSyncAgentsSkills(repoRoot, systemRoot, changeSet, mode, actionType, isDryRun);
     }
 
     const categories: Array<keyof ChangeSet> = ['skills', 'hooks', 'config'];
-
 
     let count = 0;
     const adapter = new ConfigAdapter(systemRoot);
@@ -127,9 +125,6 @@ export async function executeSync(
     const newHashes: Record<string, string> = {};
 
     try {
-        const agent = detectAgent(systemRoot);
-
-
 
         for (const category of categories) {
             const itemsToProcess: string[] = [];
@@ -168,15 +163,6 @@ export async function executeSync(
                     src = path.join(repoRoot, 'config', 'settings.json');
                     dest = path.join(systemRoot, 'settings.json');
 
-                    const agent = detectAgent(systemRoot);
-
-                    // Claude Code: settings.json managed by xtrm-tools plugin — skip wiring
-                    if (agent === 'claude') {
-                        if (!isDryRun) console.log(kleur.dim(`      (settings.json skipped — managed by xtrm-tools plugin)`));
-                        count++;
-                        continue;
-                    }
-
                     console.log(kleur.gray(`  --> config/settings.json`));
 
                     if (!isDryRun && await fs.pathExists(dest)) {
@@ -185,13 +171,6 @@ export async function executeSync(
 
                     const repoConfig = await fs.readJson(src);
                     let finalRepoConfig = resolveConfigPaths(repoConfig, systemRoot);
-
-                    // When agent CLI handles MCP servers, strip them from the config merge
-                    // but still merge hooks, permissions, plugins, skillSuggestions, etc.
-                    if (agent) {
-                        delete finalRepoConfig.mcpServers;
-                        if (!isDryRun) console.log(kleur.dim(`      (MCP servers managed by ${agent} CLI — merging non-MCP settings only)`));
-                    }
 
                     const hooksSrc = path.join(repoRoot, 'config', 'hooks.json');
                     if (await fs.pathExists(hooksSrc)) {
@@ -398,7 +377,6 @@ async function executeSyncAgentsSkills(
 
 function resolveConfigPaths(config: any, targetDir: string): any {
     const newConfig = JSON.parse(JSON.stringify(config));
-    const home = process.env.HOME || process.env.USERPROFILE || '';
 
     function recursiveReplace(obj: any) {
         for (const key in obj) {

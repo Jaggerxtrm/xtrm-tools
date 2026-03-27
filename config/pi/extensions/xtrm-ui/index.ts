@@ -27,6 +27,7 @@ export interface XtrmUiPrefs {
   showHeader: boolean;
   compactTools: boolean;
   showFooter: boolean; // Our key addition - when false, skip setFooter()
+  forceTheme: boolean; // When false, skip setTheme (allow external theme override)
 }
 
 // ============================================================================
@@ -41,6 +42,7 @@ export const DEFAULT_PREFS: XtrmUiPrefs = {
   showHeader: true,
   compactTools: true,
   showFooter: false, // XTRM: disable pi-dex footer, use custom-footer
+  forceTheme: true,
 };
 
 // ============================================================================
@@ -62,6 +64,7 @@ function normalizePrefs(input: unknown): XtrmUiPrefs {
     showHeader: source.showHeader ?? DEFAULT_PREFS.showHeader,
     compactTools: source.compactTools ?? DEFAULT_PREFS.compactTools,
     showFooter: source.showFooter ?? DEFAULT_PREFS.showFooter,
+    forceTheme: source.forceTheme ?? DEFAULT_PREFS.forceTheme,
   };
 }
 
@@ -98,7 +101,7 @@ function applyXtrmChrome(
   getThinkingLevel: () => string
 ): void {
   // Theme
-  ctx.ui.setTheme(prefs.themeName);
+  if (prefs.forceTheme) ctx.ui.setTheme(prefs.themeName);
 
   // Tool expansion
   ctx.ui.setToolsExpanded(!prefs.compactTools);
@@ -219,6 +222,7 @@ function registerCommands(pi: ExtensionAPI, getPrefs: () => XtrmUiPrefs, setPref
       const contextUsage = ctx.getContextUsage();
       const lines = [
         `Theme: ${prefs.themeName}`,
+        `Force theme: ${prefs.forceTheme ? "on" : "off"}`,
         `Density: ${prefs.density}`,
         `Compact tools: ${prefs.compactTools ? "on" : "off"}`,
         `Show header: ${prefs.showHeader ? "yes" : "no"}`,
@@ -283,6 +287,27 @@ function registerCommands(pi: ExtensionAPI, getPrefs: () => XtrmUiPrefs, setPref
       persistPrefs(pi, prefs);
       applyXtrmChrome(ctx, prefs, getThinkingLevel);
       ctx.ui.notify(`XTRM UI header ${showHeader ? "enabled" : "disabled"}`, "info");
+    },
+  });
+
+  pi.registerCommand("xtrm-ui-forcetheme", {
+    description: "Control whether xtrm-ui overrides the active theme: on|off",
+    getArgumentCompletions: (prefix) => {
+      const values = ["on", "off"].filter((item) => item.startsWith(prefix));
+      return values.length > 0 ? values.map((value) => ({ value, label: value })) : null;
+    },
+    handler: async (args, ctx) => {
+      const normalized = args.trim().toLowerCase();
+      if (normalized !== "on" && normalized !== "off") {
+        ctx.ui.notify("Usage: /xtrm-ui-forcetheme on|off", "warning");
+        return;
+      }
+      const forceTheme = normalized === "on";
+      const prefs = { ...getPrefs(), forceTheme };
+      setPrefs(prefs);
+      persistPrefs(pi, prefs);
+      applyXtrmChrome(ctx, prefs, getThinkingLevel);
+      ctx.ui.notify(`XTRM UI force theme ${forceTheme ? "enabled" : "disabled"}`, "info");
     },
   });
 

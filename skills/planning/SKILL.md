@@ -96,9 +96,29 @@ get_symbols_overview("path/to/relevant/file.ts")
 find_symbol("SymbolName", include_body=true)
 ```
 
-### Fallback when GitNexus is unavailable/stale
+### Fallback when GitNexus MCP tools are unavailable
 
-If GitNexus tools fail or index freshness is unknown, fall back to Serena search + symbols and state this explicitly in your plan output:
+If MCP GitNexus tools are unavailable, use the GitNexus CLI first, then Serena symbol exploration if needed.
+
+```bash
+# Verify index freshness / repository indexing
+npx gitnexus status
+npx gitnexus list
+
+# Concept and architecture exploration
+npx gitnexus query "<concept or symptom>" --limit 5
+npx gitnexus context "<symbolName>"
+
+# Blast radius before committing to a plan
+npx gitnexus impact "<symbolName>" --direction upstream --depth 3
+
+# If index is stale
+npx gitnexus analyze
+```
+
+Notes:
+- In this environment, `detect_changes` and `rename` are available via MCP tools, not GitNexus CLI subcommands.
+- If both MCP and CLI are unavailable, fall back to Serena search + symbols and state this explicitly in your plan output.
 
 ```bash
 search_for_pattern("<concept or symbol>")

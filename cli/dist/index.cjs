@@ -40534,6 +40534,16 @@ async function syncManagedPiExtensions({
 
 // src/commands/pi-install.ts
 var PI_AGENT_DIR = process.env.PI_AGENT_DIR || import_path10.default.join((0, import_node_os4.homedir)(), ".pi", "agent");
+function resolvePkgRoot() {
+  const candidates = [
+    import_path10.default.resolve(__dirname, "../.."),
+    import_path10.default.resolve(__dirname, "../../..")
+  ];
+  for (const c of candidates) {
+    if (require("fs").existsSync(import_path10.default.join(c, "config", "pi", "extensions"))) return c;
+  }
+  return candidates[0];
+}
 function piExtensionsDir(isGlobal, projectRoot) {
   if (!isGlobal && projectRoot) {
     return import_path10.default.join(projectRoot, ".pi", "extensions");
@@ -40566,9 +40576,8 @@ function ensurePnpm2(dryRun) {
   }
 }
 async function runPiInstall(dryRun = false, isGlobal = false, projectRoot) {
-  const repoRoot = await findRepoRoot();
-  if (!projectRoot) projectRoot = repoRoot;
-  const piConfigDir = import_path10.default.join(repoRoot, "config", "pi");
+  if (!projectRoot) projectRoot = await findRepoRoot();
+  const piConfigDir = import_path10.default.join(resolvePkgRoot(), "config", "pi");
   const schemaPath = import_path10.default.join(piConfigDir, "install-schema.json");
   console.log(t.bold("\n  \u2699  Pi extensions + packages"));
   if (!isPiInstalled()) {
@@ -41601,7 +41610,7 @@ var import_child_process4 = require("child_process");
 // src/commands/install-service-skills.ts
 var import_path14 = __toESM(require("path"), 1);
 var import_fs_extra13 = __toESM(require_lib(), 1);
-function resolvePkgRoot() {
+function resolvePkgRoot2() {
   const candidates = [
     import_path14.default.resolve(__dirname, "../.."),
     import_path14.default.resolve(__dirname, "../../..")
@@ -41612,11 +41621,11 @@ function resolvePkgRoot() {
   }
   return match;
 }
-var PKG_ROOT = resolvePkgRoot();
+var PKG_ROOT = resolvePkgRoot2();
 var SKILLS_SRC = import_path14.default.join(PKG_ROOT, "project-skills", "service-skills-set", ".claude");
 
 // src/commands/init.ts
-function resolvePkgRoot2() {
+function resolvePkgRoot3() {
   const candidates = [
     import_path15.default.resolve(__dirname, "../.."),
     import_path15.default.resolve(__dirname, "../../..")
@@ -41627,7 +41636,7 @@ function resolvePkgRoot2() {
   }
   return match;
 }
-var PKG_ROOT2 = resolvePkgRoot2();
+var PKG_ROOT2 = resolvePkgRoot3();
 var PROJECT_SKILLS_DIR = import_path15.default.join(PKG_ROOT2, "project-skills");
 var MCP_CORE_CONFIG_PATH = import_path15.default.join(PKG_ROOT2, "config", "mcp_servers.json");
 var INSTRUCTIONS_DIR = import_path15.default.join(PKG_ROOT2, "config", "instructions");

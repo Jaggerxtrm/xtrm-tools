@@ -7,7 +7,26 @@ import { findRepoRoot } from '../utils/repo-root.js';
 import { t, sym } from '../utils/theme.js';
 import { syncManagedPiExtensions, piPreCheck } from '../utils/pi-extensions.js';
 
+// __dirname is available in CJS output (tsup target: cjs)
+declare const __dirname: string;
+
 const PI_AGENT_DIR = process.env.PI_AGENT_DIR || path.join(homedir(), '.pi', 'agent');
+
+/**
+ * Resolve the xtrm-tools package root from __dirname.
+ * cli/dist/ -> ../.. = package root.
+ * Falls back to checking one level higher for global npm installs.
+ */
+function resolvePkgRoot(): string {
+    const candidates = [
+        path.resolve(__dirname, '../..'),
+        path.resolve(__dirname, '../../..'),
+    ];
+    for (const c of candidates) {
+        if (require('fs').existsSync(path.join(c, 'config', 'pi', 'extensions'))) return c;
+    }
+    return candidates[0];
+}
 
 function piExtensionsDir(isGlobal: boolean, projectRoot?: string): string {
     if (!isGlobal && projectRoot) {
@@ -58,9 +77,10 @@ function ensurePnpm(dryRun: boolean): void {
  * @param projectRoot - Project root for project-scoped installs. Defaults to findRepoRoot().
  */
 export async function runPiInstall(dryRun: boolean = false, isGlobal: boolean = false, projectRoot?: string): Promise<void> {
-    const repoRoot = await findRepoRoot();
-    if (!projectRoot) projectRoot = repoRoot;
-    const piConfigDir = path.join(repoRoot, 'config', 'pi');
+    if (!projectRoot) projectRoot = await findRepoRoot();
+    // Source always comes from xtrm-tools package (resolved via __dirname),
+    // NOT from the user's project root (which has no config/pi/).
+    const piConfigDir = path.join(resolvePkgRoot(), 'config', 'pi');
     const schemaPath = path.join(piConfigDir, 'install-schema.json');
 
     console.log(t.bold('\n  ⚙  Pi extensions + packages'));

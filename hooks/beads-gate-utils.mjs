@@ -134,24 +134,6 @@ export function getClosedThisSession(sessionId, cwd) {
 }
 
 /**
- * Return true if the memory gate is pending acknowledgment for this session.
- * Pending = closed-this-session kv is set AND .beads/.memory-gate-done marker is absent.
- */
-export function isMemoryGatePending(sessionId, cwd) {
-  if (existsSync(join(cwd, '.beads', '.memory-gate-done'))) return false;
-  const closed = getClosedThisSession(sessionId, cwd);
-  return !!closed; // null (unavailable) is falsy → fail open
-}
-
-/**
- * Return true if a Bash command is a memory-gate acknowledgment command.
- * These commands are allowed even while the memory gate is pending.
- */
-export function isMemoryAckCommand(command) {
-  return /\bbd\s+remember\b/.test(command) || /\btouch\s+\.beads\/\.memory-gate-done\b/.test(command);
-}
-
-/**
  * If cwd is inside a .xtrm/worktrees/<name> directory, return the worktree root path.
  * Returns null if not in a worktree.
  */

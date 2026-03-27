@@ -223,7 +223,7 @@ function main() {
       : '';
 
     process.stdout.write(JSON.stringify({
-      additionalContext: `\n🔓 **Beads**: Issue closed.${commitLine}\nEvaluate insights, then acknowledge:\n  \`bd remember "<insight>"\` (or note "nothing")\n  \`touch .beads/.memory-gate-done\``,
+      additionalContext: `\n🔓 **Beads**: Issue closed.${commitLine}\nMemory gate will prompt at session end.`,
     }));
     process.stdout.write('\n');
     process.exit(0);

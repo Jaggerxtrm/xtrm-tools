@@ -58,9 +58,7 @@ export function stopBlockMessage(summary, claimed) {
 
 export function memoryPromptMessage(claimId, sessionId) {
   const claimLine = claimId ? `claim \`${claimId}\` was closed.\n` : '';
-  const ackCmd = sessionId
-    ? `bd kv set "memory-gate-done:${sessionId}"`
-    : 'touch .beads/.memory-gate-done';
+  const ackCmd = `bd kv set "memory-gate-done:${sessionId}"`;
   return (
     `\u25cf Memory gate: ${claimLine}` +
     'For each candidate insight, check ALL 4:\n' +

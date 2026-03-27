@@ -41229,6 +41229,16 @@ async function launchWorktreeSession(opts) {
   console.log(kleur_default.green(`
   \u2713 Worktree ready \u2014 launching ${runtime}...
 `));
+  if (runtime === "pi") {
+    const projectPiDir = import_node_path5.default.join(repoRoot, ".pi");
+    const worktreePiLink = import_node_path5.default.join(worktreePath, ".pi");
+    if ((0, import_node_fs4.existsSync)(projectPiDir) && !(0, import_node_fs4.existsSync)(worktreePiLink)) {
+      try {
+        (0, import_node_fs4.symlinkSync)(projectPiDir, worktreePiLink);
+      } catch {
+      }
+    }
+  }
   if (runtime === "claude") {
     const statuslinePath = resolveStatuslineScript();
     if (statuslinePath) {

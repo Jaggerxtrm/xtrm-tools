@@ -1,7 +1,7 @@
 import kleur from 'kleur';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
+import { mkdirSync, writeFileSync, readFileSync, existsSync, symlinkSync } from 'node:fs';
 import { homedir } from 'node:os';
 
 export interface WorktreeSessionOptions {
@@ -134,6 +134,17 @@ export async function launchWorktreeSession(opts: WorktreeSessionOptions): Promi
 
     writeSessionMeta(worktreePath, runtime);
     console.log(kleur.green(`\n  ✓ Worktree ready — launching ${runtime}...\n`));
+
+    // Pi worktree: symlink .pi -> project root .pi so Pi finds project-scoped settings + extensions.
+    // Pi reads config from <cwd>/.pi/ only (no walk-up), so without this worktrees would fall
+    // back to the global ~/.pi/agent/settings.json which has no local extension paths.
+    if (runtime === 'pi') {
+        const projectPiDir = path.join(repoRoot, '.pi');
+        const worktreePiLink = path.join(worktreePath, '.pi');
+        if (existsSync(projectPiDir) && !existsSync(worktreePiLink)) {
+            try { symlinkSync(projectPiDir, worktreePiLink); } catch { /* non-fatal */ }
+        }
+    }
 
     // Inject statusLine config for claude worktree sessions
     if (runtime === 'claude') {

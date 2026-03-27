@@ -5,7 +5,7 @@ import { spawnSync } from 'node:child_process';
 import { homedir } from 'node:os';
 import { findRepoRoot } from '../utils/repo-root.js';
 import { t, sym } from '../utils/theme.js';
-import { syncManagedPiExtensions, piPreCheck, getInstalledPiPackages } from '../utils/pi-extensions.js';
+import { syncManagedPiExtensions, piPreCheck } from '../utils/pi-extensions.js';
 
 const PI_AGENT_DIR = process.env.PI_AGENT_DIR || path.join(homedir(), '.pi', 'agent');
 
@@ -106,12 +106,43 @@ export async function runPiInstall(dryRun: boolean = false, isGlobal: boolean = 
     console.log(kleur.dim(`    Packages:   ${preCheck.packages.installed.length}/${pkgTotal} installed, ${preCheck.packages.needed.length} needed`));
 
     // Sync extensions (only missing + stale)
-    const managedPackages = await syncManagedPiExtensions({
+    await syncManagedPiExtensions({
         sourceDir: extensionsSrc,
         targetDir: extensionsDst,
         dryRun,
         log: (message) => console.log(kleur.dim(`    ${message}`)),
     });
+
+    // For project-scoped installs, register extensions in .pi/settings.json.
+    // Pi only auto-discovers from global ~/.pi/agent/extensions/ — for project-scoped
+    // installs it reads ONLY from .pi/settings.json packages list.
+    if (!isGlobal && projectRoot && !dryRun) {
+        const piSettingsPath = path.join(projectRoot, '.pi', 'settings.json');
+        let existingSettings: { packages?: string[] } = {};
+        try {
+            existingSettings = await fs.readJson(piSettingsPath);
+        } catch { /* no existing settings — start fresh */ }
+
+        // Collect all installed extension dirs
+        const installedExtDirs: string[] = [];
+        try {
+            const entries = await fs.readdir(extensionsDst, { withFileTypes: true });
+            for (const entry of entries) {
+                if (entry.isDirectory()) installedExtDirs.push(entry.name);
+            }
+        } catch { /* extensionsDst may not exist yet */ }
+
+        // Build new packages list: extension paths first, then preserve non-extension entries
+        const extPaths = installedExtDirs.map(name => `./extensions/${name}`);
+        const nonExtPackages = (existingSettings.packages ?? []).filter(
+            p => !p.startsWith('./extensions/') && !p.startsWith('../')
+        );
+        const updatedPackages = [...extPaths, ...nonExtPackages];
+
+        await fs.ensureDir(path.join(projectRoot, '.pi'));
+        await fs.writeJson(piSettingsPath, { ...existingSettings, packages: updatedPackages }, { spaces: 2 });
+        console.log(kleur.dim(`    Updated .pi/settings.json with ${extPaths.length} extension(s)`));
+    }
 
     // Install packages (only needed)
     if (packages.length > 0) {

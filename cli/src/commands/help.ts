@@ -36,9 +36,12 @@ export function createHelpCommand(): Command {
             ]));
 
             blocks.push(section('PRIMARY COMMANDS', [
-                '  xtrm install [target-selector] [options]',
-                '    Install/sync tools, hooks, skills, and MCP wiring.',
-                '    Options: --dry-run, --yes/-y, --prune, --backport',
+                '  xtrm init [options]',
+                '    Set up xtrm in this project (plugin, Pi, skills, beads, GitNexus).',
+                '    Options: --dry-run, --yes/-y, --global',
+                '',
+                '  xtrm update',
+                '    Reinstall and sync all tools to latest (alias: xtrm init --prune -y).',
                 '',
                 '  xtrm status [--json]',
                 '    Show pending changes for detected environments.',
@@ -120,7 +123,7 @@ export function createHelpCommand(): Command {
             ]));
 
             blocks.push(section('NOTES', [
-                '  - Banner is shown only for xtrm install.',
+                '  - Banner is shown for xtrm init and xtrm update.',
                 '  - For command-level details, run: xtrm <command> --help',
                 '  - For subcommand details, run: xtrm <command> <subcommand> --help',
                 '  - For docs workflow details, run: xtrm docs --help',

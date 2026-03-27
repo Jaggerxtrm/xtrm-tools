@@ -17,40 +17,15 @@ function run(args: string[]): { stdout: string; stderr: string; status: number }
 
 describe('install command surface (c1qd, j2jk, 6gpf, a875)', () => {
 
-    it('xtrm install all prints deprecation notice', () => {
-        const r = run(['install', 'all']);
-        expect(r.stdout + r.stderr).toMatch(/deprecated/i);
-    });
-
-    it('xtrm install basic prints deprecation notice', () => {
-        const r = run(['install', 'basic']);
-        expect(r.stdout + r.stderr).toMatch(/deprecated/i);
-    });
-
-    it('xtrm install project exits with unknown command error', () => {
-        const r = run(['install', 'project', 'something']);
-        const combined = r.stdout + r.stderr;
-        expect(combined.toLowerCase()).toMatch(/unknown command|error/);
+    it('xtrm install is no longer a registered command', () => {
+        const r = run(['install']);
+        expect(r.stdout + r.stderr).toMatch(/unknown command|error|too many/i);
     });
 
     it('xtrm project exits with unknown command error', () => {
         const r = run(['project', 'init']);
         const combined = r.stdout + r.stderr;
         expect(combined.toLowerCase()).toMatch(/unknown command|error/);
-    });
-
-    it('xtrm install --help does not describe all/basic as primary install subcommands', () => {
-        const r = run(['install', '--help']);
-        expect(r.stdout).not.toMatch(/install everything.*beads/i);
-        expect(r.stdout).not.toMatch(/no beads gate/i);
-    });
-
-    it('xtrm install pi shows install help (pi is a target-selector, not a pi-runtime subcommand)', () => {
-        // 'pi' is treated as a target-selector argument by the install command,
-        // not as a pi-runtime management subcommand (that lives under xt pi install)
-        const r = run(['install', 'pi', '--help']);
-        expect(r.stdout).toMatch(/install/i);
-        expect(r.stdout).not.toMatch(/launch.*pi.*session|worktree.*session/i);
     });
 
     it('xt pi install is registered under xt pi namespace', () => {

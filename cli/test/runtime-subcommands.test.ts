@@ -108,14 +108,9 @@ describe('xt pi runtime subcommands (bjvn)', () => {
         expect(r.stdout).toMatch(/session|worktree/i);
     });
 
-    it('xt pi install is under the pi namespace (not xtrm install)', () => {
-        // xt install treats "pi" as a target-selector (not a pi runtime subcommand)
-        // The install command help should NOT mention pi runtime management
-        const r = run(['install', 'pi', '--help']);
-        expect(r.stdout).not.toMatch(/launch.*pi.*session|worktree.*session/i);
-        // xt pi install --help IS the pi runtime install
-        const r2 = run(['pi', 'install', '--help']);
-        expect(r2.status).toBe(0);
-        expect(r2.stdout).toMatch(/extension|package|install/i);
+    it('xt pi install is under the pi namespace', () => {
+        const r = run(['pi', 'install', '--help']);
+        expect(r.status).toBe(0);
+        expect(r.stdout).toMatch(/extension|package|install/i);
     });
 });

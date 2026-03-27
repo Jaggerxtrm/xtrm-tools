@@ -8,7 +8,6 @@ declare const __dirname: string;
 let version = '0.0.0';
 try { version = JSON.parse(readFileSync(resolve(__dirname, '../package.json'), 'utf8')).version; } catch { /* fallback */ }
 
-import { createInstallCommand, runInstall } from './commands/install.js';
 import { createClaudeCommand } from './commands/claude.js';
 import { createPiCommand } from './commands/pi.js';
 import { runProjectInit } from './commands/init.js';
@@ -23,14 +22,13 @@ import { createDocsCommand } from './commands/docs.js';
 import { createMemoryCommand } from './commands/memory.js';
 import { createMergeCommand } from './commands/merge.js';
 import { createDebugCommand } from './commands/debug.js';
-import { createHelloCommand } from './commands/hello.js';
 import { printBanner } from './utils/banner.js';
 
 const program = new Command();
 
 program
     .name('xtrm')
-    .description('Claude Code tools installer (skills, hooks, MCP servers)')
+    .description('Dual-runtime workflow system for Claude Code and Pi agents')
     .version(version);
 
 // Add exit override for cleaner unknown command error
@@ -44,7 +42,6 @@ program.exitOverride((err) => {
 });
 
 // Main commands
-program.addCommand(createInstallCommand());
 program.addCommand(createClaudeCommand());
 program.addCommand(createPiCommand());
 program
@@ -66,14 +63,13 @@ program.addCommand(createDocsCommand());
 program.addCommand(createMemoryCommand());
 program.addCommand(createMergeCommand());
 program.addCommand(createDebugCommand());
-program.addCommand(createHelloCommand());
 program.addCommand(createHelpCommand());
 program
     .command('update')
     .description('Reinstall and sync all tools to latest (alias: xtrm init --prune -y)')
     .action(async () => {
         await printBanner(version);
-        await runInstall({ prune: true, yes: true });
+        await runProjectInit({ prune: true, yes: true });
     });
 
 // Default action: show help
@@ -98,7 +94,7 @@ process.on('unhandledRejection', (reason) => {
 
 // Show banner for setup commands (never for help/version output)
 const isHelpOrVersion = process.argv.some(a => a === '--help' || a === '-h' || a === '--version' || a === '-V');
-const isSetupCommand = ['init', 'install', 'update'].includes(process.argv[2] ?? '');
+const isSetupCommand = ['init', 'update'].includes(process.argv[2] ?? '');
 
 (async () => {
     if (!isHelpOrVersion && isSetupCommand) {

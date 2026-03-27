@@ -50,11 +50,15 @@ export function createPiCommand(): Command {
 
             const repoRoot = await findRepoRoot();
             const sourceDir = path.join(repoRoot, 'config', 'pi', 'extensions');
-            const targetDir = path.join(PI_AGENT_DIR, 'extensions');
+            const projectScopedDir = path.join(repoRoot, '.pi', 'extensions');
+            const targetDir = await fs.pathExists(projectScopedDir)
+                ? projectScopedDir
+                : path.join(PI_AGENT_DIR, 'extensions');
+            const scopeLabel = targetDir === projectScopedDir ? 'project' : 'global';
             const diff = await diffPiExtensions(sourceDir, targetDir);
 
             if (diff.missing.length === 0 && diff.stale.length === 0) {
-                console.log(t.success(`  ✓ extensions up-to-date (${diff.upToDate.length} deployed)`));
+                console.log(t.success(`  ✓ extensions up-to-date (${diff.upToDate.length} deployed, ${scopeLabel})`));
             } else {
                 if (diff.missing.length > 0) console.log(kleur.yellow(`  ⚠ missing: ${diff.missing.join(', ')}`));
                 if (diff.stale.length > 0) console.log(kleur.yellow(`  ⚠ stale: ${diff.stale.join(', ')}`));
@@ -82,7 +86,10 @@ export function createPiCommand(): Command {
             const repoRoot = await findRepoRoot();
             const piConfigDir = path.join(repoRoot, 'config', 'pi');
             const sourceDir = path.join(piConfigDir, 'extensions');
-            const targetDir = path.join(PI_AGENT_DIR, 'extensions');
+            const projectScopedDir = path.join(repoRoot, '.pi', 'extensions');
+            const targetDir = await fs.pathExists(projectScopedDir)
+                ? projectScopedDir
+                : path.join(PI_AGENT_DIR, 'extensions');
             const diff = await diffPiExtensions(sourceDir, targetDir);
 
             if (diff.missing.length === 0 && diff.stale.length === 0) {

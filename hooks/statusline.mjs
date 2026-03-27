@@ -4,7 +4,7 @@
 // Line 2: ◐ italic(claim title)  OR  ○ bold(N) open  — no background
 //
 // Colors: bold/dim/italic only — no explicit fg/bg, adapts to dark & light themes.
-// State: .xtrm/statusline-claim (written by beads-claim-sync.mjs)
+// State: .xtrm/statusline-claim[-<worktreeName>] (written by beads-claim-sync.mjs)
 // Cache: /tmp per cwd, 5s TTL
 
 import { execSync } from 'node:child_process';
@@ -125,8 +125,10 @@ if (!data) {
   let claimTitle = null;
   let openCount = 0;
   if (existsSync(join(cwd, '.beads')) || existsSync(join(mainRoot, '.beads'))) {
-    // Use mainRoot so all sessions (main + worktrees) share one canonical claim file.
-    const claimFile = join(mainRoot, '.xtrm', 'statusline-claim');
+    // Per-worktree claim file — prevents cross-session contamination.
+    const worktreeMatch = cwd.match(/\/\.xtrm\/worktrees\/([^/]+)/);
+    const claimFileName = worktreeMatch ? `statusline-claim-${worktreeMatch[1]}` : 'statusline-claim';
+    const claimFile = join(mainRoot, '.xtrm', claimFileName);
     claimId = existsSync(claimFile) ? (readFileSync(claimFile, 'utf8').trim() || null) : null;
     if (claimId) {
       try {

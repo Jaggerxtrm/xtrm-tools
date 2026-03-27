@@ -58062,6 +58062,13 @@ function createDebugCommand() {
   });
 }
 
+// src/commands/hello.ts
+function createHelloCommand() {
+  return new Command("hello").description("Print Hello and exit").action(() => {
+    process.stdout.write("Hello\n");
+  });
+}
+
 // src/utils/banner.ts
 var ART = [
   " \u2588\u2588\u2557  \u2588\u2588\u2557\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2557\u2588\u2588\u2588\u2588\u2588\u2588\u2557 \u2588\u2588\u2588\u2557   \u2588\u2588\u2588\u2557    \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2557 \u2588\u2588\u2588\u2588\u2588\u2588\u2557  \u2588\u2588\u2588\u2588\u2588\u2588\u2557 \u2588\u2588\u2557     \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2557",
@@ -58264,6 +58271,7 @@ program2.addCommand(createDocsCommand());
 program2.addCommand(createMemoryCommand());
 program2.addCommand(createMergeCommand());
 program2.addCommand(createDebugCommand());
+program2.addCommand(createHelloCommand());
 program2.addCommand(createHelpCommand());
 program2.command("update").description("Reinstall and sync all tools to latest (alias: xtrm install --prune -y)").action(async () => {
   await printBanner(version2);

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // beads-claim-sync — PostToolUse hook
 // bd update --claim → set kv claim
-// bd close         → auto-commit staged changes, set closed-this-session kv for memory gate
+// bd close         → set closed-this-session kv for memory gate
 
 import { spawnSync } from 'node:child_process';
 import { readFileSync, existsSync, writeFileSync, unlinkSync, mkdirSync } from 'node:fs';
@@ -31,6 +31,14 @@ function resolveMainRoot(cwd) {
   const commonDir = r.stdout?.trim();
   if (commonDir && isAbsolute(commonDir)) return dirname(commonDir);
   return cwd;
+}
+
+// Returns a per-session claim filename: 'statusline-claim' for the main session,
+// 'statusline-claim-<worktreeName>' for worktree sessions.
+// Prevents cross-session contamination when multiple worktrees run simultaneously.
+function resolveClaimFileName(cwd) {
+  const m = cwd.match(/\/\.xtrm\/worktrees\/([^/]+)/);
+  return m ? `statusline-claim-${m[1]}` : 'statusline-claim';
 }
 
 function isShellTool(toolName) {
@@ -81,11 +89,11 @@ function main() {
         process.exit(0);
       }
 
-      // Write claim state for statusline — always at main repo root so all sessions share it.
+      // Write claim state for statusline — per-worktree file under main root.
       try {
         const xtrmDir = join(resolveMainRoot(cwd), '.xtrm');
         mkdirSync(xtrmDir, { recursive: true });
-        writeFileSync(join(xtrmDir, 'statusline-claim'), issueId);
+        writeFileSync(join(xtrmDir, resolveClaimFileName(cwd)), issueId);
       } catch { /* non-fatal */ }
 
       logEvent({
@@ -111,8 +119,8 @@ function main() {
     const match = command.match(/\bbd\s+close\s+(\S+)/);
     const closedIssueId = match?.[1];
 
-    // Clear claim state for statusline — use main root so worktree and main sessions agree.
-    try { unlinkSync(join(resolveMainRoot(cwd), '.xtrm', 'statusline-claim')); } catch { /* ok if missing */ }
+    // Clear claim state for statusline — per-worktree file under main root.
+    try { unlinkSync(join(resolveMainRoot(cwd), '.xtrm', resolveClaimFileName(cwd))); } catch { /* ok if missing */ }
 
     // Mark this issue as closed this session (memory gate reads this)
     if (closedIssueId) {

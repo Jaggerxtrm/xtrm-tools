@@ -3,7 +3,6 @@ import kleur from 'kleur';
 import { spawn, spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import ora from 'ora';
 
 export function createMemoryCommand(): Command {
     return new Command('memory')
@@ -57,27 +56,18 @@ function createMemoryUpdateCommand(): Command {
                 : `${existsSync(memPath) ? 'Updating' : 'Creating'} .xtrm/memory.md...`;
 
             console.log(kleur.bold(`\n  xt memory update${opts.dryRun ? ' (dry run)' : ''}\n`));
+            console.log(kleur.dim(`  ${spinnerText}\n`));
 
-            const spinner = ora({ text: spinnerText, color: 'cyan' }).start();
-            const chunks: string[] = [];
-
+            // Pass stdio: 'inherit' so specialists gets a proper TTY — piping stdout causes
+            // the specialists process to hang after job completion (it waits for TTY close).
             const exitCode = await new Promise<number>((resolve) => {
-                const proc = spawn('specialists', args, { cwd, stdio: ['inherit', 'pipe', 'pipe'] });
-                proc.stdout.on('data', (d: Buffer) => chunks.push(d.toString()));
-                proc.stderr.on('data', (d: Buffer) => chunks.push(d.toString()));
+                const proc = spawn('specialists', args, { cwd, stdio: 'inherit' });
                 proc.on('close', (code) => resolve(code ?? 0));
             });
 
-            if (exitCode === 0) {
-                spinner.succeed(opts.dryRun ? 'Analysis complete.' : '.xtrm/memory.md written.');
-            } else {
-                spinner.fail('memory-processor failed.');
+            if (exitCode !== 0) {
+                console.error(kleur.red('\n  ✗ memory-processor failed.\n'));
             }
-
-            // Show the final output — last meaningful lines
-            const lines = chunks.join('').split('\n').filter(l => l.trim());
-            const tail = lines.slice(-10).map(l => kleur.dim('  ' + l)).join('\n');
-            if (tail) console.log('\n' + tail + '\n');
 
             process.exit(exitCode);
         });

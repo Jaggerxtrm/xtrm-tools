@@ -1204,7 +1204,7 @@ var require_command = __commonJS({
     var childProcess = require("child_process");
     var path23 = require("path");
     var fs22 = require("fs");
-    var process19 = require("process");
+    var process16 = require("process");
     var { Argument: Argument2, humanReadableArgName } = require_argument();
     var { CommanderError: CommanderError2 } = require_error();
     var { Help: Help2, stripColor } = require_help();
@@ -1251,13 +1251,13 @@ var require_command = __commonJS({
         this._showSuggestionAfterError = true;
         this._savedState = null;
         this._outputConfiguration = {
-          writeOut: (str) => process19.stdout.write(str),
-          writeErr: (str) => process19.stderr.write(str),
+          writeOut: (str) => process16.stdout.write(str),
+          writeErr: (str) => process16.stderr.write(str),
           outputError: (str, write) => write(str),
-          getOutHelpWidth: () => process19.stdout.isTTY ? process19.stdout.columns : void 0,
-          getErrHelpWidth: () => process19.stderr.isTTY ? process19.stderr.columns : void 0,
-          getOutHasColors: () => useColor() ?? (process19.stdout.isTTY && process19.stdout.hasColors?.()),
-          getErrHasColors: () => useColor() ?? (process19.stderr.isTTY && process19.stderr.hasColors?.()),
+          getOutHelpWidth: () => process16.stdout.isTTY ? process16.stdout.columns : void 0,
+          getErrHelpWidth: () => process16.stderr.isTTY ? process16.stderr.columns : void 0,
+          getOutHasColors: () => useColor() ?? (process16.stdout.isTTY && process16.stdout.hasColors?.()),
+          getErrHasColors: () => useColor() ?? (process16.stderr.isTTY && process16.stderr.hasColors?.()),
           stripColor: (str) => stripColor(str)
         };
         this._hidden = false;
@@ -1651,7 +1651,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
         if (this._exitCallback) {
           this._exitCallback(new CommanderError2(exitCode, code, message));
         }
-        process19.exit(exitCode);
+        process16.exit(exitCode);
       }
       /**
        * Register callback `fn` for the command.
@@ -2051,16 +2051,16 @@ Expecting one of '${allowedValues.join("', '")}'`);
         }
         parseOptions = parseOptions || {};
         if (argv === void 0 && parseOptions.from === void 0) {
-          if (process19.versions?.electron) {
+          if (process16.versions?.electron) {
             parseOptions.from = "electron";
           }
-          const execArgv = process19.execArgv ?? [];
+          const execArgv = process16.execArgv ?? [];
           if (execArgv.includes("-e") || execArgv.includes("--eval") || execArgv.includes("-p") || execArgv.includes("--print")) {
             parseOptions.from = "eval";
           }
         }
         if (argv === void 0) {
-          argv = process19.argv;
+          argv = process16.argv;
         }
         this.rawArgs = argv.slice();
         let userArgs;
@@ -2071,7 +2071,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
             userArgs = argv.slice(2);
             break;
           case "electron":
-            if (process19.defaultApp) {
+            if (process16.defaultApp) {
               this._scriptPath = argv[1];
               userArgs = argv.slice(2);
             } else {
@@ -2258,11 +2258,11 @@ Expecting one of '${allowedValues.join("', '")}'`);
         }
         launchWithNode = sourceExt.includes(path23.extname(executableFile));
         let proc;
-        if (process19.platform !== "win32") {
+        if (process16.platform !== "win32") {
           if (launchWithNode) {
             args.unshift(executableFile);
-            args = incrementNodeInspectorPort(process19.execArgv).concat(args);
-            proc = childProcess.spawn(process19.argv[0], args, { stdio: "inherit" });
+            args = incrementNodeInspectorPort(process16.execArgv).concat(args);
+            proc = childProcess.spawn(process16.argv[0], args, { stdio: "inherit" });
           } else {
             proc = childProcess.spawn(executableFile, args, { stdio: "inherit" });
           }
@@ -2273,13 +2273,13 @@ Expecting one of '${allowedValues.join("', '")}'`);
             subcommand._name
           );
           args.unshift(executableFile);
-          args = incrementNodeInspectorPort(process19.execArgv).concat(args);
-          proc = childProcess.spawn(process19.execPath, args, { stdio: "inherit" });
+          args = incrementNodeInspectorPort(process16.execArgv).concat(args);
+          proc = childProcess.spawn(process16.execPath, args, { stdio: "inherit" });
         }
         if (!proc.killed) {
           const signals2 = ["SIGUSR1", "SIGUSR2", "SIGTERM", "SIGINT", "SIGHUP"];
           signals2.forEach((signal) => {
-            process19.on(signal, () => {
+            process16.on(signal, () => {
               if (proc.killed === false && proc.exitCode === null) {
                 proc.kill(signal);
               }
@@ -2290,7 +2290,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
         proc.on("close", (code) => {
           code = code ?? 1;
           if (!exitCallback) {
-            process19.exit(code);
+            process16.exit(code);
           } else {
             exitCallback(
               new CommanderError2(
@@ -2312,7 +2312,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
             throw new Error(`'${executableFile}' not executable`);
           }
           if (!exitCallback) {
-            process19.exit(1);
+            process16.exit(1);
           } else {
             const wrappedError = new CommanderError2(
               1,
@@ -2812,13 +2812,13 @@ Expecting one of '${allowedValues.join("', '")}'`);
        */
       _parseOptionsEnv() {
         this.options.forEach((option) => {
-          if (option.envVar && option.envVar in process19.env) {
+          if (option.envVar && option.envVar in process16.env) {
             const optionKey = option.attributeName();
             if (this.getOptionValue(optionKey) === void 0 || ["default", "config", "env"].includes(
               this.getOptionValueSource(optionKey)
             )) {
               if (option.required || option.optional) {
-                this.emit(`optionEnv:${option.name()}`, process19.env[option.envVar]);
+                this.emit(`optionEnv:${option.name()}`, process16.env[option.envVar]);
               } else {
                 this.emit(`optionEnv:${option.name()}`);
               }
@@ -3221,24 +3221,24 @@ Expecting one of '${allowedValues.join("', '")}'`);
        */
       _getOutputContext(contextOptions) {
         contextOptions = contextOptions || {};
-        const error49 = !!contextOptions.error;
+        const error48 = !!contextOptions.error;
         let baseWrite;
-        let hasColors2;
+        let hasColors;
         let helpWidth;
-        if (error49) {
+        if (error48) {
           baseWrite = (str) => this._outputConfiguration.writeErr(str);
-          hasColors2 = this._outputConfiguration.getErrHasColors();
+          hasColors = this._outputConfiguration.getErrHasColors();
           helpWidth = this._outputConfiguration.getErrHelpWidth();
         } else {
           baseWrite = (str) => this._outputConfiguration.writeOut(str);
-          hasColors2 = this._outputConfiguration.getOutHasColors();
+          hasColors = this._outputConfiguration.getOutHasColors();
           helpWidth = this._outputConfiguration.getOutHelpWidth();
         }
         const write = (str) => {
-          if (!hasColors2) str = this._outputConfiguration.stripColor(str);
+          if (!hasColors) str = this._outputConfiguration.stripColor(str);
           return baseWrite(str);
         };
-        return { error: error49, write, hasColors: hasColors2, helpWidth };
+        return { error: error48, write, hasColors, helpWidth };
       }
       /**
        * Output help information for this command.
@@ -3342,7 +3342,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
        */
       help(contextOptions) {
         this.outputHelp(contextOptions);
-        let exitCode = Number(process19.exitCode ?? 0);
+        let exitCode = Number(process16.exitCode ?? 0);
         if (exitCode === 0 && contextOptions && typeof contextOptions !== "function" && contextOptions.error) {
           exitCode = 1;
         }
@@ -3432,9 +3432,9 @@ Expecting one of '${allowedValues.join("', '")}'`);
       });
     }
     function useColor() {
-      if (process19.env.NO_COLOR || process19.env.FORCE_COLOR === "0" || process19.env.FORCE_COLOR === "false")
+      if (process16.env.NO_COLOR || process16.env.FORCE_COLOR === "0" || process16.env.FORCE_COLOR === "false")
         return false;
-      if (process19.env.FORCE_COLOR || process19.env.CLICOLOR_FORCE !== void 0)
+      if (process16.env.FORCE_COLOR || process16.env.CLICOLOR_FORCE !== void 0)
         return true;
       return void 0;
     }
@@ -4399,9 +4399,9 @@ var require_utils = __commonJS({
       if (process.platform === "win32") {
         const pathHasInvalidWinCharacters = /[<>:"|?*]/.test(pth.replace(path23.parse(pth).root, ""));
         if (pathHasInvalidWinCharacters) {
-          const error49 = new Error(`Path contains invalid characters: ${pth}`);
-          error49.code = "EINVAL";
-          throw error49;
+          const error48 = new Error(`Path contains invalid characters: ${pth}`);
+          error48.code = "EINVAL";
+          throw error48;
         }
       }
     };
@@ -6123,13 +6123,13 @@ var require_text = __commonJS({
     "use strict";
     function asyncGeneratorStep(gen, resolve2, reject, _next, _throw, key, arg) {
       try {
-        var info2 = gen[key](arg);
-        var value = info2.value;
-      } catch (error49) {
-        reject(error49);
+        var info = gen[key](arg);
+        var value = info.value;
+      } catch (error48) {
+        reject(error48);
         return;
       }
-      if (info2.done) {
+      if (info.done) {
         resolve2(value);
       } else {
         Promise.resolve(value).then(_next, _throw);
@@ -6862,13 +6862,13 @@ var require_date = __commonJS({
     "use strict";
     function asyncGeneratorStep(gen, resolve2, reject, _next, _throw, key, arg) {
       try {
-        var info2 = gen[key](arg);
-        var value = info2.value;
-      } catch (error49) {
-        reject(error49);
+        var info = gen[key](arg);
+        var value = info.value;
+      } catch (error48) {
+        reject(error48);
         return;
       }
-      if (info2.done) {
+      if (info.done) {
         resolve2(value);
       } else {
         Promise.resolve(value).then(_next, _throw);
@@ -7088,13 +7088,13 @@ var require_number = __commonJS({
     "use strict";
     function asyncGeneratorStep(gen, resolve2, reject, _next, _throw, key, arg) {
       try {
-        var info2 = gen[key](arg);
-        var value = info2.value;
-      } catch (error49) {
-        reject(error49);
+        var info = gen[key](arg);
+        var value = info.value;
+      } catch (error48) {
+        reject(error48);
         return;
       }
-      if (info2.done) {
+      if (info.done) {
         resolve2(value);
       } else {
         Promise.resolve(value).then(_next, _throw);
@@ -7534,13 +7534,13 @@ var require_autocomplete = __commonJS({
     "use strict";
     function asyncGeneratorStep(gen, resolve2, reject, _next, _throw, key, arg) {
       try {
-        var info2 = gen[key](arg);
-        var value = info2.value;
-      } catch (error49) {
-        reject(error49);
+        var info = gen[key](arg);
+        var value = info.value;
+      } catch (error48) {
+        reject(error48);
         return;
       }
-      if (info2.done) {
+      if (info.done) {
         resolve2(value);
       } else {
         Promise.resolve(value).then(_next, _throw);
@@ -8188,13 +8188,13 @@ var require_dist = __commonJS({
     }
     function asyncGeneratorStep(gen, resolve2, reject, _next, _throw, key, arg) {
       try {
-        var info2 = gen[key](arg);
-        var value = info2.value;
-      } catch (error49) {
-        reject(error49);
+        var info = gen[key](arg);
+        var value = info.value;
+      } catch (error48) {
+        reject(error48);
         return;
       }
-      if (info2.done) {
+      if (info.done) {
         resolve2(value);
       } else {
         Promise.resolve(value).then(_next, _throw);
@@ -11182,7 +11182,7 @@ var init_mjs = __esm({
   "../node_modules/signal-exit/dist/mjs/index.js"() {
     "use strict";
     init_signals();
-    processOk = (process19) => !!process19 && typeof process19 === "object" && typeof process19.removeListener === "function" && typeof process19.emit === "function" && typeof process19.reallyExit === "function" && typeof process19.listeners === "function" && typeof process19.kill === "function" && typeof process19.pid === "number" && typeof process19.on === "function";
+    processOk = (process16) => !!process16 && typeof process16 === "object" && typeof process16.removeListener === "function" && typeof process16.emit === "function" && typeof process16.reallyExit === "function" && typeof process16.listeners === "function" && typeof process16.kill === "function" && typeof process16.pid === "number" && typeof process16.on === "function";
     kExitEmitter = /* @__PURE__ */ Symbol.for("signal-exit emitter");
     global2 = globalThis;
     ObjectDefineProperty = Object.defineProperty.bind(Object);
@@ -11275,15 +11275,15 @@ var init_mjs = __esm({
       #originalProcessReallyExit;
       #sigListeners = {};
       #loaded = false;
-      constructor(process19) {
+      constructor(process16) {
         super();
-        this.#process = process19;
+        this.#process = process16;
         this.#sigListeners = {};
         for (const sig of signals) {
           this.#sigListeners[sig] = () => {
             const listeners = this.#process.listeners(sig);
             let { count } = this.#emitter;
-            const p = process19;
+            const p = process16;
             if (typeof p.__signal_exit_emitter__ === "object" && typeof p.__signal_exit_emitter__.count === "number") {
               count += p.__signal_exit_emitter__.count;
             }
@@ -11292,12 +11292,12 @@ var init_mjs = __esm({
               const ret = this.#emitter.emit("exit", null, sig);
               const s = sig === "SIGHUP" ? this.#hupSig : sig;
               if (!ret)
-                process19.kill(process19.pid, s);
+                process16.kill(process16.pid, s);
             }
           };
         }
-        this.#originalProcessReallyExit = process19.reallyExit;
-        this.#originalProcessEmit = process19.emit;
+        this.#originalProcessReallyExit = process16.reallyExit;
+        this.#originalProcessEmit = process16.emit;
       }
       onExit(cb, opts) {
         if (!processOk(this.#process)) {
@@ -11722,17 +11722,17 @@ function assembleStyles() {
   styles.bgColor.ansi16m = wrapAnsi16m(ANSI_BACKGROUND_OFFSET);
   Object.defineProperties(styles, {
     rgbToAnsi256: {
-      value(red2, green2, blue2) {
-        if (red2 === green2 && green2 === blue2) {
-          if (red2 < 8) {
+      value(red, green, blue) {
+        if (red === green && green === blue) {
+          if (red < 8) {
             return 16;
           }
-          if (red2 > 248) {
+          if (red > 248) {
             return 231;
           }
-          return Math.round((red2 - 8) / 247 * 24) + 232;
+          return Math.round((red - 8) / 247 * 24) + 232;
         }
-        return 16 + 36 * Math.round(red2 / 255 * 5) + 6 * Math.round(green2 / 255 * 5) + Math.round(blue2 / 255 * 5);
+        return 16 + 36 * Math.round(red / 255 * 5) + 6 * Math.round(green / 255 * 5) + Math.round(blue / 255 * 5);
       },
       enumerable: false
     },
@@ -11769,25 +11769,25 @@ function assembleStyles() {
         if (code < 16) {
           return 90 + (code - 8);
         }
-        let red2;
-        let green2;
-        let blue2;
+        let red;
+        let green;
+        let blue;
         if (code >= 232) {
-          red2 = ((code - 232) * 10 + 8) / 255;
-          green2 = red2;
-          blue2 = red2;
+          red = ((code - 232) * 10 + 8) / 255;
+          green = red;
+          blue = red;
         } else {
           code -= 16;
           const remainder = code % 36;
-          red2 = Math.floor(code / 36) / 5;
-          green2 = Math.floor(remainder / 6) / 5;
-          blue2 = remainder % 6 / 5;
+          red = Math.floor(code / 36) / 5;
+          green = Math.floor(remainder / 6) / 5;
+          blue = remainder % 6 / 5;
         }
-        const value = Math.max(red2, green2, blue2) * 2;
+        const value = Math.max(red, green, blue) * 2;
         if (value === 0) {
           return 30;
         }
-        let result = 30 + (Math.round(blue2) << 2 | Math.round(green2) << 1 | Math.round(red2));
+        let result = 30 + (Math.round(blue) << 2 | Math.round(green) << 1 | Math.round(red));
         if (value === 2) {
           result += 60;
         }
@@ -11796,7 +11796,7 @@ function assembleStyles() {
       enumerable: false
     },
     rgbToAnsi: {
-      value: (red2, green2, blue2) => styles.ansi256ToAnsi(styles.rgbToAnsi256(red2, green2, blue2)),
+      value: (red, green, blue) => styles.ansi256ToAnsi(styles.rgbToAnsi256(red, green, blue)),
       enumerable: false
     },
     hexToAnsi: {
@@ -11813,7 +11813,7 @@ var init_ansi_styles = __esm({
     ANSI_BACKGROUND_OFFSET = 10;
     wrapAnsi16 = (offset = 0) => (code) => `\x1B[${code + offset}m`;
     wrapAnsi256 = (offset = 0) => (code) => `\x1B[${38 + offset};5;${code}m`;
-    wrapAnsi16m = (offset = 0) => (red2, green2, blue2) => `\x1B[${38 + offset};2;${red2};${green2};${blue2}m`;
+    wrapAnsi16m = (offset = 0) => (red, green, blue) => `\x1B[${38 + offset};2;${red};${green};${blue}m`;
     styles = {
       modifier: {
         reset: [0, 0],
@@ -12211,7 +12211,7 @@ function createLogUpdate(stream, { showCursor = false } = {}) {
   let previousLineCount = 0;
   let previousWidth = getWidth(stream);
   let previousOutput = "";
-  const reset2 = () => {
+  const reset = () => {
     previousOutput = "";
     previousWidth = getWidth(stream);
     previousLineCount = 0;
@@ -12233,10 +12233,10 @@ function createLogUpdate(stream, { showCursor = false } = {}) {
   };
   render.clear = () => {
     stream.write(base_exports.eraseLines(previousLineCount));
-    reset2();
+    reset();
   };
   render.done = () => {
-    reset2();
+    reset();
     if (!showCursor) {
       cli_cursor_default.show();
     }
@@ -13450,11 +13450,11 @@ var init_wrap_ansi2 = __esm({
             index += 2;
             continue;
           }
-          const red2 = codes[index + 2];
-          const green2 = codes[index + 3];
-          const blue2 = codes[index + 4];
-          if (mode === ANSI_SGR_COLOR_MODE_RGB && Number.isFinite(red2) && Number.isFinite(green2) && Number.isFinite(blue2)) {
-            sgrTokens.push([code, mode, red2, green2, blue2]);
+          const red = codes[index + 2];
+          const green = codes[index + 3];
+          const blue = codes[index + 4];
+          if (mode === ANSI_SGR_COLOR_MODE_RGB && Number.isFinite(red) && Number.isFinite(green) && Number.isFinite(blue)) {
+            sgrTokens.push([code, mode, red, green, blue]);
             index += 4;
             continue;
           }
@@ -14186,9 +14186,9 @@ var require_codegen = __commonJS({
       }
     };
     var Throw = class extends Node {
-      constructor(error49) {
+      constructor(error48) {
         super();
-        this.error = error49;
+        this.error = error48;
       }
       render({ _n }) {
         return `throw ${this.error};` + _n;
@@ -14425,9 +14425,9 @@ var require_codegen = __commonJS({
       }
     };
     var Catch = class extends BlockNode {
-      constructor(error49) {
+      constructor(error48) {
         super();
-        this.error = error49;
+        this.error = error48;
       }
       render(opts) {
         return `catch(${this.error})` + super.render(opts);
@@ -14618,9 +14618,9 @@ var require_codegen = __commonJS({
         this._blockNode(node);
         this.code(tryBody);
         if (catchCode) {
-          const error49 = this.name("e");
-          this._currNode = node.catch = new Catch(error49);
-          catchCode(error49);
+          const error48 = this.name("e");
+          this._currNode = node.catch = new Catch(error48);
+          catchCode(error48);
         }
         if (finallyCode) {
           this._currNode = node.finally = new Finally();
@@ -14629,8 +14629,8 @@ var require_codegen = __commonJS({
         return this._endBlockNode(Catch, Finally);
       }
       // `throw` statement
-      throw(error49) {
-        return this._leafNode(new Throw(error49));
+      throw(error48) {
+        return this._leafNode(new Throw(error48));
       }
       // start self-balancing block
       block(body, nodeCount) {
@@ -14986,10 +14986,10 @@ var require_errors = __commonJS({
     exports2.keyword$DataError = {
       message: ({ keyword, schemaType }) => schemaType ? (0, codegen_1.str)`"${keyword}" keyword must be ${schemaType} ($data)` : (0, codegen_1.str)`"${keyword}" keyword is invalid ($data)`
     };
-    function reportError(cxt, error49 = exports2.keywordError, errorPaths, overrideAllErrors) {
+    function reportError(cxt, error48 = exports2.keywordError, errorPaths, overrideAllErrors) {
       const { it } = cxt;
       const { gen, compositeRule, allErrors } = it;
-      const errObj = errorObjectCode(cxt, error49, errorPaths);
+      const errObj = errorObjectCode(cxt, error48, errorPaths);
       if (overrideAllErrors !== null && overrideAllErrors !== void 0 ? overrideAllErrors : compositeRule || allErrors) {
         addError(gen, errObj);
       } else {
@@ -14997,10 +14997,10 @@ var require_errors = __commonJS({
       }
     }
     exports2.reportError = reportError;
-    function reportExtraError(cxt, error49 = exports2.keywordError, errorPaths) {
+    function reportExtraError(cxt, error48 = exports2.keywordError, errorPaths) {
       const { it } = cxt;
       const { gen, compositeRule, allErrors } = it;
-      const errObj = errorObjectCode(cxt, error49, errorPaths);
+      const errObj = errorObjectCode(cxt, error48, errorPaths);
       addError(gen, errObj);
       if (!(compositeRule || allErrors)) {
         returnErrors(it, names_1.default.vErrors);
@@ -15051,19 +15051,19 @@ var require_errors = __commonJS({
       schema: new codegen_1.Name("schema"),
       parentSchema: new codegen_1.Name("parentSchema")
     };
-    function errorObjectCode(cxt, error49, errorPaths) {
+    function errorObjectCode(cxt, error48, errorPaths) {
       const { createErrors } = cxt.it;
       if (createErrors === false)
         return (0, codegen_1._)`{}`;
-      return errorObject(cxt, error49, errorPaths);
+      return errorObject(cxt, error48, errorPaths);
     }
-    function errorObject(cxt, error49, errorPaths = {}) {
+    function errorObject(cxt, error48, errorPaths = {}) {
       const { gen, it } = cxt;
       const keyValues = [
         errorInstancePath(it, errorPaths),
         errorSchemaPath(cxt, errorPaths)
       ];
-      extraErrorProps(cxt, error49, keyValues);
+      extraErrorProps(cxt, error48, keyValues);
       return gen.object(...keyValues);
     }
     function errorInstancePath({ errorPath }, { instancePath }) {
@@ -17932,10 +17932,10 @@ var require_core = __commonJS({
         return this;
       }
       // Add format
-      addFormat(name, format3) {
-        if (typeof format3 == "string")
-          format3 = new RegExp(format3);
-        this.formats[name] = format3;
+      addFormat(name, format2) {
+        if (typeof format2 == "string")
+          format2 = new RegExp(format2);
+        this.formats[name] = format2;
         return this;
       }
       errorsText(errors = this.errors, { separator = ", ", dataVar = "data" } = {}) {
@@ -18053,9 +18053,9 @@ var require_core = __commonJS({
     }
     function addInitialFormats() {
       for (const name in this.opts.formats) {
-        const format3 = this.opts.formats[name];
-        if (format3)
-          this.addFormat(name, format3);
+        const format2 = this.opts.formats[name];
+        if (format2)
+          this.addFormat(name, format2);
       }
     }
     function addInitialKeywords(defs) {
@@ -18331,7 +18331,7 @@ var require_limitNumber = __commonJS({
       exclusiveMaximum: { okStr: "<", ok: ops.LT, fail: ops.GTE },
       exclusiveMinimum: { okStr: ">", ok: ops.GT, fail: ops.LTE }
     };
-    var error49 = {
+    var error48 = {
       message: ({ keyword, schemaCode }) => (0, codegen_1.str)`must be ${KWDs[keyword].okStr} ${schemaCode}`,
       params: ({ keyword, schemaCode }) => (0, codegen_1._)`{comparison: ${KWDs[keyword].okStr}, limit: ${schemaCode}}`
     };
@@ -18340,7 +18340,7 @@ var require_limitNumber = __commonJS({
       type: "number",
       schemaType: "number",
       $data: true,
-      error: error49,
+      error: error48,
       code(cxt) {
         const { keyword, data, schemaCode } = cxt;
         cxt.fail$data((0, codegen_1._)`${data} ${KWDs[keyword].fail} ${schemaCode} || isNaN(${data})`);
@@ -18356,7 +18356,7 @@ var require_multipleOf = __commonJS({
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
-    var error49 = {
+    var error48 = {
       message: ({ schemaCode }) => (0, codegen_1.str)`must be multiple of ${schemaCode}`,
       params: ({ schemaCode }) => (0, codegen_1._)`{multipleOf: ${schemaCode}}`
     };
@@ -18365,7 +18365,7 @@ var require_multipleOf = __commonJS({
       type: "number",
       schemaType: "number",
       $data: true,
-      error: error49,
+      error: error48,
       code(cxt) {
         const { gen, data, schemaCode, it } = cxt;
         const prec = it.opts.multipleOfPrecision;
@@ -18412,7 +18412,7 @@ var require_limitLength = __commonJS({
     var codegen_1 = require_codegen();
     var util_1 = require_util3();
     var ucs2length_1 = require_ucs2length();
-    var error49 = {
+    var error48 = {
       message({ keyword, schemaCode }) {
         const comp = keyword === "maxLength" ? "more" : "fewer";
         return (0, codegen_1.str)`must NOT have ${comp} than ${schemaCode} characters`;
@@ -18424,7 +18424,7 @@ var require_limitLength = __commonJS({
       type: "string",
       schemaType: "number",
       $data: true,
-      error: error49,
+      error: error48,
       code(cxt) {
         const { keyword, data, schemaCode, it } = cxt;
         const op = keyword === "maxLength" ? codegen_1.operators.GT : codegen_1.operators.LT;
@@ -18444,7 +18444,7 @@ var require_pattern = __commonJS({
     var code_1 = require_code2();
     var util_1 = require_util3();
     var codegen_1 = require_codegen();
-    var error49 = {
+    var error48 = {
       message: ({ schemaCode }) => (0, codegen_1.str)`must match pattern "${schemaCode}"`,
       params: ({ schemaCode }) => (0, codegen_1._)`{pattern: ${schemaCode}}`
     };
@@ -18453,7 +18453,7 @@ var require_pattern = __commonJS({
       type: "string",
       schemaType: "string",
       $data: true,
-      error: error49,
+      error: error48,
       code(cxt) {
         const { gen, data, $data, schema, schemaCode, it } = cxt;
         const u = it.opts.unicodeRegExp ? "u" : "";
@@ -18479,7 +18479,7 @@ var require_limitProperties = __commonJS({
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
-    var error49 = {
+    var error48 = {
       message({ keyword, schemaCode }) {
         const comp = keyword === "maxProperties" ? "more" : "fewer";
         return (0, codegen_1.str)`must NOT have ${comp} than ${schemaCode} properties`;
@@ -18491,7 +18491,7 @@ var require_limitProperties = __commonJS({
       type: "object",
       schemaType: "number",
       $data: true,
-      error: error49,
+      error: error48,
       code(cxt) {
         const { keyword, data, schemaCode } = cxt;
         const op = keyword === "maxProperties" ? codegen_1.operators.GT : codegen_1.operators.LT;
@@ -18510,7 +18510,7 @@ var require_required = __commonJS({
     var code_1 = require_code2();
     var codegen_1 = require_codegen();
     var util_1 = require_util3();
-    var error49 = {
+    var error48 = {
       message: ({ params: { missingProperty } }) => (0, codegen_1.str)`must have required property '${missingProperty}'`,
       params: ({ params: { missingProperty } }) => (0, codegen_1._)`{missingProperty: ${missingProperty}}`
     };
@@ -18519,7 +18519,7 @@ var require_required = __commonJS({
       type: "object",
       schemaType: "array",
       $data: true,
-      error: error49,
+      error: error48,
       code(cxt) {
         const { gen, schema, schemaCode, data, $data, it } = cxt;
         const { opts } = it;
@@ -18590,7 +18590,7 @@ var require_limitItems = __commonJS({
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
-    var error49 = {
+    var error48 = {
       message({ keyword, schemaCode }) {
         const comp = keyword === "maxItems" ? "more" : "fewer";
         return (0, codegen_1.str)`must NOT have ${comp} than ${schemaCode} items`;
@@ -18602,7 +18602,7 @@ var require_limitItems = __commonJS({
       type: "array",
       schemaType: "number",
       $data: true,
-      error: error49,
+      error: error48,
       code(cxt) {
         const { keyword, data, schemaCode } = cxt;
         const op = keyword === "maxItems" ? codegen_1.operators.GT : codegen_1.operators.LT;
@@ -18633,7 +18633,7 @@ var require_uniqueItems = __commonJS({
     var codegen_1 = require_codegen();
     var util_1 = require_util3();
     var equal_1 = require_equal();
-    var error49 = {
+    var error48 = {
       message: ({ params: { i, j } }) => (0, codegen_1.str)`must NOT have duplicate items (items ## ${j} and ${i} are identical)`,
       params: ({ params: { i, j } }) => (0, codegen_1._)`{i: ${i}, j: ${j}}`
     };
@@ -18642,7 +18642,7 @@ var require_uniqueItems = __commonJS({
       type: "array",
       schemaType: "boolean",
       $data: true,
-      error: error49,
+      error: error48,
       code(cxt) {
         const { gen, data, $data, schema, parentSchema, schemaCode, it } = cxt;
         if (!$data && !schema)
@@ -18699,14 +18699,14 @@ var require_const = __commonJS({
     var codegen_1 = require_codegen();
     var util_1 = require_util3();
     var equal_1 = require_equal();
-    var error49 = {
+    var error48 = {
       message: "must be equal to constant",
       params: ({ schemaCode }) => (0, codegen_1._)`{allowedValue: ${schemaCode}}`
     };
     var def = {
       keyword: "const",
       $data: true,
-      error: error49,
+      error: error48,
       code(cxt) {
         const { gen, data, $data, schemaCode, schema } = cxt;
         if ($data || schema && typeof schema == "object") {
@@ -18728,7 +18728,7 @@ var require_enum = __commonJS({
     var codegen_1 = require_codegen();
     var util_1 = require_util3();
     var equal_1 = require_equal();
-    var error49 = {
+    var error48 = {
       message: "must be equal to one of the allowed values",
       params: ({ schemaCode }) => (0, codegen_1._)`{allowedValues: ${schemaCode}}`
     };
@@ -18736,7 +18736,7 @@ var require_enum = __commonJS({
       keyword: "enum",
       schemaType: "array",
       $data: true,
-      error: error49,
+      error: error48,
       code(cxt) {
         const { gen, data, $data, schema, schemaCode, it } = cxt;
         if (!$data && schema.length === 0)
@@ -18815,7 +18815,7 @@ var require_additionalItems = __commonJS({
     exports2.validateAdditionalItems = void 0;
     var codegen_1 = require_codegen();
     var util_1 = require_util3();
-    var error49 = {
+    var error48 = {
       message: ({ params: { len } }) => (0, codegen_1.str)`must NOT have more than ${len} items`,
       params: ({ params: { len } }) => (0, codegen_1._)`{limit: ${len}}`
     };
@@ -18824,7 +18824,7 @@ var require_additionalItems = __commonJS({
       type: "array",
       schemaType: ["boolean", "object"],
       before: "uniqueItems",
-      error: error49,
+      error: error48,
       code(cxt) {
         const { parentSchema, it } = cxt;
         const { items } = parentSchema;
@@ -18943,7 +18943,7 @@ var require_items2020 = __commonJS({
     var util_1 = require_util3();
     var code_1 = require_code2();
     var additionalItems_1 = require_additionalItems();
-    var error49 = {
+    var error48 = {
       message: ({ params: { len } }) => (0, codegen_1.str)`must NOT have more than ${len} items`,
       params: ({ params: { len } }) => (0, codegen_1._)`{limit: ${len}}`
     };
@@ -18952,7 +18952,7 @@ var require_items2020 = __commonJS({
       type: "array",
       schemaType: ["object", "boolean"],
       before: "uniqueItems",
-      error: error49,
+      error: error48,
       code(cxt) {
         const { schema, parentSchema, it } = cxt;
         const { prefixItems } = parentSchema;
@@ -18976,7 +18976,7 @@ var require_contains = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
     var util_1 = require_util3();
-    var error49 = {
+    var error48 = {
       message: ({ params: { min, max } }) => max === void 0 ? (0, codegen_1.str)`must contain at least ${min} valid item(s)` : (0, codegen_1.str)`must contain at least ${min} and no more than ${max} valid item(s)`,
       params: ({ params: { min, max } }) => max === void 0 ? (0, codegen_1._)`{minContains: ${min}}` : (0, codegen_1._)`{minContains: ${min}, maxContains: ${max}}`
     };
@@ -18986,7 +18986,7 @@ var require_contains = __commonJS({
       schemaType: ["object", "boolean"],
       before: "uniqueItems",
       trackErrors: true,
-      error: error49,
+      error: error48,
       code(cxt) {
         const { gen, schema, parentSchema, data, it } = cxt;
         let min;
@@ -19164,7 +19164,7 @@ var require_propertyNames = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
     var util_1 = require_util3();
-    var error49 = {
+    var error48 = {
       message: "property name must be valid",
       params: ({ params }) => (0, codegen_1._)`{propertyName: ${params.propertyName}}`
     };
@@ -19172,7 +19172,7 @@ var require_propertyNames = __commonJS({
       keyword: "propertyNames",
       type: "object",
       schemaType: ["object", "boolean"],
-      error: error49,
+      error: error48,
       code(cxt) {
         const { gen, schema, data, it } = cxt;
         if ((0, util_1.alwaysValidSchema)(it, schema))
@@ -19209,7 +19209,7 @@ var require_additionalProperties = __commonJS({
     var codegen_1 = require_codegen();
     var names_1 = require_names();
     var util_1 = require_util3();
-    var error49 = {
+    var error48 = {
       message: "must NOT have additional properties",
       params: ({ params }) => (0, codegen_1._)`{additionalProperty: ${params.additionalProperty}}`
     };
@@ -19219,7 +19219,7 @@ var require_additionalProperties = __commonJS({
       schemaType: ["boolean", "object"],
       allowUndefined: true,
       trackErrors: true,
-      error: error49,
+      error: error48,
       code(cxt) {
         const { gen, schema, parentSchema, data, errsCount, it } = cxt;
         if (!errsCount)
@@ -19493,7 +19493,7 @@ var require_oneOf = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
     var util_1 = require_util3();
-    var error49 = {
+    var error48 = {
       message: "must match exactly one schema in oneOf",
       params: ({ params }) => (0, codegen_1._)`{passingSchemas: ${params.passing}}`
     };
@@ -19501,7 +19501,7 @@ var require_oneOf = __commonJS({
       keyword: "oneOf",
       schemaType: "array",
       trackErrors: true,
-      error: error49,
+      error: error48,
       code(cxt) {
         const { gen, schema, parentSchema, it } = cxt;
         if (!Array.isArray(schema))
@@ -19578,7 +19578,7 @@ var require_if = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
     var util_1 = require_util3();
-    var error49 = {
+    var error48 = {
       message: ({ params }) => (0, codegen_1.str)`must match "${params.ifClause}" schema`,
       params: ({ params }) => (0, codegen_1._)`{failingKeyword: ${params.ifClause}}`
     };
@@ -19586,7 +19586,7 @@ var require_if = __commonJS({
       keyword: "if",
       schemaType: ["object", "boolean"],
       trackErrors: true,
-      error: error49,
+      error: error48,
       code(cxt) {
         const { gen, parentSchema, it } = cxt;
         if (parentSchema.then === void 0 && parentSchema.else === void 0) {
@@ -19712,7 +19712,7 @@ var require_format = __commonJS({
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
-    var error49 = {
+    var error48 = {
       message: ({ schemaCode }) => (0, codegen_1.str)`must match format "${schemaCode}"`,
       params: ({ schemaCode }) => (0, codegen_1._)`{format: ${schemaCode}}`
     };
@@ -19721,7 +19721,7 @@ var require_format = __commonJS({
       type: ["number", "string"],
       schemaType: "string",
       $data: true,
-      error: error49,
+      error: error48,
       code(cxt, ruleType) {
         const { gen, data, $data, schema, schemaCode, it } = cxt;
         const { opts, errSchemaPath, schemaEnv, self } = it;
@@ -19738,18 +19738,18 @@ var require_format = __commonJS({
           });
           const fDef = gen.const("fDef", (0, codegen_1._)`${fmts}[${schemaCode}]`);
           const fType = gen.let("fType");
-          const format3 = gen.let("format");
-          gen.if((0, codegen_1._)`typeof ${fDef} == "object" && !(${fDef} instanceof RegExp)`, () => gen.assign(fType, (0, codegen_1._)`${fDef}.type || "string"`).assign(format3, (0, codegen_1._)`${fDef}.validate`), () => gen.assign(fType, (0, codegen_1._)`"string"`).assign(format3, fDef));
+          const format2 = gen.let("format");
+          gen.if((0, codegen_1._)`typeof ${fDef} == "object" && !(${fDef} instanceof RegExp)`, () => gen.assign(fType, (0, codegen_1._)`${fDef}.type || "string"`).assign(format2, (0, codegen_1._)`${fDef}.validate`), () => gen.assign(fType, (0, codegen_1._)`"string"`).assign(format2, fDef));
           cxt.fail$data((0, codegen_1.or)(unknownFmt(), invalidFmt()));
           function unknownFmt() {
             if (opts.strictSchema === false)
               return codegen_1.nil;
-            return (0, codegen_1._)`${schemaCode} && !${format3}`;
+            return (0, codegen_1._)`${schemaCode} && !${format2}`;
           }
           function invalidFmt() {
-            const callFormat = schemaEnv.$async ? (0, codegen_1._)`(${fDef}.async ? await ${format3}(${data}) : ${format3}(${data}))` : (0, codegen_1._)`${format3}(${data})`;
-            const validData = (0, codegen_1._)`(typeof ${format3} == "function" ? ${callFormat} : ${format3}.test(${data}))`;
-            return (0, codegen_1._)`${format3} && ${format3} !== true && ${fType} === ${ruleType} && !${validData}`;
+            const callFormat = schemaEnv.$async ? (0, codegen_1._)`(${fDef}.async ? await ${format2}(${data}) : ${format2}(${data}))` : (0, codegen_1._)`${format2}(${data})`;
+            const validData = (0, codegen_1._)`(typeof ${format2} == "function" ? ${callFormat} : ${format2}.test(${data}))`;
+            return (0, codegen_1._)`${format2} && ${format2} !== true && ${fType} === ${ruleType} && !${validData}`;
           }
         }
         function validateFormat() {
@@ -19760,7 +19760,7 @@ var require_format = __commonJS({
           }
           if (formatDef === true)
             return;
-          const [fmtType, format3, fmtRef] = getFormat(formatDef);
+          const [fmtType, format2, fmtRef] = getFormat(formatDef);
           if (fmtType === ruleType)
             cxt.pass(validCondition());
           function unknownFormat() {
@@ -19787,7 +19787,7 @@ var require_format = __commonJS({
                 throw new Error("async format in sync schema");
               return (0, codegen_1._)`await ${fmtRef}(${data})`;
             }
-            return typeof format3 == "function" ? (0, codegen_1._)`${fmtRef}(${data})` : (0, codegen_1._)`${fmtRef}.test(${data})`;
+            return typeof format2 == "function" ? (0, codegen_1._)`${fmtRef}(${data})` : (0, codegen_1._)`${fmtRef}.test(${data})`;
           }
         }
       }
@@ -19802,8 +19802,8 @@ var require_format2 = __commonJS({
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var format_1 = require_format();
-    var format3 = [format_1.default];
-    exports2.default = format3;
+    var format2 = [format_1.default];
+    exports2.default = format2;
   }
 });
 
@@ -19876,7 +19876,7 @@ var require_discriminator = __commonJS({
     var compile_1 = require_compile();
     var ref_error_1 = require_ref_error();
     var util_1 = require_util3();
-    var error49 = {
+    var error48 = {
       message: ({ params: { discrError, tagName } }) => discrError === types_1.DiscrError.Tag ? `tag "${tagName}" must be string` : `value of tag "${tagName}" must be in oneOf`,
       params: ({ params: { discrError, tag, tagName } }) => (0, codegen_1._)`{error: ${discrError}, tag: ${tagName}, tagValue: ${tag}}`
     };
@@ -19884,7 +19884,7 @@ var require_discriminator = __commonJS({
       keyword: "discriminator",
       type: "object",
       schemaType: "object",
-      error: error49,
+      error: error48,
       code(cxt) {
         const { gen, data, schema, parentSchema, it } = cxt;
         const { oneOf } = parentSchema;
@@ -20380,7 +20380,7 @@ var require_limit = __commonJS({
       formatExclusiveMaximum: { okStr: "<", ok: ops.LT, fail: ops.GTE },
       formatExclusiveMinimum: { okStr: ">", ok: ops.GT, fail: ops.LTE }
     };
-    var error49 = {
+    var error48 = {
       message: ({ keyword, schemaCode }) => codegen_1.str`should be ${KWDs[keyword].okStr} ${schemaCode}`,
       params: ({ keyword, schemaCode }) => codegen_1._`{comparison: ${KWDs[keyword].okStr}, limit: ${schemaCode}}`
     };
@@ -20389,7 +20389,7 @@ var require_limit = __commonJS({
       type: "string",
       schemaType: "string",
       $data: true,
-      error: error49,
+      error: error48,
       code(cxt) {
         const { gen, data, schemaCode, keyword, it } = cxt;
         const { opts, self } = it;
@@ -20409,17 +20409,17 @@ var require_limit = __commonJS({
           cxt.fail$data(codegen_1.or(codegen_1._`typeof ${fmt} != "object"`, codegen_1._`${fmt} instanceof RegExp`, codegen_1._`typeof ${fmt}.compare != "function"`, compareCode(fmt)));
         }
         function validateFormat() {
-          const format3 = fCxt.schema;
-          const fmtDef = self.formats[format3];
+          const format2 = fCxt.schema;
+          const fmtDef = self.formats[format2];
           if (!fmtDef || fmtDef === true)
             return;
           if (typeof fmtDef != "object" || fmtDef instanceof RegExp || typeof fmtDef.compare != "function") {
-            throw new Error(`"${keyword}": format "${format3}" does not define "compare" function`);
+            throw new Error(`"${keyword}": format "${format2}" does not define "compare" function`);
           }
           const fmt = gen.scopeValue("formats", {
-            key: format3,
+            key: format2,
             ref: fmtDef,
-            code: opts.code.formats ? codegen_1._`${opts.code.formats}${codegen_1.getProperty(format3)}` : void 0
+            code: opts.code.formats ? codegen_1._`${opts.code.formats}${codegen_1.getProperty(format2)}` : void 0
           });
           cxt.fail$data(compareCode(fmt));
         }
@@ -26999,45 +26999,45 @@ var require_esprima = __commonJS({
                 this.errors = [];
                 this.tolerant = false;
               }
-              ErrorHandler2.prototype.recordError = function(error49) {
-                this.errors.push(error49);
+              ErrorHandler2.prototype.recordError = function(error48) {
+                this.errors.push(error48);
               };
-              ErrorHandler2.prototype.tolerate = function(error49) {
+              ErrorHandler2.prototype.tolerate = function(error48) {
                 if (this.tolerant) {
-                  this.recordError(error49);
+                  this.recordError(error48);
                 } else {
-                  throw error49;
+                  throw error48;
                 }
               };
               ErrorHandler2.prototype.constructError = function(msg, column) {
-                var error49 = new Error(msg);
+                var error48 = new Error(msg);
                 try {
-                  throw error49;
+                  throw error48;
                 } catch (base) {
                   if (Object.create && Object.defineProperty) {
-                    error49 = Object.create(base);
-                    Object.defineProperty(error49, "column", { value: column });
+                    error48 = Object.create(base);
+                    Object.defineProperty(error48, "column", { value: column });
                   }
                 }
-                return error49;
+                return error48;
               };
               ErrorHandler2.prototype.createError = function(index, line, col, description) {
                 var msg = "Line " + line + ": " + description;
-                var error49 = this.constructError(msg, col);
-                error49.index = index;
-                error49.lineNumber = line;
-                error49.description = description;
-                return error49;
+                var error48 = this.constructError(msg, col);
+                error48.index = index;
+                error48.lineNumber = line;
+                error48.description = description;
+                return error48;
               };
               ErrorHandler2.prototype.throwError = function(index, line, col, description) {
                 throw this.createError(index, line, col, description);
               };
               ErrorHandler2.prototype.tolerateError = function(index, line, col, description) {
-                var error49 = this.createError(index, line, col, description);
+                var error48 = this.createError(index, line, col, description);
                 if (this.tolerant) {
-                  this.recordError(error49);
+                  this.recordError(error48);
                 } else {
-                  throw error49;
+                  throw error48;
                 }
               };
               return ErrorHandler2;
@@ -29980,19 +29980,19 @@ var require_parse2 = __commonJS({
     );
     var transform2 = (k, { value, context = {} }) => reviver ? reviver(k, value, context) : value;
     var unexpected = () => {
-      const error49 = new SyntaxError(`Unexpected token '${current.value.slice(0, 1)}', "${current_code}" is not valid JSON`);
-      Object.assign(error49, current.loc.start);
+      const error48 = new SyntaxError(`Unexpected token '${current.value.slice(0, 1)}', "${current_code}" is not valid JSON`);
+      Object.assign(error48, current.loc.start);
       free();
-      throw error49;
+      throw error48;
     };
     var unexpected_end = () => {
-      const error49 = new SyntaxError("Unexpected end of JSON input");
-      Object.assign(error49, last ? last.loc.end : {
+      const error48 = new SyntaxError("Unexpected end of JSON input");
+      Object.assign(error48, last ? last.loc.end : {
         line: 1,
         column: 0
       });
       free();
-      throw error49;
+      throw error48;
     };
     var next = () => {
       const new_token = tokens[++index];
@@ -30512,17 +30512,17 @@ function assembleStyles2() {
   styles2.bgColor.ansi16m = wrapAnsi16m2(ANSI_BACKGROUND_OFFSET2);
   Object.defineProperties(styles2, {
     rgbToAnsi256: {
-      value(red2, green2, blue2) {
-        if (red2 === green2 && green2 === blue2) {
-          if (red2 < 8) {
+      value(red, green, blue) {
+        if (red === green && green === blue) {
+          if (red < 8) {
             return 16;
           }
-          if (red2 > 248) {
+          if (red > 248) {
             return 231;
           }
-          return Math.round((red2 - 8) / 247 * 24) + 232;
+          return Math.round((red - 8) / 247 * 24) + 232;
         }
-        return 16 + 36 * Math.round(red2 / 255 * 5) + 6 * Math.round(green2 / 255 * 5) + Math.round(blue2 / 255 * 5);
+        return 16 + 36 * Math.round(red / 255 * 5) + 6 * Math.round(green / 255 * 5) + Math.round(blue / 255 * 5);
       },
       enumerable: false
     },
@@ -30559,25 +30559,25 @@ function assembleStyles2() {
         if (code < 16) {
           return 90 + (code - 8);
         }
-        let red2;
-        let green2;
-        let blue2;
+        let red;
+        let green;
+        let blue;
         if (code >= 232) {
-          red2 = ((code - 232) * 10 + 8) / 255;
-          green2 = red2;
-          blue2 = red2;
+          red = ((code - 232) * 10 + 8) / 255;
+          green = red;
+          blue = red;
         } else {
           code -= 16;
           const remainder = code % 36;
-          red2 = Math.floor(code / 36) / 5;
-          green2 = Math.floor(remainder / 6) / 5;
-          blue2 = remainder % 6 / 5;
+          red = Math.floor(code / 36) / 5;
+          green = Math.floor(remainder / 6) / 5;
+          blue = remainder % 6 / 5;
         }
-        const value = Math.max(red2, green2, blue2) * 2;
+        const value = Math.max(red, green, blue) * 2;
         if (value === 0) {
           return 30;
         }
-        let result = 30 + (Math.round(blue2) << 2 | Math.round(green2) << 1 | Math.round(red2));
+        let result = 30 + (Math.round(blue) << 2 | Math.round(green) << 1 | Math.round(red));
         if (value === 2) {
           result += 60;
         }
@@ -30586,7 +30586,7 @@ function assembleStyles2() {
       enumerable: false
     },
     rgbToAnsi: {
-      value: (red2, green2, blue2) => styles2.ansi256ToAnsi(styles2.rgbToAnsi256(red2, green2, blue2)),
+      value: (red, green, blue) => styles2.ansi256ToAnsi(styles2.rgbToAnsi256(red, green, blue)),
       enumerable: false
     },
     hexToAnsi: {
@@ -30603,7 +30603,7 @@ var init_ansi_styles2 = __esm({
     ANSI_BACKGROUND_OFFSET2 = 10;
     wrapAnsi162 = (offset = 0) => (code) => `\x1B[${code + offset}m`;
     wrapAnsi2562 = (offset = 0) => (code) => `\x1B[${38 + offset};5;${code}m`;
-    wrapAnsi16m2 = (offset = 0) => (red2, green2, blue2) => `\x1B[${38 + offset};2;${red2};${green2};${blue2}m`;
+    wrapAnsi16m2 = (offset = 0) => (red, green, blue) => `\x1B[${38 + offset};2;${red};${green};${blue}m`;
     styles2 = {
       modifier: {
         reset: [0, 0],
@@ -31118,9 +31118,9 @@ var require_main = __commonJS({
           const attrs = _instructions(result, key);
           decrypted = DotenvModule.decrypt(attrs.ciphertext, attrs.key);
           break;
-        } catch (error49) {
+        } catch (error48) {
           if (i + 1 >= length) {
-            throw error49;
+            throw error48;
           }
         }
       }
@@ -31148,13 +31148,13 @@ var require_main = __commonJS({
       let uri;
       try {
         uri = new URL(dotenvKey);
-      } catch (error49) {
-        if (error49.code === "ERR_INVALID_URL") {
+      } catch (error48) {
+        if (error48.code === "ERR_INVALID_URL") {
           const err = new Error("INVALID_DOTENV_KEY: Wrong format. Must be in valid uri format like dotenv://:key_1234@dotenvx.com/vault/.env.vault?environment=development");
           err.code = "INVALID_DOTENV_KEY";
           throw err;
         }
-        throw error49;
+        throw error48;
       }
       const key = uri.password;
       if (!key) {
@@ -31298,10 +31298,10 @@ var require_main = __commonJS({
         const aesgcm = crypto2.createDecipheriv("aes-256-gcm", key, nonce);
         aesgcm.setAuthTag(authTag);
         return `${aesgcm.update(ciphertext)}${aesgcm.final()}`;
-      } catch (error49) {
-        const isRange = error49 instanceof RangeError;
-        const invalidKeyLength = error49.message === "Invalid key length";
-        const decryptionFailed = error49.message === "Unsupported state or unable to authenticate data";
+      } catch (error48) {
+        const isRange = error48 instanceof RangeError;
+        const invalidKeyLength = error48.message === "Invalid key length";
+        const decryptionFailed = error48.message === "Unsupported state or unable to authenticate data";
         if (isRange || invalidKeyLength) {
           const err = new Error("INVALID_DOTENV_KEY: It must be 64 characters long (or more)");
           err.code = "INVALID_DOTENV_KEY";
@@ -31311,7 +31311,7 @@ var require_main = __commonJS({
           err.code = "DECRYPTION_FAILED";
           throw err;
         } else {
-          throw error49;
+          throw error48;
         }
       }
     }
@@ -31461,7 +31461,7 @@ var require_string_width = __commonJS({
     var stripAnsi2 = require_strip_ansi();
     var isFullwidthCodePoint2 = require_is_fullwidth_code_point();
     var emojiRegex = require_emoji_regex();
-    var stringWidth5 = (string4) => {
+    var stringWidth4 = (string4) => {
       if (typeof string4 !== "string" || string4.length === 0) {
         return 0;
       }
@@ -31486,8 +31486,8 @@ var require_string_width = __commonJS({
       }
       return width;
     };
-    module2.exports = stringWidth5;
-    module2.exports.default = stringWidth5;
+    module2.exports = stringWidth4;
+    module2.exports.default = stringWidth4;
   }
 });
 
@@ -31495,7 +31495,7 @@ var require_string_width = __commonJS({
 var require_utils4 = __commonJS({
   "../node_modules/cli-table3/src/utils.js"(exports2, module2) {
     "use strict";
-    var stringWidth5 = require_string_width();
+    var stringWidth4 = require_string_width();
     function codeRegex(capture) {
       return capture ? /\u001b\[((?:\d*;){0,5}\d*)m/g : /\u001b\[(?:\d*;){0,5}\d*m/g;
     }
@@ -31504,7 +31504,7 @@ var require_utils4 = __commonJS({
       let stripped = ("" + str).replace(code, "");
       let split = stripped.split("\n");
       return split.reduce(function(memo, s) {
-        return stringWidth5(s) > memo ? stringWidth5(s) : memo;
+        return stringWidth4(s) > memo ? stringWidth4(s) : memo;
       }, 0);
     }
     function repeat(str, times) {
@@ -31564,9 +31564,9 @@ var require_utils4 = __commonJS({
         }
         return;
       }
-      let info2 = codeCache[controlChars[0]];
-      if (info2) {
-        state[info2.set] = info2.to;
+      let info = codeCache[controlChars[0]];
+      if (info) {
+        state[info.set] = info.to;
       }
     }
     function readState(line) {
@@ -32468,7 +32468,7 @@ var require_safe = __commonJS({
 var require_cell = __commonJS({
   "../node_modules/cli-table3/src/cell.js"(exports2, module2) {
     "use strict";
-    var { info: info2, debug } = require_debug2();
+    var { info, debug } = require_debug2();
     var utils = require_utils4();
     var Cell = class _Cell {
       /**
@@ -32585,7 +32585,7 @@ var require_cell = __commonJS({
         if (lineNum == "bottom") return this.drawBottom(this.drawRight);
         let content = utils.truncate(this.content, 10, this.truncate);
         if (!lineNum) {
-          info2(`${this.y}-${this.x}: ${this.rowSpan - lineNum}x${this.colSpan} Cell ${content}`);
+          info(`${this.y}-${this.x}: ${this.rowSpan - lineNum}x${this.colSpan} Cell ${content}`);
         } else {
         }
         let padLen = Math.max(this.height - this.lines.length, 0);
@@ -33454,7 +33454,7 @@ var require_string_width2 = __commonJS({
     var stripAnsi2 = require_strip_ansi2();
     var isFullwidthCodePoint2 = require_is_fullwidth_code_point2();
     var emojiRegex = require_emoji_regex2();
-    var stringWidth5 = (string4) => {
+    var stringWidth4 = (string4) => {
       if (typeof string4 !== "string" || string4.length === 0) {
         return 0;
       }
@@ -33479,8 +33479,8 @@ var require_string_width2 = __commonJS({
       }
       return width;
     };
-    module2.exports = stringWidth5;
-    module2.exports.default = stringWidth5;
+    module2.exports = stringWidth4;
+    module2.exports.default = stringWidth4;
   }
 });
 
@@ -33488,7 +33488,7 @@ var require_string_width2 = __commonJS({
 var require_ansi_align = __commonJS({
   "../node_modules/ansi-align/index.js"(exports2, module2) {
     "use strict";
-    var stringWidth5 = require_string_width2();
+    var stringWidth4 = require_string_width2();
     function ansiAlign2(text, opts) {
       if (!text) return text;
       opts = opts || {};
@@ -33506,7 +33506,7 @@ var require_ansi_align = __commonJS({
       let maxWidth = 0;
       text = text.map(function(str) {
         str = String(str);
-        width = stringWidth5(str);
+        width = stringWidth4(str);
         maxWidth = Math.max(width, maxWidth);
         return {
           str,
@@ -33567,11 +33567,11 @@ function boxen(text, options) {
   text = makeContentText(text, options);
   return boxContent(text, options.width, options);
 }
-var import_node_process15, import_cli_boxes, import_ansi_align, import_cli_boxes2, NEWLINE, PAD, NONE, terminalColumns, getObject, getBorderWidth, getBorderChars, makeTitle, makeContentText, boxContent, sanitizeOptions, formatTitle, determineDimensions, isHex, isColorValid, getColorFunction, getBGColorFunction;
+var import_node_process12, import_cli_boxes, import_ansi_align, import_cli_boxes2, NEWLINE, PAD, NONE, terminalColumns, getObject, getBorderWidth, getBorderChars, makeTitle, makeContentText, boxContent, sanitizeOptions, formatTitle, determineDimensions, isHex, isColorValid, getColorFunction, getBGColorFunction;
 var init_boxen = __esm({
   "../node_modules/boxen/index.js"() {
     "use strict";
-    import_node_process15 = __toESM(require("process"), 1);
+    import_node_process12 = __toESM(require("process"), 1);
     init_string_width();
     init_source();
     init_widest_line();
@@ -33584,7 +33584,7 @@ var init_boxen = __esm({
     PAD = " ";
     NONE = "none";
     terminalColumns = () => {
-      const { env: env3, stdout, stderr } = import_node_process15.default;
+      const { env: env3, stdout, stderr } = import_node_process12.default;
       if (stdout?.columns) {
         return stdout.columns;
       }
@@ -33767,8 +33767,8 @@ var init_boxen = __esm({
       return result;
     };
     sanitizeOptions = (options) => {
-      if (options.fullscreen && import_node_process15.default?.stdout) {
-        let newDimensions = [import_node_process15.default.stdout.columns, import_node_process15.default.stdout.rows];
+      if (options.fullscreen && import_node_process12.default?.stdout) {
+        let newDimensions = [import_node_process12.default.stdout.columns, import_node_process12.default.stdout.rows];
         if (typeof options.fullscreen === "function") {
           newDimensions = options.fullscreen(...newDimensions);
         }
@@ -35266,9 +35266,9 @@ function delay(time3) {
 var ListrError = class extends Error {
   path;
   ctx;
-  constructor(error49, type, task) {
-    super(error49.message);
-    this.error = error49;
+  constructor(error48, type, task) {
+    super(error48.message);
+    this.error = error48;
     this.type = type;
     this.task = task;
     this.name = "ListrError";
@@ -35277,7 +35277,7 @@ var ListrError = class extends Error {
       this.task = cloneObject(task);
       this.ctx = cloneObject(task.listr.ctx);
     }
-    this.stack = error49?.stack;
+    this.stack = error48?.stack;
   }
 };
 var ListrRendererError = class extends Error {
@@ -35336,9 +35336,9 @@ var TaskWrapper = class {
   *
   * @see {@link https://listr2.kilic.dev/task/error-handling.html}
   */
-  report(error49, type) {
-    if (this.task.options.collectErrors !== false) this.task.listr.errors.push(new ListrError(error49, type, this.task));
-    this.task.message$ = { error: error49.message ?? this.task?.title };
+  report(error48, type) {
+    if (this.task.options.collectErrors !== false) this.task.listr.errors.push(new ListrError(error48, type, this.task));
+    this.task.message$ = { error: error48.message ?? this.task?.title };
   }
   /**
   * Skip the current task.
@@ -35593,7 +35593,7 @@ var Task = class extends ListrTaskEventManager {
         result.on("data", (data) => {
           this.output$ = data.toString();
         });
-        result.on("error", (error49) => reject(error49));
+        result.on("error", (error48) => reject(error48));
         result.on("end", () => resolve2(null));
       });
       else if (isObservable(result)) result = new Promise((resolve2, reject) => {
@@ -35641,10 +35641,10 @@ var Task = class extends ListrTaskEventManager {
         this.message$ = { duration: Date.now() - startTime };
         this.state$ = ListrTaskState.COMPLETED;
       }
-    } catch (error49) {
-      if (this.prompt instanceof PromptError) error49 = this.prompt;
+    } catch (error48) {
+      if (this.prompt instanceof PromptError) error48 = this.prompt;
       if (this.task?.rollback) {
-        wrapper.report(error49, ListrErrorTypes.WILL_ROLLBACK);
+        wrapper.report(error48, ListrErrorTypes.WILL_ROLLBACK);
         try {
           this.state$ = ListrTaskState.ROLLING_BACK;
           await this.task.rollback(context, wrapper);
@@ -35658,15 +35658,15 @@ var Task = class extends ListrTaskEventManager {
         }
         if (this.listr.options?.exitAfterRollback !== false) {
           this.close();
-          throw error49;
+          throw error48;
         }
       } else {
         this.state$ = ListrTaskState.FAILED;
         if (this.listr.options.exitOnError !== false && await assertFunctionOrSelf(this.task?.exitOnError, context) !== false) {
-          wrapper.report(error49, ListrErrorTypes.HAS_FAILED);
+          wrapper.report(error48, ListrErrorTypes.HAS_FAILED);
           this.close();
-          throw error49;
-        } else if (!this.hasSubtasks()) wrapper.report(error49, ListrErrorTypes.HAS_FAILED_WITHOUT_ERROR);
+          throw error48;
+        } else if (!this.hasSubtasks()) wrapper.report(error48, ListrErrorTypes.HAS_FAILED_WITHOUT_ERROR);
       }
     } finally {
       this.close();
@@ -36121,8 +36121,8 @@ var attemptifySync = (fn, options) => {
   return function attemptified(...args) {
     try {
       return fn.apply(void 0, args);
-    } catch (error49) {
-      return onError(error49);
+    } catch (error48) {
+      return onError(error48);
     }
   };
 };
@@ -36139,11 +36139,11 @@ var retryifyAsync = (fn, options) => {
     const interval = options2.interval ?? RETRY_INTERVAL;
     const timestamp = Date.now() + timeout;
     return function attempt(...args) {
-      return fn.apply(void 0, args).catch((error49) => {
-        if (!isRetriable(error49))
-          throw error49;
+      return fn.apply(void 0, args).catch((error48) => {
+        if (!isRetriable(error48))
+          throw error48;
         if (Date.now() >= timestamp)
-          throw error49;
+          throw error48;
         const delay3 = Math.round(interval * Math.random());
         if (delay3 > 0) {
           const delayPromise = new Promise((resolve2) => setTimeout(resolve2, delay3));
@@ -36167,11 +36167,11 @@ var retryifySync = (fn, options) => {
       while (true) {
         try {
           return fn.apply(void 0, args);
-        } catch (error49) {
-          if (!isRetriable(error49))
-            throw error49;
+        } catch (error48) {
+          if (!isRetriable(error48))
+            throw error48;
           if (Date.now() >= timestamp)
-            throw error49;
+            throw error48;
           continue;
         }
       }
@@ -36186,33 +36186,33 @@ var import_node_process6 = __toESM(require("process"), 1);
 // ../node_modules/stubborn-fs/dist/handlers.js
 var Handlers = {
   /* API */
-  isChangeErrorOk: (error49) => {
-    if (!Handlers.isNodeError(error49))
+  isChangeErrorOk: (error48) => {
+    if (!Handlers.isNodeError(error48))
       return false;
-    const { code } = error49;
+    const { code } = error48;
     if (code === "ENOSYS")
       return true;
     if (!IS_USER_ROOT && (code === "EINVAL" || code === "EPERM"))
       return true;
     return false;
   },
-  isNodeError: (error49) => {
-    return error49 instanceof Error;
+  isNodeError: (error48) => {
+    return error48 instanceof Error;
   },
-  isRetriableError: (error49) => {
-    if (!Handlers.isNodeError(error49))
+  isRetriableError: (error48) => {
+    if (!Handlers.isNodeError(error48))
       return false;
-    const { code } = error49;
+    const { code } = error48;
     if (code === "EMFILE" || code === "ENFILE" || code === "EAGAIN" || code === "EBUSY" || code === "EACCESS" || code === "EACCES" || code === "EACCS" || code === "EPERM")
       return true;
     return false;
   },
-  onChangeError: (error49) => {
-    if (!Handlers.isNodeError(error49))
-      throw error49;
-    if (Handlers.isChangeErrorOk(error49))
+  onChangeError: (error48) => {
+    if (!Handlers.isNodeError(error48))
+      throw error48;
+    if (Handlers.isChangeErrorOk(error48))
       return;
-    throw error49;
+    throw error48;
   }
 };
 var handlers_default = Handlers;
@@ -36479,11 +36479,11 @@ function writeFileSync(filePath, data, options = DEFAULT_WRITE_OPTIONS) {
     }
     try {
       dist_default.retry.renameSync(retryOptions)(tempPath, filePath);
-    } catch (error49) {
-      if (!isException(error49))
-        throw error49;
-      if (error49.code !== "ENAMETOOLONG")
-        throw error49;
+    } catch (error48) {
+      if (!isException(error48))
+        throw error48;
+      if (error48.code !== "ENAMETOOLONG")
+        throw error48;
       dist_default.retry.renameSync(retryOptions)(tempPath, temp_default.truncate(filePath));
     }
     tempDisposer();
@@ -36868,15 +36868,15 @@ var Conf = class {
       const deserializedData = this._deserialize(dataString);
       this._validate(deserializedData);
       return Object.assign(createPlainObject(), deserializedData);
-    } catch (error49) {
-      if (error49?.code === "ENOENT") {
+    } catch (error48) {
+      if (error48?.code === "ENOENT") {
         this._ensureDirectory();
         return createPlainObject();
       }
-      if (this.#options.clearInvalidConfig && error49.name === "SyntaxError") {
+      if (this.#options.clearInvalidConfig && error48.name === "SyntaxError") {
         return createPlainObject();
       }
-      throw error49;
+      throw error48;
     }
   }
   set store(value) {
@@ -36950,12 +36950,12 @@ var Conf = class {
     } else {
       try {
         writeFileSync(this.path, data, { mode: this.#options.configFileMode });
-      } catch (error49) {
-        if (error49?.code === "EXDEV") {
+      } catch (error48) {
+        if (error48?.code === "EXDEV") {
           import_node_fs3.default.writeFileSync(this.path, data, { mode: this.#options.configFileMode });
           return;
         }
-        throw error49;
+        throw error48;
       }
     }
   }
@@ -36993,9 +36993,9 @@ var Conf = class {
         this._set(MIGRATION_KEY, version3);
         previousMigratedVersion = version3;
         storeBackup = { ...this.store };
-      } catch (error49) {
+      } catch (error48) {
         this.store = storeBackup;
-        throw new Error(`Something went wrong during the migration! Changes applied to the store until this failed migration will be restored. ${error49}`);
+        throw new Error(`Something went wrong during the migration! Changes applied to the store until this failed migration will be restored. ${error48}`);
       }
     }
     if (this._isVersionInRangeFormat(previousMigratedVersion) || !import_semver.default.eq(previousMigratedVersion, versionToMigrate)) {
@@ -37260,7 +37260,7 @@ async function compareItem(category, item, repoPath, systemPath, changeSet, prun
   let systemHash;
   try {
     systemHash = await hashDirectory(systemPath);
-  } catch (error49) {
+  } catch (error48) {
     if (pruneMode) {
       throw new PruneModeReadError(systemPath);
     }
@@ -37532,14 +37532,14 @@ async function atomicWrite(filePath, data, options = {}) {
       await import_fs_extra5.default.copy(filePath, backupPath);
     }
     await import_fs_extra5.default.rename(tempFilePath, filePath);
-  } catch (error49) {
+  } catch (error48) {
     try {
       if (await import_fs_extra5.default.pathExists(tempFilePath)) {
         await import_fs_extra5.default.unlink(tempFilePath);
       }
     } catch (cleanupError) {
     }
-    throw error49;
+    throw error48;
   }
 }
 async function safeReadConfig(filePath) {
@@ -37553,9 +37553,9 @@ async function safeReadConfig(filePath) {
     } catch (parseError) {
       return JSON.parse(content);
     }
-  } catch (error49) {
-    if (error49.code === "ENOENT") return {};
-    throw new Error(`Failed to read config file: ${error49.message}`);
+  } catch (error48) {
+    if (error48.code === "ENOENT") return {};
+    throw new Error(`Failed to read config file: ${error48.message}`);
   }
 }
 async function safeMergeConfig(localConfigPath, repoConfig, options = {}) {
@@ -37672,2411 +37672,6 @@ var ConfigAdapter = class {
 // src/utils/sync-mcp-cli.ts
 var import_child_process = require("child_process");
 var import_util2 = require("util");
-
-// ../node_modules/ora/index.js
-var import_node_process14 = __toESM(require("process"), 1);
-var import_node_util4 = require("util");
-init_source();
-init_cli_cursor();
-
-// ../node_modules/cli-spinners/spinners.json
-var spinners_default = {
-  dots: {
-    interval: 80,
-    frames: [
-      "\u280B",
-      "\u2819",
-      "\u2839",
-      "\u2838",
-      "\u283C",
-      "\u2834",
-      "\u2826",
-      "\u2827",
-      "\u2807",
-      "\u280F"
-    ]
-  },
-  dots2: {
-    interval: 80,
-    frames: [
-      "\u28FE",
-      "\u28FD",
-      "\u28FB",
-      "\u28BF",
-      "\u287F",
-      "\u28DF",
-      "\u28EF",
-      "\u28F7"
-    ]
-  },
-  dots3: {
-    interval: 80,
-    frames: [
-      "\u280B",
-      "\u2819",
-      "\u281A",
-      "\u281E",
-      "\u2816",
-      "\u2826",
-      "\u2834",
-      "\u2832",
-      "\u2833",
-      "\u2813"
-    ]
-  },
-  dots4: {
-    interval: 80,
-    frames: [
-      "\u2804",
-      "\u2806",
-      "\u2807",
-      "\u280B",
-      "\u2819",
-      "\u2838",
-      "\u2830",
-      "\u2820",
-      "\u2830",
-      "\u2838",
-      "\u2819",
-      "\u280B",
-      "\u2807",
-      "\u2806"
-    ]
-  },
-  dots5: {
-    interval: 80,
-    frames: [
-      "\u280B",
-      "\u2819",
-      "\u281A",
-      "\u2812",
-      "\u2802",
-      "\u2802",
-      "\u2812",
-      "\u2832",
-      "\u2834",
-      "\u2826",
-      "\u2816",
-      "\u2812",
-      "\u2810",
-      "\u2810",
-      "\u2812",
-      "\u2813",
-      "\u280B"
-    ]
-  },
-  dots6: {
-    interval: 80,
-    frames: [
-      "\u2801",
-      "\u2809",
-      "\u2819",
-      "\u281A",
-      "\u2812",
-      "\u2802",
-      "\u2802",
-      "\u2812",
-      "\u2832",
-      "\u2834",
-      "\u2824",
-      "\u2804",
-      "\u2804",
-      "\u2824",
-      "\u2834",
-      "\u2832",
-      "\u2812",
-      "\u2802",
-      "\u2802",
-      "\u2812",
-      "\u281A",
-      "\u2819",
-      "\u2809",
-      "\u2801"
-    ]
-  },
-  dots7: {
-    interval: 80,
-    frames: [
-      "\u2808",
-      "\u2809",
-      "\u280B",
-      "\u2813",
-      "\u2812",
-      "\u2810",
-      "\u2810",
-      "\u2812",
-      "\u2816",
-      "\u2826",
-      "\u2824",
-      "\u2820",
-      "\u2820",
-      "\u2824",
-      "\u2826",
-      "\u2816",
-      "\u2812",
-      "\u2810",
-      "\u2810",
-      "\u2812",
-      "\u2813",
-      "\u280B",
-      "\u2809",
-      "\u2808"
-    ]
-  },
-  dots8: {
-    interval: 80,
-    frames: [
-      "\u2801",
-      "\u2801",
-      "\u2809",
-      "\u2819",
-      "\u281A",
-      "\u2812",
-      "\u2802",
-      "\u2802",
-      "\u2812",
-      "\u2832",
-      "\u2834",
-      "\u2824",
-      "\u2804",
-      "\u2804",
-      "\u2824",
-      "\u2820",
-      "\u2820",
-      "\u2824",
-      "\u2826",
-      "\u2816",
-      "\u2812",
-      "\u2810",
-      "\u2810",
-      "\u2812",
-      "\u2813",
-      "\u280B",
-      "\u2809",
-      "\u2808",
-      "\u2808"
-    ]
-  },
-  dots9: {
-    interval: 80,
-    frames: [
-      "\u28B9",
-      "\u28BA",
-      "\u28BC",
-      "\u28F8",
-      "\u28C7",
-      "\u2867",
-      "\u2857",
-      "\u284F"
-    ]
-  },
-  dots10: {
-    interval: 80,
-    frames: [
-      "\u2884",
-      "\u2882",
-      "\u2881",
-      "\u2841",
-      "\u2848",
-      "\u2850",
-      "\u2860"
-    ]
-  },
-  dots11: {
-    interval: 100,
-    frames: [
-      "\u2801",
-      "\u2802",
-      "\u2804",
-      "\u2840",
-      "\u2880",
-      "\u2820",
-      "\u2810",
-      "\u2808"
-    ]
-  },
-  dots12: {
-    interval: 80,
-    frames: [
-      "\u2880\u2800",
-      "\u2840\u2800",
-      "\u2804\u2800",
-      "\u2882\u2800",
-      "\u2842\u2800",
-      "\u2805\u2800",
-      "\u2883\u2800",
-      "\u2843\u2800",
-      "\u280D\u2800",
-      "\u288B\u2800",
-      "\u284B\u2800",
-      "\u280D\u2801",
-      "\u288B\u2801",
-      "\u284B\u2801",
-      "\u280D\u2809",
-      "\u280B\u2809",
-      "\u280B\u2809",
-      "\u2809\u2819",
-      "\u2809\u2819",
-      "\u2809\u2829",
-      "\u2808\u2899",
-      "\u2808\u2859",
-      "\u2888\u2829",
-      "\u2840\u2899",
-      "\u2804\u2859",
-      "\u2882\u2829",
-      "\u2842\u2898",
-      "\u2805\u2858",
-      "\u2883\u2828",
-      "\u2843\u2890",
-      "\u280D\u2850",
-      "\u288B\u2820",
-      "\u284B\u2880",
-      "\u280D\u2841",
-      "\u288B\u2801",
-      "\u284B\u2801",
-      "\u280D\u2809",
-      "\u280B\u2809",
-      "\u280B\u2809",
-      "\u2809\u2819",
-      "\u2809\u2819",
-      "\u2809\u2829",
-      "\u2808\u2899",
-      "\u2808\u2859",
-      "\u2808\u2829",
-      "\u2800\u2899",
-      "\u2800\u2859",
-      "\u2800\u2829",
-      "\u2800\u2898",
-      "\u2800\u2858",
-      "\u2800\u2828",
-      "\u2800\u2890",
-      "\u2800\u2850",
-      "\u2800\u2820",
-      "\u2800\u2880",
-      "\u2800\u2840"
-    ]
-  },
-  dots13: {
-    interval: 80,
-    frames: [
-      "\u28FC",
-      "\u28F9",
-      "\u28BB",
-      "\u283F",
-      "\u285F",
-      "\u28CF",
-      "\u28E7",
-      "\u28F6"
-    ]
-  },
-  dots14: {
-    interval: 80,
-    frames: [
-      "\u2809\u2809",
-      "\u2808\u2819",
-      "\u2800\u2839",
-      "\u2800\u28B8",
-      "\u2800\u28F0",
-      "\u2880\u28E0",
-      "\u28C0\u28C0",
-      "\u28C4\u2840",
-      "\u28C6\u2800",
-      "\u2847\u2800",
-      "\u280F\u2800",
-      "\u280B\u2801"
-    ]
-  },
-  dots8Bit: {
-    interval: 80,
-    frames: [
-      "\u2800",
-      "\u2801",
-      "\u2802",
-      "\u2803",
-      "\u2804",
-      "\u2805",
-      "\u2806",
-      "\u2807",
-      "\u2840",
-      "\u2841",
-      "\u2842",
-      "\u2843",
-      "\u2844",
-      "\u2845",
-      "\u2846",
-      "\u2847",
-      "\u2808",
-      "\u2809",
-      "\u280A",
-      "\u280B",
-      "\u280C",
-      "\u280D",
-      "\u280E",
-      "\u280F",
-      "\u2848",
-      "\u2849",
-      "\u284A",
-      "\u284B",
-      "\u284C",
-      "\u284D",
-      "\u284E",
-      "\u284F",
-      "\u2810",
-      "\u2811",
-      "\u2812",
-      "\u2813",
-      "\u2814",
-      "\u2815",
-      "\u2816",
-      "\u2817",
-      "\u2850",
-      "\u2851",
-      "\u2852",
-      "\u2853",
-      "\u2854",
-      "\u2855",
-      "\u2856",
-      "\u2857",
-      "\u2818",
-      "\u2819",
-      "\u281A",
-      "\u281B",
-      "\u281C",
-      "\u281D",
-      "\u281E",
-      "\u281F",
-      "\u2858",
-      "\u2859",
-      "\u285A",
-      "\u285B",
-      "\u285C",
-      "\u285D",
-      "\u285E",
-      "\u285F",
-      "\u2820",
-      "\u2821",
-      "\u2822",
-      "\u2823",
-      "\u2824",
-      "\u2825",
-      "\u2826",
-      "\u2827",
-      "\u2860",
-      "\u2861",
-      "\u2862",
-      "\u2863",
-      "\u2864",
-      "\u2865",
-      "\u2866",
-      "\u2867",
-      "\u2828",
-      "\u2829",
-      "\u282A",
-      "\u282B",
-      "\u282C",
-      "\u282D",
-      "\u282E",
-      "\u282F",
-      "\u2868",
-      "\u2869",
-      "\u286A",
-      "\u286B",
-      "\u286C",
-      "\u286D",
-      "\u286E",
-      "\u286F",
-      "\u2830",
-      "\u2831",
-      "\u2832",
-      "\u2833",
-      "\u2834",
-      "\u2835",
-      "\u2836",
-      "\u2837",
-      "\u2870",
-      "\u2871",
-      "\u2872",
-      "\u2873",
-      "\u2874",
-      "\u2875",
-      "\u2876",
-      "\u2877",
-      "\u2838",
-      "\u2839",
-      "\u283A",
-      "\u283B",
-      "\u283C",
-      "\u283D",
-      "\u283E",
-      "\u283F",
-      "\u2878",
-      "\u2879",
-      "\u287A",
-      "\u287B",
-      "\u287C",
-      "\u287D",
-      "\u287E",
-      "\u287F",
-      "\u2880",
-      "\u2881",
-      "\u2882",
-      "\u2883",
-      "\u2884",
-      "\u2885",
-      "\u2886",
-      "\u2887",
-      "\u28C0",
-      "\u28C1",
-      "\u28C2",
-      "\u28C3",
-      "\u28C4",
-      "\u28C5",
-      "\u28C6",
-      "\u28C7",
-      "\u2888",
-      "\u2889",
-      "\u288A",
-      "\u288B",
-      "\u288C",
-      "\u288D",
-      "\u288E",
-      "\u288F",
-      "\u28C8",
-      "\u28C9",
-      "\u28CA",
-      "\u28CB",
-      "\u28CC",
-      "\u28CD",
-      "\u28CE",
-      "\u28CF",
-      "\u2890",
-      "\u2891",
-      "\u2892",
-      "\u2893",
-      "\u2894",
-      "\u2895",
-      "\u2896",
-      "\u2897",
-      "\u28D0",
-      "\u28D1",
-      "\u28D2",
-      "\u28D3",
-      "\u28D4",
-      "\u28D5",
-      "\u28D6",
-      "\u28D7",
-      "\u2898",
-      "\u2899",
-      "\u289A",
-      "\u289B",
-      "\u289C",
-      "\u289D",
-      "\u289E",
-      "\u289F",
-      "\u28D8",
-      "\u28D9",
-      "\u28DA",
-      "\u28DB",
-      "\u28DC",
-      "\u28DD",
-      "\u28DE",
-      "\u28DF",
-      "\u28A0",
-      "\u28A1",
-      "\u28A2",
-      "\u28A3",
-      "\u28A4",
-      "\u28A5",
-      "\u28A6",
-      "\u28A7",
-      "\u28E0",
-      "\u28E1",
-      "\u28E2",
-      "\u28E3",
-      "\u28E4",
-      "\u28E5",
-      "\u28E6",
-      "\u28E7",
-      "\u28A8",
-      "\u28A9",
-      "\u28AA",
-      "\u28AB",
-      "\u28AC",
-      "\u28AD",
-      "\u28AE",
-      "\u28AF",
-      "\u28E8",
-      "\u28E9",
-      "\u28EA",
-      "\u28EB",
-      "\u28EC",
-      "\u28ED",
-      "\u28EE",
-      "\u28EF",
-      "\u28B0",
-      "\u28B1",
-      "\u28B2",
-      "\u28B3",
-      "\u28B4",
-      "\u28B5",
-      "\u28B6",
-      "\u28B7",
-      "\u28F0",
-      "\u28F1",
-      "\u28F2",
-      "\u28F3",
-      "\u28F4",
-      "\u28F5",
-      "\u28F6",
-      "\u28F7",
-      "\u28B8",
-      "\u28B9",
-      "\u28BA",
-      "\u28BB",
-      "\u28BC",
-      "\u28BD",
-      "\u28BE",
-      "\u28BF",
-      "\u28F8",
-      "\u28F9",
-      "\u28FA",
-      "\u28FB",
-      "\u28FC",
-      "\u28FD",
-      "\u28FE",
-      "\u28FF"
-    ]
-  },
-  dotsCircle: {
-    interval: 80,
-    frames: [
-      "\u288E ",
-      "\u280E\u2801",
-      "\u280A\u2811",
-      "\u2808\u2831",
-      " \u2871",
-      "\u2880\u2870",
-      "\u2884\u2860",
-      "\u2886\u2840"
-    ]
-  },
-  sand: {
-    interval: 80,
-    frames: [
-      "\u2801",
-      "\u2802",
-      "\u2804",
-      "\u2840",
-      "\u2848",
-      "\u2850",
-      "\u2860",
-      "\u28C0",
-      "\u28C1",
-      "\u28C2",
-      "\u28C4",
-      "\u28CC",
-      "\u28D4",
-      "\u28E4",
-      "\u28E5",
-      "\u28E6",
-      "\u28EE",
-      "\u28F6",
-      "\u28F7",
-      "\u28FF",
-      "\u287F",
-      "\u283F",
-      "\u289F",
-      "\u281F",
-      "\u285B",
-      "\u281B",
-      "\u282B",
-      "\u288B",
-      "\u280B",
-      "\u280D",
-      "\u2849",
-      "\u2809",
-      "\u2811",
-      "\u2821",
-      "\u2881"
-    ]
-  },
-  line: {
-    interval: 130,
-    frames: [
-      "-",
-      "\\",
-      "|",
-      "/"
-    ]
-  },
-  line2: {
-    interval: 100,
-    frames: [
-      "\u2802",
-      "-",
-      "\u2013",
-      "\u2014",
-      "\u2013",
-      "-"
-    ]
-  },
-  rollingLine: {
-    interval: 80,
-    frames: [
-      "/  ",
-      " - ",
-      " \\ ",
-      "  |",
-      "  |",
-      " \\ ",
-      " - ",
-      "/  "
-    ]
-  },
-  pipe: {
-    interval: 100,
-    frames: [
-      "\u2524",
-      "\u2518",
-      "\u2534",
-      "\u2514",
-      "\u251C",
-      "\u250C",
-      "\u252C",
-      "\u2510"
-    ]
-  },
-  simpleDots: {
-    interval: 400,
-    frames: [
-      ".  ",
-      ".. ",
-      "...",
-      "   "
-    ]
-  },
-  simpleDotsScrolling: {
-    interval: 200,
-    frames: [
-      ".  ",
-      ".. ",
-      "...",
-      " ..",
-      "  .",
-      "   "
-    ]
-  },
-  star: {
-    interval: 70,
-    frames: [
-      "\u2736",
-      "\u2738",
-      "\u2739",
-      "\u273A",
-      "\u2739",
-      "\u2737"
-    ]
-  },
-  star2: {
-    interval: 80,
-    frames: [
-      "+",
-      "x",
-      "*"
-    ]
-  },
-  flip: {
-    interval: 70,
-    frames: [
-      "_",
-      "_",
-      "_",
-      "-",
-      "`",
-      "`",
-      "'",
-      "\xB4",
-      "-",
-      "_",
-      "_",
-      "_"
-    ]
-  },
-  hamburger: {
-    interval: 100,
-    frames: [
-      "\u2631",
-      "\u2632",
-      "\u2634"
-    ]
-  },
-  growVertical: {
-    interval: 120,
-    frames: [
-      "\u2581",
-      "\u2583",
-      "\u2584",
-      "\u2585",
-      "\u2586",
-      "\u2587",
-      "\u2586",
-      "\u2585",
-      "\u2584",
-      "\u2583"
-    ]
-  },
-  growHorizontal: {
-    interval: 120,
-    frames: [
-      "\u258F",
-      "\u258E",
-      "\u258D",
-      "\u258C",
-      "\u258B",
-      "\u258A",
-      "\u2589",
-      "\u258A",
-      "\u258B",
-      "\u258C",
-      "\u258D",
-      "\u258E"
-    ]
-  },
-  balloon: {
-    interval: 140,
-    frames: [
-      " ",
-      ".",
-      "o",
-      "O",
-      "@",
-      "*",
-      " "
-    ]
-  },
-  balloon2: {
-    interval: 120,
-    frames: [
-      ".",
-      "o",
-      "O",
-      "\xB0",
-      "O",
-      "o",
-      "."
-    ]
-  },
-  noise: {
-    interval: 100,
-    frames: [
-      "\u2593",
-      "\u2592",
-      "\u2591"
-    ]
-  },
-  bounce: {
-    interval: 120,
-    frames: [
-      "\u2801",
-      "\u2802",
-      "\u2804",
-      "\u2802"
-    ]
-  },
-  boxBounce: {
-    interval: 120,
-    frames: [
-      "\u2596",
-      "\u2598",
-      "\u259D",
-      "\u2597"
-    ]
-  },
-  boxBounce2: {
-    interval: 100,
-    frames: [
-      "\u258C",
-      "\u2580",
-      "\u2590",
-      "\u2584"
-    ]
-  },
-  triangle: {
-    interval: 50,
-    frames: [
-      "\u25E2",
-      "\u25E3",
-      "\u25E4",
-      "\u25E5"
-    ]
-  },
-  binary: {
-    interval: 80,
-    frames: [
-      "010010",
-      "001100",
-      "100101",
-      "111010",
-      "111101",
-      "010111",
-      "101011",
-      "111000",
-      "110011",
-      "110101"
-    ]
-  },
-  arc: {
-    interval: 100,
-    frames: [
-      "\u25DC",
-      "\u25E0",
-      "\u25DD",
-      "\u25DE",
-      "\u25E1",
-      "\u25DF"
-    ]
-  },
-  circle: {
-    interval: 120,
-    frames: [
-      "\u25E1",
-      "\u2299",
-      "\u25E0"
-    ]
-  },
-  squareCorners: {
-    interval: 180,
-    frames: [
-      "\u25F0",
-      "\u25F3",
-      "\u25F2",
-      "\u25F1"
-    ]
-  },
-  circleQuarters: {
-    interval: 120,
-    frames: [
-      "\u25F4",
-      "\u25F7",
-      "\u25F6",
-      "\u25F5"
-    ]
-  },
-  circleHalves: {
-    interval: 50,
-    frames: [
-      "\u25D0",
-      "\u25D3",
-      "\u25D1",
-      "\u25D2"
-    ]
-  },
-  squish: {
-    interval: 100,
-    frames: [
-      "\u256B",
-      "\u256A"
-    ]
-  },
-  toggle: {
-    interval: 250,
-    frames: [
-      "\u22B6",
-      "\u22B7"
-    ]
-  },
-  toggle2: {
-    interval: 80,
-    frames: [
-      "\u25AB",
-      "\u25AA"
-    ]
-  },
-  toggle3: {
-    interval: 120,
-    frames: [
-      "\u25A1",
-      "\u25A0"
-    ]
-  },
-  toggle4: {
-    interval: 100,
-    frames: [
-      "\u25A0",
-      "\u25A1",
-      "\u25AA",
-      "\u25AB"
-    ]
-  },
-  toggle5: {
-    interval: 100,
-    frames: [
-      "\u25AE",
-      "\u25AF"
-    ]
-  },
-  toggle6: {
-    interval: 300,
-    frames: [
-      "\u101D",
-      "\u1040"
-    ]
-  },
-  toggle7: {
-    interval: 80,
-    frames: [
-      "\u29BE",
-      "\u29BF"
-    ]
-  },
-  toggle8: {
-    interval: 100,
-    frames: [
-      "\u25CD",
-      "\u25CC"
-    ]
-  },
-  toggle9: {
-    interval: 100,
-    frames: [
-      "\u25C9",
-      "\u25CE"
-    ]
-  },
-  toggle10: {
-    interval: 100,
-    frames: [
-      "\u3282",
-      "\u3280",
-      "\u3281"
-    ]
-  },
-  toggle11: {
-    interval: 50,
-    frames: [
-      "\u29C7",
-      "\u29C6"
-    ]
-  },
-  toggle12: {
-    interval: 120,
-    frames: [
-      "\u2617",
-      "\u2616"
-    ]
-  },
-  toggle13: {
-    interval: 80,
-    frames: [
-      "=",
-      "*",
-      "-"
-    ]
-  },
-  arrow: {
-    interval: 100,
-    frames: [
-      "\u2190",
-      "\u2196",
-      "\u2191",
-      "\u2197",
-      "\u2192",
-      "\u2198",
-      "\u2193",
-      "\u2199"
-    ]
-  },
-  arrow2: {
-    interval: 80,
-    frames: [
-      "\u2B06\uFE0F ",
-      "\u2197\uFE0F ",
-      "\u27A1\uFE0F ",
-      "\u2198\uFE0F ",
-      "\u2B07\uFE0F ",
-      "\u2199\uFE0F ",
-      "\u2B05\uFE0F ",
-      "\u2196\uFE0F "
-    ]
-  },
-  arrow3: {
-    interval: 120,
-    frames: [
-      "\u25B9\u25B9\u25B9\u25B9\u25B9",
-      "\u25B8\u25B9\u25B9\u25B9\u25B9",
-      "\u25B9\u25B8\u25B9\u25B9\u25B9",
-      "\u25B9\u25B9\u25B8\u25B9\u25B9",
-      "\u25B9\u25B9\u25B9\u25B8\u25B9",
-      "\u25B9\u25B9\u25B9\u25B9\u25B8"
-    ]
-  },
-  bouncingBar: {
-    interval: 80,
-    frames: [
-      "[    ]",
-      "[=   ]",
-      "[==  ]",
-      "[=== ]",
-      "[====]",
-      "[ ===]",
-      "[  ==]",
-      "[   =]",
-      "[    ]",
-      "[   =]",
-      "[  ==]",
-      "[ ===]",
-      "[====]",
-      "[=== ]",
-      "[==  ]",
-      "[=   ]"
-    ]
-  },
-  bouncingBall: {
-    interval: 80,
-    frames: [
-      "( \u25CF    )",
-      "(  \u25CF   )",
-      "(   \u25CF  )",
-      "(    \u25CF )",
-      "(     \u25CF)",
-      "(    \u25CF )",
-      "(   \u25CF  )",
-      "(  \u25CF   )",
-      "( \u25CF    )",
-      "(\u25CF     )"
-    ]
-  },
-  smiley: {
-    interval: 200,
-    frames: [
-      "\u{1F604} ",
-      "\u{1F61D} "
-    ]
-  },
-  monkey: {
-    interval: 300,
-    frames: [
-      "\u{1F648} ",
-      "\u{1F648} ",
-      "\u{1F649} ",
-      "\u{1F64A} "
-    ]
-  },
-  hearts: {
-    interval: 100,
-    frames: [
-      "\u{1F49B} ",
-      "\u{1F499} ",
-      "\u{1F49C} ",
-      "\u{1F49A} ",
-      "\u{1F497} "
-    ]
-  },
-  clock: {
-    interval: 100,
-    frames: [
-      "\u{1F55B} ",
-      "\u{1F550} ",
-      "\u{1F551} ",
-      "\u{1F552} ",
-      "\u{1F553} ",
-      "\u{1F554} ",
-      "\u{1F555} ",
-      "\u{1F556} ",
-      "\u{1F557} ",
-      "\u{1F558} ",
-      "\u{1F559} ",
-      "\u{1F55A} "
-    ]
-  },
-  earth: {
-    interval: 180,
-    frames: [
-      "\u{1F30D} ",
-      "\u{1F30E} ",
-      "\u{1F30F} "
-    ]
-  },
-  material: {
-    interval: 17,
-    frames: [
-      "\u2588\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581",
-      "\u2588\u2588\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581",
-      "\u2588\u2588\u2588\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581",
-      "\u2588\u2588\u2588\u2588\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581",
-      "\u2588\u2588\u2588\u2588\u2588\u2588\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581",
-      "\u2588\u2588\u2588\u2588\u2588\u2588\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581",
-      "\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581",
-      "\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581",
-      "\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581",
-      "\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581",
-      "\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581",
-      "\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581",
-      "\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581\u2581\u2581\u2581\u2581\u2581\u2581",
-      "\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581\u2581\u2581\u2581\u2581\u2581",
-      "\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581\u2581\u2581\u2581\u2581\u2581",
-      "\u2581\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581\u2581\u2581\u2581\u2581",
-      "\u2581\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581\u2581\u2581\u2581\u2581",
-      "\u2581\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581\u2581\u2581\u2581\u2581",
-      "\u2581\u2581\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581\u2581\u2581\u2581",
-      "\u2581\u2581\u2581\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581\u2581\u2581",
-      "\u2581\u2581\u2581\u2581\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581\u2581\u2581",
-      "\u2581\u2581\u2581\u2581\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581\u2581",
-      "\u2581\u2581\u2581\u2581\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581\u2581",
-      "\u2581\u2581\u2581\u2581\u2581\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581",
-      "\u2581\u2581\u2581\u2581\u2581\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581",
-      "\u2581\u2581\u2581\u2581\u2581\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588\u2588\u2588\u2588\u2588\u2588\u2588",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588\u2588\u2588\u2588\u2588\u2588",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588\u2588\u2588\u2588\u2588",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588\u2588\u2588\u2588\u2588",
-      "\u2588\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588\u2588\u2588\u2588",
-      "\u2588\u2588\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588\u2588\u2588",
-      "\u2588\u2588\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588\u2588\u2588",
-      "\u2588\u2588\u2588\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588\u2588\u2588",
-      "\u2588\u2588\u2588\u2588\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588\u2588",
-      "\u2588\u2588\u2588\u2588\u2588\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588",
-      "\u2588\u2588\u2588\u2588\u2588\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588",
-      "\u2588\u2588\u2588\u2588\u2588\u2588\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588",
-      "\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581",
-      "\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581",
-      "\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581",
-      "\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581",
-      "\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581",
-      "\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581",
-      "\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581",
-      "\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581",
-      "\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581\u2581\u2581\u2581\u2581\u2581",
-      "\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581\u2581\u2581\u2581\u2581\u2581",
-      "\u2581\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581\u2581\u2581\u2581\u2581",
-      "\u2581\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581\u2581\u2581\u2581\u2581",
-      "\u2581\u2581\u2581\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581\u2581\u2581\u2581",
-      "\u2581\u2581\u2581\u2581\u2581\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581\u2581\u2581",
-      "\u2581\u2581\u2581\u2581\u2581\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581\u2581\u2581",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581\u2581\u2581",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581\u2581\u2581",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581\u2581\u2581",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581\u2581",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581\u2581",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2581",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588\u2588\u2588\u2588\u2588\u2588\u2588",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588\u2588\u2588\u2588\u2588\u2588\u2588",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588\u2588\u2588\u2588\u2588",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588\u2588\u2588\u2588",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588\u2588\u2588\u2588",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588\u2588\u2588\u2588",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588\u2588\u2588",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588\u2588\u2588",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588\u2588",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588\u2588",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588\u2588",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2588",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581",
-      "\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581\u2581"
-    ]
-  },
-  moon: {
-    interval: 80,
-    frames: [
-      "\u{1F311} ",
-      "\u{1F312} ",
-      "\u{1F313} ",
-      "\u{1F314} ",
-      "\u{1F315} ",
-      "\u{1F316} ",
-      "\u{1F317} ",
-      "\u{1F318} "
-    ]
-  },
-  runner: {
-    interval: 140,
-    frames: [
-      "\u{1F6B6} ",
-      "\u{1F3C3} "
-    ]
-  },
-  pong: {
-    interval: 80,
-    frames: [
-      "\u2590\u2802       \u258C",
-      "\u2590\u2808       \u258C",
-      "\u2590 \u2802      \u258C",
-      "\u2590 \u2820      \u258C",
-      "\u2590  \u2840     \u258C",
-      "\u2590  \u2820     \u258C",
-      "\u2590   \u2802    \u258C",
-      "\u2590   \u2808    \u258C",
-      "\u2590    \u2802   \u258C",
-      "\u2590    \u2820   \u258C",
-      "\u2590     \u2840  \u258C",
-      "\u2590     \u2820  \u258C",
-      "\u2590      \u2802 \u258C",
-      "\u2590      \u2808 \u258C",
-      "\u2590       \u2802\u258C",
-      "\u2590       \u2820\u258C",
-      "\u2590       \u2840\u258C",
-      "\u2590      \u2820 \u258C",
-      "\u2590      \u2802 \u258C",
-      "\u2590     \u2808  \u258C",
-      "\u2590     \u2802  \u258C",
-      "\u2590    \u2820   \u258C",
-      "\u2590    \u2840   \u258C",
-      "\u2590   \u2820    \u258C",
-      "\u2590   \u2802    \u258C",
-      "\u2590  \u2808     \u258C",
-      "\u2590  \u2802     \u258C",
-      "\u2590 \u2820      \u258C",
-      "\u2590 \u2840      \u258C",
-      "\u2590\u2820       \u258C"
-    ]
-  },
-  shark: {
-    interval: 120,
-    frames: [
-      "\u2590|\\____________\u258C",
-      "\u2590_|\\___________\u258C",
-      "\u2590__|\\__________\u258C",
-      "\u2590___|\\_________\u258C",
-      "\u2590____|\\________\u258C",
-      "\u2590_____|\\_______\u258C",
-      "\u2590______|\\______\u258C",
-      "\u2590_______|\\_____\u258C",
-      "\u2590________|\\____\u258C",
-      "\u2590_________|\\___\u258C",
-      "\u2590__________|\\__\u258C",
-      "\u2590___________|\\_\u258C",
-      "\u2590____________|\\\u258C",
-      "\u2590____________/|\u258C",
-      "\u2590___________/|_\u258C",
-      "\u2590__________/|__\u258C",
-      "\u2590_________/|___\u258C",
-      "\u2590________/|____\u258C",
-      "\u2590_______/|_____\u258C",
-      "\u2590______/|______\u258C",
-      "\u2590_____/|_______\u258C",
-      "\u2590____/|________\u258C",
-      "\u2590___/|_________\u258C",
-      "\u2590__/|__________\u258C",
-      "\u2590_/|___________\u258C",
-      "\u2590/|____________\u258C"
-    ]
-  },
-  dqpb: {
-    interval: 100,
-    frames: [
-      "d",
-      "q",
-      "p",
-      "b"
-    ]
-  },
-  weather: {
-    interval: 100,
-    frames: [
-      "\u2600\uFE0F ",
-      "\u2600\uFE0F ",
-      "\u2600\uFE0F ",
-      "\u{1F324} ",
-      "\u26C5\uFE0F ",
-      "\u{1F325} ",
-      "\u2601\uFE0F ",
-      "\u{1F327} ",
-      "\u{1F328} ",
-      "\u{1F327} ",
-      "\u{1F328} ",
-      "\u{1F327} ",
-      "\u{1F328} ",
-      "\u26C8 ",
-      "\u{1F328} ",
-      "\u{1F327} ",
-      "\u{1F328} ",
-      "\u2601\uFE0F ",
-      "\u{1F325} ",
-      "\u26C5\uFE0F ",
-      "\u{1F324} ",
-      "\u2600\uFE0F ",
-      "\u2600\uFE0F "
-    ]
-  },
-  christmas: {
-    interval: 400,
-    frames: [
-      "\u{1F332}",
-      "\u{1F384}"
-    ]
-  },
-  grenade: {
-    interval: 80,
-    frames: [
-      "\u060C  ",
-      "\u2032  ",
-      " \xB4 ",
-      " \u203E ",
-      "  \u2E0C",
-      "  \u2E0A",
-      "  |",
-      "  \u204E",
-      "  \u2055",
-      " \u0DF4 ",
-      "  \u2053",
-      "   ",
-      "   ",
-      "   "
-    ]
-  },
-  point: {
-    interval: 125,
-    frames: [
-      "\u2219\u2219\u2219",
-      "\u25CF\u2219\u2219",
-      "\u2219\u25CF\u2219",
-      "\u2219\u2219\u25CF",
-      "\u2219\u2219\u2219"
-    ]
-  },
-  layer: {
-    interval: 150,
-    frames: [
-      "-",
-      "=",
-      "\u2261"
-    ]
-  },
-  betaWave: {
-    interval: 80,
-    frames: [
-      "\u03C1\u03B2\u03B2\u03B2\u03B2\u03B2\u03B2",
-      "\u03B2\u03C1\u03B2\u03B2\u03B2\u03B2\u03B2",
-      "\u03B2\u03B2\u03C1\u03B2\u03B2\u03B2\u03B2",
-      "\u03B2\u03B2\u03B2\u03C1\u03B2\u03B2\u03B2",
-      "\u03B2\u03B2\u03B2\u03B2\u03C1\u03B2\u03B2",
-      "\u03B2\u03B2\u03B2\u03B2\u03B2\u03C1\u03B2",
-      "\u03B2\u03B2\u03B2\u03B2\u03B2\u03B2\u03C1"
-    ]
-  },
-  fingerDance: {
-    interval: 160,
-    frames: [
-      "\u{1F918} ",
-      "\u{1F91F} ",
-      "\u{1F596} ",
-      "\u270B ",
-      "\u{1F91A} ",
-      "\u{1F446} "
-    ]
-  },
-  fistBump: {
-    interval: 80,
-    frames: [
-      "\u{1F91C}\u3000\u3000\u3000\u3000\u{1F91B} ",
-      "\u{1F91C}\u3000\u3000\u3000\u3000\u{1F91B} ",
-      "\u{1F91C}\u3000\u3000\u3000\u3000\u{1F91B} ",
-      "\u3000\u{1F91C}\u3000\u3000\u{1F91B}\u3000 ",
-      "\u3000\u3000\u{1F91C}\u{1F91B}\u3000\u3000 ",
-      "\u3000\u{1F91C}\u2728\u{1F91B}\u3000\u3000 ",
-      "\u{1F91C}\u3000\u2728\u3000\u{1F91B}\u3000 "
-    ]
-  },
-  soccerHeader: {
-    interval: 80,
-    frames: [
-      " \u{1F9D1}\u26BD\uFE0F       \u{1F9D1} ",
-      "\u{1F9D1}  \u26BD\uFE0F      \u{1F9D1} ",
-      "\u{1F9D1}   \u26BD\uFE0F     \u{1F9D1} ",
-      "\u{1F9D1}    \u26BD\uFE0F    \u{1F9D1} ",
-      "\u{1F9D1}     \u26BD\uFE0F   \u{1F9D1} ",
-      "\u{1F9D1}      \u26BD\uFE0F  \u{1F9D1} ",
-      "\u{1F9D1}       \u26BD\uFE0F\u{1F9D1}  ",
-      "\u{1F9D1}      \u26BD\uFE0F  \u{1F9D1} ",
-      "\u{1F9D1}     \u26BD\uFE0F   \u{1F9D1} ",
-      "\u{1F9D1}    \u26BD\uFE0F    \u{1F9D1} ",
-      "\u{1F9D1}   \u26BD\uFE0F     \u{1F9D1} ",
-      "\u{1F9D1}  \u26BD\uFE0F      \u{1F9D1} "
-    ]
-  },
-  mindblown: {
-    interval: 160,
-    frames: [
-      "\u{1F610} ",
-      "\u{1F610} ",
-      "\u{1F62E} ",
-      "\u{1F62E} ",
-      "\u{1F626} ",
-      "\u{1F626} ",
-      "\u{1F627} ",
-      "\u{1F627} ",
-      "\u{1F92F} ",
-      "\u{1F4A5} ",
-      "\u2728 ",
-      "\u3000 ",
-      "\u3000 ",
-      "\u3000 "
-    ]
-  },
-  speaker: {
-    interval: 160,
-    frames: [
-      "\u{1F508} ",
-      "\u{1F509} ",
-      "\u{1F50A} ",
-      "\u{1F509} "
-    ]
-  },
-  orangePulse: {
-    interval: 100,
-    frames: [
-      "\u{1F538} ",
-      "\u{1F536} ",
-      "\u{1F7E0} ",
-      "\u{1F7E0} ",
-      "\u{1F536} "
-    ]
-  },
-  bluePulse: {
-    interval: 100,
-    frames: [
-      "\u{1F539} ",
-      "\u{1F537} ",
-      "\u{1F535} ",
-      "\u{1F535} ",
-      "\u{1F537} "
-    ]
-  },
-  orangeBluePulse: {
-    interval: 100,
-    frames: [
-      "\u{1F538} ",
-      "\u{1F536} ",
-      "\u{1F7E0} ",
-      "\u{1F7E0} ",
-      "\u{1F536} ",
-      "\u{1F539} ",
-      "\u{1F537} ",
-      "\u{1F535} ",
-      "\u{1F535} ",
-      "\u{1F537} "
-    ]
-  },
-  timeTravel: {
-    interval: 100,
-    frames: [
-      "\u{1F55B} ",
-      "\u{1F55A} ",
-      "\u{1F559} ",
-      "\u{1F558} ",
-      "\u{1F557} ",
-      "\u{1F556} ",
-      "\u{1F555} ",
-      "\u{1F554} ",
-      "\u{1F553} ",
-      "\u{1F552} ",
-      "\u{1F551} ",
-      "\u{1F550} "
-    ]
-  },
-  aesthetic: {
-    interval: 80,
-    frames: [
-      "\u25B0\u25B1\u25B1\u25B1\u25B1\u25B1\u25B1",
-      "\u25B0\u25B0\u25B1\u25B1\u25B1\u25B1\u25B1",
-      "\u25B0\u25B0\u25B0\u25B1\u25B1\u25B1\u25B1",
-      "\u25B0\u25B0\u25B0\u25B0\u25B1\u25B1\u25B1",
-      "\u25B0\u25B0\u25B0\u25B0\u25B0\u25B1\u25B1",
-      "\u25B0\u25B0\u25B0\u25B0\u25B0\u25B0\u25B1",
-      "\u25B0\u25B0\u25B0\u25B0\u25B0\u25B0\u25B0",
-      "\u25B0\u25B1\u25B1\u25B1\u25B1\u25B1\u25B1"
-    ]
-  },
-  dwarfFortress: {
-    interval: 80,
-    frames: [
-      " \u2588\u2588\u2588\u2588\u2588\u2588\xA3\xA3\xA3  ",
-      "\u263A\u2588\u2588\u2588\u2588\u2588\u2588\xA3\xA3\xA3  ",
-      "\u263A\u2588\u2588\u2588\u2588\u2588\u2588\xA3\xA3\xA3  ",
-      "\u263A\u2593\u2588\u2588\u2588\u2588\u2588\xA3\xA3\xA3  ",
-      "\u263A\u2593\u2588\u2588\u2588\u2588\u2588\xA3\xA3\xA3  ",
-      "\u263A\u2592\u2588\u2588\u2588\u2588\u2588\xA3\xA3\xA3  ",
-      "\u263A\u2592\u2588\u2588\u2588\u2588\u2588\xA3\xA3\xA3  ",
-      "\u263A\u2591\u2588\u2588\u2588\u2588\u2588\xA3\xA3\xA3  ",
-      "\u263A\u2591\u2588\u2588\u2588\u2588\u2588\xA3\xA3\xA3  ",
-      "\u263A \u2588\u2588\u2588\u2588\u2588\xA3\xA3\xA3  ",
-      " \u263A\u2588\u2588\u2588\u2588\u2588\xA3\xA3\xA3  ",
-      " \u263A\u2588\u2588\u2588\u2588\u2588\xA3\xA3\xA3  ",
-      " \u263A\u2593\u2588\u2588\u2588\u2588\xA3\xA3\xA3  ",
-      " \u263A\u2593\u2588\u2588\u2588\u2588\xA3\xA3\xA3  ",
-      " \u263A\u2592\u2588\u2588\u2588\u2588\xA3\xA3\xA3  ",
-      " \u263A\u2592\u2588\u2588\u2588\u2588\xA3\xA3\xA3  ",
-      " \u263A\u2591\u2588\u2588\u2588\u2588\xA3\xA3\xA3  ",
-      " \u263A\u2591\u2588\u2588\u2588\u2588\xA3\xA3\xA3  ",
-      " \u263A \u2588\u2588\u2588\u2588\xA3\xA3\xA3  ",
-      "  \u263A\u2588\u2588\u2588\u2588\xA3\xA3\xA3  ",
-      "  \u263A\u2588\u2588\u2588\u2588\xA3\xA3\xA3  ",
-      "  \u263A\u2593\u2588\u2588\u2588\xA3\xA3\xA3  ",
-      "  \u263A\u2593\u2588\u2588\u2588\xA3\xA3\xA3  ",
-      "  \u263A\u2592\u2588\u2588\u2588\xA3\xA3\xA3  ",
-      "  \u263A\u2592\u2588\u2588\u2588\xA3\xA3\xA3  ",
-      "  \u263A\u2591\u2588\u2588\u2588\xA3\xA3\xA3  ",
-      "  \u263A\u2591\u2588\u2588\u2588\xA3\xA3\xA3  ",
-      "  \u263A \u2588\u2588\u2588\xA3\xA3\xA3  ",
-      "   \u263A\u2588\u2588\u2588\xA3\xA3\xA3  ",
-      "   \u263A\u2588\u2588\u2588\xA3\xA3\xA3  ",
-      "   \u263A\u2593\u2588\u2588\xA3\xA3\xA3  ",
-      "   \u263A\u2593\u2588\u2588\xA3\xA3\xA3  ",
-      "   \u263A\u2592\u2588\u2588\xA3\xA3\xA3  ",
-      "   \u263A\u2592\u2588\u2588\xA3\xA3\xA3  ",
-      "   \u263A\u2591\u2588\u2588\xA3\xA3\xA3  ",
-      "   \u263A\u2591\u2588\u2588\xA3\xA3\xA3  ",
-      "   \u263A \u2588\u2588\xA3\xA3\xA3  ",
-      "    \u263A\u2588\u2588\xA3\xA3\xA3  ",
-      "    \u263A\u2588\u2588\xA3\xA3\xA3  ",
-      "    \u263A\u2593\u2588\xA3\xA3\xA3  ",
-      "    \u263A\u2593\u2588\xA3\xA3\xA3  ",
-      "    \u263A\u2592\u2588\xA3\xA3\xA3  ",
-      "    \u263A\u2592\u2588\xA3\xA3\xA3  ",
-      "    \u263A\u2591\u2588\xA3\xA3\xA3  ",
-      "    \u263A\u2591\u2588\xA3\xA3\xA3  ",
-      "    \u263A \u2588\xA3\xA3\xA3  ",
-      "     \u263A\u2588\xA3\xA3\xA3  ",
-      "     \u263A\u2588\xA3\xA3\xA3  ",
-      "     \u263A\u2593\xA3\xA3\xA3  ",
-      "     \u263A\u2593\xA3\xA3\xA3  ",
-      "     \u263A\u2592\xA3\xA3\xA3  ",
-      "     \u263A\u2592\xA3\xA3\xA3  ",
-      "     \u263A\u2591\xA3\xA3\xA3  ",
-      "     \u263A\u2591\xA3\xA3\xA3  ",
-      "     \u263A \xA3\xA3\xA3  ",
-      "      \u263A\xA3\xA3\xA3  ",
-      "      \u263A\xA3\xA3\xA3  ",
-      "      \u263A\u2593\xA3\xA3  ",
-      "      \u263A\u2593\xA3\xA3  ",
-      "      \u263A\u2592\xA3\xA3  ",
-      "      \u263A\u2592\xA3\xA3  ",
-      "      \u263A\u2591\xA3\xA3  ",
-      "      \u263A\u2591\xA3\xA3  ",
-      "      \u263A \xA3\xA3  ",
-      "       \u263A\xA3\xA3  ",
-      "       \u263A\xA3\xA3  ",
-      "       \u263A\u2593\xA3  ",
-      "       \u263A\u2593\xA3  ",
-      "       \u263A\u2592\xA3  ",
-      "       \u263A\u2592\xA3  ",
-      "       \u263A\u2591\xA3  ",
-      "       \u263A\u2591\xA3  ",
-      "       \u263A \xA3  ",
-      "        \u263A\xA3  ",
-      "        \u263A\xA3  ",
-      "        \u263A\u2593  ",
-      "        \u263A\u2593  ",
-      "        \u263A\u2592  ",
-      "        \u263A\u2592  ",
-      "        \u263A\u2591  ",
-      "        \u263A\u2591  ",
-      "        \u263A   ",
-      "        \u263A  &",
-      "        \u263A \u263C&",
-      "       \u263A \u263C &",
-      "       \u263A\u263C  &",
-      "      \u263A\u263C  & ",
-      "      \u203C   & ",
-      "     \u263A   &  ",
-      "    \u203C    &  ",
-      "   \u263A    &   ",
-      "  \u203C     &   ",
-      " \u263A     &    ",
-      "\u203C      &    ",
-      "      &     ",
-      "      &     ",
-      "     &   \u2591  ",
-      "     &   \u2592  ",
-      "    &    \u2593  ",
-      "    &    \xA3  ",
-      "   &    \u2591\xA3  ",
-      "   &    \u2592\xA3  ",
-      "  &     \u2593\xA3  ",
-      "  &     \xA3\xA3  ",
-      " &     \u2591\xA3\xA3  ",
-      " &     \u2592\xA3\xA3  ",
-      "&      \u2593\xA3\xA3  ",
-      "&      \xA3\xA3\xA3  ",
-      "      \u2591\xA3\xA3\xA3  ",
-      "      \u2592\xA3\xA3\xA3  ",
-      "      \u2593\xA3\xA3\xA3  ",
-      "      \u2588\xA3\xA3\xA3  ",
-      "     \u2591\u2588\xA3\xA3\xA3  ",
-      "     \u2592\u2588\xA3\xA3\xA3  ",
-      "     \u2593\u2588\xA3\xA3\xA3  ",
-      "     \u2588\u2588\xA3\xA3\xA3  ",
-      "    \u2591\u2588\u2588\xA3\xA3\xA3  ",
-      "    \u2592\u2588\u2588\xA3\xA3\xA3  ",
-      "    \u2593\u2588\u2588\xA3\xA3\xA3  ",
-      "    \u2588\u2588\u2588\xA3\xA3\xA3  ",
-      "   \u2591\u2588\u2588\u2588\xA3\xA3\xA3  ",
-      "   \u2592\u2588\u2588\u2588\xA3\xA3\xA3  ",
-      "   \u2593\u2588\u2588\u2588\xA3\xA3\xA3  ",
-      "   \u2588\u2588\u2588\u2588\xA3\xA3\xA3  ",
-      "  \u2591\u2588\u2588\u2588\u2588\xA3\xA3\xA3  ",
-      "  \u2592\u2588\u2588\u2588\u2588\xA3\xA3\xA3  ",
-      "  \u2593\u2588\u2588\u2588\u2588\xA3\xA3\xA3  ",
-      "  \u2588\u2588\u2588\u2588\u2588\xA3\xA3\xA3  ",
-      " \u2591\u2588\u2588\u2588\u2588\u2588\xA3\xA3\xA3  ",
-      " \u2592\u2588\u2588\u2588\u2588\u2588\xA3\xA3\xA3  ",
-      " \u2593\u2588\u2588\u2588\u2588\u2588\xA3\xA3\xA3  ",
-      " \u2588\u2588\u2588\u2588\u2588\u2588\xA3\xA3\xA3  ",
-      " \u2588\u2588\u2588\u2588\u2588\u2588\xA3\xA3\xA3  "
-    ]
-  },
-  fish: {
-    interval: 80,
-    frames: [
-      "~~~~~~~~~~~~~~~~~~~~",
-      "> ~~~~~~~~~~~~~~~~~~",
-      "\xBA> ~~~~~~~~~~~~~~~~~",
-      "(\xBA> ~~~~~~~~~~~~~~~~",
-      "((\xBA> ~~~~~~~~~~~~~~~",
-      "<((\xBA> ~~~~~~~~~~~~~~",
-      "><((\xBA> ~~~~~~~~~~~~~",
-      " ><((\xBA> ~~~~~~~~~~~~",
-      "~ ><((\xBA> ~~~~~~~~~~~",
-      "~~ <>((\xBA> ~~~~~~~~~~",
-      "~~~ ><((\xBA> ~~~~~~~~~",
-      "~~~~ <>((\xBA> ~~~~~~~~",
-      "~~~~~ ><((\xBA> ~~~~~~~",
-      "~~~~~~ <>((\xBA> ~~~~~~",
-      "~~~~~~~ ><((\xBA> ~~~~~",
-      "~~~~~~~~ <>((\xBA> ~~~~",
-      "~~~~~~~~~ ><((\xBA> ~~~",
-      "~~~~~~~~~~ <>((\xBA> ~~",
-      "~~~~~~~~~~~ ><((\xBA> ~",
-      "~~~~~~~~~~~~ <>((\xBA> ",
-      "~~~~~~~~~~~~~ ><((\xBA>",
-      "~~~~~~~~~~~~~~ <>((\xBA",
-      "~~~~~~~~~~~~~~~ ><((",
-      "~~~~~~~~~~~~~~~~ <>(",
-      "~~~~~~~~~~~~~~~~~ ><",
-      "~~~~~~~~~~~~~~~~~~ <",
-      "~~~~~~~~~~~~~~~~~~~~"
-    ]
-  }
-};
-
-// ../node_modules/cli-spinners/index.js
-var cli_spinners_default = spinners_default;
-var spinnersList = Object.keys(spinners_default);
-
-// ../node_modules/log-symbols/symbols.js
-var symbols_exports = {};
-__export(symbols_exports, {
-  error: () => error,
-  info: () => info,
-  success: () => success,
-  warning: () => warning
-});
-
-// ../node_modules/yoctocolors/base.js
-var import_node_tty2 = __toESM(require("tty"), 1);
-var hasColors = import_node_tty2.default?.WriteStream?.prototype?.hasColors?.() ?? false;
-var format2 = (open, close) => {
-  if (!hasColors) {
-    return (input) => input;
-  }
-  const openCode = `\x1B[${open}m`;
-  const closeCode = `\x1B[${close}m`;
-  return (input) => {
-    const string4 = input + "";
-    let index = string4.indexOf(closeCode);
-    if (index === -1) {
-      return openCode + string4 + closeCode;
-    }
-    let result = openCode;
-    let lastIndex = 0;
-    const reopenOnNestedClose = close === 22;
-    const replaceCode = (reopenOnNestedClose ? closeCode : "") + openCode;
-    while (index !== -1) {
-      result += string4.slice(lastIndex, index) + replaceCode;
-      lastIndex = index + closeCode.length;
-      index = string4.indexOf(closeCode, lastIndex);
-    }
-    result += string4.slice(lastIndex) + closeCode;
-    return result;
-  };
-};
-var reset = format2(0, 0);
-var bold = format2(1, 22);
-var dim = format2(2, 22);
-var italic = format2(3, 23);
-var underline = format2(4, 24);
-var overline = format2(53, 55);
-var inverse = format2(7, 27);
-var hidden = format2(8, 28);
-var strikethrough = format2(9, 29);
-var black = format2(30, 39);
-var red = format2(31, 39);
-var green = format2(32, 39);
-var yellow = format2(33, 39);
-var blue = format2(34, 39);
-var magenta = format2(35, 39);
-var cyan = format2(36, 39);
-var white = format2(37, 39);
-var gray = format2(90, 39);
-var bgBlack = format2(40, 49);
-var bgRed = format2(41, 49);
-var bgGreen = format2(42, 49);
-var bgYellow = format2(43, 49);
-var bgBlue = format2(44, 49);
-var bgMagenta = format2(45, 49);
-var bgCyan = format2(46, 49);
-var bgWhite = format2(47, 49);
-var bgGray = format2(100, 49);
-var redBright = format2(91, 39);
-var greenBright = format2(92, 39);
-var yellowBright = format2(93, 39);
-var blueBright = format2(94, 39);
-var magentaBright = format2(95, 39);
-var cyanBright = format2(96, 39);
-var whiteBright = format2(97, 39);
-var bgRedBright = format2(101, 49);
-var bgGreenBright = format2(102, 49);
-var bgYellowBright = format2(103, 49);
-var bgBlueBright = format2(104, 49);
-var bgMagentaBright = format2(105, 49);
-var bgCyanBright = format2(106, 49);
-var bgWhiteBright = format2(107, 49);
-
-// ../node_modules/is-unicode-supported/index.js
-var import_node_process12 = __toESM(require("process"), 1);
-function isUnicodeSupported2() {
-  const { env: env3 } = import_node_process12.default;
-  const { TERM: TERM2, TERM_PROGRAM } = env3;
-  if (import_node_process12.default.platform !== "win32") {
-    return TERM2 !== "linux";
-  }
-  return Boolean(env3.WT_SESSION) || Boolean(env3.TERMINUS_SUBLIME) || env3.ConEmuTask === "{cmd::Cmder}" || TERM_PROGRAM === "Terminus-Sublime" || TERM_PROGRAM === "vscode" || TERM2 === "xterm-256color" || TERM2 === "alacritty" || TERM2 === "rxvt-unicode" || TERM2 === "rxvt-unicode-256color" || env3.TERMINAL_EMULATOR === "JetBrains-JediTerm";
-}
-
-// ../node_modules/log-symbols/symbols.js
-var _isUnicodeSupported = isUnicodeSupported2();
-var info = blue(_isUnicodeSupported ? "\u2139" : "i");
-var success = green(_isUnicodeSupported ? "\u2714" : "\u221A");
-var warning = yellow(_isUnicodeSupported ? "\u26A0" : "\u203C");
-var error = red(_isUnicodeSupported ? "\u2716" : "\xD7");
-
-// ../node_modules/ora/node_modules/string-width/index.js
-init_strip_ansi();
-init_get_east_asian_width();
-var segmenter5 = new Intl.Segmenter();
-var zeroWidthClusterRegex3 = new RegExp("^(?:\\p{Default_Ignorable_Code_Point}|\\p{Control}|\\p{Format}|\\p{Mark}|\\p{Surrogate})+$", "v");
-var leadingNonPrintingRegex3 = new RegExp("^[\\p{Default_Ignorable_Code_Point}\\p{Control}\\p{Format}\\p{Mark}\\p{Surrogate}]+", "v");
-var rgiEmojiRegex3 = new RegExp("^\\p{RGI_Emoji}$", "v");
-var unqualifiedKeycapRegex3 = /^[\d#*]\u20E3$/;
-var extendedPictographicRegex3 = new RegExp("\\p{Extended_Pictographic}", "gu");
-function isDoubleWidthNonRgiEmojiSequence3(segment) {
-  if (segment.length > 50) {
-    return false;
-  }
-  if (unqualifiedKeycapRegex3.test(segment)) {
-    return true;
-  }
-  if (segment.includes("\u200D")) {
-    const pictographics = segment.match(extendedPictographicRegex3);
-    return pictographics !== null && pictographics.length >= 2;
-  }
-  return false;
-}
-function baseVisible3(segment) {
-  return segment.replace(leadingNonPrintingRegex3, "");
-}
-function isZeroWidthCluster3(segment) {
-  return zeroWidthClusterRegex3.test(segment);
-}
-function trailingHalfwidthWidth3(segment, eastAsianWidthOptions) {
-  let extra = 0;
-  if (segment.length > 1) {
-    for (const char of segment.slice(1)) {
-      if (char >= "\uFF00" && char <= "\uFFEF") {
-        extra += eastAsianWidth(char.codePointAt(0), eastAsianWidthOptions);
-      }
-    }
-  }
-  return extra;
-}
-function stringWidth4(input, options = {}) {
-  if (typeof input !== "string" || input.length === 0) {
-    return 0;
-  }
-  const {
-    ambiguousIsNarrow = true,
-    countAnsiEscapeCodes = false
-  } = options;
-  let string4 = input;
-  if (!countAnsiEscapeCodes && (string4.includes("\x1B") || string4.includes("\x9B"))) {
-    string4 = stripAnsi(string4);
-  }
-  if (string4.length === 0) {
-    return 0;
-  }
-  if (/^[\u0020-\u007E]*$/.test(string4)) {
-    return string4.length;
-  }
-  let width = 0;
-  const eastAsianWidthOptions = { ambiguousAsWide: !ambiguousIsNarrow };
-  for (const { segment } of segmenter5.segment(string4)) {
-    if (isZeroWidthCluster3(segment)) {
-      continue;
-    }
-    if (rgiEmojiRegex3.test(segment) || isDoubleWidthNonRgiEmojiSequence3(segment)) {
-      width += 2;
-      continue;
-    }
-    const codePoint = baseVisible3(segment).codePointAt(0);
-    width += eastAsianWidth(codePoint, eastAsianWidthOptions);
-    width += trailingHalfwidthWidth3(segment, eastAsianWidthOptions);
-  }
-  return width;
-}
-
-// ../node_modules/is-interactive/index.js
-function isInteractive({ stream = process.stdout } = {}) {
-  return Boolean(
-    stream && stream.isTTY && process.env.TERM !== "dumb" && !("CI" in process.env)
-  );
-}
-
-// ../node_modules/stdin-discarder/index.js
-var import_node_process13 = __toESM(require("process"), 1);
-var ASCII_ETX_CODE = 3;
-var StdinDiscarder = class {
-  #activeCount = 0;
-  #stdin;
-  #stdinWasPaused = false;
-  #stdinWasRaw = false;
-  #handleInputBound = (chunk) => {
-    if (!chunk?.length) {
-      return;
-    }
-    const code = typeof chunk === "string" ? chunk.codePointAt(0) : chunk[0];
-    if (code === ASCII_ETX_CODE) {
-      if (import_node_process13.default.listenerCount("SIGINT") > 0) {
-        import_node_process13.default.emit("SIGINT");
-      } else {
-        import_node_process13.default.kill(import_node_process13.default.pid, "SIGINT");
-      }
-    }
-  };
-  start() {
-    this.#activeCount++;
-    if (this.#activeCount === 1) {
-      this.#realStart();
-    }
-  }
-  stop() {
-    if (this.#activeCount === 0) {
-      return;
-    }
-    if (--this.#activeCount === 0) {
-      this.#realStop();
-    }
-  }
-  #realStart() {
-    const { stdin } = import_node_process13.default;
-    if (import_node_process13.default.platform === "win32" || !stdin?.isTTY || typeof stdin.setRawMode !== "function") {
-      this.#stdin = void 0;
-      return;
-    }
-    this.#stdin = stdin;
-    this.#stdinWasPaused = stdin.isPaused();
-    this.#stdinWasRaw = Boolean(stdin.isRaw);
-    stdin.setRawMode(true);
-    stdin.prependListener("data", this.#handleInputBound);
-    if (this.#stdinWasPaused) {
-      stdin.resume();
-    }
-  }
-  #realStop() {
-    if (!this.#stdin) {
-      return;
-    }
-    const stdin = this.#stdin;
-    stdin.off("data", this.#handleInputBound);
-    if (stdin.isTTY) {
-      stdin.setRawMode?.(this.#stdinWasRaw);
-    }
-    if (this.#stdinWasPaused) {
-      stdin.pause();
-    }
-    this.#stdin = void 0;
-    this.#stdinWasPaused = false;
-    this.#stdinWasRaw = false;
-  }
-};
-var stdinDiscarder = new StdinDiscarder();
-var stdin_discarder_default = Object.freeze(stdinDiscarder);
-
-// ../node_modules/ora/index.js
-var RENDER_DEFERRAL_TIMEOUT = 200;
-var SYNCHRONIZED_OUTPUT_ENABLE = "\x1B[?2026h";
-var SYNCHRONIZED_OUTPUT_DISABLE = "\x1B[?2026l";
-var activeHooksPerStream = /* @__PURE__ */ new Map();
-var Ora = class {
-  #linesToClear = 0;
-  #frameIndex = -1;
-  #lastFrameTime = 0;
-  #options;
-  #spinner;
-  #stream;
-  #id;
-  #hookedStreams = /* @__PURE__ */ new Map();
-  #isInternalWrite = false;
-  #drainHandler;
-  #deferRenderTimer;
-  #isDiscardingStdin = false;
-  color;
-  // Helper to execute writes while preventing hook recursion
-  #internalWrite(fn) {
-    this.#isInternalWrite = true;
-    try {
-      return fn();
-    } finally {
-      this.#isInternalWrite = false;
-    }
-  }
-  // Helper to render if still spinning
-  #tryRender() {
-    if (this.isSpinning) {
-      this.render();
-    }
-  }
-  #stringifyChunk(chunk, encoding) {
-    if (chunk === void 0 || chunk === null) {
-      return "";
-    }
-    if (typeof chunk === "string") {
-      return chunk;
-    }
-    if (Buffer.isBuffer(chunk) || ArrayBuffer.isView(chunk)) {
-      const normalizedEncoding = typeof encoding === "string" && encoding && encoding !== "buffer" ? encoding : "utf8";
-      return Buffer.from(chunk).toString(normalizedEncoding);
-    }
-    return String(chunk);
-  }
-  #chunkTerminatesLine(chunkString) {
-    if (!chunkString) {
-      return false;
-    }
-    const lastCharacter = chunkString.at(-1);
-    return lastCharacter === "\n" || lastCharacter === "\r";
-  }
-  #scheduleRenderDeferral() {
-    if (this.#deferRenderTimer) {
-      return;
-    }
-    this.#deferRenderTimer = setTimeout(() => {
-      this.#deferRenderTimer = void 0;
-      if (this.isSpinning) {
-        this.#tryRender();
-      }
-    }, RENDER_DEFERRAL_TIMEOUT);
-    if (typeof this.#deferRenderTimer?.unref === "function") {
-      this.#deferRenderTimer.unref();
-    }
-  }
-  #clearRenderDeferral() {
-    if (this.#deferRenderTimer) {
-      clearTimeout(this.#deferRenderTimer);
-      this.#deferRenderTimer = void 0;
-    }
-  }
-  // Helper to build complete line with symbol, text, prefix, and suffix
-  #buildOutputLine(symbol2, text, prefixText, suffixText) {
-    const fullPrefixText = this.#getFullPrefixText(prefixText, " ");
-    const separatorText = symbol2 ? " " : "";
-    const fullText = typeof text === "string" ? separatorText + text : "";
-    const fullSuffixText = this.#getFullSuffixText(suffixText, " ");
-    return fullPrefixText + symbol2 + fullText + fullSuffixText;
-  }
-  constructor(options) {
-    if (typeof options === "string") {
-      options = {
-        text: options
-      };
-    }
-    this.#options = {
-      color: "cyan",
-      stream: import_node_process14.default.stderr,
-      discardStdin: true,
-      hideCursor: true,
-      ...options
-    };
-    this.color = this.#options.color;
-    this.#stream = this.#options.stream;
-    if (typeof this.#options.isEnabled !== "boolean") {
-      this.#options.isEnabled = isInteractive({ stream: this.#stream });
-    }
-    if (typeof this.#options.isSilent !== "boolean") {
-      this.#options.isSilent = false;
-    }
-    const userInterval = this.#options.interval;
-    this.spinner = this.#options.spinner;
-    this.#options.interval = userInterval;
-    this.text = this.#options.text;
-    this.prefixText = this.#options.prefixText;
-    this.suffixText = this.#options.suffixText;
-    this.indent = this.#options.indent;
-    if (import_node_process14.default.env.NODE_ENV === "test") {
-      this._stream = this.#stream;
-      this._isEnabled = this.#options.isEnabled;
-      Object.defineProperty(this, "_linesToClear", {
-        get() {
-          return this.#linesToClear;
-        },
-        set(newValue) {
-          this.#linesToClear = newValue;
-        }
-      });
-      Object.defineProperty(this, "_frameIndex", {
-        get() {
-          return this.#frameIndex;
-        }
-      });
-      Object.defineProperty(this, "_lineCount", {
-        get() {
-          const columns2 = this.#stream.columns ?? 80;
-          const prefixText = typeof this.#options.prefixText === "function" ? "" : this.#options.prefixText;
-          const suffixText = typeof this.#options.suffixText === "function" ? "" : this.#options.suffixText;
-          const fullPrefixText = typeof prefixText === "string" && prefixText !== "" ? prefixText + " " : "";
-          const fullSuffixText = typeof suffixText === "string" && suffixText !== "" ? " " + suffixText : "";
-          const spinnerChar = "-";
-          const fullText = " ".repeat(this.#options.indent) + fullPrefixText + spinnerChar + (typeof this.#options.text === "string" ? " " + this.#options.text : "") + fullSuffixText;
-          return this.#computeLineCountFrom(fullText, columns2);
-        }
-      });
-    }
-  }
-  get indent() {
-    return this.#options.indent;
-  }
-  set indent(indent2 = 0) {
-    if (!(indent2 >= 0 && Number.isInteger(indent2))) {
-      throw new Error("The `indent` option must be an integer from 0 and up");
-    }
-    this.#options.indent = indent2;
-  }
-  get interval() {
-    return this.#options.interval ?? this.#spinner.interval ?? 100;
-  }
-  get spinner() {
-    return this.#spinner;
-  }
-  set spinner(spinner) {
-    this.#frameIndex = -1;
-    this.#options.interval = void 0;
-    if (typeof spinner === "object") {
-      if (!Array.isArray(spinner.frames) || spinner.frames.length === 0 || spinner.frames.some((frame) => typeof frame !== "string")) {
-        throw new Error("The given spinner must have a non-empty `frames` array of strings");
-      }
-      if (spinner.interval !== void 0 && !(Number.isInteger(spinner.interval) && spinner.interval > 0)) {
-        throw new Error("`spinner.interval` must be a positive integer if provided");
-      }
-      this.#spinner = spinner;
-    } else if (!isUnicodeSupported2()) {
-      this.#spinner = cli_spinners_default.line;
-    } else if (spinner === void 0) {
-      this.#spinner = cli_spinners_default.dots;
-    } else if (spinner !== "default" && cli_spinners_default[spinner]) {
-      this.#spinner = cli_spinners_default[spinner];
-    } else {
-      throw new Error(`There is no built-in spinner named '${spinner}'. See https://github.com/sindresorhus/cli-spinners/blob/main/spinners.json for a full list.`);
-    }
-  }
-  get text() {
-    return this.#options.text;
-  }
-  set text(value = "") {
-    this.#options.text = value;
-  }
-  get prefixText() {
-    return this.#options.prefixText;
-  }
-  set prefixText(value = "") {
-    this.#options.prefixText = value;
-  }
-  get suffixText() {
-    return this.#options.suffixText;
-  }
-  set suffixText(value = "") {
-    this.#options.suffixText = value;
-  }
-  get isSpinning() {
-    return this.#id !== void 0;
-  }
-  #formatAffix(value, separator, placeBefore = false) {
-    const resolved = typeof value === "function" ? value() : value;
-    if (typeof resolved === "string" && resolved !== "") {
-      return placeBefore ? separator + resolved : resolved + separator;
-    }
-    return "";
-  }
-  #getFullPrefixText(prefixText = this.#options.prefixText, postfix = " ") {
-    return this.#formatAffix(prefixText, postfix, false);
-  }
-  #getFullSuffixText(suffixText = this.#options.suffixText, prefix = " ") {
-    return this.#formatAffix(suffixText, prefix, true);
-  }
-  #computeLineCountFrom(text, columns2) {
-    let count = 0;
-    for (const line of (0, import_node_util4.stripVTControlCharacters)(text).split("\n")) {
-      count += Math.max(1, Math.ceil(stringWidth4(line) / columns2));
-    }
-    return count;
-  }
-  get isEnabled() {
-    return this.#options.isEnabled && !this.#options.isSilent;
-  }
-  set isEnabled(value) {
-    if (typeof value !== "boolean") {
-      throw new TypeError("The `isEnabled` option must be a boolean");
-    }
-    this.#options.isEnabled = value;
-  }
-  get isSilent() {
-    return this.#options.isSilent;
-  }
-  set isSilent(value) {
-    if (typeof value !== "boolean") {
-      throw new TypeError("The `isSilent` option must be a boolean");
-    }
-    this.#options.isSilent = value;
-  }
-  frame() {
-    const now = Date.now();
-    if (this.#frameIndex === -1 || now - this.#lastFrameTime >= this.interval) {
-      this.#frameIndex = (this.#frameIndex + 1) % this.#spinner.frames.length;
-      this.#lastFrameTime = now;
-    }
-    const { frames } = this.#spinner;
-    let frame = frames[this.#frameIndex];
-    if (this.color) {
-      frame = source_default[this.color](frame);
-    }
-    const fullPrefixText = this.#getFullPrefixText(this.#options.prefixText, " ");
-    const fullText = typeof this.text === "string" ? " " + this.text : "";
-    const fullSuffixText = this.#getFullSuffixText(this.#options.suffixText, " ");
-    return fullPrefixText + frame + fullText + fullSuffixText;
-  }
-  clear() {
-    if (!this.isEnabled || !this.#stream.isTTY) {
-      return this;
-    }
-    this.#internalWrite(() => {
-      this.#stream.cursorTo(0);
-      for (let index = 0; index < this.#linesToClear; index++) {
-        if (index > 0) {
-          this.#stream.moveCursor(0, -1);
-        }
-        this.#stream.clearLine(1);
-      }
-      if (this.#options.indent) {
-        this.#stream.cursorTo(this.#options.indent);
-      }
-    });
-    this.#linesToClear = 0;
-    return this;
-  }
-  // Helper to hook a single stream
-  #hookStream(stream) {
-    if (!stream || this.#hookedStreams.has(stream) || !stream.isTTY || typeof stream.write !== "function") {
-      return;
-    }
-    if (activeHooksPerStream.has(stream)) {
-      console.warn("[ora] Multiple concurrent spinners detected. This may cause visual corruption. Use one spinner at a time.");
-    }
-    const originalWrite = stream.write;
-    this.#hookedStreams.set(stream, originalWrite);
-    activeHooksPerStream.set(stream, this);
-    stream.write = (chunk, encoding, callback) => this.#hookedWrite(stream, originalWrite, chunk, encoding, callback);
-  }
-  /**
-  Intercept stream writes while spinner is active to handle external writes cleanly without visual corruption.
-  Hooks process stdio streams and the active spinner stream so console.log(), console.error(), and direct writes stay tidy.
-  */
-  #installHook() {
-    if (!this.isEnabled || this.#hookedStreams.size > 0) {
-      return;
-    }
-    const streamsToHook = /* @__PURE__ */ new Set([this.#stream, import_node_process14.default.stdout, import_node_process14.default.stderr]);
-    for (const stream of streamsToHook) {
-      this.#hookStream(stream);
-    }
-  }
-  #uninstallHook() {
-    for (const [stream, originalWrite] of this.#hookedStreams) {
-      stream.write = originalWrite;
-      if (activeHooksPerStream.get(stream) === this) {
-        activeHooksPerStream.delete(stream);
-      }
-    }
-    this.#hookedStreams.clear();
-  }
-  // eslint-disable-next-line max-params -- Need stream and originalWrite for multi-stream support
-  #hookedWrite(stream, originalWrite, chunk, encoding, callback) {
-    if (typeof encoding === "function") {
-      callback = encoding;
-      encoding = void 0;
-    }
-    if (this.#isInternalWrite) {
-      return originalWrite.call(stream, chunk, encoding, callback);
-    }
-    this.clear();
-    const chunkString = this.#stringifyChunk(chunk, encoding);
-    const chunkTerminatesLine = this.#chunkTerminatesLine(chunkString);
-    const writeResult = originalWrite.call(stream, chunk, encoding, callback);
-    if (chunkTerminatesLine) {
-      this.#clearRenderDeferral();
-    } else if (chunkString.length > 0) {
-      this.#scheduleRenderDeferral();
-    }
-    if (this.isSpinning && !this.#deferRenderTimer) {
-      this.render();
-    }
-    return writeResult;
-  }
-  render() {
-    if (!this.isEnabled || this.#drainHandler || this.#deferRenderTimer) {
-      return this;
-    }
-    const useSynchronizedOutput = this.#stream.isTTY;
-    let shouldDisableSynchronizedOutput = false;
-    try {
-      if (useSynchronizedOutput) {
-        this.#internalWrite(() => this.#stream.write(SYNCHRONIZED_OUTPUT_ENABLE));
-        shouldDisableSynchronizedOutput = true;
-      }
-      this.clear();
-      let frameContent = this.frame();
-      const columns2 = this.#stream.columns ?? 80;
-      const actualLineCount = this.#computeLineCountFrom(frameContent, columns2);
-      const consoleHeight = this.#stream.rows;
-      if (consoleHeight && consoleHeight > 1 && actualLineCount > consoleHeight) {
-        const lines = frameContent.split("\n");
-        const maxLines = consoleHeight - 1;
-        frameContent = [...lines.slice(0, maxLines), "... (content truncated to fit terminal)"].join("\n");
-      }
-      const canContinue = this.#internalWrite(() => this.#stream.write(frameContent));
-      if (canContinue === false && this.#stream.isTTY) {
-        this.#drainHandler = () => {
-          this.#drainHandler = void 0;
-          this.#tryRender();
-        };
-        this.#stream.once("drain", this.#drainHandler);
-      }
-      this.#linesToClear = this.#computeLineCountFrom(frameContent, columns2);
-    } finally {
-      if (shouldDisableSynchronizedOutput) {
-        this.#internalWrite(() => this.#stream.write(SYNCHRONIZED_OUTPUT_DISABLE));
-      }
-    }
-    return this;
-  }
-  start(text) {
-    if (text) {
-      this.text = text;
-    }
-    if (this.isSilent) {
-      return this;
-    }
-    if (!this.isEnabled) {
-      const symbol2 = this.text ? "-" : "";
-      const line = " ".repeat(this.#options.indent) + this.#buildOutputLine(symbol2, this.text, this.#options.prefixText, this.#options.suffixText);
-      if (line.trim() !== "") {
-        this.#internalWrite(() => this.#stream.write(line + "\n"));
-      }
-      return this;
-    }
-    if (this.isSpinning) {
-      return this;
-    }
-    if (this.#options.hideCursor) {
-      cli_cursor_default.hide(this.#stream);
-    }
-    if (this.#options.discardStdin && import_node_process14.default.stdin.isTTY) {
-      stdin_discarder_default.start();
-      this.#isDiscardingStdin = true;
-    }
-    this.#installHook();
-    this.render();
-    this.#id = setInterval(this.render.bind(this), this.interval);
-    return this;
-  }
-  stop() {
-    clearInterval(this.#id);
-    this.#id = void 0;
-    this.#frameIndex = -1;
-    this.#lastFrameTime = 0;
-    this.#clearRenderDeferral();
-    this.#uninstallHook();
-    if (this.#drainHandler) {
-      this.#stream.removeListener("drain", this.#drainHandler);
-      this.#drainHandler = void 0;
-    }
-    if (this.isEnabled) {
-      this.clear();
-      if (this.#options.hideCursor) {
-        cli_cursor_default.show(this.#stream);
-      }
-    }
-    if (this.#isDiscardingStdin) {
-      this.#isDiscardingStdin = false;
-      stdin_discarder_default.stop();
-    }
-    return this;
-  }
-  succeed(text) {
-    return this.stopAndPersist({ symbol: symbols_exports.success, text });
-  }
-  fail(text) {
-    return this.stopAndPersist({ symbol: symbols_exports.error, text });
-  }
-  warn(text) {
-    return this.stopAndPersist({ symbol: symbols_exports.warning, text });
-  }
-  info(text) {
-    return this.stopAndPersist({ symbol: symbols_exports.info, text });
-  }
-  stopAndPersist(options = {}) {
-    if (this.isSilent) {
-      return this;
-    }
-    const symbol2 = options.symbol ?? " ";
-    const text = options.text ?? this.text;
-    const prefixText = options.prefixText ?? this.#options.prefixText;
-    const suffixText = options.suffixText ?? this.#options.suffixText;
-    const textToWrite = this.#buildOutputLine(symbol2, text, prefixText, suffixText) + "\n";
-    this.stop();
-    this.#internalWrite(() => this.#stream.write(textToWrite));
-    return this;
-  }
-};
-function ora(options) {
-  return new Ora(options);
-}
 
 // src/utils/env-manager.ts
 var import_path7 = __toESM(require("path"), 1);
@@ -40297,7 +37892,7 @@ async function executeSync(repoRoot, systemRoot, changeSet, mode, actionType, is
       await cleanupBackup(backup);
     }
     return count;
-  } catch (error49) {
+  } catch (error48) {
     console.error(kleur_default.red(`
 Sync failed, rolling back ${backups.length} changes...`));
     for (const backup of backups) {
@@ -40307,7 +37902,7 @@ Sync failed, rolling back ${backups.length} changes...`));
         await cleanupBackup(backup);
       }
     }
-    throw error49;
+    throw error48;
   }
 }
 async function executeSyncAgentsSkills(repoRoot, systemRoot, changeSet, mode, actionType, isDryRun) {
@@ -40346,7 +37941,7 @@ async function executeSyncAgentsSkills(repoRoot, systemRoot, changeSet, mode, ac
     }
     for (const backup of backups) await cleanupBackup(backup);
     return count;
-  } catch (error49) {
+  } catch (error48) {
     console.error(kleur_default.red(`
 Sync failed, rolling back ${backups.length} changes...`));
     for (const backup of backups) {
@@ -40356,7 +37951,7 @@ Sync failed, rolling back ${backups.length} changes...`));
         await cleanupBackup(backup);
       }
     }
-    throw error49;
+    throw error48;
   }
 }
 function resolveConfigPaths(config3, targetDir) {
@@ -42097,7 +39692,7 @@ __export(external_exports, {
   string: () => string2,
   stringFormat: () => stringFormat,
   stringbool: () => stringbool,
-  success: () => success2,
+  success: () => success,
   superRefine: () => superRefine,
   symbol: () => symbol,
   templateLiteral: () => templateLiteral,
@@ -42388,7 +39983,7 @@ __export(core_exports2, {
   parse: () => parse2,
   parseAsync: () => parseAsync,
   prettifyError: () => prettifyError,
-  process: () => process18,
+  process: () => process15,
   regexes: () => regexes_exports,
   registry: () => registry,
   safeDecode: () => safeDecode,
@@ -43177,10 +40772,10 @@ var initializer = (inst, def) => {
 };
 var $ZodError = $constructor("$ZodError", initializer);
 var $ZodRealError = $constructor("$ZodError", initializer, { Parent: Error });
-function flattenError(error49, mapper = (issue2) => issue2.message) {
+function flattenError(error48, mapper = (issue2) => issue2.message) {
   const fieldErrors = {};
   const formErrors = [];
-  for (const sub of error49.issues) {
+  for (const sub of error48.issues) {
     if (sub.path.length > 0) {
       fieldErrors[sub.path[0]] = fieldErrors[sub.path[0]] || [];
       fieldErrors[sub.path[0]].push(mapper(sub));
@@ -43190,10 +40785,10 @@ function flattenError(error49, mapper = (issue2) => issue2.message) {
   }
   return { formErrors, fieldErrors };
 }
-function formatError(error49, mapper = (issue2) => issue2.message) {
+function formatError(error48, mapper = (issue2) => issue2.message) {
   const fieldErrors = { _errors: [] };
-  const processError = (error50) => {
-    for (const issue2 of error50.issues) {
+  const processError = (error49) => {
+    for (const issue2 of error49.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
         issue2.errors.map((issues) => processError({ issues }));
       } else if (issue2.code === "invalid_key") {
@@ -43220,14 +40815,14 @@ function formatError(error49, mapper = (issue2) => issue2.message) {
       }
     }
   };
-  processError(error49);
+  processError(error48);
   return fieldErrors;
 }
-function treeifyError(error49, mapper = (issue2) => issue2.message) {
+function treeifyError(error48, mapper = (issue2) => issue2.message) {
   const result = { errors: [] };
-  const processError = (error50, path23 = []) => {
+  const processError = (error49, path23 = []) => {
     var _a2, _b;
-    for (const issue2 of error50.issues) {
+    for (const issue2 of error49.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
         issue2.errors.map((issues) => processError({ issues }, issue2.path));
       } else if (issue2.code === "invalid_key") {
@@ -43262,7 +40857,7 @@ function treeifyError(error49, mapper = (issue2) => issue2.message) {
       }
     }
   };
-  processError(error49);
+  processError(error48);
   return result;
 }
 function toDotPath(_path) {
@@ -43283,9 +40878,9 @@ function toDotPath(_path) {
   }
   return segs.join("");
 }
-function prettifyError(error49) {
+function prettifyError(error48) {
   const lines = [];
-  const issues = [...error49.issues].sort((a, b) => (a.path ?? []).length - (b.path ?? []).length);
+  const issues = [...error48.issues].sort((a, b) => (a.path ?? []).length - (b.path ?? []).length);
   for (const issue2 of issues) {
     lines.push(`\u2716 ${issue2.message}`);
     if (issue2.path?.length)
@@ -46156,7 +43751,7 @@ __export(locales_exports, {
 });
 
 // ../node_modules/zod/v4/locales/ar.js
-var error2 = () => {
+var error = () => {
   const Sizable = {
     string: { unit: "\u062D\u0631\u0641", verb: "\u0623\u0646 \u064A\u062D\u0648\u064A" },
     file: { unit: "\u0628\u0627\u064A\u062A", verb: "\u0623\u0646 \u064A\u062D\u0648\u064A" },
@@ -46258,12 +43853,12 @@ var error2 = () => {
 };
 function ar_default() {
   return {
-    localeError: error2()
+    localeError: error()
   };
 }
 
 // ../node_modules/zod/v4/locales/az.js
-var error3 = () => {
+var error2 = () => {
   const Sizable = {
     string: { unit: "simvol", verb: "olmal\u0131d\u0131r" },
     file: { unit: "bayt", verb: "olmal\u0131d\u0131r" },
@@ -46364,7 +43959,7 @@ var error3 = () => {
 };
 function az_default() {
   return {
-    localeError: error3()
+    localeError: error2()
   };
 }
 
@@ -46384,7 +43979,7 @@ function getBelarusianPlural(count, one, few, many) {
   }
   return many;
 }
-var error4 = () => {
+var error3 = () => {
   const Sizable = {
     string: {
       unit: {
@@ -46521,12 +44116,12 @@ var error4 = () => {
 };
 function be_default() {
   return {
-    localeError: error4()
+    localeError: error3()
   };
 }
 
 // ../node_modules/zod/v4/locales/bg.js
-var error5 = () => {
+var error4 = () => {
   const Sizable = {
     string: { unit: "\u0441\u0438\u043C\u0432\u043E\u043B\u0430", verb: "\u0434\u0430 \u0441\u044A\u0434\u044A\u0440\u0436\u0430" },
     file: { unit: "\u0431\u0430\u0439\u0442\u0430", verb: "\u0434\u0430 \u0441\u044A\u0434\u044A\u0440\u0436\u0430" },
@@ -46642,12 +44237,12 @@ var error5 = () => {
 };
 function bg_default() {
   return {
-    localeError: error5()
+    localeError: error4()
   };
 }
 
 // ../node_modules/zod/v4/locales/ca.js
-var error6 = () => {
+var error5 = () => {
   const Sizable = {
     string: { unit: "car\xE0cters", verb: "contenir" },
     file: { unit: "bytes", verb: "contenir" },
@@ -46751,12 +44346,12 @@ var error6 = () => {
 };
 function ca_default() {
   return {
-    localeError: error6()
+    localeError: error5()
   };
 }
 
 // ../node_modules/zod/v4/locales/cs.js
-var error7 = () => {
+var error6 = () => {
   const Sizable = {
     string: { unit: "znak\u016F", verb: "m\xEDt" },
     file: { unit: "bajt\u016F", verb: "m\xEDt" },
@@ -46863,12 +44458,12 @@ var error7 = () => {
 };
 function cs_default() {
   return {
-    localeError: error7()
+    localeError: error6()
   };
 }
 
 // ../node_modules/zod/v4/locales/da.js
-var error8 = () => {
+var error7 = () => {
   const Sizable = {
     string: { unit: "tegn", verb: "havde" },
     file: { unit: "bytes", verb: "havde" },
@@ -46979,12 +44574,12 @@ var error8 = () => {
 };
 function da_default() {
   return {
-    localeError: error8()
+    localeError: error7()
   };
 }
 
 // ../node_modules/zod/v4/locales/de.js
-var error9 = () => {
+var error8 = () => {
   const Sizable = {
     string: { unit: "Zeichen", verb: "zu haben" },
     file: { unit: "Bytes", verb: "zu haben" },
@@ -47088,12 +44683,12 @@ var error9 = () => {
 };
 function de_default() {
   return {
-    localeError: error9()
+    localeError: error8()
   };
 }
 
 // ../node_modules/zod/v4/locales/en.js
-var error10 = () => {
+var error9 = () => {
   const Sizable = {
     string: { unit: "characters", verb: "to have" },
     file: { unit: "bytes", verb: "to have" },
@@ -47197,12 +44792,12 @@ var error10 = () => {
 };
 function en_default() {
   return {
-    localeError: error10()
+    localeError: error9()
   };
 }
 
 // ../node_modules/zod/v4/locales/eo.js
-var error11 = () => {
+var error10 = () => {
   const Sizable = {
     string: { unit: "karaktrojn", verb: "havi" },
     file: { unit: "bajtojn", verb: "havi" },
@@ -47307,12 +44902,12 @@ var error11 = () => {
 };
 function eo_default() {
   return {
-    localeError: error11()
+    localeError: error10()
   };
 }
 
 // ../node_modules/zod/v4/locales/es.js
-var error12 = () => {
+var error11 = () => {
   const Sizable = {
     string: { unit: "caracteres", verb: "tener" },
     file: { unit: "bytes", verb: "tener" },
@@ -47440,12 +45035,12 @@ var error12 = () => {
 };
 function es_default() {
   return {
-    localeError: error12()
+    localeError: error11()
   };
 }
 
 // ../node_modules/zod/v4/locales/fa.js
-var error13 = () => {
+var error12 = () => {
   const Sizable = {
     string: { unit: "\u06A9\u0627\u0631\u0627\u06A9\u062A\u0631", verb: "\u062F\u0627\u0634\u062A\u0647 \u0628\u0627\u0634\u062F" },
     file: { unit: "\u0628\u0627\u06CC\u062A", verb: "\u062F\u0627\u0634\u062A\u0647 \u0628\u0627\u0634\u062F" },
@@ -47555,12 +45150,12 @@ var error13 = () => {
 };
 function fa_default() {
   return {
-    localeError: error13()
+    localeError: error12()
   };
 }
 
 // ../node_modules/zod/v4/locales/fi.js
-var error14 = () => {
+var error13 = () => {
   const Sizable = {
     string: { unit: "merkki\xE4", subject: "merkkijonon" },
     file: { unit: "tavua", subject: "tiedoston" },
@@ -47668,12 +45263,12 @@ var error14 = () => {
 };
 function fi_default() {
   return {
-    localeError: error14()
+    localeError: error13()
   };
 }
 
 // ../node_modules/zod/v4/locales/fr.js
-var error15 = () => {
+var error14 = () => {
   const Sizable = {
     string: { unit: "caract\xE8res", verb: "avoir" },
     file: { unit: "octets", verb: "avoir" },
@@ -47777,12 +45372,12 @@ var error15 = () => {
 };
 function fr_default() {
   return {
-    localeError: error15()
+    localeError: error14()
   };
 }
 
 // ../node_modules/zod/v4/locales/fr-CA.js
-var error16 = () => {
+var error15 = () => {
   const Sizable = {
     string: { unit: "caract\xE8res", verb: "avoir" },
     file: { unit: "octets", verb: "avoir" },
@@ -47885,12 +45480,12 @@ var error16 = () => {
 };
 function fr_CA_default() {
   return {
-    localeError: error16()
+    localeError: error15()
   };
 }
 
 // ../node_modules/zod/v4/locales/he.js
-var error17 = () => {
+var error16 = () => {
   const TypeNames = {
     string: { label: "\u05DE\u05D7\u05E8\u05D5\u05D6\u05EA", gender: "f" },
     number: { label: "\u05DE\u05E1\u05E4\u05E8", gender: "m" },
@@ -48080,12 +45675,12 @@ var error17 = () => {
 };
 function he_default() {
   return {
-    localeError: error17()
+    localeError: error16()
   };
 }
 
 // ../node_modules/zod/v4/locales/hu.js
-var error18 = () => {
+var error17 = () => {
   const Sizable = {
     string: { unit: "karakter", verb: "legyen" },
     file: { unit: "byte", verb: "legyen" },
@@ -48189,7 +45784,7 @@ var error18 = () => {
 };
 function hu_default() {
   return {
-    localeError: error18()
+    localeError: error17()
   };
 }
 
@@ -48204,7 +45799,7 @@ function withDefiniteArticle(word) {
   const lastChar = word[word.length - 1];
   return word + (vowels.includes(lastChar) ? "\u0576" : "\u0568");
 }
-var error19 = () => {
+var error18 = () => {
   const Sizable = {
     string: {
       unit: {
@@ -48337,12 +45932,12 @@ var error19 = () => {
 };
 function hy_default() {
   return {
-    localeError: error19()
+    localeError: error18()
   };
 }
 
 // ../node_modules/zod/v4/locales/id.js
-var error20 = () => {
+var error19 = () => {
   const Sizable = {
     string: { unit: "karakter", verb: "memiliki" },
     file: { unit: "byte", verb: "memiliki" },
@@ -48444,12 +46039,12 @@ var error20 = () => {
 };
 function id_default() {
   return {
-    localeError: error20()
+    localeError: error19()
   };
 }
 
 // ../node_modules/zod/v4/locales/is.js
-var error21 = () => {
+var error20 = () => {
   const Sizable = {
     string: { unit: "stafi", verb: "a\xF0 hafa" },
     file: { unit: "b\xE6ti", verb: "a\xF0 hafa" },
@@ -48554,12 +46149,12 @@ var error21 = () => {
 };
 function is_default() {
   return {
-    localeError: error21()
+    localeError: error20()
   };
 }
 
 // ../node_modules/zod/v4/locales/it.js
-var error22 = () => {
+var error21 = () => {
   const Sizable = {
     string: { unit: "caratteri", verb: "avere" },
     file: { unit: "byte", verb: "avere" },
@@ -48663,12 +46258,12 @@ var error22 = () => {
 };
 function it_default() {
   return {
-    localeError: error22()
+    localeError: error21()
   };
 }
 
 // ../node_modules/zod/v4/locales/ja.js
-var error23 = () => {
+var error22 = () => {
   const Sizable = {
     string: { unit: "\u6587\u5B57", verb: "\u3067\u3042\u308B" },
     file: { unit: "\u30D0\u30A4\u30C8", verb: "\u3067\u3042\u308B" },
@@ -48771,12 +46366,12 @@ var error23 = () => {
 };
 function ja_default() {
   return {
-    localeError: error23()
+    localeError: error22()
   };
 }
 
 // ../node_modules/zod/v4/locales/ka.js
-var error24 = () => {
+var error23 = () => {
   const Sizable = {
     string: { unit: "\u10E1\u10D8\u10DB\u10D1\u10DD\u10DA\u10DD", verb: "\u10E3\u10DC\u10D3\u10D0 \u10E8\u10D4\u10D8\u10EA\u10D0\u10D5\u10D3\u10D4\u10E1" },
     file: { unit: "\u10D1\u10D0\u10D8\u10E2\u10D8", verb: "\u10E3\u10DC\u10D3\u10D0 \u10E8\u10D4\u10D8\u10EA\u10D0\u10D5\u10D3\u10D4\u10E1" },
@@ -48884,12 +46479,12 @@ var error24 = () => {
 };
 function ka_default() {
   return {
-    localeError: error24()
+    localeError: error23()
   };
 }
 
 // ../node_modules/zod/v4/locales/km.js
-var error25 = () => {
+var error24 = () => {
   const Sizable = {
     string: { unit: "\u178F\u17BD\u17A2\u1780\u17D2\u179F\u179A", verb: "\u1782\u17BD\u179A\u1798\u17B6\u1793" },
     file: { unit: "\u1794\u17C3", verb: "\u1782\u17BD\u179A\u1798\u17B6\u1793" },
@@ -48995,7 +46590,7 @@ var error25 = () => {
 };
 function km_default() {
   return {
-    localeError: error25()
+    localeError: error24()
   };
 }
 
@@ -49005,7 +46600,7 @@ function kh_default() {
 }
 
 // ../node_modules/zod/v4/locales/ko.js
-var error26 = () => {
+var error25 = () => {
   const Sizable = {
     string: { unit: "\uBB38\uC790", verb: "to have" },
     file: { unit: "\uBC14\uC774\uD2B8", verb: "to have" },
@@ -49112,7 +46707,7 @@ var error26 = () => {
 };
 function ko_default() {
   return {
-    localeError: error26()
+    localeError: error25()
   };
 }
 
@@ -49130,7 +46725,7 @@ function getUnitTypeFromNumber(number4) {
     return "one";
   return "few";
 }
-var error27 = () => {
+var error26 = () => {
   const Sizable = {
     string: {
       unit: {
@@ -49316,12 +46911,12 @@ var error27 = () => {
 };
 function lt_default() {
   return {
-    localeError: error27()
+    localeError: error26()
   };
 }
 
 // ../node_modules/zod/v4/locales/mk.js
-var error28 = () => {
+var error27 = () => {
   const Sizable = {
     string: { unit: "\u0437\u043D\u0430\u0446\u0438", verb: "\u0434\u0430 \u0438\u043C\u0430\u0430\u0442" },
     file: { unit: "\u0431\u0430\u0458\u0442\u0438", verb: "\u0434\u0430 \u0438\u043C\u0430\u0430\u0442" },
@@ -49426,12 +47021,12 @@ var error28 = () => {
 };
 function mk_default() {
   return {
-    localeError: error28()
+    localeError: error27()
   };
 }
 
 // ../node_modules/zod/v4/locales/ms.js
-var error29 = () => {
+var error28 = () => {
   const Sizable = {
     string: { unit: "aksara", verb: "mempunyai" },
     file: { unit: "bait", verb: "mempunyai" },
@@ -49534,12 +47129,12 @@ var error29 = () => {
 };
 function ms_default() {
   return {
-    localeError: error29()
+    localeError: error28()
   };
 }
 
 // ../node_modules/zod/v4/locales/nl.js
-var error30 = () => {
+var error29 = () => {
   const Sizable = {
     string: { unit: "tekens", verb: "heeft" },
     file: { unit: "bytes", verb: "heeft" },
@@ -49645,12 +47240,12 @@ var error30 = () => {
 };
 function nl_default() {
   return {
-    localeError: error30()
+    localeError: error29()
   };
 }
 
 // ../node_modules/zod/v4/locales/no.js
-var error31 = () => {
+var error30 = () => {
   const Sizable = {
     string: { unit: "tegn", verb: "\xE5 ha" },
     file: { unit: "bytes", verb: "\xE5 ha" },
@@ -49754,12 +47349,12 @@ var error31 = () => {
 };
 function no_default() {
   return {
-    localeError: error31()
+    localeError: error30()
   };
 }
 
 // ../node_modules/zod/v4/locales/ota.js
-var error32 = () => {
+var error31 = () => {
   const Sizable = {
     string: { unit: "harf", verb: "olmal\u0131d\u0131r" },
     file: { unit: "bayt", verb: "olmal\u0131d\u0131r" },
@@ -49864,12 +47459,12 @@ var error32 = () => {
 };
 function ota_default() {
   return {
-    localeError: error32()
+    localeError: error31()
   };
 }
 
 // ../node_modules/zod/v4/locales/ps.js
-var error33 = () => {
+var error32 = () => {
   const Sizable = {
     string: { unit: "\u062A\u0648\u06A9\u064A", verb: "\u0648\u0644\u0631\u064A" },
     file: { unit: "\u0628\u0627\u06CC\u067C\u0633", verb: "\u0648\u0644\u0631\u064A" },
@@ -49979,12 +47574,12 @@ var error33 = () => {
 };
 function ps_default() {
   return {
-    localeError: error33()
+    localeError: error32()
   };
 }
 
 // ../node_modules/zod/v4/locales/pl.js
-var error34 = () => {
+var error33 = () => {
   const Sizable = {
     string: { unit: "znak\xF3w", verb: "mie\u0107" },
     file: { unit: "bajt\xF3w", verb: "mie\u0107" },
@@ -50089,12 +47684,12 @@ var error34 = () => {
 };
 function pl_default() {
   return {
-    localeError: error34()
+    localeError: error33()
   };
 }
 
 // ../node_modules/zod/v4/locales/pt.js
-var error35 = () => {
+var error34 = () => {
   const Sizable = {
     string: { unit: "caracteres", verb: "ter" },
     file: { unit: "bytes", verb: "ter" },
@@ -50198,7 +47793,7 @@ var error35 = () => {
 };
 function pt_default() {
   return {
-    localeError: error35()
+    localeError: error34()
   };
 }
 
@@ -50218,7 +47813,7 @@ function getRussianPlural(count, one, few, many) {
   }
   return many;
 }
-var error36 = () => {
+var error35 = () => {
   const Sizable = {
     string: {
       unit: {
@@ -50355,12 +47950,12 @@ var error36 = () => {
 };
 function ru_default() {
   return {
-    localeError: error36()
+    localeError: error35()
   };
 }
 
 // ../node_modules/zod/v4/locales/sl.js
-var error37 = () => {
+var error36 = () => {
   const Sizable = {
     string: { unit: "znakov", verb: "imeti" },
     file: { unit: "bajtov", verb: "imeti" },
@@ -50465,12 +48060,12 @@ var error37 = () => {
 };
 function sl_default() {
   return {
-    localeError: error37()
+    localeError: error36()
   };
 }
 
 // ../node_modules/zod/v4/locales/sv.js
-var error38 = () => {
+var error37 = () => {
   const Sizable = {
     string: { unit: "tecken", verb: "att ha" },
     file: { unit: "bytes", verb: "att ha" },
@@ -50576,12 +48171,12 @@ var error38 = () => {
 };
 function sv_default() {
   return {
-    localeError: error38()
+    localeError: error37()
   };
 }
 
 // ../node_modules/zod/v4/locales/ta.js
-var error39 = () => {
+var error38 = () => {
   const Sizable = {
     string: { unit: "\u0B8E\u0BB4\u0BC1\u0BA4\u0BCD\u0BA4\u0BC1\u0B95\u0BCD\u0B95\u0BB3\u0BCD", verb: "\u0B95\u0BCA\u0BA3\u0BCD\u0B9F\u0BBF\u0BB0\u0BC1\u0B95\u0BCD\u0B95 \u0BB5\u0BC7\u0BA3\u0BCD\u0B9F\u0BC1\u0BAE\u0BCD" },
     file: { unit: "\u0BAA\u0BC8\u0B9F\u0BCD\u0B9F\u0BC1\u0B95\u0BB3\u0BCD", verb: "\u0B95\u0BCA\u0BA3\u0BCD\u0B9F\u0BBF\u0BB0\u0BC1\u0B95\u0BCD\u0B95 \u0BB5\u0BC7\u0BA3\u0BCD\u0B9F\u0BC1\u0BAE\u0BCD" },
@@ -50687,12 +48282,12 @@ var error39 = () => {
 };
 function ta_default() {
   return {
-    localeError: error39()
+    localeError: error38()
   };
 }
 
 // ../node_modules/zod/v4/locales/th.js
-var error40 = () => {
+var error39 = () => {
   const Sizable = {
     string: { unit: "\u0E15\u0E31\u0E27\u0E2D\u0E31\u0E01\u0E29\u0E23", verb: "\u0E04\u0E27\u0E23\u0E21\u0E35" },
     file: { unit: "\u0E44\u0E1A\u0E15\u0E4C", verb: "\u0E04\u0E27\u0E23\u0E21\u0E35" },
@@ -50798,12 +48393,12 @@ var error40 = () => {
 };
 function th_default() {
   return {
-    localeError: error40()
+    localeError: error39()
   };
 }
 
 // ../node_modules/zod/v4/locales/tr.js
-var error41 = () => {
+var error40 = () => {
   const Sizable = {
     string: { unit: "karakter", verb: "olmal\u0131" },
     file: { unit: "bayt", verb: "olmal\u0131" },
@@ -50904,12 +48499,12 @@ var error41 = () => {
 };
 function tr_default() {
   return {
-    localeError: error41()
+    localeError: error40()
   };
 }
 
 // ../node_modules/zod/v4/locales/uk.js
-var error42 = () => {
+var error41 = () => {
   const Sizable = {
     string: { unit: "\u0441\u0438\u043C\u0432\u043E\u043B\u0456\u0432", verb: "\u043C\u0430\u0442\u0438\u043C\u0435" },
     file: { unit: "\u0431\u0430\u0439\u0442\u0456\u0432", verb: "\u043C\u0430\u0442\u0438\u043C\u0435" },
@@ -51013,7 +48608,7 @@ var error42 = () => {
 };
 function uk_default() {
   return {
-    localeError: error42()
+    localeError: error41()
   };
 }
 
@@ -51023,7 +48618,7 @@ function ua_default() {
 }
 
 // ../node_modules/zod/v4/locales/ur.js
-var error43 = () => {
+var error42 = () => {
   const Sizable = {
     string: { unit: "\u062D\u0631\u0648\u0641", verb: "\u06C1\u0648\u0646\u0627" },
     file: { unit: "\u0628\u0627\u0626\u0679\u0633", verb: "\u06C1\u0648\u0646\u0627" },
@@ -51129,12 +48724,12 @@ var error43 = () => {
 };
 function ur_default() {
   return {
-    localeError: error43()
+    localeError: error42()
   };
 }
 
 // ../node_modules/zod/v4/locales/uz.js
-var error44 = () => {
+var error43 = () => {
   const Sizable = {
     string: { unit: "belgi", verb: "bo\u2018lishi kerak" },
     file: { unit: "bayt", verb: "bo\u2018lishi kerak" },
@@ -51239,12 +48834,12 @@ var error44 = () => {
 };
 function uz_default() {
   return {
-    localeError: error44()
+    localeError: error43()
   };
 }
 
 // ../node_modules/zod/v4/locales/vi.js
-var error45 = () => {
+var error44 = () => {
   const Sizable = {
     string: { unit: "k\xFD t\u1EF1", verb: "c\xF3" },
     file: { unit: "byte", verb: "c\xF3" },
@@ -51348,12 +48943,12 @@ var error45 = () => {
 };
 function vi_default() {
   return {
-    localeError: error45()
+    localeError: error44()
   };
 }
 
 // ../node_modules/zod/v4/locales/zh-CN.js
-var error46 = () => {
+var error45 = () => {
   const Sizable = {
     string: { unit: "\u5B57\u7B26", verb: "\u5305\u542B" },
     file: { unit: "\u5B57\u8282", verb: "\u5305\u542B" },
@@ -51458,12 +49053,12 @@ var error46 = () => {
 };
 function zh_CN_default() {
   return {
-    localeError: error46()
+    localeError: error45()
   };
 }
 
 // ../node_modules/zod/v4/locales/zh-TW.js
-var error47 = () => {
+var error46 = () => {
   const Sizable = {
     string: { unit: "\u5B57\u5143", verb: "\u64C1\u6709" },
     file: { unit: "\u4F4D\u5143\u7D44", verb: "\u64C1\u6709" },
@@ -51566,12 +49161,12 @@ var error47 = () => {
 };
 function zh_TW_default() {
   return {
-    localeError: error47()
+    localeError: error46()
   };
 }
 
 // ../node_modules/zod/v4/locales/yo.js
-var error48 = () => {
+var error47 = () => {
   const Sizable = {
     string: { unit: "\xE0mi", verb: "n\xED" },
     file: { unit: "bytes", verb: "n\xED" },
@@ -51674,7 +49269,7 @@ var error48 = () => {
 };
 function yo_default() {
   return {
-    localeError: error48()
+    localeError: error47()
   };
 }
 
@@ -52750,13 +50345,13 @@ function _stringbool(Classes, _params) {
   return codec2;
 }
 // @__NO_SIDE_EFFECTS__
-function _stringFormat(Class2, format3, fnOrRegex, _params = {}) {
+function _stringFormat(Class2, format2, fnOrRegex, _params = {}) {
   const params = normalizeParams(_params);
   const def = {
     ...normalizeParams(_params),
     check: "string_format",
     type: "string",
-    format: format3,
+    format: format2,
     fn: typeof fnOrRegex === "function" ? fnOrRegex : (val) => fnOrRegex.test(val),
     ...params
   };
@@ -52789,7 +50384,7 @@ function initializeContext(params) {
     external: params?.external ?? void 0
   };
 }
-function process18(schema, ctx, _params = { path: [], schemaPath: [] }) {
+function process15(schema, ctx, _params = { path: [], schemaPath: [] }) {
   var _a2;
   const def = schema._zod.def;
   const seen = ctx.seen.get(schema);
@@ -52826,7 +50421,7 @@ function process18(schema, ctx, _params = { path: [], schemaPath: [] }) {
     if (parent) {
       if (!result.ref)
         result.ref = parent;
-      process18(parent, ctx, params);
+      process15(parent, ctx, params);
       ctx.seen.get(parent).isParent = true;
     }
   }
@@ -53107,14 +50702,14 @@ function isTransforming(_schema, _ctx) {
 }
 var createToJSONSchemaMethod = (schema, processors = {}) => (params) => {
   const ctx = initializeContext({ ...params, processors });
-  process18(schema, ctx);
+  process15(schema, ctx);
   extractDefs(ctx, schema);
   return finalize(ctx, schema);
 };
 var createStandardJSONSchemaMethod = (schema, io, processors = {}) => (params) => {
   const { libraryOptions, target } = params ?? {};
   const ctx = initializeContext({ ...libraryOptions ?? {}, target, io, processors });
-  process18(schema, ctx);
+  process15(schema, ctx);
   extractDefs(ctx, schema);
   return finalize(ctx, schema);
 };
@@ -53131,16 +50726,16 @@ var formatMap = {
 var stringProcessor = (schema, ctx, _json, _params) => {
   const json2 = _json;
   json2.type = "string";
-  const { minimum, maximum, format: format3, patterns, contentEncoding } = schema._zod.bag;
+  const { minimum, maximum, format: format2, patterns, contentEncoding } = schema._zod.bag;
   if (typeof minimum === "number")
     json2.minLength = minimum;
   if (typeof maximum === "number")
     json2.maxLength = maximum;
-  if (format3) {
-    json2.format = formatMap[format3] ?? format3;
+  if (format2) {
+    json2.format = formatMap[format2] ?? format2;
     if (json2.format === "")
       delete json2.format;
-    if (format3 === "time") {
+    if (format2 === "time") {
       delete json2.format;
     }
   }
@@ -53162,8 +50757,8 @@ var stringProcessor = (schema, ctx, _json, _params) => {
 };
 var numberProcessor = (schema, ctx, _json, _params) => {
   const json2 = _json;
-  const { minimum, maximum, format: format3, multipleOf, exclusiveMaximum, exclusiveMinimum } = schema._zod.bag;
-  if (typeof format3 === "string" && format3.includes("int"))
+  const { minimum, maximum, format: format2, multipleOf, exclusiveMaximum, exclusiveMinimum } = schema._zod.bag;
+  if (typeof format2 === "string" && format2.includes("int"))
     json2.type = "integer";
   else
     json2.type = "number";
@@ -53371,7 +50966,7 @@ var arrayProcessor = (schema, ctx, _json, params) => {
   if (typeof maximum === "number")
     json2.maxItems = maximum;
   json2.type = "array";
-  json2.items = process18(def.element, ctx, { ...params, path: [...params.path, "items"] });
+  json2.items = process15(def.element, ctx, { ...params, path: [...params.path, "items"] });
 };
 var objectProcessor = (schema, ctx, _json, params) => {
   const json2 = _json;
@@ -53380,7 +50975,7 @@ var objectProcessor = (schema, ctx, _json, params) => {
   json2.properties = {};
   const shape = def.shape;
   for (const key in shape) {
-    json2.properties[key] = process18(shape[key], ctx, {
+    json2.properties[key] = process15(shape[key], ctx, {
       ...params,
       path: [...params.path, "properties", key]
     });
@@ -53403,7 +50998,7 @@ var objectProcessor = (schema, ctx, _json, params) => {
     if (ctx.io === "output")
       json2.additionalProperties = false;
   } else if (def.catchall) {
-    json2.additionalProperties = process18(def.catchall, ctx, {
+    json2.additionalProperties = process15(def.catchall, ctx, {
       ...params,
       path: [...params.path, "additionalProperties"]
     });
@@ -53412,7 +51007,7 @@ var objectProcessor = (schema, ctx, _json, params) => {
 var unionProcessor = (schema, ctx, json2, params) => {
   const def = schema._zod.def;
   const isExclusive = def.inclusive === false;
-  const options = def.options.map((x, i) => process18(x, ctx, {
+  const options = def.options.map((x, i) => process15(x, ctx, {
     ...params,
     path: [...params.path, isExclusive ? "oneOf" : "anyOf", i]
   }));
@@ -53424,11 +51019,11 @@ var unionProcessor = (schema, ctx, json2, params) => {
 };
 var intersectionProcessor = (schema, ctx, json2, params) => {
   const def = schema._zod.def;
-  const a = process18(def.left, ctx, {
+  const a = process15(def.left, ctx, {
     ...params,
     path: [...params.path, "allOf", 0]
   });
-  const b = process18(def.right, ctx, {
+  const b = process15(def.right, ctx, {
     ...params,
     path: [...params.path, "allOf", 1]
   });
@@ -53445,11 +51040,11 @@ var tupleProcessor = (schema, ctx, _json, params) => {
   json2.type = "array";
   const prefixPath = ctx.target === "draft-2020-12" ? "prefixItems" : "items";
   const restPath = ctx.target === "draft-2020-12" ? "items" : ctx.target === "openapi-3.0" ? "items" : "additionalItems";
-  const prefixItems = def.items.map((x, i) => process18(x, ctx, {
+  const prefixItems = def.items.map((x, i) => process15(x, ctx, {
     ...params,
     path: [...params.path, prefixPath, i]
   }));
-  const rest = def.rest ? process18(def.rest, ctx, {
+  const rest = def.rest ? process15(def.rest, ctx, {
     ...params,
     path: [...params.path, restPath, ...ctx.target === "openapi-3.0" ? [def.items.length] : []]
   }) : null;
@@ -53489,7 +51084,7 @@ var recordProcessor = (schema, ctx, _json, params) => {
   const keyBag = keyType._zod.bag;
   const patterns = keyBag?.patterns;
   if (def.mode === "loose" && patterns && patterns.size > 0) {
-    const valueSchema = process18(def.valueType, ctx, {
+    const valueSchema = process15(def.valueType, ctx, {
       ...params,
       path: [...params.path, "patternProperties", "*"]
     });
@@ -53499,12 +51094,12 @@ var recordProcessor = (schema, ctx, _json, params) => {
     }
   } else {
     if (ctx.target === "draft-07" || ctx.target === "draft-2020-12") {
-      json2.propertyNames = process18(def.keyType, ctx, {
+      json2.propertyNames = process15(def.keyType, ctx, {
         ...params,
         path: [...params.path, "propertyNames"]
       });
     }
-    json2.additionalProperties = process18(def.valueType, ctx, {
+    json2.additionalProperties = process15(def.valueType, ctx, {
       ...params,
       path: [...params.path, "additionalProperties"]
     });
@@ -53519,7 +51114,7 @@ var recordProcessor = (schema, ctx, _json, params) => {
 };
 var nullableProcessor = (schema, ctx, json2, params) => {
   const def = schema._zod.def;
-  const inner = process18(def.innerType, ctx, params);
+  const inner = process15(def.innerType, ctx, params);
   const seen = ctx.seen.get(schema);
   if (ctx.target === "openapi-3.0") {
     seen.ref = def.innerType;
@@ -53530,20 +51125,20 @@ var nullableProcessor = (schema, ctx, json2, params) => {
 };
 var nonoptionalProcessor = (schema, ctx, _json, params) => {
   const def = schema._zod.def;
-  process18(def.innerType, ctx, params);
+  process15(def.innerType, ctx, params);
   const seen = ctx.seen.get(schema);
   seen.ref = def.innerType;
 };
 var defaultProcessor = (schema, ctx, json2, params) => {
   const def = schema._zod.def;
-  process18(def.innerType, ctx, params);
+  process15(def.innerType, ctx, params);
   const seen = ctx.seen.get(schema);
   seen.ref = def.innerType;
   json2.default = JSON.parse(JSON.stringify(def.defaultValue));
 };
 var prefaultProcessor = (schema, ctx, json2, params) => {
   const def = schema._zod.def;
-  process18(def.innerType, ctx, params);
+  process15(def.innerType, ctx, params);
   const seen = ctx.seen.get(schema);
   seen.ref = def.innerType;
   if (ctx.io === "input")
@@ -53551,7 +51146,7 @@ var prefaultProcessor = (schema, ctx, json2, params) => {
 };
 var catchProcessor = (schema, ctx, json2, params) => {
   const def = schema._zod.def;
-  process18(def.innerType, ctx, params);
+  process15(def.innerType, ctx, params);
   const seen = ctx.seen.get(schema);
   seen.ref = def.innerType;
   let catchValue;
@@ -53565,32 +51160,32 @@ var catchProcessor = (schema, ctx, json2, params) => {
 var pipeProcessor = (schema, ctx, _json, params) => {
   const def = schema._zod.def;
   const innerType = ctx.io === "input" ? def.in._zod.def.type === "transform" ? def.out : def.in : def.out;
-  process18(innerType, ctx, params);
+  process15(innerType, ctx, params);
   const seen = ctx.seen.get(schema);
   seen.ref = innerType;
 };
 var readonlyProcessor = (schema, ctx, json2, params) => {
   const def = schema._zod.def;
-  process18(def.innerType, ctx, params);
+  process15(def.innerType, ctx, params);
   const seen = ctx.seen.get(schema);
   seen.ref = def.innerType;
   json2.readOnly = true;
 };
 var promiseProcessor = (schema, ctx, _json, params) => {
   const def = schema._zod.def;
-  process18(def.innerType, ctx, params);
+  process15(def.innerType, ctx, params);
   const seen = ctx.seen.get(schema);
   seen.ref = def.innerType;
 };
 var optionalProcessor = (schema, ctx, _json, params) => {
   const def = schema._zod.def;
-  process18(def.innerType, ctx, params);
+  process15(def.innerType, ctx, params);
   const seen = ctx.seen.get(schema);
   seen.ref = def.innerType;
 };
 var lazyProcessor = (schema, ctx, _json, params) => {
   const innerType = schema._zod.innerType;
-  process18(innerType, ctx, params);
+  process15(innerType, ctx, params);
   const seen = ctx.seen.get(schema);
   seen.ref = innerType;
 };
@@ -53642,7 +51237,7 @@ function toJSONSchema(input, params) {
     const defs = {};
     for (const entry of registry2._idmap.entries()) {
       const [_, schema] = entry;
-      process18(schema, ctx2);
+      process15(schema, ctx2);
     }
     const schemas = {};
     const external = {
@@ -53665,7 +51260,7 @@ function toJSONSchema(input, params) {
     return { schemas };
   }
   const ctx = initializeContext({ ...params, processors: allProcessors });
-  process18(input, ctx);
+  process15(input, ctx);
   extractDefs(ctx, input);
   return finalize(ctx, input);
 }
@@ -53723,7 +51318,7 @@ var JSONSchemaGenerator = class {
    * This must be called before emit().
    */
   process(schema, _params = { path: [], schemaPath: [] }) {
-    return process18(schema, this.ctx, _params);
+    return process15(schema, this.ctx, _params);
   }
   /**
    * Emit the final JSON Schema after processing.
@@ -53895,7 +51490,7 @@ __export(schemas_exports2, {
   string: () => string2,
   stringFormat: () => stringFormat,
   stringbool: () => stringbool,
-  success: () => success2,
+  success: () => success,
   superRefine: () => superRefine,
   symbol: () => symbol,
   templateLiteral: () => templateLiteral,
@@ -54352,8 +51947,8 @@ var ZodCustomStringFormat = /* @__PURE__ */ $constructor("ZodCustomStringFormat"
   $ZodCustomStringFormat.init(inst, def);
   ZodStringFormat.init(inst, def);
 });
-function stringFormat(format3, fnOrRegex, _params = {}) {
-  return _stringFormat(ZodCustomStringFormat, format3, fnOrRegex, _params);
+function stringFormat(format2, fnOrRegex, _params = {}) {
+  return _stringFormat(ZodCustomStringFormat, format2, fnOrRegex, _params);
 }
 function hostname2(_params) {
   return _stringFormat(ZodCustomStringFormat, "hostname", regexes_exports.hostname, _params);
@@ -54363,11 +51958,11 @@ function hex2(_params) {
 }
 function hash(alg, params) {
   const enc = params?.enc ?? "hex";
-  const format3 = `${alg}_${enc}`;
-  const regex2 = regexes_exports[format3];
+  const format2 = `${alg}_${enc}`;
+  const regex2 = regexes_exports[format2];
   if (!regex2)
-    throw new Error(`Unrecognized hash format: ${format3}`);
-  return _stringFormat(ZodCustomStringFormat, format3, regex2, params);
+    throw new Error(`Unrecognized hash format: ${format2}`);
+  return _stringFormat(ZodCustomStringFormat, format2, regex2, params);
 }
 var ZodNumber = /* @__PURE__ */ $constructor("ZodNumber", (inst, def) => {
   $ZodNumber.init(inst, def);
@@ -54948,7 +52543,7 @@ var ZodSuccess = /* @__PURE__ */ $constructor("ZodSuccess", (inst, def) => {
   inst._zod.processJSONSchema = (ctx, json2, params) => successProcessor(inst, ctx, json2, params);
   inst.unwrap = () => inst._zod.def.innerType;
 });
-function success2(innerType) {
+function success(innerType) {
   return new ZodSuccess({
     type: "success",
     innerType
@@ -55343,52 +52938,52 @@ function convertBaseSchema(schema, ctx) {
     case "string": {
       let stringSchema = z.string();
       if (schema.format) {
-        const format3 = schema.format;
-        if (format3 === "email") {
+        const format2 = schema.format;
+        if (format2 === "email") {
           stringSchema = stringSchema.check(z.email());
-        } else if (format3 === "uri" || format3 === "uri-reference") {
+        } else if (format2 === "uri" || format2 === "uri-reference") {
           stringSchema = stringSchema.check(z.url());
-        } else if (format3 === "uuid" || format3 === "guid") {
+        } else if (format2 === "uuid" || format2 === "guid") {
           stringSchema = stringSchema.check(z.uuid());
-        } else if (format3 === "date-time") {
+        } else if (format2 === "date-time") {
           stringSchema = stringSchema.check(z.iso.datetime());
-        } else if (format3 === "date") {
+        } else if (format2 === "date") {
           stringSchema = stringSchema.check(z.iso.date());
-        } else if (format3 === "time") {
+        } else if (format2 === "time") {
           stringSchema = stringSchema.check(z.iso.time());
-        } else if (format3 === "duration") {
+        } else if (format2 === "duration") {
           stringSchema = stringSchema.check(z.iso.duration());
-        } else if (format3 === "ipv4") {
+        } else if (format2 === "ipv4") {
           stringSchema = stringSchema.check(z.ipv4());
-        } else if (format3 === "ipv6") {
+        } else if (format2 === "ipv6") {
           stringSchema = stringSchema.check(z.ipv6());
-        } else if (format3 === "mac") {
+        } else if (format2 === "mac") {
           stringSchema = stringSchema.check(z.mac());
-        } else if (format3 === "cidr") {
+        } else if (format2 === "cidr") {
           stringSchema = stringSchema.check(z.cidrv4());
-        } else if (format3 === "cidr-v6") {
+        } else if (format2 === "cidr-v6") {
           stringSchema = stringSchema.check(z.cidrv6());
-        } else if (format3 === "base64") {
+        } else if (format2 === "base64") {
           stringSchema = stringSchema.check(z.base64());
-        } else if (format3 === "base64url") {
+        } else if (format2 === "base64url") {
           stringSchema = stringSchema.check(z.base64url());
-        } else if (format3 === "e164") {
+        } else if (format2 === "e164") {
           stringSchema = stringSchema.check(z.e164());
-        } else if (format3 === "jwt") {
+        } else if (format2 === "jwt") {
           stringSchema = stringSchema.check(z.jwt());
-        } else if (format3 === "emoji") {
+        } else if (format2 === "emoji") {
           stringSchema = stringSchema.check(z.emoji());
-        } else if (format3 === "nanoid") {
+        } else if (format2 === "nanoid") {
           stringSchema = stringSchema.check(z.nanoid());
-        } else if (format3 === "cuid") {
+        } else if (format2 === "cuid") {
           stringSchema = stringSchema.check(z.cuid());
-        } else if (format3 === "cuid2") {
+        } else if (format2 === "cuid2") {
           stringSchema = stringSchema.check(z.cuid2());
-        } else if (format3 === "ulid") {
+        } else if (format2 === "ulid") {
           stringSchema = stringSchema.check(z.ulid());
-        } else if (format3 === "xid") {
+        } else if (format2 === "xid") {
           stringSchema = stringSchema.check(z.xid());
-        } else if (format3 === "ksuid") {
+        } else if (format2 === "ksuid") {
           stringSchema = stringSchema.check(z.ksuid());
         }
       }
@@ -57544,22 +55139,15 @@ function createMemoryUpdateCommand() {
     console.log(kleur_default.bold(`
   xt memory update${opts.dryRun ? " (dry run)" : ""}
 `));
-    const spinner = ora({ text: spinnerText, color: "cyan" }).start();
-    const chunks = [];
+    console.log(kleur_default.dim(`  ${spinnerText}
+`));
     const exitCode = await new Promise((resolve2) => {
-      const proc = (0, import_node_child_process12.spawn)("specialists", args, { cwd, stdio: ["inherit", "pipe", "pipe"] });
-      proc.stdout.on("data", (d) => chunks.push(d.toString()));
-      proc.stderr.on("data", (d) => chunks.push(d.toString()));
+      const proc = (0, import_node_child_process12.spawn)("specialists", args, { cwd, stdio: "inherit" });
       proc.on("close", (code) => resolve2(code ?? 0));
     });
-    if (exitCode === 0) {
-      spinner.succeed(opts.dryRun ? "Analysis complete." : ".xtrm/memory.md written.");
-    } else {
-      spinner.fail("memory-processor failed.");
+    if (exitCode !== 0) {
+      console.error(kleur_default.red("\n  \u2717 memory-processor failed.\n"));
     }
-    const lines = chunks.join("").split("\n").filter((l) => l.trim());
-    const tail = lines.slice(-10).map((l) => kleur_default.dim("  " + l)).join("\n");
-    if (tail) console.log("\n" + tail + "\n");
     process.exit(exitCode);
   });
 }
@@ -57595,25 +55183,13 @@ function createMergeCommand() {
     console.log(kleur_default.bold(`
   xt merge${opts.dryRun ? " (dry run)" : ""}
 `));
-    const spinner = ora({
-      text: opts.dryRun ? "Checking PR queue..." : "Merging PR queue...",
-      color: "cyan"
-    }).start();
-    const chunks = [];
     const exitCode = await new Promise((resolve2) => {
-      const proc = (0, import_node_child_process13.spawn)("specialists", args, { cwd, stdio: ["inherit", "pipe", "pipe"] });
-      proc.stdout.on("data", (d) => chunks.push(d.toString()));
-      proc.stderr.on("data", (d) => chunks.push(d.toString()));
+      const proc = (0, import_node_child_process13.spawn)("specialists", args, { cwd, stdio: "inherit" });
       proc.on("close", (code) => resolve2(code ?? 0));
     });
-    if (exitCode === 0) {
-      spinner.succeed(opts.dryRun ? "Queue check complete." : "PR queue drained.");
-    } else {
-      spinner.fail("xt-merge failed.");
+    if (exitCode !== 0) {
+      console.error(kleur_default.red("\n  \u2717 xt-merge failed.\n"));
     }
-    const lines = chunks.join("").split("\n").filter((l) => l.trim());
-    const tail = lines.slice(-10).map((l) => kleur_default.dim("  " + l)).join("\n");
-    if (tail) console.log("\n" + tail + "\n");
     process.exit(exitCode);
   });
 }

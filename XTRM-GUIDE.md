@@ -67,8 +67,8 @@ XTRM-Tools is a **dual-runtime workflow system** — a Claude Code plugin and a 
 # One-time global installation
 npm install -g github:Jaggerxtrm/xtrm-tools@latest
 
-# Install the plugin + dependencies
-xtrm install all
+# Set up xtrm in your project (plugin, Pi, skills, beads, GitNexus)
+xtrm init
 
 # Verify installation
 claude plugin list

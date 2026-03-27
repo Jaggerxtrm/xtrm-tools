@@ -24,11 +24,11 @@ domain: [skills, claude, pi]
 
 # Skills Module
 
-`skills/` contains reusable global capabilities synced by `xtrm install`.
+`skills/` contains reusable global capabilities synced by `xtrm init` (plugin install).
 
 ## Runtime Model
 
-1. Run `xtrm install` to sync skills.
+1. Run `xtrm init` to install the plugin (skills are included).
 2. `using-xtrm` context is injected at session start (Claude hook path).
 3. Skills are selected by intent or explicit invocation.
 
@@ -57,7 +57,7 @@ Includes GitNexus, testing, security, backend/devops, Obsidian, prompt optimizat
 ## Operational Commands
 
 ```bash
-xtrm install
+xtrm init
 xtrm status
 xtrm clean
 ```

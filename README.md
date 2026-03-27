@@ -20,7 +20,7 @@ The `planning` skill generates a structured issue board from any spec or idea �
 
 ### Statusline
 
-A live statusline renders in every Claude Code session: active claim, open issue count, model, context window health (color-coded truecolor gradient), and token usage — all in a single line below the prompt. No configuration required after `xtrm install`.
+A live statusline renders in every Claude Code session: active claim, open issue count, model, context window health (color-coded truecolor gradient), and token usage — all in a single line below the prompt. No configuration required after `xtrm init`.
 
 ### Specialists *(upcoming)*
 
@@ -57,8 +57,8 @@ Native integration with the [specialists](https://github.com/Jaggerxtrm/speciali
 # Install globally (one-time)
 npm install -g github:Jaggerxtrm/xtrm-tools@latest
 
-# Install the plugin
-xtrm install
+# Set up xtrm in your project
+xtrm init
 
 # Verify
 claude plugin list
@@ -67,7 +67,7 @@ claude plugin list
 
 **One-line run:**
 ```bash
-npx -y github:Jaggerxtrm/xtrm-tools install
+npx -y github:Jaggerxtrm/xtrm-tools init
 ```
 
 **Typical workflow after install:**
@@ -219,7 +219,7 @@ See [docs/cli-architecture.md](docs/cli-architecture.md) for internals.
 | `github-grep` | Code search |
 | `deepwiki` | Repository documentation |
 
-Official Claude plugins installed by `xtrm install`: `serena`, `context7`, `github`, `ralph-loop`.
+Official Claude plugins installed by `xtrm init`: `serena`, `context7`, `github`, `ralph-loop`.
 
 See [docs/mcp-servers.md](docs/mcp-servers.md) for configuration details.
 

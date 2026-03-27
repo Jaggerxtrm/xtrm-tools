@@ -88,8 +88,6 @@ export function createHelpCommand(): Command {
                 '',
                 '  xt pi [name]',
                 '    Launch Pi in a sandboxed xt/<name> worktree.',
-                '  xt pi install [--dry-run]',
-                '    Non-interactive extension sync + package install.',
                 '  xt pi setup',
                 '    Interactive first-time setup.',
                 '  xt pi status | xt pi doctor | xt pi reload',

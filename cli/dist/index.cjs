@@ -41517,9 +41517,6 @@ function createPiCommand() {
   const cmd = new Command("pi").description("Launch a Pi session in a sandboxed worktree, or manage the Pi runtime").argument("[name]", "Optional session name \u2014 used as xt/<name> branch (random if omitted)").action(async (name) => {
     await launchWorktreeSession({ runtime: "pi", name });
   });
-  cmd.command("install").description("Non-interactive: sync extensions + install npm packages").option("--dry-run", "Preview without making changes", false).action(async (opts) => {
-    await runPiInstall(opts.dryRun);
-  });
   const piSetup = createInstallPiCommand();
   piSetup.name("setup");
   piSetup.description("Interactive first-time setup: API keys, config files, OAuth instructions");
@@ -55902,8 +55899,6 @@ function createHelpCommand() {
       "",
       "  xt pi [name]",
       "    Launch Pi in a sandboxed xt/<name> worktree.",
-      "  xt pi install [--dry-run]",
-      "    Non-interactive extension sync + package install.",
       "  xt pi setup",
       "    Interactive first-time setup.",
       "  xt pi status | xt pi doctor | xt pi reload"

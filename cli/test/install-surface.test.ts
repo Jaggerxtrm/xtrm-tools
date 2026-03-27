@@ -28,10 +28,9 @@ describe('install command surface (c1qd, j2jk, 6gpf, a875)', () => {
         expect(combined.toLowerCase()).toMatch(/unknown command|error/);
     });
 
-    it('xt pi install is registered under xt pi namespace', () => {
-        const r = run(['pi', 'install', '--help']);
-        expect(r.status).toBe(0);
-        expect(r.stdout).toMatch(/extension|package|install/i);
+    it('xt pi install is no longer a subcommand (handled by xtrm init)', () => {
+        const r = run(['pi', '--help']);
+        expect(r.stdout).not.toMatch(/^\s+install\b/im);
     });
 
     it('xtrm init is registered', () => {

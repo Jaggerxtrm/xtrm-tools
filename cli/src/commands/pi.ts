@@ -21,13 +21,6 @@ export function createPiCommand(): Command {
             await launchWorktreeSession({ runtime: 'pi', name });
         });
 
-    cmd.command('install')
-        .description('Non-interactive: sync extensions + install npm packages')
-        .option('--dry-run', 'Preview without making changes', false)
-        .action(async (opts) => {
-            await runPiInstall(opts.dryRun);
-        });
-
     // 'setup' = interactive first-time API key + OAuth config
     const piSetup = createInstallPiCommand();
     piSetup.name('setup');

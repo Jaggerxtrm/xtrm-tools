@@ -50,3 +50,4 @@ plugins/xtrm-tools/skills/
 .specialists/jobs/
 .specialists/ready/
 config/pi/extensions/xtrm-ui/.serena/
+.xtrm/session-meta.json

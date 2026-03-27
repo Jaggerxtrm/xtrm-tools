@@ -10,7 +10,26 @@
  * XTRM's custom-footer extension.
  */
 
-import type { ExtensionAPI, ExtensionContext } from "@mariozechner/pi-coding-agent";
+import type {
+  BashToolDetails,
+  EditToolDetails,
+  ExtensionAPI,
+  ExtensionContext,
+  FindToolDetails,
+  GrepToolDetails,
+  LsToolDetails,
+  ReadToolDetails,
+} from "@mariozechner/pi-coding-agent";
+import {
+  CustomEditor,
+  createBashTool,
+  createEditTool,
+  createFindTool,
+  createGrepTool,
+  createLsTool,
+  createReadTool,
+  createWriteTool,
+} from "@mariozechner/pi-coding-agent";
 import { Box, Text, truncateToWidth, visibleWidth } from "@mariozechner/pi-tui";
 import { basename } from "node:path";
 
@@ -106,6 +125,13 @@ function applyXtrmChrome(
   // Tool expansion
   ctx.ui.setToolsExpanded(!prefs.compactTools);
 
+  // Editor — density-aware input padding
+  ctx.ui.setEditorComponent((tui, theme, keybindings) => {
+    const editor = new XtrmEditor(tui, theme, keybindings);
+    editor.setPrefs(prefs);
+    return editor;
+  });
+
   // Header (optional)
   if (prefs.showHeader) {
     ctx.ui.setHeader((_tui, theme) => ({
@@ -177,6 +203,161 @@ function applyXtrmChrome(
     });
   }
   // If showFooter is false, we do NOT call setFooter - custom-footer will handle it
+}
+
+// ============================================================================
+// Format Helpers (ported from pi-dex format.ts)
+// ============================================================================
+
+export interface DiffStats {
+  additions: number;
+  removals: number;
+}
+
+function shortenHome(path: string): string {
+  const home = process.env.HOME;
+  if (home && path.startsWith(home)) return `~${path.slice(home.length)}`;
+  return path;
+}
+
+function shortenPath(path: string, max = 56): string {
+  const normalized = shortenHome(path);
+  if (normalized.length <= max) return normalized;
+  const parts = normalized.split("/").filter(Boolean);
+  if (parts.length <= 2) return `…${normalized.slice(-(max - 1))}`;
+  const tail = parts.slice(-2).join("/");
+  const head = parts[0]?.startsWith("~") ? "~/" : "…/";
+  const candidate = `${head}${tail}`;
+  if (candidate.length <= max) return candidate;
+  return `…${candidate.slice(-(max - 1))}`;
+}
+
+function shortenCommand(command: string, max = 72): string {
+  const singleLine = command.replace(/\s+/g, " ").trim();
+  if (singleLine.length <= max) return singleLine;
+  return `${singleLine.slice(0, Math.max(0, max - 1))}…`;
+}
+
+function lineCount(text: string): number {
+  if (!text) return 0;
+  return text.split("\n").length;
+}
+
+function previewLines(text: string, count: number): string[] {
+  return text.split("\n").slice(0, count);
+}
+
+function cleanOutputLines(text: string): string[] {
+  return text
+    .split("\n")
+    .filter((line) => line.trim().length > 0)
+    .filter((line) => !/^exit code:\s*-?\d+$/i.test(line.trim()));
+}
+
+function countPrefixedItems(text: string, prefixes: string[]): number {
+  return text.split("\n").filter((line) => prefixes.some((prefix) => line.startsWith(prefix))).length;
+}
+
+function diffStats(diff: string): DiffStats {
+  let additions = 0;
+  let removals = 0;
+  for (const line of diff.split("\n")) {
+    if (line.startsWith("+") && !line.startsWith("+++")) additions++;
+    if (line.startsWith("-") && !line.startsWith("---")) removals++;
+  }
+  return { additions, removals };
+}
+
+function formatDuration(durationMs: number | undefined): string | undefined {
+  if (!durationMs || durationMs < 0) return undefined;
+  if (durationMs < 1000) return `${durationMs}ms`;
+  const seconds = durationMs / 1000;
+  if (seconds < 10) return `${seconds.toFixed(1)}s`;
+  return `${Math.round(seconds)}s`;
+}
+
+function formatLineLabel(count: number, noun: string): string {
+  return `${count} ${noun}${count === 1 ? "" : "s"}`;
+}
+
+function renderToolSummary(
+  theme: { fg(color: string, text: string): string; bold(text: string): string },
+  status: "pending" | "success" | "error" | "muted",
+  label: string,
+  subject?: string,
+  meta?: string,
+): string {
+  const color =
+    status === "pending" ? "accent"
+    : status === "error" ? "error"
+    : status === "success" ? "success"
+    : "muted";
+  let text = `${theme.fg(color, "•")} ${theme.fg("toolTitle", theme.bold(label))}`;
+  if (subject) text += ` ${theme.fg("accent", subject)}`;
+  if (meta) text += theme.fg("muted", ` · ${meta}`);
+  return text;
+}
+
+function joinMeta(parts: Array<string | undefined | false>): string | undefined {
+  const filtered = parts.filter((part): part is string => typeof part === "string" && part.length > 0);
+  return filtered.length > 0 ? filtered.join(" · ") : undefined;
+}
+
+function renderOutputPreview(theme: any, lines: string[], maxLines: number): string {
+  const subset = lines.slice(0, maxLines);
+  let text = subset.map((line) => theme.fg("toolOutput", `  ${line}`)).join("\n");
+  if (lines.length > maxLines) text += `\n${theme.fg("muted", `  … +${lines.length - maxLines} more`)}`;
+  return text;
+}
+
+function renderVerticalPreview(theme: any, lines: string[], maxLines: number): string {
+  const subset = lines.slice(0, maxLines);
+  let text = subset.map((line) => `${theme.fg("muted", "│")} ${theme.fg("toolOutput", line)}`).join("\n");
+  if (lines.length > maxLines) text += `\n${theme.fg("muted", "│")} ${theme.fg("muted", `… +${lines.length - maxLines} more lines`)}`;
+  return text;
+}
+
+function renderDiffPreview(theme: any, diff: string, maxLines: number): string {
+  const lines = diff.split("\n").slice(0, maxLines);
+  let out = "";
+  for (const line of lines) {
+    const styled =
+      line.startsWith("+") && !line.startsWith("+++") ? theme.fg("toolDiffAdded", `  ${line}`)
+      : line.startsWith("-") && !line.startsWith("---") ? theme.fg("toolDiffRemoved", `  ${line}`)
+      : theme.fg("toolDiffContext", `  ${line}`);
+    out += (out ? "\n" : "") + styled;
+  }
+  if (diff.split("\n").length > maxLines) out += `\n${theme.fg("muted", `  … +${diff.split("\n").length - maxLines} more`)}`;
+  return out;
+}
+
+function lineRange(offset?: number, limit?: number): string | undefined {
+  if (offset == null && limit == null) return undefined;
+  const start = offset ?? 1;
+  if (limit == null) return `${start}`;
+  return `${start}-${start + limit - 1}`;
+}
+
+function summarizeCount(text: string): number {
+  return text.split("\n").filter((line) => line.trim().length > 0).length;
+}
+
+// ============================================================================
+// Editor (task p38n.3)
+// ============================================================================
+
+class XtrmEditor extends CustomEditor {
+  constructor(...args: ConstructorParameters<typeof CustomEditor>) {
+    super(...args);
+  }
+
+  setPrefs(prefs: XtrmUiPrefs): void {
+    this.setPaddingX(prefs.density === "comfortable" ? 2 : 1);
+  }
+
+  render(width: number): string[] {
+    return super.render(width);
+  }
 }
 
 // ============================================================================
@@ -324,16 +505,320 @@ function registerCommands(pi: ExtensionAPI, getPrefs: () => XtrmUiPrefs, setPref
 }
 
 // ============================================================================
+// Tool Renderers (ported from pi-dex tooling.ts)
+// ============================================================================
+
+type BuiltInTools = ReturnType<typeof createBuiltInTools>;
+
+type XtrmMeta<TArgs = Record<string, unknown>> = {
+  tool: string;
+  args: TArgs;
+  durationMs: number;
+};
+
+type DetailsWithXtrmMeta<TDetails, TArgs = Record<string, unknown>> = TDetails & {
+  xtrmMeta?: XtrmMeta<TArgs>;
+};
+
+const toolCache = new Map<string, BuiltInTools>();
+
+function createBuiltInTools(cwd: string) {
+  return {
+    bash: createBashTool(cwd),
+    read: createReadTool(cwd),
+    edit: createEditTool(cwd),
+    write: createWriteTool(cwd),
+    find: createFindTool(cwd),
+    grep: createGrepTool(cwd),
+    ls: createLsTool(cwd),
+  };
+}
+
+function getTools(cwd: string): BuiltInTools {
+  let tools = toolCache.get(cwd);
+  if (!tools) {
+    tools = createBuiltInTools(cwd);
+    toolCache.set(cwd, tools);
+  }
+  return tools;
+}
+
+function withXtrmMeta<TDetails extends object, TArgs extends Record<string, unknown>>(
+  details: TDetails | undefined,
+  tool: string,
+  args: TArgs,
+  durationMs: number,
+): DetailsWithXtrmMeta<TDetails, TArgs> {
+  return { ...(details ?? ({} as TDetails)), xtrmMeta: { tool, args, durationMs } };
+}
+
+function getXtrmMeta<TDetails extends object, TArgs extends Record<string, unknown>>(
+  details: TDetails | undefined,
+): XtrmMeta<TArgs> | undefined {
+  if (!details || typeof details !== "object") return undefined;
+  return (details as DetailsWithXtrmMeta<TDetails, TArgs>).xtrmMeta;
+}
+
+function getTextContent(result: { content: Array<{ type: string; text?: string }> }): string {
+  const item = result.content.find((content) => content.type === "text");
+  return item?.text ?? "";
+}
+
+function renderPendingCall(toolName: string, args: Record<string, unknown>, theme: any): Text {
+  return new Text(renderToolSummary(theme, "pending", toolName, summarizeToolSubject(toolName, args), undefined), 0, 0);
+}
+
+function stableToolSignature(toolName: string, args: Record<string, unknown>): string {
+  return `${toolName}:${JSON.stringify(args)}`;
+}
+
+function summarizeToolSubject(toolName: string, args: Record<string, unknown>): string | undefined {
+  switch (toolName) {
+    case "bash": return shortenCommand(String(args.command ?? ""), 52);
+    case "read": {
+      const path = shortenPath(String(args.path ?? ""), 42);
+      const range = lineRange(args.offset as number | undefined, args.limit as number | undefined);
+      return range ? `${path}:${range}` : path;
+    }
+    case "edit":
+    case "write": return shortenPath(String(args.path ?? ""), 42);
+    case "find":
+    case "grep": return String(args.pattern ?? "");
+    case "ls": return shortenPath(String(args.path ?? "."), 42);
+    default: return undefined;
+  }
+}
+
+function registerXtrmUiTools(pi: ExtensionAPI): void {
+  const activeToolCalls = new Map<string, string>();
+  const activeSignatureCounts = new Map<string, number>();
+
+  const trackToolCallStart = (toolCallId: string, toolName: string, args: Record<string, unknown>) => {
+    const signature = stableToolSignature(toolName, args);
+    activeToolCalls.set(toolCallId, signature);
+    activeSignatureCounts.set(signature, (activeSignatureCounts.get(signature) ?? 0) + 1);
+  };
+
+  const trackToolCallEnd = (toolCallId: string) => {
+    const signature = activeToolCalls.get(toolCallId);
+    if (!signature) return;
+    activeToolCalls.delete(toolCallId);
+    const next = (activeSignatureCounts.get(signature) ?? 1) - 1;
+    if (next <= 0) activeSignatureCounts.delete(signature);
+    else activeSignatureCounts.set(signature, next);
+  };
+
+  const isToolCallActive = (toolName: string, args: Record<string, unknown>) =>
+    activeSignatureCounts.has(stableToolSignature(toolName, args));
+
+  const renderPendingCallIfActive = (toolName: string, args: Record<string, unknown>, theme: any) =>
+    isToolCallActive(toolName, args) ? renderPendingCall(toolName, args, theme) : undefined;
+
+  pi.on("tool_call", async (event) => {
+    trackToolCallStart(event.toolCallId, event.toolName, event.input as Record<string, unknown>);
+  });
+
+  pi.on("tool_execution_end", async (event) => {
+    trackToolCallEnd(event.toolCallId);
+  });
+
+  pi.registerTool({
+    name: "bash",
+    label: "bash",
+    description: getTools(process.cwd()).bash.description,
+    parameters: getTools(process.cwd()).bash.parameters,
+    async execute(toolCallId, params, signal, onUpdate, ctx) {
+      const started = Date.now();
+      const result = await getTools(ctx.cwd).bash.execute(toolCallId, params, signal, onUpdate);
+      return { ...result, details: withXtrmMeta(result.details as BashToolDetails | undefined, "bash", params as Record<string, unknown>, Date.now() - started) };
+    },
+    renderCall: (args, theme) => renderPendingCallIfActive("bash", args as Record<string, unknown>, theme),
+    renderResult(result, { expanded, isPartial }, theme) {
+      const details = (result.details ?? {}) as DetailsWithXtrmMeta<BashToolDetails, Record<string, unknown>>;
+      const meta = getXtrmMeta<BashToolDetails, Record<string, unknown>>(details);
+      const command = shortenCommand(String(meta?.args.command ?? ""));
+      if (isPartial) {
+        return new Text(`${theme.fg("accent", "•")} ${theme.fg("toolTitle", "Running ")}${theme.fg("accent", command)}${theme.fg("toolTitle", " in bash")}`, 0, 0);
+      }
+      const output = getTextContent(result as any);
+      const outputLines = cleanOutputLines(output);
+      const exitMatch = output.match(/exit code:\s*(-?\d+)/i);
+      const exitCode = exitMatch ? Number.parseInt(exitMatch[1] ?? "0", 10) : 0;
+      const bullet = exitCode === 0 ? theme.fg("success", "•") : theme.fg("error", "•");
+      const summary = joinMeta([formatLineLabel(outputLines.length, "line"), formatDuration(meta?.durationMs), details.truncation?.truncated ? "truncated" : undefined]);
+      let text = `${bullet} ${theme.fg("toolTitle", "Ran ")}${theme.fg("accent", command)}`;
+      if (summary) text += theme.fg("dim", ` · ${summary}`);
+      if (expanded && outputLines.length > 0) text += `\n${renderVerticalPreview(theme, outputLines, 10)}`;
+      return new Text(text, 0, 0);
+    },
+  });
+
+  pi.registerTool({
+    name: "read",
+    label: "read",
+    description: getTools(process.cwd()).read.description,
+    parameters: getTools(process.cwd()).read.parameters,
+    async execute(toolCallId, params, signal, onUpdate, ctx) {
+      const started = Date.now();
+      const result = await getTools(ctx.cwd).read.execute(toolCallId, params, signal, onUpdate);
+      return { ...result, details: withXtrmMeta(result.details as ReadToolDetails | undefined, "read", params as Record<string, unknown>, Date.now() - started) };
+    },
+    renderCall: (args, theme) => renderPendingCallIfActive("read", args as Record<string, unknown>, theme),
+    renderResult(result, { expanded, isPartial }, theme) {
+      if (isPartial) return new Text(renderToolSummary(theme, "pending", "read", "loading", undefined), 0, 0);
+      const details = (result.details ?? {}) as DetailsWithXtrmMeta<ReadToolDetails, Record<string, unknown>>;
+      const meta = getXtrmMeta<ReadToolDetails, Record<string, unknown>>(details);
+      const subjectBase = shortenPath(String(meta?.args.path ?? ""));
+      const range = lineRange(meta?.args.offset as number | undefined, meta?.args.limit as number | undefined);
+      const subject = range ? `${subjectBase}:${range}` : subjectBase;
+      const first = result.content[0];
+      if (first?.type === "image") {
+        return new Text(renderToolSummary(theme, "success", "read", subject, joinMeta(["image", formatDuration(meta?.durationMs)])), 0, 0);
+      }
+      const textContent = getTextContent(result as any);
+      const lines = textContent.split("\n");
+      let text = renderToolSummary(theme, "success", "read", subject, joinMeta([formatLineLabel(lines.length, "line"), formatDuration(meta?.durationMs), details.truncation?.truncated ? `from ${details.truncation.totalLines}` : undefined]));
+      if (expanded && textContent.length > 0) text += `\n${renderOutputPreview(theme, previewLines(textContent, 14), 14)}`;
+      return new Text(text, 0, 0);
+    },
+  });
+
+  pi.registerTool({
+    name: "edit",
+    label: "edit",
+    description: getTools(process.cwd()).edit.description,
+    parameters: getTools(process.cwd()).edit.parameters,
+    async execute(toolCallId, params, signal, onUpdate, ctx) {
+      const started = Date.now();
+      const result = await getTools(ctx.cwd).edit.execute(toolCallId, params, signal, onUpdate);
+      return { ...result, details: withXtrmMeta(result.details as EditToolDetails | undefined, "edit", params as Record<string, unknown>, Date.now() - started) };
+    },
+    renderCall: (args, theme) => renderPendingCallIfActive("edit", args as Record<string, unknown>, theme),
+    renderResult(result, { expanded, isPartial }, theme) {
+      if (isPartial) return new Text(renderToolSummary(theme, "pending", "edit", "applying", undefined), 0, 0);
+      const details = (result.details ?? {}) as DetailsWithXtrmMeta<EditToolDetails, Record<string, unknown>>;
+      const meta = getXtrmMeta<EditToolDetails, Record<string, unknown>>(details);
+      const textContent = getTextContent(result as any);
+      if (/^error/i.test(textContent.trim())) {
+        return new Text(renderToolSummary(theme, "error", "edit", shortenPath(String(meta?.args.path ?? "")), textContent.split("\n")[0]), 0, 0);
+      }
+      const stats = details.diff ? diffStats(details.diff) : { additions: 0, removals: 0 };
+      let text = renderToolSummary(theme, "success", "edit", shortenPath(String(meta?.args.path ?? "")), joinMeta([`+${stats.additions}`, `-${stats.removals}`, formatDuration(meta?.durationMs)]));
+      if (expanded && details.diff) text += `\n${renderDiffPreview(theme, details.diff, 18)}`;
+      return new Text(text, 0, 0);
+    },
+  });
+
+  pi.registerTool({
+    name: "write",
+    label: "write",
+    description: getTools(process.cwd()).write.description,
+    parameters: getTools(process.cwd()).write.parameters,
+    async execute(toolCallId, params, signal, onUpdate, ctx) {
+      const started = Date.now();
+      const result = await getTools(ctx.cwd).write.execute(toolCallId, params, signal, onUpdate);
+      return { ...result, details: withXtrmMeta(result.details as Record<string, never> | undefined, "write", params as Record<string, unknown>, Date.now() - started) };
+    },
+    renderCall: (args, theme) => renderPendingCallIfActive("write", args as Record<string, unknown>, theme),
+    renderResult(result, { isPartial }, theme) {
+      if (isPartial) return new Text(renderToolSummary(theme, "pending", "write", "writing", undefined), 0, 0);
+      const details = (result.details ?? {}) as DetailsWithXtrmMeta<Record<string, never>, Record<string, unknown>>;
+      const meta = getXtrmMeta<Record<string, never>, Record<string, unknown>>(details);
+      const textContent = getTextContent(result as any);
+      if (/^error/i.test(textContent.trim())) {
+        return new Text(renderToolSummary(theme, "error", "write", shortenPath(String(meta?.args.path ?? "")), textContent.split("\n")[0]), 0, 0);
+      }
+      return new Text(renderToolSummary(theme, "success", "write", shortenPath(String(meta?.args.path ?? "")), joinMeta([formatLineLabel(lineCount(String(meta?.args.content ?? "")), "line"), formatDuration(meta?.durationMs)])), 0, 0);
+    },
+  });
+
+  pi.registerTool({
+    name: "find",
+    label: "find",
+    description: getTools(process.cwd()).find.description,
+    parameters: getTools(process.cwd()).find.parameters,
+    async execute(toolCallId, params, signal, onUpdate, ctx) {
+      const started = Date.now();
+      const result = await getTools(ctx.cwd).find.execute(toolCallId, params, signal, onUpdate);
+      return { ...result, details: withXtrmMeta(result.details as FindToolDetails | undefined, "find", params as Record<string, unknown>, Date.now() - started) };
+    },
+    renderCall: (args, theme) => renderPendingCallIfActive("find", args as Record<string, unknown>, theme),
+    renderResult(result, { expanded, isPartial }, theme) {
+      if (isPartial) return new Text(renderToolSummary(theme, "pending", "find", "searching", undefined), 0, 0);
+      const details = (result.details ?? {}) as DetailsWithXtrmMeta<FindToolDetails, Record<string, unknown>>;
+      const meta = getXtrmMeta<FindToolDetails, Record<string, unknown>>(details);
+      const textContent = getTextContent(result as any);
+      const count = summarizeCount(textContent);
+      let text = renderToolSummary(theme, "success", "find", String(meta?.args.pattern ?? ""), joinMeta([formatLineLabel(count, "match"), formatDuration(meta?.durationMs), details.resultLimitReached ? "limit reached" : undefined]));
+      if (expanded && count > 0) text += `\n${renderOutputPreview(theme, previewLines(textContent, 10), 10)}`;
+      return new Text(text, 0, 0);
+    },
+  });
+
+  pi.registerTool({
+    name: "grep",
+    label: "grep",
+    description: getTools(process.cwd()).grep.description,
+    parameters: getTools(process.cwd()).grep.parameters,
+    async execute(toolCallId, params, signal, onUpdate, ctx) {
+      const started = Date.now();
+      const result = await getTools(ctx.cwd).grep.execute(toolCallId, params, signal, onUpdate);
+      return { ...result, details: withXtrmMeta(result.details as GrepToolDetails | undefined, "grep", params as Record<string, unknown>, Date.now() - started) };
+    },
+    renderCall: (args, theme) => renderPendingCallIfActive("grep", args as Record<string, unknown>, theme),
+    renderResult(result, { expanded, isPartial }, theme) {
+      if (isPartial) return new Text(renderToolSummary(theme, "pending", "grep", "searching", undefined), 0, 0);
+      const details = (result.details ?? {}) as DetailsWithXtrmMeta<GrepToolDetails, Record<string, unknown>>;
+      const meta = getXtrmMeta<GrepToolDetails, Record<string, unknown>>(details);
+      const textContent = getTextContent(result as any);
+      const count = countPrefixedItems(textContent, ["-- "]) || summarizeCount(textContent);
+      let text = renderToolSummary(theme, "success", "grep", String(meta?.args.pattern ?? ""), joinMeta([formatLineLabel(count, "match"), formatDuration(meta?.durationMs), details.matchLimitReached ? "limit reached" : undefined]));
+      if (expanded && textContent.length > 0) text += `\n${renderOutputPreview(theme, previewLines(textContent, 12), 12)}`;
+      return new Text(text, 0, 0);
+    },
+  });
+
+  pi.registerTool({
+    name: "ls",
+    label: "ls",
+    description: getTools(process.cwd()).ls.description,
+    parameters: getTools(process.cwd()).ls.parameters,
+    async execute(toolCallId, params, signal, onUpdate, ctx) {
+      const started = Date.now();
+      const result = await getTools(ctx.cwd).ls.execute(toolCallId, params, signal, onUpdate);
+      return { ...result, details: withXtrmMeta(result.details as LsToolDetails | undefined, "ls", params as Record<string, unknown>, Date.now() - started) };
+    },
+    renderCall: (args, theme) => renderPendingCallIfActive("ls", args as Record<string, unknown>, theme),
+    renderResult(result, { expanded, isPartial }, theme) {
+      if (isPartial) return new Text(renderToolSummary(theme, "pending", "ls", "listing", undefined), 0, 0);
+      const details = (result.details ?? {}) as DetailsWithXtrmMeta<LsToolDetails, Record<string, unknown>>;
+      const meta = getXtrmMeta<LsToolDetails, Record<string, unknown>>(details);
+      const textContent = getTextContent(result as any);
+      const count = summarizeCount(textContent);
+      let text = renderToolSummary(theme, "success", "ls", shortenPath(String(meta?.args.path ?? ".")), joinMeta([formatLineLabel(count, "entry"), formatDuration(meta?.durationMs), details.entryLimitReached ? "limit reached" : undefined]));
+      if (expanded && count > 0) text += `\n${renderOutputPreview(theme, previewLines(textContent, 12), 12)}`;
+      return new Text(text, 0, 0);
+    },
+  });
+}
+
+// ============================================================================
 // Main Extension
 // ============================================================================
 
+function isXtrmTheme(name: string | undefined): boolean {
+  return name === "pidex-dark" || name === "pidex-light";
+}
+
 export default function xtrmUiExtension(pi: ExtensionAPI): void {
   let prefs: XtrmUiPrefs = { ...DEFAULT_PREFS };
+  let previousThemeName: string | null = null;
 
   const getPrefs = () => prefs;
   const setPrefs = (p: XtrmUiPrefs) => { prefs = p; };
   const getThinkingLevel = () => formatThinking(pi.getThinkingLevel());
 
+  registerXtrmUiTools(pi);
   registerCommands(pi, getPrefs, setPrefs, getThinkingLevel);
 
   const refresh = (ctx: ExtensionContext) => {
@@ -341,21 +826,64 @@ export default function xtrmUiExtension(pi: ExtensionAPI): void {
   };
 
   pi.on("session_start", async (_event, ctx) => {
-    prefs = loadPrefs(
-      ctx.sessionManager.getEntries() as Array<MaybeCustomEntry>
-    );
+    prefs = loadPrefs(ctx.sessionManager.getEntries() as Array<MaybeCustomEntry>);
+    if (!previousThemeName && !isXtrmTheme(ctx.ui.theme.name)) {
+      previousThemeName = ctx.ui.theme.name ?? null;
+    }
     refresh(ctx);
   });
 
   pi.on("session_switch", async (_event, ctx) => {
+    if (!previousThemeName && !isXtrmTheme(ctx.ui.theme.name)) {
+      previousThemeName = ctx.ui.theme.name ?? null;
+    }
     refresh(ctx);
   });
 
   pi.on("session_fork", async (_event, ctx) => {
+    if (!previousThemeName && !isXtrmTheme(ctx.ui.theme.name)) {
+      previousThemeName = ctx.ui.theme.name ?? null;
+    }
     refresh(ctx);
   });
 
   pi.on("model_select", async (_event, ctx) => {
     refresh(ctx);
+  });
+
+  pi.on("session_shutdown", async (_event, ctx) => {
+    if (previousThemeName) {
+      ctx.ui.setTheme(previousThemeName);
+    }
+  });
+
+  pi.on("input", async (event) => {
+    if (event.source === "extension") return { action: "continue" as const };
+    if (!event.text.trim()) return { action: "continue" as const };
+    if (event.text.startsWith("/") || event.text.startsWith("!")) return { action: "continue" as const };
+    if (event.text.startsWith("› ")) return { action: "continue" as const };
+    return event.images
+      ? { action: "transform" as const, text: `› ${event.text}`, images: event.images }
+      : { action: "transform" as const, text: `› ${event.text}` };
+  });
+
+  pi.on("context", async (event) => {
+    const messages = event.messages.map((message) => {
+      if (message.role === "user" && typeof message.content === "string" && message.content.startsWith("› ")) {
+        return { ...message, content: message.content.slice(2) };
+      }
+      if (message.role === "user" && Array.isArray(message.content)) {
+        return {
+          ...message,
+          content: message.content.map((item, index) =>
+            index === 0 && item.type === "text" && item.text.startsWith("› ")
+              ? { ...item, text: item.text.slice(2) }
+              : item
+          ),
+        };
+      }
+      return message;
+    });
+    return { messages };
   });
 }

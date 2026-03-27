@@ -62,16 +62,33 @@ If the request is under 8 words or the scope is unclear, ask **one** clarifying 
 
 Use GitNexus and Serena to understand the landscape. No file edits.
 
+### GitNexus-first protocol (mandatory when available)
+
 ```bash
-# Find relevant execution flows
+# 1) Find relevant execution flows by concept
 gitnexus_query({query: "<concept related to task>"})
 
-# Understand a specific symbol
+# 2) Get full caller/callee/process context for likely symbols
 gitnexus_context({name: "<affected symbol>"})
 
-# Check blast radius before planning changes
+# 3) Assess blast radius before locking the implementation plan
 gitnexus_impact({target: "<symbol to change>", direction: "upstream"})
+```
 
+### Refactor planning checks (when rename/extract/move is in scope)
+
+```bash
+# Preview safe multi-file rename plan first
+gitnexus_rename({symbol_name: "<old>", new_name: "<new>", dry_run: true})
+
+# Confirm context before extraction/split plans
+gitnexus_context({name: "<symbol to extract/split>"})
+gitnexus_impact({target: "<symbol to extract/split>", direction: "upstream"})
+```
+
+### Serena symbol-level inspection (targeted reads)
+
+```bash
 # Map a file without reading all of it
 get_symbols_overview("path/to/relevant/file.ts")
 
@@ -79,11 +96,24 @@ get_symbols_overview("path/to/relevant/file.ts")
 find_symbol("SymbolName", include_body=true)
 ```
 
+### Fallback when GitNexus is unavailable/stale
+
+If GitNexus tools fail or index freshness is unknown, fall back to Serena search + symbols and state this explicitly in your plan output:
+
+```bash
+search_for_pattern("<concept or symbol>")
+get_symbols_overview("path/to/relevant/file.ts")
+find_symbol("<candidate symbol>", include_body=true)
+find_referencing_symbols("<symbol>", "path/to/file.ts")
+```
+
 **Capture from exploration:**
 - Which files/symbols will be affected
+- Which execution flows/processes are involved (from `gitnexus_query`/`gitnexus_context`)
 - What existing patterns to follow (naming, structure, error handling)
 - Any d=1 dependents that require updates when you change a symbol
-- Risk level: if CRITICAL or HIGH → warn user before proceeding
+- Risk level from impact analysis: if CRITICAL or HIGH → warn user before proceeding
+- If GitNexus fallback path was used, explicitly call it out in the handoff
 
 ---
 
@@ -101,6 +131,7 @@ Think through the plan before writing any bd commands. Use structured CoT:
 3. What are the dependencies? (what must be done before X can start?)
 4. What can run in parallel? (independent tasks → no deps between them)
 5. What are the risks? (complex areas, unclear spec, risky refactors)
+6. What is the blast-radius summary from GitNexus? (direct callers, affected processes, risk level)
 </thinking>
 
 <plan>
@@ -244,7 +275,13 @@ test-planning will:
 
 ## Phase 6 — Handoff
 
-Present the board and transition to implementation:
+Present the board and transition to implementation.
+
+Include a short **Architecture & Impact Summary** in your handoff message:
+- Key execution flows/processes involved
+- Top d=1 dependents to watch
+- Highest observed risk (LOW/MEDIUM/HIGH/CRITICAL)
+- Whether GitNexus-first or fallback exploration was used
 
 ```bash
 # Show the full board
@@ -339,6 +376,8 @@ Before presenting the plan to the user:
 - [ ] Every issue has context / what / AC / notes
 - [ ] Dependencies are correct (A blocks B when B needs A's output)
 - [ ] No task is more than "one session" of work (split if needed)
+- [ ] GitNexus evidence captured (query/context/impact) or fallback path explicitly stated
+- [ ] If refactor scope exists, rename/extract safety checks were included in plan
 - [ ] test-planning was invoked (or scheduled as next step)
 - [ ] First implementation issue is ready to claim
 

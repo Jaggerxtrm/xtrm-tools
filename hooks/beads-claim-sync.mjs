@@ -92,24 +92,14 @@ function getCloseReason(cwd, issueId, command) {
   return `Close ${issueId}`;
 }
 
-function stageUntracked(cwd) {
-  const result = runGit(['ls-files', '--others', '--exclude-standard'], cwd);
-  if (result.status !== 0) return;
-  const untracked = result.stdout.trim().split('\n').filter(Boolean);
-  if (untracked.length === 0) return;
-  runGit(['add', '--', ...untracked], cwd);
-}
-
 function autoCommit(cwd, issueId, command) {
   if (!hasGitChanges(cwd)) {
     return { ok: true, message: 'No changes detected — auto-commit skipped.' };
   }
 
-  stageUntracked(cwd);
-
   const reason = getCloseReason(cwd, issueId, command);
   const commitMessage = `${reason} (${issueId})`;
-  const result = runGit(['commit', '--no-verify', '-am', commitMessage], cwd, 15000);
+  const result = runGit(['commit', '-am', commitMessage], cwd, 15000);
   if (result.status !== 0) {
     const err = (result.stderr || result.stdout || '').trim();
     return { ok: false, message: `Auto-commit failed: ${err || 'unknown error'}` };

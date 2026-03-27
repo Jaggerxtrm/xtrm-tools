@@ -2,7 +2,6 @@ import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
 import { isToolCallEventType, isBashToolResult } from "@mariozechner/pi-coding-agent";
 import { SubprocessRunner, EventAdapter } from "../core/lib";
 
-
 export default function (pi: ExtensionAPI) {
 	const getCwd = (ctx: any) => ctx.cwd || process.cwd();
 
@@ -146,15 +145,28 @@ export default function (pi: ExtensionAPI) {
 				memoryGateFired = false;
 			}
 
-			const reminder = `\n\n**Beads Insight**: Work completed. Consider if this session produced insights worth persisting via \`bd remember\`.`;
-			return { content: [...event.content, { type: "text", text: reminder }] };
+			// Inject memory gate as agent-visible context only — parity with Claude Stop hook {additionalContext}.
+			// No UI notification; the agent sees this silently in its tool result context.
+			const memoryGateText = closedIssueId
+				? `\n\n**Beads Memory Gate**: Issue \`${closedIssueId}\` closed this session.\n` +
+				  `For each candidate insight, check ALL 4:\n` +
+				  `  1. Hard to rediscover from code/docs?\n` +
+				  `  2. Not obvious from the current implementation?\n` +
+				  `  3. Will affect a future decision?\n` +
+				  `  4. Still relevant in ~14 days?\n` +
+				  `KEEP (all 4 yes) → \`bd remember "<insight>"\`\n` +
+				  `SKIP examples: file maps, flag inventories, per-issue summaries, wording tweaks, facts obvious from reading the source.\n` +
+				  `When done: \`bd kv set "memory-gate-done:${sessionId}" "saved: <key>"\` (or \`"nothing novel — <reason>"\`)`
+				: `\n\n**Beads**: Work completed. Consider if this session produced insights worth persisting via \`bd remember\`.`;
+			return { content: [...event.content, { type: "text", text: memoryGateText }] };
 		}
 
 		return undefined;
 	});
 
-	// Memory gate: if this session closed an issue, prompt for insight persistence.
-	// Uses sendUserMessage to trigger a new turn in Pi (non-blocking alternative to Claude Stop hook).
+	// Memory gate: clean up session markers and check ack at agent_end/session_shutdown.
+	// Memory gate prompt was already injected into bd close tool_result context (silent, agent-visible only).
+	// No UI notification — parity with Claude Stop hook {additionalContext} pattern.
 	const triggerMemoryGateIfNeeded = async (ctx: any) => {
 		const cwd = getCwd(ctx);
 		if (!EventAdapter.isBeadsProject(cwd)) return;
@@ -174,22 +186,7 @@ export default function (pi: ExtensionAPI) {
 		if (!closedIssueId) return;
 
 		memoryGateFired = true;
-		if (ctx.hasUI) {
-			ctx.ui.notify(
-				`🧠 Memory gate: claim \`${closedIssueId}\` was closed this session.\n` +
-				`For each candidate insight, check ALL 4:\n` +
-				`  1. Hard to rediscover from code/docs?\n` +
-				`  2. Not obvious from the current implementation?\n` +
-				`  3. Will affect a future decision?\n` +
-				`  4. Still relevant in ~14 days?\n` +
-				`KEEP (all 4 yes) → \`bd remember "<insight>"\`\n` +
-				`SKIP examples: file maps, flag inventories, per-issue summaries,\n` +
-				`  wording tweaks, facts obvious from reading the source.\n` +
-				`KEEP: \`bd kv set "memory-gate-done:${sessionId}" "saved: <key>"\`\n` +
-				`SKIP: \`bd kv set "memory-gate-done:${sessionId}" "nothing novel — <one-line reason>"\``,
-				"info",
-			);
-		}
+		// No notify — memory gate was injected into bd close tool_result content (silent, agent-visible only).
 	};
 
 	pi.on("agent_end", async (_event, ctx) => {

@@ -55,10 +55,10 @@ describe("Pi beads extension parity", () => {
 		});
 
 		expect(calls.some((a) => a[0] === "kv" && a[1] === "set" && a[2].startsWith("closed-this-session:"))).toBe(true);
-		expect(result?.content?.[1]?.text).toContain("Beads Insight");
+		expect(result?.content?.[1]?.text).toContain("Beads Memory Gate");
 	});
 
-	it("fires memory gate once per closed marker and does not loop", async () => {
+	it("memory gate is silent at agent_end — injected into bd close tool_result instead", async () => {
 		(SubprocessRunner.run as any).mockImplementation(async (_cmd: string, args: string[]) => {
 			if (args[0] === "kv" && args[1] === "get" && `${args[2]}`.startsWith("closed-this-session:")) {
 				return { code: 0, stdout: "xtrm-123\n", stderr: "" };
@@ -71,8 +71,9 @@ describe("Pi beads extension parity", () => {
 		await harness.emit("agent_end", { messages: [] });
 		await harness.emit("agent_end", { messages: [] });
 
-		expect(harness.ctx.ui.notify).toHaveBeenCalledTimes(1);
-		expect(harness.ctx.ui.notify).toHaveBeenCalledWith(expect.stringContaining("claim `xtrm-123` was closed this session"), "info");
+		// Memory gate is now injected silently into bd close tool_result content.
+		// agent_end must not call ui.notify (no visible notification, no new turn).
+		expect(harness.ctx.ui.notify).not.toHaveBeenCalled();
 	});
 
 	it.skip("consumes .memory-gate-done marker and clears session markers (test environment issue)", async () => {

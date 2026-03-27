@@ -52,16 +52,27 @@ export interface SessionMeta {
     launchedAt: string;
 }
 
+// Write to .xtrm/ (gitignored) to prevent the file from ever being committed.
+function sessionMetaPath(worktreePath: string): string {
+    return path.join(worktreePath, '.xtrm', 'session-meta.json');
+}
+
 export function writeSessionMeta(worktreePath: string, runtime: 'claude' | 'pi'): void {
     try {
         const meta: SessionMeta = { runtime, launchedAt: new Date().toISOString() };
-        writeFileSync(path.join(worktreePath, '.session-meta.json'), JSON.stringify(meta, null, 2));
+        const dest = sessionMetaPath(worktreePath);
+        mkdirSync(path.dirname(dest), { recursive: true });
+        writeFileSync(dest, JSON.stringify(meta, null, 2));
     } catch { /* non-fatal */ }
 }
 
 export function readSessionMeta(worktreePath: string): SessionMeta | null {
     try {
-        const raw = readFileSync(path.join(worktreePath, '.session-meta.json'), 'utf8');
+        // Try new location first (.xtrm/session-meta.json), fall back to old root location.
+        const newPath = sessionMetaPath(worktreePath);
+        const oldPath = path.join(worktreePath, '.session-meta.json');
+        const filePath = existsSync(newPath) ? newPath : oldPath;
+        const raw = readFileSync(filePath, 'utf8');
         return JSON.parse(raw) as SessionMeta;
     } catch {
         return null;

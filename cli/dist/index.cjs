@@ -41600,10 +41600,15 @@ function resolveStatuslineScript() {
   const fallback = import_node_path5.default.join((0, import_node_os5.homedir)(), ".claude", "hooks", "statusline.mjs");
   return (0, import_node_fs4.existsSync)(fallback) ? fallback : null;
 }
+function sessionMetaPath(worktreePath) {
+  return import_node_path5.default.join(worktreePath, ".xtrm", "session-meta.json");
+}
 function writeSessionMeta(worktreePath, runtime) {
   try {
     const meta3 = { runtime, launchedAt: (/* @__PURE__ */ new Date()).toISOString() };
-    (0, import_node_fs4.writeFileSync)(import_node_path5.default.join(worktreePath, ".session-meta.json"), JSON.stringify(meta3, null, 2));
+    const dest = sessionMetaPath(worktreePath);
+    (0, import_node_fs4.mkdirSync)(import_node_path5.default.dirname(dest), { recursive: true });
+    (0, import_node_fs4.writeFileSync)(dest, JSON.stringify(meta3, null, 2));
   } catch {
   }
 }
@@ -56916,7 +56921,8 @@ function listXtWorktrees(repoRoot) {
   }
   for (const wt of worktrees) {
     try {
-      const raw = (0, import_node_fs5.readFileSync)((0, import_node_path6.join)(wt.path, ".session-meta.json"), "utf8");
+      const metaFile = (0, import_node_fs5.existsSync)((0, import_node_path6.join)(wt.path, ".xtrm", "session-meta.json")) ? (0, import_node_path6.join)(wt.path, ".xtrm", "session-meta.json") : (0, import_node_path6.join)(wt.path, ".session-meta.json");
+      const raw = (0, import_node_fs5.readFileSync)(metaFile, "utf8");
       const meta3 = JSON.parse(raw);
       wt.runtime = meta3.runtime;
       wt.launchedAt = meta3.launchedAt;

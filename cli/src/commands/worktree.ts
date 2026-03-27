@@ -50,7 +50,10 @@ export function listXtWorktrees(repoRoot: string): WorktreeInfo[] {
     // Enrich with session meta and last git activity
     for (const wt of worktrees) {
         try {
-            const raw = readFileSync(join(wt.path, '.session-meta.json'), 'utf8');
+            const metaFile = existsSync(join(wt.path, '.xtrm', 'session-meta.json'))
+                ? join(wt.path, '.xtrm', 'session-meta.json')
+                : join(wt.path, '.session-meta.json');
+            const raw = readFileSync(metaFile, 'utf8');
             const meta = JSON.parse(raw) as SessionMeta;
             wt.runtime = meta.runtime;
             wt.launchedAt = meta.launchedAt;

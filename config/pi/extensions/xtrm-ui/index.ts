@@ -88,6 +88,10 @@ function fitVisible(text: string, width: number): string {
   return truncated + " ".repeat(Math.max(0, width - visibleWidth(truncated)));
 }
 
+function formatThinking(level: string): string {
+  return level === "off" ? "standard" : level;
+}
+
 function applyXtrmChrome(
   ctx: ExtensionContext,
   prefs: XtrmUiPrefs,
@@ -199,7 +203,7 @@ function parseDensityArg(arg: string): XtrmDensity | undefined {
   return undefined;
 }
 
-function registerCommands(pi: ExtensionAPI, getPrefs: () => XtrmUiPrefs, setPrefs: (p: XtrmUiPrefs) => void) {
+function registerCommands(pi: ExtensionAPI, getPrefs: () => XtrmUiPrefs, setPrefs: (p: XtrmUiPrefs) => void, getThinkingLevel: () => string) {
   pi.registerMessageRenderer("xtrm-ui-info", (message, _options, theme) => {
     const title = (message.details as { title?: string } | undefined)?.title ?? "XTRM UI";
     const box = new Box(1, 1, (text) => theme.bg("customMessageBg", text));
@@ -241,7 +245,7 @@ function registerCommands(pi: ExtensionAPI, getPrefs: () => XtrmUiPrefs, setPref
       const prefs = { ...getPrefs(), themeName };
       setPrefs(prefs);
       persistPrefs(pi, prefs);
-      applyXtrmChrome(ctx, prefs, () => "standard");
+      applyXtrmChrome(ctx, prefs, getThinkingLevel);
       ctx.ui.notify(`XTRM UI theme set to ${themeName}`, "info");
     },
   });
@@ -261,7 +265,7 @@ function registerCommands(pi: ExtensionAPI, getPrefs: () => XtrmUiPrefs, setPref
       const prefs = { ...getPrefs(), density };
       setPrefs(prefs);
       persistPrefs(pi, prefs);
-      applyXtrmChrome(ctx, prefs, () => "standard");
+      applyXtrmChrome(ctx, prefs, getThinkingLevel);
       ctx.ui.notify(`XTRM UI density set to ${density}`, "info");
     },
   });
@@ -277,7 +281,7 @@ function registerCommands(pi: ExtensionAPI, getPrefs: () => XtrmUiPrefs, setPref
       const prefs = { ...getPrefs(), showHeader };
       setPrefs(prefs);
       persistPrefs(pi, prefs);
-      applyXtrmChrome(ctx, prefs, () => "standard");
+      applyXtrmChrome(ctx, prefs, getThinkingLevel);
       ctx.ui.notify(`XTRM UI header ${showHeader ? "enabled" : "disabled"}`, "info");
     },
   });
@@ -288,7 +292,7 @@ function registerCommands(pi: ExtensionAPI, getPrefs: () => XtrmUiPrefs, setPref
       const prefs = { ...DEFAULT_PREFS };
       setPrefs(prefs);
       persistPrefs(pi, prefs);
-      applyXtrmChrome(ctx, prefs, () => "standard");
+      applyXtrmChrome(ctx, prefs, getThinkingLevel);
       ctx.ui.notify("XTRM UI reset to defaults", "info");
     },
   });
@@ -303,11 +307,12 @@ export default function xtrmUiExtension(pi: ExtensionAPI): void {
 
   const getPrefs = () => prefs;
   const setPrefs = (p: XtrmUiPrefs) => { prefs = p; };
+  const getThinkingLevel = () => formatThinking(pi.getThinkingLevel());
 
-  registerCommands(pi, getPrefs, setPrefs);
+  registerCommands(pi, getPrefs, setPrefs, getThinkingLevel);
 
   const refresh = (ctx: ExtensionContext) => {
-    applyXtrmChrome(ctx, prefs, () => "standard");
+    applyXtrmChrome(ctx, prefs, getThinkingLevel);
   };
 
   pi.on("session_start", async (_event, ctx) => {

@@ -206,3 +206,260 @@ Agent closes a feature issue that was done ad-hoc. No test issue found. Agent:
 2. Picks strategy
 3. Creates test issue as child of same parent
 4. Documents what to assert based on the actual code
+
+## Anti-Pattern Checklist
+
+Run this checklist at both trigger points (planning and closure review). Flag any anti-patterns in the test issue description before closing.
+
+### 1. Assertion-free tests
+**Detect**: Test body calls functions/methods but has no `assert`, `expect`, or equivalent statement.
+**Fix**: Add at least one meaningful assertion. If the goal is "doesn't throw", assert that explicitly — `with pytest.raises(...)` or `expect(() => fn()).not.toThrow()`.
+
+### 2. Tautological assertions
+**Detect**: The assertion can only fail if the test framework itself is broken. E.g. `assert result == result`, `expect(true).toBe(true)`, asserting a value against the same expression used to produce it.
+**Fix**: Assert against a concrete expected value derived independently from the production code. If you can't state what the expected value is without running the code, the test has no falsifiable claim.
+
+### 3. Context leakage / shared mutable state
+**Detect**: Tests share module-level variables, database rows, file state, or global config without reset between runs. Symptoms: tests pass individually but fail in suite order.
+**Fix**: Use fixtures with setup/teardown (`beforeEach`/`afterEach`, pytest fixtures with function scope). Every test starts from a clean slate.
+
+### 4. Over-mocking internal collaborators
+**Detect**: Mocks are patching classes or functions that live in the same module under test — not external services. The test validates that internal wiring was called, not that the observable outcome is correct.
+**Fix**: Only mock at system boundaries (HTTP clients, file I/O, external services). Test internal collaborators by letting them run. If they're hard to instantiate, extract the pure logic and test that directly.
+
+### 5. Tests that cannot fail under realistic regressions
+**Detect**: Remove the core logic being tested and re-read the test — would it still pass? If yes, the test provides no protection. Common form: only testing the happy path of a function whose bug would only appear in error paths.
+**Fix**: Add at least one negative-path or edge-case assertion that would catch the most likely regression. Consult the implementation for obvious failure modes.
+
+## Priority Heuristics
+
+Test issues inherit priority from their implementation issues with bounded adjustment. The table below gives the deterministic mapping.
+
+| Implementation risk | Test issue priority | Examples |
+|---|---|---|
+| Security / auth / protocol compat | P0 (equal) | Auth token validation, schema migration safety, API contract |
+| Regression-critical boundary path | P0–P1 (equal) | Client URL routing, CLI exit codes used by external tooling |
+| High-business-impact core logic | P1 (equal or +0) | Pricing computations, session state transitions |
+| Standard domain logic | P2 (+0 or +1) | Config merge, output formatters, parsers |
+| Low-risk internals / non-critical adapters | P3 (+1) | Helper utilities, optional UI formatting |
+| Polish / test debt cleanup | P4 | Improving existing test coverage, test naming |
+
+**Inheritance rule**: start from the implementation issue's priority. Apply +1 if the test is covering a well-understood path with low regression risk. Never go lower than P2 for boundary or shell layer tests — integration tests are load-bearing.
+
+**Equal priority examples**:
+- Impl is P1 (auth endpoint) → test issue is P1 (auth contract test must ship with the feature)
+- Impl is P0 (critical fix) → test issue is P0 (regression test must land in same PR)
+
+**+1 priority examples**:
+- Impl is P2 (output formatter) → test issue is P3 (unit tests are useful but not blocking)
+- Impl is P3 (optional config key) → test issue is P4 (test debt, tackle in cleanup)
+
+## Definition of Done Templates
+
+Use these templates verbatim in test issue descriptions. Replace `<...>` placeholders.
+
+### Core layer DoD
+
+```
+Layer: core
+Strategy: <unit | property-based | example-based>
+Covers: <impl issue IDs>
+
+Assertions required:
+- [ ] Positive path: <expected output for valid input>
+- [ ] Negative path: <expected error/output for invalid input>
+- [ ] Edge cases explicitly enumerated: <list: empty input, zero, max boundary, ...>
+- [ ] Invariants/properties included: <e.g. "result is always sorted", "output length == input length">
+
+Fixture policy:
+- [ ] No shared mutable state between tests
+- [ ] Deterministic fixtures (no random, no time.now() without injection)
+- [ ] Each test constructs its own input independently
+
+Done when: all assertions above are implemented and passing in CI.
+```
+
+### Boundary layer DoD
+
+```
+Layer: boundary
+Strategy: <live-contract | recorded-fixture | mock (last resort)>
+Covers: <impl issue IDs>
+
+Assertions required:
+- [ ] Schema/contract assertions: <field presence, types, required vs optional>
+- [ ] Error codes and retry/fallback: <e.g. 404→empty list, 500→raises ServiceError>
+- [ ] Drift-safe: assertions check field presence and types, not brittle internal structure
+- [ ] Live-first policy documented: <live | recorded-fixture | mock — reason for choice>
+
+Done when: contract assertions pass against live service (or recorded fixture if live unavailable).
+Fallback documented in issue if live is not accessible.
+```
+
+### Shell layer DoD
+
+```
+Layer: shell
+Strategy: integration (subprocess or function-level wiring test)
+Covers: <impl issue IDs>
+
+Assertions required:
+- [ ] End-to-end observable outcomes: <what the user sees — output format, exit code>
+- [ ] Failure-mode UX: <error messages, non-zero exit codes, stderr vs stdout>
+- [ ] Cross-component wiring: <core + boundary are called and integrated correctly>
+- [ ] At least one real-data scenario (not mocked) if service is accessible
+
+Done when: integration tests run against real components (not mocked internals) and cover
+both success and at least one failure path.
+```
+
+## Critical-Path Coverage
+
+Do not frame test issues around coverage percentages. Frame them around critical paths and risk rationale.
+
+Every test issue description must include a **critical path map**:
+
+```
+Critical paths covered:
+- <path 1 and risk rationale>
+- <path 2 and risk rationale>
+
+Known deferred paths (with follow-up refs):
+- <path not covered yet> → follow-up: <bd issue ID or "to be created">
+```
+
+**Why**: a 90% line-coverage number says nothing about whether the one path that processes payments is tested. A critical path map forces explicit reasoning about what matters and what was skipped.
+
+**What counts as a critical path**:
+- Any path that involves auth, money, data loss, or external contract compliance
+- Any path exercised by the user-facing CLI commands described in the issue
+- Any path explicitly mentioned in the implementation issue's acceptance criteria
+
+**What to do with deferred paths**:
+- Document them — don't silently skip
+- Create a follow-up test issue if the deferred path is P2 or higher risk
+- Reference the follow-up issue ID in the current test issue's description
+
+## Advisory vs Enforcement Boundary
+
+This skill is advisory. It recommends test strategy, creates test issues, and flags anti-patterns. It does not block code execution or enforce pass/fail decisions — that is the job of hooks and quality gates.
+
+| Concern | Who owns it | How enforced |
+|---|---|---|
+| Test strategy selection (TDD vs contract vs unit) | This skill | Recommendation only |
+| Anti-pattern detection in test issues | This skill | Checklist in issue description |
+| Priority assignment | This skill | Heuristics table above |
+| DoD template in issue description | This skill | Template pasted into bd issue |
+| CI test pass/fail | quality-gates hook | PostToolUse hook blocks on test failures |
+| Test file lint/type correctness | quality-gates hook | ESLint + mypy on every edit |
+| Branch not mergeable without tests | Not enforced | Human review — no automated gate today |
+| Claiming work without test issue existing | Not enforced | Human judgment — skill creates test issue at closure if missing |
+
+**Example — advisory boundary in practice**:
+
+You are planning tests for `.14` (async HTTP client). This skill:
+- Classifies as boundary layer ✓
+- Recommends live-contract tests ✓
+- Creates a test issue with DoD template ✓
+- Flags if you try to describe tests that only mock the HTTP layer ✓ (anti-pattern 4)
+
+It does NOT:
+- Block `.14` from closing if the test issue isn't done
+- Fail the build if the test issue is open
+- Require approval before the implementation is merged
+
+The test issue is a tracked commitment, not a gate. Gating is opt-in via `bd dep` dependencies you set up during planning.
+
+## v1.1 Format Examples
+
+### Example A — Planning phase, boundary + shell epic
+
+Epic: "Implement gitnexus MCP sync in xtrm install"
+
+Children: `.1` (MCP config writer), `.2` (sync-on-install integration), `.3` (CLI `xtrm mcp` command)
+
+Classification:
+- `.1` → boundary (writes to `.mcp.json`, file I/O)
+- `.2` → shell (orchestrates install flow)
+- `.3` → shell (CLI command)
+
+Test issues created:
+
+```
+bd create "Test: MCP config writer — contract tests for .mcp.json output" \
+  -t task -p 2 --parent <epic> \
+  -d "Layer: boundary
+Strategy: example-based (file I/O, no external service)
+Covers: .1
+
+Assertions required:
+- [ ] Positive path: valid servers config produces correct .mcp.json structure
+- [ ] Negative path: invalid server entry raises validation error
+- [ ] Edge cases: empty servers list, duplicate server names, existing .mcp.json is merged not overwritten
+- [ ] Drift-safe: assert on field presence (name, command, args), not internal object identity
+
+Critical paths covered:
+- gitnexus server entry written with correct stdio transport — risk: wrong transport breaks MCP
+- existing user entries preserved during merge — risk: data loss
+
+Known deferred paths:
+- test with malformed existing .mcp.json → follow-up: to be created (P3)
+
+Done when: all assertions pass, no shared state between tests."
+```
+
+```
+bd create "Test: xtrm install MCP sync + xtrm mcp CLI — integration tests" \
+  -t task -p 2 --parent <epic> \
+  -d "Layer: shell
+Strategy: integration (subprocess)
+Covers: .2, .3
+
+Assertions required:
+- [ ] End-to-end: xtrm install writes correct .mcp.json in temp project dir
+- [ ] CLI: xtrm mcp list outputs expected server names
+- [ ] Failure-mode: xtrm mcp add with duplicate name exits non-zero with clear error
+- [ ] Cross-component: install flow calls MCP writer with correct config
+
+Critical paths covered:
+- full install → .mcp.json present and readable by Claude Code — risk: MCP servers not available
+- CLI add + list roundtrip — risk: user cannot inspect installed servers
+
+Known deferred paths:
+- test with no write permission on project dir → follow-up: to be created (P4)
+
+Done when: integration tests run against real file system in temp dir, no mocked internals."
+```
+
+---
+
+### Example B — Closure gate, core layer, implementation diverged
+
+Closing `.22` (config merge logic). Existing test issue `.31` was written before implementation.
+
+What `.22` actually built:
+- Added precedence chain: env > file > defaults (original plan had only file > defaults)
+- Added type coercion for boolean env vars ("true"/"false" → bool)
+- Removed support for `.xtrm.yaml` (only `.xtrm/config.json` now)
+
+Updated test issue `.31`:
+
+```
+bd update xtrm-31 --notes "Scope updated after .22 completed:
++ Add test: env var takes precedence over file config (new precedence chain)
++ Add test: 'true'/'false' env vars coerced to bool correctly
++ Add test: 'TRUE', '1', '0' edge cases for bool coercion
++ Remove test: .xtrm.yaml loading (format removed in .22)
+
+Anti-pattern check:
+- [ ] tautological: none detected
+- [ ] over-mocking: env injection via monkeypatch only, no internal mocking
+- [ ] shared state: each test resets env via fixture
+
+Critical paths covered:
+- env > file > defaults chain — risk: wrong precedence silently overrides user config
+- bool coercion — risk: 'false' string treated as truthy in Python
+
+Known deferred paths:
+- test with missing HOME dir (pathlib resolution edge case) → follow-up: xtrm-4x (P4)"
+```

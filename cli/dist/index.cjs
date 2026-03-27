@@ -58265,6 +58265,11 @@ program2.addCommand(createMemoryCommand());
 program2.addCommand(createMergeCommand());
 program2.addCommand(createDebugCommand());
 program2.addCommand(createHelpCommand());
+program2.command("update").description("Reinstall and sync all tools to latest (alias: xtrm install --prune -y)").action(async () => {
+  await printBanner(version2);
+  const installCmd = createInstallCommand();
+  await installCmd.parseAsync(["node", "xtrm", "--prune", "-y", "*"]);
+});
 program2.action(async () => {
   program2.help();
 });

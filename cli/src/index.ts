@@ -63,6 +63,14 @@ program.addCommand(createMemoryCommand());
 program.addCommand(createMergeCommand());
 program.addCommand(createDebugCommand());
 program.addCommand(createHelpCommand());
+program
+    .command('update')
+    .description('Reinstall and sync all tools to latest (alias: xtrm install --prune -y)')
+    .action(async () => {
+        await printBanner(version);
+        const installCmd = createInstallCommand();
+        await installCmd.parseAsync(['node', 'xtrm', '--prune', '-y', '*']);
+    });
 
 // Default action: show help
 program

@@ -83,7 +83,7 @@ Active only when cwd is inside a worktree (detected via path matching `.xtrm/wor
 
 | Hook | Event | Behavior |
 |------|-------|----------|
-| `beads-claim-sync.mjs` | PostToolUse | Notifies on `bd update --claim`; auto-commits on `bd close` with `--no-verify` (stages untracked files first) |
+| `beads-claim-sync.mjs` | PostToolUse | Notifies on `bd update --claim`; marks `closed-this-session` KV on `bd close` for memory gate |
 
 ### Statusline Hook
 

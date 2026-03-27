@@ -747,7 +747,7 @@ export function buildProjectInitGuide(): string {
         kleur.dim('   - Finish work:  bd close <id> --reason "Done" --json'),
         '',
         `${kleur.cyan('5) Git workflow:')}`,
-        kleur.dim('   - bd close <id> --reason "..."    ← closes issue + auto-commits'),
+        kleur.dim('   - bd close <id> --reason "..."    ← closes issue'),
         kleur.dim('   - xt end                          ← push, PR, merge, worktree cleanup'),
         '',
     ];

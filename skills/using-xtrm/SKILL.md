@@ -78,7 +78,7 @@ gitnexus_impact({target: "parseComposeServices", direction: "upstream"})
 get_symbols_overview("hooks/init.ts")                           # map file
 find_symbol("parseComposeServices", include_body=True)          # read just this
 replace_symbol_body("parseComposeServices", newBody)            # Serena edit
-bd close bd-xyz --reason="Fix YAML parse edge case"            # close + auto-commit
+bd close bd-xyz --reason="Fix YAML parse edge case"            # close issue
 xt end                                                         # push, PR, merge, cleanup
 ```
 

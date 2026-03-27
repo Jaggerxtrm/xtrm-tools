@@ -41083,7 +41083,7 @@ function printNextSteps() {
   console.log(`  bd prime                      ${d("load session context and available work")}`);
   console.log(`  bv --robot-triage             ${d("graph-aware triage \u2014 find highest-impact work")}`);
   console.log(`  bd update <id> --claim        ${d("claim an issue before editing any file")}`);
-  console.log(`  bd close <id>                 ${d("close when done \u2014 auto-commits")}`);
+  console.log(`  bd close <id>                 ${d("close when done")}`);
   console.log("");
   console.log(d("  Worktree workflow:"));
   console.log(`  xt claude                     ${d("launch Claude Code in a sandboxed worktree")}`);
@@ -42171,7 +42171,7 @@ function buildProjectInitGuide() {
     kleur_default.dim('   - Finish work:  bd close <id> --reason "Done" --json'),
     "",
     `${kleur_default.cyan("5) Git workflow:")}`,
-    kleur_default.dim('   - bd close <id> --reason "..."    \u2190 closes issue + auto-commits'),
+    kleur_default.dim('   - bd close <id> --reason "..."    \u2190 closes issue'),
     kleur_default.dim("   - xt end                          \u2190 push, PR, merge, worktree cleanup"),
     ""
   ];

@@ -61,7 +61,7 @@ Beads workflow enforcement for Pi. Implements claim-based edit gates and session
 
 - **Edit gate**: Blocks file edits when no beads issue is claimed
 - **Commit gate**: Blocks `git commit` when claimed issue is still in_progress  
-- **Auto-commit**: On `bd close`, automatically commits staged changes with `--no-verify` (stages untracked files first)
+- **Close tracking**: On `bd close`, marks `closed-this-session` KV to trigger memory gate
 - **Memory gate**: Nudges (non-blocking `sendUserMessage`) with 4-criteria filter when a claim was closed this session; requires articulated `bd kv set memory-gate-done:<sessionId>` ack
 
 ### `session-flow`

@@ -12,7 +12,7 @@ export const SESSION_CLOSE_PROTOCOL =
   '  xt end\n';
 
 export const COMMIT_NEXT_STEPS =
-  '  bd close <id> --reason="..."   ← closes issue + auto-commits\n' +
+  '  bd close <id> --reason="..."   ← closes issue\n' +
   '  xt end                          ← push, PR, merge, worktree cleanup\n';
 
 // ── Edit gate messages ───────────────────────────────────────────

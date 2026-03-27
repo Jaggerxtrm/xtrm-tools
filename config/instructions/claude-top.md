@@ -20,8 +20,6 @@
 | **Stop** | Session end with unclosed claim | `bd close <id>` |
 | **Memory** | Auto-fires at Stop if issue closed this session | `bd remember "<insight>"` then run the `bd kv set` command shown in the gate message |
 
-> `bd close` auto-commits via `git commit -am`. Do not double-commit after closing.
-
 ## bd Command Reference
 
 ```bash
@@ -45,7 +43,7 @@ bd create --title="..." --description="..." --type=task --priority=2
 # types: task | bug | feature | epic | chore | decision
 
 # Closing
-bd close <id>                          # Close + auto-commit
+bd close <id>                          # Close issue
 bd close <id> --reason="Done: ..."     # Close with context
 bd close <id1> <id2> <id3>            # Batch close
 
@@ -74,7 +72,7 @@ bd doctor                              # Diagnose installation issues
 git checkout -b feature/<issue-id>-<slug>   # or fix/... chore/...
 bd update <id> --claim                       # claim before any edit
 # ... write code ...
-bd close <id> --reason="..."                 # closes issue + auto-commits
+bd close <id> --reason="..."                 # closes issue
 xt end                                       # push, PR, merge, worktree cleanup
 ```
 

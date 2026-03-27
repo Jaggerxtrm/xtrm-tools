@@ -65,7 +65,7 @@ function printNextSteps(): void {
     console.log(`  bd prime                      ${d('load session context and available work')}`);
     console.log(`  bv --robot-triage             ${d('graph-aware triage — find highest-impact work')}`);
     console.log(`  bd update <id> --claim        ${d('claim an issue before editing any file')}`);
-    console.log(`  bd close <id>                 ${d('close when done — auto-commits')}`);
+    console.log(`  bd close <id>                 ${d('close when done')}`);
 
     console.log('');
     console.log(d('  Worktree workflow:'));

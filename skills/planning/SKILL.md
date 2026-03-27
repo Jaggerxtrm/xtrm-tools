@@ -292,30 +292,26 @@ Then begin work on the first task. The planning phase is complete.
 ### Example 2 — Bug fix with investigation
 
 <example>
-  <scenario>User: "bd close sometimes doesn't auto-commit"</scenario>
+  <scenario>User: "bd close doesn't commit my changes"</scenario>
 
   <exploration>
-    gitnexus_query({query: "bd close auto-commit"})
+    gitnexus_query({query: "bd close commit workflow"})
     → finds: beads-claim-sync.mjs, close event handler
-    find_symbol("handleClose", include_body=true)
-    → discovers: auto-commit only fires if tracked files changed, not untracked
+    find_symbol("main", include_body=true)
+    → discovers: bd close sets closed-this-session KV only; no git commit
   </exploration>
 
   <thinking>
-    Root cause identified: git commit -am skips untracked files.
-    Fix: check git ls-files --others before committing.
-    Risk: LOW — only beads-claim-sync.mjs changes.
-    Single task, no phases needed.
+    bd close does NOT auto-commit (removed in xtrm-wr0o).
+    Correct workflow: bd close <id>, then git add + git commit separately, then xt end.
+    No issue needed — this is expected behavior.
   </thinking>
 
   <bd_command>
-    bd create \
-      --title="Fix bd close auto-commit skips untracked new files" \
-      --description="Context: beads-claim-sync.mjs uses 'git commit -am' which skips
-      untracked files. Fix: add 'git ls-files --others --exclude-standard' check and
-      'git add -A' scoped to expected paths before committing.
-      AC: [ ] auto-commit includes new untracked files [ ] existing behavior preserved"
-      --type=bug --priority=1
+    # No issue needed — explain the correct workflow to the user:
+    # 1. bd close <id> --reason="..."   ← closes issue
+    # 2. git add . && git commit -m "..." ← commit changes manually
+    # 3. xt end                           ← push, PR, merge, worktree cleanup
   </bd_command>
 </example>
 

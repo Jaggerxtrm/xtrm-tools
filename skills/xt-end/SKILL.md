@@ -78,6 +78,33 @@ If changes cannot be classified safely, stop with `BLOCKED_DIRTY_UNCLASSIFIED_CH
 
 ---
 
+## Stage 2.5 — Scope Verification
+
+Before committing or pushing, verify that branch changes match the expected scope of the session's closed issues. **Never skip this step** — unreviewed scope is the primary source of oversized or unintended PRs.
+
+Run:
+```bash
+git diff --stat origin/main..HEAD 2>/dev/null || git diff --stat $(git merge-base HEAD main)..HEAD
+```
+
+For each significantly changed symbol, check blast radius:
+```bash
+npx gitnexus impact <symbol-name>                   # upstream dependants — what else breaks
+npx gitnexus impact <symbol-name> -d downstream    # downstream dependencies
+```
+
+For Claude agents with MCP access, also run:
+```
+gitnexus_detect_changes({scope: "compare", base_ref: "main"})
+```
+
+**Rules:**
+- Changes clearly tied to session issues → continue
+- Files unrelated to session issues → classify as overscoped (handle in Stage 3D)
+- `npx gitnexus impact` returns HIGH or CRITICAL risk on a changed symbol → **stop and report to user** before continuing
+
+---
+
 ## Stage 3 — Dry Run and Anomaly Detection
 
 Run:
@@ -260,6 +287,7 @@ If linkage had to be inferred from commits rather than detected by `xt end`, say
 
 The autonomous rule is simple:
 - normalize the session
+- verify scope with gitnexus before committing
 - dry-run
 - auto-fix predictable anomalies
 - rerun dry-run

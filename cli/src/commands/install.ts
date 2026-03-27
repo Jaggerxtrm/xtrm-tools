@@ -6,7 +6,7 @@ import fs from 'fs-extra';
 import os from 'os';
 import { getContext } from '../core/context.js';
 import { calculateDiff, PruneModeReadError } from '../core/diff.js';
-import { executeSync, syncMcpForTargets } from '../core/sync-executor.js';
+import { executeSync } from '../core/sync-executor.js';
 import { findRepoRoot } from '../utils/repo-root.js';
 import { t, sym } from '../utils/theme.js';
 import path from 'path';
@@ -111,11 +111,12 @@ async function renderSummaryCard(
 import { execSync } from 'child_process';
 
 import { spawnSync } from 'child_process';
-import { detectAgent } from '../utils/sync-mcp-cli.js';
 function formatTargetLabel(target: string): string {
     const normalized = target.replace(/\\/g, '/').toLowerCase();
-    if (normalized.endsWith('/.agents/skills') || normalized.includes('/.agents/skills/')) return '~/.agents/skills';
-    if (normalized.endsWith('/.claude') || normalized.includes('/.claude/')) return '~/.claude';
+    const home = os.homedir().replace(/\\/g, '/').toLowerCase();
+    if (normalized.endsWith('/.agents/skills') || normalized.includes('/.agents/skills/')) {
+        return normalized.startsWith(home) ? '~/.agents/skills' : '.agents/skills';
+    }
     return path.basename(target);
 }
 
@@ -137,15 +138,6 @@ function isDoltInstalled(): boolean {
     }
 }
 
-function isGitnexusInstalled(): boolean {
-    try {
-        execSync('gitnexus --version', { stdio: 'ignore' });
-        return true;
-    } catch {
-        return false;
-    }
-}
-
 function isDeepwikiInstalled(): boolean {
     try {
         execSync('deepwiki --version', { stdio: 'ignore' });
@@ -155,35 +147,6 @@ function isDeepwikiInstalled(): boolean {
     }
 }
 
-async function needsSettingsSync(repoRoot: string, target: string): Promise<boolean> {
-    const normalizedTarget = target.replace(/\\/g, '/').toLowerCase();
-    if (normalizedTarget.includes('.agents/skills')) return false;
-    // Claude Code: hooks and MCP are managed by the xtrm-tools plugin — no settings wiring needed
-    if (detectAgent(target) === 'claude') return false;
-
-    const hooksTemplatePath = path.join(repoRoot, 'config', 'hooks.json');
-    if (!await fs.pathExists(hooksTemplatePath)) return false;
-
-    const requiredEvents = Object.keys((await fs.readJson(hooksTemplatePath)).hooks ?? {});
-    if (requiredEvents.length === 0) return false;
-
-    const targetSettingsPath = path.join(target, 'settings.json');
-    if (!await fs.pathExists(targetSettingsPath)) return true;
-
-    let settings: any = {};
-    try {
-        settings = await fs.readJson(targetSettingsPath);
-    } catch {
-        return true;
-    }
-
-    const targetHooks = settings?.hooks;
-    if (!targetHooks || typeof targetHooks !== 'object' || Object.keys(targetHooks).length === 0) {
-        return true;
-    }
-
-    return requiredEvents.some((event) => !(event in targetHooks));
-}
 
 const OFFICIAL_CLAUDE_MARKETPLACE = 'https://github.com/anthropics/claude-plugins-official';
 const OFFICIAL_CLAUDE_PLUGINS = [
@@ -193,16 +156,18 @@ const OFFICIAL_CLAUDE_PLUGINS = [
     'ralph-loop@claude-plugins-official',
 ] as const;
 
-export async function installOfficialClaudePlugins(dryRun: boolean): Promise<void> {
+export async function installOfficialClaudePlugins(dryRun: boolean, isGlobal: boolean = false): Promise<void> {
     console.log(t.bold('\n  ⚙  official Claude plugins  (serena/context7/github/ralph-loop)'));
 
+    const scope = isGlobal ? 'user' : 'project';
+
     if (dryRun) {
-        console.log(kleur.dim('  [DRY RUN] Would register claude-plugins-official marketplace and install official plugins\n'));
+        console.log(kleur.dim(`  [DRY RUN] Would register claude-plugins-official marketplace and install official plugins (--scope ${scope})\n`));
         return;
     }
 
     // Ensure official marketplace is registered
-    spawnSync('claude', ['plugin', 'marketplace', 'add', OFFICIAL_CLAUDE_MARKETPLACE, '--scope', 'user'], { stdio: 'pipe' });
+    spawnSync('claude', ['plugin', 'marketplace', 'add', OFFICIAL_CLAUDE_MARKETPLACE, '--scope', scope], { stdio: 'pipe' });
 
     const listResult = spawnSync('claude', ['plugin', 'list'], { encoding: 'utf8', stdio: 'pipe' });
     const installedOutput = listResult.stdout ?? '';
@@ -216,11 +181,11 @@ export async function installOfficialClaudePlugins(dryRun: boolean): Promise<voi
             continue;
         }
 
-        const result = spawnSync('claude', ['plugin', 'install', pluginId, '--scope', 'user'], { stdio: 'inherit' });
+        const result = spawnSync('claude', ['plugin', 'install', pluginId, '--scope', scope], { stdio: 'inherit' });
         if (result.status === 0) {
             installedCount += 1;
         } else {
-            console.log(t.warning(`  ! Failed to install ${pluginId}. Install manually: claude plugin install ${pluginId} --scope user`));
+            console.log(t.warning(`  ! Failed to install ${pluginId}. Install manually: claude plugin install ${pluginId} --scope ${scope}`));
         }
     }
 
@@ -346,14 +311,16 @@ function warnIfOutdated(): void {
     } catch { /* network failure or parse error — silently skip */ }
 }
 
-export async function installPlugin(repoRoot: string, dryRun: boolean): Promise<void> {
+export async function installPlugin(repoRoot: string, dryRun: boolean, isGlobal: boolean = false): Promise<void> {
     console.log(t.bold('\n  ⚙  xtrm-tools  (Claude Code plugin)'));
     warnIfOutdated();
 
+    const scope = isGlobal ? 'user' : 'project';
+
     if (dryRun) {
-        console.log(kleur.dim('  [DRY RUN] Would register xtrm-tools marketplace and install plugin\n'));
+        console.log(kleur.dim(`  [DRY RUN] Would register xtrm-tools marketplace and install plugin (--scope ${scope})\n`));
         await cleanStalePrePluginFiles(repoRoot, true);
-        await installOfficialClaudePlugins(true);
+        await installOfficialClaudePlugins(true, isGlobal);
         return;
     }
 
@@ -361,14 +328,14 @@ export async function installPlugin(repoRoot: string, dryRun: boolean): Promise<
     // __dirname in the built CJS bundle is cli/dist/, so ../../ is the package root.
     // Do NOT use repoRoot here — that is the user's project, not the xtrm-tools package.
     const xtrmPkgRoot = path.resolve(__dirname, '..', '..');
-    spawnSync('claude', ['plugin', 'marketplace', 'add', xtrmPkgRoot, '--scope', 'user'], { stdio: 'pipe' });
+    spawnSync('claude', ['plugin', 'marketplace', 'add', xtrmPkgRoot, '--scope', scope], { stdio: 'pipe' });
 
     // Always uninstall + reinstall to refresh the cached copy from the live repo
     const listResult = spawnSync('claude', ['plugin', 'list'], { encoding: 'utf8', stdio: 'pipe' });
     if (listResult.stdout?.includes('xtrm-tools@xtrm-tools')) {
         spawnSync('claude', ['plugin', 'uninstall', 'xtrm-tools@xtrm-tools'], { stdio: 'inherit' });
     }
-    spawnSync('claude', ['plugin', 'install', 'xtrm-tools@xtrm-tools', '--scope', 'user'], { stdio: 'inherit' });
+    spawnSync('claude', ['plugin', 'install', 'xtrm-tools@xtrm-tools', '--scope', scope], { stdio: 'inherit' });
 
     console.log(t.success('  ✓ xtrm-tools plugin installed'));
     console.log(t.warning('  ↻ Restart Claude Code for the new plugin hooks to take effect'));
@@ -376,13 +343,13 @@ export async function installPlugin(repoRoot: string, dryRun: boolean): Promise<
     // Clean up stale pre-plugin files from ~/.claude/hooks/ and ~/.claude/skills/
     await cleanStalePrePluginFiles(repoRoot, dryRun);
 
-    await installOfficialClaudePlugins(false);
+    await installOfficialClaudePlugins(false, isGlobal);
 
-    // Write statusLine to user-scope ~/.claude/settings.json so it fires in all sessions.
-    installUserStatusLine(dryRun);
+    // Write statusLine to settings.json (project-scoped or user-global based on isGlobal).
+    installUserStatusLine(dryRun, repoRoot, isGlobal);
 }
 
-function installUserStatusLine(dryRun: boolean): void {
+function installUserStatusLine(dryRun: boolean, projectRoot?: string, isGlobal: boolean = false): void {
     try {
         // Resolve statusline.mjs from the xtrm-tools package root — same pattern as xtrmPkgRoot.
         // __dirname in the CJS bundle is cli/dist/, so ../../hooks/ is always the correct path.
@@ -390,7 +357,10 @@ function installUserStatusLine(dryRun: boolean): void {
         const scriptPath = path.resolve(__dirname, '..', '..', 'hooks', 'statusline.mjs');
         if (!fs.existsSync(scriptPath)) return;
 
-        const settingsPath = path.join(os.homedir(), '.claude', 'settings.json');
+        const settingsPath = isGlobal || !projectRoot
+            ? path.join(os.homedir(), '.claude', 'settings.json')
+            : path.join(projectRoot, '.claude', 'settings.json');
+
         const settings = fs.existsSync(settingsPath)
             ? JSON.parse(fs.readFileSync(settingsPath, 'utf8'))
             : {};
@@ -400,9 +370,14 @@ function installUserStatusLine(dryRun: boolean): void {
             return;
         }
 
+        if (!isGlobal && projectRoot) {
+            fs.ensureDirSync(path.dirname(settingsPath));
+        }
+
         settings.statusLine = { type: 'command', command: `node ${scriptPath}`, padding: 1 };
         fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n');
-        console.log(t.success(`  ✓ statusLine registered in ~/.claude/settings.json`));
+        const displayPath = isGlobal ? '~/.claude/settings.json' : '.claude/settings.json';
+        console.log(t.success(`  ✓ statusLine registered in ${displayPath}`));
     } catch { /* non-fatal */ }
 }
 
@@ -432,28 +407,28 @@ export function createInstallBasicCommand(): Command {
         });
 }
 
-export function createInstallCommand(): Command {
-    const installCmd = new Command('install')
-        .description('Install Claude Code tools (skills, hooks, MCP servers)')
-        .argument('[target-selector]', 'Install targets: use "*" or "all" to skip interactive target selection')
-        .option('--dry-run', 'Preview changes without making any modifications', false)
-        .option('-y, --yes', 'Skip confirmation prompts', false)
-        .option('--prune', 'Remove items not in the canonical repository', false)
-        .option('--backport', 'Backport drifted local changes back to the repository', false)
-        .action(async (targetSelector, opts) => {
-            const { dryRun, yes, prune, backport } = opts;
+export interface InstallOpts {
+    dryRun?: boolean;
+    yes?: boolean;
+    prune?: boolean;
+    backport?: boolean;
+    global?: boolean;
+}
+
+export async function runInstall(opts: InstallOpts = {}): Promise<void> {
+            const { dryRun = false, yes = false, prune = false, backport = false, global: isGlobal = false } = opts;
             const effectiveYes = yes || process.argv.includes('--yes') || process.argv.includes('-y');
+
             const syncType: 'sync' | 'backport' = backport ? 'backport' : 'sync';
             const actionLabel = backport ? 'backport' : 'install';
 
             const repoRoot = await findRepoRoot();
             const ctx = await getContext({
-                selector: targetSelector,
                 createMissingDirs: !dryRun,
+                isGlobal,
+                projectRoot: repoRoot,
             });
             const { targets, syncMode } = ctx;
-            const claudeTargets = targets.filter(t => detectAgent(t) === 'claude');
-            const otherTargets = targets.filter(t => detectAgent(t) !== 'claude');
 
             if (!backport) {
                 console.log(t.bold('\n  ⚙  beads + dolt  (workflow enforcement backend)'));
@@ -565,33 +540,20 @@ export function createInstallCommand(): Command {
                 }
             }
 
-            // Claude Code: install via plugin (no hook/settings wiring needed)
+            // Claude Code: plugin install (handles MCP, skills, hooks — no file-sync needed)
+            // Pi: project-scoped extension + package install
             if (!backport) {
-                for (const _claudeTarget of claudeTargets) {
-                    await installPlugin(repoRoot, dryRun);
-                }
-                // Pi: non-interactive extension sync + package install
-                await runPiInstall(dryRun);
+                await installPlugin(repoRoot, dryRun, isGlobal);
+                await runPiInstall(dryRun, isGlobal, repoRoot);
             }
 
-            // Phase 1: Diff (concurrent via listr2)
+            // Phase 1: Diff — skills targets only (.agents/skills)
             const diffTasks = new Listr<DiffCtx>(
-                otherTargets.map(target => ({
+                targets.map(target => ({
                     title: formatTargetLabel(target),
                     task: async (listCtx, task) => {
                         try {
                             const changeSet = await calculateDiff(repoRoot, target, prune);
-
-                            if (syncType === 'sync' && !prune) {
-                                const hasSettingsDiff =
-                                    changeSet.config.missing.includes('settings.json') ||
-                                    changeSet.config.outdated.includes('settings.json') ||
-                                    changeSet.config.drifted.includes('settings.json');
-
-                                if (!hasSettingsDiff && await needsSettingsSync(repoRoot, target)) {
-                                    changeSet.config.outdated.push('settings.json');
-                                }
-                            }
 
                             const totalChanges = Object.values(changeSet).reduce(
                                 (sum, c: any) => sum + c.missing.length + c.outdated.length + c.drifted.length, 0,
@@ -614,11 +576,6 @@ export function createInstallCommand(): Command {
 
             const diffCtx = await diffTasks.run({ allChanges: [] });
             const allChanges = diffCtx.allChanges;
-
-            // MCP sync always runs regardless of file changes
-            if (!backport) {
-                await syncMcpForTargets(repoRoot, otherTargets, dryRun);
-            }
 
             if (allChanges.length === 0) {
                 console.log('\n' + kleur.bold('✓ Files are up-to-date') + '\n');
@@ -674,9 +631,21 @@ export function createInstallCommand(): Command {
             if (!dryRun && !backport) {
                 printNextSteps();
             }
+}
+
+export function createInstallCommand(): Command {
+    const installCmd = new Command('install')
+        .description('[deprecated] Use xtrm init — project-scoped setup in one command')
+        .option('--dry-run', 'Preview changes without making any modifications', false)
+        .option('-y, --yes', 'Skip confirmation prompts', false)
+        .option('--prune', 'Remove items not in the canonical repository', false)
+        .option('--backport', 'Backport drifted local changes back to the repository', false)
+        .option('--global', 'Install to user-global scope (~/.agents/skills) instead of project-local', false)
+        .action(async (opts) => {
+            console.log(kleur.yellow('  ⚠  xtrm install is deprecated — use xtrm init\n'));
+            await runInstall(opts);
         });
 
-    // Add subcommands
     installCmd.addCommand(createInstallAllCommand());
     installCmd.addCommand(createInstallBasicCommand());
 

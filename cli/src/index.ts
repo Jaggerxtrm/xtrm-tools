@@ -8,7 +8,7 @@ declare const __dirname: string;
 let version = '0.0.0';
 try { version = JSON.parse(readFileSync(resolve(__dirname, '../package.json'), 'utf8')).version; } catch { /* fallback */ }
 
-import { createInstallCommand } from './commands/install.js';
+import { createInstallCommand, runInstall } from './commands/install.js';
 import { createClaudeCommand } from './commands/claude.js';
 import { createPiCommand } from './commands/pi.js';
 import { runProjectInit } from './commands/init.js';
@@ -49,9 +49,12 @@ program.addCommand(createClaudeCommand());
 program.addCommand(createPiCommand());
 program
     .command('init')
-    .description('Alias for xtrm project init')
-    .action(async () => {
-        await runProjectInit();
+    .description('Set up xtrm in this project (plugin, Pi extensions, skills, beads, GitNexus)')
+    .option('--dry-run', 'Preview changes without making any modifications', false)
+    .option('-y, --yes', 'Skip confirmation prompts', false)
+    .option('--global', 'Install tooling to user-global scope instead of project-local', false)
+    .action(async (opts) => {
+        await runProjectInit(opts);
     });
 program.addCommand(createStatusCommand());
 program.addCommand(createResetCommand());
@@ -67,11 +70,10 @@ program.addCommand(createHelloCommand());
 program.addCommand(createHelpCommand());
 program
     .command('update')
-    .description('Reinstall and sync all tools to latest (alias: xtrm install --prune -y)')
+    .description('Reinstall and sync all tools to latest (alias: xtrm init --prune -y)')
     .action(async () => {
         await printBanner(version);
-        const installCmd = createInstallCommand();
-        await installCmd.parseAsync(['node', 'xtrm', '--prune', '-y', '*']);
+        await runInstall({ prune: true, yes: true });
     });
 
 // Default action: show help
@@ -94,12 +96,12 @@ process.on('unhandledRejection', (reason) => {
     process.exit(1);
 });
 
-// Show banner only for the install command (never for help/version output)
+// Show banner for setup commands (never for help/version output)
 const isHelpOrVersion = process.argv.some(a => a === '--help' || a === '-h' || a === '--version' || a === '-V');
-const isInstallCommand = (process.argv[2] ?? '') === 'install';
+const isSetupCommand = ['init', 'install', 'update'].includes(process.argv[2] ?? '');
 
 (async () => {
-    if (!isHelpOrVersion && isInstallCommand) {
+    if (!isHelpOrVersion && isSetupCommand) {
         await printBanner(version);
     }
     program.parseAsync(process.argv);

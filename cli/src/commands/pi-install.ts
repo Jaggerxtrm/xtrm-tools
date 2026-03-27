@@ -9,6 +9,13 @@ import { syncManagedPiExtensions, piPreCheck, getInstalledPiPackages } from '../
 
 const PI_AGENT_DIR = process.env.PI_AGENT_DIR || path.join(homedir(), '.pi', 'agent');
 
+function piExtensionsDir(isGlobal: boolean, projectRoot?: string): string {
+    if (!isGlobal && projectRoot) {
+        return path.join(projectRoot, '.pi', 'extensions');
+    }
+    return path.join(PI_AGENT_DIR, 'extensions');
+}
+
 interface InstallSchema {
     fields: { key: string; label: string; hint: string; secret: boolean; required: boolean }[];
     oauth_providers: { key: string; instruction: string }[];
@@ -46,9 +53,13 @@ function ensurePnpm(dryRun: boolean): void {
 /**
  * Non-interactive Pi install: copies extensions + installs npm packages.
  * Called automatically as part of `xtrm install`.
+ *
+ * @param isGlobal - When true, installs to global Pi dirs (~/.pi/agent/). Default false = project-scoped.
+ * @param projectRoot - Project root for project-scoped installs. Defaults to findRepoRoot().
  */
-export async function runPiInstall(dryRun: boolean = false): Promise<void> {
+export async function runPiInstall(dryRun: boolean = false, isGlobal: boolean = false, projectRoot?: string): Promise<void> {
     const repoRoot = await findRepoRoot();
+    if (!projectRoot) projectRoot = repoRoot;
     const piConfigDir = path.join(repoRoot, 'config', 'pi');
     const schemaPath = path.join(piConfigDir, 'install-schema.json');
 
@@ -82,7 +93,7 @@ export async function runPiInstall(dryRun: boolean = false): Promise<void> {
 
     // Run pre-check
     const extensionsSrc = path.join(piConfigDir, 'extensions');
-    const extensionsDst = path.join(PI_AGENT_DIR, 'extensions');
+    const extensionsDst = piExtensionsDir(isGlobal, projectRoot);
 
     const preCheck = await piPreCheck(extensionsSrc, extensionsDst, packages);
 
@@ -110,11 +121,12 @@ export async function runPiInstall(dryRun: boolean = false): Promise<void> {
             console.log(kleur.dim(`    ✓ All ${packages.length} packages already installed`));
         } else {
             for (const pkg of preCheck.packages.needed) {
+                const installArgs = isGlobal ? ['install', pkg] : ['install', pkg, '-l'];
                 if (dryRun) {
-                    console.log(kleur.dim(`    [DRY RUN] pi install ${pkg}`));
+                    console.log(kleur.dim(`    [DRY RUN] pi ${installArgs.join(' ')}`));
                     continue;
                 }
-                const r = spawnSync('pi', ['install', pkg], { stdio: 'pipe', encoding: 'utf8' });
+                const r = spawnSync('pi', installArgs, { stdio: 'pipe', encoding: 'utf8' });
                 if (r.status === 0) {
                     console.log(t.success(`    ${sym.ok} ${pkg}`));
                 } else {

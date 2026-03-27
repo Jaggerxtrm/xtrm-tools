@@ -4,6 +4,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import { spawnSync } from 'child_process';
 import { installGitHooks as installServiceGitHooks } from './install-service-skills.js';
+import { runInstall, type InstallOpts } from './install.js';
 
 declare const __dirname: string;
 function resolvePkgRoot(): string {
@@ -755,13 +756,13 @@ export function buildProjectInitGuide(): string {
     return lines.join('\n');
 }
 
-export async function runProjectInit(): Promise<void> {
+export async function runProjectInit(opts: InstallOpts = {}): Promise<void> {
     console.log(buildProjectInitGuide());
-    await bootstrapProjectInit();
+    await bootstrapProjectInit(opts);
 }
 
 
-async function bootstrapProjectInit(): Promise<void> {
+async function bootstrapProjectInit(opts: InstallOpts = {}): Promise<void> {
     let projectRoot: string;
     try {
         projectRoot = getProjectRoot();
@@ -769,6 +770,9 @@ async function bootstrapProjectInit(): Promise<void> {
         console.log(kleur.yellow(`\n  ⚠ Skipping project bootstrap: ${err.message}\n`));
         return;
     }
+
+    // Tooling setup: plugin, Pi extensions, skills, binaries
+    await runInstall({ ...opts, backport: false });
 
     const detected = await detectProjectFeatures(projectRoot);
 

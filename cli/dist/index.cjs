@@ -40576,7 +40576,14 @@ function ensurePnpm2(dryRun) {
   }
 }
 async function runPiInstall(dryRun = false, isGlobal = false, projectRoot) {
-  if (!projectRoot) projectRoot = await findRepoRoot();
+  if (!projectRoot) {
+    const r = (0, import_node_child_process2.spawnSync)("git", ["rev-parse", "--show-toplevel"], {
+      cwd: process.cwd(),
+      encoding: "utf8",
+      stdio: "pipe"
+    });
+    projectRoot = r.status === 0 ? (r.stdout ?? "").trim() : process.cwd();
+  }
   const piConfigDir = import_path10.default.join(resolvePkgRoot(), "config", "pi");
   const schemaPath = import_path10.default.join(piConfigDir, "install-schema.json");
   console.log(t.bold("\n  \u2699  Pi extensions + packages"));

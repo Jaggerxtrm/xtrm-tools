@@ -3,7 +3,6 @@ import fs from 'fs-extra';
 import path from 'path';
 import { spawnSync } from 'node:child_process';
 import { homedir } from 'node:os';
-import { findRepoRoot } from '../utils/repo-root.js';
 import { t, sym } from '../utils/theme.js';
 import { syncManagedPiExtensions, piPreCheck } from '../utils/pi-extensions.js';
 
@@ -77,7 +76,12 @@ function ensurePnpm(dryRun: boolean): void {
  * @param projectRoot - Project root for project-scoped installs. Defaults to findRepoRoot().
  */
 export async function runPiInstall(dryRun: boolean = false, isGlobal: boolean = false, projectRoot?: string): Promise<void> {
-    if (!projectRoot) projectRoot = await findRepoRoot();
+    if (!projectRoot) {
+        const r = spawnSync('git', ['rev-parse', '--show-toplevel'], {
+            cwd: process.cwd(), encoding: 'utf8', stdio: 'pipe',
+        });
+        projectRoot = r.status === 0 ? (r.stdout ?? '').trim() : process.cwd();
+    }
     // Source always comes from xtrm-tools package (resolved via __dirname),
     // NOT from the user's project root (which has no config/pi/).
     const piConfigDir = path.join(resolvePkgRoot(), 'config', 'pi');

@@ -37,7 +37,9 @@ skills/*-workspace/
 .xtrm/statusline-claim
 .xtrm-session-state.json
 .session-meta.json
+.xtrm/session-meta.json
 .claude/skills/
+
 .perles/
 
 # prepack-plugin.mjs copies — should never be committed

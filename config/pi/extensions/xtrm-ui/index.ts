@@ -19,6 +19,7 @@ import type {
   GrepToolDetails,
   LsToolDetails,
   ReadToolDetails,
+  ToolResultEvent,
 } from "@mariozechner/pi-coding-agent";
 import {
   CustomEditor,
@@ -508,14 +509,230 @@ function summarizeToolSubject(toolName: string, args: Record<string, unknown>): 
   }
 }
 
+const SERENA_COMPACT_TOOLS = new Set([
+  "find_symbol",
+  "find_referencing_symbols",
+  "insert_after_symbol",
+  "replace_symbol_body",
+  "read_file",
+  "get_symbols_overview",
+  "insert_before_symbol",
+  "rename_symbol",
+  "restart_language_server",
+  "jet_brains_get_symbols_overview",
+  "jet_brains_find_symbol",
+  "jet_brains_find_referencing_symbols",
+  "jet_brains_type_hierarchy",
+  "search_for_pattern",
+  "list_dir",
+  "find_file",
+  "create_text_file",
+  "replace_content",
+  "delete_lines",
+  "replace_lines",
+  "insert_at_line",
+  "execute_shell_command",
+  "get_current_config",
+  "activate_project",
+  "remove_project",
+  "switch_modes",
+  "open_dashboard",
+  "check_onboarding_performed",
+  "onboarding",
+  "initial_instructions",
+  "prepare_for_new_conversation",
+  "summarize_changes",
+  "think_about_collected_information",
+  "think_about_task_adherence",
+  "think_about_whether_you_are_done",
+  "read_memory",
+  "write_memory",
+  "list_memories",
+  "delete_memory",
+  "rename_memory",
+  "edit_memory",
+  "serena_mcp_reset",
+]);
+
+function parseJson(text: string): unknown | undefined {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return undefined;
+  }
+}
+
+function asRecord(value: unknown): Record<string, unknown> | undefined {
+  return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : undefined;
+}
+
+function countSearchMatches(payload: unknown): number | undefined {
+  const record = asRecord(payload);
+  if (!record) return undefined;
+  let total = 0;
+  for (const value of Object.values(record)) {
+    if (Array.isArray(value)) total += value.length;
+  }
+  return total > 0 ? total : undefined;
+}
+
+function countOverviewSymbols(payload: unknown): number {
+  if (Array.isArray(payload)) {
+    const nested = payload.reduce<number>((total, value) => total + countOverviewSymbols(value), 0);
+    return nested || payload.length;
+  }
+  const record = asRecord(payload);
+  if (!record) return 0;
+  return Object.values(record).reduce<number>((total, value) => total + countOverviewSymbols(value), 0);
+}
+
+function countLines(text: string): number {
+  if (!text) return 0;
+  return text.split("\n").length;
+}
+
+function countJsonItems(payload: unknown): number | undefined {
+  if (Array.isArray(payload)) return payload.length;
+  const record = asRecord(payload);
+  if (!record) return undefined;
+
+  let total = 0;
+  for (const value of Object.values(record)) {
+    if (Array.isArray(value)) total += value.length;
+  }
+  return total > 0 ? total : undefined;
+}
+
+function summarizeSerenaSubject(toolName: string, input: Record<string, unknown>): string | undefined {
+  switch (toolName) {
+    case "find_symbol":
+    case "find_referencing_symbols":
+    case "replace_symbol_body":
+    case "insert_after_symbol":
+    case "insert_before_symbol":
+    case "rename_symbol":
+    case "jet_brains_find_symbol":
+    case "jet_brains_find_referencing_symbols":
+    case "jet_brains_type_hierarchy":
+      return String(input.name_path_pattern ?? input.name_path ?? "symbol");
+    case "get_symbols_overview":
+    case "jet_brains_get_symbols_overview":
+    case "read_file":
+    case "create_text_file":
+    case "replace_content":
+    case "replace_lines":
+    case "delete_lines":
+    case "insert_at_line":
+    case "list_dir":
+    case "find_file":
+      return shortenPath(String(input.relative_path ?? input.path ?? "."), 42);
+    case "search_for_pattern":
+      return shortenCommand(String(input.substring_pattern ?? ""), 52);
+    case "read_memory":
+    case "write_memory":
+    case "delete_memory":
+    case "rename_memory":
+    case "edit_memory":
+      return String(input.memory_name ?? input.old_name ?? "memory");
+    case "activate_project":
+    case "remove_project":
+      return String(input.project ?? input.project_name ?? "project");
+    case "switch_modes": {
+      const modes = input.modes;
+      if (Array.isArray(modes)) return modes.map((mode) => String(mode)).join(",");
+      return "modes";
+    }
+    case "execute_shell_command":
+      return shortenCommand(String(input.command ?? ""), 52);
+    default:
+      return undefined;
+  }
+}
+
+function summarizeSerenaToolResult(
+  toolName: string,
+  input: Record<string, unknown>,
+  text: string,
+  durationMs: number | undefined,
+): string {
+  const payload = parseJson(text);
+  const duration = formatDuration(durationMs);
+  const subject = summarizeSerenaSubject(toolName, input);
+  const meta = (...parts: Array<string | undefined>) => {
+    const joined = joinMeta(parts);
+    return joined ? ` · ${joined}` : "";
+  };
+
+  switch (toolName) {
+    case "find_symbol":
+    case "find_referencing_symbols":
+    case "jet_brains_find_symbol":
+    case "jet_brains_find_referencing_symbols": {
+      const count = countJsonItems(payload) ?? (text.match(/"name_path"\s*:/g)?.length ?? 0);
+      return `• serena ${toolName} ${subject ?? "symbol"}${meta(formatLineLabel(count, "result"), duration)}`;
+    }
+    case "get_symbols_overview":
+    case "jet_brains_get_symbols_overview":
+    case "jet_brains_type_hierarchy": {
+      const count = Math.max(countOverviewSymbols(payload), text.match(/"name_path"\s*:/g)?.length ?? 0);
+      return `• serena ${toolName} ${subject ?? "file"}${meta(formatLineLabel(count, "symbol"), duration)}`;
+    }
+    case "search_for_pattern": {
+      const count = countSearchMatches(payload) ?? (text.match(/^\s*>\s*\d+:/gm)?.length ?? 0);
+      return `• serena search ${subject ?? "pattern"}${meta(formatLineLabel(count, "match"), duration)}`;
+    }
+    case "read_file": {
+      return `• serena read ${subject ?? "file"}${meta(formatLineLabel(countLines(text), "line"), duration)}`;
+    }
+    case "list_dir": {
+      const count = countJsonItems(payload) ?? countLines(text);
+      return `• serena list_dir ${subject ?? "."}${meta(formatLineLabel(count, "entry"), duration)}`;
+    }
+    case "find_file": {
+      const count = countJsonItems(payload) ?? countLines(text);
+      return `• serena find_file ${String(input.file_mask ?? "")}${meta(formatLineLabel(count, "match"), duration)}`;
+    }
+    case "replace_symbol_body":
+    case "insert_after_symbol":
+    case "insert_before_symbol":
+    case "rename_symbol":
+    case "create_text_file":
+    case "replace_content":
+    case "replace_lines":
+    case "delete_lines":
+    case "insert_at_line":
+    case "write_memory":
+    case "delete_memory":
+    case "rename_memory":
+    case "edit_memory":
+    case "activate_project":
+    case "remove_project":
+    case "switch_modes":
+    case "restart_language_server":
+    case "onboarding":
+    case "serena_mcp_reset":
+      return `• serena ${toolName}${subject ? ` ${subject}` : ""}${meta(duration)}`;
+    case "execute_shell_command": {
+      const count = countLines(text);
+      return `• serena shell ${subject ?? "command"}${meta(formatLineLabel(count, "line"), duration)}`;
+    }
+    default: {
+      const count = countJsonItems(payload) ?? countLines(text);
+      return `• serena ${toolName}${subject ? ` ${subject}` : ""}${meta(formatLineLabel(count, "item"), duration)}`;
+    }
+  }
+}
+
 function registerXtrmUiTools(pi: ExtensionAPI): void {
   const activeToolCalls = new Map<string, string>();
   const activeSignatureCounts = new Map<string, number>();
+  const toolCallStartTimes = new Map<string, number>();
 
   const trackToolCallStart = (toolCallId: string, toolName: string, args: Record<string, unknown>) => {
     const signature = stableToolSignature(toolName, args);
     activeToolCalls.set(toolCallId, signature);
     activeSignatureCounts.set(signature, (activeSignatureCounts.get(signature) ?? 0) + 1);
+    toolCallStartTimes.set(toolCallId, Date.now());
   };
 
   const trackToolCallEnd = (toolCallId: string) => {
@@ -525,6 +742,7 @@ function registerXtrmUiTools(pi: ExtensionAPI): void {
     const next = (activeSignatureCounts.get(signature) ?? 1) - 1;
     if (next <= 0) activeSignatureCounts.delete(signature);
     else activeSignatureCounts.set(signature, next);
+    toolCallStartTimes.delete(toolCallId);
   };
 
   const isToolCallActive = (toolName: string, args: Record<string, unknown>) =>
@@ -539,6 +757,24 @@ function registerXtrmUiTools(pi: ExtensionAPI): void {
 
   pi.on("tool_execution_end", async (event) => {
     trackToolCallEnd(event.toolCallId);
+  });
+
+  pi.on("tool_result", async (event: ToolResultEvent, ctx) => {
+    if (!SERENA_COMPACT_TOOLS.has(event.toolName)) return undefined;
+    if (ctx.ui.getToolsExpanded()) return undefined;
+    if (event.isError) return undefined;
+
+    const text = getTextContent({ content: event.content as Array<{ type: string; text?: string }> });
+    if (!text.trim()) return undefined;
+
+    const startedAt = toolCallStartTimes.get(event.toolCallId);
+    const durationMs = startedAt != null ? Date.now() - startedAt : undefined;
+    const compactText = summarizeSerenaToolResult(event.toolName, event.input, text, durationMs);
+
+    return {
+      content: [{ type: "text", text: compactText }],
+      details: event.details,
+    };
   });
 
   pi.registerTool({

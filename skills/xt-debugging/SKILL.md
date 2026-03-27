@@ -1,11 +1,11 @@
 ---
-name: unified-debugging
+name: xt-debugging
 description: Complete debugging workflow — error analysis, log interpretation, performance profiling, and GitNexus call-chain tracing. Use when investigating bugs, errors, crashes, or performance issues.
 ---
 
-# Unified Debugging
+# xt-debugging
 
-Systematic debugging combining knowledge-graph call tracing, error analysis, log interpretation, and performance profiling.
+Systematic debugging using the GitNexus knowledge graph for call-chain tracing, combined with error analysis, log interpretation, and performance profiling.
 
 ## When to Use
 
@@ -18,24 +18,31 @@ Systematic debugging combining knowledge-graph call tracing, error analysis, log
 
 ---
 
+## Prerequisites
+
+GitNexus must be indexed before starting. If you see "index is stale" or no results:
+
+```bash
+npx gitnexus analyze   # re-index the repo (run this, then retry)
+npx gitnexus status    # verify freshness
+```
+
+---
+
 ## Phase 1 — Triage
 
 Understand the symptom before touching any code.
 
 1. Read the full error message and stack trace
 2. Identify the suspect symbol (function, class, endpoint)
-3. Check if GitNexus index is available:
-   ```bash
-   npx gitnexus status   # if stale → npx gitnexus analyze
-   ```
-4. Check recent changes for regressions:
+3. Check for regressions — what changed recently?
    ```
    gitnexus_detect_changes({scope: "compare", base_ref: "main"})
    ```
 
 ---
 
-## Phase 2 — Knowledge Graph Investigation (when GitNexus available)
+## Phase 2 — Knowledge Graph Investigation
 
 ```
 1. gitnexus_query({query: "<error text or symptom>"})   → Related execution flows + symbols
@@ -44,7 +51,7 @@ Understand the symptom before touching any code.
 4. gitnexus_cypher({...})                               → Custom call chain if needed
 ```
 
-### GitNexus Patterns by Symptom
+### Patterns by Symptom
 
 | Symptom | Approach |
 |---------|----------|
@@ -72,23 +79,7 @@ Understand the symptom before touching any code.
 
 ---
 
-## Phase 3 — File Discovery (fallback or complement)
-
-When GitNexus is unavailable or for targeted file reads:
-
-```bash
-# Find the error origin
-grep -rn "ErrorClass\|error_function" src/
-
-# Locate the suspect file
-grep -rn "functionName" src/ --include="*.ts"
-```
-
-Read the relevant file with ~30 lines of context around the suspect location.
-
----
-
-## Phase 4 — Root Cause Analysis
+## Phase 3 — Root Cause Analysis
 
 1. **Reproduce** — Identify minimal reproduction steps
 2. **Trace data flow** — Follow the value/control flow from input to error
@@ -105,7 +96,7 @@ Common root cause categories:
 
 ---
 
-## Phase 5 — Log Analysis
+## Phase 4 — Log Analysis
 
 1. Read the full log output (not just the last line)
 2. Identify: timestamps, error levels, request IDs, correlation tokens
@@ -115,7 +106,7 @@ Common root cause categories:
 
 ---
 
-## Phase 6 — Performance Profiling
+## Phase 5 — Performance Profiling
 
 1. **Measure baseline** — Never optimize blind
    ```bash
@@ -125,18 +116,19 @@ Common root cause categories:
    - Node.js: `--prof`, `clinic.js`, `0x`
    - Python: `cProfile`, `py-spy`, `line_profiler`
    - Go: `pprof`
-3. **Identify hotspot** — Usually 1–2 functions account for >80% of time
+3. **Identify hotspot** — Usually 1–2 functions account for >80% of time; use `gitnexus_context` to confirm call frequency
 4. **Fix the bottleneck** — Minimal targeted change
 5. **Verify** — Measure again, compare against baseline
 
 ---
 
-## Phase 7 — Remediation
+## Phase 6 — Remediation
 
 1. **Fix** — Minimal change that addresses the confirmed root cause
 2. **Verify** — Run the failing case to confirm fix
 3. **Regression test** — Add a test that would have caught this bug
 4. **Check blast radius** — `gitnexus_impact({target: "fixedSymbol", direction: "upstream"})`
+5. **Pre-commit scope check** — `gitnexus_detect_changes({scope: "staged"})`
 
 ---
 
@@ -145,7 +137,7 @@ Common root cause categories:
 ```
 - [ ] Read full error / stack trace
 - [ ] Identify suspect symbol
-- [ ] Check GitNexus index freshness
+- [ ] gitnexus_detect_changes to check for regressions
 - [ ] gitnexus_query for error text or symptom
 - [ ] gitnexus_context on suspect (callers, callees, processes)
 - [ ] Trace execution flow via process resource

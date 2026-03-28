@@ -55232,7 +55232,6 @@ function createMergeCommand() {
     console.log(kleur_default.bold(`
   xt merge${opts.dryRun ? " (dry run)" : ""}
 `));
-    console.log(kleur_default.dim("  Running xt-merge specialist...\n"));
     const jobsDir = (0, import_node_path8.join)(cwd, ".specialists", "jobs");
     let jobsBefore;
     try {
@@ -55261,34 +55260,7 @@ function createMergeCommand() {
       console.error(kleur_default.red("\n  \u2717 Timed out waiting for xt-merge job to start.\n"));
       process.exit(1);
     }
-    process.stdout.write(kleur_default.dim("  Waiting"));
-    const jobTimeout = Date.now() + 3e5;
-    let jobDone = false;
-    while (Date.now() < jobTimeout) {
-      const check3 = (0, import_node_child_process13.spawnSync)("specialists", ["poll", jobId, "--json"], {
-        cwd,
-        encoding: "utf8",
-        stdio: "pipe"
-      });
-      if (check3.status === 0 && check3.stdout) {
-        try {
-          const d = JSON.parse(check3.stdout);
-          if (d.status === "done" || d.status === "error") {
-            jobDone = true;
-            break;
-          }
-        } catch {
-        }
-      }
-      process.stdout.write(kleur_default.dim("."));
-      await new Promise((r) => setTimeout(r, 2e3));
-    }
-    process.stdout.write("\n\n");
-    if (!jobDone) {
-      console.error(kleur_default.red("  \u2717 Timed out waiting for xt-merge to complete.\n"));
-      process.exit(1);
-    }
-    (0, import_node_child_process13.spawnSync)("specialists", ["poll", jobId], { cwd, stdio: "inherit" });
+    (0, import_node_child_process13.spawnSync)("specialists", ["poll", jobId, "--follow"], { cwd, stdio: "inherit" });
     process.exit(0);
   });
 }

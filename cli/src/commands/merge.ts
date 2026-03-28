@@ -1,6 +1,8 @@
 import { Command } from 'commander';
 import kleur from 'kleur';
 import { spawn, spawnSync } from 'node:child_process';
+import { readdirSync } from 'node:fs';
+import { join } from 'node:path';
 
 export function createMergeCommand(): Command {
     return new Command('merge')
@@ -44,17 +46,47 @@ export function createMergeCommand(): Command {
 
             console.log(kleur.bold(`\n  xt merge${opts.dryRun ? ' (dry run)' : ''}\n`));
 
-            // Pass stdio: 'inherit' so specialists gets a proper TTY — piping stdout causes
-            // the specialists process to hang after job completion (it waits for TTY close).
-            const exitCode = await new Promise<number>((resolve) => {
-                const proc = spawn('specialists', args, { cwd, stdio: 'inherit' });
-                proc.on('close', (code) => resolve(code ?? 0));
-            });
-
-            if (exitCode !== 0) {
-                console.error(kleur.red('\n  ✗ xt-merge failed.\n'));
+            // Snapshot job IDs before running so we can find the new one after
+            const jobsDir = join(cwd, '.specialists', 'jobs');
+            let jobsBefore: Set<string>;
+            try {
+                jobsBefore = new Set(
+                    readdirSync(jobsDir, { withFileTypes: true })
+                        .filter(d => d.isDirectory())
+                        .map(d => d.name),
+                );
+            } catch {
+                jobsBefore = new Set();
             }
 
-            process.exit(exitCode);
+            // Spawn detached so we can poll independently — stdio: 'ignore' avoids
+            // the TTY-close hang that occurs with piped or inherited output.
+            const runProc = spawn('specialists', args, { cwd, detached: true, stdio: 'ignore' });
+            runProc.unref();
+
+            // Wait for the new job directory to appear (created at job startup, not completion)
+            const jobId = await (async () => {
+                const deadline = Date.now() + 15_000;
+                while (Date.now() < deadline) {
+                    try {
+                        const entries = readdirSync(jobsDir, { withFileTypes: true })
+                            .filter(d => d.isDirectory())
+                            .map(d => d.name);
+                        const newId = entries.find(id => !jobsBefore.has(id));
+                        if (newId) return newId;
+                    } catch { /* dir not yet created */ }
+                    await new Promise(r => setTimeout(r, 200));
+                }
+                return undefined;
+            })();
+
+            if (!jobId) {
+                console.error(kleur.red('\n  ✗ Timed out waiting for xt-merge job to start.\n'));
+                process.exit(1);
+            }
+
+            // --follow: redraws header in-place every second until done, then shows output
+            spawnSync('specialists', ['poll', jobId, '--follow'], { cwd, stdio: 'inherit' });
+            process.exit(0);
         });
 }

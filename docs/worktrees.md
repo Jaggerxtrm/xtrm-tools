@@ -3,7 +3,7 @@ title: xt Worktrees
 scope: worktrees
 category: reference
 version: 1.0.0
-updated: 2026-03-25
+updated: 2026-03-28
 synced_at: 66b408d
 source_of_truth_for:
   - "cli/src/commands/worktree.ts"
@@ -21,6 +21,7 @@ domain: [cli, worktrees, beads]
 | [Naming Convention](#naming-convention) | Branch and worktree always share the same slug, so they're trivially linked |
 | [Re-attaching to a Session](#re-attaching-to-a-session) | When a Claude or Pi session closes unexpectedly, use `xt attach` to re-enter the worktree and resume the previous conver |
 | [Managing Worktrees](#managing-worktrees) | `xt worktree list` shows each worktree's runtime badge `[claude]`/`[pi]`, last activity timestamp, last commit message,  |
+| [Session Close & Merge Pipeline](#session-close--merge-pipeline) | Two-stage publish lifecycle: `xt end` (inside worktree) rebases, pushes, and opens a PR; `xt merge` (from main) drains the `xt/*` PR queue FIFO with automatic rebase cascade. |
 | [Beads / Dolt Architecture](#beads-dolt-architecture) | xtrm-tools runs beads in **server mode** — a persistent Dolt server process handles |
 | [Constraints](#constraints) | directly or Claude Code's `EnterWorktree` tool |
 | [Troubleshooting](#troubleshooting) | `bd` connected to a spurious Dolt server instead of main's |
@@ -153,6 +154,101 @@ xt worktree remove xt/ab3k
 When multiple `xt/*` PRs are open at once, run `xt merge` from a normal checkout to drain the queue safely. `xt merge` wraps the `xt-merge` specialist: oldest PR first, CI must be green, merge with `--rebase --delete-branch`, then rebase the remaining queued xt branches onto the updated target branch and push them with `--force-with-lease`. Use `xt merge --dry-run` when you want queue order and CI status without performing any merge.
 
 If you want a fresh operator memory snapshot after several worktree sessions, run `xt memory update`. That command wraps the `memory-processor` specialist, which synthesizes `.xtrm/memory.md` from bd memories plus current repo state. Use `xt memory update --dry-run` to review the report only.
+
+## Session Close & Merge Pipeline
+
+The publish lifecycle for a worktree session has two stages: **close** (run from inside the worktree) and **merge** (run from the main checkout).
+
+```
+Worktree session
+  │
+  └── xt end [--yes]              ← run from inside the worktree
+        │  1. gate: xt/ branch + clean tree
+        │  2. fetch + rebase onto origin/<default>
+        │  3. push --force-with-lease
+        │  4. gh pr create (title from issues / commits / files)
+        │  5. bd update --notes "PR: <url>"  (links PR to each issue)
+        │  6. remove worktree (auto with --yes, prompt otherwise)
+        ↓
+  xt/* PR queue on GitHub
+        │
+  xt merge                        ← run from main checkout
+        │  FIFO: oldest PR first
+        │  gh pr merge --rebase --delete-branch
+        │  rebase all remaining xt/* branches onto new main
+        │  git push --force-with-lease each
+        │  repeat until queue empty
+        ↓
+  main (linear history)
+```
+
+### xt end — Session Close
+
+Run from **inside** the worktree when the session work is done.
+
+**Flags:**
+
+| Flag | Effect |
+|---|---|
+| `--yes` / `-y` | Skip all prompts; remove worktree automatically after PR creation |
+| `--dry-run` | Preview PR title, body, and linked issues — no push, no PR |
+| `--draft` | Open the PR as a draft |
+| `--keep` | Skip worktree removal entirely (overrides `--yes`) |
+
+> **Skill / agent use:** always call `xt end --yes`. Without it the command stops to prompt for worktree removal, blocking autonomous execution.
+
+**PR title inference** (evaluated in this order):
+
+1. Single closed beads issue → use its title
+2. Multiple closed issues → first issue title + `(+N more)`
+3. No issues → first commit subject line (if not generic)
+4. Generic / no commits → dominant changed area (`cli` / `hooks` / `skills` / `docs` / `config`)
+
+**Rebase conflict during `xt end`:**
+
+```bash
+# xt end stops and lists conflicted files
+git status
+# edit each file to resolve <<<< ==== >>>> markers
+git add <resolved-files>
+git rebase --continue
+xt end --yes
+```
+
+### xt merge — Queue Drain
+
+Run from the **main checkout** (not from inside a worktree). Delegates to the `xt-merge` specialist which processes all open `xt/*` PRs in FIFO order.
+
+**Why FIFO + rebase cascade:**
+
+Each `xt end` rebases its branch onto main at push time. After the oldest PR merges and main advances, every remaining branch is behind. The rebase cascade brings each branch current before the next merge — keeping history strictly linear and ensuring CI on each PR reflects `main + branch`, not a stale base.
+
+**Per-cycle steps:**
+
+1. List open `xt/*` PRs sorted by `createdAt`
+2. Check CI on the oldest PR — stop if pending or failing
+3. `gh pr merge <n> --rebase --delete-branch`
+4. For each remaining branch: `git rebase origin/main && git push origin xt/<branch> --force-with-lease`
+5. Repeat until queue is empty
+
+**Flags:**
+
+| Flag | Effect |
+|---|---|
+| `--dry-run` | Show queue order and CI status, no merge |
+
+**Rebase conflict during cascade:**
+
+```bash
+git status                        # see conflicted files
+# resolve <<<< ==== >>>> markers
+git add <resolved-files>
+git rebase --continue
+git push origin xt/<branch> --force-with-lease
+# re-run xt merge to continue with the next PR
+```
+
+---
 
 ## Beads / Dolt Architecture
 

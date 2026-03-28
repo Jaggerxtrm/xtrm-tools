@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import kleur from 'kleur';
 import prompts from 'prompts';
-import { spawnSync, execSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import { t } from '../utils/theme.js';
 
 interface EndOptions {
@@ -28,10 +28,22 @@ function bd(args: string[], cwd: string): { ok: boolean; out: string } {
     return { ok: r.status === 0, out: (r.stdout ?? '').trim() };
 }
 
-/** Extract issue IDs from commit messages like "reason (xtrm-skg2)" or "reason (8jr5.8)" */
+// Common conventional-commit scope words that are never beads IDs
+const CONVENTIONAL_SCOPES = new Set([
+    'feat', 'fix', 'chore', 'docs', 'test', 'tests', 'refactor', 'style',
+    'perf', 'ci', 'build', 'revert', 'wip', 'auth', 'api', 'ui', 'db',
+    'merge', 'memory', 'end', 'sync', 'core', 'cli', 'hooks', 'skills',
+]);
+
+/** Extract beads issue IDs from commit messages like "reason (xtrm-skg2)" or "reason (8jr5.8)" */
 function extractIssueIds(commitLog: string): string[] {
-    const matches = commitLog.matchAll(/\(([a-z0-9]+(?:-[a-z0-9]+)*(?:\.[0-9]+)?)\)/gi);
-    return [...new Set([...matches].map(m => m[1].toLowerCase()))];
+    // Require at least one hyphen so single-word scopes like (auth) are excluded
+    const matches = commitLog.matchAll(/\(([a-z][a-z0-9]*-[a-z0-9]+(?:\.[0-9]+)?)\)/gi);
+    return [...new Set(
+        [...matches]
+            .map(m => m[1].toLowerCase())
+            .filter(id => !CONVENTIONAL_SCOPES.has(id)),
+    )];
 }
 
 function normalizePrTitle(input: string): string {
@@ -44,42 +56,46 @@ function isGenericPrTitle(title: string): boolean {
     return /^(session changes|update|updates|misc|wip|work in progress)$/i.test(title.trim());
 }
 
-function inferTitleFromChangedFiles(changedFiles: string[]): string {
-    const hasDocsCrossCheck = changedFiles.some(f => f.includes('docs-cross-check'));
-    const hasDocsCommand = changedFiles.some(f => f === 'cli/src/commands/docs.ts' || f === 'cli/src/commands/help.ts');
-    const hasSyncDocsSkill = changedFiles.some(f => f === 'skills/sync-docs/SKILL.md');
-    const hasDocsPages = changedFiles.some(f => f.startsWith('docs/') || f === 'README.md' || f === 'XTRM-GUIDE.md');
-    const hasTests = changedFiles.some(f => f.startsWith('cli/test/'));
+/** Infer a PR title from the commit log (first meaningful commit) with a file-based fallback. */
+function inferTitleFromCommitsOrFiles(commitLog: string, changedFiles: string[]): string {
+    // Try the first commit message subject line
+    const firstCommit = commitLog.split('\n')[0]?.replace(/^[a-f0-9]+ /, '').trim() ?? '';
+    if (firstCommit && !isGenericPrTitle(firstCommit)) {
+        return normalizePrTitle(firstCommit);
+    }
 
-    if (hasDocsCrossCheck && hasSyncDocsSkill) return 'Add docs cross-check and integrate sync-docs workflow';
-    if (hasDocsCrossCheck && hasTests) return 'Add docs cross-check command and tests';
-    if (hasDocsCommand && hasDocsPages && hasSyncDocsSkill) return 'Integrate docs workflow across CLI, docs, and sync-docs';
-    if (hasDocsCommand && hasDocsPages) return 'Update docs workflow and CLI help';
-    if (hasDocsPages) return 'Update documentation';
+    // File-based fallback: derive from dominant changed area
+    const hasCli = changedFiles.some(f => f.startsWith('cli/src/'));
+    const hasTests = changedFiles.some(f => f.startsWith('cli/test/'));
+    const hasHooks = changedFiles.some(f => f.startsWith('hooks/'));
+    const hasSkills = changedFiles.some(f => f.startsWith('skills/'));
+    const hasDocs = changedFiles.some(f => f.startsWith('docs/') || f === 'README.md' || f === 'XTRM-GUIDE.md');
+    const hasConfig = changedFiles.some(f => f.startsWith('config/'));
+
+    if (hasCli && hasTests) return 'Update CLI with tests';
+    if (hasCli && hasHooks) return 'Update CLI and hooks';
+    if (hasCli) return 'Update CLI';
+    if (hasHooks) return 'Update hooks';
+    if (hasSkills) return 'Update skills';
+    if (hasDocs) return 'Update documentation';
+    if (hasConfig) return 'Update config';
 
     return 'Update worktree session';
 }
 
 /** Generate PR title from issue data, with deterministic fallback if issue-derived titles are too generic. */
-function buildPrTitle(issues: EndIssue[], changedFiles: string[]): string {
-    if (issues.length === 0) return inferTitleFromChangedFiles(changedFiles);
+function buildPrTitle(issues: EndIssue[], changedFiles: string[], commitLog: string): string {
+    if (issues.length === 0) return inferTitleFromCommitsOrFiles(commitLog, changedFiles);
 
     if (issues.length === 1) {
         const single = normalizePrTitle(issues[0].title || issues[0].reason || issues[0].id);
-        return isGenericPrTitle(single) ? inferTitleFromChangedFiles(changedFiles) : single;
+        return isGenericPrTitle(single) ? inferTitleFromCommitsOrFiles(commitLog, changedFiles) : single;
     }
 
-    const titles = issues.map(i => `${i.title} ${i.reason}`.toLowerCase());
-    const hasCrossCheck = titles.some(t => t.includes('cross-check'));
-    const hasSyncDocs = titles.some(t => t.includes('sync-docs'));
-    const hasDocs = titles.some(t => t.includes('docs'));
-
-    if (hasCrossCheck && hasSyncDocs) return 'Add docs cross-check and integrate sync-docs workflow';
-    if (hasDocs) return 'Update docs workflow and command surfaces';
-
+    // Multiple issues: first issue title + count, fall back to commit/file inference
     const multi = normalizePrTitle(issues[0].title || issues[0].reason || issues[0].id);
     return isGenericPrTitle(multi)
-        ? inferTitleFromChangedFiles(changedFiles)
+        ? inferTitleFromCommitsOrFiles(commitLog, changedFiles)
         : `${multi} (+${issues.length - 1} more)`;
 }
 
@@ -213,7 +229,7 @@ export function createEndCommand(): Command {
                 const fullLog = git(['log', `origin/${defaultBranch}..HEAD`, '--oneline'], cwd).out;
                 const diffStat = git(['diff', `origin/${defaultBranch}`, '--stat'], cwd).out;
                 const changedFiles = git(['diff', `origin/${defaultBranch}`, '--name-only'], cwd).out.split('\n').filter(Boolean);
-                const prTitle = buildPrTitle(issues, changedFiles);
+                const prTitle = buildPrTitle(issues, changedFiles, fullLog);
                 const prBody = buildPrBody(issues, fullLog, diffStat, branch);
 
                 console.log(t.bold('\n  [DRY RUN] PR preview\n'));
@@ -264,7 +280,7 @@ export function createEndCommand(): Command {
             const fullLog = git(['log', `origin/${defaultBranch}..HEAD`, '--oneline'], cwd).out;
             const diffStat = git(['diff', `origin/${defaultBranch}`, '--stat'], cwd).out;
             const changedFiles = git(['diff', `origin/${defaultBranch}`, '--name-only'], cwd).out.split('\n').filter(Boolean);
-            const prTitle = buildPrTitle(issues, changedFiles);
+            const prTitle = buildPrTitle(issues, changedFiles, fullLog);
             const prBody = buildPrBody(issues, fullLog, diffStat, branch);
 
             // 10. Create PR

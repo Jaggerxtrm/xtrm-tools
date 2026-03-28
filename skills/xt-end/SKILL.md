@@ -19,6 +19,7 @@ Default to **autonomous execution**:
 - do not ask the user routine clarification questions
 - prefer deterministic fallbacks over conversational review
 - only stop when a real blocker prevents safe progress
+- **always invoke `xt end --yes`** — never call `xt end` without this flag; the bare command prompts interactively for worktree removal which blocks autonomous execution
 
 ## Success States
 

@@ -21,12 +21,14 @@ const lastActivePath = path.join(cwd, '.beads', '.last_active');
 if (!existsSync(lastActivePath)) process.exit(0);
 
 let ids = [];
+let serenaProject = null;
 
 try {
   const raw = readFileSync(lastActivePath, 'utf8').trim();
   if (raw.startsWith('{')) {
     const parsed = JSON.parse(raw);
     ids = Array.isArray(parsed.ids) ? parsed.ids.filter(Boolean) : [];
+    serenaProject = parsed.serenaProject ?? null;
   } else {
     // Backward compatibility: legacy newline format
     ids = raw.split('\n').filter(Boolean);
@@ -53,14 +55,20 @@ for (const id of ids) {
   }
 }
 
-if (restored > 0) {
-  const lines = [`Restored ${restored} in_progress issue${restored === 1 ? '' : 's'} from last session before compaction.`];
+if (restored > 0 || serenaProject) {
+  const parts = [];
+  if (restored > 0) {
+    parts.push(`Restored ${restored} in_progress issue${restored === 1 ? '' : 's'} from last session before compaction. Check \`bd list\` for details.`);
+  }
+  if (serenaProject) {
+    parts.push(`Serena was active on project "${serenaProject}" — re-activate with activate_project("${serenaProject}") before any symbol lookups.`);
+  }
 
   process.stdout.write(
     JSON.stringify({
       hookSpecificOutput: {
         hookEventName: 'SessionStart',
-        additionalSystemPrompt: `${lines.join(' ')} Check \`bd list\` for details.`,
+        additionalSystemPrompt: parts.join(' '),
       },
     }) + '\n',
   );

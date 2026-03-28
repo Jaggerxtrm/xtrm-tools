@@ -44,7 +44,19 @@ const bundle = {
   savedAt: new Date().toISOString(),
 };
 
-if (bundle.ids.length === 0) process.exit(0);
+// Detect active Serena project
+const serenaProjectYml = path.join(cwd, '.serena', 'project.yml');
+if (existsSync(serenaProjectYml)) {
+  try {
+    const yml = readFileSync(serenaProjectYml, 'utf8');
+    const m = yml.match(/^project_name:\s*["']?([^"'\n]+)["']?/m);
+    if (m) bundle.serenaProject = m[1].trim();
+  } catch {
+    // ignore — not critical
+  }
+}
+
+if (bundle.ids.length === 0 && !bundle.serenaProject) process.exit(0);
 
 writeFileSync(path.join(beadsDir, '.last_active'), JSON.stringify(bundle, null, 2) + '\n', 'utf8');
 

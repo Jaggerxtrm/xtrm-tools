@@ -319,12 +319,10 @@ export function createEndCommand(): Command {
                 }
 
                 if (doRemove) {
-                    // Clean up project-scoped plugin entries for the worktree path
-                    unregisterPluginsForWorktree(cwd);
-
                     // Must run from outside the worktree
                     try {
                         const repoRoot = git(['rev-parse', '--show-toplevel'], cwd).out;
+                        unregisterPluginsForWorktree(cwd);
                         const removeResult = spawnSync(
                             'git', ['worktree', 'remove', cwd, '--force'],
                             { cwd: repoRoot, encoding: 'utf8', stdio: 'pipe' }

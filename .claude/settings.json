@@ -53,5 +53,8 @@
         }
       ]
     }
-  ]
+  ],
+  "enabledPlugins": {
+    "xtrm-tools@xtrm-tools": true
+  }
 }

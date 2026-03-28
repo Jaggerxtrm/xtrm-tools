@@ -38566,13 +38566,36 @@ async function installPlugin(repoRoot, dryRun, isGlobal = false) {
   }
   const xtrmPkgRoot = import_path11.default.resolve(__dirname, "..", "..");
   (0, import_child_process3.spawnSync)("claude", ["plugin", "marketplace", "add", xtrmPkgRoot, "--scope", scope], { stdio: "pipe" });
-  const listResult = (0, import_child_process3.spawnSync)("claude", ["plugin", "list"], { encoding: "utf8", stdio: "pipe" });
-  if (listResult.stdout?.includes("xtrm-tools@xtrm-tools")) {
-    (0, import_child_process3.spawnSync)("claude", ["plugin", "uninstall", "xtrm-tools@xtrm-tools"], { stdio: "inherit" });
+  const installedPluginsPath = import_path11.default.join(import_os5.default.homedir(), ".claude", "plugins", "installed_plugins.json");
+  const pluginSourceDir = import_path11.default.join(xtrmPkgRoot, "plugins", "xtrm-tools");
+  let cachePath;
+  if (import_fs_extra10.default.existsSync(installedPluginsPath)) {
+    try {
+      const installed = JSON.parse(import_fs_extra10.default.readFileSync(installedPluginsPath, "utf8"));
+      const entries = installed?.plugins?.["xtrm-tools@xtrm-tools"] ?? [];
+      cachePath = entries.find((e) => e.installPath && import_fs_extra10.default.existsSync(e.installPath))?.installPath;
+    } catch {
+    }
   }
-  (0, import_child_process3.spawnSync)("claude", ["plugin", "install", "xtrm-tools@xtrm-tools", "--scope", scope], { stdio: "inherit" });
-  console.log(t.success("  \u2713 xtrm-tools plugin installed"));
-  console.log(t.warning("  \u21BB Restart Claude Code for the new plugin hooks to take effect"));
+  if (cachePath) {
+    try {
+      const srcMcp = import_path11.default.join(pluginSourceDir, ".mcp.json");
+      const dstMcp = import_path11.default.join(cachePath, ".mcp.json");
+      if (import_fs_extra10.default.existsSync(srcMcp)) import_fs_extra10.default.copyFileSync(srcMcp, dstMcp);
+      const srcPlugin = import_path11.default.join(pluginSourceDir, ".claude-plugin", "plugin.json");
+      const dstPlugin = import_path11.default.join(cachePath, ".claude-plugin", "plugin.json");
+      if (import_fs_extra10.default.existsSync(srcPlugin)) {
+        import_fs_extra10.default.ensureDirSync(import_path11.default.dirname(dstPlugin));
+        import_fs_extra10.default.copyFileSync(srcPlugin, dstPlugin);
+      }
+    } catch {
+    }
+    console.log(t.success("  \u2713 xtrm-tools plugin up to date"));
+  } else {
+    (0, import_child_process3.spawnSync)("claude", ["plugin", "install", "xtrm-tools@xtrm-tools", "--scope", scope], { stdio: "inherit" });
+    console.log(t.success("  \u2713 xtrm-tools plugin installed"));
+    console.log(t.warning("  \u21BB Restart Claude Code for the new plugin hooks to take effect"));
+  }
   await cleanStalePrePluginFiles(repoRoot, dryRun);
   await installOfficialClaudePlugins(false, isGlobal);
   installUserStatusLine(dryRun);

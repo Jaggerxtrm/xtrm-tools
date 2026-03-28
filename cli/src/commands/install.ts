@@ -330,15 +330,43 @@ export async function installPlugin(repoRoot: string, dryRun: boolean, isGlobal:
     const xtrmPkgRoot = path.resolve(__dirname, '..', '..');
     spawnSync('claude', ['plugin', 'marketplace', 'add', xtrmPkgRoot, '--scope', scope], { stdio: 'pipe' });
 
-    // Always uninstall + reinstall to refresh the cached copy from the live repo
-    const listResult = spawnSync('claude', ['plugin', 'list'], { encoding: 'utf8', stdio: 'pipe' });
-    if (listResult.stdout?.includes('xtrm-tools@xtrm-tools')) {
-        spawnSync('claude', ['plugin', 'uninstall', 'xtrm-tools@xtrm-tools'], { stdio: 'inherit' });
-    }
-    spawnSync('claude', ['plugin', 'install', 'xtrm-tools@xtrm-tools', '--scope', scope], { stdio: 'inherit' });
+    // For directory-source plugins the cache uses symlinks (hooks/, skills/) that point
+    // to the live repo — content is always fresh. Only real files (.mcp.json, plugin.json)
+    // need syncing. NEVER uninstall+reinstall: that disrupts all running Claude Code
+    // sessions sharing the plugin and causes cyclic reload errors.
+    const installedPluginsPath = path.join(os.homedir(), '.claude', 'plugins', 'installed_plugins.json');
+    const pluginSourceDir = path.join(xtrmPkgRoot, 'plugins', 'xtrm-tools');
+    let cachePath: string | undefined;
 
-    console.log(t.success('  ✓ xtrm-tools plugin installed'));
-    console.log(t.warning('  ↻ Restart Claude Code for the new plugin hooks to take effect'));
+    if (fs.existsSync(installedPluginsPath)) {
+        try {
+            const installed = JSON.parse(fs.readFileSync(installedPluginsPath, 'utf8'));
+            const entries: Array<{ installPath?: string }> = installed?.plugins?.['xtrm-tools@xtrm-tools'] ?? [];
+            cachePath = entries.find((e) => e.installPath && fs.existsSync(e.installPath))?.installPath;
+        } catch { /* parse error — treat as not installed */ }
+    }
+
+    if (cachePath) {
+        // Already installed — refresh only the non-symlinked real files in-place.
+        try {
+            const srcMcp = path.join(pluginSourceDir, '.mcp.json');
+            const dstMcp = path.join(cachePath, '.mcp.json');
+            if (fs.existsSync(srcMcp)) fs.copyFileSync(srcMcp, dstMcp);
+
+            const srcPlugin = path.join(pluginSourceDir, '.claude-plugin', 'plugin.json');
+            const dstPlugin = path.join(cachePath, '.claude-plugin', 'plugin.json');
+            if (fs.existsSync(srcPlugin)) {
+                fs.ensureDirSync(path.dirname(dstPlugin));
+                fs.copyFileSync(srcPlugin, dstPlugin);
+            }
+        } catch { /* non-fatal — cache refresh is best-effort */ }
+        console.log(t.success('  ✓ xtrm-tools plugin up to date'));
+    } else {
+        // First install — let Claude Code create the cache with proper symlinks.
+        spawnSync('claude', ['plugin', 'install', 'xtrm-tools@xtrm-tools', '--scope', scope], { stdio: 'inherit' });
+        console.log(t.success('  ✓ xtrm-tools plugin installed'));
+        console.log(t.warning('  ↻ Restart Claude Code for the new plugin hooks to take effect'));
+    }
 
     // Clean up stale pre-plugin files from ~/.claude/hooks/ and ~/.claude/skills/
     await cleanStalePrePluginFiles(repoRoot, dryRun);

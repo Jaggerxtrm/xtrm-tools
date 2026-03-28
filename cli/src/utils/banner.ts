@@ -55,29 +55,6 @@ function selectTier(): Tier {
     return 1;
 }
 
-// ── Press-any-key with passive 1s auto-timeout ─────────────────────────────
-
-function pressAnyKey(): Promise<void> {
-    return new Promise(resolve => {
-        process.stdout.write(kleur.dim('\n  press any key to continue...'));
-        process.stdin.setRawMode(true);
-        process.stdin.resume();
-
-        let done = false;
-        const finish = (): void => {
-            if (done) return;
-            done = true;
-            process.stdin.setRawMode(false);
-            process.stdin.pause();
-            process.stdout.write('\r\x1b[2K');
-            resolve();
-        };
-
-        process.stdin.once('data', finish);
-        setTimeout(finish, 4000);
-    });
-}
-
 // ── Typewriter tagline (bold-white, 42ms per char) ─────────────────────────
 
 function delay(ms: number): Promise<void> {
@@ -190,5 +167,4 @@ export async function printBanner(version: string): Promise<void> {
         case 3: renderTier3(version); break;
         case 4: renderTier4(version); return;
     }
-    if (isTTY()) await pressAnyKey();
 }

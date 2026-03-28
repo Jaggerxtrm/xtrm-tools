@@ -43,7 +43,7 @@ describe('xtrm docs list (vwp0.7)', () => {
     });
 
     it('table output includes Path/Size/Modified/Title/Type headers', async () => {
-        await writeDoc('README.md', '---\ntitle: Root Doc\ntype: guide\n---\n');
+        await writeDoc('docs/guide.md', '---\ntitle: Guide Doc\ntype: guide\n---\n');
         const r = run(['docs', 'list']);
         expect(r.status).toBe(0);
         expect(r.stdout).toMatch(/Path/);
@@ -53,21 +53,21 @@ describe('xtrm docs list (vwp0.7)', () => {
         expect(r.stdout).toMatch(/Type/);
     });
 
-    it('table includes all .md files from fixture', async () => {
+    it('table includes .md files from docs/ only', async () => {
         await writeDoc('README.md', '# Root');
         await writeDoc('docs/guide.md', '# Guide');
         const r = run(['docs', 'list']);
-        expect(r.stdout).toMatch(/README\.md/);
+        expect(r.stdout).not.toMatch(/README\.md/);
         expect(r.stdout).toMatch(/docs\/guide\.md/);
     });
 
     it('--json outputs valid JSON array with expected shape', async () => {
-        await writeDoc('README.md', '---\ntitle: Test\ntype: guide\n---\n');
+        await writeDoc('docs/guide.md', '---\ntitle: Test\ntype: guide\n---\n');
         const r = run(['docs', 'list', '--json']);
         expect(r.status).toBe(0);
         const parsed = JSON.parse(r.stdout);
         expect(Array.isArray(parsed)).toBe(true);
-        const item = parsed.find((e: any) => e.path === 'README.md');
+        const item = parsed.find((e: any) => e.path === 'docs/guide.md');
         expect(item).toBeDefined();
         expect(item).toHaveProperty('path');
         expect(item).toHaveProperty('sizeBytes');
@@ -86,30 +86,30 @@ describe('xtrm docs list (vwp0.7)', () => {
     });
 
     it('--pattern narrows by filename substring', async () => {
-        await writeDoc('README.md', '# Readme');
-        await writeDoc('CHANGELOG.md', '# Changelog');
-        const r = run(['docs', 'list', '--pattern', 'README']);
-        expect(r.stdout).toMatch(/README\.md/);
-        expect(r.stdout).not.toMatch(/CHANGELOG\.md/);
+        await writeDoc('docs/guide.md', '# Guide');
+        await writeDoc('docs/changelog.md', '# Changelog');
+        const r = run(['docs', 'list', '--pattern', 'guide']);
+        expect(r.stdout).toMatch(/guide\.md/);
+        expect(r.stdout).not.toMatch(/changelog\.md/);
     });
 
     it('--filter type=service returns only matching files', async () => {
-        await writeDoc('a.md', '---\ntype: service\n---\n');
-        await writeDoc('b.md', '---\ntype: guide\n---\n');
+        await writeDoc('docs/a.md', '---\ntype: service\n---\n');
+        await writeDoc('docs/b.md', '---\ntype: guide\n---\n');
         const r = run(['docs', 'list', '--filter', 'type=service']);
         expect(r.stdout).toMatch(/a\.md/);
         expect(r.stdout).not.toMatch(/b\.md/);
     });
 
     it('footer shows total file count', async () => {
-        await writeDoc('a.md', '# A');
-        await writeDoc('b.md', '# B');
+        await writeDoc('docs/a.md', '# A');
+        await writeDoc('docs/b.md', '# B');
         const r = run(['docs', 'list']);
         expect(r.stdout).toMatch(/2 files/);
     });
 
     it('--no-cache forces fresh scan (no "(cached)" in footer)', async () => {
-        await writeDoc('README.md', '# Root');
+        await writeDoc('docs/guide.md', '# Guide');
         // Prime the cache
         run(['docs', 'list']);
         // Second call with --no-cache
@@ -118,7 +118,7 @@ describe('xtrm docs list (vwp0.7)', () => {
     });
 
     it('second invocation within TTL shows "(cached)" in footer', async () => {
-        await writeDoc('README.md', '# Root');
+        await writeDoc('docs/guide.md', '# Guide');
         run(['docs', 'list']); // prime cache
         const r = run(['docs', 'list']); // should hit cache
         expect(r.stdout).toMatch(/\(cached\)/);

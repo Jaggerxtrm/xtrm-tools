@@ -17,13 +17,7 @@ const REQUIRED_FIELDS = new Set(['title', 'type', 'status', 'updated_at', 'versi
 async function collectDocFiles(repoRoot: string, filterPattern?: string): Promise<DocEntry[]> {
     const candidates: string[] = [];
 
-    // Fixed candidates
-    for (const name of ['README.md', 'CHANGELOG.md']) {
-        const p = path.join(repoRoot, name);
-        if (await fs.pathExists(p)) candidates.push(p);
-    }
-
-    // docs/ directory
+    // docs/ directory (top-level only — no subdirs, no other paths)
     const docsDir = path.join(repoRoot, 'docs');
     if (await fs.pathExists(docsDir)) {
         const entries = await fs.readdir(docsDir);
@@ -216,7 +210,7 @@ export function createDocsCommand(): Command {
                 }
             }
 
-            const scanOpts = { dir: opts.dir, pattern: opts.pattern, filter: fmFilter };
+            const scanOpts = { dir: opts.dir ?? 'docs', pattern: opts.pattern, filter: fmFilter, recursive: false };
 
             // Try cache first
             let entries: DocEntry[] = [];

@@ -56419,6 +56419,25 @@ var import_node_path8 = require("path");
 function createMergeCommand() {
   return new Command("merge").description("Drain the xt worktree PR merge queue via the xt-merge specialist").option("--dry-run", "List queue and CI status without merging", false).option("--no-beads", "Skip creating a tracking bead for this run", false).action(async (opts) => {
     const cwd = process.cwd();
+    const gitCheck = (0, import_node_child_process13.spawnSync)("git", ["rev-parse", "--git-dir"], { cwd, encoding: "utf8", stdio: "pipe" });
+    if (gitCheck.status !== 0) {
+      console.error(kleur_default.red("\n  \u2717 Not inside a git repository.\n"));
+      process.exit(1);
+    }
+    const ghAuth = (0, import_node_child_process13.spawnSync)("gh", ["auth", "status"], { cwd, encoding: "utf8", stdio: "pipe" });
+    if (ghAuth.status !== 0) {
+      console.error(kleur_default.red(
+        "\n  \u2717 gh is not authenticated.\n  Run: gh auth login\n"
+      ));
+      process.exit(1);
+    }
+    const dirty = (0, import_node_child_process13.spawnSync)("git", ["status", "--porcelain"], { cwd, encoding: "utf8", stdio: "pipe" });
+    if (dirty.stdout.trim().length > 0) {
+      console.error(kleur_default.yellow(
+        '\n  \u26A0 Uncommitted changes detected.\n  The rebase cascade will check out other branches \u2014 a dirty tree\n  will either fail or carry changes onto the wrong branch.\n\n  Stash first:  git stash push -m "xt-merge cascade stash"\n  Then re-run:  xt merge\n'
+      ));
+      process.exit(1);
+    }
     const check2 = (0, import_node_child_process13.spawnSync)("specialists", ["--version"], { encoding: "utf8", stdio: "pipe" });
     if (check2.status !== 0) {
       console.error(kleur_default.red(

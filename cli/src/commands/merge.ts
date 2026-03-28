@@ -12,6 +12,36 @@ export function createMergeCommand(): Command {
         .action(async (opts: { dryRun: boolean; beads: boolean }) => {
             const cwd = process.cwd();
 
+            // Gate: must be inside a git repository
+            const gitCheck = spawnSync('git', ['rev-parse', '--git-dir'], { cwd, encoding: 'utf8', stdio: 'pipe' });
+            if (gitCheck.status !== 0) {
+                console.error(kleur.red('\n  ✗ Not inside a git repository.\n'));
+                process.exit(1);
+            }
+
+            // Gate: gh must be authenticated
+            const ghAuth = spawnSync('gh', ['auth', 'status'], { cwd, encoding: 'utf8', stdio: 'pipe' });
+            if (ghAuth.status !== 0) {
+                console.error(kleur.red(
+                    '\n  ✗ gh is not authenticated.\n' +
+                    '  Run: gh auth login\n'
+                ));
+                process.exit(1);
+            }
+
+            // Gate: warn on uncommitted changes — rebase cascade checks out other branches
+            const dirty = spawnSync('git', ['status', '--porcelain'], { cwd, encoding: 'utf8', stdio: 'pipe' });
+            if (dirty.stdout.trim().length > 0) {
+                console.error(kleur.yellow(
+                    '\n  ⚠ Uncommitted changes detected.\n' +
+                    '  The rebase cascade will check out other branches — a dirty tree\n' +
+                    '  will either fail or carry changes onto the wrong branch.\n\n' +
+                    '  Stash first:  git stash push -m "xt-merge cascade stash"\n' +
+                    '  Then re-run:  xt merge\n'
+                ));
+                process.exit(1);
+            }
+
             // Gate: specialists CLI must be available
             const check = spawnSync('specialists', ['--version'], { encoding: 'utf8', stdio: 'pipe' });
             if (check.status !== 0) {

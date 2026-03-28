@@ -55279,7 +55279,7 @@ function createMergeCommand() {
       ));
       process.exit(1);
     }
-    const dirty = (0, import_node_child_process13.spawnSync)("git", ["status", "--porcelain"], { cwd, encoding: "utf8", stdio: "pipe" });
+    const dirty = (0, import_node_child_process13.spawnSync)("git", ["status", "--porcelain", "--", ":!.beads/"], { cwd, encoding: "utf8", stdio: "pipe" });
     if (dirty.stdout.trim().length > 0) {
       console.error(kleur_default.yellow(
         '\n  \u26A0 Uncommitted changes detected.\n  The rebase cascade will check out other branches \u2014 a dirty tree\n  will either fail or carry changes onto the wrong branch.\n\n  Stash first:  git stash push -m "xt-merge cascade stash"\n  Then re-run:  xt merge\n'

@@ -29,8 +29,9 @@ export function createMergeCommand(): Command {
                 process.exit(1);
             }
 
-            // Gate: warn on uncommitted changes — rebase cascade checks out other branches
-            const dirty = spawnSync('git', ['status', '--porcelain'], { cwd, encoding: 'utf8', stdio: 'pipe' });
+            // Gate: warn on uncommitted changes — rebase cascade checks out other branches.
+            // Exclude .beads/ (runtime noise: dolt-monitor.pid, dolt-server.activity, etc.)
+            const dirty = spawnSync('git', ['status', '--porcelain', '--', ':!.beads/'], { cwd, encoding: 'utf8', stdio: 'pipe' });
             if (dirty.stdout.trim().length > 0) {
                 console.error(kleur.yellow(
                     '\n  ⚠ Uncommitted changes detected.\n' +

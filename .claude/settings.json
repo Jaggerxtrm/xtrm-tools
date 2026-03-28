@@ -41,6 +41,15 @@
           "command": "node .specialists/default/hooks/specialists-complete.mjs"
         }
       ]
+    },
+    {
+      "matcher": "",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node .claude/hooks/specialists-complete.mjs"
+        }
+      ]
     }
   ],
   "SessionStart": [
@@ -50,6 +59,15 @@
         {
           "type": "command",
           "command": "node .specialists/default/hooks/specialists-session-start.mjs"
+        }
+      ]
+    },
+    {
+      "matcher": "",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node .claude/hooks/specialists-session-start.mjs"
         }
       ]
     }

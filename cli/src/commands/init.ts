@@ -3,8 +3,12 @@ import kleur from 'kleur';
 import path from 'path';
 import fs from 'fs-extra';
 import { spawnSync } from 'child_process';
+import prompts from 'prompts';
 import { installGitHooks as installServiceGitHooks } from './install-service-skills.js';
-import { runInstall, type InstallOpts } from './install.js';
+import { runInstall, runMachineBootstrap, isBeadsInstalled, isDoltInstalled, isBvInstalled, isDeepwikiInstalled, type InstallOpts } from './install.js';
+import { getContext } from '../core/context.js';
+import { calculateDiff } from '../core/diff.js';
+import { findRepoRoot } from '../utils/repo-root.js';
 
 declare const __dirname: string;
 function resolvePkgRoot(): string {
@@ -720,49 +724,172 @@ export async function installAllProjectSkills(projectRootOverride?: string): Pro
     }
 }
 
-export function buildProjectInitGuide(): string {
-    const lines = [
-        kleur.bold('\nProject Init — Global-first baseline\n'),
-        kleur.dim('xtrm init bootstraps project data (beads, GitNexus, service registry) while hooks/skills stay global.\n'),
-        `${kleur.cyan('1) Run initialization once per repository:')}`,
-        kleur.dim('   xtrm init   (alias: xtrm project init)'),
-        kleur.dim('   - Initializes beads workspace (bd init)'),
-        kleur.dim('   - Refreshes GitNexus index if missing/stale'),
-        kleur.dim('   - Injects XTRM workflow headers into AGENTS.md + CLAUDE.md'),
-        kleur.dim('   - Detects TypeScript/Python project signals'),
-        '',
-        `${kleur.cyan('2) What is already global (no per-project install needed):')}`,
-        kleur.dim('   - quality gates hooks (ESLint/tsc/ruff/mypy on every edit)'),
-        kleur.dim('   - beads workflow gates (edit/commit/stop/memory enforcement)'),
-        kleur.dim('   - session-flow gates (claim sync, stop gate, xt end reminder)'),
-        kleur.dim('   - service-skills routing and drift checks'),
-        '',
-        `${kleur.cyan('3) Configure repo quality tools (hooks enforce what exists):')}`,
-        kleur.dim('   - TS: eslint + prettier + tsc'),
-        kleur.dim('   - PY: ruff + mypy/pyright'),
-        kleur.dim('   - tests: failing tests should block regressions'),
-        '',
-        `${kleur.cyan('4) Beads workflow (required for gated edit/commit flow):')}`,
-        kleur.dim('   - Claim work:   bd ready --json  ->  bd update <id> --claim --json'),
-        kleur.dim('   - During work:  keep issue status current; create discovered follow-ups'),
-        kleur.dim('   - Finish work:  bd close <id> --reason "Done" --json'),
-        '',
-        `${kleur.cyan('5) Git workflow:')}`,
-        kleur.dim('   - bd close <id> --reason "..."    ← closes issue'),
-        kleur.dim('   - xt end                          ← push, PR, merge, worktree cleanup'),
-        '',
+// ─── Inventory types ──────────────────────────────────────────────────────────
+
+interface MachineToolCheck {
+    name: string;
+    description: string;
+    installed: boolean;
+}
+
+interface InitInventory {
+    projectRoot: string;
+    machineTools: MachineToolCheck[];
+    skillsChanges: number;
+    needsBdInit: boolean;
+    needsGitNexus: boolean;
+    projectTypes: string[];
+}
+
+// ── Phase 1: Preflight / Inventory ────────────────────────────────────────────
+// Reads system state without making any changes. Produces the plan data.
+
+async function runPreflight(projectRoot: string, opts: InstallOpts): Promise<InitInventory> {
+    const repoRoot = await findRepoRoot().catch(() => projectRoot);
+
+    // Machine tool availability (read-only checks)
+    const machineTools: MachineToolCheck[] = [
+        {
+            name: 'beads + dolt',
+            description: 'workflow enforcement backend',
+            installed: isBeadsInstalled() && isDoltInstalled(),
+        },
+        {
+            name: 'bv',
+            description: 'beads graph triage',
+            installed: isBvInstalled(),
+        },
+        {
+            name: 'deepwiki',
+            description: 'AI-powered repo documentation',
+            installed: isDeepwikiInstalled(),
+        },
     ];
 
-    return lines.join('\n');
+    // Skills diff (read-only — no files written)
+    let skillsChanges = 0;
+    try {
+        const ctx = await getContext({
+            createMissingDirs: false,
+            isGlobal: opts.global,
+            projectRoot: repoRoot,
+        });
+        for (const target of ctx.targets) {
+            try {
+                const changeSet = await calculateDiff(repoRoot, target, false);
+                skillsChanges += Object.values(changeSet).reduce(
+                    (sum, c: any) => sum + c.missing.length + c.outdated.length, 0,
+                ) as number;
+            } catch { /* diff failure is non-fatal in inventory */ }
+        }
+    } catch { /* context failure is non-fatal */ }
+
+    // Project state (read-only)
+    const needsBdInit = !await fs.pathExists(path.join(projectRoot, '.beads'));
+
+    const gitnexusStatus = spawnSync('gitnexus', ['status'], {
+        cwd: projectRoot, encoding: 'utf8', timeout: 5000,
+    });
+    const gnText = `${gitnexusStatus.stdout ?? ''}\n${gitnexusStatus.stderr ?? ''}`.toLowerCase();
+    const needsGitNexus = gitnexusStatus.status !== 0 ||
+        gnText.includes('stale') || gnText.includes('not indexed') || gnText.includes('missing');
+
+    const detected = await detectProjectFeatures(projectRoot);
+    const projectTypes: string[] = [
+        ...(detected.hasTypeScript ? ['TypeScript'] : []),
+        ...(detected.hasPython ? ['Python'] : []),
+    ];
+
+    return { projectRoot, machineTools, skillsChanges, needsBdInit, needsGitNexus, projectTypes };
 }
+
+// ── Phase 2: Plan ─────────────────────────────────────────────────────────────
+// Renders a consolidated view of all changes before any mutations occur.
+
+function renderInitPlan(inventory: InitInventory): void {
+    const { machineTools, skillsChanges, needsBdInit, needsGitNexus, projectTypes } = inventory;
+
+    console.log(kleur.bold('\n  xtrm init — Installation Plan'));
+    console.log(kleur.dim('  ' + '─'.repeat(42)));
+
+    const missingTools = machineTools.filter(tool => !tool.installed);
+    if (missingTools.length > 0) {
+        console.log(kleur.bold('\n  Machine Bootstrap'));
+        for (const tool of machineTools) {
+            const icon = tool.installed ? kleur.green('  ✓') : kleur.yellow('  +');
+            const status = tool.installed ? kleur.dim('already installed') : kleur.white('will install');
+            console.log(`${icon}  ${tool.name.padEnd(18)} ${status}`);
+        }
+    }
+
+    console.log(kleur.bold('\n  Claude Runtime Sync'));
+    console.log(`${kleur.cyan('  ↻')}  xtrm-tools plugin + official plugins (serena/context7/github/ralph-loop)`);
+
+    console.log(kleur.bold('\n  Pi Runtime Sync'));
+    console.log(`${kleur.cyan('  ↻')}  extensions + packages`);
+
+    console.log(kleur.bold('\n  Skills  (.agents/skills)'));
+    if (skillsChanges > 0) {
+        console.log(`${kleur.cyan('  ↑')}  ${skillsChanges} change${skillsChanges !== 1 ? 's' : ''} pending`);
+    } else {
+        console.log(kleur.dim('  ✓  already up to date'));
+    }
+
+    console.log(kleur.bold('\n  Project Bootstrap'));
+    const projActions = [
+        needsBdInit ? 'bd init — initialize beads workspace' : null,
+        needsGitNexus ? 'gitnexus analyze — build code intelligence index' : null,
+        'AGENTS.md + CLAUDE.md — inject workflow instruction headers',
+    ].filter(Boolean) as string[];
+    for (const action of projActions) {
+        console.log(`${kleur.cyan('  •')}  ${action}`);
+    }
+
+    if (projectTypes.length > 0) {
+        console.log(kleur.dim(`\n  Detected: ${projectTypes.join(', ')}`));
+    }
+
+    console.log(kleur.dim('\n  ' + '─'.repeat(42) + '\n'));
+}
+
+// ── Phase 3: Confirmation ─────────────────────────────────────────────────────
+// Single gate before any mutations. All phases execute only after this confirms.
+
+async function confirmInitPlan(): Promise<boolean> {
+    const { confirm } = await prompts({
+        type: 'confirm',
+        name: 'confirm',
+        message: 'Proceed with xtrm init?',
+        initial: true,
+    });
+    return Boolean(confirm);
+}
+
+// ── Phase 7: Project Bootstrap ────────────────────────────────────────────────
+// Initializes project-level tooling: beads workspace, GitNexus index,
+// and CLAUDE.md / AGENTS.md instruction headers.
+
+async function runProjectBootstrap(projectRoot: string): Promise<void> {
+    await runBdInitForProject(projectRoot);
+    await injectProjectInstructionHeaders(projectRoot);
+    await runGitNexusInitForProject(projectRoot);
+}
+
+// ── Main Orchestrator ─────────────────────────────────────────────────────────
+// Top-level entrypoint for `xtrm init`. Runs all phases in order:
+//   1. Preflight          — inventory system state (read-only, no mutations)
+//   2. Plan               — render a consolidated view of what will change
+//   3. Confirm            — single gate; all mutations happen only after this
+//   4. Machine Bootstrap  — install missing system tools (beads/dolt, bv, deepwiki)
+//   5. Claude Runtime     — xtrm-tools plugin + official plugins + skills sync
+//   6. Pi Runtime         — extensions + packages (delegated to runInstall)
+//   7. Project Bootstrap  — bd init, gitnexus index, CLAUDE.md/AGENTS.md headers
+//   8. Summary            — brief completion message
 
 export async function runProjectInit(opts: InstallOpts = {}): Promise<void> {
-    console.log(buildProjectInitGuide());
-    await bootstrapProjectInit(opts);
-}
+    const { dryRun = false, yes = false } = opts;
+    const effectiveYes = yes || process.argv.includes('--yes') || process.argv.includes('-y');
 
-
-async function bootstrapProjectInit(opts: InstallOpts = {}): Promise<void> {
     let projectRoot: string;
     try {
         projectRoot = getProjectRoot();
@@ -771,22 +898,48 @@ async function bootstrapProjectInit(opts: InstallOpts = {}): Promise<void> {
         return;
     }
 
-    // Tooling setup: plugin, Pi extensions, skills, binaries
-    await runInstall({ ...opts, backport: false });
+    // ── Phase 1: Preflight / Inventory ──────────────────────────────────────
+    const inventory = await runPreflight(projectRoot, opts);
 
-    const detected = await detectProjectFeatures(projectRoot);
+    // ── Phase 2: Plan ────────────────────────────────────────────────────────
+    renderInitPlan(inventory);
 
-    await runBdInitForProject(projectRoot);
-    await injectProjectInstructionHeaders(projectRoot);
-    await runGitNexusInitForProject(projectRoot);
+    if (dryRun) {
+        console.log(kleur.dim('  Dry run — no changes written\n'));
+        return;
+    }
 
-    const projectTypes: string[] = [];
-    if (detected.hasTypeScript) projectTypes.push('TypeScript');
-    if (detected.hasPython) projectTypes.push('Python');
+    // ── Phase 3: Confirmation (single gate for all mutations) ────────────────
+    if (!effectiveYes) {
+        const ok = await confirmInitPlan();
+        if (!ok) {
+            console.log(kleur.dim('  Init cancelled.\n'));
+            return;
+        }
+    }
 
+    // ── Phase 4: Machine Bootstrap ───────────────────────────────────────────
+    // Install missing system tools that workflow gates and the Claude runtime
+    // depend on. Runs with yes=true because the user already confirmed above.
+    await runMachineBootstrap({ yes: true });
+
+    // ── Phase 5: Claude Runtime Sync + Phase 6: Pi Runtime Sync ─────────────
+    // Installs xtrm-tools plugin, official Claude plugins, Pi extensions,
+    // and syncs agent skills to .agents/skills.
+    // skipMachineBootstrap=true: machine deps already handled in Phase 4.
+    await runInstall({ ...opts, yes: true, backport: false, skipMachineBootstrap: true });
+
+    // ── Phase 7: Project Bootstrap ───────────────────────────────────────────
+    // Initialize beads workspace, inject CLAUDE.md/AGENTS.md instruction
+    // headers, and ensure the GitNexus code intelligence index is current.
+    await runProjectBootstrap(projectRoot);
+
+    // ── Phase 8: Summary ─────────────────────────────────────────────────────
     console.log(kleur.bold('\nProject initialized.'));
-    console.log(kleur.white(`  Quality gates active globally.`));
-    console.log(kleur.white(`  Project types: ${projectTypes.length > 0 ? projectTypes.join(', ') : 'none detected'}.`));
+    console.log(kleur.white('  Quality gates active globally.'));
+    if (inventory.projectTypes.length > 0) {
+        console.log(kleur.white(`  Project types: ${inventory.projectTypes.join(', ')}.`));
+    }
     console.log('');
 }
 
@@ -874,8 +1027,6 @@ async function runGitNexusInitForProject(projectRoot: string): Promise<void> {
  * List available project skills.
  */
 async function listProjectSkills(): Promise<void> {
-    printProjectInstallDeprecationWarning();
-
     const entries = await getAvailableProjectSkills();
     if (entries.length === 0) {
         console.log(kleur.dim('  No project skills available.\n'));

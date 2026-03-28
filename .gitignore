@@ -53,3 +53,6 @@ plugins/xtrm-tools/skills/
 .specialists/ready/
 config/pi/extensions/xtrm-ui/.serena/
 .xtrm/session-meta.json
+
+# Project-level skills symlink (runtime artifact, installed by xtrm)
+.claude/skills

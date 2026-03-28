@@ -51,7 +51,12 @@ plugins/xtrm-tools/skills/
 
 .specialists/jobs/
 .specialists/ready/
+.specialists/trace.jsonl
 config/pi/extensions/xtrm-ui/.serena/
+
+# Beads runtime files (always modified, not meaningful to track)
+.beads/dolt-monitor.pid
+.beads/dolt-server.activity
 .xtrm/session-meta.json
 
 # Project-level skills symlink (runtime artifact, installed by xtrm)

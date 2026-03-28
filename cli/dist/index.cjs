@@ -30319,10 +30319,10 @@ var require_stringify = __commonJS({
       replacer = null;
       indent2 = EMPTY;
     };
-    var join8 = (one, two, gap) => one ? two ? one + two.trim() + LF + gap : one.trimRight() + LF + gap : two ? two.trimRight() + LF + gap : EMPTY;
+    var join9 = (one, two, gap) => one ? two ? one + two.trim() + LF + gap : one.trimRight() + LF + gap : two ? two.trimRight() + LF + gap : EMPTY;
     var join_content = (inside, value, gap) => {
       const comment = process_comments(value, PREFIX_BEFORE, gap + indent2, true);
-      return join8(comment, inside, gap);
+      return join9(comment, inside, gap);
     };
     var array_stringify = (value, gap) => {
       const deeper_gap = gap + indent2;
@@ -30333,7 +30333,7 @@ var require_stringify = __commonJS({
         if (i !== 0) {
           inside += COMMA;
         }
-        const before = join8(
+        const before = join9(
           after_comma,
           process_comments(value, BEFORE(i), deeper_gap),
           deeper_gap
@@ -30343,7 +30343,7 @@ var require_stringify = __commonJS({
         inside += process_comments(value, AFTER_VALUE(i), deeper_gap);
         after_comma = process_comments(value, AFTER(i), deeper_gap);
       }
-      inside += join8(
+      inside += join9(
         after_comma,
         process_comments(value, PREFIX_AFTER, deeper_gap),
         deeper_gap
@@ -30368,7 +30368,7 @@ var require_stringify = __commonJS({
           inside += COMMA;
         }
         first = false;
-        const before = join8(
+        const before = join9(
           after_comma,
           process_comments(value, BEFORE(key), deeper_gap),
           deeper_gap
@@ -30378,7 +30378,7 @@ var require_stringify = __commonJS({
         after_comma = process_comments(value, AFTER(key), deeper_gap);
       };
       keys.forEach(iteratee);
-      inside += join8(
+      inside += join9(
         after_comma,
         process_comments(value, PREFIX_AFTER, deeper_gap),
         deeper_gap
@@ -33827,8 +33827,8 @@ var init_boxen = __esm({
 });
 
 // src/index.ts
-var import_node_fs8 = require("fs");
-var import_node_path9 = require("path");
+var import_node_fs9 = require("fs");
+var import_node_path10 = require("path");
 
 // ../node_modules/commander/esm.mjs
 var import_index = __toESM(require_commander(), 1);
@@ -38128,6 +38128,20 @@ async function syncManagedPiExtensions({
 }
 
 // src/commands/pi-install.ts
+async function ensureCorePackageSymlink(extensionsDst, projectRoot, dryRun) {
+  const coreDir = import_path10.default.join(extensionsDst, "core");
+  if (!await import_fs_extra9.default.pathExists(coreDir)) return;
+  const nodeModulesDir = import_path10.default.join(projectRoot, ".pi", "npm", "node_modules", "@xtrm");
+  const symlinkPath = import_path10.default.join(nodeModulesDir, "pi-core");
+  if (await import_fs_extra9.default.pathExists(symlinkPath)) return;
+  if (dryRun) {
+    console.log(kleur_default.dim(`    [DRY RUN] would create @xtrm/pi-core symlink`));
+    return;
+  }
+  await import_fs_extra9.default.ensureDir(nodeModulesDir);
+  await import_fs_extra9.default.symlink("../../../extensions/core", symlinkPath);
+  console.log(kleur_default.dim(`    Created @xtrm/pi-core symlink for module resolution`));
+}
 var PI_AGENT_DIR = process.env.PI_AGENT_DIR || import_path10.default.join((0, import_node_os4.homedir)(), ".pi", "agent");
 function resolvePkgRoot() {
   const candidates = [
@@ -38262,6 +38276,9 @@ async function runPiInstall(dryRun = false, isGlobal = false, projectRoot) {
         }
       }
     }
+  }
+  if (!isGlobal && projectRoot) {
+    await ensureCorePackageSymlink(extensionsDst, projectRoot, dryRun);
   }
   const configFiles = ["models.json", "auth.json", "settings.json"];
   const missingConfig = configFiles.filter((f) => !require("fs").existsSync(import_path10.default.join(PI_AGENT_DIR, f)));
@@ -53844,9 +53861,38 @@ function bd(args, cwd) {
   const r = (0, import_node_child_process7.spawnSync)("bd", args, { cwd, encoding: "utf8", stdio: "pipe" });
   return { ok: r.status === 0, out: (r.stdout ?? "").trim() };
 }
+var CONVENTIONAL_SCOPES = /* @__PURE__ */ new Set([
+  "feat",
+  "fix",
+  "chore",
+  "docs",
+  "test",
+  "tests",
+  "refactor",
+  "style",
+  "perf",
+  "ci",
+  "build",
+  "revert",
+  "wip",
+  "auth",
+  "api",
+  "ui",
+  "db",
+  "merge",
+  "memory",
+  "end",
+  "sync",
+  "core",
+  "cli",
+  "hooks",
+  "skills"
+]);
 function extractIssueIds(commitLog) {
-  const matches = commitLog.matchAll(/\(([a-z0-9]+(?:-[a-z0-9]+)*(?:\.[0-9]+)?)\)/gi);
-  return [...new Set([...matches].map((m) => m[1].toLowerCase()))];
+  const matches = commitLog.matchAll(/\(([a-z][a-z0-9]*-[a-z0-9]+(?:\.[0-9]+)?)\)/gi);
+  return [...new Set(
+    [...matches].map((m) => m[1].toLowerCase()).filter((id) => !CONVENTIONAL_SCOPES.has(id))
+  )];
 }
 function normalizePrTitle(input) {
   const trimmed = input.trim().replace(/[.\s]+$/g, "");
@@ -53856,33 +53902,34 @@ function normalizePrTitle(input) {
 function isGenericPrTitle(title) {
   return /^(session changes|update|updates|misc|wip|work in progress)$/i.test(title.trim());
 }
-function inferTitleFromChangedFiles(changedFiles) {
-  const hasDocsCrossCheck = changedFiles.some((f) => f.includes("docs-cross-check"));
-  const hasDocsCommand = changedFiles.some((f) => f === "cli/src/commands/docs.ts" || f === "cli/src/commands/help.ts");
-  const hasSyncDocsSkill = changedFiles.some((f) => f === "skills/sync-docs/SKILL.md");
-  const hasDocsPages = changedFiles.some((f) => f.startsWith("docs/") || f === "README.md" || f === "XTRM-GUIDE.md");
+function inferTitleFromCommitsOrFiles(commitLog, changedFiles) {
+  const firstCommit = commitLog.split("\n")[0]?.replace(/^[a-f0-9]+ /, "").trim() ?? "";
+  if (firstCommit && !isGenericPrTitle(firstCommit)) {
+    return normalizePrTitle(firstCommit);
+  }
+  const hasCli = changedFiles.some((f) => f.startsWith("cli/src/"));
   const hasTests = changedFiles.some((f) => f.startsWith("cli/test/"));
-  if (hasDocsCrossCheck && hasSyncDocsSkill) return "Add docs cross-check and integrate sync-docs workflow";
-  if (hasDocsCrossCheck && hasTests) return "Add docs cross-check command and tests";
-  if (hasDocsCommand && hasDocsPages && hasSyncDocsSkill) return "Integrate docs workflow across CLI, docs, and sync-docs";
-  if (hasDocsCommand && hasDocsPages) return "Update docs workflow and CLI help";
-  if (hasDocsPages) return "Update documentation";
+  const hasHooks = changedFiles.some((f) => f.startsWith("hooks/"));
+  const hasSkills = changedFiles.some((f) => f.startsWith("skills/"));
+  const hasDocs = changedFiles.some((f) => f.startsWith("docs/") || f === "README.md" || f === "XTRM-GUIDE.md");
+  const hasConfig = changedFiles.some((f) => f.startsWith("config/"));
+  if (hasCli && hasTests) return "Update CLI with tests";
+  if (hasCli && hasHooks) return "Update CLI and hooks";
+  if (hasCli) return "Update CLI";
+  if (hasHooks) return "Update hooks";
+  if (hasSkills) return "Update skills";
+  if (hasDocs) return "Update documentation";
+  if (hasConfig) return "Update config";
   return "Update worktree session";
 }
-function buildPrTitle(issues, changedFiles) {
-  if (issues.length === 0) return inferTitleFromChangedFiles(changedFiles);
+function buildPrTitle(issues, changedFiles, commitLog) {
+  if (issues.length === 0) return inferTitleFromCommitsOrFiles(commitLog, changedFiles);
   if (issues.length === 1) {
     const single = normalizePrTitle(issues[0].title || issues[0].reason || issues[0].id);
-    return isGenericPrTitle(single) ? inferTitleFromChangedFiles(changedFiles) : single;
+    return isGenericPrTitle(single) ? inferTitleFromCommitsOrFiles(commitLog, changedFiles) : single;
   }
-  const titles = issues.map((i) => `${i.title} ${i.reason}`.toLowerCase());
-  const hasCrossCheck = titles.some((t2) => t2.includes("cross-check"));
-  const hasSyncDocs = titles.some((t2) => t2.includes("sync-docs"));
-  const hasDocs = titles.some((t2) => t2.includes("docs"));
-  if (hasCrossCheck && hasSyncDocs) return "Add docs cross-check and integrate sync-docs workflow";
-  if (hasDocs) return "Update docs workflow and command surfaces";
   const multi = normalizePrTitle(issues[0].title || issues[0].reason || issues[0].id);
-  return isGenericPrTitle(multi) ? inferTitleFromChangedFiles(changedFiles) : `${multi} (+${issues.length - 1} more)`;
+  return isGenericPrTitle(multi) ? inferTitleFromCommitsOrFiles(commitLog, changedFiles) : `${multi} (+${issues.length - 1} more)`;
 }
 function buildPrBody(issues, commitLog, diffStat, branch) {
   const lines = [];
@@ -53984,7 +54031,7 @@ function createEndCommand() {
       const fullLog2 = git(["log", `origin/${defaultBranch}..HEAD`, "--oneline"], cwd).out;
       const diffStat2 = git(["diff", `origin/${defaultBranch}`, "--stat"], cwd).out;
       const changedFiles2 = git(["diff", `origin/${defaultBranch}`, "--name-only"], cwd).out.split("\n").filter(Boolean);
-      const prTitle2 = buildPrTitle(issues, changedFiles2);
+      const prTitle2 = buildPrTitle(issues, changedFiles2, fullLog2);
       const prBody2 = buildPrBody(issues, fullLog2, diffStat2, branch);
       console.log(t.bold("\n  [DRY RUN] PR preview\n"));
       console.log(`  ${kleur_default.bold("Title:")} ${prTitle2}`);
@@ -54028,7 +54075,7 @@ function createEndCommand() {
     const fullLog = git(["log", `origin/${defaultBranch}..HEAD`, "--oneline"], cwd).out;
     const diffStat = git(["diff", `origin/${defaultBranch}`, "--stat"], cwd).out;
     const changedFiles = git(["diff", `origin/${defaultBranch}`, "--name-only"], cwd).out.split("\n").filter(Boolean);
-    const prTitle = buildPrTitle(issues, changedFiles);
+    const prTitle = buildPrTitle(issues, changedFiles, fullLog);
     const prBody = buildPrBody(issues, fullLog, diffStat, branch);
     console.log(kleur_default.dim("  Creating PR..."));
     const prArgs = ["pr", "create", "--title", prTitle, "--body", prBody];
@@ -55154,6 +55201,8 @@ function createMemoryUpdateCommand() {
 
 // src/commands/merge.ts
 var import_node_child_process13 = require("child_process");
+var import_node_fs7 = require("fs");
+var import_node_path8 = require("path");
 function createMergeCommand() {
   return new Command("merge").description("Drain the xt worktree PR merge queue via the xt-merge specialist").option("--dry-run", "List queue and CI status without merging", false).option("--no-beads", "Skip creating a tracking bead for this run", false).action(async (opts) => {
     const cwd = process.cwd();
@@ -55183,21 +55232,40 @@ function createMergeCommand() {
     console.log(kleur_default.bold(`
   xt merge${opts.dryRun ? " (dry run)" : ""}
 `));
-    const exitCode = await new Promise((resolve2) => {
-      const proc = (0, import_node_child_process13.spawn)("specialists", args, { cwd, stdio: "inherit" });
-      proc.on("close", (code) => resolve2(code ?? 0));
-    });
-    if (exitCode !== 0) {
+    console.log(kleur_default.dim("  Running xt-merge specialist...\n"));
+    const jobsDir = (0, import_node_path8.join)(cwd, ".specialists", "jobs");
+    let jobsBefore;
+    try {
+      jobsBefore = new Set(
+        (0, import_node_fs7.readdirSync)(jobsDir, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name)
+      );
+    } catch {
+      jobsBefore = /* @__PURE__ */ new Set();
+    }
+    const runResult = (0, import_node_child_process13.spawnSync)("specialists", args, { cwd, encoding: "utf8", stdio: "pipe" });
+    let newJobId;
+    try {
+      const jobsAfter = (0, import_node_fs7.readdirSync)(jobsDir, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name);
+      newJobId = jobsAfter.find((id) => !jobsBefore.has(id));
+    } catch {
+    }
+    if (newJobId) {
+      (0, import_node_child_process13.spawnSync)("specialists", ["poll", newJobId], { cwd, stdio: "inherit" });
+    } else {
+      if (runResult.stdout) process.stdout.write(runResult.stdout);
+      if (runResult.stderr) process.stderr.write(runResult.stderr);
+    }
+    if (runResult.status !== 0) {
       console.error(kleur_default.red("\n  \u2717 xt-merge failed.\n"));
     }
-    process.exit(exitCode);
+    process.exit(runResult.status ?? 0);
   });
 }
 
 // src/commands/debug.ts
 var import_node_child_process14 = require("child_process");
-var import_node_fs7 = require("fs");
-var import_node_path8 = require("path");
+var import_node_fs8 = require("fs");
+var import_node_path9 = require("path");
 var KIND_LABELS = {
   "session.start": { label: "SESS+", color: kleur_default.green },
   "session.end": { label: "SESS-", color: kleur_default.white },
@@ -55297,14 +55365,14 @@ function buildDetail(event) {
   }
   if (event.kind === "tool.call") {
     if (d?.cmd) parts.push(kleur_default.dim(d.cmd.slice(0, 72)));
-    if (d?.file) parts.push(kleur_default.dim((0, import_node_path8.basename)(d.file)));
+    if (d?.file) parts.push(kleur_default.dim((0, import_node_path9.basename)(d.file)));
     if (d?.pattern) parts.push(kleur_default.dim(`/${d.pattern}/`));
     if (d?.url) parts.push(kleur_default.dim(d.url.slice(0, 72)));
     if (d?.query) parts.push(kleur_default.dim(d.query.slice(0, 72)));
     if (d?.prompt) parts.push(kleur_default.dim(d.prompt.slice(0, 72)));
   } else {
     if (event.issue_id) parts.push(kleur_default.yellow(event.issue_id));
-    if (d?.file) parts.push(kleur_default.dim((0, import_node_path8.basename)(d.file)));
+    if (d?.file) parts.push(kleur_default.dim((0, import_node_path9.basename)(d.file)));
     if (d?.reason_code) parts.push(kleur_default.dim(`[${d.reason_code}]`));
     if (event.worktree) parts.push(kleur_default.dim(`wt:${event.worktree}`));
   }
@@ -55321,8 +55389,8 @@ function formatLine(event, colorMap) {
 function findDbPath(cwd) {
   let dir = cwd;
   for (let i = 0; i < 10; i++) {
-    if ((0, import_node_fs7.existsSync)((0, import_node_path8.join)(dir, ".beads"))) return (0, import_node_path8.join)(dir, ".xtrm", "debug.db");
-    const parent = (0, import_node_path8.join)(dir, "..");
+    if ((0, import_node_fs8.existsSync)((0, import_node_path9.join)(dir, ".beads"))) return (0, import_node_path9.join)(dir, ".xtrm", "debug.db");
+    const parent = (0, import_node_path9.join)(dir, "..");
     if (parent === dir) break;
     dir = parent;
   }
@@ -55383,7 +55451,7 @@ function createDebugCommand() {
   return new Command("debug").description("Watch xtrm events: tool calls, gate decisions, bd lifecycle").option("-f, --follow", "Follow new events (default)", false).option("--all", "Show full history and exit", false).option("--session <id>", "Filter by session ID (prefix match)").option("--type <domain>", "Filter by domain: tool | gate | bd | session").option("--json", "Output raw JSON lines", false).action((opts) => {
     const cwd = process.cwd();
     const dbPath = findDbPath(cwd);
-    if (!dbPath || !(0, import_node_fs7.existsSync)(dbPath)) return;
+    if (!dbPath || !(0, import_node_fs8.existsSync)(dbPath)) return;
     if (opts.all) {
       const events = queryEvents(dbPath, buildWhere(opts, ""), 1e3);
       const colorMap = buildColorMap(events);
@@ -55568,7 +55636,7 @@ async function printBanner(version3) {
 // src/index.ts
 var version2 = "0.0.0";
 try {
-  version2 = JSON.parse((0, import_node_fs8.readFileSync)((0, import_node_path9.resolve)(__dirname, "../package.json"), "utf8")).version;
+  version2 = JSON.parse((0, import_node_fs9.readFileSync)((0, import_node_path10.resolve)(__dirname, "../package.json"), "utf8")).version;
 } catch {
 }
 var program2 = new Command();

@@ -7,6 +7,30 @@ import { t, sym } from '../utils/theme.js';
 import { syncManagedPiExtensions, piPreCheck } from '../utils/pi-extensions.js';
 
 // __dirname is available in CJS output (tsup target: cjs)
+
+/**
+ * Ensure @xtrm/pi-core is resolvable from .pi/npm/node_modules.
+ * Creates a symlink: .pi/npm/node_modules/@xtrm/pi-core -> ../../extensions/core
+ */
+async function ensureCorePackageSymlink(extensionsDst: string, projectRoot: string, dryRun: boolean): Promise<void> {
+    const coreDir = path.join(extensionsDst, 'core');
+    if (!await fs.pathExists(coreDir)) return; // core not synced yet
+
+    const nodeModulesDir = path.join(projectRoot, '.pi', 'npm', 'node_modules', '@xtrm');
+    const symlinkPath = path.join(nodeModulesDir, 'pi-core');
+
+    if (await fs.pathExists(symlinkPath)) return; // already exists
+
+    if (dryRun) {
+        console.log(kleur.dim(`    [DRY RUN] would create @xtrm/pi-core symlink`));
+        return;
+    }
+
+    await fs.ensureDir(nodeModulesDir);
+    // Relative path from symlink location: @xtrm/pi-core -> ../../../extensions/core
+    await fs.symlink('../../../extensions/core', symlinkPath);
+    console.log(kleur.dim(`    Created @xtrm/pi-core symlink for module resolution`));
+}
 declare const __dirname: string;
 
 const PI_AGENT_DIR = process.env.PI_AGENT_DIR || path.join(homedir(), '.pi', 'agent');
@@ -189,6 +213,11 @@ export async function runPiInstall(dryRun: boolean = false, isGlobal: boolean = 
                 }
             }
         }
+    }
+
+    // Ensure @xtrm/pi-core is resolvable from node_modules (after npm install completes)
+    if (!isGlobal && projectRoot) {
+        await ensureCorePackageSymlink(extensionsDst, projectRoot, dryRun);
     }
 
     // Detect unconfigured Pi — nudge to run setup

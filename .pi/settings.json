@@ -1,5 +1,6 @@
 {
   "packages": [
+    "./extensions/core",
     "./extensions/auto-session-name",
     "./extensions/auto-update",
     "./extensions/beads",

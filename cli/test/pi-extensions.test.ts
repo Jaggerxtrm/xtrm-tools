@@ -90,12 +90,11 @@ describe('syncManagedPiExtensions', () => {
         fs.rmSync(dstRoot, { recursive: true, force: true });
     });
 
-    it('returns 0 when source directory does not exist', async () => {
-        const count = await syncManagedPiExtensions({
+    it('throws when source directory does not exist', async () => {
+        await expect(syncManagedPiExtensions({
             sourceDir: '/nonexistent/path',
             targetDir: '/tmp/target',
-        });
-        expect(count).toBe(0);
+        })).rejects.toThrow('Pi extensions source directory not found');
     });
 });
 

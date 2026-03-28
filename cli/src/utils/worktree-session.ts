@@ -79,6 +79,68 @@ export function readSessionMeta(worktreePath: string): SessionMeta | null {
     }
 }
 
+/**
+ * Clone project-scoped plugin entries from the main repo to a worktree path.
+ * Claude Code matches plugins by projectPath — without this, worktree sessions
+ * won't see any project-scoped plugins (no skills, no hooks, no MCP servers).
+ */
+function registerPluginsForWorktree(repoRoot: string, worktreePath: string): void {
+    const pluginsFile = path.join(homedir(), '.claude', 'plugins', 'installed_plugins.json');
+    try {
+        const data = JSON.parse(readFileSync(pluginsFile, 'utf8'));
+        const plugins = data?.plugins;
+        if (!plugins || typeof plugins !== 'object') return;
+
+        let changed = false;
+        for (const [, entries] of Object.entries(plugins) as [string, any[]][]) {
+            if (!Array.isArray(entries)) continue;
+
+            // Find entries for the main repo that don't yet have a worktree counterpart
+            const hasWorktreeEntry = entries.some(
+                (e: any) => e.projectPath === worktreePath
+            );
+            if (hasWorktreeEntry) continue;
+
+            const repoEntries = entries.filter(
+                (e: any) => e.scope === 'project' && e.projectPath === repoRoot
+            );
+            for (const entry of repoEntries) {
+                entries.push({ ...entry, projectPath: worktreePath });
+                changed = true;
+            }
+        }
+
+        if (changed) {
+            writeFileSync(pluginsFile, JSON.stringify(data, null, 2));
+        }
+    } catch { /* non-fatal — plugin registration is best-effort */ }
+}
+
+/**
+ * Remove plugin entries registered for a worktree path.
+ * Called during `xt end` when the worktree is being removed.
+ */
+export function unregisterPluginsForWorktree(worktreePath: string): void {
+    const pluginsFile = path.join(homedir(), '.claude', 'plugins', 'installed_plugins.json');
+    try {
+        const data = JSON.parse(readFileSync(pluginsFile, 'utf8'));
+        const plugins = data?.plugins;
+        if (!plugins || typeof plugins !== 'object') return;
+
+        let changed = false;
+        for (const [key, entries] of Object.entries(plugins) as [string, any[]][]) {
+            if (!Array.isArray(entries)) continue;
+            const before = entries.length;
+            plugins[key] = entries.filter((e: any) => e.projectPath !== worktreePath);
+            if (plugins[key].length < before) changed = true;
+        }
+
+        if (changed) {
+            writeFileSync(pluginsFile, JSON.stringify(data, null, 2));
+        }
+    } catch { /* non-fatal */ }
+}
+
 export async function launchWorktreeSession(opts: WorktreeSessionOptions): Promise<void> {
     const { runtime, name } = opts;
     const cwd = process.cwd();
@@ -146,8 +208,25 @@ export async function launchWorktreeSession(opts: WorktreeSessionOptions): Promi
         }
     }
 
-    // Inject statusLine config for claude worktree sessions
+    // Claude worktree: register plugins + symlink gitignored dirs so the session
+    // has the same environment as the main repo.
     if (runtime === 'claude') {
+        // 1. Symlink .claude/skills/ (gitignored — not present in worktree working tree)
+        const mainSkillsDir = path.join(repoRoot, '.claude', 'skills');
+        const wtSkillsDir = path.join(worktreePath, '.claude', 'skills');
+        if (existsSync(mainSkillsDir) && !existsSync(wtSkillsDir)) {
+            try {
+                mkdirSync(path.join(worktreePath, '.claude'), { recursive: true });
+                symlinkSync(mainSkillsDir, wtSkillsDir);
+            } catch { /* non-fatal */ }
+        }
+
+        // 2. Register project-scoped plugins for the worktree path.
+        //    Claude Code matches plugins by projectPath — worktrees have a different
+        //    path so they won't see plugins installed for the main repo.
+        registerPluginsForWorktree(repoRoot, worktreePath);
+
+        // 3. Inject statusLine config
         const statuslinePath = resolveStatuslineScript();
         if (statuslinePath) {
             const claudeDir = path.join(worktreePath, '.claude');

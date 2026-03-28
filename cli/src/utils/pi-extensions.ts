@@ -181,7 +181,12 @@ export async function syncManagedPiExtensions({
     dryRun = false,
     log,
 }: SyncPiExtensionsOptions): Promise<number> {
-    if (!await fs.pathExists(sourceDir)) return 0;
+    if (!await fs.pathExists(sourceDir)) {
+        throw new Error(
+            `Pi extensions source directory not found: ${sourceDir}\n` +
+            `Ensure xtrm-tools is installed correctly (not xtrm-cli).`
+        );
+    }
 
     const diff = await diffPiExtensions(sourceDir, targetDir);
     const toSync = [...diff.missing, ...diff.stale];

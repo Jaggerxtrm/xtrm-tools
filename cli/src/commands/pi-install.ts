@@ -37,8 +37,12 @@ const PI_AGENT_DIR = process.env.PI_AGENT_DIR || path.join(homedir(), '.pi', 'ag
 
 /**
  * Resolve the xtrm-tools package root from __dirname.
- * cli/dist/ -> ../.. = package root.
- * Falls back to checking one level higher for global npm installs.
+ * cli/dist/ -> ../.. = package root (local dev / npm link).
+ * cli/dist/ -> ../../.. = xtrm-tools root (global npm install).
+ *
+ * Throws if config/pi/extensions is not found at any candidate —
+ * this means the package was installed without config/ (e.g. xtrm-cli
+ * instead of xtrm-tools) or the install is corrupted.
  */
 function resolvePkgRoot(): string {
     const candidates = [
@@ -48,7 +52,11 @@ function resolvePkgRoot(): string {
     for (const c of candidates) {
         if (require('fs').existsSync(path.join(c, 'config', 'pi', 'extensions'))) return c;
     }
-    return candidates[0];
+    throw new Error(
+        `Pi extensions source not found. Looked in:\n` +
+        candidates.map(c => `  - ${path.join(c, 'config', 'pi', 'extensions')}`).join('\n') +
+        `\nEnsure you installed xtrm-tools (not xtrm-cli) or run from the repo.`
+    );
 }
 
 function piExtensionsDir(isGlobal: boolean, projectRoot?: string): string {
@@ -108,7 +116,13 @@ export async function runPiInstall(dryRun: boolean = false, isGlobal: boolean = 
     }
     // Source always comes from xtrm-tools package (resolved via __dirname),
     // NOT from the user's project root (which has no config/pi/).
-    const piConfigDir = path.join(resolvePkgRoot(), 'config', 'pi');
+    let piConfigDir: string;
+    try {
+        piConfigDir = path.join(resolvePkgRoot(), 'config', 'pi');
+    } catch (err: any) {
+        console.error(kleur.red(`\n  ✗ ${err.message}`));
+        return;
+    }
     const schemaPath = path.join(piConfigDir, 'install-schema.json');
 
     console.log(t.bold('\n  ⚙  Pi extensions + packages'));
@@ -154,12 +168,17 @@ export async function runPiInstall(dryRun: boolean = false, isGlobal: boolean = 
     console.log(kleur.dim(`    Packages:   ${preCheck.packages.installed.length}/${pkgTotal} installed, ${preCheck.packages.needed.length} needed`));
 
     // Sync extensions (only missing + stale)
-    await syncManagedPiExtensions({
-        sourceDir: extensionsSrc,
-        targetDir: extensionsDst,
-        dryRun,
-        log: (message) => console.log(kleur.dim(`    ${message}`)),
-    });
+    try {
+        await syncManagedPiExtensions({
+            sourceDir: extensionsSrc,
+            targetDir: extensionsDst,
+            dryRun,
+            log: (message) => console.log(kleur.dim(`    ${message}`)),
+        });
+    } catch (err: any) {
+        console.error(kleur.red(`\n  ✗ Extension sync failed: ${err.message}`));
+        return;
+    }
 
     // For project-scoped installs, register extensions in .pi/settings.json.
     // Pi only auto-discovers from global ~/.pi/agent/extensions/ — for project-scoped

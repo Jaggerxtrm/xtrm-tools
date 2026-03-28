@@ -3,6 +3,7 @@ import kleur from 'kleur';
 import prompts from 'prompts';
 import { spawnSync } from 'node:child_process';
 import { t } from '../utils/theme.js';
+import { unregisterPluginsForWorktree } from '../utils/worktree-session.js';
 
 interface EndOptions {
     draft: boolean;
@@ -318,6 +319,9 @@ export function createEndCommand(): Command {
                 }
 
                 if (doRemove) {
+                    // Clean up project-scoped plugin entries for the worktree path
+                    unregisterPluginsForWorktree(cwd);
+
                     // Must run from outside the worktree
                     try {
                         const repoRoot = git(['rev-parse', '--show-toplevel'], cwd).out;

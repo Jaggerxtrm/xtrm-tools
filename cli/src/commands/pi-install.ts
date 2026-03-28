@@ -16,7 +16,7 @@ async function ensureCorePackageSymlink(extensionsDst: string, projectRoot: stri
     const coreDir = path.join(extensionsDst, 'core');
     if (!await fs.pathExists(coreDir)) return; // core not synced yet
 
-    const nodeModulesDir = path.join(projectRoot, '.pi', 'npm', 'node_modules', '@xtrm');
+    const nodeModulesDir = path.join(projectRoot, '.pi', 'node_modules', '@xtrm');
     const symlinkPath = path.join(nodeModulesDir, 'pi-core');
 
     if (await fs.pathExists(symlinkPath)) return; // already exists
@@ -27,8 +27,8 @@ async function ensureCorePackageSymlink(extensionsDst: string, projectRoot: stri
     }
 
     await fs.ensureDir(nodeModulesDir);
-    // Relative path from symlink location: @xtrm/pi-core -> ../../../extensions/core
-    await fs.symlink('../../../extensions/core', symlinkPath);
+    // Relative path: .pi/node_modules/@xtrm/pi-core -> ../../extensions/core
+    await fs.symlink('../../extensions/core', symlinkPath);
     console.log(kleur.dim(`    Created @xtrm/pi-core symlink for module resolution`));
 }
 declare const __dirname: string;
@@ -180,8 +180,10 @@ export async function runPiInstall(dryRun: boolean = false, isGlobal: boolean = 
             }
         } catch { /* extensionsDst may not exist yet */ }
 
-        // Build new packages list: extension paths first, then preserve non-extension entries
-        const extPaths = installedExtDirs.map(name => `./extensions/${name}`);
+        // Build new packages list: extension paths first (exclude 'core' - it's a library, not an extension)
+        const extPaths = installedExtDirs
+            .filter(name => name !== 'core')
+            .map(name => `./extensions/${name}`);
         const nonExtPackages = (existingSettings.packages ?? []).filter(
             p => !p.startsWith('./extensions/') && !p.startsWith('../')
         );

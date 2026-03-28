@@ -38131,7 +38131,7 @@ async function syncManagedPiExtensions({
 async function ensureCorePackageSymlink(extensionsDst, projectRoot, dryRun) {
   const coreDir = import_path10.default.join(extensionsDst, "core");
   if (!await import_fs_extra9.default.pathExists(coreDir)) return;
-  const nodeModulesDir = import_path10.default.join(projectRoot, ".pi", "npm", "node_modules", "@xtrm");
+  const nodeModulesDir = import_path10.default.join(projectRoot, ".pi", "node_modules", "@xtrm");
   const symlinkPath = import_path10.default.join(nodeModulesDir, "pi-core");
   if (await import_fs_extra9.default.pathExists(symlinkPath)) return;
   if (dryRun) {
@@ -38139,7 +38139,7 @@ async function ensureCorePackageSymlink(extensionsDst, projectRoot, dryRun) {
     return;
   }
   await import_fs_extra9.default.ensureDir(nodeModulesDir);
-  await import_fs_extra9.default.symlink("../../../extensions/core", symlinkPath);
+  await import_fs_extra9.default.symlink("../../extensions/core", symlinkPath);
   console.log(kleur_default.dim(`    Created @xtrm/pi-core symlink for module resolution`));
 }
 var PI_AGENT_DIR = process.env.PI_AGENT_DIR || import_path10.default.join((0, import_node_os4.homedir)(), ".pi", "agent");
@@ -38248,7 +38248,7 @@ async function runPiInstall(dryRun = false, isGlobal = false, projectRoot) {
       }
     } catch {
     }
-    const extPaths = installedExtDirs.map((name) => `./extensions/${name}`);
+    const extPaths = installedExtDirs.filter((name) => name !== "core").map((name) => `./extensions/${name}`);
     const nonExtPackages = (existingSettings.packages ?? []).filter(
       (p) => !p.startsWith("./extensions/") && !p.startsWith("../")
     );
@@ -55242,23 +55242,54 @@ function createMergeCommand() {
     } catch {
       jobsBefore = /* @__PURE__ */ new Set();
     }
-    const runResult = (0, import_node_child_process13.spawnSync)("specialists", args, { cwd, encoding: "utf8", stdio: "pipe" });
-    let newJobId;
-    try {
-      const jobsAfter = (0, import_node_fs7.readdirSync)(jobsDir, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name);
-      newJobId = jobsAfter.find((id) => !jobsBefore.has(id));
-    } catch {
+    const runProc = (0, import_node_child_process13.spawn)("specialists", args, { cwd, detached: true, stdio: "ignore" });
+    runProc.unref();
+    const jobId = await (async () => {
+      const deadline = Date.now() + 15e3;
+      while (Date.now() < deadline) {
+        try {
+          const entries = (0, import_node_fs7.readdirSync)(jobsDir, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name);
+          const newId = entries.find((id) => !jobsBefore.has(id));
+          if (newId) return newId;
+        } catch {
+        }
+        await new Promise((r) => setTimeout(r, 200));
+      }
+      return void 0;
+    })();
+    if (!jobId) {
+      console.error(kleur_default.red("\n  \u2717 Timed out waiting for xt-merge job to start.\n"));
+      process.exit(1);
     }
-    if (newJobId) {
-      (0, import_node_child_process13.spawnSync)("specialists", ["poll", newJobId], { cwd, stdio: "inherit" });
-    } else {
-      if (runResult.stdout) process.stdout.write(runResult.stdout);
-      if (runResult.stderr) process.stderr.write(runResult.stderr);
+    process.stdout.write(kleur_default.dim("  Waiting"));
+    const jobTimeout = Date.now() + 3e5;
+    let jobDone = false;
+    while (Date.now() < jobTimeout) {
+      const check3 = (0, import_node_child_process13.spawnSync)("specialists", ["poll", jobId, "--json"], {
+        cwd,
+        encoding: "utf8",
+        stdio: "pipe"
+      });
+      if (check3.status === 0 && check3.stdout) {
+        try {
+          const d = JSON.parse(check3.stdout);
+          if (d.status === "done" || d.status === "error") {
+            jobDone = true;
+            break;
+          }
+        } catch {
+        }
+      }
+      process.stdout.write(kleur_default.dim("."));
+      await new Promise((r) => setTimeout(r, 2e3));
     }
-    if (runResult.status !== 0) {
-      console.error(kleur_default.red("\n  \u2717 xt-merge failed.\n"));
+    process.stdout.write("\n\n");
+    if (!jobDone) {
+      console.error(kleur_default.red("  \u2717 Timed out waiting for xt-merge to complete.\n"));
+      process.exit(1);
     }
-    process.exit(runResult.status ?? 0);
+    (0, import_node_child_process13.spawnSync)("specialists", ["poll", jobId], { cwd, stdio: "inherit" });
+    process.exit(0);
   });
 }
 

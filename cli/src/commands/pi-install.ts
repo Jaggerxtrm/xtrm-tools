@@ -37,12 +37,8 @@ const PI_AGENT_DIR = process.env.PI_AGENT_DIR || path.join(homedir(), '.pi', 'ag
 
 /**
  * Resolve the xtrm-tools package root from __dirname.
- * cli/dist/ -> ../.. = package root (local dev / npm link).
- * cli/dist/ -> ../../.. = xtrm-tools root (global npm install).
- *
- * Throws if config/pi/extensions is not found at any candidate —
- * this means the package was installed without config/ (e.g. xtrm-cli
- * instead of xtrm-tools) or the install is corrupted.
+ * cli/dist/ -> ../.. = package root.
+ * Falls back to checking one level higher for global npm installs.
  */
 function resolvePkgRoot(): string {
     const candidates = [
@@ -52,11 +48,7 @@ function resolvePkgRoot(): string {
     for (const c of candidates) {
         if (require('fs').existsSync(path.join(c, 'config', 'pi', 'extensions'))) return c;
     }
-    throw new Error(
-        `Pi extensions source not found. Looked in:\n` +
-        candidates.map(c => `  - ${path.join(c, 'config', 'pi', 'extensions')}`).join('\n') +
-        `\nEnsure you installed xtrm-tools (not xtrm-cli) or run from the repo.`
-    );
+    return candidates[0];
 }
 
 function piExtensionsDir(isGlobal: boolean, projectRoot?: string): string {
@@ -116,14 +108,9 @@ export async function runPiInstall(dryRun: boolean = false, isGlobal: boolean = 
     }
     // Source always comes from xtrm-tools package (resolved via __dirname),
     // NOT from the user's project root (which has no config/pi/).
-    let piConfigDir: string;
-    try {
-        piConfigDir = path.join(resolvePkgRoot(), 'config', 'pi');
-    } catch (err: any) {
-        console.error(kleur.red(`\n  ✗ ${err.message}`));
-        return;
-    }
+    const piConfigDir = path.join(resolvePkgRoot(), 'config', 'pi');
     const schemaPath = path.join(piConfigDir, 'install-schema.json');
+    const hasManagedExtensions = await fs.pathExists(piConfigDir);
 
     console.log(t.bold('\n  ⚙  Pi extensions + packages'));
 
@@ -153,31 +140,38 @@ export async function runPiInstall(dryRun: boolean = false, isGlobal: boolean = 
         packages = schema.packages;
     }
 
-    // Run pre-check
+    // Run pre-check for managed extensions (only if config/pi/extensions exists)
     const extensionsSrc = path.join(piConfigDir, 'extensions');
     const extensionsDst = piExtensionsDir(isGlobal, projectRoot);
 
-    const preCheck = await piPreCheck(extensionsSrc, extensionsDst, packages);
+    let neededPackages: string[] = [];
 
-    // Print pre-check summary
-    const extTotal = preCheck.extensions.missing.length + preCheck.extensions.stale.length + preCheck.extensions.upToDate.length;
-    const pkgTotal = packages.length;
+    if (hasManagedExtensions) {
+        const preCheck = await piPreCheck(extensionsSrc, extensionsDst, packages);
+        neededPackages = preCheck.packages.needed;
 
-    console.log(kleur.dim(`\n  Pre-check:`));
-    console.log(kleur.dim(`    Extensions: ${preCheck.extensions.upToDate.length}/${extTotal} up-to-date, ${preCheck.extensions.stale.length} stale, ${preCheck.extensions.missing.length} missing`));
-    console.log(kleur.dim(`    Packages:   ${preCheck.packages.installed.length}/${pkgTotal} installed, ${preCheck.packages.needed.length} needed`));
+        // Print pre-check summary
+        const extTotal = preCheck.extensions.missing.length + preCheck.extensions.stale.length + preCheck.extensions.upToDate.length;
+        const pkgTotal = packages.length;
 
-    // Sync extensions (only missing + stale)
-    try {
+        console.log(kleur.dim(`\n  Pre-check:`));
+        console.log(kleur.dim(`    Extensions: ${preCheck.extensions.upToDate.length}/${extTotal} up-to-date, ${preCheck.extensions.stale.length} stale, ${preCheck.extensions.missing.length} missing`));
+        console.log(kleur.dim(`    Packages:   ${preCheck.packages.installed.length}/${pkgTotal} installed, ${preCheck.packages.needed.length} needed`));
+
+        // Sync extensions (only missing + stale)
         await syncManagedPiExtensions({
             sourceDir: extensionsSrc,
             targetDir: extensionsDst,
             dryRun,
             log: (message) => console.log(kleur.dim(`    ${message}`)),
         });
-    } catch (err: any) {
-        console.error(kleur.red(`\n  ✗ Extension sync failed: ${err.message}`));
-        return;
+    } else {
+        // No managed extensions - just install packages
+        neededPackages = packages; // Assume all packages needed when no precheck
+
+        console.log(kleur.dim(`\n  Pre-check:`));
+        console.log(kleur.dim(`    Managed extensions: skipped (not bundled in npm package)`));
+        console.log(kleur.dim(`    Packages:   ${packages.length} to install`));
     }
 
     // For project-scoped installs, register extensions in .pi/settings.json.
@@ -217,10 +211,10 @@ export async function runPiInstall(dryRun: boolean = false, isGlobal: boolean = 
     if (packages.length > 0) {
         console.log(t.bold('\n  npm Packages'));
 
-        if (preCheck.packages.needed.length === 0) {
+        if (neededPackages.length === 0) {
             console.log(kleur.dim(`    ✓ All ${packages.length} packages already installed`));
         } else {
-            for (const pkg of preCheck.packages.needed) {
+            for (const pkg of neededPackages) {
                 const installArgs = isGlobal ? ['install', pkg] : ['install', pkg, '-l'];
                 if (dryRun) {
                     console.log(kleur.dim(`    [DRY RUN] pi ${installArgs.join(' ')}`));
@@ -237,7 +231,7 @@ export async function runPiInstall(dryRun: boolean = false, isGlobal: boolean = 
     }
 
     // Ensure @xtrm/pi-core is resolvable from node_modules (after npm install completes)
-    if (!isGlobal && projectRoot) {
+    if (hasManagedExtensions && !isGlobal && projectRoot) {
         await ensureCorePackageSymlink(extensionsDst, projectRoot, dryRun);
     }
 

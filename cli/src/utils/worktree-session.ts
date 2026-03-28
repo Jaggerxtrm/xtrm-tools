@@ -94,13 +94,8 @@ function registerPluginsForWorktree(repoRoot: string, worktreePath: string): voi
         let changed = false;
         for (const [, entries] of Object.entries(plugins) as [string, any[]][]) {
             if (!Array.isArray(entries)) continue;
-
-            // Find entries for the main repo that don't yet have a worktree counterpart
-            const hasWorktreeEntry = entries.some(
-                (e: any) => e.projectPath === worktreePath
-            );
+            const hasWorktreeEntry = entries.some((e: any) => e.projectPath === worktreePath);
             if (hasWorktreeEntry) continue;
-
             const repoEntries = entries.filter(
                 (e: any) => e.scope === 'project' && e.projectPath === repoRoot
             );
@@ -110,10 +105,8 @@ function registerPluginsForWorktree(repoRoot: string, worktreePath: string): voi
             }
         }
 
-        if (changed) {
-            writeFileSync(pluginsFile, JSON.stringify(data, null, 2));
-        }
-    } catch { /* non-fatal — plugin registration is best-effort */ }
+        if (changed) writeFileSync(pluginsFile, JSON.stringify(data, null, 2));
+    } catch { /* non-fatal */ }
 }
 
 /**
@@ -135,9 +128,7 @@ export function unregisterPluginsForWorktree(worktreePath: string): void {
             if (plugins[key].length < before) changed = true;
         }
 
-        if (changed) {
-            writeFileSync(pluginsFile, JSON.stringify(data, null, 2));
-        }
+        if (changed) writeFileSync(pluginsFile, JSON.stringify(data, null, 2));
     } catch { /* non-fatal */ }
 }
 
@@ -211,33 +202,37 @@ export async function launchWorktreeSession(opts: WorktreeSessionOptions): Promi
     // Claude worktree: register plugins + symlink gitignored dirs so the session
     // has the same environment as the main repo.
     if (runtime === 'claude') {
-        // 1. Symlink .claude/skills/ (gitignored — not present in worktree working tree)
+        // 1. Register project-scoped plugins for the worktree path.
+        //    Claude Code matches plugins by exact projectPath — worktrees have a
+        //    different path so they won't see plugins installed for the main repo.
+        registerPluginsForWorktree(repoRoot, worktreePath);
+
+        // 2. Symlink .claude/skills/ (gitignored — not present in worktree checkout)
+        const claudeDir = path.join(worktreePath, '.claude');
         const mainSkillsDir = path.join(repoRoot, '.claude', 'skills');
-        const wtSkillsDir = path.join(worktreePath, '.claude', 'skills');
+        const wtSkillsDir = path.join(claudeDir, 'skills');
         if (existsSync(mainSkillsDir) && !existsSync(wtSkillsDir)) {
             try {
-                mkdirSync(path.join(worktreePath, '.claude'), { recursive: true });
+                mkdirSync(claudeDir, { recursive: true });
                 symlinkSync(mainSkillsDir, wtSkillsDir);
             } catch { /* non-fatal */ }
         }
 
-        // 2. Register project-scoped plugins for the worktree path.
-        //    Claude Code matches plugins by projectPath — worktrees have a different
-        //    path so they won't see plugins installed for the main repo.
-        registerPluginsForWorktree(repoRoot, worktreePath);
-
-        // 3. Inject statusLine config
+        // 3. Write settings.local.json with enabledPlugins + statusLine.
+        //    enabledPlugins is needed regardless of whether the worktree branch
+        //    has it in its committed settings.json (e.g. branches predating PR #179).
+        const localSettings: Record<string, unknown> = {
+            enabledPlugins: { 'xtrm-tools@xtrm-tools': true },
+        };
         const statuslinePath = resolveStatuslineScript();
         if (statuslinePath) {
-            const claudeDir = path.join(worktreePath, '.claude');
-            const localSettingsPath = path.join(claudeDir, 'settings.local.json');
-            try {
-                mkdirSync(claudeDir, { recursive: true });
-                writeFileSync(localSettingsPath, JSON.stringify({
-                    statusLine: { type: 'command', command: `node ${statuslinePath}`, padding: 1 },
-                }, null, 2));
-            } catch { /* non-fatal — statusline is cosmetic */ }
+            localSettings.statusLine = { type: 'command', command: `node ${statuslinePath}`, padding: 1 };
         }
+        const localSettingsPath = path.join(claudeDir, 'settings.local.json');
+        try {
+            mkdirSync(claudeDir, { recursive: true });
+            writeFileSync(localSettingsPath, JSON.stringify(localSettings, null, 2));
+        } catch { /* non-fatal */ }
     }
 
     // Launch the runtime in the worktree

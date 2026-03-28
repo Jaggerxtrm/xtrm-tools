@@ -346,10 +346,10 @@ export async function installPlugin(repoRoot: string, dryRun: boolean, isGlobal:
     await installOfficialClaudePlugins(false, isGlobal);
 
     // Write statusLine to settings.json (project-scoped or user-global based on isGlobal).
-    installUserStatusLine(dryRun, repoRoot, isGlobal);
+    installUserStatusLine(dryRun);
 }
 
-function installUserStatusLine(dryRun: boolean, projectRoot?: string, isGlobal: boolean = false): void {
+function installUserStatusLine(dryRun: boolean): void {
     try {
         // Resolve statusline.mjs from the xtrm-tools package root — same pattern as xtrmPkgRoot.
         // __dirname in the CJS bundle is cli/dist/, so ../../hooks/ is always the correct path.
@@ -357,27 +357,22 @@ function installUserStatusLine(dryRun: boolean, projectRoot?: string, isGlobal: 
         const scriptPath = path.resolve(__dirname, '..', '..', 'hooks', 'statusline.mjs');
         if (!fs.existsSync(scriptPath)) return;
 
-        const settingsPath = isGlobal || !projectRoot
-            ? path.join(os.homedir(), '.claude', 'settings.json')
-            : path.join(projectRoot, '.claude', 'settings.json');
+        // Always write to ~/.claude/settings.json — statusLine contains a machine-specific
+        // path and must never land in a project .claude/settings.json that could be committed.
+        const settingsPath = path.join(os.homedir(), '.claude', 'settings.json');
 
         const settings = fs.existsSync(settingsPath)
             ? JSON.parse(fs.readFileSync(settingsPath, 'utf8'))
             : {};
 
         if (dryRun) {
-            console.log(kleur.dim(`  [DRY RUN] Would write statusLine → ${scriptPath}`));
+            console.log(kleur.dim(`  [DRY RUN] Would write statusLine → ~/.claude/settings.json`));
             return;
-        }
-
-        if (!isGlobal && projectRoot) {
-            fs.ensureDirSync(path.dirname(settingsPath));
         }
 
         settings.statusLine = { type: 'command', command: `node ${scriptPath}`, padding: 1 };
         fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n');
-        const displayPath = isGlobal ? '~/.claude/settings.json' : '.claude/settings.json';
-        console.log(t.success(`  ✓ statusLine registered in ${displayPath}`));
+        console.log(t.success(`  ✓ statusLine registered in ~/.claude/settings.json`));
     } catch { /* non-fatal */ }
 }
 

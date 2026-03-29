@@ -37,7 +37,15 @@ export function createHelpCommand(): Command {
 
             blocks.push(section('PRIMARY COMMANDS', [
                 '  xtrm init [options]',
-                '    Set up xtrm in this project (plugin, Pi, skills, beads, GitNexus).',
+                '    Bootstrap xtrm in this project with a phased installer:',
+                '      1. Preflight     — inventory system state (no mutations)',
+                '      2. Plan          — show what will change',
+                '      3. Confirm       — single gate before all mutations',
+                '      4. Machine       — install system tools (bd, dolt, bv, pi, pnpm)',
+                '      5. Claude        — xtrm-tools plugin + official plugins',
+                '      6. Pi            — extensions + packages sync',
+                '      7. Project       — bd init, GitNexus index, AGENTS.md/CLAUDE.md',
+                '      8. Verify        — unified outcome summary',
                 '    Options: --dry-run, --yes/-y, --global',
                 '',
                 '  xtrm update',
@@ -49,9 +57,6 @@ export function createHelpCommand(): Command {
                 '  xtrm clean [options]',
                 '    Remove orphaned hooks/skills and stale hook wiring entries.',
                 '    Options: --dry-run, --hooks-only, --skills-only, --yes/-y',
-                '',
-                '  xtrm init',
-                '    Initialize project-level workflow setup.',
                 '',
                 '  xtrm docs --help',
                 '    Documentation inspection and drift-check submenu.',
@@ -121,7 +126,8 @@ export function createHelpCommand(): Command {
             ]));
 
             blocks.push(section('NOTES', [
-                '  - Banner is shown for xtrm init and xtrm update.',
+                '  - xtrm init uses a single confirmation before all mutations.',
+                '  - Use --yes/-y to skip the confirmation gate.',
                 '  - For command-level details, run: xtrm <command> --help',
                 '  - For subcommand details, run: xtrm <command> <subcommand> --help',
                 '  - For docs workflow details, run: xtrm docs --help',

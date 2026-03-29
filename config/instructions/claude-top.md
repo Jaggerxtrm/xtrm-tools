@@ -11,6 +11,13 @@
 4. `bv --robot-triage` — graph-aware triage: ranked picks, unblock targets, project health
 5. `bd update <id> --claim` — claim before any file edit
 
+## Execution Interaction Policy
+
+- Proceed by default on standard implementation tasks once scope is clear.
+- Do **not** ask repetitive “Proceed? Yes/No” confirmations.
+- Ask for confirmation only when actions are destructive, irreversible, or high-risk (e.g. `rm`, history rewrite, mass deletes, credential rotation, prod-impacting ops).
+- Prefer concise clarifying questions only when requirements are genuinely ambiguous.
+
 ## Active Gates (hooks enforce these — not optional)
 
 | Gate | Trigger | Required action |

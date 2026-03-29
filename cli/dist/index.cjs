@@ -56329,7 +56329,7 @@ program2.exitOverride((err) => {
 });
 program2.addCommand(createClaudeCommand());
 program2.addCommand(createPiCommand());
-program2.command("init").description("Set up xtrm in this project (plugin, Pi extensions, skills, beads, GitNexus)").option("--dry-run", "Preview changes without making any modifications", false).option("-y, --yes", "Skip confirmation prompts", false).option("--global", "Install tooling to user-global scope instead of project-local", false).action(async (opts) => {
+program2.command("init").description("Bootstrap xtrm with phased installer: machine \u2192 Claude \u2192 Pi \u2192 project").option("--dry-run", "Preview changes without making any modifications", false).option("-y, --yes", "Skip confirmation prompts", false).option("--global", "Install tooling to user-global scope instead of project-local", false).action(async (opts) => {
   await runProjectInit(opts);
 });
 program2.addCommand(createStatusCommand());

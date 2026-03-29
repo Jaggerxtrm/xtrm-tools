@@ -188,14 +188,24 @@ export async function launchWorktreeSession(opts: WorktreeSessionOptions): Promi
     writeSessionMeta(worktreePath, runtime);
     console.log(kleur.green(`\n  ✓ Worktree ready — launching ${runtime}...\n`));
 
-    // Pi worktree: symlink .pi -> project root .pi so Pi finds project-scoped settings + extensions.
-    // Pi reads config from <cwd>/.pi/ only (no walk-up), so without this worktrees would fall
-    // back to the global ~/.pi/agent/settings.json which has no local extension paths.
+    // Pi worktree bootstrap.
+    // Pi resolves project runtime packages from <cwd>/.pi/npm/node_modules.
+    // In fresh worktrees this directory is missing, which causes Pi to reinstall all `npm:` packages
+    // on every `xt pi` launch. Reuse the main repo cache via symlink to avoid repeated reinstalls.
     if (runtime === 'pi') {
         const projectPiDir = path.join(repoRoot, '.pi');
-        const worktreePiLink = path.join(worktreePath, '.pi');
-        if (existsSync(projectPiDir) && !existsSync(worktreePiLink)) {
-            try { symlinkSync(projectPiDir, worktreePiLink); } catch { /* non-fatal */ }
+        const worktreePiDir = path.join(worktreePath, '.pi');
+
+        // If the worktree does not have .pi at all, link it to project root.
+        if (existsSync(projectPiDir) && !existsSync(worktreePiDir)) {
+            try { symlinkSync(projectPiDir, worktreePiDir); } catch { /* non-fatal */ }
+        }
+
+        // If .pi exists as a directory (tracked files), still share npm cache explicitly.
+        const projectPiNpmDir = path.join(projectPiDir, 'npm');
+        const worktreePiNpmDir = path.join(worktreePiDir, 'npm');
+        if (existsSync(projectPiNpmDir) && !existsSync(worktreePiNpmDir)) {
+            try { symlinkSync(projectPiNpmDir, worktreePiNpmDir); } catch { /* non-fatal */ }
         }
     }
 

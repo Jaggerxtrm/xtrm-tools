@@ -34395,10 +34395,18 @@ async function launchWorktreeSession(opts) {
 `));
   if (runtime === "pi") {
     const projectPiDir = import_node_path.default.join(repoRoot, ".pi");
-    const worktreePiLink = import_node_path.default.join(worktreePath, ".pi");
-    if ((0, import_node_fs.existsSync)(projectPiDir) && !(0, import_node_fs.existsSync)(worktreePiLink)) {
+    const worktreePiDir = import_node_path.default.join(worktreePath, ".pi");
+    if ((0, import_node_fs.existsSync)(projectPiDir) && !(0, import_node_fs.existsSync)(worktreePiDir)) {
       try {
-        (0, import_node_fs.symlinkSync)(projectPiDir, worktreePiLink);
+        (0, import_node_fs.symlinkSync)(projectPiDir, worktreePiDir);
+      } catch {
+      }
+    }
+    const projectPiNpmDir = import_node_path.default.join(projectPiDir, "npm");
+    const worktreePiNpmDir = import_node_path.default.join(worktreePiDir, "npm");
+    if ((0, import_node_fs.existsSync)(projectPiNpmDir) && !(0, import_node_fs.existsSync)(worktreePiNpmDir)) {
+      try {
+        (0, import_node_fs.symlinkSync)(projectPiNpmDir, worktreePiNpmDir);
       } catch {
       }
     }

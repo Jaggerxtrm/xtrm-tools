@@ -296,14 +296,11 @@ export default function (pi: ExtensionAPI) {
 							? `?/${formatTokens(contextWindow)}`
 							: `${contextPercent}%/${formatTokens(contextWindow)}`;
 
-					let statsLeft: string;
-					if (contextPercentValue > 90) {
-						statsLeft = theme.fg("error", contextDisplay);
-					} else if (contextPercentValue > 70) {
-						statsLeft = theme.fg("warning", contextDisplay);
-					} else {
-						statsLeft = contextDisplay;
-					}
+					const colorizeUsage = (text: string) => {
+						if (contextPercentValue > 90) return theme.fg("error", text);
+						if (contextPercentValue > 70) return theme.fg("warning", text);
+						return text;
+					};
 
 					// Build right side: (provider) model • thinking
 					const modelName = model?.id || "no-model";
@@ -321,45 +318,29 @@ export default function (pi: ExtensionAPI) {
 					let rightSide = rightSideWithoutProvider;
 					if (providerCount > 1 && model) {
 						rightSide = `(${model.provider}) ${rightSideWithoutProvider}`;
-						if (visibleWidth(statsLeft) + 3 + visibleWidth(rightSide) > width) {
+						if (visibleWidth(contextDisplay) + 3 + visibleWidth(rightSide) > width) {
 							rightSide = rightSideWithoutProvider;
 						}
 					}
 
 					// Keep provider/model adjacent to usage (no right-bound alignment)
 					const separator = " ";
-
-					// Calculate layout
-					let leftWidth = visibleWidth(statsLeft);
+					const leftWidth = visibleWidth(contextDisplay);
 					const separatorWidth = visibleWidth(separator);
 
-					// Check if left side too wide
-					if (leftWidth > width - separatorWidth) {
-						statsLeft = truncateToWidth(statsLeft, width - separatorWidth, "...");
-						leftWidth = visibleWidth(statsLeft);
-					}
-
-					// Truncate right side to remaining width and place immediately after separator
-					const availableForRight = width - leftWidth - separatorWidth;
 					let line2: string;
-					if (availableForRight > 0) {
-						const truncatedRight = truncateToWidth(rightSide, availableForRight, "");
-						line2 = statsLeft + separator + truncatedRight;
+					if (leftWidth >= width) {
+						line2 = colorizeUsage(truncateToWidth(contextDisplay, width, ""));
 					} else {
-						line2 = truncateToWidth(statsLeft, width, "");
+						const availableForRight = Math.max(0, width - leftWidth - separatorWidth);
+						const truncatedRight = truncateToWidth(rightSide, availableForRight, "");
+						line2 = `${colorizeUsage(contextDisplay)}${theme.fg("dim", separator)}${theme.fg("dim", truncatedRight)}`;
 					}
-
-					// Apply dim to each part separately (like original footer)
-					// statsLeft may contain color codes for context % that end with reset
-					const dimLeft = theme.fg("dim", statsLeft);
-					const dimSep = theme.fg("dim", separator);
-					const remainder = line2.slice(leftWidth + separatorWidth);
-					const dimRemainder = theme.fg("dim", remainder);
 
 					// === LINE 3: ◐ 4843.5 Rework project bootstrap... ===
 					const line3 = buildBeadsLine(width, theme);
 
-					return [pwdLine, dimLeft + dimSep + dimRemainder, line3];
+					return [pwdLine, line2, line3];
 				},
 			};
 		});

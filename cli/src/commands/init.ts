@@ -5,7 +5,8 @@ import fs from 'fs-extra';
 import { spawnSync } from 'child_process';
 import prompts from 'prompts';
 import { installGitHooks as installServiceGitHooks } from './install-service-skills.js';
-import { runInstall, runMachineBootstrap, isBeadsInstalled, isDoltInstalled, isBvInstalled, isDeepwikiInstalled, type InstallOpts } from './install.js';
+import { runInstall, type InstallOpts } from './install.js';
+import { inventoryDeps, renderBootstrapPlan, runMachineBootstrapPhase, type BootstrapPlan } from '../core/machine-bootstrap.js';
 import { getContext } from '../core/context.js';
 import { calculateDiff } from '../core/diff.js';
 import { findRepoRoot } from '../utils/repo-root.js';
@@ -726,15 +727,9 @@ export async function installAllProjectSkills(projectRootOverride?: string): Pro
 
 // ─── Inventory types ──────────────────────────────────────────────────────────
 
-interface MachineToolCheck {
-    name: string;
-    description: string;
-    installed: boolean;
-}
-
 interface InitInventory {
     projectRoot: string;
-    machineTools: MachineToolCheck[];
+    bootstrapPlan: BootstrapPlan;
     skillsChanges: number;
     needsBdInit: boolean;
     needsGitNexus: boolean;
@@ -747,24 +742,8 @@ interface InitInventory {
 async function runPreflight(projectRoot: string, opts: InstallOpts): Promise<InitInventory> {
     const repoRoot = await findRepoRoot().catch(() => projectRoot);
 
-    // Machine tool availability (read-only checks)
-    const machineTools: MachineToolCheck[] = [
-        {
-            name: 'beads + dolt',
-            description: 'workflow enforcement backend',
-            installed: isBeadsInstalled() && isDoltInstalled(),
-        },
-        {
-            name: 'bv',
-            description: 'beads graph triage',
-            installed: isBvInstalled(),
-        },
-        {
-            name: 'deepwiki',
-            description: 'AI-powered repo documentation',
-            installed: isDeepwikiInstalled(),
-        },
-    ];
+    // Machine tool availability via unified bootstrap module (read-only)
+    const bootstrapPlan = inventoryDeps();
 
     // Skills diff (read-only — no files written)
     let skillsChanges = 0;
@@ -800,27 +779,20 @@ async function runPreflight(projectRoot: string, opts: InstallOpts): Promise<Ini
         ...(detected.hasPython ? ['Python'] : []),
     ];
 
-    return { projectRoot, machineTools, skillsChanges, needsBdInit, needsGitNexus, projectTypes };
+    return { projectRoot, bootstrapPlan, skillsChanges, needsBdInit, needsGitNexus, projectTypes };
 }
 
 // ── Phase 2: Plan ─────────────────────────────────────────────────────────────
 // Renders a consolidated view of all changes before any mutations occur.
 
 function renderInitPlan(inventory: InitInventory): void {
-    const { machineTools, skillsChanges, needsBdInit, needsGitNexus, projectTypes } = inventory;
+    const { bootstrapPlan, skillsChanges, needsBdInit, needsGitNexus, projectTypes } = inventory;
 
     console.log(kleur.bold('\n  xtrm init — Installation Plan'));
     console.log(kleur.dim('  ' + '─'.repeat(42)));
 
-    const missingTools = machineTools.filter(tool => !tool.installed);
-    if (missingTools.length > 0) {
-        console.log(kleur.bold('\n  Machine Bootstrap'));
-        for (const tool of machineTools) {
-            const icon = tool.installed ? kleur.green('  ✓') : kleur.yellow('  +');
-            const status = tool.installed ? kleur.dim('already installed') : kleur.white('will install');
-            console.log(`${icon}  ${tool.name.padEnd(18)} ${status}`);
-        }
-    }
+    // Machine bootstrap: delegates to the unified bootstrap plan renderer
+    renderBootstrapPlan(bootstrapPlan);
 
     console.log(kleur.bold('\n  Claude Runtime Sync'));
     console.log(`${kleur.cyan('  ↻')}  xtrm-tools plugin + official plugins (serena/context7/github/ralph-loop)`);
@@ -920,8 +892,8 @@ export async function runProjectInit(opts: InstallOpts = {}): Promise<void> {
 
     // ── Phase 4: Machine Bootstrap ───────────────────────────────────────────
     // Install missing system tools that workflow gates and the Claude runtime
-    // depend on. Runs with yes=true because the user already confirmed above.
-    await runMachineBootstrap({ yes: true });
+    // depend on. Uses the pre-computed plan from Phase 1 inventory.
+    await runMachineBootstrapPhase({ dryRun: false });
 
     // ── Phase 5: Claude Runtime Sync + Phase 6: Pi Runtime Sync ─────────────
     // Installs xtrm-tools plugin, official Claude plugins, Pi extensions,

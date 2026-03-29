@@ -7,6 +7,7 @@ import { findRepoRoot } from '../utils/repo-root.js';
 import { t } from '../utils/theme.js';
 import { installPlugin } from './install.js';
 import { launchWorktreeSession } from '../utils/worktree-session.js';
+import { inventoryDeps, renderBootstrapPlan } from '../core/machine-bootstrap.js';
 
 export function createClaudeCommand(): Command {
     const cmd = new Command('claude')
@@ -87,28 +88,11 @@ export function createClaudeCommand(): Command {
                 allOk = false;
             }
 
-            try {
-                execSync('bd --version', { stdio: 'ignore' });
-                console.log(t.success('  ✓ beads (bd) installed'));
-            } catch {
-                console.log(kleur.yellow('  ⚠ beads not installed — run: npm install -g @beads/bd'));
-                allOk = false;
-            }
+            // Managed dependencies — unified inventory
+            const plan = inventoryDeps();
+            renderBootstrapPlan(plan);
 
-            try {
-                execSync('dolt version', { stdio: 'ignore' });
-                console.log(t.success('  ✓ dolt installed'));
-            } catch {
-                console.log(kleur.yellow('  ⚠ dolt not installed — required for beads storage'));
-                allOk = false;
-            }
-
-            try {
-                execSync('gitnexus --version', { stdio: 'ignore' });
-                console.log(t.success('  ✓ gitnexus installed'));
-            } catch {
-                console.log(kleur.dim('  ○ gitnexus not installed (optional) — npm install -g gitnexus'));
-            }
+            if (!plan.allRequiredPresent) allOk = false;
 
             console.log('');
             if (allOk) {

@@ -108,9 +108,12 @@ async function renderSummaryCard(
     }) + '\n');
 }
 
-import { execSync } from 'child_process';
-
 import { spawnSync } from 'child_process';
+
+import {
+    runMachineBootstrapPhase,
+} from '../core/machine-bootstrap.js';
+
 function formatTargetLabel(target: string): string {
     const normalized = target.replace(/\\/g, '/').toLowerCase();
     const home = os.homedir().replace(/\\/g, '/').toLowerCase();
@@ -120,41 +123,7 @@ function formatTargetLabel(target: string): string {
     return path.basename(target);
 }
 
-export function isBeadsInstalled(): boolean {
-    try {
-        execSync('bd --version', { stdio: 'ignore' });
-        return true;
-    } catch {
-        return false;
-    }
-}
-
-export function isDoltInstalled(): boolean {
-    try {
-        execSync('dolt version', { stdio: 'ignore' });
-        return true;
-    } catch {
-        return false;
-    }
-}
-
-export function isDeepwikiInstalled(): boolean {
-    try {
-        execSync('deepwiki --version', { stdio: 'ignore' });
-        return true;
-    } catch {
-        return false;
-    }
-}
-
-export function isBvInstalled(): boolean {
-    try {
-        execSync('bv --version', { stdio: 'ignore' });
-        return true;
-    } catch {
-        return false;
-    }
-}
+export { isBeadsInstalled, isDoltInstalled, isDeepwikiInstalled, isBvInstalled } from '../core/machine-bootstrap.js';
 
 
 const OFFICIAL_CLAUDE_MARKETPLACE = 'https://github.com/anthropics/claude-plugins-official';
@@ -450,117 +419,11 @@ export interface InstallOpts {
 }
 
 // ── Machine Bootstrap ─────────────────────────────────────────────────────────
-// Installs missing system tools: beads+dolt (workflow backend), bv (triage),
-// and deepwiki (repo docs). Extracted so the init orchestrator can call it
-// as a distinct phase after the user confirms the plan.
+// Delegates to the unified machine-bootstrap module. Kept as a thin wrapper
+// so existing callers (init.ts) don't need immediate refactoring.
 
 export async function runMachineBootstrap(opts: { yes?: boolean } = {}): Promise<void> {
-    const effectiveYes = opts.yes ?? false;
-
-    // ── beads + dolt ──────────────────────────────────────────────────────────
-    console.log(t.bold('\n  ⚙  beads + dolt  (workflow enforcement backend)'));
-    console.log(t.muted('  beads is a git-backed issue tracker; dolt is its SQL+git storage backend.'));
-    console.log(t.muted('  Without them the gate hooks install but provide no enforcement.\n'));
-
-    const beadsOk = isBeadsInstalled();
-    const doltOk = isDoltInstalled();
-
-    if (beadsOk && doltOk) {
-        console.log(t.success('  ✓ beads + dolt already installed\n'));
-    } else {
-        const missing = [!beadsOk && 'bd', !doltOk && 'dolt'].filter(Boolean).join(', ');
-
-        let doInstall = effectiveYes;
-        if (!effectiveYes) {
-            const { install } = await prompts({
-                type: 'confirm',
-                name: 'install',
-                message: `Install beads + dolt? (${missing} not found) — required for workflow enforcement hooks`,
-                initial: true,
-            });
-            doInstall = install;
-        }
-
-        if (doInstall) {
-            if (!beadsOk) {
-                console.log(t.muted('\n  Installing @beads/bd...'));
-                spawnSync('npm', ['install', '-g', '@beads/bd'], { stdio: 'inherit' });
-                console.log(t.success('  ✓ bd installed'));
-            }
-            if (!doltOk) {
-                console.log(t.muted('\n  Installing dolt...'));
-                if (process.platform === 'darwin') {
-                    spawnSync('brew', ['install', 'dolt'], { stdio: 'inherit' });
-                } else {
-                    spawnSync('sudo', ['bash', '-c',
-                        'curl -L https://github.com/dolthub/dolt/releases/latest/download/install.sh | bash',
-                    ], { stdio: 'inherit' });
-                }
-                console.log(t.success('  ✓ dolt installed'));
-            }
-            console.log('');
-        } else {
-            console.log(t.muted('  ℹ Skipped. Re-run after installing beads+dolt.\n'));
-        }
-    }
-
-    // ── bv (beads_viewer) ─────────────────────────────────────────────────────
-    console.log(t.bold('\n  ⚙  bv  (beads graph triage)'));
-
-    const bvOk = isBvInstalled();
-
-    if (bvOk) {
-        console.log(t.success('  ✓ bv already installed\n'));
-    } else {
-        let doInstall = effectiveYes;
-        if (!effectiveYes) {
-            const { install } = await prompts({
-                type: 'confirm',
-                name: 'install',
-                message: 'Install bv (beads_viewer)? — graph-aware triage for bd issues',
-                initial: true,
-            });
-            doInstall = install;
-        }
-
-        if (doInstall) {
-            console.log(t.muted('\n  Installing bv...'));
-            spawnSync('bash', ['-c',
-                'curl -fsSL https://raw.githubusercontent.com/Jaggerxtrm/beads_viewer/main/scripts/install-bv.sh | bash',
-            ], { stdio: 'inherit' });
-            console.log(t.success('  ✓ bv installed\n'));
-        } else {
-            console.log(t.muted('  ℹ Skipped.\n'));
-        }
-    }
-
-    // ── deepwiki ──────────────────────────────────────────────────────────────
-    console.log(t.bold('\n  ⚙  deepwiki  (AI-powered repo documentation)'));
-
-    const deepwikiOk = isDeepwikiInstalled();
-
-    if (deepwikiOk) {
-        console.log(t.success('  ✓ deepwiki already installed\n'));
-    } else {
-        let doInstall = effectiveYes;
-        if (!effectiveYes) {
-            const { install } = await prompts({
-                type: 'confirm',
-                name: 'install',
-                message: 'Install @seflless/deepwiki?',
-                initial: true,
-            });
-            doInstall = install;
-        }
-
-        if (doInstall) {
-            console.log(t.muted('\n  Installing @seflless/deepwiki...'));
-            spawnSync('npm', ['install', '-g', '@seflless/deepwiki'], { stdio: 'inherit' });
-            console.log(t.success('  ✓ deepwiki installed\n'));
-        } else {
-            console.log(t.muted('  ℹ Skipped.\n'));
-        }
-    }
+    await runMachineBootstrapPhase({ dryRun: false });
 }
 
 export async function runInstall(opts: InstallOpts = {}): Promise<void> {

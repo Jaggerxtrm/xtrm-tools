@@ -5,6 +5,7 @@ import { spawnSync } from 'node:child_process';
 import { homedir } from 'node:os';
 import { t, sym } from '../utils/theme.js';
 import { syncManagedPiExtensions, piPreCheck } from '../utils/pi-extensions.js';
+import { isPiInstalled, isPnpmInstalled } from '../core/machine-bootstrap.js';
 
 // __dirname is available in CJS output (tsup target: cjs)
 
@@ -62,15 +63,6 @@ interface InstallSchema {
     fields: { key: string; label: string; hint: string; secret: boolean; required: boolean }[];
     oauth_providers: { key: string; instruction: string }[];
     packages: string[];
-}
-
-function isPiInstalled(): boolean {
-    const r = spawnSync('pi', ['--version'], { encoding: 'utf8', stdio: 'pipe' });
-    return r.status === 0;
-}
-
-function isPnpmInstalled(): boolean {
-    return spawnSync('pnpm', ['--version'], { encoding: 'utf8', stdio: 'pipe' }).status === 0;
 }
 
 function ensurePnpm(dryRun: boolean): void {

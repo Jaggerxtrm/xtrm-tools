@@ -1,27 +1,38 @@
-import { describe, expect, it } from 'vitest';
-import fs from 'node:fs';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import fs from 'fs-extra';
 import os from 'node:os';
 import path from 'node:path';
 import { syncManagedPiExtensions, diffPiExtensions, getInstalledPiPackages } from '../src/utils/pi-extensions.js';
 
+async function makeExtension(baseDir: string, name: string, extraFiles: Record<string, string> = {}): Promise<void> {
+    const extDir = path.join(baseDir, name);
+    await fs.ensureDir(extDir);
+    await fs.writeJson(path.join(extDir, 'package.json'), { name });
+    await fs.writeFile(path.join(extDir, 'index.ts'), `export const ${name.replace(/[^a-zA-Z0-9_]/g, '_')} = 1;`);
+
+    for (const [relativePath, content] of Object.entries(extraFiles)) {
+        const absPath = path.join(extDir, relativePath);
+        await fs.ensureDir(path.dirname(absPath));
+        await fs.writeFile(absPath, content);
+    }
+}
+
 describe('syncManagedPiExtensions', () => {
+    beforeEach(() => {
+        vi.resetModules();
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
     it('copies missing and stale extensions, skips up-to-date', async () => {
-        const srcRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'pi-ext-src-'));
-        const dstRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'pi-ext-dst-'));
+        const srcRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'pi-ext-src-'));
+        const dstRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'pi-ext-dst-'));
 
-        // Source extensions
-        fs.mkdirSync(path.join(srcRoot, 'ext-a'));
-        fs.writeFileSync(path.join(srcRoot, 'ext-a', 'package.json'), '{"name":"ext-a","version":"1.0.0"}');
-        fs.writeFileSync(path.join(srcRoot, 'ext-a', 'index.ts'), 'export default {};');
-
-        fs.mkdirSync(path.join(srcRoot, 'ext-b'));
-        fs.writeFileSync(path.join(srcRoot, 'ext-b', 'package.json'), '{"name":"ext-b","version":"1.0.0"}');
-        fs.writeFileSync(path.join(srcRoot, 'ext-b', 'index.ts'), 'export default {};');
-
-        // Destination: ext-a already exists with same content (up-to-date)
-        fs.mkdirSync(path.join(dstRoot, 'ext-a'));
-        fs.writeFileSync(path.join(dstRoot, 'ext-a', 'package.json'), '{"name":"ext-a","version":"1.0.0"}');
-        fs.writeFileSync(path.join(dstRoot, 'ext-a', 'index.ts'), 'export default {};');
+        await makeExtension(srcRoot, 'ext-a');
+        await makeExtension(srcRoot, 'ext-b');
+        await makeExtension(dstRoot, 'ext-a');
 
         const logs: string[] = [];
         const count = await syncManagedPiExtensions({
@@ -31,27 +42,19 @@ describe('syncManagedPiExtensions', () => {
         });
 
         expect(count).toBe(2);
-        // ext-a should not be re-copied (up-to-date)
-        // ext-b should be copied (missing)
         expect(logs.some((m) => m.includes('skipped 1 up-to-date'))).toBe(true);
-        expect(fs.existsSync(path.join(dstRoot, 'ext-b', 'index.ts'))).toBe(true);
+        expect(await fs.pathExists(path.join(dstRoot, 'ext-b', 'index.ts'))).toBe(true);
 
-        fs.rmSync(srcRoot, { recursive: true, force: true });
-        fs.rmSync(dstRoot, { recursive: true, force: true });
+        await fs.remove(srcRoot);
+        await fs.remove(dstRoot);
     });
 
     it('skips sync entirely when all extensions are up-to-date', async () => {
-        const srcRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'pi-ext-src-'));
-        const dstRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'pi-ext-dst-'));
+        const srcRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'pi-ext-src-'));
+        const dstRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'pi-ext-dst-'));
 
-        // Create identical extension in both source and dest
-        fs.mkdirSync(path.join(srcRoot, 'my-ext'));
-        fs.writeFileSync(path.join(srcRoot, 'my-ext', 'package.json'), '{"name":"my-ext"}');
-        fs.writeFileSync(path.join(srcRoot, 'my-ext', 'index.ts'), 'export const x = 1;');
-
-        fs.mkdirSync(path.join(dstRoot, 'my-ext'));
-        fs.writeFileSync(path.join(dstRoot, 'my-ext', 'package.json'), '{"name":"my-ext"}');
-        fs.writeFileSync(path.join(dstRoot, 'my-ext', 'index.ts'), 'export const x = 1;');
+        await makeExtension(srcRoot, 'my-ext');
+        await makeExtension(dstRoot, 'my-ext');
 
         const logs: string[] = [];
         const count = await syncManagedPiExtensions({
@@ -63,16 +66,15 @@ describe('syncManagedPiExtensions', () => {
         expect(count).toBe(1);
         expect(logs.some((m) => m.includes('All 1 extensions up-to-date, skipping sync'))).toBe(true);
 
-        fs.rmSync(srcRoot, { recursive: true, force: true });
-        fs.rmSync(dstRoot, { recursive: true, force: true });
+        await fs.remove(srcRoot);
+        await fs.remove(dstRoot);
     });
 
     it('supports dry-run without writing files', async () => {
-        const srcRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'pi-ext-src-'));
-        const dstRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'pi-ext-dst-'));
+        const srcRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'pi-ext-src-'));
+        const dstRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'pi-ext-dst-'));
 
-        fs.mkdirSync(path.join(srcRoot, 'quality-gates'));
-        fs.writeFileSync(path.join(srcRoot, 'quality-gates', 'package.json'), '{}');
+        await makeExtension(srcRoot, 'quality-gates');
 
         const logs: string[] = [];
         const count = await syncManagedPiExtensions({
@@ -83,11 +85,11 @@ describe('syncManagedPiExtensions', () => {
         });
 
         expect(count).toBe(1);
-        expect(fs.existsSync(path.join(dstRoot, 'quality-gates'))).toBe(false);
+        expect(await fs.pathExists(path.join(dstRoot, 'quality-gates'))).toBe(false);
         expect(logs.some((message) => message.includes('[DRY RUN]'))).toBe(true);
 
-        fs.rmSync(srcRoot, { recursive: true, force: true });
-        fs.rmSync(dstRoot, { recursive: true, force: true });
+        await fs.remove(srcRoot);
+        await fs.remove(dstRoot);
     });
 
     it('throws when source directory does not exist', async () => {
@@ -99,30 +101,24 @@ describe('syncManagedPiExtensions', () => {
 });
 
 describe('diffPiExtensions', () => {
+    beforeEach(() => {
+        vi.resetModules();
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
     it('detects missing, stale, and up-to-date extensions', async () => {
-        const srcRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'pi-diff-src-'));
-        const dstRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'pi-diff-dst-'));
+        const srcRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'pi-diff-src-'));
+        const dstRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'pi-diff-dst-'));
 
-        // Source: ext-a (will be stale), ext-b (will be missing), ext-c (up-to-date)
-        fs.mkdirSync(path.join(srcRoot, 'ext-a'));
-        fs.writeFileSync(path.join(srcRoot, 'ext-a', 'package.json'), '{"v":2}');
-        fs.writeFileSync(path.join(srcRoot, 'ext-a', 'index.ts'), 'export const a = 2;');
+        await makeExtension(srcRoot, 'ext-a', { 'package.json': '{"v":2}', 'index.ts': 'export const a = 2;' });
+        await makeExtension(srcRoot, 'ext-b');
+        await makeExtension(srcRoot, 'ext-c');
 
-        fs.mkdirSync(path.join(srcRoot, 'ext-b'));
-        fs.writeFileSync(path.join(srcRoot, 'ext-b', 'package.json'), '{}');
-
-        fs.mkdirSync(path.join(srcRoot, 'ext-c'));
-        fs.writeFileSync(path.join(srcRoot, 'ext-c', 'package.json'), '{}');
-        fs.writeFileSync(path.join(srcRoot, 'ext-c', 'index.ts'), 'export const c = 1;');
-
-        // Destination: ext-a with old content (stale), ext-c identical (up-to-date)
-        fs.mkdirSync(path.join(dstRoot, 'ext-a'));
-        fs.writeFileSync(path.join(dstRoot, 'ext-a', 'package.json'), '{"v":1}');
-        fs.writeFileSync(path.join(dstRoot, 'ext-a', 'index.ts'), 'export const a = 1;');
-
-        fs.mkdirSync(path.join(dstRoot, 'ext-c'));
-        fs.writeFileSync(path.join(dstRoot, 'ext-c', 'package.json'), '{}');
-        fs.writeFileSync(path.join(dstRoot, 'ext-c', 'index.ts'), 'export const c = 1;');
+        await makeExtension(dstRoot, 'ext-a', { 'package.json': '{"v":1}', 'index.ts': 'export const a = 1;' });
+        await makeExtension(dstRoot, 'ext-c');
 
         const diff = await diffPiExtensions(srcRoot, dstRoot);
 
@@ -130,15 +126,69 @@ describe('diffPiExtensions', () => {
         expect(diff.stale).toEqual(['ext-a']);
         expect(diff.upToDate).toEqual(['ext-c']);
 
-        fs.rmSync(srcRoot, { recursive: true, force: true });
-        fs.rmSync(dstRoot, { recursive: true, force: true });
+        await fs.remove(srcRoot);
+        await fs.remove(dstRoot);
+    });
+
+    it('detects nested-file drift inside an extension package', async () => {
+        const fresh = await import('../src/utils/pi-extensions.js?t=nested-' + Date.now());
+
+        const srcDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pi-ext-src-'));
+        const dstDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pi-ext-dst-'));
+
+        await makeExtension(srcDir, 'nested-ext', { 'lib/runtime/config.json': '{"enabled":true}' });
+        await makeExtension(dstDir, 'nested-ext', { 'lib/runtime/config.json': '{"enabled":false}' });
+
+        const diff = await fresh.diffPiExtensions(srcDir, dstDir);
+
+        expect(diff.stale).toContain('nested-ext');
+        expect(diff.missing).toEqual([]);
+        expect(diff.upToDate).toEqual([]);
+
+        await fs.remove(srcDir);
+        await fs.remove(dstDir);
     });
 });
 
 describe('getInstalledPiPackages', () => {
-    it('returns empty array if pi is not installed', async () => {
-        // This test will pass even if pi is installed, as it just checks the function runs
+    it('returns empty array if pi is not installed', () => {
         const packages = getInstalledPiPackages();
         expect(Array.isArray(packages)).toBe(true);
+    });
+
+    it('piPreCheck reports only missing Pi packages as needed', async () => {
+        vi.resetModules();
+        vi.doMock('node:child_process', () => ({
+            spawnSync: vi.fn(() => ({
+                status: 0,
+                stdout: [
+                    'User packages:',
+                    '  npm:pi-dex',
+                    '  npm:pi-gitnexus',
+                    'Project packages:',
+                    '',
+                ].join('\n'),
+            })),
+        }));
+
+        const { piPreCheck } = await import('../src/utils/pi-extensions.js?t=precheck-' + Date.now());
+
+        const srcDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pi-ext-src-'));
+        const dstDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pi-ext-dst-'));
+
+        await makeExtension(srcDir, 'managed-ext');
+        await makeExtension(dstDir, 'managed-ext');
+
+        const result = await piPreCheck(srcDir, dstDir, ['npm:pi-dex', 'npm:pi-foo']);
+
+        expect(result.extensions.upToDate).toEqual(['managed-ext']);
+        expect(result.extensions.missing).toEqual([]);
+        expect(result.extensions.stale).toEqual([]);
+        expect(result.packages.installed).toEqual(['npm:pi-dex', 'npm:pi-gitnexus']);
+        expect(result.packages.needed).toEqual(['npm:pi-foo']);
+
+        await fs.remove(srcDir);
+        await fs.remove(dstDir);
+        vi.restoreAllMocks();
     });
 });

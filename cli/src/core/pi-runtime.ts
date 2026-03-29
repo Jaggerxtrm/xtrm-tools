@@ -160,20 +160,11 @@ function getInstalledPiPackages(): string[] {
     const output = result.stdout;
     const packages: string[] = [];
 
-    let inUserPackages = false;
+    // Collect npm: packages from both User and Project sections
+    // Project-scoped installs go to .pi/npm/node_modules/
     for (const line of output.split('\n')) {
-        if (line.includes('User packages:')) {
-            inUserPackages = true;
-            continue;
-        }
-        if (line.includes('Project packages:')) {
-            inUserPackages = false;
-            continue;
-        }
-        if (inUserPackages) {
-            const match = line.match(/^\s+(npm:[\w\-/@]+)/);
-            if (match) packages.push(match[1]);
-        }
+        const match = line.match(/^\s+(npm:[\w\-/@]+)/);
+        if (match) packages.push(match[1]);
     }
 
     return packages.sort();

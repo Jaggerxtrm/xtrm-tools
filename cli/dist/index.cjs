@@ -34836,20 +34836,9 @@ function getInstalledPiPackages() {
   if (result.status !== 0) return [];
   const output = result.stdout;
   const packages = [];
-  let inUserPackages = false;
   for (const line of output.split("\n")) {
-    if (line.includes("User packages:")) {
-      inUserPackages = true;
-      continue;
-    }
-    if (line.includes("Project packages:")) {
-      inUserPackages = false;
-      continue;
-    }
-    if (inUserPackages) {
-      const match = line.match(/^\s+(npm:[\w\-/@]+)/);
-      if (match) packages.push(match[1]);
-    }
+    const match = line.match(/^\s+(npm:[\w\-/@]+)/);
+    if (match) packages.push(match[1]);
   }
   return packages.sort();
 }

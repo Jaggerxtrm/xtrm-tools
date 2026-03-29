@@ -79,7 +79,6 @@ export interface ManagedPackage {
 const MANAGED_PACKAGES: ManagedPackage[] = [
     { id: 'npm:pi-gitnexus', displayName: 'pi-gitnexus', required: true },
     { id: 'npm:pi-serena-tools', displayName: 'pi-serena-tools', required: true },
-    { id: 'npm:lsp-pi', displayName: 'lsp-pi', required: false },
     { id: 'npm:@zenobius/pi-worktrees', displayName: 'pi-worktrees', required: true },
     { id: 'npm:@robhowley/pi-structured-return', displayName: 'pi-structured-return', required: true },
     { id: 'npm:@aliou/pi-guardrails', displayName: 'pi-guardrails', required: false },

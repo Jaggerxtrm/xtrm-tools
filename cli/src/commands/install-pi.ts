@@ -8,6 +8,7 @@ import { homedir } from 'node:os';
 import { findRepoRoot } from '../utils/repo-root.js';
 import { t, sym } from '../utils/theme.js';
 import { syncManagedPiExtensions, diffPiExtensions, piPreCheck } from '../utils/pi-extensions.js';
+import { isPiInstalled } from '../core/machine-bootstrap.js';
 
 const PI_AGENT_DIR = process.env.PI_AGENT_DIR || path.join(homedir(), '.pi', 'agent');
 
@@ -47,11 +48,6 @@ export function readExistingPiValues(piAgentDir: string): Record<string, string>
     } catch { /* file doesn't exist or invalid */ }
     return values;
 }
-
-function isPiInstalled(): boolean {
-    return spawnSync('pi', ['--version'], { encoding: 'utf8' }).status === 0;
-}
-
 
 function printPiCheckSummary(diff: Awaited<ReturnType<typeof diffPiExtensions>>): void {
     const totalDiff = diff.missing.length + diff.stale.length;

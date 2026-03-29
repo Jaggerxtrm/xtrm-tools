@@ -6,6 +6,7 @@ import { spawnSync } from 'child_process';
 import prompts from 'prompts';
 import { installGitHooks as installServiceGitHooks } from './install-service-skills.js';
 import { runInstall, type InstallOpts } from './install.js';
+import { runClaudeRuntimeSyncPhase, renderClaudeRuntimePlanSummary } from '../core/claude-runtime-sync.js';
 import { inventoryDeps, renderBootstrapPlan, runMachineBootstrapPhase, type BootstrapPlan } from '../core/machine-bootstrap.js';
 import { getContext } from '../core/context.js';
 import { calculateDiff } from '../core/diff.js';
@@ -794,8 +795,7 @@ function renderInitPlan(inventory: InitInventory): void {
     // Machine bootstrap: delegates to the unified bootstrap plan renderer
     renderBootstrapPlan(bootstrapPlan);
 
-    console.log(kleur.bold('\n  Claude Runtime Sync'));
-    console.log(`${kleur.cyan('  ↻')}  xtrm-tools plugin + official plugins (serena/context7/github/ralph-loop)`);
+    renderClaudeRuntimePlanSummary();
 
     console.log(kleur.bold('\n  Pi Runtime Sync'));
     console.log(`${kleur.cyan('  ↻')}  extensions + packages`);
@@ -853,8 +853,8 @@ async function runProjectBootstrap(projectRoot: string): Promise<void> {
 //   2. Plan               — render a consolidated view of what will change
 //   3. Confirm            — single gate; all mutations happen only after this
 //   4. Machine Bootstrap  — install missing system tools (beads/dolt, bv, deepwiki)
-//   5. Claude Runtime     — xtrm-tools plugin + official plugins + skills sync
-//   6. Pi Runtime         — extensions + packages (delegated to runInstall)
+//   5. Claude Runtime     — xtrm-tools plugin + official plugins + cleanup + verification
+//   6. Pi Runtime         — extensions + packages + skills sync (delegated to runInstall)
 //   7. Project Bootstrap  — bd init, gitnexus index, CLAUDE.md/AGENTS.md headers
 //   8. Summary            — brief completion message
 
@@ -895,11 +895,13 @@ export async function runProjectInit(opts: InstallOpts = {}): Promise<void> {
     // depend on. Uses the pre-computed plan from Phase 1 inventory.
     await runMachineBootstrapPhase({ dryRun: false });
 
-    // ── Phase 5: Claude Runtime Sync + Phase 6: Pi Runtime Sync ─────────────
-    // Installs xtrm-tools plugin, official Claude plugins, Pi extensions,
-    // and syncs agent skills to .agents/skills.
+    // ── Phase 5: Claude Runtime Sync ─────────────────────────────────────────
+    await runClaudeRuntimeSyncPhase({ repoRoot: projectRoot, dryRun: false, isGlobal: false });
+
+    // ── Phase 6: Pi Runtime Sync + Skills Sync ───────────────────────────────
     // skipMachineBootstrap=true: machine deps already handled in Phase 4.
-    await runInstall({ ...opts, yes: true, backport: false, skipMachineBootstrap: true });
+    // skipClaudeRuntimeSync=true: Claude runtime is now its own explicit phase.
+    await runInstall({ ...opts, yes: true, backport: false, skipMachineBootstrap: true, skipClaudeRuntimeSync: true });
 
     // ── Phase 7: Project Bootstrap ───────────────────────────────────────────
     // Initialize beads workspace, inject CLAUDE.md/AGENTS.md instruction

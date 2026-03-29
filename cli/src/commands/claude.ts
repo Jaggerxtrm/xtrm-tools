@@ -1,11 +1,9 @@
 import { Command } from 'commander';
 import kleur from 'kleur';
 import { execSync, spawnSync } from 'node:child_process';
-import path from 'node:path';
-import fs from 'fs-extra';
 import { findRepoRoot } from '../utils/repo-root.js';
 import { t } from '../utils/theme.js';
-import { installPlugin } from './install.js';
+import { runClaudeRuntimeSyncPhase } from '../core/claude-runtime-sync.js';
 import { launchWorktreeSession } from '../utils/worktree-session.js';
 import { inventoryDeps, renderBootstrapPlan } from '../core/machine-bootstrap.js';
 
@@ -22,7 +20,7 @@ export function createClaudeCommand(): Command {
         .option('--dry-run', 'Preview without making changes', false)
         .action(async (opts) => {
             const repoRoot = await findRepoRoot();
-            await installPlugin(repoRoot, opts.dryRun);
+            await runClaudeRuntimeSyncPhase({ repoRoot, dryRun: opts.dryRun, isGlobal: false });
         });
 
     cmd.command('reload')
@@ -30,7 +28,7 @@ export function createClaudeCommand(): Command {
         .description('Reinstall Claude plugin from live repo (refreshes cached copy)')
         .action(async () => {
             const repoRoot = await findRepoRoot();
-            await installPlugin(repoRoot, false);
+            await runClaudeRuntimeSyncPhase({ repoRoot, dryRun: false, isGlobal: false });
         });
 
     cmd.command('status')

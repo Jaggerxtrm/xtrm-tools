@@ -35518,12 +35518,13 @@ function createPiCommand() {
 // src/commands/init.ts
 var import_path17 = __toESM(require("path"), 1);
 var import_fs_extra15 = __toESM(require_lib(), 1);
-var import_child_process6 = require("child_process");
+var import_child_process7 = require("child_process");
 var import_prompts3 = __toESM(require_prompts3(), 1);
 
 // src/commands/install-service-skills.ts
 var import_path7 = __toESM(require("path"), 1);
 var import_fs_extra7 = __toESM(require_lib(), 1);
+var import_child_process4 = require("child_process");
 function resolvePkgRoot3() {
   const candidates = [
     import_path7.default.resolve(__dirname, "../.."),
@@ -35537,6 +35538,90 @@ function resolvePkgRoot3() {
 }
 var PKG_ROOT = resolvePkgRoot3();
 var SKILLS_SRC = import_path7.default.join(PKG_ROOT, "project-skills", "service-skills-set", ".claude");
+var MARKER_DOC = "# [jaggers] doc-reminder";
+var MARKER_STALENESS = "# [jaggers] skill-staleness";
+var MARKER_CHAIN = "# [jaggers] chain-githooks";
+async function installGitHooks(projectRoot, skillsSrc = SKILLS_SRC) {
+  const gitHooksSrc = import_path7.default.join(skillsSrc, "git-hooks");
+  const gitHooksDest = import_path7.default.join(projectRoot, ".claude", "git-hooks");
+  await import_fs_extra7.default.copy(gitHooksSrc, gitHooksDest, { overwrite: true });
+  const docScript = import_path7.default.join(projectRoot, ".claude", "git-hooks", "doc_reminder.py");
+  const stalenessScript = import_path7.default.join(projectRoot, ".claude", "git-hooks", "skill_staleness.py");
+  const preCommit = import_path7.default.join(projectRoot, ".githooks", "pre-commit");
+  const prePush = import_path7.default.join(projectRoot, ".githooks", "pre-push");
+  for (const hookPath of [preCommit, prePush]) {
+    if (!await import_fs_extra7.default.pathExists(hookPath)) {
+      await import_fs_extra7.default.mkdirp(import_path7.default.dirname(hookPath));
+      await import_fs_extra7.default.writeFile(hookPath, "#!/usr/bin/env bash\n", { mode: 493 });
+    }
+  }
+  const snippets = [
+    [
+      preCommit,
+      MARKER_DOC,
+      `
+${MARKER_DOC}
+if command -v python3 &>/dev/null && [ -f "${docScript}" ]; then
+    python3 "${docScript}" || true
+fi
+`
+    ],
+    [
+      prePush,
+      MARKER_STALENESS,
+      `
+${MARKER_STALENESS}
+if command -v python3 &>/dev/null && [ -f "${stalenessScript}" ]; then
+    python3 "${stalenessScript}" || true
+fi
+`
+    ]
+  ];
+  const hookFiles = [];
+  for (const [hookPath, marker, snippet] of snippets) {
+    const content = await import_fs_extra7.default.readFile(hookPath, "utf8");
+    const name = import_path7.default.basename(hookPath);
+    if (!content.includes(marker)) {
+      await import_fs_extra7.default.writeFile(hookPath, content + snippet);
+      hookFiles.push({ name, status: "added" });
+    } else {
+      hookFiles.push({ name, status: "already-present" });
+    }
+  }
+  const hooksPathResult = (0, import_child_process4.spawnSync)("git", ["config", "--get", "core.hooksPath"], {
+    cwd: projectRoot,
+    encoding: "utf8",
+    timeout: 5e3
+  });
+  const configuredHooksPath = hooksPathResult.status === 0 ? hooksPathResult.stdout.trim() : "";
+  const activeHooksDir = configuredHooksPath ? import_path7.default.isAbsolute(configuredHooksPath) ? configuredHooksPath : import_path7.default.join(projectRoot, configuredHooksPath) : import_path7.default.join(projectRoot, ".git", "hooks");
+  const activationTargets = /* @__PURE__ */ new Set([import_path7.default.join(projectRoot, ".git", "hooks"), activeHooksDir]);
+  for (const hooksDir of activationTargets) {
+    await import_fs_extra7.default.mkdirp(hooksDir);
+    for (const [name, sourceHook] of [["pre-commit", preCommit], ["pre-push", prePush]]) {
+      const targetHook = import_path7.default.join(hooksDir, name);
+      if (!await import_fs_extra7.default.pathExists(targetHook)) {
+        await import_fs_extra7.default.writeFile(targetHook, "#!/usr/bin/env bash\n", { mode: 493 });
+      } else {
+        await import_fs_extra7.default.chmod(targetHook, 493);
+      }
+      if (import_path7.default.resolve(targetHook) === import_path7.default.resolve(sourceHook)) {
+        continue;
+      }
+      const chainSnippet = `
+${MARKER_CHAIN}
+if [ -x "${sourceHook}" ]; then
+    "${sourceHook}" "$@"
+fi
+`;
+      const targetContent = await import_fs_extra7.default.readFile(targetHook, "utf8");
+      if (!targetContent.includes(MARKER_CHAIN)) {
+        await import_fs_extra7.default.writeFile(targetHook, targetContent + chainSnippet);
+      }
+    }
+  }
+  return { hookFiles };
+}
 
 // src/commands/install.ts
 var import_prompts2 = __toESM(require_prompts3(), 1);
@@ -39198,7 +39283,7 @@ var ConfigAdapter = class {
 };
 
 // src/utils/sync-mcp-cli.ts
-var import_child_process4 = require("child_process");
+var import_child_process5 = require("child_process");
 var import_util2 = require("util");
 
 // src/utils/env-manager.ts
@@ -39210,7 +39295,7 @@ var ENV_FILE = import_path13.default.join(CONFIG_DIR, ".env");
 var ENV_EXAMPLE_FILE = import_path13.default.join(CONFIG_DIR, ".env.example");
 
 // src/utils/sync-mcp-cli.ts
-var execAsync = (0, import_util2.promisify)(import_child_process4.exec);
+var execAsync = (0, import_util2.promisify)(import_child_process5.exec);
 
 // src/core/rollback.ts
 var import_fs_extra12 = __toESM(require_lib(), 1);
@@ -39682,7 +39767,7 @@ async function runInstall(opts = {}) {
 }
 
 // src/core/init-verification.ts
-var import_child_process5 = require("child_process");
+var import_child_process6 = require("child_process");
 var import_fs_extra14 = __toESM(require_lib(), 1);
 var import_path16 = __toESM(require("path"), 1);
 function verifyMachineBootstrap() {
@@ -39695,7 +39780,7 @@ function verifyClaudeRuntime() {
     "github@claude-plugins-official",
     "ralph-loop@claude-plugins-official"
   ];
-  const result = (0, import_child_process5.spawnSync)("claude", ["plugin", "list"], { encoding: "utf8", stdio: "pipe" });
+  const result = (0, import_child_process6.spawnSync)("claude", ["plugin", "list"], { encoding: "utf8", stdio: "pipe" });
   const output = result.stdout ?? "";
   const xtrmToolsPlugin = output.includes("xtrm-tools@xtrm-tools") || output.includes("xtrm-tools");
   const officialPlugins = [];
@@ -39729,7 +39814,7 @@ async function verifyPiRuntime(projectRoot) {
 }
 function verifyProjectBootstrap(projectRoot) {
   const beadsInitialized = import_fs_extra14.default.pathExistsSync(import_path16.default.join(projectRoot, ".beads"));
-  const gnStatus = (0, import_child_process5.spawnSync)("gitnexus", ["status"], { cwd: projectRoot, encoding: "utf8", timeout: 5e3 });
+  const gnStatus = (0, import_child_process6.spawnSync)("gitnexus", ["status"], { cwd: projectRoot, encoding: "utf8", timeout: 5e3 });
   const gnText = `${gnStatus.stdout ?? ""}
 ${gnStatus.stderr ?? ""}`.toLowerCase();
   const gitnexusIndexed = gnStatus.status === 0 && !gnText.includes("stale") && !gnText.includes("not indexed") && !gnText.includes("missing");
@@ -39942,6 +40027,323 @@ async function injectProjectInstructionHeaders(projectRoot) {
     console.log(`${kleur_default.green("  \u2713")} updated ${target.output}`);
   }
 }
+async function getAvailableProjectSkills() {
+  if (!await import_fs_extra15.default.pathExists(PROJECT_SKILLS_DIR)) {
+    return [];
+  }
+  const entries = await import_fs_extra15.default.readdir(PROJECT_SKILLS_DIR);
+  const skills = [];
+  for (const entry of entries) {
+    const entryPath = import_path17.default.join(PROJECT_SKILLS_DIR, entry);
+    const stat = await import_fs_extra15.default.stat(entryPath);
+    if (stat.isDirectory() && await import_fs_extra15.default.pathExists(import_path17.default.join(entryPath, ".claude"))) {
+      skills.push(entry);
+    }
+  }
+  return skills.sort();
+}
+function getScriptFilename(hook) {
+  const cmd = hook.command || hook.hooks?.[0]?.command || "";
+  if (typeof cmd !== "string") return null;
+  const m = cmd.match(/\/hooks\/([A-Za-z0-9_/-]+\.(?:py|cjs|mjs|js))/);
+  if (m) return m[1];
+  const m2 = cmd.match(/([A-Za-z0-9_-]+\.(?:py|cjs|mjs|js))(?!.*[A-Za-z0-9._-]+\.(?:py|cjs|mjs|js))/);
+  return m2?.[1] ?? null;
+}
+function pruneStaleHooks(existing, canonical) {
+  const result = { ...existing };
+  const removed = [];
+  if (!result.hooks || typeof result.hooks !== "object") {
+    return { result, removed };
+  }
+  if (!canonical.hooks || typeof canonical.hooks !== "object") {
+    return { result, removed };
+  }
+  const canonicalScripts = /* @__PURE__ */ new Set();
+  const canonicalBasenames = /* @__PURE__ */ new Set();
+  for (const hooks of Object.values(canonical.hooks)) {
+    const hookList = Array.isArray(hooks) ? hooks : [hooks];
+    for (const wrapper of hookList) {
+      const innerHooks = wrapper.hooks || [wrapper];
+      for (const hook of innerHooks) {
+        const script = getScriptFilename(hook);
+        if (!script) continue;
+        canonicalScripts.add(script);
+        canonicalBasenames.add(import_path17.default.basename(script));
+      }
+    }
+  }
+  for (const [event, hooks] of Object.entries(result.hooks)) {
+    if (!Array.isArray(hooks)) continue;
+    const prunedWrappers = [];
+    for (const wrapper of hooks) {
+      const innerHooks = wrapper.hooks || [wrapper];
+      const keptInner = [];
+      for (const hook of innerHooks) {
+        const script = getScriptFilename(hook);
+        if (!script) {
+          keptInner.push(hook);
+          continue;
+        }
+        if (canonicalScripts.has(script)) {
+          keptInner.push(hook);
+          continue;
+        }
+        const sameSkillFamily = canonicalBasenames.has(import_path17.default.basename(script));
+        if (sameSkillFamily) {
+          removed.push(`${event}:${script}`);
+          continue;
+        }
+        keptInner.push(hook);
+      }
+      if (keptInner.length > 0) {
+        if (wrapper.hooks) {
+          prunedWrappers.push({ ...wrapper, hooks: keptInner });
+        } else if (keptInner.length === 1) {
+          prunedWrappers.push(keptInner[0]);
+        } else {
+          prunedWrappers.push({ ...wrapper, hooks: keptInner });
+        }
+      }
+    }
+    if (prunedWrappers.length > 0) {
+      result.hooks[event] = prunedWrappers;
+    } else {
+      delete result.hooks[event];
+    }
+  }
+  return { result, removed };
+}
+function deepMergeHooks(existing, incoming) {
+  const result = { ...existing };
+  if (!result.hooks) result.hooks = {};
+  if (!incoming.hooks) return result;
+  for (const [event, incomingHooks] of Object.entries(incoming.hooks)) {
+    if (!result.hooks[event]) {
+      result.hooks[event] = incomingHooks;
+    } else {
+      const existingEventHooks = Array.isArray(result.hooks[event]) ? result.hooks[event] : [result.hooks[event]];
+      const incomingEventHooks = Array.isArray(incomingHooks) ? incomingHooks : [incomingHooks];
+      const getCommand = (h) => h.command || h.hooks?.[0]?.command;
+      const getCommandKey = (cmd) => {
+        if (!cmd || typeof cmd !== "string") return null;
+        const m = cmd.match(/([A-Za-z0-9._-]+\.(?:py|cjs|mjs|js))(?!.*[A-Za-z0-9._-]+\.(?:py|cjs|mjs|js))/);
+        return m?.[1] ?? null;
+      };
+      const mergeMatcher2 = (existingMatcher, incomingMatcher) => {
+        const existingParts = existingMatcher.split("|").map((s) => s.trim()).filter(Boolean);
+        const incomingParts = incomingMatcher.split("|").map((s) => s.trim()).filter(Boolean);
+        const merged = [...existingParts];
+        for (const part of incomingParts) {
+          if (!merged.includes(part)) merged.push(part);
+        }
+        return merged.join("|");
+      };
+      const mergedEventHooks = [...existingEventHooks];
+      for (const incomingHook of incomingEventHooks) {
+        const incomingCmd = getCommand(incomingHook);
+        if (!incomingCmd) {
+          mergedEventHooks.push(incomingHook);
+          continue;
+        }
+        const incomingKey = getCommandKey(incomingCmd);
+        const existingIndex = mergedEventHooks.findIndex((h) => {
+          const existingCmd = getCommand(h);
+          if (existingCmd === incomingCmd) return true;
+          if (!incomingKey) return false;
+          return getCommandKey(existingCmd) === incomingKey;
+        });
+        if (existingIndex === -1) {
+          mergedEventHooks.push(incomingHook);
+          continue;
+        }
+        const existingHook = mergedEventHooks[existingIndex];
+        if (typeof existingHook.matcher === "string" && typeof incomingHook.matcher === "string") {
+          existingHook.matcher = mergeMatcher2(existingHook.matcher, incomingHook.matcher);
+        }
+      }
+      result.hooks[event] = mergedEventHooks;
+    }
+  }
+  return result;
+}
+function extractReadmeDescription(readmeContent) {
+  const lines = readmeContent.split("\n");
+  const headingIndex = lines.findIndex((line) => line.trim().startsWith("# "));
+  const searchStart = headingIndex >= 0 ? headingIndex + 1 : 0;
+  for (const rawLine of lines.slice(searchStart)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith("#") || line.startsWith("[![") || line.startsWith("<")) {
+      continue;
+    }
+    return line.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1").replace(/[*_`]/g, "").trim();
+  }
+  return "No description available";
+}
+async function installProjectSkill(toolName, projectRootOverride) {
+  const skillPath = import_path17.default.join(PROJECT_SKILLS_DIR, toolName);
+  if (!await import_fs_extra15.default.pathExists(skillPath)) {
+    console.error(kleur_default.red(`
+\u2717 Project skill '${toolName}' not found.
+`));
+    console.error(kleur_default.dim(`  Available project skills:
+`));
+    await listProjectSkills();
+    process.exit(1);
+  }
+  const projectRoot = projectRootOverride ?? getProjectRoot();
+  const claudeDir = import_path17.default.join(projectRoot, ".claude");
+  console.log(kleur_default.dim(`
+  Installing project skill: ${kleur_default.cyan(toolName)}`));
+  console.log(kleur_default.dim(`  Target: ${projectRoot}
+`));
+  const skillClaudeDir = import_path17.default.join(skillPath, ".claude");
+  const skillSettingsPath = import_path17.default.join(skillClaudeDir, "settings.json");
+  const skillSkillsDir = import_path17.default.join(skillClaudeDir, "skills");
+  const skillReadmePath = import_path17.default.join(skillPath, "README.md");
+  if (await import_fs_extra15.default.pathExists(skillSettingsPath)) {
+    console.log(kleur_default.bold("\u2500\u2500 Installing Hooks \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
+    const targetSettingsPath = import_path17.default.join(claudeDir, "settings.json");
+    await import_fs_extra15.default.mkdirp(import_path17.default.dirname(targetSettingsPath));
+    let existingSettings = {};
+    if (await import_fs_extra15.default.pathExists(targetSettingsPath)) {
+      try {
+        existingSettings = JSON.parse(await import_fs_extra15.default.readFile(targetSettingsPath, "utf8"));
+      } catch {
+      }
+    }
+    const incomingSettings = JSON.parse(await import_fs_extra15.default.readFile(skillSettingsPath, "utf8"));
+    const { result: prunedSettings, removed } = pruneStaleHooks(existingSettings, incomingSettings);
+    if (removed.length > 0) {
+      console.log(kleur_default.yellow(`  \u21B3 Pruned ${removed.length} stale hook(s): ${removed.join(", ")}`));
+    }
+    const mergedSettings = deepMergeHooks(prunedSettings, incomingSettings);
+    await import_fs_extra15.default.writeFile(targetSettingsPath, JSON.stringify(mergedSettings, null, 2) + "\n");
+    console.log(`${kleur_default.green("  \u2713")} settings.json (hooks merged)`);
+  }
+  if (await import_fs_extra15.default.pathExists(skillSkillsDir)) {
+    console.log(kleur_default.bold("\n\u2500\u2500 Installing Skills \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
+    const targetSkillsDir = import_path17.default.join(claudeDir, "skills");
+    const skillEntries = await import_fs_extra15.default.readdir(skillSkillsDir);
+    for (const entry of skillEntries) {
+      const src = import_path17.default.join(skillSkillsDir, entry);
+      const dest = import_path17.default.join(targetSkillsDir, entry);
+      await import_fs_extra15.default.copy(src, dest, {
+        filter: (src2) => !src2.includes(".Zone.Identifier") && !src2.includes("__pycache__") && !src2.includes(".pytest_cache") && !src2.endsWith(".pyc")
+      });
+      console.log(`${kleur_default.green("  \u2713")} .claude/skills/${entry}/`);
+    }
+  }
+  if (await import_fs_extra15.default.pathExists(skillClaudeDir)) {
+    const claudeEntries = await import_fs_extra15.default.readdir(skillClaudeDir);
+    for (const entry of claudeEntries) {
+      if (entry === "settings.json" || entry === "skills") {
+        continue;
+      }
+      const src = import_path17.default.join(skillClaudeDir, entry);
+      const dest = import_path17.default.join(claudeDir, entry);
+      await import_fs_extra15.default.copy(src, dest, {
+        filter: (src2) => !src2.includes(".Zone.Identifier") && !src2.includes("__pycache__") && !src2.includes(".pytest_cache") && !src2.endsWith(".pyc")
+      });
+      console.log(`${kleur_default.green("  \u2713")} .claude/${entry}/`);
+    }
+  }
+  const claudeSkillsDir = import_path17.default.join(claudeDir, "skills");
+  if (await import_fs_extra15.default.pathExists(claudeSkillsDir)) {
+    const agentsDir = import_path17.default.join(projectRoot, ".agents");
+    const agentsSkillsLink = import_path17.default.join(agentsDir, "skills");
+    const symlinkTarget = import_path17.default.join("..", ".claude", "skills");
+    let needsSymlink = true;
+    if (await import_fs_extra15.default.pathExists(agentsSkillsLink)) {
+      try {
+        const stat = await import_fs_extra15.default.lstat(agentsSkillsLink);
+        if (stat.isSymbolicLink()) {
+          const current = await import_fs_extra15.default.readlink(agentsSkillsLink);
+          if (current === symlinkTarget) {
+            needsSymlink = false;
+          } else {
+            await import_fs_extra15.default.remove(agentsSkillsLink);
+          }
+        } else {
+          console.log(kleur_default.yellow("  \u26A0 .agents/skills/ is a real directory \u2014 skipping Pi symlink"));
+          needsSymlink = false;
+        }
+      } catch {
+        needsSymlink = true;
+      }
+    }
+    if (needsSymlink) {
+      await import_fs_extra15.default.mkdirp(agentsDir);
+      await import_fs_extra15.default.symlink(symlinkTarget, agentsSkillsLink);
+      console.log(`${kleur_default.green("  \u2713")} .agents/skills \u2192 ../.claude/skills`);
+    } else {
+      console.log(kleur_default.dim("  \u2713 .agents/skills symlink already in place"));
+    }
+  }
+  if (await import_fs_extra15.default.pathExists(skillReadmePath)) {
+    console.log(kleur_default.bold("\n\u2500\u2500 Installing Documentation \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
+    const docsDir = import_path17.default.join(claudeDir, "docs");
+    await import_fs_extra15.default.mkdirp(docsDir);
+    const destReadme = import_path17.default.join(docsDir, `${toolName}-readme.md`);
+    await import_fs_extra15.default.copy(skillReadmePath, destReadme);
+    console.log(`${kleur_default.green("  \u2713")} .claude/docs/${toolName}-readme.md`);
+  }
+  if (toolName === "service-skills-set") {
+    console.log(kleur_default.bold("\n\u2500\u2500 Installing Git Hooks \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
+    await installGitHooks(projectRoot, skillClaudeDir);
+    console.log(`${kleur_default.green("  \u2713")} .githooks/pre-commit`);
+    console.log(`${kleur_default.green("  \u2713")} .githooks/pre-push`);
+    console.log(`${kleur_default.green("  \u2713")} activated in .git/hooks/`);
+  }
+  console.log(kleur_default.bold("\n\u2500\u2500 Post-Install Steps \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
+  console.log(kleur_default.yellow("\n  \u26A0 IMPORTANT: Manual setup required!\n"));
+  console.log(kleur_default.white(`  ${toolName} requires additional configuration.`));
+  console.log(kleur_default.white(`  Please read: ${kleur_default.cyan(".claude/docs/" + toolName + "-readme.md")}
+`));
+  if (toolName === "tdd-guard") {
+    const tddGuardCheck = (0, import_child_process7.spawnSync)("tdd-guard", ["--version"], { stdio: "pipe" });
+    if (tddGuardCheck.status !== 0) {
+      console.log(kleur_default.red("  \u2717 tdd-guard CLI not found globally!\n"));
+      console.log(kleur_default.white("  Install the global CLI:"));
+      console.log(kleur_default.cyan("    npm install -g tdd-guard\n"));
+    } else {
+      console.log(kleur_default.green("  \u2713 tdd-guard CLI found globally"));
+    }
+    console.log(kleur_default.white("\n  Install a test reporter (choose one):"));
+    console.log(kleur_default.dim("    npm install --save-dev tdd-guard-vitest    # Vitest"));
+    console.log(kleur_default.dim("    npm install --save-dev tdd-guard-jest      # Jest"));
+    console.log(kleur_default.dim("    pip install tdd-guard-pytest               # pytest\n"));
+  }
+  if (toolName === "quality-gates") {
+    console.log(kleur_default.white("  Install language dependencies:\n"));
+    console.log(kleur_default.white("  TypeScript:"));
+    console.log(kleur_default.dim("    npm install --save-dev typescript eslint prettier"));
+    console.log(kleur_default.white("\n  Python:"));
+    console.log(kleur_default.dim("    pip install ruff mypy"));
+    console.log(kleur_default.white("\n  For TDD (test-first) enforcement, install separately:"));
+    console.log(kleur_default.dim("    npm install -g tdd-guard"));
+    console.log(kleur_default.dim("    xtrm install project tdd-guard\n"));
+  }
+  console.log(kleur_default.green("  \u2713 Installation complete!\n"));
+}
+async function installAllProjectSkills(projectRootOverride) {
+  const skills = await getAvailableProjectSkills();
+  if (skills.length === 0) {
+    console.log(kleur_default.dim("  No project skills available.\n"));
+    return;
+  }
+  const projectRoot = projectRootOverride ?? getProjectRoot();
+  console.log(kleur_default.bold(`
+Installing ${skills.length} project skills:
+`));
+  for (const skill of skills) {
+    console.log(kleur_default.dim(`  \u2022 ${skill}`));
+  }
+  console.log("");
+  for (const skill of skills) {
+    await installProjectSkill(skill, projectRoot);
+  }
+}
 async function runPreflight(projectRoot, opts) {
   const repoRoot = await findRepoRoot().catch(() => projectRoot);
   const bootstrapPlan = inventoryDeps();
@@ -39966,7 +40368,7 @@ async function runPreflight(projectRoot, opts) {
   } catch {
   }
   const needsBdInit = !await import_fs_extra15.default.pathExists(import_path17.default.join(projectRoot, ".beads"));
-  const gitnexusStatus = (0, import_child_process6.spawnSync)("gitnexus", ["status"], {
+  const gitnexusStatus = (0, import_child_process7.spawnSync)("gitnexus", ["status"], {
     cwd: projectRoot,
     encoding: "utf8",
     timeout: 5e3
@@ -39999,7 +40401,8 @@ function renderInitPlan(inventory) {
   const projActions = [
     needsBdInit ? "bd init \u2014 initialize beads workspace" : null,
     needsGitNexus ? "gitnexus analyze \u2014 build code index" : null,
-    "AGENTS.md + CLAUDE.md \u2014 workflow headers"
+    "AGENTS.md + CLAUDE.md \u2014 workflow headers",
+    "project-skills \u2014 service-skills-set, quality-gates"
   ].filter(Boolean);
   for (const action of projActions) {
     console.log(`${kleur_default.cyan("  \u2022")}  ${action}`);
@@ -40025,6 +40428,7 @@ async function runProjectBootstrap(projectRoot) {
   await runBdInitForProject(projectRoot);
   await injectProjectInstructionHeaders(projectRoot);
   await runGitNexusInitForProject(projectRoot);
+  await installAllProjectSkills(projectRoot);
 }
 async function runProjectInit(opts = {}) {
   const { dryRun = false, yes = false } = opts;
@@ -40073,7 +40477,7 @@ async function runProjectInit(opts = {}) {
 }
 async function runBdInitForProject(projectRoot) {
   console.log(kleur_default.bold("Running beads initialization (bd init)..."));
-  const result = (0, import_child_process6.spawnSync)("bd", ["init"], {
+  const result = (0, import_child_process7.spawnSync)("bd", ["init"], {
     cwd: projectRoot,
     encoding: "utf8",
     timeout: 15e3
@@ -40098,7 +40502,7 @@ ${result.stderr || ""}`.toLowerCase();
   if (result.stderr) process.stderr.write(result.stderr);
 }
 async function runGitNexusInitForProject(projectRoot) {
-  const gitnexusCheck = (0, import_child_process6.spawnSync)("gitnexus", ["--version"], {
+  const gitnexusCheck = (0, import_child_process7.spawnSync)("gitnexus", ["--version"], {
     cwd: projectRoot,
     encoding: "utf8",
     timeout: 5e3
@@ -40109,7 +40513,7 @@ async function runGitNexusInitForProject(projectRoot) {
     return;
   }
   console.log(kleur_default.bold("Checking GitNexus index status..."));
-  const status = (0, import_child_process6.spawnSync)("gitnexus", ["status"], {
+  const status = (0, import_child_process7.spawnSync)("gitnexus", ["status"], {
     cwd: projectRoot,
     encoding: "utf8",
     timeout: 1e4
@@ -40122,7 +40526,7 @@ ${status.stderr || ""}`.toLowerCase();
     return;
   }
   console.log(kleur_default.bold("Running GitNexus indexing (gitnexus analyze)..."));
-  const analyze = (0, import_child_process6.spawnSync)("gitnexus", ["analyze"], {
+  const analyze = (0, import_child_process7.spawnSync)("gitnexus", ["analyze"], {
     cwd: projectRoot,
     encoding: "utf8",
     timeout: 12e4
@@ -40135,8 +40539,46 @@ ${status.stderr || ""}`.toLowerCase();
   if (analyze.stderr) process.stderr.write(analyze.stderr);
   console.log(kleur_default.yellow(`  \u26A0 gitnexus analyze exited with code ${analyze.status}`));
 }
+async function listProjectSkills() {
+  const entries = await getAvailableProjectSkills();
+  if (entries.length === 0) {
+    console.log(kleur_default.dim("  No project skills available.\n"));
+    return;
+  }
+  const skills = [];
+  for (const entry of entries) {
+    const readmePath = import_path17.default.join(PROJECT_SKILLS_DIR, entry, "README.md");
+    let description = "No description available";
+    if (await import_fs_extra15.default.pathExists(readmePath)) {
+      const readmeContent = await import_fs_extra15.default.readFile(readmePath, "utf8");
+      description = extractReadmeDescription(readmeContent).slice(0, 80);
+    }
+    skills.push({ name: entry, description });
+  }
+  if (skills.length === 0) {
+    console.log(kleur_default.dim("  No project skills available.\n"));
+    return;
+  }
+  console.log(kleur_default.bold("\nAvailable Project Skills:\n"));
+  const Table = require_cli_table3();
+  const table = new Table({
+    head: [kleur_default.cyan("Skill"), kleur_default.cyan("Description")],
+    colWidths: [25, 60],
+    style: { head: [], border: [] }
+  });
+  for (const skill of skills) {
+    table.push([kleur_default.white(skill.name), kleur_default.dim(skill.description)]);
+  }
+  console.log(table.toString());
+  console.log(kleur_default.bold("\n\nUsage (legacy):\n"));
+  console.log(kleur_default.dim("  xtrm install project <skill-name>   Install a legacy project skill"));
+  console.log(kleur_default.dim("  xtrm install project all            Install all legacy project skills"));
+  console.log(kleur_default.dim("  xtrm install project list           List available legacy skills\n"));
+  console.log(kleur_default.bold("Preferred:\n"));
+  console.log(kleur_default.dim("  xtrm init                           Bootstrap project data for global hooks/skills\n"));
+}
 function getProjectRoot() {
-  const result = (0, import_child_process6.spawnSync)("git", ["rev-parse", "--show-toplevel"], {
+  const result = (0, import_child_process7.spawnSync)("git", ["rev-parse", "--show-toplevel"], {
     encoding: "utf8",
     timeout: 5e3
   });

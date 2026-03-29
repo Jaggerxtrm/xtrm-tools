@@ -742,18 +742,20 @@ interface InitInventory {
 // Reads system state without making any changes. Produces the plan data.
 
 async function runPreflight(projectRoot: string, opts: InstallOpts): Promise<InitInventory> {
+    // Source repo for skills/hooks (bundled in npm package or git repo)
     const repoRoot = await findRepoRoot().catch(() => projectRoot);
 
     // Machine tool availability via unified bootstrap module (read-only)
     const bootstrapPlan = inventoryDeps();
 
     // Skills diff (read-only — no files written)
+    // Note: repoRoot is the SOURCE (skills/ dir), target is derived from projectRoot
     let skillsChanges = 0;
     try {
         const ctx = await getContext({
             createMissingDirs: false,
             isGlobal: opts.global,
-            projectRoot: repoRoot,
+            projectRoot,  // Target project, not source repo
         });
         for (const target of ctx.targets) {
             try {
@@ -821,6 +823,7 @@ function renderInitPlan(inventory: InitInventory): void {
         needsBdInit ? 'bd init — initialize beads workspace' : null,
         needsGitNexus ? 'gitnexus analyze — build code index' : null,
         'AGENTS.md + CLAUDE.md — workflow headers',
+        'project-skills — service-skills-set, quality-gates',
     ].filter(Boolean) as string[];
     for (const action of projActions) {
         console.log(`${kleur.cyan('  •')}  ${action}`);
@@ -852,12 +855,13 @@ async function confirmInitPlan(): Promise<boolean> {
 
 // ── Phase 7: Project Bootstrap ────────────────────────────────────────────────
 // Initializes project-level tooling: beads workspace, GitNexus index,
-// and CLAUDE.md / AGENTS.md instruction headers.
+// CLAUDE.md / AGENTS.md instruction headers, and project-skills.
 
 async function runProjectBootstrap(projectRoot: string): Promise<void> {
     await runBdInitForProject(projectRoot);
     await injectProjectInstructionHeaders(projectRoot);
     await runGitNexusInitForProject(projectRoot);
+    await installAllProjectSkills(projectRoot);
 }
 
 // ── Main Orchestrator ─────────────────────────────────────────────────────────
@@ -868,7 +872,7 @@ async function runProjectBootstrap(projectRoot: string): Promise<void> {
 //   4. Machine Bootstrap  — install missing system tools (bd, dolt, bv, pi, pnpm)
 //   5. Claude Runtime     — xtrm-tools plugin + official plugins + cleanup
 //   6. Pi Runtime         — extensions + packages + skills sync (via runInstall)
-//   7. Project Bootstrap  — bd init, gitnexus index, CLAUDE.md/AGENTS.md headers
+//   7. Project Bootstrap  — bd init, gitnexus index, CLAUDE.md/AGENTS.md headers, project-skills
 //   8. Verification       — unified summary of all phase outcomes
 //   9. Next Steps         — guidance based on verification result
 

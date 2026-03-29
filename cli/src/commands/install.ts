@@ -2,7 +2,6 @@ import { Command } from 'commander';
 import kleur from 'kleur';
 import prompts from 'prompts';
 import { Listr } from 'listr2';
-import fs from 'fs-extra';
 import os from 'os';
 import { getContext } from '../core/context.js';
 import { calculateDiff, PruneModeReadError } from '../core/diff.js';
@@ -11,6 +10,7 @@ import { findRepoRoot } from '../utils/repo-root.js';
 import { t, sym } from '../utils/theme.js';
 import path from 'path';
 import { runPiInstall } from './pi-install.js';
+import { runClaudeRuntimeSyncPhase } from '../core/claude-runtime-sync.js';
 
 interface TargetChanges {
     target: string;
@@ -108,8 +108,6 @@ async function renderSummaryCard(
     }) + '\n');
 }
 
-import { spawnSync } from 'child_process';
-
 import {
     runMachineBootstrapPhase,
 } from '../core/machine-bootstrap.js';
@@ -125,262 +123,6 @@ function formatTargetLabel(target: string): string {
 
 export { isBeadsInstalled, isDoltInstalled, isDeepwikiInstalled, isBvInstalled } from '../core/machine-bootstrap.js';
 
-
-const OFFICIAL_CLAUDE_MARKETPLACE = 'https://github.com/anthropics/claude-plugins-official';
-const OFFICIAL_CLAUDE_PLUGINS = [
-    'serena@claude-plugins-official',
-    'context7@claude-plugins-official',
-    'github@claude-plugins-official',
-    'ralph-loop@claude-plugins-official',
-] as const;
-
-export async function installOfficialClaudePlugins(dryRun: boolean, isGlobal: boolean = false): Promise<void> {
-    console.log(t.bold('\n  ⚙  official Claude plugins  (serena/context7/github/ralph-loop)'));
-
-    const scope = isGlobal ? 'user' : 'project';
-
-    if (dryRun) {
-        console.log(kleur.dim(`  [DRY RUN] Would register claude-plugins-official marketplace and install official plugins (--scope ${scope})\n`));
-        return;
-    }
-
-    // Ensure official marketplace is registered
-    spawnSync('claude', ['plugin', 'marketplace', 'add', OFFICIAL_CLAUDE_MARKETPLACE, '--scope', scope], { stdio: 'pipe' });
-
-    const listResult = spawnSync('claude', ['plugin', 'list'], { encoding: 'utf8', stdio: 'pipe' });
-    const installedOutput = listResult.stdout ?? '';
-
-    let installedCount = 0;
-    let alreadyInstalledCount = 0;
-
-    for (const pluginId of OFFICIAL_CLAUDE_PLUGINS) {
-        if (installedOutput.includes(pluginId)) {
-            alreadyInstalledCount += 1;
-            continue;
-        }
-
-        const result = spawnSync('claude', ['plugin', 'install', pluginId, '--scope', scope], { stdio: 'inherit' });
-        if (result.status === 0) {
-            installedCount += 1;
-        } else {
-            console.log(t.warning(`  ! Failed to install ${pluginId}. Install manually: claude plugin install ${pluginId} --scope ${scope}`));
-        }
-    }
-
-    console.log(t.success(`  ✓ Official plugins ready (${installedCount} installed, ${alreadyInstalledCount} already present)\n`));
-}
-
-async function cleanStalePrePluginFiles(repoRoot: string, dryRun: boolean): Promise<void> {
-    const home = os.homedir();
-    const staleHooksDir = path.join(home, '.claude', 'hooks');
-    const staleSkillsDir = path.join(home, '.claude', 'skills');
-    const settingsPath = path.join(home, '.claude', 'settings.json');
-
-    const removed: string[] = [];
-
-    // Remove stale hook files managed by xtrm-tools (those matching repo hooks/)
-    const repoHooksDir = path.join(repoRoot, 'hooks');
-    if (await fs.pathExists(repoHooksDir) && await fs.pathExists(staleHooksDir)) {
-        const repoHookNames = (await fs.readdir(repoHooksDir)).filter(n => n !== 'README.md' && n !== 'hooks.json');
-        for (const name of repoHookNames) {
-            const staleFile = path.join(staleHooksDir, name);
-            if (await fs.pathExists(staleFile)) {
-                if (dryRun) {
-                    console.log(kleur.dim(`  [DRY RUN] Would remove stale hook: ~/.claude/hooks/${name}`));
-                } else {
-                    await fs.remove(staleFile);
-                    console.log(t.muted(`  ✗ Removed stale hook: ~/.claude/hooks/${name}`));
-                }
-                removed.push(`hooks/${name}`);
-            }
-        }
-    }
-
-    // Remove stale skill directories managed by xtrm-tools (those matching repo skills/)
-    const repoSkillsDir = path.join(repoRoot, 'skills');
-    if (await fs.pathExists(repoSkillsDir) && await fs.pathExists(staleSkillsDir)) {
-        const repoSkillNames = (await fs.readdir(repoSkillsDir)).filter(n => !n.startsWith('.'));
-        for (const name of repoSkillNames) {
-            const staleDir = path.join(staleSkillsDir, name);
-            if (await fs.pathExists(staleDir)) {
-                if (dryRun) {
-                    console.log(kleur.dim(`  [DRY RUN] Would remove stale skill: ~/.claude/skills/${name}`));
-                } else {
-                    await fs.remove(staleDir);
-                    console.log(t.muted(`  ✗ Removed stale skill: ~/.claude/skills/${name}`));
-                }
-                removed.push(`skills/${name}`);
-            }
-        }
-    }
-
-    // Clean stale settings.json hook entries pointing to ~/.claude/hooks/ (not ${CLAUDE_PLUGIN_ROOT})
-    if (await fs.pathExists(settingsPath)) {
-        let settings: any;
-        try {
-            settings = await fs.readJson(settingsPath);
-        } catch {
-            settings = null;
-        }
-        if (settings && settings.hooks && typeof settings.hooks === 'object') {
-            let settingsModified = false;
-            for (const [event, matchers] of Object.entries(settings.hooks)) {
-                if (!Array.isArray(matchers)) continue;
-                const cleanedMatchers = (matchers as any[]).filter((matcher: any) => {
-                    const hooks = Array.isArray(matcher?.hooks) ? matcher.hooks : [];
-                    const staleHooks = hooks.filter((h: any) => {
-                        const cmd: string = typeof h?.command === 'string' ? h.command : '';
-                        return cmd.includes('/.claude/hooks/') && !cmd.includes('${CLAUDE_PLUGIN_ROOT}');
-                    });
-                    if (staleHooks.length > 0) {
-                        for (const h of staleHooks) {
-                            const msg = `settings.json [${event}] hook: ${h.command}`;
-                            if (dryRun) {
-                                console.log(kleur.dim(`  [DRY RUN] Would remove stale ${msg}`));
-                            } else {
-                                console.log(t.muted(`  ✗ Removed stale ${msg}`));
-                            }
-                            removed.push(msg);
-                        }
-                        // Remove stale hooks from matcher; drop matcher if empty
-                        const remainingHooks = hooks.filter((h: any) => {
-                            const cmd: string = typeof h?.command === 'string' ? h.command : '';
-                            return !(cmd.includes('/.claude/hooks/') && !cmd.includes('${CLAUDE_PLUGIN_ROOT}'));
-                        });
-                        if (remainingHooks.length === 0) return false;
-                        matcher.hooks = remainingHooks;
-                        settingsModified = true;
-                        return true;
-                    }
-                    return true;
-                });
-                if (cleanedMatchers.length !== matchers.length) {
-                    settings.hooks[event] = cleanedMatchers;
-                    settingsModified = true;
-                }
-            }
-            if (settingsModified && !dryRun) {
-                await fs.writeJson(settingsPath, settings, { spaces: 2 });
-            }
-        }
-    }
-
-    if (removed.length === 0) {
-        console.log(t.success('  ✓ No stale pre-plugin files found'));
-    }
-}
-
-function warnIfOutdated(): void {
-    try {
-        const localPkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../package.json'), 'utf8'));
-        const result = spawnSync('npm', ['show', 'xtrm-tools', 'version', '--json'], {
-            encoding: 'utf8', stdio: 'pipe', timeout: 5000,
-        });
-        if (result.status !== 0 || !result.stdout) return;
-        const npmVersion: string = JSON.parse(result.stdout.trim());
-        const parse = (v: string) => v.split('.').map(Number);
-        const [lMaj, lMin, lPat] = parse(localPkg.version);
-        const [rMaj, rMin, rPat] = parse(npmVersion);
-        const isNewer = rMaj > lMaj || (rMaj === lMaj && rMin > lMin) || (rMaj === lMaj && rMin === lMin && rPat > lPat);
-        if (isNewer) {
-            console.log(t.warning(`  ⚠  npm has a newer version (${npmVersion} > ${localPkg.version})`));
-            console.log(t.label('     Run: npm install -g xtrm-tools@latest'));
-        }
-    } catch { /* network failure or parse error — silently skip */ }
-}
-
-export async function installPlugin(repoRoot: string, dryRun: boolean, isGlobal: boolean = false): Promise<void> {
-    console.log(t.bold('\n  ⚙  xtrm-tools  (Claude Code plugin)'));
-    warnIfOutdated();
-
-    const scope = isGlobal ? 'user' : 'project';
-
-    if (dryRun) {
-        console.log(kleur.dim(`  [DRY RUN] Would register xtrm-tools marketplace and install plugin (--scope ${scope})\n`));
-        await cleanStalePrePluginFiles(repoRoot, true);
-        await installOfficialClaudePlugins(true, isGlobal);
-        return;
-    }
-
-    // Register marketplace using the xtrm-tools package root.
-    // __dirname in the built CJS bundle is cli/dist/, so ../../ is the package root.
-    // Do NOT use repoRoot here — that is the user's project, not the xtrm-tools package.
-    const xtrmPkgRoot = path.resolve(__dirname, '..', '..');
-    spawnSync('claude', ['plugin', 'marketplace', 'add', xtrmPkgRoot, '--scope', scope], { stdio: 'pipe' });
-
-    // For directory-source plugins the cache uses symlinks (hooks/, skills/) that point
-    // to the live repo — content is always fresh. Only real files (.mcp.json, plugin.json)
-    // need syncing. NEVER uninstall+reinstall: that disrupts all running Claude Code
-    // sessions sharing the plugin and causes cyclic reload errors.
-    const installedPluginsPath = path.join(os.homedir(), '.claude', 'plugins', 'installed_plugins.json');
-    const pluginSourceDir = path.join(xtrmPkgRoot, 'plugins', 'xtrm-tools');
-    let cachePath: string | undefined;
-
-    if (fs.existsSync(installedPluginsPath)) {
-        try {
-            const installed = JSON.parse(fs.readFileSync(installedPluginsPath, 'utf8'));
-            const entries: Array<{ installPath?: string }> = installed?.plugins?.['xtrm-tools@xtrm-tools'] ?? [];
-            cachePath = entries.find((e) => e.installPath && fs.existsSync(e.installPath))?.installPath;
-        } catch { /* parse error — treat as not installed */ }
-    }
-
-    if (cachePath) {
-        // Already installed — refresh only the non-symlinked real files in-place.
-        try {
-            const srcMcp = path.join(pluginSourceDir, '.mcp.json');
-            const dstMcp = path.join(cachePath, '.mcp.json');
-            if (fs.existsSync(srcMcp)) fs.copyFileSync(srcMcp, dstMcp);
-
-            const srcPlugin = path.join(pluginSourceDir, '.claude-plugin', 'plugin.json');
-            const dstPlugin = path.join(cachePath, '.claude-plugin', 'plugin.json');
-            if (fs.existsSync(srcPlugin)) {
-                fs.ensureDirSync(path.dirname(dstPlugin));
-                fs.copyFileSync(srcPlugin, dstPlugin);
-            }
-        } catch { /* non-fatal — cache refresh is best-effort */ }
-        console.log(t.success('  ✓ xtrm-tools plugin up to date'));
-    } else {
-        // First install — let Claude Code create the cache with proper symlinks.
-        spawnSync('claude', ['plugin', 'install', 'xtrm-tools@xtrm-tools', '--scope', scope], { stdio: 'inherit' });
-        console.log(t.success('  ✓ xtrm-tools plugin installed'));
-        console.log(t.warning('  ↻ Restart Claude Code for the new plugin hooks to take effect'));
-    }
-
-    // Clean up stale pre-plugin files from ~/.claude/hooks/ and ~/.claude/skills/
-    await cleanStalePrePluginFiles(repoRoot, dryRun);
-
-    await installOfficialClaudePlugins(false, isGlobal);
-
-    // Write statusLine to settings.json (project-scoped or user-global based on isGlobal).
-    installUserStatusLine(dryRun);
-}
-
-function installUserStatusLine(dryRun: boolean): void {
-    try {
-        // Resolve statusline.mjs from the xtrm-tools package root — same pattern as xtrmPkgRoot.
-        // __dirname in the CJS bundle is cli/dist/, so ../../hooks/ is always the correct path.
-        // This avoids depending on installed_plugins.json which may be absent on fresh machines.
-        const scriptPath = path.resolve(__dirname, '..', '..', 'hooks', 'statusline.mjs');
-        if (!fs.existsSync(scriptPath)) return;
-
-        // Always write to ~/.claude/settings.json — statusLine contains a machine-specific
-        // path and must never land in a project .claude/settings.json that could be committed.
-        const settingsPath = path.join(os.homedir(), '.claude', 'settings.json');
-
-        const settings = fs.existsSync(settingsPath)
-            ? JSON.parse(fs.readFileSync(settingsPath, 'utf8'))
-            : {};
-
-        if (dryRun) {
-            console.log(kleur.dim(`  [DRY RUN] Would write statusLine → ~/.claude/settings.json`));
-            return;
-        }
-
-        settings.statusLine = { type: 'command', command: `node ${scriptPath}`, padding: 1 };
-        fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n');
-        console.log(t.success(`  ✓ statusLine registered in ~/.claude/settings.json`));
-    } catch { /* non-fatal */ }
-}
 
 export function createInstallAllCommand(): Command {
     // Deprecated: kept temporarily for backward compat; use bare 'xtrm install'
@@ -416,6 +158,8 @@ export interface InstallOpts {
     global?: boolean;
     /** Skip machine bootstrap (beads/dolt/bv/deepwiki) — used by the init orchestrator which handles it in a dedicated phase. */
     skipMachineBootstrap?: boolean;
+    /** Skip Claude runtime sync (xtrm-tools plugin, official plugins, cleanup, verification). */
+    skipClaudeRuntimeSync?: boolean;
 }
 
 // ── Machine Bootstrap ─────────────────────────────────────────────────────────
@@ -427,7 +171,7 @@ export async function runMachineBootstrap(opts: { yes?: boolean } = {}): Promise
 }
 
 export async function runInstall(opts: InstallOpts = {}): Promise<void> {
-            const { dryRun = false, yes = false, prune = false, backport = false, global: isGlobal = false, skipMachineBootstrap = false } = opts;
+            const { dryRun = false, yes = false, prune = false, backport = false, global: isGlobal = false, skipMachineBootstrap = false, skipClaudeRuntimeSync = false } = opts;
             const effectiveYes = yes || process.argv.includes('--yes') || process.argv.includes('-y');
 
             const syncType: 'sync' | 'backport' = backport ? 'backport' : 'sync';
@@ -450,7 +194,9 @@ export async function runInstall(opts: InstallOpts = {}): Promise<void> {
 
             // ── Claude + Pi Runtime Sync ─────────────────────────────────────────────
             if (!backport) {
-                await installPlugin(repoRoot, dryRun, isGlobal);
+                if (!skipClaudeRuntimeSync) {
+                    await runClaudeRuntimeSyncPhase({ repoRoot, dryRun, isGlobal });
+                }
                 await runPiInstall(dryRun, isGlobal, repoRoot);
             }
 

@@ -116,8 +116,13 @@ export function createMergeCommand(): Command {
                 process.exit(1);
             }
 
-            // --follow: redraws header in-place every second until done, then shows output
-            spawnSync('specialists', ['poll', jobId, '--follow'], { cwd, stdio: 'inherit' });
-            process.exit(0);
+            // Stream live events via feed, then print final specialist output.
+            const feed = spawnSync('specialists', ['feed', '--job', jobId, '--follow'], { cwd, stdio: 'inherit' });
+            if (feed.status !== 0) {
+                process.exit(feed.status ?? 1);
+            }
+
+            const result = spawnSync('specialists', ['result', jobId, '--wait'], { cwd, stdio: 'inherit' });
+            process.exit(result.status ?? 0);
         });
 }

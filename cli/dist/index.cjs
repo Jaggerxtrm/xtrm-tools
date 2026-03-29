@@ -56408,8 +56408,12 @@ function createMergeCommand() {
       console.error(kleur_default.red("\n  \u2717 Timed out waiting for xt-merge job to start.\n"));
       process.exit(1);
     }
-    (0, import_node_child_process13.spawnSync)("specialists", ["poll", jobId, "--follow"], { cwd, stdio: "inherit" });
-    process.exit(0);
+    const feed = (0, import_node_child_process13.spawnSync)("specialists", ["feed", "--job", jobId, "--follow"], { cwd, stdio: "inherit" });
+    if (feed.status !== 0) {
+      process.exit(feed.status ?? 1);
+    }
+    const result = (0, import_node_child_process13.spawnSync)("specialists", ["result", jobId, "--wait"], { cwd, stdio: "inherit" });
+    process.exit(result.status ?? 0);
   });
 }
 

@@ -34800,7 +34800,7 @@ var MANAGED_PACKAGES = [
   { id: "npm:@zenobius/pi-worktrees", displayName: "pi-worktrees", required: true },
   { id: "npm:@robhowley/pi-structured-return", displayName: "pi-structured-return", required: true },
   { id: "npm:@aliou/pi-guardrails", displayName: "pi-guardrails", required: false },
-  { id: "npm:@aliou/pi-processes", displayName: "pi-processes", required: false }
+  { id: "npm:@aliou/pi-processes", displayName: "pi-processes", required: true }
 ];
 async function extensionHash(extDir) {
   if (!await import_fs_extra3.default.pathExists(extDir)) return "";

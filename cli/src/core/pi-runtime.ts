@@ -83,7 +83,7 @@ const MANAGED_PACKAGES: ManagedPackage[] = [
     { id: 'npm:@zenobius/pi-worktrees', displayName: 'pi-worktrees', required: true },
     { id: 'npm:@robhowley/pi-structured-return', displayName: 'pi-structured-return', required: true },
     { id: 'npm:@aliou/pi-guardrails', displayName: 'pi-guardrails', required: false },
-    { id: 'npm:@aliou/pi-processes', displayName: 'pi-processes', required: false },
+    { id: 'npm:@aliou/pi-processes', displayName: 'pi-processes', required: true },
 ];
 
 // ── Inventory ─────────────────────────────────────────────────────────────────

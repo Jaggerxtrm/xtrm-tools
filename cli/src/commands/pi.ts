@@ -41,9 +41,17 @@ export function createPiCommand(): Command {
                 return;
             }
 
-            const repoRoot = await findRepoRoot();
-            const sourceDir = path.join(repoRoot, 'config', 'pi', 'extensions');
-            const projectScopedDir = path.join(repoRoot, '.pi', 'extensions');
+            // Use git to find the actual project root, not findRepoRoot()
+            // which finds the xtrm-tools source repo
+            const gitResult = spawnSync('git', ['rev-parse', '--show-toplevel'], {
+                cwd: process.cwd(), encoding: 'utf8', stdio: 'pipe',
+            });
+            const projectRoot = gitResult.status === 0 ? (gitResult.stdout ?? '').trim() : process.cwd();
+            
+            // Source is from the bundled xtrm-tools package
+            const bundleRoot = await findRepoRoot();
+            const sourceDir = path.join(bundleRoot, 'config', 'pi', 'extensions');
+            const projectScopedDir = path.join(projectRoot, '.pi', 'extensions');
             const targetDir = await fs.pathExists(projectScopedDir)
                 ? projectScopedDir
                 : path.join(PI_AGENT_DIR, 'extensions');
@@ -122,9 +130,17 @@ export function createPiCommand(): Command {
             }
 
             // Check extensions and packages using unified service
-            const repoRoot = await findRepoRoot();
-            const sourceDir = path.join(repoRoot, 'config', 'pi', 'extensions');
-            const projectScopedDir = path.join(repoRoot, '.pi', 'extensions');
+            // Use git to find the actual project root, not findRepoRoot()
+            // which finds the xtrm-tools source repo
+            const gitResult = spawnSync('git', ['rev-parse', '--show-toplevel'], {
+                cwd: process.cwd(), encoding: 'utf8', stdio: 'pipe',
+            });
+            const projectRoot = gitResult.status === 0 ? (gitResult.stdout ?? '').trim() : process.cwd();
+            
+            // Source is from the bundled xtrm-tools package
+            const bundleRoot = await findRepoRoot();
+            const sourceDir = path.join(bundleRoot, 'config', 'pi', 'extensions');
+            const projectScopedDir = path.join(projectRoot, '.pi', 'extensions');
             const targetDir = await fs.pathExists(projectScopedDir)
                 ? projectScopedDir
                 : path.join(PI_AGENT_DIR, 'extensions');
@@ -164,8 +180,13 @@ export function createPiCommand(): Command {
     cmd.command('reload')
         .description('Re-sync extensions, remove orphaned, and reinstall missing packages')
         .action(async () => {
-            const repoRoot = await findRepoRoot();
-            await runPiInstall(false, false, repoRoot);
+            // Use git to find the actual project root, not findRepoRoot()
+            // which finds the xtrm-tools source repo
+            const r = spawnSync('git', ['rev-parse', '--show-toplevel'], {
+                cwd: process.cwd(), encoding: 'utf8', stdio: 'pipe',
+            });
+            const projectRoot = r.status === 0 ? (r.stdout ?? '').trim() : process.cwd();
+            await runPiInstall(false, false, projectRoot);
         });
 
     return cmd;

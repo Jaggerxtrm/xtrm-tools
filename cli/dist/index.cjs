@@ -35394,9 +35394,15 @@ function createPiCommand() {
       console.log("");
       return;
     }
-    const repoRoot = await findRepoRoot();
-    const sourceDir = import_path6.default.join(repoRoot, "config", "pi", "extensions");
-    const projectScopedDir = import_path6.default.join(repoRoot, ".pi", "extensions");
+    const gitResult = (0, import_node_child_process5.spawnSync)("git", ["rev-parse", "--show-toplevel"], {
+      cwd: process.cwd(),
+      encoding: "utf8",
+      stdio: "pipe"
+    });
+    const projectRoot = gitResult.status === 0 ? (gitResult.stdout ?? "").trim() : process.cwd();
+    const bundleRoot = await findRepoRoot();
+    const sourceDir = import_path6.default.join(bundleRoot, "config", "pi", "extensions");
+    const projectScopedDir = import_path6.default.join(projectRoot, ".pi", "extensions");
     const targetDir = await import_fs_extra6.default.pathExists(projectScopedDir) ? projectScopedDir : import_path6.default.join(PI_AGENT_DIR4, "extensions");
     const scopeLabel = targetDir === projectScopedDir ? "project" : "global";
     if (!await import_fs_extra6.default.pathExists(sourceDir)) {
@@ -35458,9 +35464,15 @@ function createPiCommand() {
       console.log(kleur_default.yellow(`  \u26A0 missing config: ${missingConfig.join(", ")}`));
       allOk = false;
     }
-    const repoRoot = await findRepoRoot();
-    const sourceDir = import_path6.default.join(repoRoot, "config", "pi", "extensions");
-    const projectScopedDir = import_path6.default.join(repoRoot, ".pi", "extensions");
+    const gitResult = (0, import_node_child_process5.spawnSync)("git", ["rev-parse", "--show-toplevel"], {
+      cwd: process.cwd(),
+      encoding: "utf8",
+      stdio: "pipe"
+    });
+    const projectRoot = gitResult.status === 0 ? (gitResult.stdout ?? "").trim() : process.cwd();
+    const bundleRoot = await findRepoRoot();
+    const sourceDir = import_path6.default.join(bundleRoot, "config", "pi", "extensions");
+    const projectScopedDir = import_path6.default.join(projectRoot, ".pi", "extensions");
     const targetDir = await import_fs_extra6.default.pathExists(projectScopedDir) ? projectScopedDir : import_path6.default.join(PI_AGENT_DIR4, "extensions");
     if (await import_fs_extra6.default.pathExists(sourceDir)) {
       const plan = await inventoryPiRuntime(sourceDir, targetDir);
@@ -35492,8 +35504,13 @@ function createPiCommand() {
     }
   });
   cmd.command("reload").description("Re-sync extensions, remove orphaned, and reinstall missing packages").action(async () => {
-    const repoRoot = await findRepoRoot();
-    await runPiInstall(false, false, repoRoot);
+    const r = (0, import_node_child_process5.spawnSync)("git", ["rev-parse", "--show-toplevel"], {
+      cwd: process.cwd(),
+      encoding: "utf8",
+      stdio: "pipe"
+    });
+    const projectRoot = r.status === 0 ? (r.stdout ?? "").trim() : process.cwd();
+    await runPiInstall(false, false, projectRoot);
   });
   return cmd;
 }
@@ -37321,6 +37338,7 @@ var Listr = class {
 
 // src/commands/install.ts
 var import_os6 = __toESM(require("os"), 1);
+var import_node_child_process6 = require("child_process");
 
 // src/core/context.ts
 var import_os3 = __toESM(require("os"), 1);
@@ -39571,11 +39589,17 @@ async function runInstall(opts = {}) {
   const effectiveYes = yes || process.argv.includes("--yes") || process.argv.includes("-y");
   const syncType = backport ? "backport" : "sync";
   const actionLabel = backport ? "backport" : "install";
+  const gitResult = (0, import_node_child_process6.spawnSync)("git", ["rev-parse", "--show-toplevel"], {
+    cwd: process.cwd(),
+    encoding: "utf8",
+    stdio: "pipe"
+  });
+  const projectRoot = gitResult.status === 0 ? (gitResult.stdout ?? "").trim() : process.cwd();
   const repoRoot = await findRepoRoot();
   const ctx = await getContext({
     createMissingDirs: !dryRun,
     isGlobal,
-    projectRoot: repoRoot
+    projectRoot
   });
   const { targets, syncMode } = ctx;
   if (!backport && !skipMachineBootstrap) {
@@ -39583,9 +39607,9 @@ async function runInstall(opts = {}) {
   }
   if (!backport) {
     if (!skipClaudeRuntimeSync) {
-      await runClaudeRuntimeSyncPhase({ repoRoot, dryRun, isGlobal });
+      await runClaudeRuntimeSyncPhase({ repoRoot: projectRoot, dryRun, isGlobal });
     }
-    await runPiInstall(dryRun, isGlobal, repoRoot);
+    await runPiInstall(dryRun, isGlobal, projectRoot);
   }
   const diffTasks = new Listr(
     targets.map((target) => ({
@@ -54488,17 +54512,17 @@ function createCleanCommand() {
 
 // src/commands/end.ts
 var import_prompts5 = __toESM(require_prompts3(), 1);
-var import_node_child_process6 = require("child_process");
+var import_node_child_process7 = require("child_process");
 function git(args, cwd) {
-  const r = (0, import_node_child_process6.spawnSync)("git", args, { cwd, encoding: "utf8", stdio: "pipe" });
+  const r = (0, import_node_child_process7.spawnSync)("git", args, { cwd, encoding: "utf8", stdio: "pipe" });
   return { ok: r.status === 0, out: (r.stdout ?? "").trim(), err: (r.stderr ?? "").trim() };
 }
 function bd(args, cwd) {
-  const r = (0, import_node_child_process6.spawnSync)("bd", args, { cwd, encoding: "utf8", stdio: "pipe" });
+  const r = (0, import_node_child_process7.spawnSync)("bd", args, { cwd, encoding: "utf8", stdio: "pipe" });
   return { ok: r.status === 0, out: (r.stdout ?? "").trim() };
 }
 function npm(args, cwd) {
-  const r = (0, import_node_child_process6.spawnSync)("npm", args, { cwd, encoding: "utf8", stdio: "pipe" });
+  const r = (0, import_node_child_process7.spawnSync)("npm", args, { cwd, encoding: "utf8", stdio: "pipe" });
   return { ok: r.status === 0, out: (r.stdout ?? "").trim(), err: (r.stderr ?? "").trim() };
 }
 var CONVENTIONAL_SCOPES = /* @__PURE__ */ new Set([
@@ -54757,7 +54781,7 @@ function createEndCommand() {
     console.log(kleur_default.dim("  Creating PR..."));
     const prArgs = ["pr", "create", "--title", prTitle, "--body", prBody];
     if (opts.draft) prArgs.push("--draft");
-    const prResult = (0, import_node_child_process6.spawnSync)("gh", prArgs, { cwd, encoding: "utf8", stdio: "pipe" });
+    const prResult = (0, import_node_child_process7.spawnSync)("gh", prArgs, { cwd, encoding: "utf8", stdio: "pipe" });
     if (prResult.status !== 0) {
       console.error(kleur_default.red(`
   \u2717 PR creation failed:
@@ -54788,7 +54812,7 @@ function createEndCommand() {
         try {
           const repoRoot = git(["rev-parse", "--show-toplevel"], cwd).out;
           unregisterPluginsForWorktree(cwd);
-          const removeResult = (0, import_node_child_process6.spawnSync)(
+          const removeResult = (0, import_node_child_process7.spawnSync)(
             "git",
             ["worktree", "remove", cwd, "--force"],
             { cwd: repoRoot, encoding: "utf8", stdio: "pipe" }
@@ -54812,11 +54836,11 @@ function createEndCommand() {
 
 // src/commands/worktree.ts
 var import_prompts6 = __toESM(require_prompts3(), 1);
-var import_node_child_process7 = require("child_process");
+var import_node_child_process8 = require("child_process");
 var import_node_fs5 = require("fs");
 var import_node_path6 = require("path");
 function listXtWorktrees(repoRoot) {
-  const r = (0, import_node_child_process7.spawnSync)("git", ["worktree", "list", "--porcelain"], {
+  const r = (0, import_node_child_process8.spawnSync)("git", ["worktree", "list", "--porcelain"], {
     cwd: repoRoot,
     encoding: "utf8",
     stdio: "pipe"
@@ -54850,7 +54874,7 @@ function listXtWorktrees(repoRoot) {
       wt.launchedAt = meta3.launchedAt;
     } catch {
     }
-    const logR = (0, import_node_child_process7.spawnSync)("git", ["log", "-1", "--format=%ci%s", "HEAD"], {
+    const logR = (0, import_node_child_process8.spawnSync)("git", ["log", "-1", "--format=%ci%s", "HEAD"], {
       cwd: wt.path,
       encoding: "utf8",
       stdio: "pipe"
@@ -54867,7 +54891,7 @@ function listXtWorktrees(repoRoot) {
 }
 function isMergedIntoMain(branch, repoRoot) {
   const branchShort = branch.replace("refs/heads/", "");
-  const r = (0, import_node_child_process7.spawnSync)("git", ["branch", "--merged", "origin/main", "--list", branchShort], {
+  const r = (0, import_node_child_process8.spawnSync)("git", ["branch", "--merged", "origin/main", "--list", branchShort], {
     cwd: repoRoot,
     encoding: "utf8",
     stdio: "pipe"
@@ -54876,7 +54900,7 @@ function isMergedIntoMain(branch, repoRoot) {
 }
 function getPrStatus(branch, repoRoot) {
   const branchShort = branch.replace("refs/heads/", "");
-  const r = (0, import_node_child_process7.spawnSync)("gh", ["pr", "list", "--head", branchShort, "--state", "all", "--json", "state,url", "--limit", "1"], {
+  const r = (0, import_node_child_process8.spawnSync)("gh", ["pr", "list", "--head", branchShort, "--state", "all", "--json", "state,url", "--limit", "1"], {
     cwd: repoRoot,
     encoding: "utf8",
     stdio: "pipe"
@@ -54891,7 +54915,7 @@ function getPrStatus(branch, repoRoot) {
   }
 }
 function getRepoRoot(cwd) {
-  const r = (0, import_node_child_process7.spawnSync)("git", ["rev-parse", "--show-toplevel"], { cwd, encoding: "utf8", stdio: "pipe" });
+  const r = (0, import_node_child_process8.spawnSync)("git", ["rev-parse", "--show-toplevel"], { cwd, encoding: "utf8", stdio: "pipe" });
   return r.ok ? r.stdout.trim() : cwd;
 }
 function createWorktreeCommand() {
@@ -54953,7 +54977,7 @@ function createWorktreeCommand() {
       return;
     }
     for (const wt of merged) {
-      const r = (0, import_node_child_process7.spawnSync)("git", ["worktree", "remove", wt.path, "--force"], {
+      const r = (0, import_node_child_process8.spawnSync)("git", ["worktree", "remove", wt.path, "--force"], {
         cwd: repoRoot,
         encoding: "utf8",
         stdio: "pipe"
@@ -54994,7 +55018,7 @@ function createWorktreeCommand() {
       console.log(kleur_default.dim("  Cancelled\n"));
       return;
     }
-    const r = (0, import_node_child_process7.spawnSync)("git", ["worktree", "remove", target.path, "--force"], {
+    const r = (0, import_node_child_process8.spawnSync)("git", ["worktree", "remove", target.path, "--force"], {
       cwd: repoRoot,
       encoding: "utf8",
       stdio: "pipe"
@@ -55023,7 +55047,7 @@ function clearStatuslineClaim(repoRoot) {
 
 // src/commands/attach.ts
 var import_prompts7 = __toESM(require_prompts3(), 1);
-var import_node_child_process8 = require("child_process");
+var import_node_child_process9 = require("child_process");
 function createAttachCommand() {
   return new Command("attach").description("Re-attach to an existing xt worktree and resume the Claude or Pi session").argument("[name]", 'Worktree slug or branch name to attach to (e.g. "abc1" or "xt/abc1")').action(async (name) => {
     const repoRoot = getRepoRoot(process.cwd());
@@ -55078,7 +55102,7 @@ function createAttachCommand() {
     console.log(kleur_default.dim(`  runtime: ${runtime}  (resuming session)`));
     console.log(kleur_default.dim(`  path:    ${target.path}
 `));
-    const result = (0, import_node_child_process8.spawnSync)(runtime, resumeArgs, {
+    const result = (0, import_node_child_process9.spawnSync)(runtime, resumeArgs, {
       cwd: target.path,
       stdio: "inherit"
     });
@@ -55241,16 +55265,16 @@ function isCacheValid(cache, entries, ttlMs = DEFAULT_TTL_MS) {
 }
 
 // src/commands/docs-cross-check-gh.ts
-var import_node_child_process9 = require("child_process");
+var import_node_child_process10 = require("child_process");
 function isGhAvailable() {
-  return (0, import_node_child_process9.spawnSync)("gh", ["--version"], { stdio: "pipe", encoding: "utf8" }).status === 0;
+  return (0, import_node_child_process10.spawnSync)("gh", ["--version"], { stdio: "pipe", encoding: "utf8" }).status === 0;
 }
 function fetchRecentPrs(repoRoot, days) {
   if (!isGhAvailable()) {
     console.log(kleur_default.yellow("  \u26A0 gh CLI not found \u2014 skipping PR data (install gh to enable cross-check)"));
     return [];
   }
-  const r = (0, import_node_child_process9.spawnSync)("gh", [
+  const r = (0, import_node_child_process10.spawnSync)("gh", [
     "pr",
     "list",
     "--state",
@@ -55280,11 +55304,11 @@ function fetchRecentPrs(repoRoot, days) {
 }
 
 // src/commands/docs-cross-check-bd.ts
-var import_node_child_process10 = require("child_process");
+var import_node_child_process11 = require("child_process");
 var _bdAvailable = null;
 function isBdAvailable() {
   if (_bdAvailable !== null) return _bdAvailable;
-  const r = (0, import_node_child_process10.spawnSync)("bd", ["--version"], { stdio: "pipe", encoding: "utf8" });
+  const r = (0, import_node_child_process11.spawnSync)("bd", ["--version"], { stdio: "pipe", encoding: "utf8" });
   _bdAvailable = r.status === 0;
   return _bdAvailable;
 }
@@ -55296,7 +55320,7 @@ function fetchClosedBdIssues(days) {
     logBdWarning("fetchClosedBdIssues: bd CLI not available, skipping issue fetch");
     return [];
   }
-  const r = (0, import_node_child_process10.spawnSync)("bd", [
+  const r = (0, import_node_child_process11.spawnSync)("bd", [
     "query",
     `status=closed AND updated>${days}d`,
     "--json"
@@ -55823,7 +55847,7 @@ ${content}`;
 }
 
 // src/commands/memory.ts
-var import_node_child_process11 = require("child_process");
+var import_node_child_process12 = require("child_process");
 var import_node_fs6 = require("fs");
 var import_node_path7 = require("path");
 function createMemoryCommand() {
@@ -55832,14 +55856,14 @@ function createMemoryCommand() {
 function createMemoryUpdateCommand() {
   return new Command("update").description("Run memory-processor specialist to synthesize bd memories into .xtrm/memory.md").option("--dry-run", "Report only \u2014 do not modify memories or write memory.md", false).option("--no-beads", "Skip creating a tracking bead for this run", false).action(async (opts) => {
     const cwd = process.cwd();
-    const check2 = (0, import_node_child_process11.spawnSync)("specialists", ["--version"], { encoding: "utf8", stdio: "pipe" });
+    const check2 = (0, import_node_child_process12.spawnSync)("specialists", ["--version"], { encoding: "utf8", stdio: "pipe" });
     if (check2.status !== 0) {
       console.error(kleur_default.red(
         "\n  \u2717 specialists CLI not found.\n  Install with: npm install -g @jaggerxtrm/specialists\n"
       ));
       process.exit(1);
     }
-    const list = (0, import_node_child_process11.spawnSync)("specialists", ["list", "--json"], { cwd, encoding: "utf8", stdio: "pipe" });
+    const list = (0, import_node_child_process12.spawnSync)("specialists", ["list", "--json"], { cwd, encoding: "utf8", stdio: "pipe" });
     if (list.status === 0) {
       try {
         const specialists = JSON.parse(list.stdout);
@@ -55863,7 +55887,7 @@ function createMemoryUpdateCommand() {
     console.log(kleur_default.dim(`  ${spinnerText}
 `));
     const exitCode = await new Promise((resolve2) => {
-      const proc = (0, import_node_child_process11.spawn)("specialists", args, { cwd, stdio: "inherit" });
+      const proc = (0, import_node_child_process12.spawn)("specialists", args, { cwd, stdio: "inherit" });
       proc.on("close", (code) => resolve2(code ?? 0));
     });
     if (exitCode !== 0) {
@@ -55874,39 +55898,39 @@ function createMemoryUpdateCommand() {
 }
 
 // src/commands/merge.ts
-var import_node_child_process12 = require("child_process");
+var import_node_child_process13 = require("child_process");
 var import_node_fs7 = require("fs");
 var import_node_path8 = require("path");
 function createMergeCommand() {
   return new Command("merge").description("Drain the xt worktree PR merge queue via the xt-merge specialist").option("--dry-run", "List queue and CI status without merging", false).option("--no-beads", "Skip creating a tracking bead for this run", false).action(async (opts) => {
     const cwd = process.cwd();
-    const gitCheck = (0, import_node_child_process12.spawnSync)("git", ["rev-parse", "--git-dir"], { cwd, encoding: "utf8", stdio: "pipe" });
+    const gitCheck = (0, import_node_child_process13.spawnSync)("git", ["rev-parse", "--git-dir"], { cwd, encoding: "utf8", stdio: "pipe" });
     if (gitCheck.status !== 0) {
       console.error(kleur_default.red("\n  \u2717 Not inside a git repository.\n"));
       process.exit(1);
     }
-    const ghAuth = (0, import_node_child_process12.spawnSync)("gh", ["auth", "status"], { cwd, encoding: "utf8", stdio: "pipe" });
+    const ghAuth = (0, import_node_child_process13.spawnSync)("gh", ["auth", "status"], { cwd, encoding: "utf8", stdio: "pipe" });
     if (ghAuth.status !== 0) {
       console.error(kleur_default.red(
         "\n  \u2717 gh is not authenticated.\n  Run: gh auth login\n"
       ));
       process.exit(1);
     }
-    const dirty = (0, import_node_child_process12.spawnSync)("git", ["status", "--porcelain", "--", ":!.beads/", ":!.specialists/"], { cwd, encoding: "utf8", stdio: "pipe" });
+    const dirty = (0, import_node_child_process13.spawnSync)("git", ["status", "--porcelain", "--", ":!.beads/", ":!.specialists/"], { cwd, encoding: "utf8", stdio: "pipe" });
     if (dirty.stdout.trim().length > 0) {
       console.error(kleur_default.yellow(
         '\n  \u26A0 Uncommitted changes detected.\n  The rebase cascade will check out other branches \u2014 a dirty tree\n  will either fail or carry changes onto the wrong branch.\n\n  Stash first:  git stash push -m "xt-merge cascade stash"\n  Then re-run:  xt merge\n'
       ));
       process.exit(1);
     }
-    const check2 = (0, import_node_child_process12.spawnSync)("specialists", ["--version"], { encoding: "utf8", stdio: "pipe" });
+    const check2 = (0, import_node_child_process13.spawnSync)("specialists", ["--version"], { encoding: "utf8", stdio: "pipe" });
     if (check2.status !== 0) {
       console.error(kleur_default.red(
         "\n  \u2717 specialists CLI not found.\n  Install with: npm install -g @jaggerxtrm/specialists\n"
       ));
       process.exit(1);
     }
-    const list = (0, import_node_child_process12.spawnSync)("specialists", ["list", "--json"], { cwd, encoding: "utf8", stdio: "pipe" });
+    const list = (0, import_node_child_process13.spawnSync)("specialists", ["list", "--json"], { cwd, encoding: "utf8", stdio: "pipe" });
     if (list.status === 0) {
       try {
         const specialists = JSON.parse(list.stdout);
@@ -55934,7 +55958,7 @@ function createMergeCommand() {
     } catch {
       jobsBefore = /* @__PURE__ */ new Set();
     }
-    const runProc = (0, import_node_child_process12.spawn)("specialists", args, { cwd, detached: true, stdio: "ignore" });
+    const runProc = (0, import_node_child_process13.spawn)("specialists", args, { cwd, detached: true, stdio: "ignore" });
     runProc.unref();
     const jobId = await (async () => {
       const deadline = Date.now() + 15e3;
@@ -55953,13 +55977,13 @@ function createMergeCommand() {
       console.error(kleur_default.red("\n  \u2717 Timed out waiting for xt-merge job to start.\n"));
       process.exit(1);
     }
-    (0, import_node_child_process12.spawnSync)("specialists", ["poll", jobId, "--follow"], { cwd, stdio: "inherit" });
+    (0, import_node_child_process13.spawnSync)("specialists", ["poll", jobId, "--follow"], { cwd, stdio: "inherit" });
     process.exit(0);
   });
 }
 
 // src/commands/debug.ts
-var import_node_child_process13 = require("child_process");
+var import_node_child_process14 = require("child_process");
 var import_node_fs8 = require("fs");
 var import_node_path9 = require("path");
 var KIND_LABELS = {
@@ -56107,7 +56131,7 @@ function buildWhere(opts, base) {
 }
 function queryEvents(dbPath, where, limit) {
   const sql = `SELECT id,ts,session_id,runtime,worktree,kind,tool_name,outcome,issue_id,duration_ms,data FROM events${where ? ` WHERE ${where}` : ""} ORDER BY id ASC LIMIT ${limit}`;
-  const result = (0, import_node_child_process13.spawnSync)("sqlite3", [dbPath, "-json", sql], {
+  const result = (0, import_node_child_process14.spawnSync)("sqlite3", [dbPath, "-json", sql], {
     stdio: ["pipe", "pipe", "pipe"],
     encoding: "utf8",
     timeout: 5e3

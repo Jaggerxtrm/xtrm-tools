@@ -3,6 +3,7 @@ import kleur from 'kleur';
 import prompts from 'prompts';
 import { Listr } from 'listr2';
 import os from 'os';
+import { spawnSync } from 'node:child_process';
 import { getContext } from '../core/context.js';
 import { calculateDiff, PruneModeReadError } from '../core/diff.js';
 import { executeSync } from '../core/sync-executor.js';
@@ -177,11 +178,20 @@ export async function runInstall(opts: InstallOpts = {}): Promise<void> {
             const syncType: 'sync' | 'backport' = backport ? 'backport' : 'sync';
             const actionLabel = backport ? 'backport' : 'install';
 
+            // Use git to find the actual project root for Pi install target
+            // findRepoRoot() finds the xtrm-tools source repo, not the target project
+            const gitResult = spawnSync('git', ['rev-parse', '--show-toplevel'], {
+                cwd: process.cwd(), encoding: 'utf8', stdio: 'pipe',
+            });
+            const projectRoot = gitResult.status === 0 ? (gitResult.stdout ?? '').trim() : process.cwd();
+            
+            // Source repo for skills/hooks sync
             const repoRoot = await findRepoRoot();
+            
             const ctx = await getContext({
                 createMissingDirs: !dryRun,
                 isGlobal,
-                projectRoot: repoRoot,
+                projectRoot,
             });
             const { targets, syncMode } = ctx;
 
@@ -195,9 +205,9 @@ export async function runInstall(opts: InstallOpts = {}): Promise<void> {
             // ── Claude + Pi Runtime Sync ─────────────────────────────────────────────
             if (!backport) {
                 if (!skipClaudeRuntimeSync) {
-                    await runClaudeRuntimeSyncPhase({ repoRoot, dryRun, isGlobal });
+                    await runClaudeRuntimeSyncPhase({ repoRoot: projectRoot, dryRun, isGlobal });
                 }
-                await runPiInstall(dryRun, isGlobal, repoRoot);
+                await runPiInstall(dryRun, isGlobal, projectRoot);
             }
 
             // Phase 1: Diff — skills targets only (.agents/skills)

@@ -29,6 +29,11 @@ function bd(args: string[], cwd: string): { ok: boolean; out: string } {
     return { ok: r.status === 0, out: (r.stdout ?? '').trim() };
 }
 
+function npm(args: string[], cwd: string): { ok: boolean; out: string; err: string } {
+    const r = spawnSync('npm', args, { cwd, encoding: 'utf8', stdio: 'pipe' });
+    return { ok: r.status === 0, out: (r.stdout ?? '').trim(), err: (r.stderr ?? '').trim() };
+}
+
 // Common conventional-commit scope words that are never beads IDs
 const CONVENTIONAL_SCOPES = new Set([
     'feat', 'fix', 'chore', 'docs', 'test', 'tests', 'refactor', 'style',
@@ -98,6 +103,52 @@ function buildPrTitle(issues: EndIssue[], changedFiles: string[], commitLog: str
     return isGenericPrTitle(multi)
         ? inferTitleFromCommitsOrFiles(commitLog, changedFiles)
         : `${multi} (+${issues.length - 1} more)`;
+}
+
+function getChangedFilesSinceBase(cwd: string, defaultBranch: string, pathspec?: string): string[] {
+    const args = ['diff', '--name-only', `origin/${defaultBranch}..HEAD`];
+    if (pathspec) args.push('--', pathspec);
+    const result = git(args, cwd);
+    return result.out.split('\n').map(line => line.trim()).filter(Boolean);
+}
+
+function maybeRebuildCliDist(cwd: string, defaultBranch: string): void {
+    const changedCliSources = getChangedFilesSinceBase(cwd, defaultBranch, 'cli/src/');
+    if (changedCliSources.length === 0) return;
+
+    console.log(kleur.dim('  cli/src changed in this session — rebuilding cli/dist...'));
+    const buildResult = npm(['run', 'build', '--workspace', 'cli', '--ignore-scripts'], cwd);
+    if (!buildResult.ok) {
+        const details = [buildResult.out, buildResult.err].filter(Boolean).join('\n');
+        console.error(kleur.red(`
+  ✗ Auto-rebuild failed:
+${details ? `
+${details}
+` : ''}`));
+        process.exit(1);
+    }
+
+    git(['add', 'cli/dist'], cwd);
+    const stagedDist = git(['diff', '--cached', '--name-only', '--', 'cli/dist/'], cwd).out
+        .split('\n')
+        .map(line => line.trim())
+        .filter(Boolean);
+
+    if (stagedDist.length === 0) {
+        console.log(t.success('  ✓ cli/dist already up to date'));
+        return;
+    }
+
+    const commitResult = git(['commit', '-m', 'chore: rebuild dist after source changes'], cwd);
+    if (!commitResult.ok) {
+        console.error(kleur.red(`
+  ✗ Could not commit rebuilt cli/dist:
+  ${commitResult.err}
+`));
+        process.exit(1);
+    }
+
+    console.log(t.success(`  ✓ Rebuilt cli/dist and committed ${stagedDist.length} file(s)`));
 }
 
 /** Generate PR body from issues, commit log, diff stat */
@@ -268,7 +319,10 @@ export function createEndCommand(): Command {
             }
             console.log(t.success(`  ✓ Rebased onto origin/${defaultBranch}`));
 
-            // 8. Push (force-with-lease = safe after rebase)
+            // 8. Rebuild generated CLI bundle if session commits touched cli/src/
+            maybeRebuildCliDist(cwd, defaultBranch);
+
+            // 9. Push (force-with-lease = safe after rebase)
             console.log(kleur.dim('  Pushing branch...'));
             const pushResult = git(['push', 'origin', branch, '--force-with-lease'], cwd);
             if (!pushResult.ok) {

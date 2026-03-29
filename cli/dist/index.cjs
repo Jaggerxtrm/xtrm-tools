@@ -38132,6 +38132,248 @@ Ensure xtrm-tools is installed correctly (not xtrm-cli).`
   return diff.upToDate.length + toSync.length;
 }
 
+// src/core/machine-bootstrap.ts
+var import_child_process2 = require("child_process");
+var MANAGED_DEPS = [
+  {
+    id: "bd",
+    cli: "bd",
+    versionFlag: "--version",
+    displayName: "beads (bd)",
+    description: "git-backed issue tracker \u2014 workflow enforcement backend",
+    required: true,
+    install: {
+      default: [{ cmd: "npm", args: ["install", "-g", "@beads/bd"] }]
+    }
+  },
+  {
+    id: "dolt",
+    cli: "dolt",
+    versionFlag: "version",
+    displayName: "dolt",
+    description: "SQL+git storage backend for beads",
+    required: true,
+    install: {
+      darwin: [{ cmd: "brew", args: ["install", "dolt"] }],
+      default: [
+        {
+          cmd: "bash",
+          args: ["-c", "curl -L https://github.com/dolthub/dolt/releases/latest/download/install.sh | bash"],
+          sudo: true
+        }
+      ]
+    }
+  },
+  {
+    id: "bv",
+    cli: "bv",
+    versionFlag: "--version",
+    displayName: "bv",
+    description: "graph-aware triage for beads issues",
+    required: true,
+    install: {
+      default: [
+        {
+          cmd: "bash",
+          args: ["-c", "curl -fsSL https://raw.githubusercontent.com/Jaggerxtrm/beads_viewer/main/scripts/install-bv.sh | bash"]
+        }
+      ]
+    }
+  },
+  {
+    id: "oh-pi",
+    cli: "pi",
+    versionFlag: "--version",
+    displayName: "oh-pi (pi)",
+    description: "Pi agent runtime",
+    required: true,
+    install: {
+      default: [{ cmd: "npm", args: ["install", "-g", "oh-pi"] }]
+    }
+  },
+  {
+    id: "pnpm",
+    cli: "pnpm",
+    versionFlag: "--version",
+    displayName: "pnpm",
+    description: "fast package manager \u2014 required by Pi extensions",
+    required: true,
+    install: {
+      default: [{ cmd: "npm", args: ["install", "-g", "pnpm"] }]
+    }
+  },
+  {
+    id: "gitnexus",
+    cli: "gitnexus",
+    versionFlag: "--version",
+    displayName: "gitnexus",
+    description: "code intelligence \u2014 call graph, impact analysis",
+    required: false,
+    install: {
+      default: [{ cmd: "npm", args: ["install", "-g", "gitnexus"] }]
+    }
+  },
+  {
+    id: "deepwiki",
+    cli: "deepwiki",
+    versionFlag: "--version",
+    displayName: "deepwiki",
+    description: "AI-powered repo documentation",
+    required: false,
+    install: {
+      default: [{ cmd: "npm", args: ["install", "-g", "@seflless/deepwiki"] }]
+    }
+  }
+];
+function checkDep(dep) {
+  const result = (0, import_child_process2.spawnSync)(dep.cli, [dep.versionFlag], {
+    encoding: "utf8",
+    stdio: "pipe",
+    timeout: 5e3
+  });
+  if (result.status !== 0) {
+    return { dep, installed: false };
+  }
+  const version3 = (result.stdout ?? "").trim().split("\n")[0]?.trim();
+  return { dep, installed: true, version: version3 || void 0 };
+}
+function inventoryDeps() {
+  const deps = MANAGED_DEPS.map(checkDep);
+  const missingRequired = deps.filter((d) => !d.installed && d.dep.required);
+  const missingRecommended = deps.filter((d) => !d.installed && !d.dep.required);
+  return {
+    deps,
+    missingRequired,
+    missingRecommended,
+    allRequiredPresent: missingRequired.length === 0,
+    allPresent: deps.every((d) => d.installed)
+  };
+}
+function renderBootstrapPlan(plan) {
+  console.log(kleur_default.bold("\n  Machine Bootstrap"));
+  console.log(kleur_default.dim("  " + "-".repeat(50)));
+  for (const status of plan.deps) {
+    const { dep, installed, version: version3 } = status;
+    const icon = installed ? kleur_default.green("  \u2713") : dep.required ? kleur_default.yellow("  +") : kleur_default.dim("  \u25CB");
+    const label = dep.displayName.padEnd(20);
+    const tag = dep.required ? "" : kleur_default.dim(" (recommended)");
+    if (installed) {
+      const ver = version3 ? kleur_default.dim(` ${version3}`) : "";
+      console.log(`${icon} ${label}${ver}`);
+    } else {
+      console.log(`${icon} ${label}${kleur_default.white("will install")}${tag}`);
+    }
+  }
+  console.log(kleur_default.dim("  " + "-".repeat(50)));
+  const { missingRequired, missingRecommended } = plan;
+  if (missingRequired.length === 0 && missingRecommended.length === 0) {
+    console.log(t.success("  All dependencies present.\n"));
+  } else {
+    const parts = [];
+    if (missingRequired.length > 0) {
+      parts.push(`${missingRequired.length} required`);
+    }
+    if (missingRecommended.length > 0) {
+      parts.push(`${missingRecommended.length} recommended`);
+    }
+    console.log(kleur_default.dim(`  ${parts.join(", ")} to install
+`));
+  }
+}
+function getInstallSteps(dep) {
+  if (process.platform === "darwin" && dep.install.darwin) {
+    return dep.install.darwin;
+  }
+  return dep.install.default;
+}
+function executeBootstrap(plan, opts = {}) {
+  const { includeRecommended = true, dryRun = false } = opts;
+  const result = { installed: [], failed: [], skipped: [] };
+  const toInstall = plan.deps.filter((d) => {
+    if (d.installed) return false;
+    if (d.dep.required) return true;
+    return includeRecommended;
+  });
+  if (toInstall.length === 0) return result;
+  console.log(kleur_default.bold("\n  Installing dependencies..."));
+  for (const status of toInstall) {
+    const { dep } = status;
+    const steps = getInstallSteps(dep);
+    if (dryRun) {
+      for (const step of steps) {
+        const prefix = step.sudo ? "sudo " : "";
+        console.log(kleur_default.dim(`  [DRY RUN] ${prefix}${step.cmd} ${step.args.join(" ")}`));
+      }
+      result.skipped.push(dep.id);
+      continue;
+    }
+    console.log(kleur_default.dim(`
+  Installing ${dep.displayName}...`));
+    let ok = true;
+    for (const step of steps) {
+      const cmd = step.sudo && process.platform !== "darwin" ? "sudo" : step.cmd;
+      const args = step.sudo && process.platform !== "darwin" ? [step.cmd, ...step.args] : step.args;
+      const r = (0, import_child_process2.spawnSync)(cmd, args, { stdio: "inherit" });
+      if (r.status !== 0) {
+        ok = false;
+        break;
+      }
+    }
+    if (ok) {
+      console.log(t.success(`  \u2713 ${dep.displayName} installed`));
+      result.installed.push(dep.id);
+    } else {
+      const installHint = steps.map((s) => `${s.cmd} ${s.args.join(" ")}`).join(" && ");
+      console.log(kleur_default.yellow(`  \u26A0 Failed to install ${dep.displayName}. Run manually: ${installHint}`));
+      result.failed.push(dep.id);
+    }
+  }
+  for (const d of plan.deps) {
+    if (!d.installed && !toInstall.some((t2) => t2.dep.id === d.dep.id)) {
+      result.skipped.push(d.dep.id);
+    }
+  }
+  return result;
+}
+function verifyBootstrap() {
+  const plan = inventoryDeps();
+  if (plan.allPresent) {
+    console.log(t.success("\n  \u2713 All managed dependencies verified.\n"));
+  } else if (plan.allRequiredPresent) {
+    const missing = plan.missingRecommended.map((d) => d.dep.displayName).join(", ");
+    console.log(t.success("\n  \u2713 All required dependencies verified."));
+    console.log(kleur_default.dim(`  \u25CB Recommended not installed: ${missing}
+`));
+  } else {
+    const missing = plan.missingRequired.map((d) => d.dep.displayName).join(", ");
+    console.log(kleur_default.yellow(`
+  \u26A0 Missing required dependencies: ${missing}`));
+    console.log(kleur_default.dim("  Re-run xtrm init to install them.\n"));
+  }
+  return plan;
+}
+async function runMachineBootstrapPhase(opts = {}) {
+  const plan = inventoryDeps();
+  renderBootstrapPlan(plan);
+  if (plan.allPresent) {
+    return { installed: [], failed: [], skipped: [] };
+  }
+  const result = executeBootstrap(plan, {
+    includeRecommended: true,
+    dryRun: opts.dryRun
+  });
+  if (!opts.dryRun) {
+    verifyBootstrap();
+  }
+  return result;
+}
+function isPiInstalled() {
+  return checkDep(MANAGED_DEPS.find((d) => d.id === "oh-pi")).installed;
+}
+function isPnpmInstalled() {
+  return checkDep(MANAGED_DEPS.find((d) => d.id === "pnpm")).installed;
+}
+
 // src/commands/pi-install.ts
 async function ensureCorePackageSymlink(extensionsDst, projectRoot, dryRun) {
   const coreDir = import_path10.default.join(extensionsDst, "core");
@@ -38163,13 +38405,6 @@ function piExtensionsDir(isGlobal, projectRoot) {
     return import_path10.default.join(projectRoot, ".pi", "extensions");
   }
   return import_path10.default.join(PI_AGENT_DIR, "extensions");
-}
-function isPiInstalled() {
-  const r = (0, import_node_child_process2.spawnSync)("pi", ["--version"], { encoding: "utf8", stdio: "pipe" });
-  return r.status === 0;
-}
-function isPnpmInstalled() {
-  return (0, import_node_child_process2.spawnSync)("pnpm", ["--version"], { encoding: "utf8", stdio: "pipe" }).status === 0;
 }
 function ensurePnpm2(dryRun) {
   if (isPnpmInstalled()) {
@@ -38309,7 +38544,6 @@ async function runPiInstall(dryRun = false, isGlobal = false, projectRoot) {
 }
 
 // src/commands/install.ts
-var import_child_process2 = require("child_process");
 var import_child_process3 = require("child_process");
 function renderPlanTable(allChanges) {
   const Table = require_cli_table3();
@@ -38382,38 +38616,6 @@ function formatTargetLabel(target) {
     return normalized.startsWith(home) ? "~/.agents/skills" : ".agents/skills";
   }
   return import_path11.default.basename(target);
-}
-function isBeadsInstalled() {
-  try {
-    (0, import_child_process2.execSync)("bd --version", { stdio: "ignore" });
-    return true;
-  } catch {
-    return false;
-  }
-}
-function isDoltInstalled() {
-  try {
-    (0, import_child_process2.execSync)("dolt version", { stdio: "ignore" });
-    return true;
-  } catch {
-    return false;
-  }
-}
-function isDeepwikiInstalled() {
-  try {
-    (0, import_child_process2.execSync)("deepwiki --version", { stdio: "ignore" });
-    return true;
-  } catch {
-    return false;
-  }
-}
-function isBvInstalled() {
-  try {
-    (0, import_child_process2.execSync)("bv --version", { stdio: "ignore" });
-    return true;
-  } catch {
-    return false;
-  }
 }
 var OFFICIAL_CLAUDE_MARKETPLACE = "https://github.com/anthropics/claude-plugins-official";
 var OFFICIAL_CLAUDE_PLUGINS = [
@@ -38625,99 +38827,7 @@ function installUserStatusLine(dryRun) {
   }
 }
 async function runMachineBootstrap(opts = {}) {
-  const effectiveYes = opts.yes ?? false;
-  console.log(t.bold("\n  \u2699  beads + dolt  (workflow enforcement backend)"));
-  console.log(t.muted("  beads is a git-backed issue tracker; dolt is its SQL+git storage backend."));
-  console.log(t.muted("  Without them the gate hooks install but provide no enforcement.\n"));
-  const beadsOk = isBeadsInstalled();
-  const doltOk = isDoltInstalled();
-  if (beadsOk && doltOk) {
-    console.log(t.success("  \u2713 beads + dolt already installed\n"));
-  } else {
-    const missing = [!beadsOk && "bd", !doltOk && "dolt"].filter(Boolean).join(", ");
-    let doInstall = effectiveYes;
-    if (!effectiveYes) {
-      const { install } = await (0, import_prompts.default)({
-        type: "confirm",
-        name: "install",
-        message: `Install beads + dolt? (${missing} not found) \u2014 required for workflow enforcement hooks`,
-        initial: true
-      });
-      doInstall = install;
-    }
-    if (doInstall) {
-      if (!beadsOk) {
-        console.log(t.muted("\n  Installing @beads/bd..."));
-        (0, import_child_process3.spawnSync)("npm", ["install", "-g", "@beads/bd"], { stdio: "inherit" });
-        console.log(t.success("  \u2713 bd installed"));
-      }
-      if (!doltOk) {
-        console.log(t.muted("\n  Installing dolt..."));
-        if (process.platform === "darwin") {
-          (0, import_child_process3.spawnSync)("brew", ["install", "dolt"], { stdio: "inherit" });
-        } else {
-          (0, import_child_process3.spawnSync)("sudo", [
-            "bash",
-            "-c",
-            "curl -L https://github.com/dolthub/dolt/releases/latest/download/install.sh | bash"
-          ], { stdio: "inherit" });
-        }
-        console.log(t.success("  \u2713 dolt installed"));
-      }
-      console.log("");
-    } else {
-      console.log(t.muted("  \u2139 Skipped. Re-run after installing beads+dolt.\n"));
-    }
-  }
-  console.log(t.bold("\n  \u2699  bv  (beads graph triage)"));
-  const bvOk = isBvInstalled();
-  if (bvOk) {
-    console.log(t.success("  \u2713 bv already installed\n"));
-  } else {
-    let doInstall = effectiveYes;
-    if (!effectiveYes) {
-      const { install } = await (0, import_prompts.default)({
-        type: "confirm",
-        name: "install",
-        message: "Install bv (beads_viewer)? \u2014 graph-aware triage for bd issues",
-        initial: true
-      });
-      doInstall = install;
-    }
-    if (doInstall) {
-      console.log(t.muted("\n  Installing bv..."));
-      (0, import_child_process3.spawnSync)("bash", [
-        "-c",
-        "curl -fsSL https://raw.githubusercontent.com/Jaggerxtrm/beads_viewer/main/scripts/install-bv.sh | bash"
-      ], { stdio: "inherit" });
-      console.log(t.success("  \u2713 bv installed\n"));
-    } else {
-      console.log(t.muted("  \u2139 Skipped.\n"));
-    }
-  }
-  console.log(t.bold("\n  \u2699  deepwiki  (AI-powered repo documentation)"));
-  const deepwikiOk = isDeepwikiInstalled();
-  if (deepwikiOk) {
-    console.log(t.success("  \u2713 deepwiki already installed\n"));
-  } else {
-    let doInstall = effectiveYes;
-    if (!effectiveYes) {
-      const { install } = await (0, import_prompts.default)({
-        type: "confirm",
-        name: "install",
-        message: "Install @seflless/deepwiki?",
-        initial: true
-      });
-      doInstall = install;
-    }
-    if (doInstall) {
-      console.log(t.muted("\n  Installing @seflless/deepwiki..."));
-      (0, import_child_process3.spawnSync)("npm", ["install", "-g", "@seflless/deepwiki"], { stdio: "inherit" });
-      console.log(t.success("  \u2713 deepwiki installed\n"));
-    } else {
-      console.log(t.muted("  \u2139 Skipped.\n"));
-    }
-  }
+  await runMachineBootstrapPhase({ dryRun: false });
 }
 async function runInstall(opts = {}) {
   const { dryRun = false, yes = false, prune = false, backport = false, global: isGlobal = false, skipMachineBootstrap = false } = opts;
@@ -39033,26 +39143,9 @@ function createClaudeCommand() {
       console.log(kleur_default.yellow("  \u26A0 xtrm-tools plugin missing \u2014 run: xt claude install"));
       allOk = false;
     }
-    try {
-      (0, import_node_child_process4.execSync)("bd --version", { stdio: "ignore" });
-      console.log(t.success("  \u2713 beads (bd) installed"));
-    } catch {
-      console.log(kleur_default.yellow("  \u26A0 beads not installed \u2014 run: npm install -g @beads/bd"));
-      allOk = false;
-    }
-    try {
-      (0, import_node_child_process4.execSync)("dolt version", { stdio: "ignore" });
-      console.log(t.success("  \u2713 dolt installed"));
-    } catch {
-      console.log(kleur_default.yellow("  \u26A0 dolt not installed \u2014 required for beads storage"));
-      allOk = false;
-    }
-    try {
-      (0, import_node_child_process4.execSync)("gitnexus --version", { stdio: "ignore" });
-      console.log(t.success("  \u2713 gitnexus installed"));
-    } catch {
-      console.log(kleur_default.dim("  \u25CB gitnexus not installed (optional) \u2014 npm install -g gitnexus"));
-    }
+    const plan = inventoryDeps();
+    renderBootstrapPlan(plan);
+    if (!plan.allRequiredPresent) allOk = false;
     console.log("");
     if (allOk) {
       console.log(t.boldGreen("  \u2713 All checks passed\n"));
@@ -39096,9 +39189,6 @@ function readExistingPiValues(piAgentDir) {
   }
   return values;
 }
-function isPiInstalled2() {
-  return (0, import_node_child_process5.spawnSync)("pi", ["--version"], { encoding: "utf8" }).status === 0;
-}
 function printPiCheckSummary(diff) {
   const totalDiff = diff.missing.length + diff.stale.length;
   console.log(t.bold("\n  Pi extension drift check\n"));
@@ -39135,7 +39225,7 @@ function createInstallPiCommand() {
       return;
     }
     console.log(t.bold("\n  Pi Coding Agent Setup\n"));
-    if (!isPiInstalled2()) {
+    if (!isPiInstalled()) {
       console.log(kleur_default.yellow("  pi not found \u2014 installing oh-pi globally...\n"));
       const r = (0, import_node_child_process5.spawnSync)("npm", ["install", "-g", "oh-pi"], { stdio: "inherit" });
       if (r.status !== 0) {
@@ -39446,23 +39536,7 @@ async function injectProjectInstructionHeaders(projectRoot) {
 }
 async function runPreflight(projectRoot, opts) {
   const repoRoot = await findRepoRoot().catch(() => projectRoot);
-  const machineTools = [
-    {
-      name: "beads + dolt",
-      description: "workflow enforcement backend",
-      installed: isBeadsInstalled() && isDoltInstalled()
-    },
-    {
-      name: "bv",
-      description: "beads graph triage",
-      installed: isBvInstalled()
-    },
-    {
-      name: "deepwiki",
-      description: "AI-powered repo documentation",
-      installed: isDeepwikiInstalled()
-    }
-  ];
+  const bootstrapPlan = inventoryDeps();
   let skillsChanges = 0;
   try {
     const ctx = await getContext({
@@ -39496,21 +39570,13 @@ ${gitnexusStatus.stderr ?? ""}`.toLowerCase();
     ...detected.hasTypeScript ? ["TypeScript"] : [],
     ...detected.hasPython ? ["Python"] : []
   ];
-  return { projectRoot, machineTools, skillsChanges, needsBdInit, needsGitNexus, projectTypes };
+  return { projectRoot, bootstrapPlan, skillsChanges, needsBdInit, needsGitNexus, projectTypes };
 }
 function renderInitPlan(inventory) {
-  const { machineTools, skillsChanges, needsBdInit, needsGitNexus, projectTypes } = inventory;
+  const { bootstrapPlan, skillsChanges, needsBdInit, needsGitNexus, projectTypes } = inventory;
   console.log(kleur_default.bold("\n  xtrm init \u2014 Installation Plan"));
   console.log(kleur_default.dim("  " + "\u2500".repeat(42)));
-  const missingTools = machineTools.filter((tool) => !tool.installed);
-  if (missingTools.length > 0) {
-    console.log(kleur_default.bold("\n  Machine Bootstrap"));
-    for (const tool of machineTools) {
-      const icon = tool.installed ? kleur_default.green("  \u2713") : kleur_default.yellow("  +");
-      const status = tool.installed ? kleur_default.dim("already installed") : kleur_default.white("will install");
-      console.log(`${icon}  ${tool.name.padEnd(18)} ${status}`);
-    }
-  }
+  renderBootstrapPlan(bootstrapPlan);
   console.log(kleur_default.bold("\n  Claude Runtime Sync"));
   console.log(`${kleur_default.cyan("  \u21BB")}  xtrm-tools plugin + official plugins (serena/context7/github/ralph-loop)`);
   console.log(kleur_default.bold("\n  Pi Runtime Sync"));
@@ -39575,7 +39641,7 @@ async function runProjectInit(opts = {}) {
       return;
     }
   }
-  await runMachineBootstrap({ yes: true });
+  await runMachineBootstrapPhase({ dryRun: false });
   await runInstall({ ...opts, yes: true, backport: false, skipMachineBootstrap: true });
   await runProjectBootstrap(projectRoot);
   console.log(kleur_default.bold("\nProject initialized."));

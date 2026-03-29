@@ -32,6 +32,23 @@
       }
     ]
   },
+  "enabledPlugins": {
+    "xtrm-tools@xtrm-tools": true
+  },
+  "extraKnownMarketplaces": {
+    "xtrm-tools": {
+      "source": {
+        "source": "directory",
+        "path": "/home/dawid/projects/xtrm-tools"
+      }
+    },
+    "claude-plugins-official": {
+      "source": {
+        "source": "git",
+        "url": "https://github.com/anthropics/claude-plugins-official.git"
+      }
+    }
+  },
   "UserPromptSubmit": [
     {
       "matcher": "",
@@ -71,8 +88,5 @@
         }
       ]
     }
-  ],
-  "enabledPlugins": {
-    "xtrm-tools@xtrm-tools": true
-  }
+  ]
 }

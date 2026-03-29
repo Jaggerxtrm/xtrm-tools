@@ -275,14 +275,14 @@ export default function (pi: ExtensionAPI) {
 					const branch = runtimeState.branch || footerData.getGitBranch();
 					if (branch) {
 						const branchWithStatus = runtimeState.gitStatus
-							? `${branch} (${runtimeState.gitStatus})`
+							? `${branch} ${runtimeState.gitStatus}`
 							: branch;
 						pwd = `${pwd} (${branchWithStatus})`;
 					}
 
 					const pwdLine = truncateToWidth(theme.fg("dim", pwd), width, theme.fg("dim", "..."));
 
-					// === LINE 2: XX%/window | (provider) model • thinking ===
+					// === LINE 2: XX%/window (provider) model • thinking ===
 					const usage = ctx.getContextUsage();
 					const model = ctx.model;
 
@@ -326,13 +326,12 @@ export default function (pi: ExtensionAPI) {
 						}
 					}
 
-					// Add separator " | " between left and right
-					const separator = " | ";
+					// Keep provider/model adjacent to usage (no right-bound alignment)
+					const separator = " ";
 
 					// Calculate layout
 					let leftWidth = visibleWidth(statsLeft);
 					const separatorWidth = visibleWidth(separator);
-					let rightWidth = visibleWidth(rightSide);
 
 					// Check if left side too wide
 					if (leftWidth > width - separatorWidth) {
@@ -340,22 +339,14 @@ export default function (pi: ExtensionAPI) {
 						leftWidth = visibleWidth(statsLeft);
 					}
 
-					const totalNeeded = leftWidth + separatorWidth + rightWidth;
-
+					// Truncate right side to remaining width and place immediately after separator
+					const availableForRight = width - leftWidth - separatorWidth;
 					let line2: string;
-					if (totalNeeded <= width) {
-						// Pad after separator to right-align
-						const padding = " ".repeat(width - leftWidth - separatorWidth - rightWidth);
-						line2 = statsLeft + separator + padding + rightSide;
+					if (availableForRight > 0) {
+						const truncatedRight = truncateToWidth(rightSide, availableForRight, "");
+						line2 = statsLeft + separator + truncatedRight;
 					} else {
-						// Truncate right side
-						const availableForRight = width - leftWidth - separatorWidth;
-						if (availableForRight > 0) {
-							const truncatedRight = truncateToWidth(rightSide, availableForRight, "");
-							line2 = statsLeft + separator + truncatedRight;
-						} else {
-							line2 = truncateToWidth(statsLeft, width, "");
-						}
+						line2 = truncateToWidth(statsLeft, width, "");
 					}
 
 					// Apply dim to each part separately (like original footer)

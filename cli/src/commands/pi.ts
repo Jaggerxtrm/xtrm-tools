@@ -7,7 +7,7 @@ import fs from 'fs-extra';
 import { findRepoRoot } from '../utils/repo-root.js';
 import { t } from '../utils/theme.js';
 import { runPiInstall } from './pi-install.js';
-import { diffPiExtensions } from '../utils/pi-extensions.js';
+import { inventoryPiRuntime, renderPiRuntimePlan } from '../core/pi-runtime.js';
 import { createInstallPiCommand } from './install-pi.js';
 import { launchWorktreeSession } from '../utils/worktree-session.js';
 
@@ -36,7 +36,7 @@ export function createPiCommand(): Command {
             if (piResult.status === 0) {
                 console.log(t.success(`  ✓ pi ${piResult.stdout.trim()} installed`));
             } else {
-                console.log(kleur.red('  ✗ pi not found — run: xt pi install'));
+                console.log(kleur.red('  ✗ pi not found — run: xt pi setup'));
                 console.log('');
                 return;
             }
@@ -48,81 +48,124 @@ export function createPiCommand(): Command {
                 ? projectScopedDir
                 : path.join(PI_AGENT_DIR, 'extensions');
             const scopeLabel = targetDir === projectScopedDir ? 'project' : 'global';
-            const diff = await diffPiExtensions(sourceDir, targetDir);
 
-            if (diff.missing.length === 0 && diff.stale.length === 0) {
-                console.log(t.success(`  ✓ extensions up-to-date (${diff.upToDate.length} deployed, ${scopeLabel})`));
-            } else {
-                if (diff.missing.length > 0) console.log(kleur.yellow(`  ⚠ missing: ${diff.missing.join(', ')}`));
-                if (diff.stale.length > 0) console.log(kleur.yellow(`  ⚠ stale: ${diff.stale.join(', ')}`));
-                console.log(kleur.dim('  → run: xt pi install'));
+            if (!await fs.pathExists(sourceDir)) {
+                console.log(kleur.dim(`  ○ managed extensions not bundled in this install\n`));
+                return;
             }
 
-            console.log('');
+            const plan = await inventoryPiRuntime(sourceDir, targetDir);
+
+            // Summary line
+            const extOk = plan.extensions.filter(s => s.installed && !s.stale).length;
+            const pkgOk = plan.packages.filter(s => s.installed).length;
+
+            console.log(kleur.dim(`  Scope:      ${scopeLabel}`));
+            console.log(kleur.dim(`  Extensions: ${extOk}/${plan.extensions.length} up-to-date`));
+            console.log(kleur.dim(`  Packages:   ${pkgOk}/${plan.packages.length} installed`));
+
+            if (plan.allPresent) {
+                console.log(t.success(`\n  ✓ All extensions and packages present\n`));
+            } else {
+                if (plan.missingExtensions.length > 0) {
+                    const names = plan.missingExtensions.map(s => s.ext.displayName).join(', ');
+                    console.log(kleur.yellow(`  Missing:    ${names}`));
+                }
+                if (plan.staleExtensions.length > 0) {
+                    const names = plan.staleExtensions.map(s => s.ext.displayName).join(', ');
+                    console.log(kleur.yellow(`  Stale:      ${names}`));
+                }
+                if (plan.orphanedExtensions.length > 0) {
+                    console.log(kleur.red(`  Orphaned:   ${plan.orphanedExtensions.join(', ')}`));
+                }
+                if (plan.missingPackages.length > 0) {
+                    const names = plan.missingPackages.map(s => s.pkg.displayName).join(', ');
+                    console.log(kleur.yellow(`  Packages:   ${names}`));
+                }
+                console.log(kleur.dim('\n  → run: xt pi reload\n'));
+            }
         });
 
     cmd.command('doctor')
-        .description('Diagnostic checks: pi installed, extensions deployed, packages present')
+        .description('Diagnostic checks: pi installed, extensions deployed, packages present, orphaned extensions')
         .action(async () => {
             console.log(t.bold('\n  Pi Doctor\n'));
 
             let allOk = true;
 
+            // Check pi binary
             const piResult = spawnSync('pi', ['--version'], { encoding: 'utf8', stdio: 'pipe' });
             if (piResult.status === 0) {
                 console.log(t.success(`  ✓ pi ${piResult.stdout.trim()} installed`));
             } else {
-                console.log(kleur.red('  ✗ pi not found — run: xt pi install'));
+                console.log(kleur.red('  ✗ pi not found — run: xt pi setup'));
                 allOk = false;
             }
 
+            // Check pnpm
+            const pnpmResult = spawnSync('pnpm', ['--version'], { encoding: 'utf8', stdio: 'pipe' });
+            if (pnpmResult.status === 0) {
+                console.log(t.success(`  ✓ pnpm ${pnpmResult.stdout.trim()} installed`));
+            } else {
+                console.log(kleur.yellow('  ⚠ pnpm not found'));
+                allOk = false;
+            }
+
+            // Check config files
+            const configFiles = ['models.json', 'auth.json', 'settings.json'];
+            const missingConfig = configFiles.filter(f => !fs.existsSync(path.join(PI_AGENT_DIR, f)));
+            if (missingConfig.length === 0) {
+                console.log(t.success(`  ✓ config files present`));
+            } else {
+                console.log(kleur.yellow(`  ⚠ missing config: ${missingConfig.join(', ')}`));
+                allOk = false;
+            }
+
+            // Check extensions and packages using unified service
             const repoRoot = await findRepoRoot();
-            const piConfigDir = path.join(repoRoot, 'config', 'pi');
-            const sourceDir = path.join(piConfigDir, 'extensions');
+            const sourceDir = path.join(repoRoot, 'config', 'pi', 'extensions');
             const projectScopedDir = path.join(repoRoot, '.pi', 'extensions');
             const targetDir = await fs.pathExists(projectScopedDir)
                 ? projectScopedDir
                 : path.join(PI_AGENT_DIR, 'extensions');
-            const diff = await diffPiExtensions(sourceDir, targetDir);
 
-            if (diff.missing.length === 0 && diff.stale.length === 0) {
-                console.log(t.success(`  ✓ extensions deployed (${diff.upToDate.length})`));
-            } else {
-                console.log(kleur.yellow(`  ⚠ extension drift (${diff.missing.length} missing, ${diff.stale.length} stale)`));
-                allOk = false;
-            }
+            if (await fs.pathExists(sourceDir)) {
+                const plan = await inventoryPiRuntime(sourceDir, targetDir);
 
-            const schemaPath = path.join(piConfigDir, 'install-schema.json');
-            if (await fs.pathExists(schemaPath)) {
-                try {
-                    execSync('pi --version', { stdio: 'ignore' });
-                    const schema = await fs.readJson(schemaPath);
-                    const listResult = spawnSync('pi', ['list'], { encoding: 'utf8', stdio: 'pipe' });
-                    const installed = listResult.stdout ?? '';
-                    const missing = schema.packages.filter((p: string) => !installed.includes(p.replace('npm:', '')));
-                    if (missing.length === 0) {
-                        console.log(t.success(`  ✓ all ${schema.packages.length} packages installed`));
-                    } else {
-                        console.log(kleur.yellow(`  ⚠ ${missing.length} package(s) missing: ${missing.join(', ')}`));
+                if (plan.allPresent) {
+                    console.log(t.success(`  ✓ extensions deployed (${plan.extensions.length})`));
+                    console.log(t.success(`  ✓ packages installed (${plan.packages.length})`));
+                } else {
+                    if (plan.missingExtensions.length > 0 || plan.staleExtensions.length > 0) {
+                        console.log(kleur.yellow(`  ⚠ extension drift (${plan.missingExtensions.length} missing, ${plan.staleExtensions.length} stale)`));
                         allOk = false;
                     }
-                } catch {
-                    console.log(kleur.dim('  ○ could not check packages (pi not available)'));
+                    if (plan.orphanedExtensions.length > 0) {
+                        console.log(kleur.red(`  ✗ orphaned extensions: ${plan.orphanedExtensions.join(', ')}`));
+                        allOk = false;
+                    }
+                    if (plan.missingPackages.length > 0) {
+                        console.log(kleur.yellow(`  ⚠ ${plan.missingPackages.length} package(s) missing`));
+                        allOk = false;
+                    }
                 }
+            } else {
+                console.log(kleur.dim('  ○ managed extensions not bundled in this install'));
             }
 
             console.log('');
             if (allOk) {
                 console.log(t.boldGreen('  ✓ All checks passed\n'));
             } else {
-                console.log(kleur.yellow('  ⚠ Some checks failed — run: xt pi install\n'));
+                console.log(kleur.yellow('  ⚠ Some checks failed — run: xt pi reload\n'));
             }
         });
 
     cmd.command('reload')
-        .description('Re-sync extensions and reinstall packages from repo')
+        .description('Re-sync extensions, remove orphaned, and reinstall missing packages')
         .action(async () => {
-            await runPiInstall(false);
+            const repoRoot = await findRepoRoot();
+            await runPiInstall(false, false, repoRoot);
         });
 
     return cmd;

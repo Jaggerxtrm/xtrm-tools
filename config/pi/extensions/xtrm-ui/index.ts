@@ -749,7 +749,7 @@ function registerXtrmUiTools(pi: ExtensionAPI): void {
     activeSignatureCounts.has(stableToolSignature(toolName, args));
 
   const renderPendingCallIfActive = (toolName: string, args: Record<string, unknown>, theme: any) =>
-    isToolCallActive(toolName, args) ? renderPendingCall(toolName, args, theme) : undefined;
+    isToolCallActive(toolName, args) ? renderPendingCall(toolName, args, theme) : new Text("", 0, 0);
 
   pi.on("tool_call", async (event) => {
     trackToolCallStart(event.toolCallId, event.toolName, event.input as Record<string, unknown>);

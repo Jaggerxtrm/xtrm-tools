@@ -39950,7 +39950,8 @@ async function runPreflight(projectRoot, opts) {
     const ctx = await getContext({
       createMissingDirs: false,
       isGlobal: opts.global,
-      projectRoot: repoRoot
+      projectRoot
+      // Target project, not source repo
     });
     for (const target of ctx.targets) {
       try {

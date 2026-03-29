@@ -38006,22 +38006,36 @@ async function listExtensionDirs(baseDir) {
   }
   return extDirs.sort();
 }
-async function fileSha256(filePath) {
-  const crypto2 = await import("crypto");
-  const content = await import_fs_extra8.default.readFile(filePath);
-  return crypto2.createHash("sha256").update(content).digest("hex");
+async function listFilesRecursive(baseDir, currentDir = baseDir) {
+  const entries = await import_fs_extra8.default.readdir(currentDir, { withFileTypes: true });
+  const files = [];
+  for (const entry of entries) {
+    const fullPath = import_path9.default.join(currentDir, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...await listFilesRecursive(baseDir, fullPath));
+      continue;
+    }
+    if (entry.isFile()) {
+      files.push(import_path9.default.relative(baseDir, fullPath));
+    }
+  }
+  return files.sort();
 }
 async function extensionHash(extDir) {
-  const pkgPath = import_path9.default.join(extDir, "package.json");
-  const indexPath = import_path9.default.join(extDir, "index.ts");
-  const hashes = [];
-  if (await import_fs_extra8.default.pathExists(pkgPath)) {
-    hashes.push(await fileSha256(pkgPath));
+  if (!await import_fs_extra8.default.pathExists(extDir)) {
+    return "";
   }
-  if (await import_fs_extra8.default.pathExists(indexPath)) {
-    hashes.push(await fileSha256(indexPath));
+  const crypto2 = await import("crypto");
+  const files = await listFilesRecursive(extDir);
+  const hash2 = crypto2.createHash("sha256");
+  for (const relativeFile of files) {
+    const absoluteFile = import_path9.default.join(extDir, relativeFile);
+    hash2.update(relativeFile);
+    hash2.update("\0");
+    hash2.update(await import_fs_extra8.default.readFile(absoluteFile));
+    hash2.update("\0");
   }
-  return hashes.join(":");
+  return hash2.digest("hex");
 }
 async function diffPiExtensions(sourceDir, targetDir) {
   const sourceAbs = import_path9.default.resolve(sourceDir);

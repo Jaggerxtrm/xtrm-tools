@@ -46,7 +46,7 @@ program.addCommand(createClaudeCommand());
 program.addCommand(createPiCommand());
 program
     .command('init')
-    .description('Set up xtrm in this project (plugin, Pi extensions, skills, beads, GitNexus)')
+    .description('Bootstrap xtrm with phased installer: machine → Claude → Pi → project')
     .option('--dry-run', 'Preview changes without making any modifications', false)
     .option('-y, --yes', 'Skip confirmation prompts', false)
     .option('--global', 'Install tooling to user-global scope instead of project-local', false)

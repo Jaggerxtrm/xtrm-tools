@@ -47,23 +47,46 @@ async function fileSha256(filePath: string): Promise<string> {
     return crypto.createHash('sha256').update(content).digest('hex');
 }
 
+async function listFilesRecursive(baseDir: string, currentDir: string = baseDir): Promise<string[]> {
+    const entries = await fs.readdir(currentDir, { withFileTypes: true });
+    const files: string[] = [];
+
+    for (const entry of entries) {
+        const fullPath = path.join(currentDir, entry.name);
+        if (entry.isDirectory()) {
+            files.push(...await listFilesRecursive(baseDir, fullPath));
+            continue;
+        }
+        if (entry.isFile()) {
+            files.push(path.relative(baseDir, fullPath));
+        }
+    }
+
+    return files.sort();
+}
+
 /**
- * Compute a hash for an extension package based on package.json + index.ts.
+ * Compute a hash for an extension package based on all tracked files.
+ * This catches drift in nested files, not just package.json/index.ts.
  */
 export async function extensionHash(extDir: string): Promise<string> {
-    const pkgPath = path.join(extDir, 'package.json');
-    const indexPath = path.join(extDir, 'index.ts');
-
-    const hashes: string[] = [];
-
-    if (await fs.pathExists(pkgPath)) {
-        hashes.push(await fileSha256(pkgPath));
-    }
-    if (await fs.pathExists(indexPath)) {
-        hashes.push(await fileSha256(indexPath));
+    if (!await fs.pathExists(extDir)) {
+        return '';
     }
 
-    return hashes.join(':');
+    const crypto = await import('node:crypto');
+    const files = await listFilesRecursive(extDir);
+    const hash = crypto.createHash('sha256');
+
+    for (const relativeFile of files) {
+        const absoluteFile = path.join(extDir, relativeFile);
+        hash.update(relativeFile);
+        hash.update('\0');
+        hash.update(await fs.readFile(absoluteFile));
+        hash.update('\0');
+    }
+
+    return hash.digest('hex');
 }
 
 /**

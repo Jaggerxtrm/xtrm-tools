@@ -8215,7 +8215,7 @@ var require_dist = __commonJS({
         });
       };
     }
-    var prompts7 = require_prompts();
+    var prompts8 = require_prompts();
     var passOn = ["suggest", "format", "onState", "validate", "onRender", "type"];
     var noop = () => {
     };
@@ -8266,7 +8266,7 @@ var require_dist = __commonJS({
             var _question2 = question;
             name = _question2.name;
             type = _question2.type;
-            if (prompts7[type] === void 0) {
+            if (prompts8[type] === void 0) {
               throw new Error(`prompt type (${type}) is not defined`);
             }
             if (override2[question.name] !== void 0) {
@@ -8277,7 +8277,7 @@ var require_dist = __commonJS({
               }
             }
             try {
-              answer = prompt._injected ? getInjectedAnswer(prompt._injected, question.initial) : yield prompts7[type](question);
+              answer = prompt._injected ? getInjectedAnswer(prompt._injected, question.initial) : yield prompts8[type](question);
               answers[name] = answer = yield getFormattedAnswer(question, answer, true);
               quit = yield onSubmit(question, answer, answers);
             } catch (err) {
@@ -8309,7 +8309,7 @@ var require_dist = __commonJS({
     }
     module2.exports = Object.assign(prompt, {
       prompt,
-      prompts: prompts7,
+      prompts: prompts8,
       inject,
       override
     });
@@ -10396,7 +10396,7 @@ var require_prompts2 = __commonJS({
 var require_lib2 = __commonJS({
   "../node_modules/prompts/lib/index.js"(exports2, module2) {
     "use strict";
-    var prompts7 = require_prompts2();
+    var prompts8 = require_prompts2();
     var passOn = ["suggest", "format", "onState", "validate", "onRender", "type"];
     var noop = () => {
     };
@@ -10428,7 +10428,7 @@ var require_lib2 = __commonJS({
           throw new Error("prompt message is required");
         }
         ({ name, type } = question);
-        if (prompts7[type] === void 0) {
+        if (prompts8[type] === void 0) {
           throw new Error(`prompt type (${type}) is not defined`);
         }
         if (override2[question.name] !== void 0) {
@@ -10439,7 +10439,7 @@ var require_lib2 = __commonJS({
           }
         }
         try {
-          answer = prompt._injected ? getInjectedAnswer(prompt._injected, question.initial) : await prompts7[type](question);
+          answer = prompt._injected ? getInjectedAnswer(prompt._injected, question.initial) : await prompts8[type](question);
           answers[name] = answer = await getFormattedAnswer(question, answer, true);
           quit = await onSubmit(question, answer, answers);
         } catch (err) {
@@ -10462,7 +10462,7 @@ var require_lib2 = __commonJS({
     function override(answers) {
       prompt._override = Object.assign({}, answers);
     }
-    module2.exports = Object.assign(prompt, { prompt, prompts: prompts7, inject, override });
+    module2.exports = Object.assign(prompt, { prompt, prompts: prompts8, inject, override });
   }
 });
 
@@ -38407,6 +38407,14 @@ function isDeepwikiInstalled() {
     return false;
   }
 }
+function isBvInstalled() {
+  try {
+    (0, import_child_process2.execSync)("bv --version", { stdio: "ignore" });
+    return true;
+  } catch {
+    return false;
+  }
+}
 var OFFICIAL_CLAUDE_MARKETPLACE = "https://github.com/anthropics/claude-plugins-official";
 var OFFICIAL_CLAUDE_PLUGINS = [
   "serena@claude-plugins-official",
@@ -38616,8 +38624,103 @@ function installUserStatusLine(dryRun) {
   } catch {
   }
 }
+async function runMachineBootstrap(opts = {}) {
+  const effectiveYes = opts.yes ?? false;
+  console.log(t.bold("\n  \u2699  beads + dolt  (workflow enforcement backend)"));
+  console.log(t.muted("  beads is a git-backed issue tracker; dolt is its SQL+git storage backend."));
+  console.log(t.muted("  Without them the gate hooks install but provide no enforcement.\n"));
+  const beadsOk = isBeadsInstalled();
+  const doltOk = isDoltInstalled();
+  if (beadsOk && doltOk) {
+    console.log(t.success("  \u2713 beads + dolt already installed\n"));
+  } else {
+    const missing = [!beadsOk && "bd", !doltOk && "dolt"].filter(Boolean).join(", ");
+    let doInstall = effectiveYes;
+    if (!effectiveYes) {
+      const { install } = await (0, import_prompts.default)({
+        type: "confirm",
+        name: "install",
+        message: `Install beads + dolt? (${missing} not found) \u2014 required for workflow enforcement hooks`,
+        initial: true
+      });
+      doInstall = install;
+    }
+    if (doInstall) {
+      if (!beadsOk) {
+        console.log(t.muted("\n  Installing @beads/bd..."));
+        (0, import_child_process3.spawnSync)("npm", ["install", "-g", "@beads/bd"], { stdio: "inherit" });
+        console.log(t.success("  \u2713 bd installed"));
+      }
+      if (!doltOk) {
+        console.log(t.muted("\n  Installing dolt..."));
+        if (process.platform === "darwin") {
+          (0, import_child_process3.spawnSync)("brew", ["install", "dolt"], { stdio: "inherit" });
+        } else {
+          (0, import_child_process3.spawnSync)("sudo", [
+            "bash",
+            "-c",
+            "curl -L https://github.com/dolthub/dolt/releases/latest/download/install.sh | bash"
+          ], { stdio: "inherit" });
+        }
+        console.log(t.success("  \u2713 dolt installed"));
+      }
+      console.log("");
+    } else {
+      console.log(t.muted("  \u2139 Skipped. Re-run after installing beads+dolt.\n"));
+    }
+  }
+  console.log(t.bold("\n  \u2699  bv  (beads graph triage)"));
+  const bvOk = isBvInstalled();
+  if (bvOk) {
+    console.log(t.success("  \u2713 bv already installed\n"));
+  } else {
+    let doInstall = effectiveYes;
+    if (!effectiveYes) {
+      const { install } = await (0, import_prompts.default)({
+        type: "confirm",
+        name: "install",
+        message: "Install bv (beads_viewer)? \u2014 graph-aware triage for bd issues",
+        initial: true
+      });
+      doInstall = install;
+    }
+    if (doInstall) {
+      console.log(t.muted("\n  Installing bv..."));
+      (0, import_child_process3.spawnSync)("bash", [
+        "-c",
+        "curl -fsSL https://raw.githubusercontent.com/Jaggerxtrm/beads_viewer/main/scripts/install-bv.sh | bash"
+      ], { stdio: "inherit" });
+      console.log(t.success("  \u2713 bv installed\n"));
+    } else {
+      console.log(t.muted("  \u2139 Skipped.\n"));
+    }
+  }
+  console.log(t.bold("\n  \u2699  deepwiki  (AI-powered repo documentation)"));
+  const deepwikiOk = isDeepwikiInstalled();
+  if (deepwikiOk) {
+    console.log(t.success("  \u2713 deepwiki already installed\n"));
+  } else {
+    let doInstall = effectiveYes;
+    if (!effectiveYes) {
+      const { install } = await (0, import_prompts.default)({
+        type: "confirm",
+        name: "install",
+        message: "Install @seflless/deepwiki?",
+        initial: true
+      });
+      doInstall = install;
+    }
+    if (doInstall) {
+      console.log(t.muted("\n  Installing @seflless/deepwiki..."));
+      (0, import_child_process3.spawnSync)("npm", ["install", "-g", "@seflless/deepwiki"], { stdio: "inherit" });
+      console.log(t.success("  \u2713 deepwiki installed\n"));
+    } else {
+      console.log(t.muted("  \u2139 Skipped.\n"));
+    }
+  }
+}
 async function runInstall(opts = {}) {
-  const { dryRun = false, yes = false, prune = false, backport = false, global: isGlobal = false } = opts;
+  const { dryRun = false, yes = false, prune = false, backport = false, global: isGlobal = false, skipMachineBootstrap = false } = opts;
   const effectiveYes = yes || process.argv.includes("--yes") || process.argv.includes("-y");
   const syncType = backport ? "backport" : "sync";
   const actionLabel = backport ? "backport" : "install";
@@ -38628,110 +38731,8 @@ async function runInstall(opts = {}) {
     projectRoot: repoRoot
   });
   const { targets, syncMode } = ctx;
-  if (!backport) {
-    console.log(t.bold("\n  \u2699  beads + dolt  (workflow enforcement backend)"));
-    console.log(t.muted("  beads is a git-backed issue tracker; dolt is its SQL+git storage backend."));
-    console.log(t.muted("  Without them the gate hooks install but provide no enforcement.\n"));
-    const beadsOk = isBeadsInstalled();
-    const doltOk = isDoltInstalled();
-    if (beadsOk && doltOk) {
-      console.log(t.success("  \u2713 beads + dolt already installed\n"));
-    } else {
-      const missing = [!beadsOk && "bd", !doltOk && "dolt"].filter(Boolean).join(", ");
-      let doInstall = effectiveYes;
-      if (!effectiveYes) {
-        const { install } = await (0, import_prompts.default)({
-          type: "confirm",
-          name: "install",
-          message: `Install beads + dolt? (${missing} not found) \u2014 required for workflow enforcement hooks`,
-          initial: true
-        });
-        doInstall = install;
-      }
-      if (doInstall) {
-        if (!beadsOk) {
-          console.log(t.muted("\n  Installing @beads/bd..."));
-          (0, import_child_process3.spawnSync)("npm", ["install", "-g", "@beads/bd"], { stdio: "inherit" });
-          console.log(t.success("  \u2713 bd installed"));
-        }
-        if (!doltOk) {
-          console.log(t.muted("\n  Installing dolt..."));
-          if (process.platform === "darwin") {
-            (0, import_child_process3.spawnSync)("brew", ["install", "dolt"], { stdio: "inherit" });
-          } else {
-            (0, import_child_process3.spawnSync)("sudo", [
-              "bash",
-              "-c",
-              "curl -L https://github.com/dolthub/dolt/releases/latest/download/install.sh | bash"
-            ], { stdio: "inherit" });
-          }
-          console.log(t.success("  \u2713 dolt installed"));
-        }
-        console.log("");
-      } else {
-        console.log(t.muted("  \u2139 Skipped. Re-run after installing beads+dolt.\n"));
-      }
-    }
-  }
-  if (!backport) {
-    console.log(t.bold("\n  \u2699  bv  (beads graph triage)"));
-    const bvOk = (() => {
-      try {
-        (0, import_child_process2.execSync)("bv --version", { stdio: "ignore" });
-        return true;
-      } catch {
-        return false;
-      }
-    })();
-    if (bvOk) {
-      console.log(t.success("  \u2713 bv already installed\n"));
-    } else {
-      let doInstall = effectiveYes;
-      if (!effectiveYes) {
-        const { install } = await (0, import_prompts.default)({
-          type: "confirm",
-          name: "install",
-          message: "Install bv (beads_viewer)? \u2014 graph-aware triage for bd issues",
-          initial: true
-        });
-        doInstall = install;
-      }
-      if (doInstall) {
-        console.log(t.muted("\n  Installing bv..."));
-        (0, import_child_process3.spawnSync)("bash", [
-          "-c",
-          "curl -fsSL https://raw.githubusercontent.com/Jaggerxtrm/beads_viewer/main/scripts/install-bv.sh | bash"
-        ], { stdio: "inherit" });
-        console.log(t.success("  \u2713 bv installed\n"));
-      } else {
-        console.log(t.muted("  \u2139 Skipped.\n"));
-      }
-    }
-  }
-  if (!backport) {
-    console.log(t.bold("\n  \u2699  deepwiki  (AI-powered repo documentation)"));
-    const deepwikiOk = isDeepwikiInstalled();
-    if (deepwikiOk) {
-      console.log(t.success("  \u2713 deepwiki already installed\n"));
-    } else {
-      let doInstall = effectiveYes;
-      if (!effectiveYes) {
-        const { install } = await (0, import_prompts.default)({
-          type: "confirm",
-          name: "install",
-          message: "Install @seflless/deepwiki?",
-          initial: true
-        });
-        doInstall = install;
-      }
-      if (doInstall) {
-        console.log(t.muted("\n  Installing @seflless/deepwiki..."));
-        (0, import_child_process3.spawnSync)("npm", ["install", "-g", "@seflless/deepwiki"], { stdio: "inherit" });
-        console.log(t.success("  \u2713 deepwiki installed\n"));
-      } else {
-        console.log(t.muted("  \u2139 Skipped.\n"));
-      }
-    }
+  if (!backport && !skipMachineBootstrap) {
+    await runMachineBootstrap({ yes: effectiveYes });
   }
   if (!backport) {
     await installPlugin(repoRoot, dryRun, isGlobal);
@@ -39309,6 +39310,7 @@ function createPiCommand() {
 var import_path15 = __toESM(require("path"), 1);
 var import_fs_extra14 = __toESM(require_lib(), 1);
 var import_child_process4 = require("child_process");
+var import_prompts3 = __toESM(require_prompts3(), 1);
 
 // src/commands/install-service-skills.ts
 var import_path14 = __toESM(require("path"), 1);
@@ -39442,45 +39444,115 @@ async function injectProjectInstructionHeaders(projectRoot) {
     console.log(`${kleur_default.green("  \u2713")} updated ${target.output}`);
   }
 }
-function buildProjectInitGuide() {
-  const lines = [
-    kleur_default.bold("\nProject Init \u2014 Global-first baseline\n"),
-    kleur_default.dim("xtrm init bootstraps project data (beads, GitNexus, service registry) while hooks/skills stay global.\n"),
-    `${kleur_default.cyan("1) Run initialization once per repository:")}`,
-    kleur_default.dim("   xtrm init   (alias: xtrm project init)"),
-    kleur_default.dim("   - Initializes beads workspace (bd init)"),
-    kleur_default.dim("   - Refreshes GitNexus index if missing/stale"),
-    kleur_default.dim("   - Injects XTRM workflow headers into AGENTS.md + CLAUDE.md"),
-    kleur_default.dim("   - Detects TypeScript/Python project signals"),
-    "",
-    `${kleur_default.cyan("2) What is already global (no per-project install needed):")}`,
-    kleur_default.dim("   - quality gates hooks (ESLint/tsc/ruff/mypy on every edit)"),
-    kleur_default.dim("   - beads workflow gates (edit/commit/stop/memory enforcement)"),
-    kleur_default.dim("   - session-flow gates (claim sync, stop gate, xt end reminder)"),
-    kleur_default.dim("   - service-skills routing and drift checks"),
-    "",
-    `${kleur_default.cyan("3) Configure repo quality tools (hooks enforce what exists):")}`,
-    kleur_default.dim("   - TS: eslint + prettier + tsc"),
-    kleur_default.dim("   - PY: ruff + mypy/pyright"),
-    kleur_default.dim("   - tests: failing tests should block regressions"),
-    "",
-    `${kleur_default.cyan("4) Beads workflow (required for gated edit/commit flow):")}`,
-    kleur_default.dim("   - Claim work:   bd ready --json  ->  bd update <id> --claim --json"),
-    kleur_default.dim("   - During work:  keep issue status current; create discovered follow-ups"),
-    kleur_default.dim('   - Finish work:  bd close <id> --reason "Done" --json'),
-    "",
-    `${kleur_default.cyan("5) Git workflow:")}`,
-    kleur_default.dim('   - bd close <id> --reason "..."    \u2190 closes issue'),
-    kleur_default.dim("   - xt end                          \u2190 push, PR, merge, worktree cleanup"),
-    ""
+async function runPreflight(projectRoot, opts) {
+  const repoRoot = await findRepoRoot().catch(() => projectRoot);
+  const machineTools = [
+    {
+      name: "beads + dolt",
+      description: "workflow enforcement backend",
+      installed: isBeadsInstalled() && isDoltInstalled()
+    },
+    {
+      name: "bv",
+      description: "beads graph triage",
+      installed: isBvInstalled()
+    },
+    {
+      name: "deepwiki",
+      description: "AI-powered repo documentation",
+      installed: isDeepwikiInstalled()
+    }
   ];
-  return lines.join("\n");
+  let skillsChanges = 0;
+  try {
+    const ctx = await getContext({
+      createMissingDirs: false,
+      isGlobal: opts.global,
+      projectRoot: repoRoot
+    });
+    for (const target of ctx.targets) {
+      try {
+        const changeSet = await calculateDiff(repoRoot, target, false);
+        skillsChanges += Object.values(changeSet).reduce(
+          (sum, c) => sum + c.missing.length + c.outdated.length,
+          0
+        );
+      } catch {
+      }
+    }
+  } catch {
+  }
+  const needsBdInit = !await import_fs_extra14.default.pathExists(import_path15.default.join(projectRoot, ".beads"));
+  const gitnexusStatus = (0, import_child_process4.spawnSync)("gitnexus", ["status"], {
+    cwd: projectRoot,
+    encoding: "utf8",
+    timeout: 5e3
+  });
+  const gnText = `${gitnexusStatus.stdout ?? ""}
+${gitnexusStatus.stderr ?? ""}`.toLowerCase();
+  const needsGitNexus = gitnexusStatus.status !== 0 || gnText.includes("stale") || gnText.includes("not indexed") || gnText.includes("missing");
+  const detected = await detectProjectFeatures(projectRoot);
+  const projectTypes = [
+    ...detected.hasTypeScript ? ["TypeScript"] : [],
+    ...detected.hasPython ? ["Python"] : []
+  ];
+  return { projectRoot, machineTools, skillsChanges, needsBdInit, needsGitNexus, projectTypes };
+}
+function renderInitPlan(inventory) {
+  const { machineTools, skillsChanges, needsBdInit, needsGitNexus, projectTypes } = inventory;
+  console.log(kleur_default.bold("\n  xtrm init \u2014 Installation Plan"));
+  console.log(kleur_default.dim("  " + "\u2500".repeat(42)));
+  const missingTools = machineTools.filter((tool) => !tool.installed);
+  if (missingTools.length > 0) {
+    console.log(kleur_default.bold("\n  Machine Bootstrap"));
+    for (const tool of machineTools) {
+      const icon = tool.installed ? kleur_default.green("  \u2713") : kleur_default.yellow("  +");
+      const status = tool.installed ? kleur_default.dim("already installed") : kleur_default.white("will install");
+      console.log(`${icon}  ${tool.name.padEnd(18)} ${status}`);
+    }
+  }
+  console.log(kleur_default.bold("\n  Claude Runtime Sync"));
+  console.log(`${kleur_default.cyan("  \u21BB")}  xtrm-tools plugin + official plugins (serena/context7/github/ralph-loop)`);
+  console.log(kleur_default.bold("\n  Pi Runtime Sync"));
+  console.log(`${kleur_default.cyan("  \u21BB")}  extensions + packages`);
+  console.log(kleur_default.bold("\n  Skills  (.agents/skills)"));
+  if (skillsChanges > 0) {
+    console.log(`${kleur_default.cyan("  \u2191")}  ${skillsChanges} change${skillsChanges !== 1 ? "s" : ""} pending`);
+  } else {
+    console.log(kleur_default.dim("  \u2713  already up to date"));
+  }
+  console.log(kleur_default.bold("\n  Project Bootstrap"));
+  const projActions = [
+    needsBdInit ? "bd init \u2014 initialize beads workspace" : null,
+    needsGitNexus ? "gitnexus analyze \u2014 build code intelligence index" : null,
+    "AGENTS.md + CLAUDE.md \u2014 inject workflow instruction headers"
+  ].filter(Boolean);
+  for (const action of projActions) {
+    console.log(`${kleur_default.cyan("  \u2022")}  ${action}`);
+  }
+  if (projectTypes.length > 0) {
+    console.log(kleur_default.dim(`
+  Detected: ${projectTypes.join(", ")}`));
+  }
+  console.log(kleur_default.dim("\n  " + "\u2500".repeat(42) + "\n"));
+}
+async function confirmInitPlan() {
+  const { confirm } = await (0, import_prompts3.default)({
+    type: "confirm",
+    name: "confirm",
+    message: "Proceed with xtrm init?",
+    initial: true
+  });
+  return Boolean(confirm);
+}
+async function runProjectBootstrap(projectRoot) {
+  await runBdInitForProject(projectRoot);
+  await injectProjectInstructionHeaders(projectRoot);
+  await runGitNexusInitForProject(projectRoot);
 }
 async function runProjectInit(opts = {}) {
-  console.log(buildProjectInitGuide());
-  await bootstrapProjectInit(opts);
-}
-async function bootstrapProjectInit(opts = {}) {
+  const { dryRun = false, yes = false } = opts;
+  const effectiveYes = yes || process.argv.includes("--yes") || process.argv.includes("-y");
   let projectRoot;
   try {
     projectRoot = getProjectRoot();
@@ -39490,17 +39562,27 @@ async function bootstrapProjectInit(opts = {}) {
 `));
     return;
   }
-  await runInstall({ ...opts, backport: false });
-  const detected = await detectProjectFeatures(projectRoot);
-  await runBdInitForProject(projectRoot);
-  await injectProjectInstructionHeaders(projectRoot);
-  await runGitNexusInitForProject(projectRoot);
-  const projectTypes = [];
-  if (detected.hasTypeScript) projectTypes.push("TypeScript");
-  if (detected.hasPython) projectTypes.push("Python");
+  const inventory = await runPreflight(projectRoot, opts);
+  renderInitPlan(inventory);
+  if (dryRun) {
+    console.log(kleur_default.dim("  Dry run \u2014 no changes written\n"));
+    return;
+  }
+  if (!effectiveYes) {
+    const ok = await confirmInitPlan();
+    if (!ok) {
+      console.log(kleur_default.dim("  Init cancelled.\n"));
+      return;
+    }
+  }
+  await runMachineBootstrap({ yes: true });
+  await runInstall({ ...opts, yes: true, backport: false, skipMachineBootstrap: true });
+  await runProjectBootstrap(projectRoot);
   console.log(kleur_default.bold("\nProject initialized."));
-  console.log(kleur_default.white(`  Quality gates active globally.`));
-  console.log(kleur_default.white(`  Project types: ${projectTypes.length > 0 ? projectTypes.join(", ") : "none detected"}.`));
+  console.log(kleur_default.white("  Quality gates active globally."));
+  if (inventory.projectTypes.length > 0) {
+    console.log(kleur_default.white(`  Project types: ${inventory.projectTypes.join(", ")}.`));
+  }
   console.log("");
 }
 async function runBdInitForProject(projectRoot) {
@@ -39579,7 +39661,7 @@ function getProjectRoot() {
 }
 
 // src/commands/status.ts
-var import_prompts3 = __toESM(require_prompts3(), 1);
+var import_prompts4 = __toESM(require_prompts3(), 1);
 
 // src/core/manifest.ts
 var import_path16 = require("path");
@@ -53483,7 +53565,7 @@ function createStatusCommand() {
     console.log(kleur_default.yellow(`
   \u26A0  ${totalPending} pending change${totalPending !== 1 ? "s" : ""} across ${pending.length} environment${pending.length !== 1 ? "s" : ""}
 `));
-    const { selected } = await (0, import_prompts3.default)({
+    const { selected } = await (0, import_prompts4.default)({
       type: "multiselect",
       name: "selected",
       message: "Select environments to sync:",
@@ -53938,7 +54020,7 @@ function createCleanCommand() {
 }
 
 // src/commands/end.ts
-var import_prompts4 = __toESM(require_prompts3(), 1);
+var import_prompts5 = __toESM(require_prompts3(), 1);
 var import_node_child_process7 = require("child_process");
 function git(args, cwd) {
   const r = (0, import_node_child_process7.spawnSync)("git", args, { cwd, encoding: "utf8", stdio: "pipe" });
@@ -54186,7 +54268,7 @@ function createEndCommand() {
     if (!opts.keep) {
       let doRemove = opts.yes;
       if (!opts.yes) {
-        const { remove } = await (0, import_prompts4.default)({
+        const { remove } = await (0, import_prompts5.default)({
           type: "confirm",
           name: "remove",
           message: `Remove local worktree at ${cwd}?`,
@@ -54221,7 +54303,7 @@ function createEndCommand() {
 }
 
 // src/commands/worktree.ts
-var import_prompts5 = __toESM(require_prompts3(), 1);
+var import_prompts6 = __toESM(require_prompts3(), 1);
 var import_node_child_process8 = require("child_process");
 var import_node_fs5 = require("fs");
 var import_node_path6 = require("path");
@@ -54350,7 +54432,7 @@ function createWorktreeCommand() {
     }
     let doRemove = opts.yes;
     if (!opts.yes) {
-      const { confirm } = await (0, import_prompts5.default)({
+      const { confirm } = await (0, import_prompts6.default)({
         type: "confirm",
         name: "confirm",
         message: `Remove ${merged.length} worktree(s)?`,
@@ -54392,7 +54474,7 @@ function createWorktreeCommand() {
     }
     let doRemove = opts.yes;
     if (!opts.yes) {
-      const { confirm } = await (0, import_prompts5.default)({
+      const { confirm } = await (0, import_prompts6.default)({
         type: "confirm",
         name: "confirm",
         message: `Remove ${target.path}?`,
@@ -54432,7 +54514,7 @@ function clearStatuslineClaim(repoRoot) {
 }
 
 // src/commands/attach.ts
-var import_prompts6 = __toESM(require_prompts3(), 1);
+var import_prompts7 = __toESM(require_prompts3(), 1);
 var import_node_child_process9 = require("child_process");
 function createAttachCommand() {
   return new Command("attach").description("Re-attach to an existing xt worktree and resume the Claude or Pi session").argument("[name]", 'Worktree slug or branch name to attach to (e.g. "abc1" or "xt/abc1")').action(async (name) => {
@@ -54468,7 +54550,7 @@ function createAttachCommand() {
           value: slug
         };
       });
-      const { picked } = await (0, import_prompts6.default)({
+      const { picked } = await (0, import_prompts7.default)({
         type: "select",
         name: "picked",
         message: "Select worktree to attach",
@@ -54496,7 +54578,7 @@ function createAttachCommand() {
   });
 }
 async function pickRuntime() {
-  const { runtime } = await (0, import_prompts6.default)({
+  const { runtime } = await (0, import_prompts7.default)({
     type: "select",
     name: "runtime",
     message: "No session metadata found \u2014 which runtime?",
@@ -55619,24 +55701,6 @@ function selectTier() {
   if (hasTruecolor()) return 0;
   return 1;
 }
-function pressAnyKey() {
-  return new Promise((resolve2) => {
-    process.stdout.write(kleur_default.dim("\n  press any key to continue..."));
-    process.stdin.setRawMode(true);
-    process.stdin.resume();
-    let done = false;
-    const finish = () => {
-      if (done) return;
-      done = true;
-      process.stdin.setRawMode(false);
-      process.stdin.pause();
-      process.stdout.write("\r\x1B[2K");
-      resolve2();
-    };
-    process.stdin.once("data", finish);
-    setTimeout(finish, 4e3);
-  });
-}
 function delay2(ms) {
   return new Promise((r) => setTimeout(r, ms));
 }
@@ -55736,7 +55800,6 @@ async function printBanner(version3) {
       renderTier4(version3);
       return;
   }
-  if (isTTY2()) await pressAnyKey();
 }
 
 // src/index.ts

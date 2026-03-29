@@ -1,13 +1,14 @@
 /**
  * XTRM Custom Footer Extension
  *
- * Displays: XTRM brand, model/context, host, cwd, git branch/status, beads state.
+ * Layout:
+ * Line 1: ~/path (branch *+↑) — with git status flags, no session name
+ * Line 2: XX%/window | (provider) model • thinking — simplified stats
+ * Line 3: ◐ 4843.5 Rework project bootstrap... — beads claim or ○ 6 open
  */
 
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
-import { truncateToWidth } from "@mariozechner/pi-tui";
-import { basename, relative } from "node:path";
-import { hostname } from "node:os";
+import { truncateToWidth, visibleWidth } from "@mariozechner/pi-tui";
 
 import { SubprocessRunner, EventAdapter } from "@xtrm/pi-core";
 
@@ -22,11 +23,8 @@ export default function (pi: ExtensionAPI) {
 	}
 
 	interface RuntimeState {
-		host: string;
-		displayDir: string;
 		branch: string | null;
 		gitStatus: string;
-		venv: string | null;
 		lastFetch: number;
 	}
 
@@ -52,6 +50,7 @@ export default function (pi: ExtensionAPI) {
 
 	const chip = (text: string, bg = CHIP_BG_NEUTRAL): string => `${bg}${CHIP_FG} ${text} ${CHIP_RESET}`;
 
+	let capturedPi: ExtensionAPI = pi;
 	let capturedCtx: any = null;
 	let sessionId = "";
 	let requestRender: (() => void) | null = null;
@@ -70,17 +69,17 @@ export default function (pi: ExtensionAPI) {
 	};
 
 	let runtimeState: RuntimeState = {
-		host: hostname().split(".")[0] || "host",
-		displayDir: process.cwd(),
 		branch: null,
 		gitStatus: "",
-		venv: process.env.VIRTUAL_ENV ? basename(process.env.VIRTUAL_ENV) : null,
 		lastFetch: 0,
 	};
 
 	const getCwd = () => capturedCtx?.cwd || process.cwd();
 	const getShortId = (id: string) => id.split("-").pop() ?? id;
 
+	/**
+	 * Parse git status --porcelain output into status flags
+	 */
 	const parseGitFlags = (porcelain: string): string => {
 		let modified = false;
 		let staged = false;
@@ -93,33 +92,29 @@ export default function (pi: ExtensionAPI) {
 		return `${modified ? "*" : ""}${staged ? "+" : ""}${deleted ? "-" : ""}`;
 	};
 
+	/**
+	 * Fetch git branch and status
+	 */
 	const refreshRuntimeState = async () => {
 		if (refreshingRuntime || Date.now() - runtimeState.lastFetch < CACHE_TTL) return;
 		refreshingRuntime = true;
 		const cwd = getCwd();
 		try {
-			const host = hostname().split(".")[0] || "host";
-			const venv = process.env.VIRTUAL_ENV ? basename(process.env.VIRTUAL_ENV) : null;
+			let branch: string | null = null;
+			let gitStatus = "";
+
 			const rootResult = await SubprocessRunner.run("git", ["rev-parse", "--show-toplevel"], { cwd });
 			const repoRoot = rootResult.code === 0 ? rootResult.stdout.trim() : null;
 
-			const displayDir = repoRoot
-				? (() => {
-					const relPath = relative(repoRoot, cwd) || ".";
-					return relPath === "." ? basename(repoRoot) : `${basename(repoRoot)}/${relPath}`;
-				  })()
-				: (() => {
-					const parts = cwd.split("/");
-					return parts.length > 2 ? parts.slice(-2).join("/") : cwd;
-				  })();
-
-			let branch: string | null = null;
-			let gitStatus = "";
 			if (repoRoot) {
 				const branchResult = await SubprocessRunner.run("git", ["branch", "--show-current"], { cwd });
 				branch = branchResult.code === 0 ? branchResult.stdout.trim() || null : null;
 
-				const porcelainResult = await SubprocessRunner.run("git", ["--no-optional-locks", "status", "--porcelain"], { cwd });
+				const porcelainResult = await SubprocessRunner.run(
+					"git",
+					["--no-optional-locks", "status", "--porcelain"],
+					{ cwd },
+				);
 				const baseFlags = porcelainResult.code === 0 ? parseGitFlags(porcelainResult.stdout) : "";
 
 				let upstreamFlags = "";
@@ -141,11 +136,8 @@ export default function (pi: ExtensionAPI) {
 			}
 
 			runtimeState = {
-				host,
-				displayDir,
 				branch,
 				gitStatus,
-				venv,
 				lastFetch: Date.now(),
 			};
 			requestRender?.();
@@ -154,6 +146,17 @@ export default function (pi: ExtensionAPI) {
 		} finally {
 			refreshingRuntime = false;
 		}
+	};
+
+	/**
+	 * Format token counts (from original footer)
+	 */
+	const formatTokens = (count: number): string => {
+		if (count < 1000) return count.toString();
+		if (count < 10000) return `${(count / 1000).toFixed(1)}k`;
+		if (count < 1000000) return `${Math.round(count / 1000)}k`;
+		if (count < 10000000) return `${(count / 1000000).toFixed(1)}M`;
+		return `${Math.round(count / 1000000)}M`;
 	};
 
 	const refreshBeadState = async () => {
@@ -216,29 +219,27 @@ export default function (pi: ExtensionAPI) {
 		}
 	};
 
-	const buildBeadChip = (): string => {
-		const { claimId, shortId, status, openCount } = beadState;
-		if (claimId && shortId && status) {
-			const icon = STATUS_ICONS[status] ?? "?";
-			const bg = STATUS_BG[status] ?? CHIP_BG_NEUTRAL;
-			return chip(`bd:${shortId}${icon}`, bg);
-		}
-		if (openCount > 0) return chip(`bd:${openCount}${STATUS_ICONS.open}`);
-		return "";
-	};
-
-	const buildIssueLine = (width: number, theme: any): string => {
+	/**
+	 * Build beads line: ◐ 4843.5 Rework project bootstrap... or ○ 6 open
+	 */
+	const buildBeadsLine = (width: number, theme: any): string => {
 		const { shortId, claimTitle, status, openCount } = beadState;
+
+		// Claimed: ◐ 4843.5 Rework project bootstrap, verificat...
 		if (shortId && claimTitle && status) {
 			const icon = STATUS_ICONS[status] ?? "◐";
 			const prefix = `${icon} ${shortId} `;
 			const title = theme.fg("muted", claimTitle);
 			return truncateToWidth(`${prefix}${title}`, width);
 		}
+
+		// Unclaimed with open issues: ○ 6 open
 		if (openCount > 0) {
 			return truncateToWidth(`○ ${openCount} open`, width);
 		}
-		return truncateToWidth("○ no open issues", width);
+
+		// No open issues: ○ no open issues
+		return truncateToWidth(`○ no open issues`, width);
 	};
 
 	let footerReapplyTimer: ReturnType<typeof setTimeout> | null = null;
@@ -262,36 +263,112 @@ export default function (pi: ExtensionAPI) {
 					refreshRuntimeState().catch(() => {});
 					refreshBeadState().catch(() => {});
 
-					const BOLD = "\x1b[1m";
-					const BOLD_OFF = "\x1b[22m";
-					const brand = `${BOLD}${theme.fg("dim", "XTRM")}${BOLD_OFF}`;
+					// === LINE 1: ~/path (branch *+↑) ===
+					// Like original, no session name, but with git status flags
+					let pwd = process.cwd();
+					const home = process.env.HOME || process.env.USERPROFILE;
+					if (home && pwd.startsWith(home)) {
+						pwd = `~${pwd.slice(home.length)}`;
+					}
 
-					const usage = ctx.getContextUsage();
-					const pct = usage?.percent ?? 0;
-					const usageStr = theme.fg("dim", `[${pct.toFixed(0)}%]`);
-
-					const modelId = ctx.model?.id || "no-model";
-					const modelStr = `${modelId} ${usageStr}`;
-
-					const branchFromFooter = footerData.getGitBranch();
-					const branch = runtimeState.branch || branchFromFooter;
-					const branchWithStatus = branch
-						? runtimeState.gitStatus
+					// Use runtimeState branch (with git status) or fallback to footerData
+					const branch = runtimeState.branch || footerData.getGitBranch();
+					if (branch) {
+						const branchWithStatus = runtimeState.gitStatus
 							? `${branch} (${runtimeState.gitStatus})`
-							: branch
-						: "";
-					const branchStr = branchWithStatus ? theme.fg("muted", branchWithStatus) : "";
-					const hostStr = theme.fg("muted", runtimeState.host);
-					const cwdStr = `${BOLD}${runtimeState.displayDir}${BOLD_OFF}`;
-					const venvStr = runtimeState.venv ? theme.fg("muted", `(${runtimeState.venv})`) : "";
+							: branch;
+						pwd = `${pwd} (${branchWithStatus})`;
+					}
 
-					const line1Parts = [brand, modelStr, hostStr, cwdStr];
-					if (branchStr) line1Parts.push(branchStr);
-					if (venvStr) line1Parts.push(venvStr);
+					const pwdLine = truncateToWidth(theme.fg("dim", pwd), width, theme.fg("dim", "..."));
 
-					const line1 = truncateToWidth(line1Parts.join(" "), width);
-					const line2 = buildIssueLine(width, theme);
-					return [line1, line2];
+					// === LINE 2: XX%/window | (provider) model • thinking ===
+					const usage = ctx.getContextUsage();
+					const model = ctx.model;
+
+					const contextWindow = usage?.contextWindow ?? model?.contextWindow ?? 0;
+					const contextPercentValue = usage?.percent ?? 0;
+					const contextPercent = usage?.percent !== null ? contextPercentValue.toFixed(1) : "?";
+
+					// Build left side: context %/window (color-coded like original)
+					const contextDisplay =
+						contextPercent === "?"
+							? `?/${formatTokens(contextWindow)}`
+							: `${contextPercent}%/${formatTokens(contextWindow)}`;
+
+					let statsLeft: string;
+					if (contextPercentValue > 90) {
+						statsLeft = theme.fg("error", contextDisplay);
+					} else if (contextPercentValue > 70) {
+						statsLeft = theme.fg("warning", contextDisplay);
+					} else {
+						statsLeft = contextDisplay;
+					}
+
+					// Build right side: (provider) model • thinking
+					const modelName = model?.id || "no-model";
+					const providerCount = footerData.getAvailableProviderCount();
+
+					// Thinking level if model supports reasoning
+					let rightSideWithoutProvider = modelName;
+					if (model?.reasoning) {
+						const thinkingLevel = capturedPi.getThinkingLevel() || "off";
+						rightSideWithoutProvider =
+							thinkingLevel === "off" ? `${modelName} • thinking off` : `${modelName} • ${thinkingLevel}`;
+					}
+
+					// Prepend provider if >1
+					let rightSide = rightSideWithoutProvider;
+					if (providerCount > 1 && model) {
+						rightSide = `(${model.provider}) ${rightSideWithoutProvider}`;
+						if (visibleWidth(statsLeft) + 3 + visibleWidth(rightSide) > width) {
+							rightSide = rightSideWithoutProvider;
+						}
+					}
+
+					// Add separator " | " between left and right
+					const separator = " | ";
+
+					// Calculate layout
+					let leftWidth = visibleWidth(statsLeft);
+					const separatorWidth = visibleWidth(separator);
+					let rightWidth = visibleWidth(rightSide);
+
+					// Check if left side too wide
+					if (leftWidth > width - separatorWidth) {
+						statsLeft = truncateToWidth(statsLeft, width - separatorWidth, "...");
+						leftWidth = visibleWidth(statsLeft);
+					}
+
+					const totalNeeded = leftWidth + separatorWidth + rightWidth;
+
+					let line2: string;
+					if (totalNeeded <= width) {
+						// Pad after separator to right-align
+						const padding = " ".repeat(width - leftWidth - separatorWidth - rightWidth);
+						line2 = statsLeft + separator + padding + rightSide;
+					} else {
+						// Truncate right side
+						const availableForRight = width - leftWidth - separatorWidth;
+						if (availableForRight > 0) {
+							const truncatedRight = truncateToWidth(rightSide, availableForRight, "");
+							line2 = statsLeft + separator + truncatedRight;
+						} else {
+							line2 = truncateToWidth(statsLeft, width, "");
+						}
+					}
+
+					// Apply dim to each part separately (like original footer)
+					// statsLeft may contain color codes for context % that end with reset
+					const dimLeft = theme.fg("dim", statsLeft);
+					const dimSep = theme.fg("dim", separator);
+					const remainder = line2.slice(leftWidth + separatorWidth);
+					const dimRemainder = theme.fg("dim", remainder);
+
+					// === LINE 3: ◐ 4843.5 Rework project bootstrap... ===
+					const line3 = buildBeadsLine(width, theme);
+
+					return [pwdLine, dimLeft + dimSep + dimRemainder, line3];
 				},
 			};
 		});
@@ -325,7 +402,6 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	pi.on("model_select", async (_event, ctx) => {
-		runtimeState.lastFetch = 0;
 		scheduleFooterReapply(ctx);
 	});
 

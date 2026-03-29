@@ -6,6 +6,20 @@ import path from 'node:path';
 const mocked = vi.hoisted(() => {
     const runInstall = vi.fn(async () => undefined);
     const runMachineBootstrap = vi.fn(async () => undefined);
+    const runClaudeRuntimeSync = vi.fn(async () => ({
+        installedOfficial: 0,
+        alreadyInstalledOfficial: 4,
+        failedOfficial: [],
+        verificationPassed: true,
+    }));
+    const runInitVerification = vi.fn(async () => ({
+        machineBootstrap: { allRequiredPresent: true, missingRequired: [] },
+        claudeRuntime: { xtrmToolsPlugin: true, officialPlugins: ['serena'], missingPlugins: [] },
+        piRuntime: { allRequiredPresent: true, missingExtensions: [], missingPackages: [] },
+        projectBootstrap: { beadsInitialized: true, gitnexusIndexed: true, instructionHeaders: true },
+        allPassed: true,
+    }));
+    const renderVerificationSummary = vi.fn();
     const getContext = vi.fn(async () => ({ targets: ['/tmp/.agents/skills'], syncMode: 'sync' }));
     const calculateDiff = vi.fn(async () => ({
         skills: { missing: ['a'], outdated: ['b'], drifted: [] },
@@ -16,6 +30,9 @@ const mocked = vi.hoisted(() => {
     return {
         runInstall,
         runMachineBootstrap,
+        runClaudeRuntimeSync,
+        runInitVerification,
+        renderVerificationSummary,
         getContext,
         calculateDiff,
         findRepoRoot,
@@ -31,6 +48,28 @@ vi.mock('../src/commands/install.js', () => ({
     isDoltInstalled: vi.fn(() => true),
     isBvInstalled: vi.fn(() => true),
     isDeepwikiInstalled: vi.fn(() => true),
+}));
+
+vi.mock('../src/core/machine-bootstrap.js', () => ({
+    inventoryDeps: vi.fn(() => ({
+        deps: [],
+        missingRequired: [],
+        missingRecommended: [],
+        allRequiredPresent: true,
+        allPresent: true,
+    })),
+    renderBootstrapPlan: vi.fn(),
+    runMachineBootstrapPhase: mocked.runMachineBootstrap,
+}));
+
+vi.mock('../src/core/claude-runtime-sync.js', () => ({
+    runClaudeRuntimeSyncPhase: mocked.runClaudeRuntimeSync,
+    renderClaudeRuntimePlanSummary: vi.fn(),
+}));
+
+vi.mock('../src/core/init-verification.js', () => ({
+    runInitVerification: mocked.runInitVerification,
+    renderVerificationSummary: mocked.renderVerificationSummary,
 }));
 
 vi.mock('../src/core/context.js', () => ({
@@ -57,23 +96,28 @@ function setupSpawnSync(projectRoot: string, calls: string[]): void {
     mocked.spawnSync.mockImplementation((command: string, args: string[] = [], options: any = {}) => {
         const key = `${command} ${args.join(' ')}`.trim();
 
+        // git rev-parse for getProjectRoot()
         if (key === 'git rev-parse --show-toplevel') {
             return { status: 0, stdout: `${projectRoot}\n`, stderr: '' };
         }
 
+        // gitnexus status check in runGitNexusInitForProject
         if (key === 'gitnexus status') {
             return { status: 1, stdout: 'not indexed', stderr: '' };
         }
 
+        // gitnexus --version check
         if (key === 'gitnexus --version') {
             return { status: 0, stdout: 'gitnexus 1.0.0', stderr: '' };
         }
 
+        // gitnexus analyze in runGitNexusInitForProject
         if (key === 'gitnexus analyze') {
             calls.push('gitnexus analyze');
             return { status: 0, stdout: 'indexed', stderr: '' };
         }
 
+        // bd init in runBdInitForProject
         if (key === 'bd init') {
             calls.push('bd init');
             return { status: 0, stdout: 'initialized', stderr: '' };
@@ -155,14 +199,27 @@ describe('xtrm init phased orchestrator', () => {
         const { runProjectInit } = await import('../src/commands/init.js?t=ordered-' + Date.now());
         await runProjectInit({ yes: true });
 
+        // Verify phase order: machine bootstrap -> Claude runtime -> Pi runtime -> project bootstrap -> verification
         expect(mocked.prompts).not.toHaveBeenCalled();
-        expect(mocked.runMachineBootstrap).toHaveBeenCalledWith({ yes: true });
+        expect(mocked.runMachineBootstrap).toHaveBeenCalledWith({ dryRun: false });
+        expect(mocked.runClaudeRuntimeSync).toHaveBeenCalledWith(expect.objectContaining({
+            repoRoot: projectRoot,
+            dryRun: false,
+            isGlobal: false,
+        }));
         expect(mocked.runInstall).toHaveBeenCalledWith(expect.objectContaining({
             yes: true,
             backport: false,
             skipMachineBootstrap: true,
+            skipClaudeRuntimeSync: true,
         }));
         expect(calls).toEqual(['runMachineBootstrap', 'runInstall', 'bd init', 'gitnexus analyze']);
-        expect(logs.join('\n')).toContain('Project initialized.');
+        
+        // Verify verification phase was called
+        expect(mocked.runInitVerification).toHaveBeenCalledWith(projectRoot);
+        expect(mocked.renderVerificationSummary).toHaveBeenCalled();
+        
+        // Verify new next-steps output
+        expect(logs.join('\n')).toContain('Next steps:');
     });
 });

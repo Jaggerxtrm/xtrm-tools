@@ -8,6 +8,7 @@ import { installGitHooks as installServiceGitHooks } from './install-service-ski
 import { runInstall, type InstallOpts } from './install.js';
 import { runClaudeRuntimeSyncPhase, renderClaudeRuntimePlanSummary } from '../core/claude-runtime-sync.js';
 import { inventoryDeps, renderBootstrapPlan, runMachineBootstrapPhase, type BootstrapPlan } from '../core/machine-bootstrap.js';
+import { runInitVerification, renderVerificationSummary } from '../core/init-verification.js';
 import { getContext } from '../core/context.js';
 import { calculateDiff } from '../core/diff.js';
 import { findRepoRoot } from '../utils/repo-root.js';
@@ -786,42 +787,54 @@ async function runPreflight(projectRoot: string, opts: InstallOpts): Promise<Ini
 // ── Phase 2: Plan ─────────────────────────────────────────────────────────────
 // Renders a consolidated view of all changes before any mutations occur.
 
+// ── Phase 2: Plan Rendering ─────────────────────────────────────────────────
+// Shows a consolidated view of all changes before any mutations occur.
+// Each phase section matches the execution order in runProjectInit.
+
 function renderInitPlan(inventory: InitInventory): void {
     const { bootstrapPlan, skillsChanges, needsBdInit, needsGitNexus, projectTypes } = inventory;
 
     console.log(kleur.bold('\n  xtrm init — Installation Plan'));
-    console.log(kleur.dim('  ' + '─'.repeat(42)));
+    console.log(kleur.dim('  ' + '─'.repeat(50)));
 
-    // Machine bootstrap: delegates to the unified bootstrap plan renderer
+    // Phase 4: Machine Bootstrap
     renderBootstrapPlan(bootstrapPlan);
 
+    // Phase 5: Claude Runtime Sync
     renderClaudeRuntimePlanSummary();
 
-    console.log(kleur.bold('\n  Pi Runtime Sync'));
-    console.log(`${kleur.cyan('  ↻')}  extensions + packages`);
+    // Phase 6: Pi Runtime Sync (extensions + packages)
+    console.log(kleur.bold('\n  Pi Runtime'));
+    console.log(kleur.dim('  ↻  extensions + packages sync'));
 
-    console.log(kleur.bold('\n  Skills  (.agents/skills)'));
+    // Phase 6b: Skills (part of Pi runtime sync via runInstall)
+    console.log(kleur.bold('\n  Skills'));
     if (skillsChanges > 0) {
         console.log(`${kleur.cyan('  ↑')}  ${skillsChanges} change${skillsChanges !== 1 ? 's' : ''} pending`);
     } else {
         console.log(kleur.dim('  ✓  already up to date'));
     }
 
+    // Phase 7: Project Bootstrap
     console.log(kleur.bold('\n  Project Bootstrap'));
     const projActions = [
         needsBdInit ? 'bd init — initialize beads workspace' : null,
-        needsGitNexus ? 'gitnexus analyze — build code intelligence index' : null,
-        'AGENTS.md + CLAUDE.md — inject workflow instruction headers',
+        needsGitNexus ? 'gitnexus analyze — build code index' : null,
+        'AGENTS.md + CLAUDE.md — workflow headers',
     ].filter(Boolean) as string[];
     for (const action of projActions) {
         console.log(`${kleur.cyan('  •')}  ${action}`);
     }
 
+    // Phase 8: Verification (implicit)
+    console.log(kleur.bold('\n  Verification'));
+    console.log(kleur.dim('  ✓  unified summary after execution'));
+
     if (projectTypes.length > 0) {
         console.log(kleur.dim(`\n  Detected: ${projectTypes.join(', ')}`));
     }
 
-    console.log(kleur.dim('\n  ' + '─'.repeat(42) + '\n'));
+    console.log(kleur.dim('\n  ' + '─'.repeat(50) + '\n'));
 }
 
 // ── Phase 3: Confirmation ─────────────────────────────────────────────────────
@@ -852,11 +865,12 @@ async function runProjectBootstrap(projectRoot: string): Promise<void> {
 //   1. Preflight          — inventory system state (read-only, no mutations)
 //   2. Plan               — render a consolidated view of what will change
 //   3. Confirm            — single gate; all mutations happen only after this
-//   4. Machine Bootstrap  — install missing system tools (beads/dolt, bv, deepwiki)
-//   5. Claude Runtime     — xtrm-tools plugin + official plugins + cleanup + verification
-//   6. Pi Runtime         — extensions + packages + skills sync (delegated to runInstall)
+//   4. Machine Bootstrap  — install missing system tools (bd, dolt, bv, pi, pnpm)
+//   5. Claude Runtime     — xtrm-tools plugin + official plugins + cleanup
+//   6. Pi Runtime         — extensions + packages + skills sync (via runInstall)
 //   7. Project Bootstrap  — bd init, gitnexus index, CLAUDE.md/AGENTS.md headers
-//   8. Summary            — brief completion message
+//   8. Verification       — unified summary of all phase outcomes
+//   9. Next Steps         — guidance based on verification result
 
 export async function runProjectInit(opts: InstallOpts = {}): Promise<void> {
     const { dryRun = false, yes = false } = opts;
@@ -908,11 +922,23 @@ export async function runProjectInit(opts: InstallOpts = {}): Promise<void> {
     // headers, and ensure the GitNexus code intelligence index is current.
     await runProjectBootstrap(projectRoot);
 
-    // ── Phase 8: Summary ─────────────────────────────────────────────────────
-    console.log(kleur.bold('\nProject initialized.'));
-    console.log(kleur.white('  Quality gates active globally.'));
-    if (inventory.projectTypes.length > 0) {
-        console.log(kleur.white(`  Project types: ${inventory.projectTypes.join(', ')}.`));
+    // ── Phase 8: Verification ────────────────────────────────────────────────
+    // Unified verification across all phases: machine, Claude, Pi, project.
+    const verification = await runInitVerification(projectRoot);
+    renderVerificationSummary(verification);
+
+    // ── Phase 9: Summary ─────────────────────────────────────────────────────
+    if (verification.allPassed) {
+        console.log(kleur.bold('  Next steps:'));
+        console.log(kleur.white('    • Quality gates are active globally'));
+        console.log(kleur.white('    • Run `xt pi` or `xt claude` to start a worktree session'));
+        if (inventory.projectTypes.length > 0) {
+            console.log(kleur.white(`    • Project types: ${inventory.projectTypes.join(', ')}`));
+        }
+    } else {
+        console.log(kleur.bold('  Troubleshooting:'));
+        console.log(kleur.white('    • Re-run `xtrm init` to retry incomplete phases'));
+        console.log(kleur.white('    • Check individual tool status with `xt pi doctor` or `xt claude doctor`'));
     }
     console.log('');
 }

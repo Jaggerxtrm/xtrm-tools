@@ -3,6 +3,7 @@ import kleur from 'kleur';
 import prompts from 'prompts';
 import { Listr } from 'listr2';
 import os from 'os';
+import fs from 'fs-extra';
 import { spawnSync } from 'node:child_process';
 import { getContext } from '../core/context.js';
 import { calculateDiff, PruneModeReadError } from '../core/diff.js';
@@ -171,6 +172,58 @@ export async function runMachineBootstrap(opts: { yes?: boolean } = {}): Promise
     await runMachineBootstrapPhase({ dryRun: false });
 }
 
+async function trySymlinkOrCopy(sourcePath: string, targetPath: string, dryRun: boolean): Promise<'symlink' | 'copy' | 'noop'> {
+    if (dryRun) return 'noop';
+
+    await fs.ensureDir(path.dirname(targetPath));
+
+    const sourceRealPath = await fs.realpath(sourcePath).catch(() => path.resolve(sourcePath));
+    const existingStat = await fs.lstat(targetPath).catch(() => null);
+    if (existingStat?.isSymbolicLink()) {
+        const targetRealPath = await fs.realpath(targetPath).catch(() => null);
+        if (targetRealPath && targetRealPath === sourceRealPath) {
+            return 'noop';
+        }
+    }
+
+    await fs.remove(targetPath);
+
+    try {
+        await fs.ensureSymlink(sourcePath, targetPath);
+        return 'symlink';
+    } catch {
+        await fs.copy(sourcePath, targetPath);
+        return 'copy';
+    }
+}
+
+async function prepareSkillsSymlinkLayout(params: {
+    dryRun: boolean;
+    isGlobal: boolean;
+    projectRoot: string;
+    repoRoot: string;
+}): Promise<void> {
+    const { dryRun, isGlobal, projectRoot, repoRoot } = params;
+    const baseRoot = isGlobal ? os.homedir() : projectRoot;
+    const packageSkillsPath = path.join(repoRoot, 'skills');
+    const registryDefaultPath = path.join(baseRoot, '.xtrm', 'skills', 'default');
+    const agentsSkillsPath = path.join(baseRoot, '.agents', 'skills');
+
+    const registryMode = await trySymlinkOrCopy(packageSkillsPath, registryDefaultPath, dryRun);
+    if (registryMode === 'symlink') {
+        console.log(kleur.dim(`  ✓ .xtrm/skills/default → ${packageSkillsPath}`));
+    } else if (registryMode === 'copy') {
+        console.log(kleur.yellow('  ⚠ Could not create .xtrm/skills/default symlink; using copy fallback'));
+    }
+
+    const agentsMode = await trySymlinkOrCopy(registryDefaultPath, agentsSkillsPath, dryRun);
+    if (agentsMode === 'symlink') {
+        console.log(kleur.dim('  ✓ .agents/skills → .xtrm/skills/default'));
+    } else if (agentsMode === 'copy') {
+        console.log(kleur.yellow('  ⚠ Could not create .agents/skills symlink; using copy fallback'));
+    }
+}
+
 export async function runInstall(opts: InstallOpts = {}): Promise<void> {
             const { dryRun = false, yes = false, prune = false, backport = false, global: isGlobal = false, skipMachineBootstrap = false, skipClaudeRuntimeSync = false } = opts;
             const effectiveYes = yes || process.argv.includes('--yes') || process.argv.includes('-y');
@@ -187,6 +240,15 @@ export async function runInstall(opts: InstallOpts = {}): Promise<void> {
             
             // Source repo for skills/hooks sync
             const repoRoot = await findRepoRoot();
+
+            if (!backport) {
+                await prepareSkillsSymlinkLayout({
+                    dryRun,
+                    isGlobal,
+                    projectRoot,
+                    repoRoot,
+                });
+            }
             
             const ctx = await getContext({
                 createMissingDirs: !dryRun,

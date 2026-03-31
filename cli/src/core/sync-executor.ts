@@ -8,6 +8,57 @@ import { hashDirectory } from '../utils/hash.js';
 import { createBackup, restoreBackup, cleanupBackup, type BackupInfo } from './rollback.js';
 import type { ChangeSet } from '../types/config.js';
 
+const LEGACY_BASH_ALLOWLISTS = new Set(['Bash(bd:*)', 'Bash(git:*)']);
+const SAFE_BD_BASH_ALLOWLIST = [
+    'Bash(bd show:*)',
+    'Bash(bd list:*)',
+    'Bash(bd ready:*)',
+    'Bash(bd stats:*)',
+    'Bash(bd search:*)',
+    'Bash(bd prime:*)',
+    'Bash(bd memories:*)',
+    'Bash(bd recall:*)',
+];
+const SAFE_GIT_BASH_ALLOWLIST = [
+    'Bash(git status:*)',
+    'Bash(git log:*)',
+    'Bash(git diff:*)',
+    'Bash(git show:*)',
+    'Bash(git fetch:*)',
+];
+
+async function normalizeLegacyBashAllowlist(settingsPath: string, isDryRun: boolean): Promise<boolean> {
+    if (!(await fs.pathExists(settingsPath))) return false;
+
+    const settings = await fs.readJson(settingsPath);
+    const allow = settings?.permissions?.allow;
+    if (!Array.isArray(allow)) return false;
+
+    const hasLegacy = allow.some((entry: unknown) =>
+        typeof entry === 'string' && LEGACY_BASH_ALLOWLISTS.has(entry),
+    );
+    if (!hasLegacy) return false;
+
+    const filteredAllow = allow.filter((entry: unknown) =>
+        !(typeof entry === 'string' && LEGACY_BASH_ALLOWLISTS.has(entry)),
+    );
+
+    const safeEntries = [...SAFE_BD_BASH_ALLOWLIST, ...SAFE_GIT_BASH_ALLOWLIST];
+    for (const entry of safeEntries) {
+        if (!filteredAllow.includes(entry)) filteredAllow.push(entry);
+    }
+
+    if (isDryRun) {
+        console.log(kleur.dim('      (Would replace legacy Bash(bd:*)/Bash(git:*) allowlist entries)'));
+        return true;
+    }
+
+    settings.permissions.allow = filteredAllow;
+    await fs.writeJson(settingsPath, settings, { spaces: 2 });
+    console.log(kleur.dim('      (Replaced legacy Bash(bd:*)/Bash(git:*) allowlist entries)'));
+    return true;
+}
+
 /**
  * Sync MCP servers for a list of targets, once per unique agent type.
  * Call this explicitly before per-target file sync loops.
@@ -218,6 +269,8 @@ export async function executeSync(
                         if (mergeResult.updated) {
                             console.log(kleur.blue(`      (Configuration safely merged)`));
                         }
+
+                        await normalizeLegacyBashAllowlist(dest, isDryRun);
                     } else {
                         if (!isDryRun) {
                             await fs.ensureDir(path.dirname(dest));

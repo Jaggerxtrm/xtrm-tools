@@ -13,11 +13,15 @@ import { truncateToWidth, visibleWidth } from "@mariozechner/pi-tui";
 import { SubprocessRunner, EventAdapter } from "@xtrm/pi-core";
 
 export default function (pi: ExtensionAPI) {
+	interface BeadClaim {
+		id: string;
+		shortId: string;
+		title: string | null;
+		status: string;
+	}
+
 	interface BeadState {
-		claimId: string | null;
-		shortId: string | null;
-		claimTitle: string | null;
-		status: string | null;
+		claims: BeadClaim[];
 		openCount: number;
 		lastFetch: number;
 	}
@@ -52,7 +56,6 @@ export default function (pi: ExtensionAPI) {
 
 	let capturedPi: ExtensionAPI = pi;
 	let capturedCtx: any = null;
-	let sessionId = "";
 	let requestRender: (() => void) | null = null;
 
 	const CACHE_TTL = 5000;
@@ -60,10 +63,7 @@ export default function (pi: ExtensionAPI) {
 	let refreshingRuntime = false;
 
 	let beadState: BeadState = {
-		claimId: null,
-		shortId: null,
-		claimTitle: null,
-		status: null,
+		claims: [],
 		openCount: 0,
 		lastFetch: 0,
 	};
@@ -162,52 +162,42 @@ export default function (pi: ExtensionAPI) {
 	const refreshBeadState = async () => {
 		if (refreshingBeads || Date.now() - beadState.lastFetch < CACHE_TTL) return;
 		const cwd = getCwd();
-		if (!EventAdapter.isBeadsProject(cwd) || !sessionId) return;
+		if (!EventAdapter.isBeadsProject(cwd)) return;
 		refreshingBeads = true;
 		try {
-			const claimResult = await SubprocessRunner.run("bd", ["kv", "get", `claimed:${sessionId}`], { cwd });
-			const claimId = claimResult.code === 0 ? claimResult.stdout.trim() || null : null;
+			const inProgressResult = await SubprocessRunner.run("bd", ["list", "--status=in_progress"], { cwd });
+			const inProgressRaw = inProgressResult.code === 0 ? inProgressResult.stdout : "";
+			const ids = [...new Set([...inProgressRaw.matchAll(/^◐\s+([a-z][\w-]+)/gm)].map((m) => m[1]).filter((id) => id.includes("-")))];
 
-			let status: string | null = null;
-			let claimTitle: string | null = null;
-			if (claimId) {
-				const showResult = await SubprocessRunner.run("bd", ["show", claimId, "--json"], { cwd });
+			let claims: BeadClaim[] = [];
+			if (ids.length === 1) {
+				const [id] = ids;
+				const showResult = await SubprocessRunner.run("bd", ["show", id, "--json"], { cwd });
 				if (showResult.code === 0) {
 					try {
 						const issue = JSON.parse(showResult.stdout)?.[0];
-						status = issue?.status ?? null;
-						claimTitle = issue?.title ?? null;
+						claims = [{ id, shortId: getShortId(id), title: issue?.title ?? null, status: issue?.status ?? "in_progress" }];
 					} catch {
-						// keep nulls
+						claims = [{ id, shortId: getShortId(id), title: null, status: "in_progress" }];
 					}
+				} else {
+					claims = [{ id, shortId: getShortId(id), title: null, status: "in_progress" }];
 				}
-				if (status === "closed") {
-					await SubprocessRunner.run("bd", ["kv", "clear", `claimed:${sessionId}`], { cwd });
-					beadState = {
-						claimId: null,
-						shortId: null,
-						claimTitle: null,
-						status: null,
-						openCount: beadState.openCount,
-						lastFetch: Date.now(),
-					};
-					requestRender?.();
-					return;
-				}
+			} else if (ids.length > 1) {
+				claims = ids.map((id) => ({ id, shortId: getShortId(id), title: null, status: "in_progress" }));
 			}
 
 			let openCount = 0;
-			const listResult = await SubprocessRunner.run("bd", ["list"], { cwd });
-			if (listResult.code === 0) {
-				const m = listResult.stdout.match(/\((\d+)\s+open/);
-				if (m) openCount = parseInt(m[1], 10);
+			if (claims.length === 0) {
+				const listResult = await SubprocessRunner.run("bd", ["list"], { cwd });
+				if (listResult.code === 0) {
+					const m = listResult.stdout.match(/\((\d+)\s+open/);
+					if (m) openCount = parseInt(m[1], 10);
+				}
 			}
 
 			beadState = {
-				claimId,
-				shortId: claimId ? getShortId(claimId) : null,
-				claimTitle,
-				status,
+				claims,
 				openCount,
 				lastFetch: Date.now(),
 			};
@@ -223,22 +213,29 @@ export default function (pi: ExtensionAPI) {
 	 * Build beads line: ◐ 4843.5 Rework project bootstrap... or ○ 6 open
 	 */
 	const buildBeadsLine = (width: number, theme: any): string => {
-		const { shortId, claimTitle, status, openCount } = beadState;
+		const { claims, openCount } = beadState;
 
-		// Claimed: ◐ 4843.5 Rework project bootstrap, verificat...
-		if (shortId && claimTitle && status) {
+		if (claims.length === 1) {
+			const [{ shortId, title, status }] = claims;
 			const icon = STATUS_ICONS[status] ?? "◐";
-			const prefix = `${icon} ${shortId} `;
-			const title = theme.fg("muted", claimTitle);
-			return truncateToWidth(`${prefix}${title}`, width);
+			const idChip = chip(`${icon} ${shortId}`, STATUS_BG[status] ?? CHIP_BG_NEUTRAL);
+			const cappedTitle = title ? (title.length > 40 ? `${title.slice(0, 39)}…` : title) : "";
+			const line = cappedTitle ? `${idChip} ${theme.fg("muted", cappedTitle)}` : idChip;
+			return truncateToWidth(line, width);
 		}
 
-		// Unclaimed with open issues: ○ 6 open
+		if (claims.length > 1) {
+			const chips = claims.map(({ shortId, status }) => {
+				const icon = STATUS_ICONS[status] ?? "◐";
+				return chip(`${icon} ${shortId}`, STATUS_BG[status] ?? CHIP_BG_ACTIVE);
+			});
+			return truncateToWidth(chips.join(" "), width);
+		}
+
 		if (openCount > 0) {
 			return truncateToWidth(`○ ${openCount} open`, width);
 		}
 
-		// No open issues: ○ no open issues
 		return truncateToWidth(`○ no open issues`, width);
 	};
 
@@ -356,7 +353,6 @@ export default function (pi: ExtensionAPI) {
 
 	pi.on("session_start", async (_event, ctx) => {
 		capturedCtx = ctx;
-		sessionId = ctx.sessionManager?.getSessionId?.() || ctx.sessionId || ctx.session_id || process.pid.toString();
 		runtimeState.lastFetch = 0;
 		beadState.lastFetch = 0;
 		applyCustomFooter(ctx);

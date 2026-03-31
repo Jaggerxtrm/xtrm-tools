@@ -5,7 +5,7 @@
 // Line 3: ◐ claim-title OR ○ N open
 
 import { execSync } from 'node:child_process';
-import { readFileSync, writeFileSync, existsSync, unlinkSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { join, basename, relative, dirname, isAbsolute } from 'node:path';
 import { tmpdir } from 'node:os';
 import { createHash } from 'node:crypto';
@@ -92,28 +92,31 @@ if (!data) {
   const provider = getProvider(modelId);
   const modelName = modelDisplayName ?? getModelName(modelId) ?? null;
 
-  let claimId = null, claimTitle = null, claimStatus = null, openCount = 0;
+  let claims = [], openCount = 0;
   if (existsSync(join(cwd, '.beads')) || existsSync(join(mainRoot, '.beads'))) {
-    const worktreeMatch = cwd.match(/\/\.xtrm\/worktrees\/([^/]+)/);
-    const claimFileName = worktreeMatch ? `statusline-claim-${worktreeMatch[1]}` : 'statusline-claim';
-    const claimFile = join(mainRoot, '.xtrm', claimFileName);
-    claimId = existsSync(claimFile) ? (readFileSync(claimFile, 'utf8').trim() || null) : null;
-    if (claimId) {
+    const inProgressRaw = run('bd list --status=in_progress') ?? '';
+    const ids = [...inProgressRaw.matchAll(/[◐○●]\s+([a-z][\w-]+)/g)]
+      .map(m => m[1]).filter(id => id.includes('-'));
+    if (ids.length === 1) {
       try {
-        const raw = run(`bd show ${claimId} --json`);
+        const raw = run(`bd show ${ids[0]} --json`);
         const issue = raw ? JSON.parse(raw)?.[0] : null;
-        if (issue?.status === 'closed') { try { unlinkSync(claimFile); } catch {} claimId = null; }
-        else { claimTitle = issue?.title ?? null; claimStatus = issue?.status ?? null; }
+        if (issue) claims.push({ id: ids[0], title: issue.title ?? null, status: issue.status ?? 'in_progress' });
       } catch {}
+    } else if (ids.length > 1) {
+      claims = ids.map(id => ({ id, title: null, status: 'in_progress' }));
     }
-    if (!claimTitle) { const m = run('bd list')?.match(/\((\d+)\s+open/); if (m) openCount = parseInt(m[1], 10); }
+    if (claims.length === 0) {
+      const m = run('bd list')?.match(/\((\d+)\s+open/);
+      if (m) openCount = parseInt(m[1], 10);
+    }
   }
 
-  data = { displayDir, branch, gitFlags, provider, modelName, claimId, claimTitle, claimStatus, openCount };
+  data = { displayDir, branch, gitFlags, provider, modelName, claims, openCount };
   setCache(data);
 }
 
-const { displayDir, branch, gitFlags, provider, modelName, claimId, claimTitle, claimStatus, openCount } = data;
+const { displayDir, branch, gitFlags, provider, modelName, claims, openCount } = data;
 
 // Line 1: ~/path (branch *+↑)
 let line1 = B + displayDir + B_;
@@ -128,16 +131,23 @@ const line2 = `${D}${ctxStr}${R} ${D}${modelStr}${R}`;
 
 // Line 3: beads chip
 let line3;
-if (claimTitle && claimStatus) {
-  const icon = claimStatus === 'blocked' ? '●' : claimStatus === 'in_progress' ? '◐' : '○';
-  const shortId = claimId?.split('-').pop() ?? claimId;
+if (claims.length === 0) {
+  line3 = `○ ${openCount > 0 ? `${B}${openCount}${B_} open` : 'no open issues'}`;
+} else if (claims.length === 1) {
+  const { id, title, status } = claims[0];
+  const icon = status === 'blocked' ? '●' : status === 'in_progress' ? '◐' : '○';
+  const shortId = id.split('-').pop();
   const cols = process.stdout.columns || 80;
   const prefix = `${icon} ${shortId} `;
-  const max = cols - prefix.length - 1;
-  const t = claimTitle.length > max ? claimTitle.slice(0, max - 1) + '…' : claimTitle;
+  const max = Math.min(cols - prefix.length - 1, 40);
+  const t = title ? (title.length > max ? title.slice(0, max - 1) + '…' : title) : '';
   line3 = `${prefix}${I}${t}${I_}`;
 } else {
-  line3 = `○ ${openCount > 0 ? `${B}${openCount}${B_} open` : 'no open issues'}`;
+  const chips = claims.map(({ id, status }) => {
+    const icon = status === 'blocked' ? '●' : '◐';
+    return `${icon} ${id.split('-').pop()}`;
+  });
+  line3 = chips.join('  ');
 }
 
 process.stdout.write(`${line1}\n${line2}\n${line3}\n`);

@@ -95,8 +95,10 @@ if (!data) {
   let claims = [], openCount = 0;
   if (existsSync(join(cwd, '.beads')) || existsSync(join(mainRoot, '.beads'))) {
     const inProgressRaw = run('bd list --status=in_progress') ?? '';
-    const ids = [...inProgressRaw.matchAll(/[◐○●]\s+([a-z][\w-]+)/g)]
-      .map(m => m[1]).filter(id => id.includes('-'));
+    const ids = [...new Set(
+      [...inProgressRaw.matchAll(/^[◐]\s+([a-z][\w-]+)/gm)]
+        .map(m => m[1]).filter(id => id.includes('-'))
+    )];
     if (ids.length === 1) {
       try {
         const raw = run(`bd show ${ids[0]} --json`);

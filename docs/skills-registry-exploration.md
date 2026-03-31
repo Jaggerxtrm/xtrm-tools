@@ -32,7 +32,161 @@ This creates a hybrid of copy-based and bundle-based behavior rather than a sing
 
 ---
 
-## 2) Architecture options
+## 2) Formal three-tier packaging model (default / extra / user)
+
+This section is normative for runtime-registry-first behavior.
+
+### Tier definitions
+
+| Tier | Source | Required | Mutability | Asset contract |
+|---|---|---|---|---|
+| `default` | npm/plugin bundle shipped with xtrm | Yes | Read-only (managed) | Baseline skill set and manifests required for core runtime workflows |
+| `extra` | Optional skill packs installed/enabled by user | No | Managed (replaceable via pack lifecycle) | Add-on packs, domain bundles, and optional specialist sets |
+| `user` | Local author-owned overlays in project/user scope | No | User-writable | Overrides/patches/custom skills that are not overwritten by managed sync |
+
+### Required registry schema
+
+```json
+{
+  "tiers": {
+    "default": {
+      "kind": "bundle",
+      "root": "<managed>/skills/default",
+      "manifest": "manifest.json",
+      "immutable": true
+    },
+    "extra": {
+      "kind": "pack-set",
+      "root": "<managed>/skills/extra",
+      "manifest": "packs.json",
+      "immutable": false
+    },
+    "user": {
+      "kind": "overlay-set",
+      "root": "<scope>/skills/user",
+      "manifest": "overlays.json",
+      "immutable": false
+    }
+  }
+}
+```
+
+### Asset record schemas
+
+All tier manifests MUST normalize records to one of these shapes.
+
+```ts
+type ManagedAsset = {
+  skillId: string;               // stable id, e.g. "using-xtrm"
+  version: string;               // exact semver pin, e.g. "0.5.26"
+  source: "default" | "extra";
+  packId?: string;               // required when source === "extra"
+  entrypoint: string;            // path to SKILL.md
+  files: readonly string[];      // all files owned by the asset
+  sha256: string;                // content hash for drift/idempotency
+  replaces?: string;             // optional skillId this asset supersedes
+};
+
+type UserOverlayAsset = {
+  skillId: string;
+  source: "user";
+  entrypoint: string;
+  files: readonly string[];
+  sha256: string;
+  base?: {
+    tier: "default" | "extra";
+    version: string;
+    packId?: string;
+  };
+  strategy: "replace" | "merge";
+};
+```
+
+Validation rules:
+
+- `default` tier MAY contain only `ManagedAsset` with `source: "default"`.
+- `extra` tier MAY contain only `ManagedAsset` with `source: "extra"` and required `packId`.
+- `user` tier MAY contain only `UserOverlayAsset`.
+- `skillId` is globally unique per tier after manifest normalization.
+
+### What populates each tier
+
+#### `default` (npm bundle)
+
+- Populated only from xtrm-distributed assets (npm package / plugin payload).
+- Contains baseline skills required for bootstrapping and core workflows.
+- Must include hash/version metadata per skill to support drift detection.
+- Never edited in place by end users.
+
+#### `extra` (optional packs)
+
+- Populated by explicit install/enable actions (`xt skills enable <pack>`).
+- Contains optional packs that can add new skills or provide managed replacements of default definitions.
+- Pack records must include pack id, version, provenance, and compatibility constraints.
+- Can be added/removed without mutating `default`.
+
+#### `user` (local overlays)
+
+- Populated by user-authored local files or explicit overlay commands.
+- Contains custom skills and override directives for managed skills.
+- Always preserved across install/sync/update operations.
+- Stored per scope (global or local), never in managed bundle directories.
+
+### Precedence and resolution order
+
+Resolver order is deterministic:
+
+1. `user`
+2. `extra`
+3. `default`
+
+Rules:
+
+- The first tier that provides a valid definition for a skill id wins.
+- Missing fields are merged down from lower tiers only when schema allows partial overlays.
+- If a tier provides a full replacement record, lower tiers are ignored for that skill.
+- Effective output must include provenance: `{ tier, scope, source, version }`.
+
+### Conflict resolution policy between tiers
+
+For each skill id, resolver emits one status:
+
+- `resolved-user`
+- `resolved-extra`
+- `resolved-default`
+- `conflict`
+
+`conflict` is raised when any of the following is true:
+
+1. Two records in the same tier define incompatible versions for the same `skillId` after normalization.
+2. Multiple enabled `extra` packs provide the same `skillId` and no deterministic tie-break decision exists.
+3. A user overlay references a base symbol/file that does not exist in lower tiers.
+4. Merge strategy is undefined for overlapping fields (for example both records attempt non-mergeable replacements).
+5. Pack compatibility constraints fail for the active runtime version.
+
+Deterministic tie-break for `extra` pack collisions (same `skillId`):
+
+1. Explicit registry decision record (`xt skills resolve <skillId> --pack <packId>`), else
+2. Lowest `pack.priority` value, else
+3. Lexicographically smallest `packId`.
+
+Winning decision MUST be persisted so subsequent runs are idempotent.
+
+Non-interactive runtime policy:
+
+- Fail closed for conflicted skill ids (do not activate ambiguous result).
+- Continue resolving other skill ids.
+- Surface machine-readable conflict diagnostics and remediation commands.
+
+Interactive/CLI remediation policy:
+
+- `xt skills doctor` reports conflicts with exact fix paths.
+- User can resolve via explicit commands (align/unpin/reset-overlay/disable-pack).
+- Resolution decisions are persisted as registry state so reruns stay idempotent.
+
+---
+
+## 3) Architecture options
 
 ## Option A — Plugin-first
 
@@ -83,7 +237,7 @@ Make `.xtrm/skills` + registry metadata the canonical runtime source. Both Claud
 
 ---
 
-## 3) Compatibility matrix
+## 4) Compatibility matrix
 
 Matrix covers: **Pi runtime / Claude plugin / global install / project-local / git worktree** against each option.
 
@@ -101,7 +255,7 @@ Matrix covers: **Pi runtime / Claude plugin / global install / project-local / g
 
 ---
 
-## 4) `xt skills` CLI contract (minimum)
+## 5) `xt skills` CLI contract (minimum)
 
 Required baseline contract:
 
@@ -112,11 +266,24 @@ xt skills disable <pack> [--global|--local]
 xt skills profile <name> [--global|--local]
 ```
 
+Deferred from MVP (explicitly out of baseline contract):
+
+```bash
+xt skills select <skill...> [--global|--local]
+```
+
 ### Semantics
 
 - `--global`: operate on user/global registry scope.
 - `--local`: operate on project-local registry scope.
 - If no scope flag is provided, CLI should use deterministic default resolution (documented precedence).
+
+### `xt skills select` defer rationale (post-MVP)
+
+- `select` introduces a finer-grained state model (explicit per-skill selections) that overlaps with pack/profile resolution.
+- For MVP, `enable`/`disable` + `profile` are sufficient to validate registry semantics, idempotency, and scope behavior.
+- Deferring `select` reduces initial contract complexity while keeping migration risk lower during v0.8–v1.0.
+- `select` should be added after pack/profile precedence and overlay policy are finalized.
 
 ### Contract expectations
 
@@ -129,7 +296,7 @@ xt skills profile <name> [--global|--local]
 
 ---
 
-## 5) Migration plan for existing copy-based installs
+## 6) Migration plan for existing copy-based installs
 
 Goal: transition safely from copy-based installs to registry-driven behavior with idempotency and rollback.
 
@@ -169,33 +336,117 @@ Goal: transition safely from copy-based installs to registry-driven behavior wit
 
 ---
 
-## 6) Risks and open questions
+## 7) Risks and open questions
 
 ### A) Windows symlink permissions
 
 - Non-admin/dev-mode environments may block symlink creation.
 - Required behavior: deterministic copy fallback + visibility in command output.
 
-### B) Claude plugin lifecycle constraints
+### B) Claude plugin lifecycle constraints (concrete)
 
-- Plugin packaging/loading lifecycle may limit direct dynamic path resolution.
-- Open question: exact boundary between plugin-bundled assets vs runtime-registry reads.
+This is the hard boundary that drives Option B integration design.
+
+#### 1) Install-time vs run-time timing (`postinstall` and plugin activation)
+
+- **npm `postinstall` is package-install lifecycle, not Claude-session lifecycle.** It can run before Claude is ever launched, and may be skipped (`--ignore-scripts`, CI hardening, alternative install flows).
+- **Claude plugin activation happens later**, when the plugin is registered/enabled and Claude starts a session.
+- Result: migration-critical convergence (registry hydration, repair, drift reconciliation) **cannot depend on `postinstall` alone**; it must have an explicit runtime/CLI reconciliation path.
+
+#### 2) Plugin asset directory conventions (what Claude discovers natively)
+
+Claude plugin discovery is convention-based:
+
+- Plugin root must include `.claude-plugin/plugin.json`.
+- Plugin skills must live at `skills/<skill-name>/SKILL.md`.
+- Hook commands should resolve through `${CLAUDE_PLUGIN_ROOT}` (portable cache/install path).
+
+Implication: assets outside these conventions are not part of native plugin skill discovery.
+
+#### 3) CLAUDE.md path resolution constraints
+
+- `CLAUDE.md` is loaded from Claude memory resolution rules (project/user context), **not** from arbitrary plugin-owned files by default.
+- Skills from `--add-dir` are auto-discovered, but `CLAUDE.md` from those additional directories is not loaded unless `CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1` is set.
+- Therefore plugin-bundled guidance that must always apply should use deterministic hook injection (for example SessionStart `additionalSystemPrompt`) rather than assuming plugin-local `CLAUDE.md` ingestion.
+
+#### 4) Exact boundary: plugin-bundled assets vs runtime-registry reads
+
+- **Plugin-bundled assets:** natively discoverable by Claude at startup (plugin `skills/`, plugin-declared hooks, plugin-declared MCP config paths).
+- **Runtime-registry reads (`.xtrm/skills`, manifests, overlays):** only available if runtime code/hook scripts explicitly read them during execution.
+- **What is not possible by default:** replacing Claude's startup plugin-skill discovery with arbitrary registry files without a bridge layer.
+
+Design consequence for Option B:
+
+- Keep a plugin-visible bridge surface (minimal bundled skills/hooks), and
+- Resolve effective skill payload/state from registry at runtime via explicit loader logic,
+- with CLI repair paths (`xt skills ...`) as the deterministic source of convergence.
 
 ### C) npm `postinstall` reliability
 
-- `postinstall` behavior can vary by environment and installer flags.
-- Critical migration steps should not rely solely on implicit postinstall execution.
+- `postinstall` behavior varies by environment and installer flags, and may not run at all in hardened workflows.
+- Even when it runs, it runs too early to represent Claude session state (enabled plugins, active project, worktree scope).
+- Critical migration steps should not rely solely on implicit `postinstall` execution.
 - Prefer explicit CLI reconciliation commands for deterministic repair.
 
 ### Additional open questions
 
-- Scope precedence when both global and local states exist.
 - Worktree inheritance model for shared vs isolated registry state.
-- Policy for user-modified managed skills (overlay vs in-place drift).
+
+### Scope conflict policy (global vs local registry)
+
+When the same `skillId` exists in both registries, runtime behavior MUST be deterministic, inspectable, and idempotent.
+
+#### 1) Version pinning policy
+
+- Each registry entry MUST persist `{ skillId, version, source, managed }`.
+- Managed entries MUST be exact pins (`x.y.z`), not ranges, once written to registry state.
+- Global and local scopes may pin different versions of the same `skillId`.
+- Resolver MUST NOT pick "highest semver" across scopes; it must pick the winning scope first, then use that scope's pinned version.
+- `xt skills list --effective` MUST print: `declared-global`, `declared-local`, `effective-scope`, and `effective-version` when duplicate IDs exist.
+
+#### 2) Precedence rules
+
+- Default runtime precedence: **local explicit entry > global entry > bundled default**.
+- Local explicit `disabled` for a skill blocks inheritance from global for that `skillId`.
+- If local has no entry for the `skillId`, global definition is inherited unchanged.
+- `--global` and `--local` flags target mutation scope only; they do not change default runtime precedence.
+- Worktrees inherit repository local scope by default; worktree-local overrides (if configured) sit above repository-local in the same precedence chain.
+
+#### 3) User-modified managed skills
+
+- Managed skill payloads are immutable; direct edits are treated as drift, not accepted as canonical managed state.
+- User customization MUST be stored as an overlay keyed by `{ skillId, baseVersion }`.
+- On detected in-place edits, resolver marks status `drifted`, preserves user changes into overlay storage, and offers repair guidance.
+- During upgrade/sync: apply managed base first, then re-apply overlay.
+- If overlay baseVersion does not match effective managed version, mark `conflict` and skip overlay application until rebased.
+
+#### 4) Conflict resolution algorithm
+
+For each duplicated `skillId`:
+
+1. Load local and global entries.
+2. Resolve winner using precedence rules.
+3. Resolve winner version from winner pin (or winner default profile mapping).
+4. Apply compatible overlay (matching baseVersion) if present.
+5. If overlay/version constraints are incompatible, emit `conflict` and fail closed for that skill only.
+
+Standard resolver statuses:
+
+- `resolved-local`
+- `resolved-global`
+- `resolved-fallback`
+- `drifted`
+- `conflict`
+
+Operational policy:
+
+- Non-interactive default is fail-closed per conflicting skill, continue remaining skills.
+- `xt skills doctor` MUST output concrete remediation commands (`align-version`, `unpin`, `accept-local`, `accept-global`, `rebase-overlay`, `reset-overlay`).
+- Explicit user resolution writes a decision record so repeated runs remain idempotent.
 
 ---
 
-## 7) Recommendation
+## 8) Recommendation
 
 Adopt **Option B: runtime-registry-first**, with phased rollout:
 

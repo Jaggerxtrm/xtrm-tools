@@ -2,9 +2,9 @@
 title: CLI Architecture
 scope: cli-architecture
 category: reference
-version: 1.3.0
+version: 1.4.0
 updated: 2026-03-31
-synced_at: 5ebb7506
+synced_at: 50e04da9
 source_of_truth_for:
   - "cli/src/**/*.ts"
 domain: [cli]
@@ -52,6 +52,10 @@ xt / xtrm
 │   ├── report show        → display latest or specified report
 │   ├── report list        → list all reports with frontmatter summary
 │   └── report diff        → compare two reports
+├── skills           → commands/skills.ts
+│   ├── skills list       → lists installed skills from .xtrm/skills/default (or plugin fallback)
+│   ├── skills enable     → enable a skill pack (v0.8 stub; pack activation in v0.9)
+│   └── skills disable    → disable a skill pack (v0.8 stub; pack deactivation in v0.9)
 └── help             → commands/help.ts
 ```
 
@@ -155,6 +159,23 @@ The `generate` command collects:
 
 See the `session-close-report` skill (`skills/session-close-report/SKILL.md`) for
 the full fill workflow and quality bar reference.
+
+
+### `commands/skills.ts`
+
+**`createSkillsCommand()`**
+
+Registers `xt skills`, the skill registry control surface for v0.8 foundation.
+
+- **`xt skills list [--global|--local] [--json]`**: reads skills from `.xtrm/skills/default/` (registry path) with fallback to `${CLAUDE_PLUGIN_ROOT}/skills/` (plugin-bundled path). Emits `name`, `tier`, `source`, and `path` per skill. Source is `registry` when `.xtrm` path resolves, `plugin-fallback` otherwise.
+- **`xt skills enable <pack> [--global|--local] [--json]`**: v0.8 stub; returns `not-implemented` status. Full pack activation deferred to v0.9.
+- **`xt skills disable <pack> [--global|--local] [--json]`**: v0.8 stub; returns `not-implemented` status. Full pack deactivation deferred to v0.9.
+
+Scope resolution: `--global` → `~/.xtrm/skills`; `--local` (default) → `./.xtrm/skills` (project root via `findRepoRoot()`). Passing both flags is an error.
+
+The `.xtrm/skills/default` entry is a symlink to `../../skills` in the project repo, giving the registry a live view of `skills/` without copying.
+
+See `docs/skills-registry-exploration.md` for the full three-tier model, CLI contract, and migration roadmap.
 
 
 ### `core/preflight.ts`

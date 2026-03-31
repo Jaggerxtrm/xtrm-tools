@@ -10,6 +10,7 @@ import { runPiInstall } from './pi-install.js';
 import { inventoryPiRuntime, renderPiRuntimePlan } from '../core/pi-runtime.js';
 import { createInstallPiCommand } from './install-pi.js';
 import { launchWorktreeSession } from '../utils/worktree-session.js';
+import { confirmDestructiveAction } from '../utils/confirmation.js';
 
 const PI_AGENT_DIR = process.env.PI_AGENT_DIR || path.join(homedir(), '.pi', 'agent');
 
@@ -179,7 +180,18 @@ export function createPiCommand(): Command {
 
     cmd.command('reload')
         .description('Re-sync extensions, remove orphaned, and reinstall missing packages')
-        .action(async () => {
+        .option('-y, --yes', 'Skip confirmation prompt', false)
+        .action(async (opts: { yes: boolean }) => {
+            const confirmed = await confirmDestructiveAction({
+                yes: opts.yes,
+                message: 'Re-sync Pi runtime and remove orphaned extensions?',
+                initial: true,
+            });
+            if (!confirmed) {
+                console.log(kleur.dim('  Cancelled\n'));
+                return;
+            }
+
             // Use git to find the actual project root, not findRepoRoot()
             // which finds the xtrm-tools source repo
             const r = spawnSync('git', ['rev-parse', '--show-toplevel'], {

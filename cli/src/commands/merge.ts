@@ -3,13 +3,15 @@ import kleur from 'kleur';
 import { spawn, spawnSync } from 'node:child_process';
 import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { confirmDestructiveAction } from '../utils/confirmation.js';
 
 export function createMergeCommand(): Command {
     return new Command('merge')
         .description('Drain the xt worktree PR merge queue via the xt-merge specialist')
         .option('--dry-run', 'List queue and CI status without merging', false)
+        .option('-y, --yes', 'Skip confirmation prompt', false)
         .option('--no-beads', 'Skip creating a tracking bead for this run', false)
-        .action(async (opts: { dryRun: boolean; beads: boolean }) => {
+        .action(async (opts: { dryRun: boolean; yes: boolean; beads: boolean }) => {
             const cwd = process.cwd();
 
             // Gate: must be inside a git repository
@@ -66,6 +68,18 @@ export function createMergeCommand(): Command {
                         process.exit(1);
                     }
                 } catch { /* non-fatal: proceed and let specialists run handle it */ }
+            }
+
+            if (!opts.dryRun) {
+                const confirmed = await confirmDestructiveAction({
+                    yes: opts.yes,
+                    message: 'Drain and merge the xt PR queue?',
+                    initial: false,
+                });
+                if (!confirmed) {
+                    console.log(kleur.dim('  Cancelled\n'));
+                    return;
+                }
             }
 
             const prompt = opts.dryRun

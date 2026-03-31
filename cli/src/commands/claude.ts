@@ -5,6 +5,7 @@ import { findRepoRoot } from '../utils/repo-root.js';
 import { t } from '../utils/theme.js';
 import { runClaudeRuntimeSyncPhase } from '../core/claude-runtime-sync.js';
 import { launchWorktreeSession } from '../utils/worktree-session.js';
+import { confirmDestructiveAction } from '../utils/confirmation.js';
 import { inventoryDeps, renderBootstrapPlan } from '../core/machine-bootstrap.js';
 
 export function createClaudeCommand(): Command {
@@ -18,7 +19,20 @@ export function createClaudeCommand(): Command {
     cmd.command('install')
         .description('Install/refresh the xtrm-tools Claude plugin and official plugins')
         .option('--dry-run', 'Preview without making changes', false)
-        .action(async (opts) => {
+        .option('-y, --yes', 'Skip confirmation prompt', false)
+        .action(async (opts: { dryRun: boolean; yes: boolean }) => {
+            if (!opts.dryRun) {
+                const confirmed = await confirmDestructiveAction({
+                    yes: opts.yes,
+                    message: 'Sync Claude runtime and remove stale pre-plugin files?',
+                    initial: true,
+                });
+                if (!confirmed) {
+                    console.log(kleur.dim('  Cancelled\n'));
+                    return;
+                }
+            }
+
             const repoRoot = await findRepoRoot();
             await runClaudeRuntimeSyncPhase({ repoRoot, dryRun: opts.dryRun, isGlobal: false });
         });
@@ -26,7 +40,18 @@ export function createClaudeCommand(): Command {
     cmd.command('reload')
         .alias('reinstall')
         .description('Reinstall Claude plugin from live repo (refreshes cached copy)')
-        .action(async () => {
+        .option('-y, --yes', 'Skip confirmation prompt', false)
+        .action(async (opts: { yes: boolean }) => {
+            const confirmed = await confirmDestructiveAction({
+                yes: opts.yes,
+                message: 'Re-sync Claude runtime and remove stale pre-plugin files?',
+                initial: true,
+            });
+            if (!confirmed) {
+                console.log(kleur.dim('  Cancelled\n'));
+                return;
+            }
+
             const repoRoot = await findRepoRoot();
             await runClaudeRuntimeSyncPhase({ repoRoot, dryRun: false, isGlobal: false });
         });

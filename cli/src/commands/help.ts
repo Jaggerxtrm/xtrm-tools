@@ -69,7 +69,7 @@ export function createHelpCommand(): Command {
                 '    Run memory-processor specialist to synthesize bd memories into .xtrm/memory.md.',
                 '    --dry-run: classify and report without writing memory.md or pruning.',
                 '',
-                '  xtrm merge [--dry-run] [--no-beads]',
+                '  xtrm merge [--dry-run] [--yes/-y] [--no-beads]',
                 '    Drain the xt worktree PR merge queue via the xt-merge specialist (FIFO, --rebase).',
                 '    --dry-run: list queue and CI status without merging.',
                 '',
@@ -77,7 +77,7 @@ export function createHelpCommand(): Command {
                 '    Stream xtrm event log (tool calls, gates, session/bd lifecycle).',
                 '    Options: --follow, --all, --session <id>, --type <domain>, --json',
                 '',
-                '  xtrm reset',
+                '  xtrm reset [--yes/-y]',
                 '    Clear saved CLI preferences.',
                 '',
                 '  xtrm help',
@@ -87,7 +87,7 @@ export function createHelpCommand(): Command {
             blocks.push(section('RUNTIME COMMANDS', [
                 '  xt claude [name]',
                 '    Launch Claude in a sandboxed xt/<name> worktree.',
-                '  xt claude install [--dry-run]',
+                '  xt claude install [--dry-run] [--yes/-y]',
                 '    Install/refresh xtrm Claude plugin + official plugins.',
                 '  xt claude status | xt claude doctor | xt claude reload',
                 '',
@@ -95,7 +95,7 @@ export function createHelpCommand(): Command {
                 '    Launch Pi in a sandboxed xt/<name> worktree.',
                 '  xt pi setup',
                 '    Interactive first-time setup.',
-                '  xt pi status | xt pi doctor | xt pi reload',
+                '  xt pi status | xt pi doctor | xt pi reload [--yes/-y]',
             ]));
 
             blocks.push(section('WORKTREE COMMANDS', [
@@ -123,7 +123,7 @@ export function createHelpCommand(): Command {
                 '  xt memory update [--dry-run] [--no-beads]',
                 '    Run memory-processor to synthesize .xtrm/memory.md from bd memories + repo state.',
                 '',
-                '  xt merge [--dry-run] [--no-beads]',
+                '  xt merge [--dry-run] [--yes/-y] [--no-beads]',
                 '    Run xt-merge to drain queued xt/* PRs FIFO: CI gate → rebase merge → rebase cascade.',
             ]));
 

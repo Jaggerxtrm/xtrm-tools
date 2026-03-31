@@ -5,6 +5,7 @@ import path from 'path';
 import { homedir } from 'os';
 import { t, sym } from '../utils/theme.js';
 import { findRepoRoot } from '../utils/repo-root.js';
+import { confirmDestructiveAction } from '../utils/confirmation.js';
 
 // Canonical hooks (files in ~/.claude/hooks/)
 const CANONICAL_HOOKS = new Set([
@@ -288,6 +289,18 @@ export function createCleanCommand(): Command {
 
             if (dryRun) {
                 console.log(kleur.yellow('  DRY RUN — No changes will be made\n'));
+            }
+
+            if (!dryRun) {
+                const confirmed = await confirmDestructiveAction({
+                    yes,
+                    message: 'Remove orphaned hooks/skills and stale hook wiring entries?',
+                    initial: false,
+                });
+                if (!confirmed) {
+                    console.log(kleur.dim('  Cancelled\n'));
+                    return;
+                }
             }
 
             const result: CleanResult = {

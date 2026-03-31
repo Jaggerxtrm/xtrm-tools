@@ -8215,7 +8215,7 @@ var require_dist = __commonJS({
         });
       };
     }
-    var prompts8 = require_prompts();
+    var prompts5 = require_prompts();
     var passOn = ["suggest", "format", "onState", "validate", "onRender", "type"];
     var noop = () => {
     };
@@ -8266,7 +8266,7 @@ var require_dist = __commonJS({
             var _question2 = question;
             name = _question2.name;
             type = _question2.type;
-            if (prompts8[type] === void 0) {
+            if (prompts5[type] === void 0) {
               throw new Error(`prompt type (${type}) is not defined`);
             }
             if (override2[question.name] !== void 0) {
@@ -8277,7 +8277,7 @@ var require_dist = __commonJS({
               }
             }
             try {
-              answer = prompt._injected ? getInjectedAnswer(prompt._injected, question.initial) : yield prompts8[type](question);
+              answer = prompt._injected ? getInjectedAnswer(prompt._injected, question.initial) : yield prompts5[type](question);
               answers[name] = answer = yield getFormattedAnswer(question, answer, true);
               quit = yield onSubmit(question, answer, answers);
             } catch (err) {
@@ -8309,7 +8309,7 @@ var require_dist = __commonJS({
     }
     module2.exports = Object.assign(prompt, {
       prompt,
-      prompts: prompts8,
+      prompts: prompts5,
       inject,
       override
     });
@@ -10396,7 +10396,7 @@ var require_prompts2 = __commonJS({
 var require_lib2 = __commonJS({
   "../node_modules/prompts/lib/index.js"(exports2, module2) {
     "use strict";
-    var prompts8 = require_prompts2();
+    var prompts5 = require_prompts2();
     var passOn = ["suggest", "format", "onState", "validate", "onRender", "type"];
     var noop = () => {
     };
@@ -10428,7 +10428,7 @@ var require_lib2 = __commonJS({
           throw new Error("prompt message is required");
         }
         ({ name, type } = question);
-        if (prompts8[type] === void 0) {
+        if (prompts5[type] === void 0) {
           throw new Error(`prompt type (${type}) is not defined`);
         }
         if (override2[question.name] !== void 0) {
@@ -10439,7 +10439,7 @@ var require_lib2 = __commonJS({
           }
         }
         try {
-          answer = prompt._injected ? getInjectedAnswer(prompt._injected, question.initial) : await prompts8[type](question);
+          answer = prompt._injected ? getInjectedAnswer(prompt._injected, question.initial) : await prompts5[type](question);
           answers[name] = answer = await getFormattedAnswer(question, answer, true);
           quit = await onSubmit(question, answer, answers);
         } catch (err) {
@@ -10462,7 +10462,7 @@ var require_lib2 = __commonJS({
     function override(answers) {
       prompt._override = Object.assign({}, answers);
     }
-    module2.exports = Object.assign(prompt, { prompt, prompts: prompts8, inject, override });
+    module2.exports = Object.assign(prompt, { prompt, prompts: prompts5, inject, override });
   }
 });
 
@@ -34841,6 +34841,31 @@ async function launchWorktreeSession(opts) {
   process.exit(launchResult.status ?? 0);
 }
 
+// src/utils/confirmation.ts
+var import_prompts = __toESM(require_prompts3(), 1);
+function hasInteractiveTTY() {
+  return Boolean(process.stdout.isTTY && process.stdin.isTTY);
+}
+function isTestRuntime() {
+  return Boolean(process.env.VITEST || process.env.NODE_ENV === "test");
+}
+async function confirmDestructiveAction(opts) {
+  if (opts.yes) return true;
+  if (!hasInteractiveTTY() && !isTestRuntime()) {
+    console.error(kleur_default.red(
+      "\n  \u2717 Destructive command requires confirmation in interactive mode.\n  Re-run with --yes to allow non-interactive execution.\n"
+    ));
+    return false;
+  }
+  const { confirm } = await (0, import_prompts.default)({
+    type: "confirm",
+    name: "confirm",
+    message: opts.message,
+    initial: opts.initial ?? false
+  });
+  return Boolean(confirm);
+}
+
 // src/core/machine-bootstrap.ts
 var import_child_process3 = require("child_process");
 var MANAGED_DEPS = [
@@ -35088,11 +35113,31 @@ function createClaudeCommand() {
   const cmd = new Command("claude").description("Launch a Claude session in a sandboxed worktree, or manage the Claude runtime").argument("[name]", "Optional session name \u2014 used as xt/<name> branch (random if omitted)").action(async (name) => {
     await launchWorktreeSession({ runtime: "claude", name });
   });
-  cmd.command("install").description("Install/refresh the xtrm-tools Claude plugin and official plugins").option("--dry-run", "Preview without making changes", false).action(async (opts) => {
+  cmd.command("install").description("Install/refresh the xtrm-tools Claude plugin and official plugins").option("--dry-run", "Preview without making changes", false).option("-y, --yes", "Skip confirmation prompt", false).action(async (opts) => {
+    if (!opts.dryRun) {
+      const confirmed = await confirmDestructiveAction({
+        yes: opts.yes,
+        message: "Sync Claude runtime and remove stale pre-plugin files?",
+        initial: true
+      });
+      if (!confirmed) {
+        console.log(kleur_default.dim("  Cancelled\n"));
+        return;
+      }
+    }
     const repoRoot = await findRepoRoot();
     await runClaudeRuntimeSyncPhase({ repoRoot, dryRun: opts.dryRun, isGlobal: false });
   });
-  cmd.command("reload").alias("reinstall").description("Reinstall Claude plugin from live repo (refreshes cached copy)").action(async () => {
+  cmd.command("reload").alias("reinstall").description("Reinstall Claude plugin from live repo (refreshes cached copy)").option("-y, --yes", "Skip confirmation prompt", false).action(async (opts) => {
+    const confirmed = await confirmDestructiveAction({
+      yes: opts.yes,
+      message: "Re-sync Claude runtime and remove stale pre-plugin files?",
+      initial: true
+    });
+    if (!confirmed) {
+      console.log(kleur_default.dim("  Cancelled\n"));
+      return;
+    }
     const repoRoot = await findRepoRoot();
     await runClaudeRuntimeSyncPhase({ repoRoot, dryRun: false, isGlobal: false });
   });
@@ -35258,7 +35303,7 @@ async function runPiInstall(dryRun = false, isGlobal = false, projectRoot) {
 }
 
 // src/commands/install-pi.ts
-var import_prompts = __toESM(require_prompts3(), 1);
+var import_prompts2 = __toESM(require_prompts3(), 1);
 var import_fs_extra5 = __toESM(require_lib(), 1);
 var import_path5 = __toESM(require("path"), 1);
 var import_node_child_process4 = require("child_process");
@@ -35342,7 +35387,7 @@ function createInstallPiCommand() {
           continue;
         }
         if (!field.required && !yes) {
-          const { include } = await (0, import_prompts.default)({
+          const { include } = await (0, import_prompts2.default)({
             type: "confirm",
             name: "include",
             message: `  Configure ${field.label}? (optional)`,
@@ -35350,7 +35395,7 @@ function createInstallPiCommand() {
           });
           if (!include) continue;
         }
-        const { value } = await (0, import_prompts.default)({
+        const { value } = await (0, import_prompts2.default)({
           type: field.secret ? "password" : "text",
           name: "value",
           message: `  ${field.label}`,
@@ -35365,7 +35410,7 @@ function createInstallPiCommand() {
       for (const name of ["models.json", "auth.json", "settings.json"]) {
         const destPath = import_path5.default.join(PI_AGENT_DIR3, name);
         if (name === "auth.json" && await import_fs_extra5.default.pathExists(destPath) && !yes) {
-          const { overwrite } = await (0, import_prompts.default)({
+          const { overwrite } = await (0, import_prompts2.default)({
             type: "confirm",
             name: "overwrite",
             message: `  ${name} already exists \u2014 overwrite? (OAuth tokens will be lost)`,
@@ -35537,7 +35582,16 @@ function createPiCommand() {
       console.log(kleur_default.yellow("  \u26A0 Some checks failed \u2014 run: xt pi reload\n"));
     }
   });
-  cmd.command("reload").description("Re-sync extensions, remove orphaned, and reinstall missing packages").action(async () => {
+  cmd.command("reload").description("Re-sync extensions, remove orphaned, and reinstall missing packages").option("-y, --yes", "Skip confirmation prompt", false).action(async (opts) => {
+    const confirmed = await confirmDestructiveAction({
+      yes: opts.yes,
+      message: "Re-sync Pi runtime and remove orphaned extensions?",
+      initial: true
+    });
+    if (!confirmed) {
+      console.log(kleur_default.dim("  Cancelled\n"));
+      return;
+    }
     const r = (0, import_node_child_process5.spawnSync)("git", ["rev-parse", "--show-toplevel"], {
       cwd: process.cwd(),
       encoding: "utf8",
@@ -35553,7 +35607,6 @@ function createPiCommand() {
 var import_path17 = __toESM(require("path"), 1);
 var import_fs_extra16 = __toESM(require_lib(), 1);
 var import_child_process7 = require("child_process");
-var import_prompts3 = __toESM(require_prompts3(), 1);
 
 // src/commands/install-service-skills.ts
 var import_path7 = __toESM(require("path"), 1);
@@ -35656,9 +35709,6 @@ fi
   }
   return { hookFiles };
 }
-
-// src/commands/install.ts
-var import_prompts2 = __toESM(require_prompts3(), 1);
 
 // ../node_modules/eventemitter3/index.mjs
 var import_index2 = __toESM(require_eventemitter3(), 1);
@@ -39858,18 +39908,15 @@ async function runInstall(opts = {}) {
     console.log(kleur_default.dim("  Dry run \u2014 no changes written\n"));
     return;
   }
-  if (!effectiveYes) {
-    const totalChangesCount = allChanges.reduce((s, c) => s + c.totalChanges, 0);
-    const { confirm } = await (0, import_prompts2.default)({
-      type: "confirm",
-      name: "confirm",
-      message: `Proceed with ${actionLabel} (${totalChangesCount} total changes)?`,
-      initial: true
-    });
-    if (!confirm) {
-      console.log(t.muted("  Install cancelled.\n"));
-      return;
-    }
+  const totalChangesCount = allChanges.reduce((s, c) => s + c.totalChanges, 0);
+  const confirmed = await confirmDestructiveAction({
+    yes: effectiveYes,
+    message: `Proceed with ${actionLabel} (${totalChangesCount} total changes)?`,
+    initial: true
+  });
+  if (!confirmed) {
+    console.log(t.muted("  Install cancelled.\n"));
+    return;
   }
   let totalCount = 0;
   for (const { target, changeSet, skippedDrifted } of allChanges) {
@@ -40541,14 +40588,12 @@ function renderInitPlan(inventory) {
   }
   console.log(kleur_default.dim("\n  " + "\u2500".repeat(50) + "\n"));
 }
-async function confirmInitPlan() {
-  const { confirm } = await (0, import_prompts3.default)({
-    type: "confirm",
-    name: "confirm",
+async function confirmInitPlan(yes) {
+  return confirmDestructiveAction({
+    yes,
     message: "Proceed with xtrm init?",
     initial: true
   });
-  return Boolean(confirm);
 }
 async function runProjectBootstrap(projectRoot) {
   await runBdInitForProject(projectRoot);
@@ -40574,12 +40619,10 @@ async function runProjectInit(opts = {}) {
     console.log(kleur_default.dim("  Dry run \u2014 no changes written\n"));
     return;
   }
-  if (!effectiveYes) {
-    const ok = await confirmInitPlan();
-    if (!ok) {
-      console.log(kleur_default.dim("  Init cancelled.\n"));
-      return;
-    }
+  const ok = await confirmInitPlan(effectiveYes);
+  if (!ok) {
+    console.log(kleur_default.dim("  Init cancelled.\n"));
+    return;
   }
   await runMachineBootstrapPhase({ dryRun: false });
   await runClaudeRuntimeSyncPhase({ repoRoot: projectRoot, dryRun: false, isGlobal: false });
@@ -40715,7 +40758,7 @@ function getProjectRoot() {
 }
 
 // src/commands/status.ts
-var import_prompts4 = __toESM(require_prompts3(), 1);
+var import_prompts3 = __toESM(require_prompts3(), 1);
 
 // src/core/manifest.ts
 var import_path18 = require("path");
@@ -54619,7 +54662,7 @@ function createStatusCommand() {
     console.log(kleur_default.yellow(`
   \u26A0  ${totalPending} pending change${totalPending !== 1 ? "s" : ""} across ${pending.length} environment${pending.length !== 1 ? "s" : ""}
 `));
-    const { selected } = await (0, import_prompts4.default)({
+    const { selected } = await (0, import_prompts3.default)({
       type: "multiselect",
       name: "selected",
       message: "Select environments to sync:",
@@ -54654,7 +54697,16 @@ function createStatusCommand() {
 
 // src/commands/reset.ts
 function createResetCommand() {
-  return new Command("reset").description("Reset CLI configuration (clears saved sync mode and preferences)").action(() => {
+  return new Command("reset").description("Reset CLI configuration (clears saved sync mode and preferences)").option("-y, --yes", "Skip confirmation prompt", false).action(async (opts) => {
+    const confirmed = await confirmDestructiveAction({
+      yes: opts.yes,
+      message: "Reset saved CLI configuration?",
+      initial: false
+    });
+    if (!confirmed) {
+      console.log(kleur_default.dim("  Cancelled\n"));
+      return;
+    }
     resetContext();
     console.log(kleur_default.green("\u2713 Configuration reset. Run sync again to reconfigure."));
   });
@@ -54723,7 +54775,7 @@ function createHelpCommand() {
       "    Run memory-processor specialist to synthesize bd memories into .xtrm/memory.md.",
       "    --dry-run: classify and report without writing memory.md or pruning.",
       "",
-      "  xtrm merge [--dry-run] [--no-beads]",
+      "  xtrm merge [--dry-run] [--yes/-y] [--no-beads]",
       "    Drain the xt worktree PR merge queue via the xt-merge specialist (FIFO, --rebase).",
       "    --dry-run: list queue and CI status without merging.",
       "",
@@ -54731,7 +54783,7 @@ function createHelpCommand() {
       "    Stream xtrm event log (tool calls, gates, session/bd lifecycle).",
       "    Options: --follow, --all, --session <id>, --type <domain>, --json",
       "",
-      "  xtrm reset",
+      "  xtrm reset [--yes/-y]",
       "    Clear saved CLI preferences.",
       "",
       "  xtrm help",
@@ -54740,7 +54792,7 @@ function createHelpCommand() {
     blocks.push(section("RUNTIME COMMANDS", [
       "  xt claude [name]",
       "    Launch Claude in a sandboxed xt/<name> worktree.",
-      "  xt claude install [--dry-run]",
+      "  xt claude install [--dry-run] [--yes/-y]",
       "    Install/refresh xtrm Claude plugin + official plugins.",
       "  xt claude status | xt claude doctor | xt claude reload",
       "",
@@ -54748,7 +54800,7 @@ function createHelpCommand() {
       "    Launch Pi in a sandboxed xt/<name> worktree.",
       "  xt pi setup",
       "    Interactive first-time setup.",
-      "  xt pi status | xt pi doctor | xt pi reload"
+      "  xt pi status | xt pi doctor | xt pi reload [--yes/-y]"
     ]));
     blocks.push(section("WORKTREE COMMANDS", [
       "  xt attach [slug]",
@@ -54774,7 +54826,7 @@ function createHelpCommand() {
       "  xt memory update [--dry-run] [--no-beads]",
       "    Run memory-processor to synthesize .xtrm/memory.md from bd memories + repo state.",
       "",
-      "  xt merge [--dry-run] [--no-beads]",
+      "  xt merge [--dry-run] [--yes/-y] [--no-beads]",
       "    Run xt-merge to drain queued xt/* PRs FIFO: CI gate \u2192 rebase merge \u2192 rebase cascade."
     ]));
     blocks.push(section("NOTES", [
@@ -55011,6 +55063,17 @@ function createCleanCommand() {
     if (dryRun) {
       console.log(kleur_default.yellow("  DRY RUN \u2014 No changes will be made\n"));
     }
+    if (!dryRun) {
+      const confirmed = await confirmDestructiveAction({
+        yes,
+        message: "Remove orphaned hooks/skills and stale hook wiring entries?",
+        initial: false
+      });
+      if (!confirmed) {
+        console.log(kleur_default.dim("  Cancelled\n"));
+        return;
+      }
+    }
     const result = {
       hooksRemoved: [],
       skillsRemoved: [],
@@ -55082,7 +55145,6 @@ function createCleanCommand() {
 }
 
 // src/commands/end.ts
-var import_prompts5 = __toESM(require_prompts3(), 1);
 var import_node_child_process7 = require("child_process");
 var import_node_fs5 = require("fs");
 var import_node_path6 = require("path");
@@ -55391,6 +55453,15 @@ function createEndCommand() {
     }
     console.log(t.success(`  \u2713 Rebased onto origin/${defaultBranch}`));
     maybeRebuildCliDist(cwd, defaultBranch);
+    const pushConfirmed = await confirmDestructiveAction({
+      yes: opts.yes,
+      message: `Force-push ${branch} to origin with --force-with-lease?`,
+      initial: false
+    });
+    if (!pushConfirmed) {
+      console.log(kleur_default.dim("  Cancelled\n"));
+      return;
+    }
     console.log(kleur_default.dim("  Pushing branch..."));
     const pushResult = git(["push", "origin", branch, "--force-with-lease"], cwd);
     if (!pushResult.ok) {
@@ -55426,16 +55497,11 @@ function createEndCommand() {
       console.log(t.success(`  \u2713 Linked PR to ${issues.length} issue(s)`));
     }
     if (!opts.keep) {
-      let doRemove = opts.yes;
-      if (!opts.yes) {
-        const { remove } = await (0, import_prompts5.default)({
-          type: "confirm",
-          name: "remove",
-          message: `Remove local worktree at ${cwd}?`,
-          initial: false
-        });
-        doRemove = remove;
-      }
+      const doRemove = await confirmDestructiveAction({
+        yes: opts.yes,
+        message: `Remove local worktree at ${cwd}?`,
+        initial: false
+      });
       if (doRemove) {
         const repoRoot = resolveMainRepoRoot(cwd);
         const cleanup = cleanupWorktreePath(cwd, repoRoot);
@@ -55464,7 +55530,6 @@ function createEndCommand() {
 }
 
 // src/commands/worktree.ts
-var import_prompts6 = __toESM(require_prompts3(), 1);
 var import_node_child_process8 = require("child_process");
 var import_node_fs6 = require("fs");
 var import_node_path7 = require("path");
@@ -55741,17 +55806,12 @@ function createWorktreeCommand() {
       console.log(kleur_default.yellow("\n  \u2139 Dry run \u2014 no changes applied\n"));
       return;
     }
-    let doRemove = opts.yes;
     const totalTargets = merged.length + orphanDirs.length;
-    if (!opts.yes) {
-      const { confirm } = await (0, import_prompts6.default)({
-        type: "confirm",
-        name: "confirm",
-        message: `Apply cleanup for ${totalTargets} item(s)?`,
-        initial: true
-      });
-      doRemove = confirm;
-    }
+    const doRemove = await confirmDestructiveAction({
+      yes: opts.yes,
+      message: `Apply cleanup for ${totalTargets} item(s)?`,
+      initial: true
+    });
     if (!doRemove) {
       console.log(kleur_default.dim("  Cancelled\n"));
       return;
@@ -55806,16 +55866,11 @@ function createWorktreeCommand() {
       console.log(kleur_default.dim("  Run: xt worktree list\n"));
       process.exit(1);
     }
-    let doRemove = opts.yes;
-    if (!opts.yes) {
-      const { confirm } = await (0, import_prompts6.default)({
-        type: "confirm",
-        name: "confirm",
-        message: `Remove ${target.path}?`,
-        initial: false
-      });
-      doRemove = confirm;
-    }
+    const doRemove = await confirmDestructiveAction({
+      yes: opts.yes,
+      message: `Remove ${target.path}?`,
+      initial: false
+    });
     if (!doRemove) {
       console.log(kleur_default.dim("  Cancelled\n"));
       return;
@@ -55842,7 +55897,7 @@ function clearStatuslineClaim2(repoRoot) {
 }
 
 // src/commands/attach.ts
-var import_prompts7 = __toESM(require_prompts3(), 1);
+var import_prompts4 = __toESM(require_prompts3(), 1);
 var import_node_child_process9 = require("child_process");
 function createAttachCommand() {
   return new Command("attach").description("Re-attach to an existing xt worktree and resume the Claude or Pi session").argument("[name]", 'Worktree slug or branch name to attach to (e.g. "abc1" or "xt/abc1")').action(async (name) => {
@@ -55878,7 +55933,7 @@ function createAttachCommand() {
           value: slug
         };
       });
-      const { picked } = await (0, import_prompts7.default)({
+      const { picked } = await (0, import_prompts4.default)({
         type: "select",
         name: "picked",
         message: "Select worktree to attach",
@@ -55906,7 +55961,7 @@ function createAttachCommand() {
   });
 }
 async function pickRuntime() {
-  const { runtime } = await (0, import_prompts7.default)({
+  const { runtime } = await (0, import_prompts4.default)({
     type: "select",
     name: "runtime",
     message: "No session metadata found \u2014 which runtime?",
@@ -56698,7 +56753,7 @@ var import_node_child_process13 = require("child_process");
 var import_node_fs8 = require("fs");
 var import_node_path9 = require("path");
 function createMergeCommand() {
-  return new Command("merge").description("Drain the xt worktree PR merge queue via the xt-merge specialist").option("--dry-run", "List queue and CI status without merging", false).option("--no-beads", "Skip creating a tracking bead for this run", false).action(async (opts) => {
+  return new Command("merge").description("Drain the xt worktree PR merge queue via the xt-merge specialist").option("--dry-run", "List queue and CI status without merging", false).option("-y, --yes", "Skip confirmation prompt", false).option("--no-beads", "Skip creating a tracking bead for this run", false).action(async (opts) => {
     const cwd = process.cwd();
     const gitCheck = (0, import_node_child_process13.spawnSync)("git", ["rev-parse", "--git-dir"], { cwd, encoding: "utf8", stdio: "pipe" });
     if (gitCheck.status !== 0) {
@@ -56737,6 +56792,17 @@ function createMergeCommand() {
           process.exit(1);
         }
       } catch {
+      }
+    }
+    if (!opts.dryRun) {
+      const confirmed = await confirmDestructiveAction({
+        yes: opts.yes,
+        message: "Drain and merge the xt PR queue?",
+        initial: false
+      });
+      if (!confirmed) {
+        console.log(kleur_default.dim("  Cancelled\n"));
+        return;
       }
     }
     const prompt = opts.dryRun ? "List all open xt/ PRs sorted by creation time and check CI status on each. Do not merge anything." : "Drain the xt worktree PR merge queue.";

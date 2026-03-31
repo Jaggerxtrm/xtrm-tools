@@ -1,6 +1,5 @@
 import { Command } from 'commander';
 import kleur from 'kleur';
-import prompts from 'prompts';
 import { Listr } from 'listr2';
 import os from 'os';
 import fs from 'fs-extra';
@@ -13,6 +12,7 @@ import { t, sym } from '../utils/theme.js';
 import path from 'path';
 import { runPiInstall } from './pi-install.js';
 import { runClaudeRuntimeSyncPhase } from '../core/claude-runtime-sync.js';
+import { confirmDestructiveAction } from '../utils/confirmation.js';
 
 interface TargetChanges {
     target: string;
@@ -316,18 +316,15 @@ export async function runInstall(opts: InstallOpts = {}): Promise<void> {
             }
 
             // Phase 3: Confirmation
-            if (!effectiveYes) {
-                const totalChangesCount = allChanges.reduce((s, c) => s + c.totalChanges, 0);
-                const { confirm } = await prompts({
-                    type: 'confirm',
-                    name: 'confirm',
-                    message: `Proceed with ${actionLabel} (${totalChangesCount} total changes)?`,
-                    initial: true,
-                });
-                if (!confirm) {
-                    console.log(t.muted('  Install cancelled.\n'));
-                    return;
-                }
+            const totalChangesCount = allChanges.reduce((s, c) => s + c.totalChanges, 0);
+            const confirmed = await confirmDestructiveAction({
+                yes: effectiveYes,
+                message: `Proceed with ${actionLabel} (${totalChangesCount} total changes)?`,
+                initial: true,
+            });
+            if (!confirmed) {
+                console.log(t.muted('  Install cancelled.\n'));
+                return;
             }
 
             // Phase 4: Execute

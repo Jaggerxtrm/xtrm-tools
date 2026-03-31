@@ -3,7 +3,6 @@ import kleur from 'kleur';
 import path from 'path';
 import fs from 'fs-extra';
 import { spawnSync } from 'child_process';
-import prompts from 'prompts';
 import { installGitHooks as installServiceGitHooks } from './install-service-skills.js';
 import { runInstall, type InstallOpts } from './install.js';
 import { runClaudeRuntimeSyncPhase, renderClaudeRuntimePlanSummary } from '../core/claude-runtime-sync.js';
@@ -12,6 +11,7 @@ import { runInitVerification, renderVerificationSummary } from '../core/init-ver
 import { getContext } from '../core/context.js';
 import { calculateDiff } from '../core/diff.js';
 import { findRepoRoot } from '../utils/repo-root.js';
+import { confirmDestructiveAction } from '../utils/confirmation.js';
 
 declare const __dirname: string;
 function resolvePkgRoot(): string {
@@ -843,14 +843,12 @@ function renderInitPlan(inventory: InitInventory): void {
 // ── Phase 3: Confirmation ─────────────────────────────────────────────────────
 // Single gate before any mutations. All phases execute only after this confirms.
 
-async function confirmInitPlan(): Promise<boolean> {
-    const { confirm } = await prompts({
-        type: 'confirm',
-        name: 'confirm',
+async function confirmInitPlan(yes: boolean): Promise<boolean> {
+    return confirmDestructiveAction({
+        yes,
         message: 'Proceed with xtrm init?',
         initial: true,
     });
-    return Boolean(confirm);
 }
 
 // ── Phase 7: Project Bootstrap ────────────────────────────────────────────────
@@ -900,12 +898,10 @@ export async function runProjectInit(opts: InstallOpts = {}): Promise<void> {
     }
 
     // ── Phase 3: Confirmation (single gate for all mutations) ────────────────
-    if (!effectiveYes) {
-        const ok = await confirmInitPlan();
-        if (!ok) {
-            console.log(kleur.dim('  Init cancelled.\n'));
-            return;
-        }
+    const ok = await confirmInitPlan(effectiveYes);
+    if (!ok) {
+        console.log(kleur.dim('  Init cancelled.\n'));
+        return;
     }
 
     // ── Phase 4: Machine Bootstrap ───────────────────────────────────────────

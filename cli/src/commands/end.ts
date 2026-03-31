@@ -1,11 +1,11 @@
 import { Command } from 'commander';
 import kleur from 'kleur';
-import prompts from 'prompts';
 import { spawnSync } from 'node:child_process';
 import { existsSync, rmSync, unlinkSync } from 'node:fs';
 import { join, dirname, isAbsolute, resolve } from 'node:path';
 import { t } from '../utils/theme.js';
 import { unregisterPluginsForWorktree } from '../utils/worktree-session.js';
+import { confirmDestructiveAction } from '../utils/confirmation.js';
 
 interface EndOptions {
     draft: boolean;
@@ -400,6 +400,16 @@ export function createEndCommand(): Command {
             maybeRebuildCliDist(cwd, defaultBranch);
 
             // 9. Push (force-with-lease = safe after rebase)
+            const pushConfirmed = await confirmDestructiveAction({
+                yes: opts.yes,
+                message: `Force-push ${branch} to origin with --force-with-lease?`,
+                initial: false,
+            });
+            if (!pushConfirmed) {
+                console.log(kleur.dim('  Cancelled\n'));
+                return;
+            }
+
             console.log(kleur.dim('  Pushing branch...'));
             const pushResult = git(['push', 'origin', branch, '--force-with-lease'], cwd);
             if (!pushResult.ok) {
@@ -438,16 +448,11 @@ export function createEndCommand(): Command {
 
             // 12. Worktree cleanup
             if (!opts.keep) {
-                let doRemove = opts.yes;
-                if (!opts.yes) {
-                    const { remove } = await prompts({
-                        type: 'confirm',
-                        name: 'remove',
-                        message: `Remove local worktree at ${cwd}?`,
-                        initial: false,
-                    });
-                    doRemove = remove;
-                }
+                const doRemove = await confirmDestructiveAction({
+                    yes: opts.yes,
+                    message: `Remove local worktree at ${cwd}?`,
+                    initial: false,
+                });
 
                 if (doRemove) {
                     const repoRoot = resolveMainRepoRoot(cwd);

@@ -1,12 +1,12 @@
 import { Command } from 'commander';
 import kleur from 'kleur';
-import prompts from 'prompts';
 import { spawnSync } from 'node:child_process';
 import { existsSync, readdirSync, rmSync, statSync, unlinkSync, readFileSync } from 'node:fs';
 import { join, dirname, isAbsolute, resolve, sep } from 'node:path';
 import type { SessionMeta } from '../utils/worktree-session.js';
 import { unregisterPluginsForWorktree } from '../utils/worktree-session.js';
 import { t } from '../utils/theme.js';
+import { confirmDestructiveAction } from '../utils/confirmation.js';
 
 export interface WorktreeInfo {
     path: string;
@@ -368,17 +368,12 @@ export function createWorktreeCommand(): Command {
                 return;
             }
 
-            let doRemove = opts.yes;
             const totalTargets = merged.length + orphanDirs.length;
-            if (!opts.yes) {
-                const { confirm } = await prompts({
-                    type: 'confirm',
-                    name: 'confirm',
-                    message: `Apply cleanup for ${totalTargets} item(s)?`,
-                    initial: true,
-                });
-                doRemove = confirm;
-            }
+            const doRemove = await confirmDestructiveAction({
+                yes: opts.yes,
+                message: `Apply cleanup for ${totalTargets} item(s)?`,
+                initial: true,
+            });
 
             if (!doRemove) {
                 console.log(kleur.dim('  Cancelled\n'));
@@ -444,16 +439,11 @@ export function createWorktreeCommand(): Command {
                 process.exit(1);
             }
 
-            let doRemove = opts.yes;
-            if (!opts.yes) {
-                const { confirm } = await prompts({
-                    type: 'confirm',
-                    name: 'confirm',
-                    message: `Remove ${target.path}?`,
-                    initial: false,
-                });
-                doRemove = confirm;
-            }
+            const doRemove = await confirmDestructiveAction({
+                yes: opts.yes,
+                message: `Remove ${target.path}?`,
+                initial: false,
+            });
 
             if (!doRemove) {
                 console.log(kleur.dim('  Cancelled\n'));

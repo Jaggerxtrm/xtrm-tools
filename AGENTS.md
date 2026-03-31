@@ -26,7 +26,7 @@
 | **Edit** | Write/Edit without active claim | `bd update <id> --claim` |
 | **Commit** | `git commit` while claim is open | `bd close <id>` first, then commit |
 | **Stop** | Session end with unclosed claim | `bd close <id>` |
-| **Memory** | Auto-fires at session end if issue closed | `bd remember "<insight>"` then run the `bd kv set` command shown in the gate message |
+| **Memory** | `bd close <id>` without issue ack | First run `bd remember "<insight>"` (or decide nothing novel), then `bd kv set "memory-acked:<id>" "saved:<key>"` or `"nothing novel:<reason>"`, then retry `bd close <id> --reason="..."` |
 
 ## bd Command Reference
 
@@ -51,9 +51,11 @@ bd create --title="..." --description="..." --type=task --priority=2
 # types: task | bug | feature | epic | chore | decision
 
 # Closing
-bd close <id>                          # Close issue
+# Memory gate: ack per issue before close
+#   bd kv set "memory-acked:<id>" "saved:<key>"  OR  "nothing novel:<reason>"
+bd close <id>                          # Close issue (blocked until memory-acked:<id> exists)
 bd close <id> --reason="Done: ..."     # Close with context
-bd close <id1> <id2> <id3>            # Batch close
+bd close <id1> <id2> <id3>            # Batch close (each id needs its own memory ack)
 
 # Dependencies
 bd dep add <issue> <depends-on>        # issue depends on depends-on (depends-on blocks issue)
@@ -150,7 +152,7 @@ bv --robot-insights | jq '.Cycles'               # Circular deps — must fix
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **xtrm-tools** (5554 symbols, 8095 relationships, 245 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **xtrm-tools** (5577 symbols, 8125 relationships, 245 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 

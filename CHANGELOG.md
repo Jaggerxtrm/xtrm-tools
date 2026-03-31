@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.7.0] - 2026-03-31
+
+### Added
+- **`xt report`**: Session close report CLI — `generate` collects git/bd/specialist data into a skeleton at `.xtrm/reports/`, `show`/`list`/`diff` for consumption. Agent fills `<!-- FILL -->` sections with session insights via the `session-close-report` skill.
+- **`session-close-report` skill**: Structured handoff report workflow — agent generates skeleton, fills narrative sections from session context, produces a reference-quality technical handoff for the next agent.
+
+---
+
 ## [0.5.45] - 2026-03-25
 
 ### Changed

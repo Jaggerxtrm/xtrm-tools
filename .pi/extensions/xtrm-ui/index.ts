@@ -70,7 +70,7 @@ export interface XtrmUiPrefs {
 export const XTRM_UI_PREFS_ENTRY = "xtrm-ui-prefs";
 
 export const DEFAULT_PREFS: XtrmUiPrefs = {
-  themeName: "pidex-light",
+  themeName: "pidex-dark",
   density: "compact",
   showHeader: true,
   compactTools: true,
@@ -92,7 +92,7 @@ function normalizePrefs(input: unknown): XtrmUiPrefs {
   if (!input || typeof input !== "object") return { ...DEFAULT_PREFS };
   const source = input as Partial<XtrmUiPrefs>;
   return {
-    themeName: source.themeName === "pidex-dark" ? "pidex-dark" : "pidex-light",
+    themeName: source.themeName === "pidex-light" ? "pidex-light" : "pidex-dark",
     density: source.density === "comfortable" ? "comfortable" : "compact",
     showHeader: source.showHeader ?? DEFAULT_PREFS.showHeader,
     compactTools: source.compactTools ?? DEFAULT_PREFS.compactTools,

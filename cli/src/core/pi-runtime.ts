@@ -368,7 +368,7 @@ export interface PiSyncResult {
  * Ensure @xtrm/pi-core is resolvable from .pi/node_modules/@xtrm/pi-core.
  * Creates a symlink pointing to the extensions/core directory.
  */
-async function ensureCorePackageSymlink(
+export async function ensureCorePackageSymlink(
     extensionsDst: string,
     projectRoot: string,
     dryRun: boolean,

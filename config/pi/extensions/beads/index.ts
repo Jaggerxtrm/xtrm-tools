@@ -75,6 +75,25 @@ export default function (pi: ExtensionAPI) {
 		return false;
 	};
 
+	const stripQuoted = (command: string): string => command.replace(/'[^']*'|"[^"]*"/g, "");
+	const isSpecialistsSubprocessCommand = (commandUnquoted: string): boolean =>
+		/\bspecialists\s+(run|resume|result|feed|stop|status)\b/.test(commandUnquoted);
+
+	const getClosedIssueIdFromCommand = (commandUnquoted: string): string | null => {
+		const match = commandUnquoted.match(/\bbd\s+close\s+(\S+)/);
+		const issueId = match?.[1]?.trim();
+		if (!issueId || issueId.startsWith("-")) return null;
+		return issueId;
+	};
+
+	const hasIssueMemoryAck = async (issueId: string, cwd: string): Promise<boolean> => {
+		const result = await SubprocessRunner.run("bd", ["kv", "get", `memory-acked:${issueId}`], { cwd });
+		return result.code === 0 && result.stdout.trim().length > 0;
+	};
+
+	const closeMemoryBlockReason = (issueId: string): string =>
+		`MEMORY_GATE_BLOCK issue=${issueId} run="bd remember '<insight>' && bd kv set 'memory-acked:${issueId}' 'saved:<key>'" or="bd kv set 'memory-acked:${issueId}' 'nothing novel:<reason>'" then="bd close ${issueId} --reason='<reason>'"`;
+
 	pi.on("session_start", async (_event, ctx) => {
 		cachedSessionId = ctx?.sessionManager?.getSessionId?.() ?? ctx?.sessionId ?? ctx?.session_id ?? cachedSessionId;
 		return undefined;
@@ -102,8 +121,23 @@ export default function (pi: ExtensionAPI) {
 		}
 
 		if (isToolCallEventType("bash", event)) {
-			const command = event.input.command;
-			if (command && /\bgit\s+commit\b/.test(command)) {
+			const command = event.input.command ?? "";
+			const commandUnquoted = stripQuoted(command);
+
+			if (isSpecialistsSubprocessCommand(commandUnquoted)) return undefined;
+
+			const closedIssueId = getClosedIssueIdFromCommand(commandUnquoted);
+			if (closedIssueId) {
+				const acked = await hasIssueMemoryAck(closedIssueId, cwd);
+				if (!acked) {
+					return {
+						block: true,
+						reason: closeMemoryBlockReason(closedIssueId),
+					};
+				}
+			}
+
+			if (/\bgit\s+commit\b/.test(commandUnquoted)) {
 				const claim = await getActiveClaim(sessionId, cwd);
 				if (claim) {
 					return {
@@ -145,18 +179,8 @@ export default function (pi: ExtensionAPI) {
 				memoryGateFired = false;
 			}
 
-			// Inject memory gate as agent-visible context only — parity with Claude Stop hook {additionalContext}.
-			// No UI notification; the agent sees this silently in its tool result context.
 			const memoryGateText = closedIssueId
-				? `\n\n**Beads Memory Gate**: Issue \`${closedIssueId}\` closed this session.\n` +
-				  `For each candidate insight, check ALL 4:\n` +
-				  `  1. Hard to rediscover from code/docs?\n` +
-				  `  2. Not obvious from the current implementation?\n` +
-				  `  3. Will affect a future decision?\n` +
-				  `  4. Still relevant in ~14 days?\n` +
-				  `KEEP (all 4 yes) → \`bd remember "<insight>"\`\n` +
-				  `SKIP examples: file maps, flag inventories, per-issue summaries, wording tweaks, facts obvious from reading the source.\n` +
-				  `When done: \`bd kv set "memory-gate-done:${sessionId}" "saved: <key>"\` (or \`"nothing novel — <reason>"\`)`
+				? `\n\n**Beads Memory Gate**: close-time memory ack verified for \`${closedIssueId}\` (\`memory-acked:${closedIssueId}\`).`
 				: `\n\n**Beads**: Work completed. Consider if this session produced insights worth persisting via \`bd remember\`.`;
 			return { content: [...event.content, { type: "text", text: memoryGateText }] };
 		}
@@ -184,6 +208,13 @@ export default function (pi: ExtensionAPI) {
 
 		const closedIssueId = await getClosedThisSession(sessionId, cwd);
 		if (!closedIssueId) return;
+
+		const closeTimeAcked = await hasIssueMemoryAck(closedIssueId, cwd);
+		if (closeTimeAcked) {
+			await SubprocessRunner.run("bd", ["kv", "clear", `closed-this-session:${sessionId}`], { cwd });
+			memoryGateFired = false;
+			return;
+		}
 
 		memoryGateFired = true;
 		// No notify — memory gate was injected into bd close tool_result content (silent, agent-visible only).

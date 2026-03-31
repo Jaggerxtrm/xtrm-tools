@@ -26,6 +26,10 @@ const command = input.tool_input?.command ?? '';
 // Strip quoted strings to avoid matching patterns inside --reason "..." or similar args
 const commandUnquoted = command.replace(/'[^']*'|"[^"]*"/g, '');
 
+if (/\bspecialists\s+(run|resume|result|feed|stop|status)\b/.test(commandUnquoted)) {
+  process.exit(0);
+}
+
 withSafeBdContext(() => {
   const ctx = resolveSessionContext(input);
   if (!ctx || !ctx.isBeadsProject) process.exit(0);

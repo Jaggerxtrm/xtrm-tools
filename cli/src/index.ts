@@ -22,6 +22,7 @@ import { createDocsCommand } from './commands/docs.js';
 import { createMemoryCommand } from './commands/memory.js';
 import { createMergeCommand } from './commands/merge.js';
 import { createDebugCommand } from './commands/debug.js';
+import { createReportCommand } from './commands/report.js';
 import { printBanner } from './utils/banner.js';
 
 const program = new Command();
@@ -63,6 +64,7 @@ program.addCommand(createDocsCommand());
 program.addCommand(createMemoryCommand());
 program.addCommand(createMergeCommand());
 program.addCommand(createDebugCommand());
+program.addCommand(createReportCommand());
 program.addCommand(createHelpCommand());
 program
     .command('update')

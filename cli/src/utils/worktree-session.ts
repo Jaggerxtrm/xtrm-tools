@@ -3,6 +3,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, writeFileSync, readFileSync, existsSync, symlinkSync } from 'node:fs';
 import { homedir } from 'node:os';
+import { ensureCorePackageSymlink } from '../core/pi-runtime.js';
 
 export interface WorktreeSessionOptions {
     runtime: 'claude' | 'pi';
@@ -206,6 +207,15 @@ export async function launchWorktreeSession(opts: WorktreeSessionOptions): Promi
         const worktreePiNpmDir = path.join(worktreePiDir, 'npm');
         if (existsSync(projectPiNpmDir) && !existsSync(worktreePiNpmDir)) {
             try { symlinkSync(projectPiNpmDir, worktreePiNpmDir); } catch { /* non-fatal */ }
+        }
+
+        // Ensure @xtrm/pi-core resolves before Pi extension loading starts.
+        const worktreeExtensionsDir = path.join(worktreePiDir, 'extensions');
+        try {
+            await ensureCorePackageSymlink(worktreeExtensionsDir, worktreePath, false);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            console.log(kleur.dim(`  warning: could not ensure @xtrm/pi-core symlink (${message})`));
         }
     }
 

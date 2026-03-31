@@ -9,11 +9,13 @@ specialist:
 
   execution:
     mode: tool
-    model: anthropic/claude-sonnet-4-6
-    fallback_model: google-gemini-cli/gemini-3.1-pro-preview
-    timeout_ms: 300000
+    model: openai-codex/gpt-5.4
+    fallback_model: anthropic/claude-sonnet-4-6
+    timeout_ms: 0
+    stall_timeout_ms: 120000
     response_format: markdown
     permission_required: READ_ONLY
+    interactive: true
 
   prompt:
     system: |
@@ -58,6 +60,17 @@ specialist:
 
       Produce a complete multi-phase analysis. Use markdown headers for each phase.
       End with a "## Final Answer" section containing the distilled recommendation.
+
+  skills:
+    paths:
+      - .agents/skills/planning/SKILL.md
+
+  validation:
+    files_to_watch:
+      - src/specialist/schema.ts
+      - src/specialist/runner.ts
+      - .agents/skills/planning/SKILL.md
+    stale_threshold_days: 30
 
   communication:
     publishes: [deep_analysis, reasoning_output, overthinking_result]

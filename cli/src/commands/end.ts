@@ -2,6 +2,8 @@ import { Command } from 'commander';
 import kleur from 'kleur';
 import prompts from 'prompts';
 import { spawnSync } from 'node:child_process';
+import { existsSync, rmSync, unlinkSync } from 'node:fs';
+import { join, dirname, isAbsolute, resolve } from 'node:path';
 import { t } from '../utils/theme.js';
 import { unregisterPluginsForWorktree } from '../utils/worktree-session.js';
 
@@ -32,6 +34,81 @@ function bd(args: string[], cwd: string): { ok: boolean; out: string } {
 function npm(args: string[], cwd: string): { ok: boolean; out: string; err: string } {
     const r = spawnSync('npm', args, { cwd, encoding: 'utf8', stdio: 'pipe' });
     return { ok: r.status === 0, out: (r.stdout ?? '').trim(), err: (r.stderr ?? '').trim() };
+}
+
+function resolveMainRepoRoot(cwd: string): string {
+    const commonDirResult = git(['rev-parse', '--git-common-dir'], cwd);
+    if (commonDirResult.ok && commonDirResult.out) {
+        const commonDir = isAbsolute(commonDirResult.out)
+            ? commonDirResult.out
+            : resolve(cwd, commonDirResult.out);
+        return commonDir.endsWith('/.git') || commonDir.endsWith('\\.git')
+            ? dirname(commonDir)
+            : commonDir;
+    }
+
+    const fallback = git(['rev-parse', '--show-toplevel'], cwd);
+    return fallback.ok && fallback.out ? fallback.out : cwd;
+}
+
+function clearStatuslineClaim(repoRoot: string): void {
+    try {
+        const claimFile = join(repoRoot, '.xtrm', 'statusline-claim');
+        if (existsSync(claimFile)) unlinkSync(claimFile);
+    } catch {
+        // non-fatal
+    }
+}
+
+interface WorktreeCleanupResult {
+    removed: boolean;
+    alreadyMissing: boolean;
+    warnings: string[];
+}
+
+function cleanupWorktreePath(worktreePath: string, repoRoot: string): WorktreeCleanupResult {
+    const warnings: string[] = [];
+    const removeResult = spawnSync(
+        'git',
+        ['worktree', 'remove', worktreePath, '--force'],
+        { cwd: repoRoot, encoding: 'utf8', stdio: 'pipe' },
+    );
+
+    if (removeResult.status !== 0) {
+        const errorText = (removeResult.stderr ?? '').trim();
+        if (errorText) warnings.push(errorText);
+    }
+
+    const pruneResult = spawnSync('git', ['worktree', 'prune', '--expire', 'now'], {
+        cwd: repoRoot,
+        encoding: 'utf8',
+        stdio: 'pipe',
+    });
+    if (pruneResult.status !== 0 && (pruneResult.stderr ?? '').trim()) {
+        warnings.push((pruneResult.stderr ?? '').trim());
+    }
+
+    const isMissing = !existsSync(worktreePath);
+    if (isMissing) {
+        return {
+            removed: true,
+            alreadyMissing: removeResult.status !== 0,
+            warnings,
+        };
+    }
+
+    try {
+        rmSync(worktreePath, { recursive: true, force: true });
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        warnings.push(`Could not remove directory ${worktreePath}: ${message}`);
+    }
+
+    return {
+        removed: !existsSync(worktreePath),
+        alreadyMissing: false,
+        warnings,
+    };
 }
 
 // Common conventional-commit scope words that are never beads IDs
@@ -373,22 +450,25 @@ export function createEndCommand(): Command {
                 }
 
                 if (doRemove) {
-                    // Must run from outside the worktree
-                    try {
-                        const repoRoot = git(['rev-parse', '--show-toplevel'], cwd).out;
+                    const repoRoot = resolveMainRepoRoot(cwd);
+                    const cleanup = cleanupWorktreePath(cwd, repoRoot);
+
+                    if (cleanup.removed) {
                         unregisterPluginsForWorktree(cwd);
-                        const removeResult = spawnSync(
-                            'git', ['worktree', 'remove', cwd, '--force'],
-                            { cwd: repoRoot, encoding: 'utf8', stdio: 'pipe' }
-                        );
-                        if (removeResult.status === 0) {
-                            console.log(t.success('  ✓ Worktree removed'));
+                        clearStatuslineClaim(repoRoot);
+                        if (cleanup.alreadyMissing) {
+                            console.log(t.success('  ✓ Worktree already absent; cleaned stale git metadata'));
                         } else {
-                            console.log(kleur.yellow('  ⚠ Could not remove worktree — remove manually:'));
-                            console.log(kleur.dim(`    git worktree remove ${cwd} --force`));
+                            console.log(t.success('  ✓ Worktree removed'));
                         }
-                    } catch {
-                        console.log(kleur.yellow('  ⚠ Could not remove worktree automatically'));
+                    } else {
+                        console.log(kleur.yellow('  ⚠ Worktree cleanup incomplete — manual remediation required:'));
+                        console.log(kleur.dim(`    git -C ${repoRoot} worktree remove ${cwd} --force`));
+                        console.log(kleur.dim(`    git -C ${repoRoot} worktree prune --expire now`));
+                    }
+
+                    for (const warning of cleanup.warnings) {
+                        console.log(kleur.dim(`    ${warning}`));
                     }
                 }
             }

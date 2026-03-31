@@ -135,11 +135,20 @@ If CI is failing:
 ## Stage 3 — Merge the head PR
 
 ```bash
-gh pr merge <number> --rebase --delete-branch
+gh pr merge <number> --rebase
 ```
 
 Use `--rebase` (not `--squash` or `--merge`) to keep linear history and preserve
-individual commits from the session. Use `--delete-branch` to clean up the remote branch.
+individual commits from the session.
+
+After a successful merge, explicitly clean branches:
+```bash
+git push origin --delete xt/<branch>
+# Local delete is best-effort only (non-fatal on failure):
+git branch -d xt/<branch>
+```
+If local delete fails because the branch is attached to an existing worktree, report
+that status and continue. Do not treat attached-branch delete failures as merge failures.
 
 If `gh pr merge` fails with "No commits between main and xt/<branch>", the branch's
 commits were already absorbed into main (e.g. from a previous push). Close the PR
@@ -224,7 +233,9 @@ while queue not empty:
   check CI on head PR
     → verify: gh pr view <n> headRefOid == SHA in gh pr checks output
     → wait for green; stop if failing
-  merge head PR (--rebase --delete-branch)
+  merge head PR (--rebase)
+  delete remote branch: git push origin --delete xt/<branch>
+  attempt local branch delete (non-fatal if attached to worktree)
   git fetch origin → confirm main advanced
   for each remaining branch in queue order:
     git checkout xt/<branch>
@@ -258,12 +269,14 @@ Confirm no open xt/ PRs remain and show the user the final state of main.
 **No commits between main and xt/branch**: branch was already absorbed into main.
 Close the PR and continue.
 
-**Branch was deleted** (worktree cleaned up by `xt end`): The remote branch
-still exists (pushed by `xt end`). The local branch may not. Check out from remote:
+**Branch was already deleted locally**: recreate from remote before rebasing:
 ```bash
 git fetch origin
 git checkout -b xt/<branch> origin/xt/<branch>
 ```
+
+**Local branch delete fails after merge**: this is expected if the branch is attached
+to an active worktree. Treat as non-fatal, report it, and continue draining the queue.
 
 **CI never triggers after rebase push**: GitHub sometimes needs a nudge. Close and
 re-open the PR, or push an empty commit:

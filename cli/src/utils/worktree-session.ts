@@ -21,6 +21,23 @@ function gitRepoRoot(cwd: string): string | null {
     return r.status === 0 ? (r.stdout ?? '').trim() : null;
 }
 
+function gitMainRepoRoot(cwd: string): string | null {
+    const common = spawnSync('git', ['rev-parse', '--git-common-dir'], {
+        cwd,
+        stdio: 'pipe',
+        encoding: 'utf8',
+    });
+
+    if (common.status !== 0) return null;
+
+    const raw = (common.stdout ?? '').trim();
+    if (!raw) return null;
+    const commonDir = path.isAbsolute(raw) ? raw : path.resolve(cwd, raw);
+    return commonDir.endsWith('/.git') || commonDir.endsWith('\\.git')
+        ? path.dirname(commonDir)
+        : commonDir;
+}
+
 /**
  * Launch a Claude or Pi session in a sandboxed git worktree.
  *
@@ -137,21 +154,34 @@ export async function launchWorktreeSession(opts: WorktreeSessionOptions): Promi
     const { runtime, name } = opts;
     const cwd = process.cwd();
 
-    // Use git to find the user's actual repo root — not xtrm-tools' package root
-    const repoRoot = gitRepoRoot(cwd);
-    if (!repoRoot) {
+    // Use git to find both current checkout root and common/main repo root.
+    const currentRepoRoot = gitRepoRoot(cwd);
+    const mainRepoRoot = gitMainRepoRoot(cwd);
+    if (!currentRepoRoot || !mainRepoRoot) {
         console.error(kleur.red('\n  ✗ Not inside a git repository\n'));
         process.exit(1);
     }
 
-    const cwdBasename = path.basename(repoRoot);
+    // Guardrail: never create a worktree from inside another worktree.
+    if (currentRepoRoot !== mainRepoRoot) {
+        console.error(kleur.red('\n  ✗ Refusing to create nested worktree from inside an existing worktree.\n'));
+        console.error(kleur.dim(`  current worktree: ${currentRepoRoot}`));
+        console.error(kleur.dim(`  main repo root:  ${mainRepoRoot}`));
+        console.error(kleur.dim('\n  Remediation:'));
+        console.error(kleur.dim('    1) cd to the main repo checkout'));
+        console.error(kleur.dim('    2) run xt claude|pi there (or use xt attach to resume this session)'));
+        console.error(kleur.dim('    3) run xt worktree doctor to inspect stale/nested entries\n'));
+        process.exit(1);
+    }
+
+    const cwdBasename = path.basename(mainRepoRoot);
 
     // Resolve slug — shared by both branch and worktree path so they're linked
     const slug = name ?? randomSlug(4);
 
     // Worktree path: inside repo under .xtrm/worktrees/
     const worktreeName = `${cwdBasename}-xt-${runtime}-${slug}`;
-    const worktreePath = path.join(repoRoot, '.xtrm', 'worktrees', worktreeName);
+    const worktreePath = path.join(mainRepoRoot, '.xtrm', 'worktrees', worktreeName);
 
     // Branch name
     const branchName = `xt/${slug}`;
@@ -162,8 +192,17 @@ export async function launchWorktreeSession(opts: WorktreeSessionOptions): Promi
 
     // Use bd worktree create — sets up git worktree + canonical .beads/redirect in one step.
     // Falls back to plain git worktree add if bd is unavailable or the project has no .beads/.
+    if (existsSync(worktreePath)) {
+        console.error(kleur.red('\n  ✗ Worktree path already exists. Refusing to reuse stale directory.\n'));
+        console.error(kleur.dim(`  path: ${worktreePath}`));
+        console.error(kleur.dim('\n  Remediation:'));
+        console.error(kleur.dim('    xt worktree doctor'));
+        console.error(kleur.dim('    xt worktree clean --orphans --yes\n'));
+        process.exit(1);
+    }
+
     const bdResult = spawnSync('bd', ['worktree', 'create', worktreePath, '--branch', branchName], {
-        cwd: repoRoot, stdio: 'inherit',
+        cwd: mainRepoRoot, stdio: 'inherit',
     });
 
     if (bdResult.error || bdResult.status !== 0) {
@@ -172,14 +211,14 @@ export async function launchWorktreeSession(opts: WorktreeSessionOptions): Promi
             console.log(kleur.dim('  beads: no database found, creating worktree without redirect'));
         }
         const branchExists = spawnSync('git', ['rev-parse', '--verify', branchName], {
-            cwd: repoRoot, stdio: 'pipe',
+            cwd: mainRepoRoot, stdio: 'pipe',
         }).status === 0;
 
         const gitArgs = branchExists
             ? ['worktree', 'add', worktreePath, branchName]
             : ['worktree', 'add', '-b', branchName, worktreePath];
 
-        const gitResult = spawnSync('git', gitArgs, { cwd: repoRoot, stdio: 'inherit' });
+        const gitResult = spawnSync('git', gitArgs, { cwd: mainRepoRoot, stdio: 'inherit' });
         if (gitResult.status !== 0) {
             console.error(kleur.red(`\n  ✗ Failed to create worktree at ${worktreePath}\n`));
             process.exit(1);
@@ -194,7 +233,7 @@ export async function launchWorktreeSession(opts: WorktreeSessionOptions): Promi
     // In fresh worktrees this directory is missing, which causes Pi to reinstall all `npm:` packages
     // on every `xt pi` launch. Reuse the main repo cache via symlink to avoid repeated reinstalls.
     if (runtime === 'pi') {
-        const projectPiDir = path.join(repoRoot, '.pi');
+        const projectPiDir = path.join(mainRepoRoot, '.pi');
         const worktreePiDir = path.join(worktreePath, '.pi');
 
         // If the worktree does not have .pi at all, link it to project root.
@@ -225,11 +264,11 @@ export async function launchWorktreeSession(opts: WorktreeSessionOptions): Promi
         // 1. Register project-scoped plugins for the worktree path.
         //    Claude Code matches plugins by exact projectPath — worktrees have a
         //    different path so they won't see plugins installed for the main repo.
-        registerPluginsForWorktree(repoRoot, worktreePath);
+        registerPluginsForWorktree(mainRepoRoot, worktreePath);
 
         // 2. Symlink .claude/skills/ (gitignored — not present in worktree checkout)
         const claudeDir = path.join(worktreePath, '.claude');
-        const mainSkillsDir = path.join(repoRoot, '.claude', 'skills');
+        const mainSkillsDir = path.join(mainRepoRoot, '.claude', 'skills');
         const wtSkillsDir = path.join(claudeDir, 'skills');
         if (existsSync(mainSkillsDir) && !existsSync(wtSkillsDir)) {
             try {

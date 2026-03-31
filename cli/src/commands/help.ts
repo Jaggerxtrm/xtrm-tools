@@ -32,7 +32,7 @@ export function createHelpCommand(): Command {
                 '     xt memory update   (refresh .xtrm/memory.md from bd memories + repo state)',
                 '     xt merge           (drain queued xt/* PRs oldest-first after CI passes)',
                 '  6) Manage old worktrees when needed:',
-                '     xt worktree list | xt worktree clean',
+                '     xt worktree list | xt worktree doctor | xt worktree clean',
             ]));
 
             blocks.push(section('PRIMARY COMMANDS', [
@@ -107,8 +107,10 @@ export function createHelpCommand(): Command {
                 '  xt worktree list',
                 '    List active xt/* worktrees with runtime, last activity, last commit, and',
                 '    a ready-to-run resume hint.',
-                '  xt worktree clean [--yes/-y]',
-                '    Remove worktrees already merged into main.',
+                '  xt worktree doctor',
+                '    Diagnose nested/prunable/orphaned worktree state and show cleanup commands.',
+                '  xt worktree clean [--orphans] [--dry-run] [--yes/-y]',
+                '    Remove merged worktrees; with --orphans also prune stale metadata and orphan dirs.',
                 '  xt worktree remove <name> [--yes/-y]',
                 '    Remove a specific xt worktree by name or path.',
             ]));

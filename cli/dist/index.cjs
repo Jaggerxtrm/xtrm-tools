@@ -3474,8 +3474,8 @@ var require_universalify = __commonJS({
       return Object.defineProperty(function(...args) {
         if (typeof args[args.length - 1] === "function") fn.apply(this, args);
         else {
-          return new Promise((resolve2, reject) => {
-            args.push((err, res) => err != null ? reject(err) : resolve2(res));
+          return new Promise((resolve4, reject) => {
+            args.push((err, res) => err != null ? reject(err) : resolve4(res));
             fn.apply(this, args);
           });
         }
@@ -4330,18 +4330,18 @@ var require_fs = __commonJS({
       if (typeof callback === "function") {
         return fs25.exists(filename, callback);
       }
-      return new Promise((resolve2) => {
-        return fs25.exists(filename, resolve2);
+      return new Promise((resolve4) => {
+        return fs25.exists(filename, resolve4);
       });
     };
     exports2.read = function(fd, buffer, offset, length, position, callback) {
       if (typeof callback === "function") {
         return fs25.read(fd, buffer, offset, length, position, callback);
       }
-      return new Promise((resolve2, reject) => {
+      return new Promise((resolve4, reject) => {
         fs25.read(fd, buffer, offset, length, position, (err, bytesRead, buffer2) => {
           if (err) return reject(err);
-          resolve2({ bytesRead, buffer: buffer2 });
+          resolve4({ bytesRead, buffer: buffer2 });
         });
       });
     };
@@ -4349,10 +4349,10 @@ var require_fs = __commonJS({
       if (typeof args[args.length - 1] === "function") {
         return fs25.write(fd, buffer, ...args);
       }
-      return new Promise((resolve2, reject) => {
+      return new Promise((resolve4, reject) => {
         fs25.write(fd, buffer, ...args, (err, bytesWritten, buffer2) => {
           if (err) return reject(err);
-          resolve2({ bytesWritten, buffer: buffer2 });
+          resolve4({ bytesWritten, buffer: buffer2 });
         });
       });
     };
@@ -4360,10 +4360,10 @@ var require_fs = __commonJS({
       if (typeof args[args.length - 1] === "function") {
         return fs25.readv(fd, buffers, ...args);
       }
-      return new Promise((resolve2, reject) => {
+      return new Promise((resolve4, reject) => {
         fs25.readv(fd, buffers, ...args, (err, bytesRead, buffers2) => {
           if (err) return reject(err);
-          resolve2({ bytesRead, buffers: buffers2 });
+          resolve4({ bytesRead, buffers: buffers2 });
         });
       });
     };
@@ -4371,10 +4371,10 @@ var require_fs = __commonJS({
       if (typeof args[args.length - 1] === "function") {
         return fs25.writev(fd, buffers, ...args);
       }
-      return new Promise((resolve2, reject) => {
+      return new Promise((resolve4, reject) => {
         fs25.writev(fd, buffers, ...args, (err, bytesWritten, buffers2) => {
           if (err) return reject(err);
-          resolve2({ bytesWritten, buffers: buffers2 });
+          resolve4({ bytesWritten, buffers: buffers2 });
         });
       });
     };
@@ -4822,8 +4822,8 @@ var require_copy_sync = __commonJS({
       return getStats(destStat, src, dest, opts);
     }
     function getStats(destStat, src, dest, opts) {
-      const statSync = opts.dereference ? fs25.statSync : fs25.lstatSync;
-      const srcStat = statSync(src);
+      const statSync2 = opts.dereference ? fs25.statSync : fs25.lstatSync;
+      const srcStat = statSync2(src);
       if (srcStat.isDirectory()) return onDir(srcStat, destStat, src, dest, opts);
       else if (srcStat.isFile() || srcStat.isCharacterDevice() || srcStat.isBlockDevice()) return onFile(srcStat, destStat, src, dest, opts);
       else if (srcStat.isSymbolicLink()) return onLink(destStat, src, dest, opts);
@@ -6121,7 +6121,7 @@ var require_prompt = __commonJS({
 var require_text = __commonJS({
   "../node_modules/prompts/dist/elements/text.js"(exports2, module2) {
     "use strict";
-    function asyncGeneratorStep(gen, resolve2, reject, _next, _throw, key, arg) {
+    function asyncGeneratorStep(gen, resolve4, reject, _next, _throw, key, arg) {
       try {
         var info = gen[key](arg);
         var value = info.value;
@@ -6130,7 +6130,7 @@ var require_text = __commonJS({
         return;
       }
       if (info.done) {
-        resolve2(value);
+        resolve4(value);
       } else {
         Promise.resolve(value).then(_next, _throw);
       }
@@ -6138,13 +6138,13 @@ var require_text = __commonJS({
     function _asyncToGenerator(fn) {
       return function() {
         var self = this, args = arguments;
-        return new Promise(function(resolve2, reject) {
+        return new Promise(function(resolve4, reject) {
           var gen = fn.apply(self, args);
           function _next(value) {
-            asyncGeneratorStep(gen, resolve2, reject, _next, _throw, "next", value);
+            asyncGeneratorStep(gen, resolve4, reject, _next, _throw, "next", value);
           }
           function _throw(err) {
-            asyncGeneratorStep(gen, resolve2, reject, _next, _throw, "throw", err);
+            asyncGeneratorStep(gen, resolve4, reject, _next, _throw, "throw", err);
           }
           _next(void 0);
         });
@@ -6860,7 +6860,7 @@ var require_dateparts = __commonJS({
 var require_date = __commonJS({
   "../node_modules/prompts/dist/elements/date.js"(exports2, module2) {
     "use strict";
-    function asyncGeneratorStep(gen, resolve2, reject, _next, _throw, key, arg) {
+    function asyncGeneratorStep(gen, resolve4, reject, _next, _throw, key, arg) {
       try {
         var info = gen[key](arg);
         var value = info.value;
@@ -6869,7 +6869,7 @@ var require_date = __commonJS({
         return;
       }
       if (info.done) {
-        resolve2(value);
+        resolve4(value);
       } else {
         Promise.resolve(value).then(_next, _throw);
       }
@@ -6877,13 +6877,13 @@ var require_date = __commonJS({
     function _asyncToGenerator(fn) {
       return function() {
         var self = this, args = arguments;
-        return new Promise(function(resolve2, reject) {
+        return new Promise(function(resolve4, reject) {
           var gen = fn.apply(self, args);
           function _next(value) {
-            asyncGeneratorStep(gen, resolve2, reject, _next, _throw, "next", value);
+            asyncGeneratorStep(gen, resolve4, reject, _next, _throw, "next", value);
           }
           function _throw(err) {
-            asyncGeneratorStep(gen, resolve2, reject, _next, _throw, "throw", err);
+            asyncGeneratorStep(gen, resolve4, reject, _next, _throw, "throw", err);
           }
           _next(void 0);
         });
@@ -7086,7 +7086,7 @@ ${i ? ` ` : figures2.pointerSmall} ${color2.red().italic(l)}`, ``);
 var require_number = __commonJS({
   "../node_modules/prompts/dist/elements/number.js"(exports2, module2) {
     "use strict";
-    function asyncGeneratorStep(gen, resolve2, reject, _next, _throw, key, arg) {
+    function asyncGeneratorStep(gen, resolve4, reject, _next, _throw, key, arg) {
       try {
         var info = gen[key](arg);
         var value = info.value;
@@ -7095,7 +7095,7 @@ var require_number = __commonJS({
         return;
       }
       if (info.done) {
-        resolve2(value);
+        resolve4(value);
       } else {
         Promise.resolve(value).then(_next, _throw);
       }
@@ -7103,13 +7103,13 @@ var require_number = __commonJS({
     function _asyncToGenerator(fn) {
       return function() {
         var self = this, args = arguments;
-        return new Promise(function(resolve2, reject) {
+        return new Promise(function(resolve4, reject) {
           var gen = fn.apply(self, args);
           function _next(value) {
-            asyncGeneratorStep(gen, resolve2, reject, _next, _throw, "next", value);
+            asyncGeneratorStep(gen, resolve4, reject, _next, _throw, "next", value);
           }
           function _throw(err) {
-            asyncGeneratorStep(gen, resolve2, reject, _next, _throw, "throw", err);
+            asyncGeneratorStep(gen, resolve4, reject, _next, _throw, "throw", err);
           }
           _next(void 0);
         });
@@ -7532,7 +7532,7 @@ Instructions:
 var require_autocomplete = __commonJS({
   "../node_modules/prompts/dist/elements/autocomplete.js"(exports2, module2) {
     "use strict";
-    function asyncGeneratorStep(gen, resolve2, reject, _next, _throw, key, arg) {
+    function asyncGeneratorStep(gen, resolve4, reject, _next, _throw, key, arg) {
       try {
         var info = gen[key](arg);
         var value = info.value;
@@ -7541,7 +7541,7 @@ var require_autocomplete = __commonJS({
         return;
       }
       if (info.done) {
-        resolve2(value);
+        resolve4(value);
       } else {
         Promise.resolve(value).then(_next, _throw);
       }
@@ -7549,13 +7549,13 @@ var require_autocomplete = __commonJS({
     function _asyncToGenerator(fn) {
       return function() {
         var self = this, args = arguments;
-        return new Promise(function(resolve2, reject) {
+        return new Promise(function(resolve4, reject) {
           var gen = fn.apply(self, args);
           function _next(value) {
-            asyncGeneratorStep(gen, resolve2, reject, _next, _throw, "next", value);
+            asyncGeneratorStep(gen, resolve4, reject, _next, _throw, "next", value);
           }
           function _throw(err) {
-            asyncGeneratorStep(gen, resolve2, reject, _next, _throw, "throw", err);
+            asyncGeneratorStep(gen, resolve4, reject, _next, _throw, "throw", err);
           }
           _next(void 0);
         });
@@ -8064,9 +8064,9 @@ var require_prompts = __commonJS({
     $2.date = (args) => toPrompt("DatePrompt", args);
     $2.confirm = (args) => toPrompt("ConfirmPrompt", args);
     $2.list = (args) => {
-      const sep = args.separator || ",";
+      const sep2 = args.separator || ",";
       return toPrompt("TextPrompt", args, {
-        onSubmit: (str) => str.split(sep).map((s) => s.trim())
+        onSubmit: (str) => str.split(sep2).map((s) => s.trim())
       });
     };
     $2.toggle = (args) => toPrompt("TogglePrompt", args);
@@ -8186,7 +8186,7 @@ var require_dist = __commonJS({
       for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
       return arr2;
     }
-    function asyncGeneratorStep(gen, resolve2, reject, _next, _throw, key, arg) {
+    function asyncGeneratorStep(gen, resolve4, reject, _next, _throw, key, arg) {
       try {
         var info = gen[key](arg);
         var value = info.value;
@@ -8195,7 +8195,7 @@ var require_dist = __commonJS({
         return;
       }
       if (info.done) {
-        resolve2(value);
+        resolve4(value);
       } else {
         Promise.resolve(value).then(_next, _throw);
       }
@@ -8203,13 +8203,13 @@ var require_dist = __commonJS({
     function _asyncToGenerator(fn) {
       return function() {
         var self = this, args = arguments;
-        return new Promise(function(resolve2, reject) {
+        return new Promise(function(resolve4, reject) {
           var gen = fn.apply(self, args);
           function _next(value) {
-            asyncGeneratorStep(gen, resolve2, reject, _next, _throw, "next", value);
+            asyncGeneratorStep(gen, resolve4, reject, _next, _throw, "next", value);
           }
           function _throw(err) {
-            asyncGeneratorStep(gen, resolve2, reject, _next, _throw, "throw", err);
+            asyncGeneratorStep(gen, resolve4, reject, _next, _throw, "throw", err);
           }
           _next(void 0);
         });
@@ -10358,9 +10358,9 @@ var require_prompts2 = __commonJS({
     $2.date = (args) => toPrompt("DatePrompt", args);
     $2.confirm = (args) => toPrompt("ConfirmPrompt", args);
     $2.list = (args) => {
-      const sep = args.separator || ",";
+      const sep2 = args.separator || ",";
       return toPrompt("TextPrompt", args, {
-        onSubmit: (str) => str.split(sep).map((s) => s.trim())
+        onSubmit: (str) => str.split(sep2).map((s) => s.trim())
       });
     };
     $2.toggle = (args) => toPrompt("TogglePrompt", args);
@@ -16697,7 +16697,7 @@ var require_compile = __commonJS({
       const schOrFunc = root.refs[ref];
       if (schOrFunc)
         return schOrFunc;
-      let _sch = resolve2.call(this, root, ref);
+      let _sch = resolve4.call(this, root, ref);
       if (_sch === void 0) {
         const schema = (_a2 = root.localRefs) === null || _a2 === void 0 ? void 0 : _a2[ref];
         const { schemaId } = this.opts;
@@ -16724,7 +16724,7 @@ var require_compile = __commonJS({
     function sameSchemaEnv(s1, s2) {
       return s1.schema === s2.schema && s1.root === s2.root && s1.baseId === s2.baseId;
     }
-    function resolve2(root, ref) {
+    function resolve4(root, ref) {
       let sch;
       while (typeof (sch = this.refs[ref]) == "string")
         ref = sch;
@@ -17299,7 +17299,7 @@ var require_fast_uri = __commonJS({
       }
       return uri;
     }
-    function resolve2(baseURI, relativeURI, options) {
+    function resolve4(baseURI, relativeURI, options) {
       const schemelessOptions = options ? Object.assign({ scheme: "null" }, options) : { scheme: "null" };
       const resolved = resolveComponent(parse4(baseURI, schemelessOptions), parse4(relativeURI, schemelessOptions), schemelessOptions, true);
       schemelessOptions.skipEscape = true;
@@ -17526,7 +17526,7 @@ var require_fast_uri = __commonJS({
     var fastUri = {
       SCHEMES,
       normalize: normalize2,
-      resolve: resolve2,
+      resolve: resolve4,
       resolveComponent,
       equal,
       serialize,
@@ -30319,10 +30319,10 @@ var require_stringify = __commonJS({
       replacer = null;
       indent2 = EMPTY;
     };
-    var join9 = (one, two, gap) => one ? two ? one + two.trim() + LF + gap : one.trimRight() + LF + gap : two ? two.trimRight() + LF + gap : EMPTY;
+    var join10 = (one, two, gap) => one ? two ? one + two.trim() + LF + gap : one.trimRight() + LF + gap : two ? two.trimRight() + LF + gap : EMPTY;
     var join_content = (inside, value, gap) => {
       const comment = process_comments(value, PREFIX_BEFORE, gap + indent2, true);
-      return join9(comment, inside, gap);
+      return join10(comment, inside, gap);
     };
     var array_stringify = (value, gap) => {
       const deeper_gap = gap + indent2;
@@ -30333,7 +30333,7 @@ var require_stringify = __commonJS({
         if (i !== 0) {
           inside += COMMA;
         }
-        const before = join9(
+        const before = join10(
           after_comma,
           process_comments(value, BEFORE(i), deeper_gap),
           deeper_gap
@@ -30343,7 +30343,7 @@ var require_stringify = __commonJS({
         inside += process_comments(value, AFTER_VALUE(i), deeper_gap);
         after_comma = process_comments(value, AFTER(i), deeper_gap);
       }
-      inside += join9(
+      inside += join10(
         after_comma,
         process_comments(value, PREFIX_AFTER, deeper_gap),
         deeper_gap
@@ -30368,7 +30368,7 @@ var require_stringify = __commonJS({
           inside += COMMA;
         }
         first = false;
-        const before = join9(
+        const before = join10(
           after_comma,
           process_comments(value, BEFORE(key), deeper_gap),
           deeper_gap
@@ -30378,7 +30378,7 @@ var require_stringify = __commonJS({
         after_comma = process_comments(value, AFTER(key), deeper_gap);
       };
       keys.forEach(iteratee);
-      inside += join9(
+      inside += join10(
         after_comma,
         process_comments(value, PREFIX_AFTER, deeper_gap),
         deeper_gap
@@ -33827,8 +33827,8 @@ var init_boxen = __esm({
 });
 
 // src/index.ts
-var import_node_fs9 = require("fs");
-var import_node_path10 = require("path");
+var import_node_fs10 = require("fs");
+var import_node_path11 = require("path");
 
 // ../node_modules/commander/esm.mjs
 var import_index = __toESM(require_commander(), 1);
@@ -34641,6 +34641,18 @@ function gitRepoRoot(cwd) {
   });
   return r.status === 0 ? (r.stdout ?? "").trim() : null;
 }
+function gitMainRepoRoot(cwd) {
+  const common = (0, import_node_child_process.spawnSync)("git", ["rev-parse", "--git-common-dir"], {
+    cwd,
+    stdio: "pipe",
+    encoding: "utf8"
+  });
+  if (common.status !== 0) return null;
+  const raw = (common.stdout ?? "").trim();
+  if (!raw) return null;
+  const commonDir = import_node_path.default.isAbsolute(raw) ? raw : import_node_path.default.resolve(cwd, raw);
+  return commonDir.endsWith("/.git") || commonDir.endsWith("\\.git") ? import_node_path.default.dirname(commonDir) : commonDir;
+}
 function resolveStatuslineScript() {
   const pluginsFile = import_node_path.default.join((0, import_node_os2.homedir)(), ".claude", "plugins", "installed_plugins.json");
   try {
@@ -34710,23 +34722,42 @@ function unregisterPluginsForWorktree(worktreePath) {
 async function launchWorktreeSession(opts) {
   const { runtime, name } = opts;
   const cwd = process.cwd();
-  const repoRoot = gitRepoRoot(cwd);
-  if (!repoRoot) {
+  const currentRepoRoot = gitRepoRoot(cwd);
+  const mainRepoRoot = gitMainRepoRoot(cwd);
+  if (!currentRepoRoot || !mainRepoRoot) {
     console.error(kleur_default.red("\n  \u2717 Not inside a git repository\n"));
     process.exit(1);
   }
-  const cwdBasename = import_node_path.default.basename(repoRoot);
+  if (currentRepoRoot !== mainRepoRoot) {
+    console.error(kleur_default.red("\n  \u2717 Refusing to create nested worktree from inside an existing worktree.\n"));
+    console.error(kleur_default.dim(`  current worktree: ${currentRepoRoot}`));
+    console.error(kleur_default.dim(`  main repo root:  ${mainRepoRoot}`));
+    console.error(kleur_default.dim("\n  Remediation:"));
+    console.error(kleur_default.dim("    1) cd to the main repo checkout"));
+    console.error(kleur_default.dim("    2) run xt claude|pi there (or use xt attach to resume this session)"));
+    console.error(kleur_default.dim("    3) run xt worktree doctor to inspect stale/nested entries\n"));
+    process.exit(1);
+  }
+  const cwdBasename = import_node_path.default.basename(mainRepoRoot);
   const slug = name ?? randomSlug(4);
   const worktreeName = `${cwdBasename}-xt-${runtime}-${slug}`;
-  const worktreePath = import_node_path.default.join(repoRoot, ".xtrm", "worktrees", worktreeName);
+  const worktreePath = import_node_path.default.join(mainRepoRoot, ".xtrm", "worktrees", worktreeName);
   const branchName = `xt/${slug}`;
   console.log(kleur_default.bold(`
   Launching ${runtime} session`));
   console.log(kleur_default.dim(`  worktree: ${worktreePath}`));
   console.log(kleur_default.dim(`  branch:   ${branchName}
 `));
+  if ((0, import_node_fs.existsSync)(worktreePath)) {
+    console.error(kleur_default.red("\n  \u2717 Worktree path already exists. Refusing to reuse stale directory.\n"));
+    console.error(kleur_default.dim(`  path: ${worktreePath}`));
+    console.error(kleur_default.dim("\n  Remediation:"));
+    console.error(kleur_default.dim("    xt worktree doctor"));
+    console.error(kleur_default.dim("    xt worktree clean --orphans --yes\n"));
+    process.exit(1);
+  }
   const bdResult = (0, import_node_child_process.spawnSync)("bd", ["worktree", "create", worktreePath, "--branch", branchName], {
-    cwd: repoRoot,
+    cwd: mainRepoRoot,
     stdio: "inherit"
   });
   if (bdResult.error || bdResult.status !== 0) {
@@ -34734,11 +34765,11 @@ async function launchWorktreeSession(opts) {
       console.log(kleur_default.dim("  beads: no database found, creating worktree without redirect"));
     }
     const branchExists = (0, import_node_child_process.spawnSync)("git", ["rev-parse", "--verify", branchName], {
-      cwd: repoRoot,
+      cwd: mainRepoRoot,
       stdio: "pipe"
     }).status === 0;
     const gitArgs = branchExists ? ["worktree", "add", worktreePath, branchName] : ["worktree", "add", "-b", branchName, worktreePath];
-    const gitResult = (0, import_node_child_process.spawnSync)("git", gitArgs, { cwd: repoRoot, stdio: "inherit" });
+    const gitResult = (0, import_node_child_process.spawnSync)("git", gitArgs, { cwd: mainRepoRoot, stdio: "inherit" });
     if (gitResult.status !== 0) {
       console.error(kleur_default.red(`
   \u2717 Failed to create worktree at ${worktreePath}
@@ -34751,7 +34782,7 @@ async function launchWorktreeSession(opts) {
   \u2713 Worktree ready \u2014 launching ${runtime}...
 `));
   if (runtime === "pi") {
-    const projectPiDir = import_node_path.default.join(repoRoot, ".pi");
+    const projectPiDir = import_node_path.default.join(mainRepoRoot, ".pi");
     const worktreePiDir = import_node_path.default.join(worktreePath, ".pi");
     if ((0, import_node_fs.existsSync)(projectPiDir) && !(0, import_node_fs.existsSync)(worktreePiDir)) {
       try {
@@ -34776,9 +34807,9 @@ async function launchWorktreeSession(opts) {
     }
   }
   if (runtime === "claude") {
-    registerPluginsForWorktree(repoRoot, worktreePath);
+    registerPluginsForWorktree(mainRepoRoot, worktreePath);
     const claudeDir = import_node_path.default.join(worktreePath, ".claude");
-    const mainSkillsDir = import_node_path.default.join(repoRoot, ".claude", "skills");
+    const mainSkillsDir = import_node_path.default.join(mainRepoRoot, ".claude", "skills");
     const wtSkillsDir = import_node_path.default.join(claudeDir, "skills");
     if ((0, import_node_fs.existsSync)(mainSkillsDir) && !(0, import_node_fs.existsSync)(wtSkillsDir)) {
       try {
@@ -36849,8 +36880,8 @@ var Concurrency = class {
   }
   add(fn) {
     if (this.count < this.concurrency) return this.run(fn);
-    return new Promise((resolve2) => {
-      const callback = () => resolve2(this.run(fn));
+    return new Promise((resolve4) => {
+      const callback = () => resolve4(this.run(fn));
       this.queue.add(callback);
     });
   }
@@ -36875,8 +36906,8 @@ var Concurrency = class {
   }
 };
 function delay(time3) {
-  return new Promise((resolve2) => {
-    setTimeout(resolve2, time3);
+  return new Promise((resolve4) => {
+    setTimeout(resolve4, time3);
   });
 }
 var ListrError = class extends Error {
@@ -37205,20 +37236,20 @@ var Task = class extends ListrTaskEventManager {
         this.emit(ListrTaskEventType.SUBTASK, this.subtasks);
         result = result.run(context);
       } else if (result instanceof Promise) result = result.then(handleResult);
-      else if (isReadable(result)) result = new Promise((resolve2, reject) => {
+      else if (isReadable(result)) result = new Promise((resolve4, reject) => {
         result.on("data", (data) => {
           this.output$ = data.toString();
         });
         result.on("error", (error48) => reject(error48));
-        result.on("end", () => resolve2(null));
+        result.on("end", () => resolve4(null));
       });
-      else if (isObservable(result)) result = new Promise((resolve2, reject) => {
+      else if (isObservable(result)) result = new Promise((resolve4, reject) => {
         result.subscribe({
           next: (data) => {
             this.output$ = data;
           },
           error: reject,
-          complete: resolve2
+          complete: resolve4
         });
       });
       return result;
@@ -37763,7 +37794,7 @@ var retryifyAsync = (fn, options) => {
           throw error48;
         const delay3 = Math.round(interval * Math.random());
         if (delay3 > 0) {
-          const delayPromise = new Promise((resolve2) => setTimeout(resolve2, delay3));
+          const delayPromise = new Promise((resolve4) => setTimeout(resolve4, delay3));
           return delayPromise.then(() => attempt.apply(void 0, args));
         } else {
           return attempt.apply(void 0, args);
@@ -54656,7 +54687,7 @@ function createHelpCommand() {
       "     xt memory update   (refresh .xtrm/memory.md from bd memories + repo state)",
       "     xt merge           (drain queued xt/* PRs oldest-first after CI passes)",
       "  6) Manage old worktrees when needed:",
-      "     xt worktree list | xt worktree clean"
+      "     xt worktree list | xt worktree doctor | xt worktree clean"
     ]));
     blocks.push(section("PRIMARY COMMANDS", [
       "  xtrm init [options]",
@@ -54728,8 +54759,10 @@ function createHelpCommand() {
       "  xt worktree list",
       "    List active xt/* worktrees with runtime, last activity, last commit, and",
       "    a ready-to-run resume hint.",
-      "  xt worktree clean [--yes/-y]",
-      "    Remove worktrees already merged into main.",
+      "  xt worktree doctor",
+      "    Diagnose nested/prunable/orphaned worktree state and show cleanup commands.",
+      "  xt worktree clean [--orphans] [--dry-run] [--yes/-y]",
+      "    Remove merged worktrees; with --orphans also prune stale metadata and orphan dirs.",
       "  xt worktree remove <name> [--yes/-y]",
       "    Remove a specific xt worktree by name or path."
     ]));
@@ -55051,6 +55084,8 @@ function createCleanCommand() {
 // src/commands/end.ts
 var import_prompts5 = __toESM(require_prompts3(), 1);
 var import_node_child_process7 = require("child_process");
+var import_node_fs5 = require("fs");
+var import_node_path6 = require("path");
 function git(args, cwd) {
   const r = (0, import_node_child_process7.spawnSync)("git", args, { cwd, encoding: "utf8", stdio: "pipe" });
   return { ok: r.status === 0, out: (r.stdout ?? "").trim(), err: (r.stderr ?? "").trim() };
@@ -55062,6 +55097,61 @@ function bd(args, cwd) {
 function npm(args, cwd) {
   const r = (0, import_node_child_process7.spawnSync)("npm", args, { cwd, encoding: "utf8", stdio: "pipe" });
   return { ok: r.status === 0, out: (r.stdout ?? "").trim(), err: (r.stderr ?? "").trim() };
+}
+function resolveMainRepoRoot(cwd) {
+  const commonDirResult = git(["rev-parse", "--git-common-dir"], cwd);
+  if (commonDirResult.ok && commonDirResult.out) {
+    const commonDir = (0, import_node_path6.isAbsolute)(commonDirResult.out) ? commonDirResult.out : (0, import_node_path6.resolve)(cwd, commonDirResult.out);
+    return commonDir.endsWith("/.git") || commonDir.endsWith("\\.git") ? (0, import_node_path6.dirname)(commonDir) : commonDir;
+  }
+  const fallback = git(["rev-parse", "--show-toplevel"], cwd);
+  return fallback.ok && fallback.out ? fallback.out : cwd;
+}
+function clearStatuslineClaim(repoRoot) {
+  try {
+    const claimFile = (0, import_node_path6.join)(repoRoot, ".xtrm", "statusline-claim");
+    if ((0, import_node_fs5.existsSync)(claimFile)) (0, import_node_fs5.unlinkSync)(claimFile);
+  } catch {
+  }
+}
+function cleanupWorktreePath(worktreePath, repoRoot) {
+  const warnings = [];
+  const removeResult = (0, import_node_child_process7.spawnSync)(
+    "git",
+    ["worktree", "remove", worktreePath, "--force"],
+    { cwd: repoRoot, encoding: "utf8", stdio: "pipe" }
+  );
+  if (removeResult.status !== 0) {
+    const errorText = (removeResult.stderr ?? "").trim();
+    if (errorText) warnings.push(errorText);
+  }
+  const pruneResult = (0, import_node_child_process7.spawnSync)("git", ["worktree", "prune", "--expire", "now"], {
+    cwd: repoRoot,
+    encoding: "utf8",
+    stdio: "pipe"
+  });
+  if (pruneResult.status !== 0 && (pruneResult.stderr ?? "").trim()) {
+    warnings.push((pruneResult.stderr ?? "").trim());
+  }
+  const isMissing = !(0, import_node_fs5.existsSync)(worktreePath);
+  if (isMissing) {
+    return {
+      removed: true,
+      alreadyMissing: removeResult.status !== 0,
+      warnings
+    };
+  }
+  try {
+    (0, import_node_fs5.rmSync)(worktreePath, { recursive: true, force: true });
+  } catch (error48) {
+    const message = error48 instanceof Error ? error48.message : String(error48);
+    warnings.push(`Could not remove directory ${worktreePath}: ${message}`);
+  }
+  return {
+    removed: !(0, import_node_fs5.existsSync)(worktreePath),
+    alreadyMissing: false,
+    warnings
+  };
 }
 var CONVENTIONAL_SCOPES = /* @__PURE__ */ new Set([
   "feat",
@@ -55347,22 +55437,23 @@ function createEndCommand() {
         doRemove = remove;
       }
       if (doRemove) {
-        try {
-          const repoRoot = git(["rev-parse", "--show-toplevel"], cwd).out;
+        const repoRoot = resolveMainRepoRoot(cwd);
+        const cleanup = cleanupWorktreePath(cwd, repoRoot);
+        if (cleanup.removed) {
           unregisterPluginsForWorktree(cwd);
-          const removeResult = (0, import_node_child_process7.spawnSync)(
-            "git",
-            ["worktree", "remove", cwd, "--force"],
-            { cwd: repoRoot, encoding: "utf8", stdio: "pipe" }
-          );
-          if (removeResult.status === 0) {
-            console.log(t.success("  \u2713 Worktree removed"));
+          clearStatuslineClaim(repoRoot);
+          if (cleanup.alreadyMissing) {
+            console.log(t.success("  \u2713 Worktree already absent; cleaned stale git metadata"));
           } else {
-            console.log(kleur_default.yellow("  \u26A0 Could not remove worktree \u2014 remove manually:"));
-            console.log(kleur_default.dim(`    git worktree remove ${cwd} --force`));
+            console.log(t.success("  \u2713 Worktree removed"));
           }
-        } catch {
-          console.log(kleur_default.yellow("  \u26A0 Could not remove worktree automatically"));
+        } else {
+          console.log(kleur_default.yellow("  \u26A0 Worktree cleanup incomplete \u2014 manual remediation required:"));
+          console.log(kleur_default.dim(`    git -C ${repoRoot} worktree remove ${cwd} --force`));
+          console.log(kleur_default.dim(`    git -C ${repoRoot} worktree prune --expire now`));
+        }
+        for (const warning of cleanup.warnings) {
+          console.log(kleur_default.dim(`    ${warning}`));
         }
       }
     }
@@ -55375,38 +55466,85 @@ function createEndCommand() {
 // src/commands/worktree.ts
 var import_prompts6 = __toESM(require_prompts3(), 1);
 var import_node_child_process8 = require("child_process");
-var import_node_fs5 = require("fs");
-var import_node_path6 = require("path");
-function listXtWorktrees(repoRoot) {
-  const r = (0, import_node_child_process8.spawnSync)("git", ["worktree", "list", "--porcelain"], {
-    cwd: repoRoot,
-    encoding: "utf8",
-    stdio: "pipe"
-  });
-  if (r.status !== 0) return [];
+var import_node_fs6 = require("fs");
+var import_node_path7 = require("path");
+function git2(args, cwd) {
+  const r = (0, import_node_child_process8.spawnSync)("git", args, { cwd, encoding: "utf8", stdio: "pipe" });
+  return {
+    ok: r.status === 0,
+    out: (r.stdout ?? "").trim(),
+    err: (r.stderr ?? "").trim()
+  };
+}
+function parseGitWorktreeList(repoRoot) {
+  const r = git2(["worktree", "list", "--porcelain"], repoRoot);
+  if (!r.ok) return [];
   const worktrees = [];
   let current = {};
-  for (const line of (r.stdout ?? "").split("\n")) {
+  for (const line of r.out.split("\n")) {
     if (line.startsWith("worktree ")) {
-      if (current.path && current.branch?.startsWith("refs/heads/xt/")) {
-        worktrees.push(current);
+      if (current.path) {
+        worktrees.push({
+          path: current.path,
+          branch: current.branch,
+          head: current.head,
+          prunable: Boolean(current.prunable)
+        });
       }
       current = { path: line.slice("worktree ".length), prunable: false };
-    } else if (line.startsWith("HEAD ")) {
+      continue;
+    }
+    if (line.startsWith("HEAD ")) {
       current.head = line.slice("HEAD ".length);
-    } else if (line.startsWith("branch ")) {
+      continue;
+    }
+    if (line.startsWith("branch ")) {
       current.branch = line.slice("branch ".length);
-    } else if (line === "prunable") {
+      continue;
+    }
+    if (line === "prunable") {
       current.prunable = true;
     }
   }
-  if (current.path && current.branch?.startsWith("refs/heads/xt/")) {
-    worktrees.push(current);
+  if (current.path) {
+    worktrees.push({
+      path: current.path,
+      branch: current.branch,
+      head: current.head,
+      prunable: Boolean(current.prunable)
+    });
   }
+  return worktrees;
+}
+function detectNestedParents(paths) {
+  const nested = /* @__PURE__ */ new Map();
+  const sorted = [...paths].sort((a, b) => a.length - b.length);
+  for (const childPath of sorted) {
+    for (const parentPath of sorted) {
+      if (childPath === parentPath) continue;
+      if (childPath.startsWith(`${parentPath}${import_node_path7.sep}`)) {
+        nested.set(childPath, parentPath);
+        break;
+      }
+    }
+  }
+  return nested;
+}
+function listXtWorktrees(repoRoot) {
+  const allWorktrees = parseGitWorktreeList(repoRoot);
+  const xtWorktrees = allWorktrees.filter((wt) => wt.branch?.startsWith("refs/heads/xt/"));
+  const nestedParents = detectNestedParents(xtWorktrees.map((wt) => wt.path));
+  const worktrees = xtWorktrees.map((wt) => ({
+    path: wt.path,
+    branch: wt.branch ?? "",
+    head: wt.head ?? "",
+    prunable: wt.prunable,
+    nestedInPath: nestedParents.get(wt.path)
+  }));
   for (const wt of worktrees) {
     try {
-      const metaFile = (0, import_node_fs5.existsSync)((0, import_node_path6.join)(wt.path, ".xtrm", "session-meta.json")) ? (0, import_node_path6.join)(wt.path, ".xtrm", "session-meta.json") : (0, import_node_path6.join)(wt.path, ".session-meta.json");
-      const raw = (0, import_node_fs5.readFileSync)(metaFile, "utf8");
+      const metaFile = (0, import_node_fs6.existsSync)((0, import_node_path7.join)(wt.path, ".xtrm", "session-meta.json")) ? (0, import_node_path7.join)(wt.path, ".xtrm", "session-meta.json") : (0, import_node_path7.join)(wt.path, ".session-meta.json");
+      const raw = (0, import_node_fs6.readFileSync)(metaFile, "utf8");
       const meta3 = JSON.parse(raw);
       wt.runtime = meta3.runtime;
       wt.launchedAt = meta3.launchedAt;
@@ -55418,14 +55556,44 @@ function listXtWorktrees(repoRoot) {
       stdio: "pipe"
     });
     if (logR.status === 0 && logR.stdout.trim()) {
-      const sep = logR.stdout.trim().indexOf("");
-      if (sep !== -1) {
-        wt.lastLogTime = new Date(logR.stdout.slice(0, sep).trim());
-        wt.lastLogMsg = logR.stdout.slice(sep + 1).trim();
+      const sepIdx = logR.stdout.trim().indexOf("");
+      if (sepIdx !== -1) {
+        wt.lastLogTime = new Date(logR.stdout.slice(0, sepIdx).trim());
+        wt.lastLogMsg = logR.stdout.slice(sepIdx + 1).trim();
       }
     }
   }
   return worktrees;
+}
+function getManagedWorktreeRoot(repoRoot) {
+  return (0, import_node_path7.join)(repoRoot, ".xtrm", "worktrees");
+}
+function listOrphanManagedDirs(repoRoot) {
+  const managedRoot = getManagedWorktreeRoot(repoRoot);
+  if (!(0, import_node_fs6.existsSync)(managedRoot)) return [];
+  const activePaths = new Set(parseGitWorktreeList(repoRoot).map((wt) => (0, import_node_path7.resolve)(wt.path)));
+  const orphans = [];
+  for (const entry of (0, import_node_fs6.readdirSync)(managedRoot)) {
+    const fullPath = (0, import_node_path7.join)(managedRoot, entry);
+    let isDirectory = false;
+    try {
+      isDirectory = (0, import_node_fs6.statSync)(fullPath).isDirectory();
+    } catch {
+      continue;
+    }
+    if (!isDirectory) continue;
+    if (!activePaths.has((0, import_node_path7.resolve)(fullPath))) {
+      orphans.push(fullPath);
+    }
+  }
+  return orphans.sort();
+}
+function runGitWorktreePrune(repoRoot) {
+  const prune = git2(["worktree", "prune", "--expire", "now"], repoRoot);
+  return {
+    ok: prune.ok,
+    message: prune.ok ? "pruned stale git worktree metadata" : prune.err || "git worktree prune failed"
+  };
 }
 function isMergedIntoMain(branch, repoRoot) {
   const branchShort = branch.replace("refs/heads/", "");
@@ -55452,9 +55620,23 @@ function getPrStatus(branch, repoRoot) {
     return "unknown";
   }
 }
+function removeWorktreeEntry(repoRoot, worktreePath) {
+  const remove = git2(["worktree", "remove", worktreePath, "--force"], repoRoot);
+  if (!remove.ok) {
+    return { ok: false, message: remove.err || `could not remove ${worktreePath}` };
+  }
+  unregisterPluginsForWorktree(worktreePath);
+  clearStatuslineClaim2(repoRoot);
+  return { ok: true, message: `Removed ${worktreePath}` };
+}
 function getRepoRoot(cwd) {
-  const r = (0, import_node_child_process8.spawnSync)("git", ["rev-parse", "--show-toplevel"], { cwd, encoding: "utf8", stdio: "pipe" });
-  return r.ok ? r.stdout.trim() : cwd;
+  const commonDirResult = git2(["rev-parse", "--git-common-dir"], cwd);
+  if (commonDirResult.ok && commonDirResult.out) {
+    const commonDir = (0, import_node_path7.isAbsolute)(commonDirResult.out) ? commonDirResult.out : (0, import_node_path7.resolve)(cwd, commonDirResult.out);
+    return commonDir.endsWith("/.git") || commonDir.endsWith("\\.git") ? (0, import_node_path7.dirname)(commonDir) : commonDir;
+  }
+  const fallback = git2(["rev-parse", "--show-toplevel"], cwd);
+  return fallback.ok && fallback.out ? fallback.out : cwd;
 }
 function createWorktreeCommand() {
   const cmd = new Command("worktree").description("Manage xt session worktrees");
@@ -55475,37 +55657,97 @@ function createWorktreeCommand() {
       const status = merged ? kleur_default.green("merged") : kleur_default.yellow("open");
       const prunable = wt.prunable ? kleur_default.dim(" [prunable]") : "";
       const runtimeBadge = wt.runtime ? kleur_default.cyan(` [${wt.runtime}]`) : "";
+      const nestedBadge = wt.nestedInPath ? kleur_default.red(" [nested]") : "";
       const timeStr = wt.lastLogTime ? kleur_default.dim(wt.lastLogTime.toLocaleString()) : wt.launchedAt ? kleur_default.dim(new Date(wt.launchedAt).toLocaleString()) : "";
       const logLine = wt.lastLogMsg ? kleur_default.dim(`  "${wt.lastLogMsg}"`) : "";
-      console.log(`  ${status}${runtimeBadge} ${kleur_default.bold(branch)}${prunable}`);
+      console.log(`  ${status}${runtimeBadge}${nestedBadge} ${kleur_default.bold(branch)}${prunable}`);
       if (timeStr) console.log(`    last activity: ${timeStr}${logLine}`);
       console.log(kleur_default.dim(`    path: ${wt.path}`));
       console.log(kleur_default.dim(`    resume: xt attach ${slug}`));
+      if (wt.nestedInPath) {
+        console.log(kleur_default.red(`    nested under: ${wt.nestedInPath}`));
+        console.log(kleur_default.dim("    remediation: xt worktree clean --orphans --dry-run"));
+      }
       console.log("");
     }
   });
-  cmd.command("clean").description("Remove worktrees whose branch has been merged into main").option("-y, --yes", "Skip confirmation prompt", false).action(async (opts) => {
+  cmd.command("doctor").description("Diagnose stale/nested/orphaned worktree state and suggest remediation").action(() => {
+    const repoRoot = getRepoRoot(process.cwd());
+    const xtWorktrees = listXtWorktrees(repoRoot);
+    const orphanDirs = listOrphanManagedDirs(repoRoot);
+    const prunable = xtWorktrees.filter((wt) => wt.prunable);
+    const nested = xtWorktrees.filter((wt) => Boolean(wt.nestedInPath));
+    console.log(t.bold("\n  xt worktree doctor\n"));
+    console.log(kleur_default.dim(`  repo: ${repoRoot}`));
+    console.log(kleur_default.dim(`  active xt worktrees: ${xtWorktrees.length}`));
+    console.log(kleur_default.dim(`  prunable entries:    ${prunable.length}`));
+    console.log(kleur_default.dim(`  nested entries:      ${nested.length}`));
+    console.log(kleur_default.dim(`  orphan dirs:         ${orphanDirs.length}`));
+    if (nested.length > 0) {
+      console.log(kleur_default.red("\n  Nested worktree roots detected:"));
+      for (const wt of nested) {
+        console.log(kleur_default.red(`    - ${wt.path}`));
+        if (wt.nestedInPath) console.log(kleur_default.dim(`      parent: ${wt.nestedInPath}`));
+      }
+    }
+    if (orphanDirs.length > 0) {
+      console.log(kleur_default.yellow("\n  Orphaned .xtrm/worktrees directories:"));
+      for (const orphan of orphanDirs) {
+        console.log(kleur_default.yellow(`    - ${orphan}`));
+      }
+    }
+    if (nested.length === 0 && orphanDirs.length === 0 && prunable.length === 0) {
+      console.log(t.success("\n  \u2713 No stale worktree issues detected\n"));
+      return;
+    }
+    console.log(kleur_default.bold("\n  Remediation:"));
+    console.log(kleur_default.dim("    xt worktree clean --orphans --dry-run"));
+    console.log(kleur_default.dim("    xt worktree clean --orphans --yes"));
+    console.log(kleur_default.dim(`    git -C ${repoRoot} worktree prune --expire now`));
+    console.log("");
+  });
+  cmd.command("clean").description("Remove merged xt worktrees and optionally sweep stale/orphaned worktree state").option("-y, --yes", "Skip confirmation prompt", false).option("--dry-run", "Preview clean targets without removing anything", false).option("--orphans", "Also prune stale git worktree metadata and remove orphan .xtrm/worktrees dirs", false).action(async (opts) => {
     const repoRoot = getRepoRoot(process.cwd());
     const worktrees = listXtWorktrees(repoRoot);
     const merged = worktrees.filter(
       (wt) => isMergedIntoMain(wt.branch, repoRoot) || getPrStatus(wt.branch, repoRoot).startsWith("merged")
     );
-    if (merged.length === 0) {
+    const orphanDirs = opts.orphans ? listOrphanManagedDirs(repoRoot) : [];
+    if (merged.length === 0 && orphanDirs.length === 0 && !opts.orphans) {
       console.log(kleur_default.dim("\n  No merged xt worktrees to clean\n"));
       return;
     }
-    console.log(t.bold(`
-  ${merged.length} merged worktree(s) to remove:
-`));
-    for (const wt of merged) {
-      console.log(kleur_default.dim(`  - ${wt.path} (${wt.branch.replace("refs/heads/", "")})`));
+    if (merged.length === 0 && orphanDirs.length === 0 && opts.orphans) {
+      console.log(kleur_default.dim("\n  No merged worktrees or orphaned directories found\n"));
+      console.log(kleur_default.dim("  (git worktree prune would still run in apply mode)\n"));
+      if (opts.dryRun) return;
+    }
+    console.log(t.bold("\n  xt worktree clean\n"));
+    if (merged.length > 0) {
+      console.log(kleur_default.bold(`  ${merged.length} merged worktree(s):`));
+      for (const wt of merged) {
+        console.log(kleur_default.dim(`    - ${wt.path} (${wt.branch.replace("refs/heads/", "")})`));
+      }
+    }
+    if (opts.orphans) {
+      console.log(kleur_default.bold(`
+  ${orphanDirs.length} orphaned managed director(y/ies):`));
+      for (const orphan of orphanDirs) {
+        console.log(kleur_default.dim(`    - ${orphan}`));
+      }
+      console.log(kleur_default.dim("    - git worktree prune --expire now"));
+    }
+    if (opts.dryRun) {
+      console.log(kleur_default.yellow("\n  \u2139 Dry run \u2014 no changes applied\n"));
+      return;
     }
     let doRemove = opts.yes;
+    const totalTargets = merged.length + orphanDirs.length;
     if (!opts.yes) {
       const { confirm } = await (0, import_prompts6.default)({
         type: "confirm",
         name: "confirm",
-        message: `Remove ${merged.length} worktree(s)?`,
+        message: `Apply cleanup for ${totalTargets} item(s)?`,
         initial: true
       });
       doRemove = confirm;
@@ -55514,20 +55756,42 @@ function createWorktreeCommand() {
       console.log(kleur_default.dim("  Cancelled\n"));
       return;
     }
+    let removedCount = 0;
     for (const wt of merged) {
-      const r = (0, import_node_child_process8.spawnSync)("git", ["worktree", "remove", wt.path, "--force"], {
-        cwd: repoRoot,
-        encoding: "utf8",
-        stdio: "pipe"
-      });
-      if (r.status === 0) {
-        console.log(t.success(`  \u2713 Removed ${wt.path}`));
-        clearStatuslineClaim(repoRoot);
+      const result = removeWorktreeEntry(repoRoot, wt.path);
+      if (result.ok) {
+        removedCount += 1;
+        console.log(t.success(`  \u2713 ${result.message}`));
       } else {
-        console.log(kleur_default.yellow(`  \u26A0 Could not remove ${wt.path}: ${(r.stderr ?? "").trim()}`));
+        console.log(kleur_default.yellow(`  \u26A0 ${result.message}`));
       }
     }
-    console.log("");
+    if (opts.orphans) {
+      for (const orphan of orphanDirs) {
+        try {
+          (0, import_node_fs6.rmSync)(orphan, { recursive: true, force: true });
+          removedCount += 1;
+          unregisterPluginsForWorktree(orphan);
+          console.log(t.success(`  \u2713 Removed orphan directory ${orphan}`));
+        } catch (error48) {
+          const message = error48 instanceof Error ? error48.message : String(error48);
+          console.log(kleur_default.yellow(`  \u26A0 Could not remove ${orphan}: ${message}`));
+        }
+      }
+      const pruneResult = runGitWorktreePrune(repoRoot);
+      if (pruneResult.ok) {
+        console.log(t.success(`  \u2713 ${pruneResult.message}`));
+      } else {
+        console.log(kleur_default.yellow(`  \u26A0 ${pruneResult.message}`));
+      }
+    }
+    if (removedCount === 0) {
+      console.log(kleur_default.yellow("\n  \u26A0 Nothing was removed\n"));
+      return;
+    }
+    console.log(t.boldGreen(`
+  \u2713 Cleanup complete (${removedCount} item(s) removed)
+`));
   });
   cmd.command("remove <name>").description("Manually remove a specific xt worktree by branch name or path").option("-y, --yes", "Skip confirmation", false).action(async (name, opts) => {
     const repoRoot = getRepoRoot(process.cwd());
@@ -55556,29 +55820,23 @@ function createWorktreeCommand() {
       console.log(kleur_default.dim("  Cancelled\n"));
       return;
     }
-    const r = (0, import_node_child_process8.spawnSync)("git", ["worktree", "remove", target.path, "--force"], {
-      cwd: repoRoot,
-      encoding: "utf8",
-      stdio: "pipe"
-    });
-    if (r.status === 0) {
-      clearStatuslineClaim(repoRoot);
-      console.log(t.success(`
-  \u2713 Removed ${target.path}
-`));
-    } else {
+    const result = removeWorktreeEntry(repoRoot, target.path);
+    if (!result.ok) {
       console.error(kleur_default.red(`
-  \u2717 Failed: ${(r.stderr ?? "").trim()}
+  \u2717 Failed: ${result.message}
 `));
       process.exit(1);
     }
+    console.log(t.success(`
+  \u2713 ${result.message}
+`));
   });
   return cmd;
 }
-function clearStatuslineClaim(repoRoot) {
+function clearStatuslineClaim2(repoRoot) {
   try {
-    const claimFile = (0, import_node_path6.join)(repoRoot, ".xtrm", "statusline-claim");
-    if ((0, import_node_fs5.existsSync)(claimFile)) (0, import_node_fs5.unlinkSync)(claimFile);
+    const claimFile = (0, import_node_path7.join)(repoRoot, ".xtrm", "statusline-claim");
+    if ((0, import_node_fs6.existsSync)(claimFile)) (0, import_node_fs6.unlinkSync)(claimFile);
   } catch {
   }
 }
@@ -56143,9 +56401,9 @@ function createDocsCommand() {
     const repoRoot = await findRepoRoot();
     let fmFilter;
     if (opts.filter) {
-      const sep = opts.filter.indexOf("=");
-      if (sep !== -1) {
-        fmFilter = { field: opts.filter.slice(0, sep), value: opts.filter.slice(sep + 1) };
+      const sep2 = opts.filter.indexOf("=");
+      if (sep2 !== -1) {
+        fmFilter = { field: opts.filter.slice(0, sep2), value: opts.filter.slice(sep2 + 1) };
       }
     }
     const scanOpts = { dir: opts.dir ?? "docs", pattern: opts.pattern, filter: fmFilter, recursive: false };
@@ -56386,8 +56644,8 @@ ${content}`;
 
 // src/commands/memory.ts
 var import_node_child_process12 = require("child_process");
-var import_node_fs6 = require("fs");
-var import_node_path7 = require("path");
+var import_node_fs7 = require("fs");
+var import_node_path8 = require("path");
 function createMemoryCommand() {
   return new Command("memory").description("Manage project memory (.xtrm/memory.md)").addCommand(createMemoryUpdateCommand());
 }
@@ -56417,16 +56675,16 @@ function createMemoryUpdateCommand() {
     const prompt = opts.dryRun ? "Dry run: classify all memories and show the full report. Do not call bd forget or write .xtrm/memory.md." : "Run the full memory processor workflow.";
     const args = ["run", "memory-processor", "--prompt", prompt];
     if (!opts.beads) args.push("--no-beads");
-    const memPath = (0, import_node_path7.join)(cwd, ".xtrm", "memory.md");
-    const spinnerText = opts.dryRun ? "Analyzing memories..." : `${(0, import_node_fs6.existsSync)(memPath) ? "Updating" : "Creating"} .xtrm/memory.md...`;
+    const memPath = (0, import_node_path8.join)(cwd, ".xtrm", "memory.md");
+    const spinnerText = opts.dryRun ? "Analyzing memories..." : `${(0, import_node_fs7.existsSync)(memPath) ? "Updating" : "Creating"} .xtrm/memory.md...`;
     console.log(kleur_default.bold(`
   xt memory update${opts.dryRun ? " (dry run)" : ""}
 `));
     console.log(kleur_default.dim(`  ${spinnerText}
 `));
-    const exitCode = await new Promise((resolve2) => {
+    const exitCode = await new Promise((resolve4) => {
       const proc = (0, import_node_child_process12.spawn)("specialists", args, { cwd, stdio: "inherit" });
-      proc.on("close", (code) => resolve2(code ?? 0));
+      proc.on("close", (code) => resolve4(code ?? 0));
     });
     if (exitCode !== 0) {
       console.error(kleur_default.red("\n  \u2717 memory-processor failed.\n"));
@@ -56437,8 +56695,8 @@ function createMemoryUpdateCommand() {
 
 // src/commands/merge.ts
 var import_node_child_process13 = require("child_process");
-var import_node_fs7 = require("fs");
-var import_node_path8 = require("path");
+var import_node_fs8 = require("fs");
+var import_node_path9 = require("path");
 function createMergeCommand() {
   return new Command("merge").description("Drain the xt worktree PR merge queue via the xt-merge specialist").option("--dry-run", "List queue and CI status without merging", false).option("--no-beads", "Skip creating a tracking bead for this run", false).action(async (opts) => {
     const cwd = process.cwd();
@@ -56487,11 +56745,11 @@ function createMergeCommand() {
     console.log(kleur_default.bold(`
   xt merge${opts.dryRun ? " (dry run)" : ""}
 `));
-    const jobsDir = (0, import_node_path8.join)(cwd, ".specialists", "jobs");
+    const jobsDir = (0, import_node_path9.join)(cwd, ".specialists", "jobs");
     let jobsBefore;
     try {
       jobsBefore = new Set(
-        (0, import_node_fs7.readdirSync)(jobsDir, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name)
+        (0, import_node_fs8.readdirSync)(jobsDir, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name)
       );
     } catch {
       jobsBefore = /* @__PURE__ */ new Set();
@@ -56502,7 +56760,7 @@ function createMergeCommand() {
       const deadline = Date.now() + 15e3;
       while (Date.now() < deadline) {
         try {
-          const entries = (0, import_node_fs7.readdirSync)(jobsDir, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name);
+          const entries = (0, import_node_fs8.readdirSync)(jobsDir, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name);
           const newId = entries.find((id) => !jobsBefore.has(id));
           if (newId) return newId;
         } catch {
@@ -56526,8 +56784,8 @@ function createMergeCommand() {
 
 // src/commands/debug.ts
 var import_node_child_process14 = require("child_process");
-var import_node_fs8 = require("fs");
-var import_node_path9 = require("path");
+var import_node_fs9 = require("fs");
+var import_node_path10 = require("path");
 var KIND_LABELS = {
   "session.start": { label: "SESS+", color: kleur_default.green },
   "session.end": { label: "SESS-", color: kleur_default.white },
@@ -56627,14 +56885,14 @@ function buildDetail(event) {
   }
   if (event.kind === "tool.call") {
     if (d?.cmd) parts.push(kleur_default.dim(d.cmd.slice(0, 72)));
-    if (d?.file) parts.push(kleur_default.dim((0, import_node_path9.basename)(d.file)));
+    if (d?.file) parts.push(kleur_default.dim((0, import_node_path10.basename)(d.file)));
     if (d?.pattern) parts.push(kleur_default.dim(`/${d.pattern}/`));
     if (d?.url) parts.push(kleur_default.dim(d.url.slice(0, 72)));
     if (d?.query) parts.push(kleur_default.dim(d.query.slice(0, 72)));
     if (d?.prompt) parts.push(kleur_default.dim(d.prompt.slice(0, 72)));
   } else {
     if (event.issue_id) parts.push(kleur_default.yellow(event.issue_id));
-    if (d?.file) parts.push(kleur_default.dim((0, import_node_path9.basename)(d.file)));
+    if (d?.file) parts.push(kleur_default.dim((0, import_node_path10.basename)(d.file)));
     if (d?.reason_code) parts.push(kleur_default.dim(`[${d.reason_code}]`));
     if (event.worktree) parts.push(kleur_default.dim(`wt:${event.worktree}`));
   }
@@ -56651,8 +56909,8 @@ function formatLine(event, colorMap) {
 function findDbPath(cwd) {
   let dir = cwd;
   for (let i = 0; i < 10; i++) {
-    if ((0, import_node_fs8.existsSync)((0, import_node_path9.join)(dir, ".beads"))) return (0, import_node_path9.join)(dir, ".xtrm", "debug.db");
-    const parent = (0, import_node_path9.join)(dir, "..");
+    if ((0, import_node_fs9.existsSync)((0, import_node_path10.join)(dir, ".beads"))) return (0, import_node_path10.join)(dir, ".xtrm", "debug.db");
+    const parent = (0, import_node_path10.join)(dir, "..");
     if (parent === dir) break;
     dir = parent;
   }
@@ -56713,7 +56971,7 @@ function createDebugCommand() {
   return new Command("debug").description("Watch xtrm events: tool calls, gate decisions, bd lifecycle").option("-f, --follow", "Follow new events (default)", false).option("--all", "Show full history and exit", false).option("--session <id>", "Filter by session ID (prefix match)").option("--type <domain>", "Filter by domain: tool | gate | bd | session").option("--json", "Output raw JSON lines", false).action((opts) => {
     const cwd = process.cwd();
     const dbPath = findDbPath(cwd);
-    if (!dbPath || !(0, import_node_fs8.existsSync)(dbPath)) return;
+    if (!dbPath || !(0, import_node_fs9.existsSync)(dbPath)) return;
     if (opts.all) {
       const events = queryEvents(dbPath, buildWhere(opts, ""), 1e3);
       const colorMap = buildColorMap(events);
@@ -57102,7 +57360,7 @@ async function listReports(cwd) {
 }
 async function diffReports(cwd, a, b) {
   const reportsDir = import_path24.default.join(cwd, ".xtrm", "reports");
-  const resolve2 = async (ref) => {
+  const resolve4 = async (ref) => {
     if (await import_fs_extra22.default.pathExists(ref)) return ref;
     const candidate = import_path24.default.join(reportsDir, ref.endsWith(".md") ? ref : `${ref}.md`);
     if (await import_fs_extra22.default.pathExists(candidate)) return candidate;
@@ -57111,8 +57369,8 @@ async function diffReports(cwd, a, b) {
     console.error(kleur_default.red(`  No report matching "${ref}"`));
     process.exit(1);
   };
-  const pathA = await resolve2(a);
-  const pathB = await resolve2(b);
+  const pathA = await resolve4(a);
+  const pathB = await resolve4(b);
   const result = run2("diff", ["--unified=3", "--color=always", pathA, pathB], cwd);
   if (!result.out) {
     console.log(kleur_default.dim("\n  Reports are identical\n"));
@@ -57297,7 +57555,7 @@ async function printBanner(version3) {
 // src/index.ts
 var version2 = "0.0.0";
 try {
-  version2 = JSON.parse((0, import_node_fs9.readFileSync)((0, import_node_path10.resolve)(__dirname, "../package.json"), "utf8")).version;
+  version2 = JSON.parse((0, import_node_fs10.readFileSync)((0, import_node_path11.resolve)(__dirname, "../package.json"), "utf8")).version;
 } catch {
 }
 var program2 = new Command();

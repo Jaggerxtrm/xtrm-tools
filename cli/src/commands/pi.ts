@@ -1,18 +1,60 @@
 import { Command } from 'commander';
 import kleur from 'kleur';
 import path from 'path';
-import { execSync, spawnSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import { homedir } from 'node:os';
 import fs from 'fs-extra';
 import { findRepoRoot } from '../utils/repo-root.js';
 import { t } from '../utils/theme.js';
 import { runPiInstall } from './pi-install.js';
-import { inventoryPiRuntime, renderPiRuntimePlan } from '../core/pi-runtime.js';
+import { inventoryPiRuntime } from '../core/pi-runtime.js';
 import { createInstallPiCommand } from './install-pi.js';
 import { launchWorktreeSession } from '../utils/worktree-session.js';
 import { confirmDestructiveAction } from '../utils/confirmation.js';
 
 const PI_AGENT_DIR = process.env.PI_AGENT_DIR || path.join(homedir(), '.pi', 'agent');
+
+interface PiProjectPointer {
+    hasProjectExtensions: boolean;
+    pointsToXtrmExtensions: boolean;
+}
+
+function resolveProjectRoot(): string {
+    const gitResult = spawnSync('git', ['rev-parse', '--show-toplevel'], {
+        cwd: process.cwd(), encoding: 'utf8', stdio: 'pipe',
+    });
+    return gitResult.status === 0 ? (gitResult.stdout ?? '').trim() : process.cwd();
+}
+
+function hasSettingsEntry(entries: unknown, expectedEntry: string): boolean {
+    if (!Array.isArray(entries)) return false;
+    return entries.some((entry) => {
+        if (typeof entry !== 'string') return false;
+        return entry.replace(/\\/g, '/') === expectedEntry;
+    });
+}
+
+async function getPiProjectPointer(projectRoot: string): Promise<PiProjectPointer> {
+    const projectExtensionsDir = path.join(projectRoot, '.xtrm', 'extensions');
+    const settingsPath = path.join(projectRoot, '.pi', 'settings.json');
+
+    const hasProjectExtensions = await fs.pathExists(projectExtensionsDir);
+    const hasSettingsFile = await fs.pathExists(settingsPath);
+
+    if (!hasSettingsFile) {
+        return { hasProjectExtensions, pointsToXtrmExtensions: false };
+    }
+
+    try {
+        const settings = await fs.readJson(settingsPath) as { extensions?: unknown };
+        return {
+            hasProjectExtensions,
+            pointsToXtrmExtensions: hasSettingsEntry(settings.extensions, '../.xtrm/extensions'),
+        };
+    } catch {
+        return { hasProjectExtensions, pointsToXtrmExtensions: false };
+    }
+}
 
 export function createPiCommand(): Command {
     const cmd = new Command('pi')
@@ -42,40 +84,42 @@ export function createPiCommand(): Command {
                 return;
             }
 
-            // Use git to find the actual project root, not findRepoRoot()
-            // which finds the xtrm-tools source repo
-            const gitResult = spawnSync('git', ['rev-parse', '--show-toplevel'], {
-                cwd: process.cwd(), encoding: 'utf8', stdio: 'pipe',
-            });
-            const projectRoot = gitResult.status === 0 ? (gitResult.stdout ?? '').trim() : process.cwd();
-            
-            // Source is from the bundled xtrm-tools package
+            const projectRoot = resolveProjectRoot();
+            const pointer = await getPiProjectPointer(projectRoot);
+
             const bundleRoot = await findRepoRoot();
-            const sourceDir = path.join(bundleRoot, 'config', 'pi', 'extensions');
-            const projectScopedDir = path.join(projectRoot, '.pi', 'extensions');
-            const targetDir = await fs.pathExists(projectScopedDir)
-                ? projectScopedDir
-                : path.join(PI_AGENT_DIR, 'extensions');
-            const scopeLabel = targetDir === projectScopedDir ? 'project' : 'global';
+            const sourceDir = path.join(bundleRoot, '.xtrm', 'extensions');
+            const globalTargetDir = path.join(PI_AGENT_DIR, 'extensions');
 
             if (!await fs.pathExists(sourceDir)) {
-                console.log(kleur.dim(`  ○ managed extensions not bundled in this install\n`));
+                console.log(kleur.dim('  ○ managed extensions not bundled in this install\n'));
                 return;
             }
 
-            const plan = await inventoryPiRuntime(sourceDir, targetDir);
-
-            // Summary line
-            const extOk = plan.extensions.filter(s => s.installed && !s.stale).length;
+            const plan = await inventoryPiRuntime(sourceDir, globalTargetDir);
             const pkgOk = plan.packages.filter(s => s.installed).length;
 
-            console.log(kleur.dim(`  Scope:      ${scopeLabel}`));
-            console.log(kleur.dim(`  Extensions: ${extOk}/${plan.extensions.length} up-to-date`));
+            if (pointer.hasProjectExtensions && pointer.pointsToXtrmExtensions) {
+                console.log(kleur.dim('  Scope:      project'));
+                console.log(kleur.dim('  Extensions: via .xtrm/extensions (.pi/settings.json)'));
+            } else {
+                console.log(kleur.dim('  Scope:      global'));
+                const extOk = plan.extensions.filter(s => s.installed && !s.stale).length;
+                console.log(kleur.dim(`  Extensions: ${extOk}/${plan.extensions.length} up-to-date`));
+            }
+
             console.log(kleur.dim(`  Packages:   ${pkgOk}/${plan.packages.length} installed`));
 
-            if (plan.allPresent) {
-                console.log(t.success(`\n  ✓ All extensions and packages present\n`));
-            } else {
+            if (pointer.hasProjectExtensions && !pointer.pointsToXtrmExtensions) {
+                console.log(kleur.yellow('  Settings:   .pi/settings.json is not pointing to ../.xtrm/extensions'));
+            }
+
+            if (plan.missingPackages.length > 0) {
+                const names = plan.missingPackages.map(s => s.pkg.displayName).join(', ');
+                console.log(kleur.yellow(`  Packages:   ${names}`));
+            }
+
+            if (!pointer.pointsToXtrmExtensions) {
                 if (plan.missingExtensions.length > 0) {
                     const names = plan.missingExtensions.map(s => s.ext.displayName).join(', ');
                     console.log(kleur.yellow(`  Missing:    ${names}`));
@@ -87,12 +131,18 @@ export function createPiCommand(): Command {
                 if (plan.orphanedExtensions.length > 0) {
                     console.log(kleur.red(`  Orphaned:   ${plan.orphanedExtensions.join(', ')}`));
                 }
-                if (plan.missingPackages.length > 0) {
-                    const names = plan.missingPackages.map(s => s.pkg.displayName).join(', ');
-                    console.log(kleur.yellow(`  Packages:   ${names}`));
-                }
-                console.log(kleur.dim('\n  → run: xt pi reload\n'));
             }
+
+            const projectModeOk = pointer.hasProjectExtensions ? pointer.pointsToXtrmExtensions : true;
+            const hasGlobalDrift = !pointer.pointsToXtrmExtensions && !plan.allPresent;
+            const hasPackageDrift = plan.missingPackages.length > 0;
+
+            if (projectModeOk && !hasGlobalDrift && !hasPackageDrift) {
+                console.log(t.success('\n  ✓ Pi runtime configuration looks healthy\n'));
+                return;
+            }
+
+            console.log(kleur.dim('\n  → run: xt pi reload\n'));
         });
 
     cmd.command('doctor')
@@ -102,7 +152,6 @@ export function createPiCommand(): Command {
 
             let allOk = true;
 
-            // Check pi binary
             const piResult = spawnSync('pi', ['--version'], { encoding: 'utf8', stdio: 'pipe' });
             if (piResult.status === 0) {
                 console.log(t.success(`  ✓ pi ${piResult.stdout.trim()} installed`));
@@ -111,7 +160,6 @@ export function createPiCommand(): Command {
                 allOk = false;
             }
 
-            // Check pnpm
             const pnpmResult = spawnSync('pnpm', ['--version'], { encoding: 'utf8', stdio: 'pipe' });
             if (pnpmResult.status === 0) {
                 console.log(t.success(`  ✓ pnpm ${pnpmResult.stdout.trim()} installed`));
@@ -120,38 +168,33 @@ export function createPiCommand(): Command {
                 allOk = false;
             }
 
-            // Check config files
             const configFiles = ['models.json', 'auth.json', 'settings.json'];
             const missingConfig = configFiles.filter(f => !fs.existsSync(path.join(PI_AGENT_DIR, f)));
             if (missingConfig.length === 0) {
-                console.log(t.success(`  ✓ config files present`));
+                console.log(t.success('  ✓ config files present'));
             } else {
                 console.log(kleur.yellow(`  ⚠ missing config: ${missingConfig.join(', ')}`));
                 allOk = false;
             }
 
-            // Check extensions and packages using unified service
-            // Use git to find the actual project root, not findRepoRoot()
-            // which finds the xtrm-tools source repo
-            const gitResult = spawnSync('git', ['rev-parse', '--show-toplevel'], {
-                cwd: process.cwd(), encoding: 'utf8', stdio: 'pipe',
-            });
-            const projectRoot = gitResult.status === 0 ? (gitResult.stdout ?? '').trim() : process.cwd();
-            
-            // Source is from the bundled xtrm-tools package
+            const projectRoot = resolveProjectRoot();
+            const pointer = await getPiProjectPointer(projectRoot);
             const bundleRoot = await findRepoRoot();
-            const sourceDir = path.join(bundleRoot, 'config', 'pi', 'extensions');
-            const projectScopedDir = path.join(projectRoot, '.pi', 'extensions');
-            const targetDir = await fs.pathExists(projectScopedDir)
-                ? projectScopedDir
-                : path.join(PI_AGENT_DIR, 'extensions');
+            const sourceDir = path.join(bundleRoot, '.xtrm', 'extensions');
+            const globalTargetDir = path.join(PI_AGENT_DIR, 'extensions');
 
-            if (await fs.pathExists(sourceDir)) {
-                const plan = await inventoryPiRuntime(sourceDir, targetDir);
+            if (!await fs.pathExists(sourceDir)) {
+                console.log(kleur.dim('  ○ managed extensions not bundled in this install'));
+            } else {
+                const plan = await inventoryPiRuntime(sourceDir, globalTargetDir);
 
-                if (plan.allPresent) {
-                    console.log(t.success(`  ✓ extensions deployed (${plan.extensions.length})`));
-                    console.log(t.success(`  ✓ packages installed (${plan.packages.length})`));
+                if (pointer.hasProjectExtensions && pointer.pointsToXtrmExtensions) {
+                    console.log(t.success('  ✓ project runtime points to .xtrm/extensions'));
+                } else if (pointer.hasProjectExtensions) {
+                    console.log(kleur.yellow('  ⚠ .pi/settings.json does not include ../.xtrm/extensions'));
+                    allOk = false;
+                } else if (plan.missingExtensions.length === 0 && plan.staleExtensions.length === 0 && plan.orphanedExtensions.length === 0) {
+                    console.log(t.success(`  ✓ global extensions deployed (${plan.extensions.length})`));
                 } else {
                     if (plan.missingExtensions.length > 0 || plan.staleExtensions.length > 0) {
                         console.log(kleur.yellow(`  ⚠ extension drift (${plan.missingExtensions.length} missing, ${plan.staleExtensions.length} stale)`));
@@ -161,13 +204,14 @@ export function createPiCommand(): Command {
                         console.log(kleur.red(`  ✗ orphaned extensions: ${plan.orphanedExtensions.join(', ')}`));
                         allOk = false;
                     }
-                    if (plan.missingPackages.length > 0) {
-                        console.log(kleur.yellow(`  ⚠ ${plan.missingPackages.length} package(s) missing`));
-                        allOk = false;
-                    }
                 }
-            } else {
-                console.log(kleur.dim('  ○ managed extensions not bundled in this install'));
+
+                if (plan.missingPackages.length === 0) {
+                    console.log(t.success(`  ✓ packages installed (${plan.packages.length})`));
+                } else {
+                    console.log(kleur.yellow(`  ⚠ ${plan.missingPackages.length} package(s) missing`));
+                    allOk = false;
+                }
             }
 
             console.log('');
@@ -192,13 +236,7 @@ export function createPiCommand(): Command {
                 return;
             }
 
-            // Use git to find the actual project root, not findRepoRoot()
-            // which finds the xtrm-tools source repo
-            const r = spawnSync('git', ['rev-parse', '--show-toplevel'], {
-                cwd: process.cwd(), encoding: 'utf8', stdio: 'pipe',
-            });
-            const projectRoot = r.status === 0 ? (r.stdout ?? '').trim() : process.cwd();
-            await runPiInstall(false, false, projectRoot);
+            await runPiInstall(false, false, resolveProjectRoot());
         });
 
     return cmd;

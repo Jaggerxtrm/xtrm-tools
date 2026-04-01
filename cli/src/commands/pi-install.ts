@@ -8,71 +8,14 @@
  */
 
 import kleur from 'kleur';
-import fs from 'fs-extra';
 import path from 'path';
 import { spawnSync } from 'node:child_process';
 import { homedir } from 'node:os';
-import { t, sym } from '../utils/theme.js';
+import { t } from '../utils/theme.js';
 import { runPiRuntimeSync } from '../core/pi-runtime.js';
 import { isPiInstalled, isPnpmInstalled } from '../core/machine-bootstrap.js';
 
-// __dirname is available in CJS output (tsup target: cjs)
-declare const __dirname: string;
-
 const PI_AGENT_DIR = process.env.PI_AGENT_DIR || path.join(homedir(), '.pi', 'agent');
-
-/**
- * Ensure @xtrm/pi-core is resolvable from .pi/npm/node_modules.
- * Creates a symlink: .pi/npm/node_modules/@xtrm/pi-core -> ../../extensions/core
- */
-async function ensureCorePackageSymlink(extensionsDst: string, projectRoot: string, dryRun: boolean): Promise<void> {
-    const coreDir = path.join(extensionsDst, 'core');
-    if (!await fs.pathExists(coreDir)) return; // core not synced yet
-
-    const nodeModulesDir = path.join(projectRoot, '.pi', 'node_modules', '@xtrm');
-    const symlinkPath = path.join(nodeModulesDir, 'pi-core');
-
-    if (await fs.pathExists(symlinkPath)) return; // already exists
-
-    if (dryRun) {
-        console.log(kleur.dim(`    [DRY RUN] would create @xtrm/pi-core symlink`));
-        return;
-    }
-
-    await fs.ensureDir(nodeModulesDir);
-    // Relative path: .pi/node_modules/@xtrm/pi-core -> ../../extensions/core
-    await fs.symlink('../../extensions/core', symlinkPath);
-    console.log(kleur.dim(`    Created @xtrm/pi-core symlink for module resolution`));
-}
-
-/**
- * Resolve the xtrm-tools package root from __dirname.
- * cli/dist/ -> ../.. = package root.
- * Falls back to checking one level higher for global npm installs.
- */
-function resolvePkgRoot(): string {
-    const candidates = [
-        path.resolve(__dirname, '../..'),
-        path.resolve(__dirname, '../../..'),
-    ];
-    for (const c of candidates) {
-        if (require('fs').existsSync(path.join(c, 'config', 'pi', 'extensions'))) return c;
-    }
-    return candidates[0];
-}
-
-function piExtensionsDir(isGlobal: boolean, projectRoot?: string): string {
-    if (!isGlobal && projectRoot) {
-        return path.join(projectRoot, '.pi', 'extensions');
-    }
-    return path.join(PI_AGENT_DIR, 'extensions');
-}
-
-interface InstallSchema {
-    fields: { key: string; label: string; hint: string; secret: boolean; required: boolean }[];
-    oauth_providers: { key: string; instruction: string }[];
-    packages: string[];
-}
 
 function ensurePnpm(dryRun: boolean): void {
     if (isPnpmInstalled()) {
@@ -132,15 +75,6 @@ export async function runPiInstall(dryRun: boolean = false, isGlobal: boolean = 
 
     // Run unified sync
     await runPiRuntimeSync({ dryRun, isGlobal, projectRoot });
-
-    // Ensure @xtrm/pi-core is resolvable from node_modules (project-scoped only)
-    const piConfigDir = path.join(resolvePkgRoot(), 'config', 'pi');
-    const hasManagedExtensions = await fs.pathExists(piConfigDir);
-
-    if (hasManagedExtensions && !isGlobal && projectRoot) {
-        const extensionsDst = piExtensionsDir(isGlobal, projectRoot);
-        await ensureCorePackageSymlink(extensionsDst, projectRoot, dryRun);
-    }
 
     // Detect unconfigured Pi — nudge to run setup
     const configFiles = ['models.json', 'auth.json', 'settings.json'];

@@ -4,7 +4,7 @@ scope: skills
 category: overview
 version: 2.0.0
 updated: 2026-04-01
-synced_at: HEAD
+synced_at: de153d07
 description: "Skills tier architecture: default skills, optional packs, user packs, and xt skills CLI"
 source_of_truth_for:
   - ".xtrm/skills/**"

@@ -4,7 +4,7 @@ scope: cli-architecture
 category: reference
 version: 1.5.0
 updated: 2026-04-01
-synced_at: HEAD
+synced_at: de153d07
 source_of_truth_for:
   - "cli/src/**/*.ts"
 domain: [cli]

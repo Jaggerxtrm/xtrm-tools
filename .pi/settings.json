@@ -1,5 +1,5 @@
 {
-  "packages": [
+  "extensions": [
     "./extensions/auto-session-name",
     "./extensions/auto-update",
     "./extensions/beads",
@@ -13,7 +13,12 @@
     "./extensions/service-skills",
     "./extensions/session-flow",
     "./extensions/xtrm-loader",
-    "./extensions/xtrm-ui",
+    "./extensions/xtrm-ui"
+  ],
+  "skills": [
+    "../.xtrm/skills/default"
+  ],
+  "packages": [
     "npm:pi-gitnexus",
     "npm:pi-serena-tools",
     "npm:lsp-pi",

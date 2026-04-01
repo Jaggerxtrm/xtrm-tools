@@ -31707,14 +31707,21 @@ async function updatePiSettings(extensionsDst, projectRoot, dryRun, log) {
   } catch {
   }
   const entries = await import_fs_extra3.default.readdir(extensionsDst, { withFileTypes: true });
-  const extPaths = entries.filter((e) => e.isDirectory() && e.name !== "core").map((e) => `./extensions/${e.name}`);
-  const nonExtPackages = (existingSettings.packages ?? []).filter(
-    (p) => !p.startsWith("./extensions/") && !p.startsWith("../")
+  const extPaths = entries.filter((e) => (e.isDirectory() || e.isSymbolicLink()) && e.name !== "core").map((e) => `./extensions/${e.name}`);
+  const existingPackages = (existingSettings.packages ?? []).filter(
+    (p) => !p.startsWith("./extensions/")
   );
-  const updatedPackages = [...extPaths, ...nonExtPackages];
+  const skillsPath = "../.xtrm/skills/default";
+  const existingSkills = (existingSettings.skills ?? []).filter((s) => s !== skillsPath);
+  const updatedSkills = [skillsPath, ...existingSkills];
   await import_fs_extra3.default.ensureDir(import_path3.default.join(projectRoot, ".pi"));
-  await import_fs_extra3.default.writeJson(piSettingsPath, { ...existingSettings, packages: updatedPackages }, { spaces: 2 });
-  log?.(kleur_default.dim(`Updated .pi/settings.json with ${extPaths.length} extension(s)`));
+  await import_fs_extra3.default.writeJson(piSettingsPath, {
+    ...existingSettings,
+    extensions: extPaths,
+    skills: updatedSkills,
+    packages: existingPackages
+  }, { spaces: 2 });
+  log?.(kleur_default.dim(`Updated .pi/settings.json: ${extPaths.length} extension(s), skills \u2192 .xtrm/skills/default`));
 }
 async function executePiSync(plan, sourceDir, targetDir, opts = {}) {
   const {

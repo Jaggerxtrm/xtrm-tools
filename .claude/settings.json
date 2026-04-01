@@ -5,17 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "git config pull.ff only",
-            "timeout": 5
-          }
-        ]
-      },
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node /home/dawid/projects/specialists/hooks/specialists-session-start.mjs"
+            "command": "node \"/home/dawid/projects/xtrm-tools/.xtrm/hooks/using-xtrm-reminder.mjs\""
           }
         ]
       },
@@ -23,174 +13,143 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/skills/using-service-skills/scripts/cataloger.py\""
+            "command": "node \"/home/dawid/projects/xtrm-tools/.xtrm/hooks/beads-compact-restore.mjs\"",
+            "timeout": 5000
           }
         ]
       },
       {
-        "matcher": "",
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.wolf/hooks/session-start.js\"",
-            "timeout": 5
+            "command": "node \"/home/dawid/projects/xtrm-tools/.xtrm/hooks/quality-check-env.mjs\"",
+            "timeout": 5000
           }
         ]
-      }
-    ],
-    "UserPromptSubmit": [
+      },
       {
-        "matcher": "",
         "hooks": [
           {
             "type": "command",
-            "command": "node /home/dawid/projects/specialists/hooks/specialists-complete.mjs"
+            "command": "node \"/home/dawid/projects/xtrm-tools/.xtrm/hooks/xtrm-session-logger.mjs\"",
+            "timeout": 3000
           }
         ]
       }
     ],
     "PreToolUse": [
       {
-        "matcher": "Read|Write|Edit|Glob|Grep|Bash|mcp__serena__rename_symbol|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol",
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/skills/using-service-skills/scripts/skill_activator.py\""
+            "command": "node \"/home/dawid/projects/xtrm-tools/.xtrm/hooks/worktree-boundary.mjs\"",
+            "timeout": 2000
           }
-        ]
+        ],
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit|mcp__serena__rename_symbol|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol"
       },
       {
-        "matcher": "Read",
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.wolf/hooks/pre-read.js\"",
-            "timeout": 5
+            "command": "node \"/home/dawid/projects/xtrm-tools/.xtrm/hooks/beads-edit-gate.mjs\"",
+            "timeout": 5000
           }
-        ]
+        ],
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit|mcp__serena__rename_symbol|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol"
       },
       {
-        "matcher": "Write|Edit|MultiEdit",
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.wolf/hooks/pre-write.js\"",
-            "timeout": 5
+            "command": "node \"/home/dawid/projects/xtrm-tools/.xtrm/hooks/beads-commit-gate.mjs\"",
+            "timeout": 5000
           }
-        ]
+        ],
+        "matcher": "Bash"
       }
     ],
     "PostToolUse": [
       {
-        "matcher": "Write|Edit|mcp__serena__rename_symbol|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol",
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/skills/updating-service-skills/scripts/drift_detector.py\" check-hook",
-            "timeout": 10
+            "command": "node \"/home/dawid/projects/xtrm-tools/.xtrm/hooks/beads-claim-sync.mjs\"",
+            "timeout": 5000
           }
-        ]
+        ],
+        "matcher": "Bash|execute_shell_command|bash"
       },
       {
-        "matcher": "Read",
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.wolf/hooks/post-read.js\"",
-            "timeout": 5
+            "command": "node \"/home/dawid/projects/xtrm-tools/.xtrm/hooks/quality-check.cjs\"",
+            "timeout": 30000
           }
-        ]
+        ],
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit|mcp__serena__rename_symbol|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol"
       },
       {
-        "matcher": "Write|Edit|MultiEdit",
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.wolf/hooks/post-write.js\"",
-            "timeout": 10
+            "command": "python3 \"/home/dawid/projects/xtrm-tools/.xtrm/hooks/quality-check.py\"",
+            "timeout": 30000
+          }
+        ],
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit|mcp__serena__rename_symbol|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"/home/dawid/projects/xtrm-tools/.xtrm/hooks/gitnexus/gitnexus-hook.cjs\"",
+            "timeout": 10000
+          }
+        ],
+        "matcher": "Bash|Grep|Read|Glob|mcp__serena__find_symbol|mcp__serena__get_symbols_overview|mcp__serena__search_for_pattern|mcp__serena__find_referencing_symbols|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol|mcp__serena__rename_symbol"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"/home/dawid/projects/xtrm-tools/.xtrm/hooks/xtrm-tool-logger.mjs\"",
+            "timeout": 3000
           }
         ]
       }
     ],
     "Stop": [
       {
-        "matcher": "",
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.wolf/hooks/stop.js\"",
-            "timeout": 10
+            "command": "node \"/home/dawid/projects/xtrm-tools/.xtrm/hooks/beads-stop-gate.mjs\"",
+            "timeout": 5000
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"/home/dawid/projects/xtrm-tools/.xtrm/hooks/beads-memory-gate.mjs\"",
+            "timeout": 8000
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"/home/dawid/projects/xtrm-tools/.xtrm/hooks/beads-compact-save.mjs\"",
+            "timeout": 5000
           }
         ]
       }
     ]
-  },
-  "enabledPlugins": {
-    "xtrm-tools@xtrm-tools": true
-  },
-  "extraKnownMarketplaces": {
-    "xtrm-tools": {
-      "source": {
-        "source": "directory",
-        "path": "/home/dawid/projects/xtrm-tools"
-      }
-    },
-    "claude-plugins-official": {
-      "source": {
-        "source": "git",
-        "url": "https://github.com/anthropics/claude-plugins-official.git"
-      }
-    }
-  },
-  "UserPromptSubmit": [
-    {
-      "matcher": "",
-      "hooks": [
-        {
-          "type": "command",
-          "command": "node .specialists/default/hooks/specialists-complete.mjs"
-        }
-      ]
-    },
-    {
-      "matcher": "",
-      "hooks": [
-        {
-          "type": "command",
-          "command": "node .claude/hooks/specialists-complete.mjs"
-        }
-      ]
-    }
-  ],
-  "SessionStart": [
-    {
-      "matcher": "",
-      "hooks": [
-        {
-          "type": "command",
-          "command": "node .specialists/default/hooks/specialists-session-start.mjs"
-        }
-      ]
-    },
-    {
-      "matcher": "",
-      "hooks": [
-        {
-          "type": "command",
-          "command": "node .claude/hooks/specialists-session-start.mjs"
-        }
-      ]
-    }
-  ],
-  "PostToolUse": [
-    {
-      "matcher": "",
-      "hooks": [
-        {
-          "type": "command",
-          "command": "node .claude/hooks/specialists-complete.mjs"
-        }
-      ]
-    }
-  ]
+  }
 }

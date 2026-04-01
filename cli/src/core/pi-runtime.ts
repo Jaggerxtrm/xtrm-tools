@@ -27,7 +27,7 @@ function resolvePkgRoot(): string {
         path.resolve(__dirname, '../../..'),
     ];
     for (const c of candidates) {
-        if (fs.existsSync(path.join(c, 'config', 'pi', 'extensions'))) return c;
+        if (fs.existsSync(path.join(c, '.xtrm', 'extensions'))) return c;
     }
     return candidates[0];
 }
@@ -176,7 +176,7 @@ async function listInstalledExtensions(targetDir: string): Promise<string[]> {
     if (!await fs.pathExists(targetDir)) return [];
     const entries = await fs.readdir(targetDir, { withFileTypes: true });
     return entries
-        .filter(e => e.isDirectory())
+        .filter(e => e.isDirectory() || e.isSymbolicLink())
         .map(e => e.name)
         .sort();
 }
@@ -214,13 +214,18 @@ export async function inventoryPiRuntime(
             continue;
         }
 
-        // Compare hashes for drift detection
-        const [srcHash, dstHash] = await Promise.all([
-            extensionHash(srcPath),
-            extensionHash(dstPath),
-        ]);
-
-        const isStale = srcHash !== dstHash;
+        // Stale detection: if dstPath is a symlink, verify it resolves to srcPath.
+        // If it's a real copy (legacy), treat as stale so it gets replaced with a symlink.
+        let isStale = false;
+        const dstStat = await fs.lstat(dstPath);
+        if (dstStat.isSymbolicLink()) {
+            const linkTarget = await fs.readlink(dstPath);
+            const resolvedTarget = path.resolve(path.dirname(dstPath), linkTarget);
+            isStale = resolvedTarget !== path.resolve(srcPath);
+        } else {
+            // Real copy — replace with symlink
+            isStale = true;
+        }
         const status: ExtensionStatus = {
             ext,
             installed: true,
@@ -476,13 +481,16 @@ export async function executePiSync(
         }
 
         try {
-            await fs.copy(srcPath, dstPath, { overwrite: true });
+            // Remove stale copy/symlink, then create a relative symlink into .xtrm/extensions
+            await fs.remove(dstPath);
+            const relTarget = path.relative(targetDir, srcPath);
+            await fs.symlink(relTarget, dstPath);
             if (status.installed) {
                 result.extensionsUpdated.push(ext.id);
-                log(`↻ ${ext.displayName}`);
+                log(`↻ ${ext.displayName} (symlinked)`);
             } else {
                 result.extensionsAdded.push(ext.id);
-                log(`+ ${ext.displayName}`);
+                log(`+ ${ext.displayName} (symlinked)`);
             }
         } catch (err) {
             result.failed.push(ext.id);
@@ -564,7 +572,7 @@ export async function runPiRuntimeSync(opts: PiRuntimeOptions = {}): Promise<PiS
 
     // Resolve source from package root
     const pkgRoot = resolvePkgRoot();
-    const sourceDir = path.join(pkgRoot, 'config', 'pi', 'extensions');
+    const sourceDir = path.join(pkgRoot, '.xtrm', 'extensions');
 
     // Resolve target (ensure string, not undefined)
     const resolvedProjectRoot = projectRoot || process.cwd();

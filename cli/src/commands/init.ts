@@ -3,11 +3,6 @@ import kleur from 'kleur';
 import path from 'path';
 import fs from 'fs-extra';
 import { spawnSync } from 'child_process';
-import {
-    installGitHooks as installServiceGitHooks,
-    installSettings as installServiceSettings,
-    installSkills as installServiceSkills,
-} from './install-service-skills.js';
 import { runInstall, type InstallOpts } from './install.js';
 import { runClaudeRuntimeSyncPhase, renderClaudeRuntimePlanSummary } from '../core/claude-runtime-sync.js';
 import { inventoryDeps, renderBootstrapPlan, runMachineBootstrapPhase, type BootstrapPlan } from '../core/machine-bootstrap.js';
@@ -521,27 +516,8 @@ async function ensureAgentsSkillsSymlink(projectRoot: string): Promise<void> {
     console.log(`${kleur.green('  ✓')} .agents/skills → ../.xtrm/skills/default`);
 }
 
-async function installServiceSkillHooks(projectRoot: string): Promise<void> {
-    const serviceSkillRoot = path.join(projectRoot, '.xtrm', 'skills', 'default', 'service-skills-set', '.claude');
-    if (!await fs.pathExists(serviceSkillRoot)) {
-        console.log(kleur.yellow('  ⚠ service-skills-set package not found under .xtrm/skills/default; skipping project hook wiring'));
-        return;
-    }
-
-    console.log(kleur.bold('Installing service-skills-set project hooks...'));
-    await installServiceSkills(projectRoot, serviceSkillRoot);
-    const { added, skipped } = await installServiceSettings(projectRoot);
-    const { hookFiles } = await installServiceGitHooks(projectRoot, serviceSkillRoot);
-
-    if (added.length > 0) {
-        console.log(kleur.dim(`  ↳ settings hooks added: ${added.join(', ')}`));
-    }
-    if (skipped.length > 0) {
-        console.log(kleur.dim(`  ↳ settings hooks already present: ${skipped.join(', ')}`));
-    }
-    if (hookFiles.some(file => file.status === 'added')) {
-        console.log(kleur.dim('  ↳ git hooks updated'));
-    }
+async function installServiceSkillHooks(_projectRoot: string): Promise<void> {
+    // service-skills hooks are opt-in via `xt install service-skills`, not auto-wired on init.
 }
 
 // ─── Inventory types ──────────────────────────────────────────────────────────
@@ -640,7 +616,6 @@ function renderInitPlan(inventory: InitInventory): void {
         needsBdInit ? 'bd init — initialize beads workspace' : null,
         needsGitNexus ? 'gitnexus analyze — build code index' : null,
         'AGENTS.md + CLAUDE.md — workflow headers',
-        'service-skills-set hooks + git hooks wiring',
     ].filter(Boolean) as string[];
     for (const action of projActions) {
         console.log(`${kleur.cyan('  •')}  ${action}`);

@@ -6,14 +6,19 @@ import { confirmDestructiveAction } from '../utils/confirmation.js';
 
 export type CleanupScope = 'global' | 'project' | 'all';
 
-type CleanupOperationType = 'delete-path' | 'delete-settings-keys';
+type CleanupOperationType = 'delete-path' | 'delete-json-map-entries';
+
+interface JsonMapEntryDelete {
+  parentKey: string;
+  entryKey: string;
+}
 
 interface CleanupOperation {
   scope: Exclude<CleanupScope, 'all'>;
   type: CleanupOperationType;
   targetPath: string;
   label: string;
-  settingsKeys?: readonly string[];
+  mapEntryDeletes?: readonly JsonMapEntryDelete[];
 }
 
 export interface RunPluginEraCleanupOptions {
@@ -31,7 +36,21 @@ export interface CleanupResult {
   updatedSettings: string[];
 }
 
-const SETTINGS_PLUGIN_KEYS = ['enabledPlugins', 'extraKnownMarketplaces'] as const;
+const LEGACY_PLUGIN_INSTALL_ID = 'xtrm-tools@xtrm-tools';
+const LEGACY_MARKETPLACE_ID = 'xtrm-tools';
+
+const SETTINGS_MAP_ENTRY_DELETES: readonly JsonMapEntryDelete[] = [
+  { parentKey: 'enabledPlugins', entryKey: LEGACY_PLUGIN_INSTALL_ID },
+  { parentKey: 'extraKnownMarketplaces', entryKey: LEGACY_MARKETPLACE_ID },
+];
+
+const INSTALLED_PLUGINS_FILE_ENTRY_DELETES: readonly JsonMapEntryDelete[] = [
+  { parentKey: '', entryKey: LEGACY_PLUGIN_INSTALL_ID },
+];
+
+const KNOWN_MARKETPLACES_FILE_ENTRY_DELETES: readonly JsonMapEntryDelete[] = [
+  { parentKey: '', entryKey: LEGACY_MARKETPLACE_ID },
+];
 
 const XTRM_MANAGED_PI_EXTENSIONS = new Set([
   'beads',
@@ -60,7 +79,9 @@ const LEGACY_PROJECT_HOOK_FILES: Array<{ legacyFile: string; duplicatePath: stri
 ];
 
 export const PLUGIN_ERA_ARTIFACTS = {
-  settingsKeys: SETTINGS_PLUGIN_KEYS,
+  settingsMapEntryDeletes: SETTINGS_MAP_ENTRY_DELETES,
+  installedPluginsEntry: LEGACY_PLUGIN_INSTALL_ID,
+  knownMarketplaceEntry: LEGACY_MARKETPLACE_ID,
   piExtensionIds: Array.from(XTRM_MANAGED_PI_EXTENSIONS),
   legacyProjectHookFiles: LEGACY_PROJECT_HOOK_FILES.map((entry) => entry.legacyFile),
 } as const;
@@ -124,9 +145,9 @@ export async function runPluginEraCleanup(opts: RunPluginEraCleanupOptions = {})
         removedPaths.push(operation.targetPath);
       }
 
-      if (operation.type === 'delete-settings-keys') {
+      if (operation.type === 'delete-json-map-entries') {
         if (!dryRun) {
-          await deleteSettingsKeys(operation.targetPath, operation.settingsKeys ?? SETTINGS_PLUGIN_KEYS);
+          await deleteJsonMapEntries(operation.targetPath, operation.mapEntryDeletes ?? []);
         }
         updatedSettings.push(operation.targetPath);
       }
@@ -172,44 +193,67 @@ async function planGlobalOperations(managedAgentSkills: ReadonlySet<string>): Pr
 
   const claudeDir = path.join(os.homedir(), '.claude');
   const pluginDir = path.join(claudeDir, 'plugins');
-  const claudeSkillsDir = path.join(claudeDir, 'skills');
-  const claudeHooksDir = path.join(claudeDir, 'hooks');
   const claudeSettingsPath = path.join(claudeDir, 'settings.json');
 
-  if (await fs.pathExists(pluginDir)) {
+  const xtrmPluginDataDir = path.join(pluginDir, 'data', 'xtrm-tools-xtrm-tools');
+  if (await fs.pathExists(xtrmPluginDataDir)) {
     operations.push({
       scope: 'global',
       type: 'delete-path',
-      targetPath: pluginDir,
-      label: '~/.claude/plugins/',
+      targetPath: xtrmPluginDataDir,
+      label: '~/.claude/plugins/data/xtrm-tools-xtrm-tools/',
     });
   }
 
-  if (await hasSettingsKeys(claudeSettingsPath, SETTINGS_PLUGIN_KEYS)) {
+  const xtrmPluginCacheDir = path.join(pluginDir, 'cache', 'xtrm-tools');
+  if (await fs.pathExists(xtrmPluginCacheDir)) {
     operations.push({
       scope: 'global',
-      type: 'delete-settings-keys',
+      type: 'delete-path',
+      targetPath: xtrmPluginCacheDir,
+      label: '~/.claude/plugins/cache/xtrm-tools/',
+    });
+  }
+
+  const xtrmPluginMarketplaceDir = path.join(pluginDir, 'marketplaces', 'xtrm-tools');
+  if (await fs.pathExists(xtrmPluginMarketplaceDir)) {
+    operations.push({
+      scope: 'global',
+      type: 'delete-path',
+      targetPath: xtrmPluginMarketplaceDir,
+      label: '~/.claude/plugins/marketplaces/xtrm-tools/',
+    });
+  }
+
+  const installedPluginsPath = path.join(pluginDir, 'installed_plugins.json');
+  if (await hasJsonMapEntries(installedPluginsPath, INSTALLED_PLUGINS_FILE_ENTRY_DELETES)) {
+    operations.push({
+      scope: 'global',
+      type: 'delete-json-map-entries',
+      targetPath: installedPluginsPath,
+      label: '~/.claude/plugins/installed_plugins.json key: xtrm-tools@xtrm-tools',
+      mapEntryDeletes: INSTALLED_PLUGINS_FILE_ENTRY_DELETES,
+    });
+  }
+
+  const knownMarketplacesPath = path.join(pluginDir, 'known_marketplaces.json');
+  if (await hasJsonMapEntries(knownMarketplacesPath, KNOWN_MARKETPLACES_FILE_ENTRY_DELETES)) {
+    operations.push({
+      scope: 'global',
+      type: 'delete-json-map-entries',
+      targetPath: knownMarketplacesPath,
+      label: '~/.claude/plugins/known_marketplaces.json key: xtrm-tools',
+      mapEntryDeletes: KNOWN_MARKETPLACES_FILE_ENTRY_DELETES,
+    });
+  }
+
+  if (await hasJsonMapEntries(claudeSettingsPath, SETTINGS_MAP_ENTRY_DELETES)) {
+    operations.push({
+      scope: 'global',
+      type: 'delete-json-map-entries',
       targetPath: claudeSettingsPath,
-      label: '~/.claude/settings.json keys: enabledPlugins, extraKnownMarketplaces',
-      settingsKeys: SETTINGS_PLUGIN_KEYS,
-    });
-  }
-
-  if (await fs.pathExists(claudeSkillsDir)) {
-    operations.push({
-      scope: 'global',
-      type: 'delete-path',
-      targetPath: claudeSkillsDir,
-      label: '~/.claude/skills/',
-    });
-  }
-
-  if (await fs.pathExists(claudeHooksDir)) {
-    operations.push({
-      scope: 'global',
-      type: 'delete-path',
-      targetPath: claudeHooksDir,
-      label: '~/.claude/hooks/',
+      label: '~/.claude/settings.json entries: enabledPlugins[xtrm-tools@xtrm-tools], extraKnownMarketplaces[xtrm-tools]',
+      mapEntryDeletes: SETTINGS_MAP_ENTRY_DELETES,
     });
   }
 
@@ -236,13 +280,13 @@ async function planProjectOperations(repoRoot: string): Promise<CleanupOperation
   const operations: CleanupOperation[] = [];
 
   const claudeSettingsPath = path.join(repoRoot, '.claude', 'settings.json');
-  if (await hasSettingsKeys(claudeSettingsPath, SETTINGS_PLUGIN_KEYS)) {
+  if (await hasJsonMapEntries(claudeSettingsPath, SETTINGS_MAP_ENTRY_DELETES)) {
     operations.push({
       scope: 'project',
-      type: 'delete-settings-keys',
+      type: 'delete-json-map-entries',
       targetPath: claudeSettingsPath,
-      label: '.claude/settings.json keys: enabledPlugins, extraKnownMarketplaces',
-      settingsKeys: SETTINGS_PLUGIN_KEYS,
+      label: '.claude/settings.json entries: enabledPlugins[xtrm-tools@xtrm-tools], extraKnownMarketplaces[xtrm-tools]',
+      mapEntryDeletes: SETTINGS_MAP_ENTRY_DELETES,
     });
   }
 
@@ -308,7 +352,7 @@ function printCleanupPlan(operations: CleanupOperation[], dryRun: boolean): void
 
     console.log(kleur.cyan(`  ${scopeName}:`));
     for (const operation of scopeOps) {
-      const action = operation.type === 'delete-settings-keys' ? 'update' : 'delete';
+      const action = operation.type === 'delete-json-map-entries' ? 'update' : 'delete';
       const prefix = dryRun ? '[DRY RUN] would' : 'will';
       console.log(kleur.dim(`    • ${prefix} ${action} ${operation.label}`));
     }
@@ -316,27 +360,69 @@ function printCleanupPlan(operations: CleanupOperation[], dryRun: boolean): void
   console.log('');
 }
 
-async function hasSettingsKeys(settingsPath: string, keys: readonly string[]): Promise<boolean> {
-  const settings = await readJsonObject(settingsPath);
-  if (!settings) {
+async function hasJsonMapEntries(filePath: string, deletes: readonly JsonMapEntryDelete[]): Promise<boolean> {
+  const record = await readJsonObject(filePath);
+  if (!record) {
     return false;
   }
 
-  return keys.some((key) => key in settings);
+  return deletes.some(({ parentKey, entryKey }) => hasJsonMapEntry(record, parentKey, entryKey));
 }
 
-async function deleteSettingsKeys(settingsPath: string, keys: readonly string[]): Promise<void> {
-  const settings = await readJsonObject(settingsPath);
-  if (!settings) {
+function hasJsonMapEntry(record: Record<string, unknown>, parentKey: string, entryKey: string): boolean {
+  if (parentKey.length === 0) {
+    return entryKey in record;
+  }
+
+  const parent = record[parentKey];
+  if (!parent || typeof parent !== 'object' || Array.isArray(parent)) {
+    return false;
+  }
+
+  return entryKey in (parent as Record<string, unknown>);
+}
+
+async function deleteJsonMapEntries(filePath: string, deletes: readonly JsonMapEntryDelete[]): Promise<void> {
+  const record = await readJsonObject(filePath);
+  if (!record) {
     return;
   }
 
-  for (const key of keys) {
-    delete settings[key];
+  let changed = false;
+
+  for (const { parentKey, entryKey } of deletes) {
+    if (parentKey.length === 0) {
+      if (entryKey in record) {
+        delete record[entryKey];
+        changed = true;
+      }
+      continue;
+    }
+
+    const parent = record[parentKey];
+    if (!parent || typeof parent !== 'object' || Array.isArray(parent)) {
+      continue;
+    }
+
+    const parentRecord = parent as Record<string, unknown>;
+    if (!(entryKey in parentRecord)) {
+      continue;
+    }
+
+    delete parentRecord[entryKey];
+    changed = true;
+
+    if (Object.keys(parentRecord).length === 0) {
+      delete record[parentKey];
+    }
   }
 
-  await fs.ensureDir(path.dirname(settingsPath));
-  await fs.writeJson(settingsPath, settings, { spaces: 2 });
+  if (!changed) {
+    return;
+  }
+
+  await fs.ensureDir(path.dirname(filePath));
+  await fs.writeJson(filePath, record, { spaces: 2 });
 }
 
 async function readJsonObject(filePath: string): Promise<Record<string, unknown> | null> {

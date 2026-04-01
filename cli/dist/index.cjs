@@ -32066,6 +32066,8 @@ async function confirmDestructiveAction(opts) {
 
 // src/core/machine-bootstrap.ts
 var import_child_process3 = require("child_process");
+var OFFICIAL_CLAUDE_PLUGINS = ["serena", "context7"];
+var OFFICIAL_MARKETPLACE = "claude-plugins-official";
 var MANAGED_DEPS = [
   {
     id: "bd",
@@ -32284,10 +32286,85 @@ function verifyBootstrap() {
   }
   return plan;
 }
+function normalizePluginName(name) {
+  const trimmed = name.trim();
+  if (!trimmed) {
+    return "";
+  }
+  if (trimmed.startsWith("@")) {
+    return trimmed;
+  }
+  const atIndex = trimmed.indexOf("@");
+  return atIndex === -1 ? trimmed : trimmed.slice(0, atIndex);
+}
+function readInstalledOfficialPlugins() {
+  const listResult = (0, import_child_process3.spawnSync)("claude", ["plugin", "list", "--json"], {
+    encoding: "utf8",
+    stdio: "pipe",
+    timeout: 1e4
+  });
+  if (listResult.status !== 0) {
+    return null;
+  }
+  let parsed;
+  try {
+    parsed = JSON.parse(listResult.stdout ?? "[]");
+  } catch {
+    return null;
+  }
+  if (!Array.isArray(parsed)) {
+    return null;
+  }
+  const installedNames = /* @__PURE__ */ new Set();
+  for (const entry of parsed) {
+    const rawName = typeof entry === "string" ? entry : entry && typeof entry === "object" && "name" in entry && typeof entry.name === "string" ? entry.name : "";
+    const normalized = normalizePluginName(rawName);
+    if (normalized) {
+      installedNames.add(normalized);
+    }
+  }
+  return installedNames;
+}
+function tryInstallOfficialPlugin(pluginName) {
+  const directInstall = (0, import_child_process3.spawnSync)("claude", ["plugin", "install", pluginName, "--scope", "user"], { stdio: "inherit" });
+  if (directInstall.status === 0) {
+    return true;
+  }
+  const marketplaceQualified = `${pluginName}@${OFFICIAL_MARKETPLACE}`;
+  const marketplaceInstall = (0, import_child_process3.spawnSync)("claude", ["plugin", "install", marketplaceQualified, "--scope", "user"], { stdio: "inherit" });
+  return marketplaceInstall.status === 0;
+}
+function ensureOfficialPlugins(dryRun) {
+  const installed = readInstalledOfficialPlugins();
+  if (!installed) {
+    console.log(kleur_default.yellow("  \u26A0 Could not determine Claude plugin state; skipping official plugin install check."));
+    return;
+  }
+  const missing = OFFICIAL_CLAUDE_PLUGINS.filter((pluginName) => !installed.has(pluginName));
+  if (missing.length === 0) {
+    console.log(kleur_default.dim("  \u2713 Official Claude plugins already installed: serena, context7"));
+    return;
+  }
+  console.log(kleur_default.bold("\n  Ensuring official Claude plugins..."));
+  for (const pluginName of missing) {
+    if (dryRun) {
+      console.log(kleur_default.dim(`  [DRY RUN] claude plugin install ${pluginName} --scope user`));
+      continue;
+    }
+    console.log(kleur_default.dim(`  Installing ${pluginName}...`));
+    const installedOk = tryInstallOfficialPlugin(pluginName);
+    if (installedOk) {
+      console.log(t.success(`  \u2713 ${pluginName} installed`));
+    } else {
+      console.log(kleur_default.yellow(`  \u26A0 Failed to install ${pluginName}. Try: claude plugin install ${pluginName}@${OFFICIAL_MARKETPLACE}`));
+    }
+  }
+}
 async function runMachineBootstrapPhase(opts = {}) {
   const plan = inventoryDeps();
   renderBootstrapPlan(plan);
   if (plan.allPresent) {
+    ensureOfficialPlugins(opts.dryRun ?? false);
     return { installed: [], failed: [], skipped: [] };
   }
   const result = executeBootstrap(plan, {
@@ -32297,6 +32374,7 @@ async function runMachineBootstrapPhase(opts = {}) {
   if (!opts.dryRun) {
     verifyBootstrap();
   }
+  ensureOfficialPlugins(opts.dryRun ?? false);
   return result;
 }
 function isPiInstalled() {
@@ -34351,7 +34429,18 @@ async function checkDrift(registryPath, userXtrmDir) {
 var import_fs_extra11 = __toESM(require_lib(), 1);
 var import_os3 = __toESM(require("os"), 1);
 var import_path9 = __toESM(require("path"), 1);
-var SETTINGS_PLUGIN_KEYS = ["enabledPlugins", "extraKnownMarketplaces"];
+var LEGACY_PLUGIN_INSTALL_ID = "xtrm-tools@xtrm-tools";
+var LEGACY_MARKETPLACE_ID = "xtrm-tools";
+var SETTINGS_MAP_ENTRY_DELETES = [
+  { parentKey: "enabledPlugins", entryKey: LEGACY_PLUGIN_INSTALL_ID },
+  { parentKey: "extraKnownMarketplaces", entryKey: LEGACY_MARKETPLACE_ID }
+];
+var INSTALLED_PLUGINS_FILE_ENTRY_DELETES = [
+  { parentKey: "", entryKey: LEGACY_PLUGIN_INSTALL_ID }
+];
+var KNOWN_MARKETPLACES_FILE_ENTRY_DELETES = [
+  { parentKey: "", entryKey: LEGACY_MARKETPLACE_ID }
+];
 var XTRM_MANAGED_PI_EXTENSIONS = /* @__PURE__ */ new Set([
   "beads",
   "session-flow",
@@ -34377,7 +34466,9 @@ var LEGACY_PROJECT_HOOK_FILES = [
   { legacyFile: "specialists-session-start.mjs", duplicatePath: import_path9.default.join(".xtrm", "hooks", "specialists-session-start.mjs") }
 ];
 var PLUGIN_ERA_ARTIFACTS = {
-  settingsKeys: SETTINGS_PLUGIN_KEYS,
+  settingsMapEntryDeletes: SETTINGS_MAP_ENTRY_DELETES,
+  installedPluginsEntry: LEGACY_PLUGIN_INSTALL_ID,
+  knownMarketplaceEntry: LEGACY_MARKETPLACE_ID,
   piExtensionIds: Array.from(XTRM_MANAGED_PI_EXTENSIONS),
   legacyProjectHookFiles: LEGACY_PROJECT_HOOK_FILES.map((entry) => entry.legacyFile)
 };
@@ -34430,9 +34521,9 @@ async function runPluginEraCleanup(opts = {}) {
         }
         removedPaths.push(operation.targetPath);
       }
-      if (operation.type === "delete-settings-keys") {
+      if (operation.type === "delete-json-map-entries") {
         if (!dryRun) {
-          await deleteSettingsKeys(operation.targetPath, operation.settingsKeys ?? SETTINGS_PLUGIN_KEYS);
+          await deleteJsonMapEntries(operation.targetPath, operation.mapEntryDeletes ?? []);
         }
         updatedSettings.push(operation.targetPath);
       }
@@ -34466,40 +34557,61 @@ async function planGlobalOperations(managedAgentSkills) {
   const operations = [];
   const claudeDir = import_path9.default.join(import_os3.default.homedir(), ".claude");
   const pluginDir = import_path9.default.join(claudeDir, "plugins");
-  const claudeSkillsDir = import_path9.default.join(claudeDir, "skills");
-  const claudeHooksDir = import_path9.default.join(claudeDir, "hooks");
   const claudeSettingsPath = import_path9.default.join(claudeDir, "settings.json");
-  if (await import_fs_extra11.default.pathExists(pluginDir)) {
+  const xtrmPluginDataDir = import_path9.default.join(pluginDir, "data", "xtrm-tools-xtrm-tools");
+  if (await import_fs_extra11.default.pathExists(xtrmPluginDataDir)) {
     operations.push({
       scope: "global",
       type: "delete-path",
-      targetPath: pluginDir,
-      label: "~/.claude/plugins/"
+      targetPath: xtrmPluginDataDir,
+      label: "~/.claude/plugins/data/xtrm-tools-xtrm-tools/"
     });
   }
-  if (await hasSettingsKeys(claudeSettingsPath, SETTINGS_PLUGIN_KEYS)) {
+  const xtrmPluginCacheDir = import_path9.default.join(pluginDir, "cache", "xtrm-tools");
+  if (await import_fs_extra11.default.pathExists(xtrmPluginCacheDir)) {
     operations.push({
       scope: "global",
-      type: "delete-settings-keys",
+      type: "delete-path",
+      targetPath: xtrmPluginCacheDir,
+      label: "~/.claude/plugins/cache/xtrm-tools/"
+    });
+  }
+  const xtrmPluginMarketplaceDir = import_path9.default.join(pluginDir, "marketplaces", "xtrm-tools");
+  if (await import_fs_extra11.default.pathExists(xtrmPluginMarketplaceDir)) {
+    operations.push({
+      scope: "global",
+      type: "delete-path",
+      targetPath: xtrmPluginMarketplaceDir,
+      label: "~/.claude/plugins/marketplaces/xtrm-tools/"
+    });
+  }
+  const installedPluginsPath = import_path9.default.join(pluginDir, "installed_plugins.json");
+  if (await hasJsonMapEntries(installedPluginsPath, INSTALLED_PLUGINS_FILE_ENTRY_DELETES)) {
+    operations.push({
+      scope: "global",
+      type: "delete-json-map-entries",
+      targetPath: installedPluginsPath,
+      label: "~/.claude/plugins/installed_plugins.json key: xtrm-tools@xtrm-tools",
+      mapEntryDeletes: INSTALLED_PLUGINS_FILE_ENTRY_DELETES
+    });
+  }
+  const knownMarketplacesPath = import_path9.default.join(pluginDir, "known_marketplaces.json");
+  if (await hasJsonMapEntries(knownMarketplacesPath, KNOWN_MARKETPLACES_FILE_ENTRY_DELETES)) {
+    operations.push({
+      scope: "global",
+      type: "delete-json-map-entries",
+      targetPath: knownMarketplacesPath,
+      label: "~/.claude/plugins/known_marketplaces.json key: xtrm-tools",
+      mapEntryDeletes: KNOWN_MARKETPLACES_FILE_ENTRY_DELETES
+    });
+  }
+  if (await hasJsonMapEntries(claudeSettingsPath, SETTINGS_MAP_ENTRY_DELETES)) {
+    operations.push({
+      scope: "global",
+      type: "delete-json-map-entries",
       targetPath: claudeSettingsPath,
-      label: "~/.claude/settings.json keys: enabledPlugins, extraKnownMarketplaces",
-      settingsKeys: SETTINGS_PLUGIN_KEYS
-    });
-  }
-  if (await import_fs_extra11.default.pathExists(claudeSkillsDir)) {
-    operations.push({
-      scope: "global",
-      type: "delete-path",
-      targetPath: claudeSkillsDir,
-      label: "~/.claude/skills/"
-    });
-  }
-  if (await import_fs_extra11.default.pathExists(claudeHooksDir)) {
-    operations.push({
-      scope: "global",
-      type: "delete-path",
-      targetPath: claudeHooksDir,
-      label: "~/.claude/hooks/"
+      label: "~/.claude/settings.json entries: enabledPlugins[xtrm-tools@xtrm-tools], extraKnownMarketplaces[xtrm-tools]",
+      mapEntryDeletes: SETTINGS_MAP_ENTRY_DELETES
     });
   }
   const piExtensionsDir2 = import_path9.default.join(import_os3.default.homedir(), ".pi", "agent", "extensions");
@@ -34521,13 +34633,13 @@ async function planGlobalOperations(managedAgentSkills) {
 async function planProjectOperations(repoRoot) {
   const operations = [];
   const claudeSettingsPath = import_path9.default.join(repoRoot, ".claude", "settings.json");
-  if (await hasSettingsKeys(claudeSettingsPath, SETTINGS_PLUGIN_KEYS)) {
+  if (await hasJsonMapEntries(claudeSettingsPath, SETTINGS_MAP_ENTRY_DELETES)) {
     operations.push({
       scope: "project",
-      type: "delete-settings-keys",
+      type: "delete-json-map-entries",
       targetPath: claudeSettingsPath,
-      label: ".claude/settings.json keys: enabledPlugins, extraKnownMarketplaces",
-      settingsKeys: SETTINGS_PLUGIN_KEYS
+      label: ".claude/settings.json entries: enabledPlugins[xtrm-tools@xtrm-tools], extraKnownMarketplaces[xtrm-tools]",
+      mapEntryDeletes: SETTINGS_MAP_ENTRY_DELETES
     });
   }
   const projectHooksDir = import_path9.default.join(repoRoot, ".claude", "hooks");
@@ -34575,30 +34687,63 @@ function printCleanupPlan(operations, dryRun) {
     }
     console.log(kleur_default.cyan(`  ${scopeName}:`));
     for (const operation of scopeOps) {
-      const action = operation.type === "delete-settings-keys" ? "update" : "delete";
+      const action = operation.type === "delete-json-map-entries" ? "update" : "delete";
       const prefix = dryRun ? "[DRY RUN] would" : "will";
       console.log(kleur_default.dim(`    \u2022 ${prefix} ${action} ${operation.label}`));
     }
   }
   console.log("");
 }
-async function hasSettingsKeys(settingsPath, keys) {
-  const settings = await readJsonObject(settingsPath);
-  if (!settings) {
+async function hasJsonMapEntries(filePath, deletes) {
+  const record2 = await readJsonObject(filePath);
+  if (!record2) {
     return false;
   }
-  return keys.some((key) => key in settings);
+  return deletes.some(({ parentKey, entryKey }) => hasJsonMapEntry(record2, parentKey, entryKey));
 }
-async function deleteSettingsKeys(settingsPath, keys) {
-  const settings = await readJsonObject(settingsPath);
-  if (!settings) {
+function hasJsonMapEntry(record2, parentKey, entryKey) {
+  if (parentKey.length === 0) {
+    return entryKey in record2;
+  }
+  const parent = record2[parentKey];
+  if (!parent || typeof parent !== "object" || Array.isArray(parent)) {
+    return false;
+  }
+  return entryKey in parent;
+}
+async function deleteJsonMapEntries(filePath, deletes) {
+  const record2 = await readJsonObject(filePath);
+  if (!record2) {
     return;
   }
-  for (const key of keys) {
-    delete settings[key];
+  let changed = false;
+  for (const { parentKey, entryKey } of deletes) {
+    if (parentKey.length === 0) {
+      if (entryKey in record2) {
+        delete record2[entryKey];
+        changed = true;
+      }
+      continue;
+    }
+    const parent = record2[parentKey];
+    if (!parent || typeof parent !== "object" || Array.isArray(parent)) {
+      continue;
+    }
+    const parentRecord = parent;
+    if (!(entryKey in parentRecord)) {
+      continue;
+    }
+    delete parentRecord[entryKey];
+    changed = true;
+    if (Object.keys(parentRecord).length === 0) {
+      delete record2[parentKey];
+    }
   }
-  await import_fs_extra11.default.ensureDir(import_path9.default.dirname(settingsPath));
-  await import_fs_extra11.default.writeJson(settingsPath, settings, { spaces: 2 });
+  if (!changed) {
+    return;
+  }
+  await import_fs_extra11.default.ensureDir(import_path9.default.dirname(filePath));
+  await import_fs_extra11.default.writeJson(filePath, record2, { spaces: 2 });
 }
 async function readJsonObject(filePath) {
   if (!await import_fs_extra11.default.pathExists(filePath)) {

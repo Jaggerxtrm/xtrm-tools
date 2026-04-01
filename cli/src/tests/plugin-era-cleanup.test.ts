@@ -32,18 +32,35 @@ afterEach(async () => {
 async function seedPluginEraArtifacts(params: { projectRoot: string; homeDir: string }): Promise<void> {
   const { projectRoot, homeDir } = params;
 
-  await fs.ensureDir(path.join(homeDir, '.claude', 'plugins', 'cache'));
+  await fs.ensureDir(path.join(homeDir, '.claude', 'plugins', 'data', 'xtrm-tools-xtrm-tools'));
+  await fs.ensureDir(path.join(homeDir, '.claude', 'plugins', 'cache', 'xtrm-tools'));
+  await fs.ensureDir(path.join(homeDir, '.claude', 'plugins', 'marketplaces', 'xtrm-tools'));
+  await fs.ensureDir(path.join(homeDir, '.claude', 'plugins', 'data', 'serena'));
+  await fs.ensureDir(path.join(homeDir, '.claude', 'plugins', 'cache', 'serena'));
+  await fs.writeJson(path.join(homeDir, '.claude', 'plugins', 'installed_plugins.json'), {
+    'xtrm-tools@xtrm-tools': { version: '0.0.1' },
+    'serena@claude-plugins-official': { version: '1.2.3' },
+  }, { spaces: 2 });
+  await fs.writeJson(path.join(homeDir, '.claude', 'plugins', 'known_marketplaces.json'), {
+    'xtrm-tools': { source: { source: 'directory', path: '/tmp/x' } },
+    'claude-plugins-official': { source: { source: 'github', owner: 'anthropics', repo: 'claude-plugins-official' } },
+  }, { spaces: 2 });
+
   await fs.writeJson(path.join(homeDir, '.claude', 'settings.json'), {
     permissions: { allow: ['Bash(git status)'], defaultMode: 'acceptEdits' },
     model: 'claude-sonnet-4-5',
     hooks: { PostToolUse: [] },
     skillSuggestions: { enabled: false },
     statusLine: { type: 'command', command: 'echo ok' },
-    enabledPlugins: { 'xtrm-tools@xtrm-tools': true },
-    extraKnownMarketplaces: { 'xtrm-tools': { source: { source: 'directory', path: '/tmp/x' } } },
+    enabledPlugins: {
+      'xtrm-tools@xtrm-tools': true,
+      'serena@claude-plugins-official': true,
+    },
+    extraKnownMarketplaces: {
+      'xtrm-tools': { source: { source: 'directory', path: '/tmp/x' } },
+      'claude-plugins-official': { source: { source: 'github', owner: 'anthropics', repo: 'claude-plugins-official' } },
+    },
   }, { spaces: 2 });
-  await fs.ensureDir(path.join(homeDir, '.claude', 'skills', 'old-skill'));
-  await fs.ensureDir(path.join(homeDir, '.claude', 'hooks'));
 
   await fs.ensureDir(path.join(homeDir, '.pi', 'agent', 'extensions', 'beads'));
   await fs.ensureDir(path.join(homeDir, '.pi', 'agent', 'extensions', 'custom-ext'));
@@ -55,8 +72,14 @@ async function seedPluginEraArtifacts(params: { projectRoot: string; homeDir: st
   await fs.writeJson(path.join(projectRoot, '.claude', 'settings.json'), {
     permissions: { allow: ['Read(README.md)'] },
     model: 'claude-opus-4-1',
-    enabledPlugins: { 'xtrm-tools@xtrm-tools': true },
-    extraKnownMarketplaces: { xtrm: true },
+    enabledPlugins: {
+      'xtrm-tools@xtrm-tools': true,
+      'serena@claude-plugins-official': true,
+    },
+    extraKnownMarketplaces: {
+      'xtrm-tools': { source: { source: 'directory', path: '/tmp/x' } },
+      'claude-plugins-official': true,
+    },
   }, { spaces: 2 });
 
   await fs.ensureDir(path.join(projectRoot, '.claude', 'hooks'));
@@ -98,9 +121,20 @@ describe('runPluginEraCleanup', () => {
 
     const homeDir = process.env.HOME as string;
 
-    expect(await fs.pathExists(path.join(homeDir, '.claude', 'plugins'))).toBe(false);
-    expect(await fs.pathExists(path.join(homeDir, '.claude', 'skills'))).toBe(false);
-    expect(await fs.pathExists(path.join(homeDir, '.claude', 'hooks'))).toBe(false);
+    expect(await fs.pathExists(path.join(homeDir, '.claude', 'plugins'))).toBe(true);
+    expect(await fs.pathExists(path.join(homeDir, '.claude', 'plugins', 'data', 'xtrm-tools-xtrm-tools'))).toBe(false);
+    expect(await fs.pathExists(path.join(homeDir, '.claude', 'plugins', 'cache', 'xtrm-tools'))).toBe(false);
+    expect(await fs.pathExists(path.join(homeDir, '.claude', 'plugins', 'marketplaces', 'xtrm-tools'))).toBe(false);
+    expect(await fs.pathExists(path.join(homeDir, '.claude', 'plugins', 'data', 'serena'))).toBe(true);
+    expect(await fs.pathExists(path.join(homeDir, '.claude', 'plugins', 'cache', 'serena'))).toBe(true);
+
+    const installedPlugins = await fs.readJson(path.join(homeDir, '.claude', 'plugins', 'installed_plugins.json')) as Record<string, unknown>;
+    expect(installedPlugins['xtrm-tools@xtrm-tools']).toBeUndefined();
+    expect(installedPlugins['serena@claude-plugins-official']).toBeTruthy();
+
+    const knownMarketplaces = await fs.readJson(path.join(homeDir, '.claude', 'plugins', 'known_marketplaces.json')) as Record<string, unknown>;
+    expect(knownMarketplaces['xtrm-tools']).toBeUndefined();
+    expect(knownMarketplaces['claude-plugins-official']).toBeTruthy();
 
     const globalSettings = await fs.readJson(path.join(homeDir, '.claude', 'settings.json')) as Record<string, unknown>;
     expect(globalSettings.permissions).toBeTruthy();
@@ -108,8 +142,8 @@ describe('runPluginEraCleanup', () => {
     expect(globalSettings.hooks).toBeTruthy();
     expect(globalSettings.skillSuggestions).toBeTruthy();
     expect(globalSettings.statusLine).toBeTruthy();
-    expect(globalSettings.enabledPlugins).toBeUndefined();
-    expect(globalSettings.extraKnownMarketplaces).toBeUndefined();
+    expect(globalSettings.enabledPlugins).toEqual({ 'serena@claude-plugins-official': true });
+    expect(globalSettings.extraKnownMarketplaces).toEqual({ 'claude-plugins-official': { source: { source: 'github', owner: 'anthropics', repo: 'claude-plugins-official' } } });
 
     expect(await fs.pathExists(path.join(homeDir, '.pi', 'agent', 'extensions', 'beads'))).toBe(false);
     expect(await fs.pathExists(path.join(homeDir, '.pi', 'agent', 'extensions', 'custom-ext'))).toBe(true);
@@ -118,8 +152,8 @@ describe('runPluginEraCleanup', () => {
     expect(await fs.pathExists(path.join(homeDir, '.agents', 'skills', 'my-custom-skill'))).toBe(true);
 
     const projectSettings = await fs.readJson(path.join(projectRoot, '.claude', 'settings.json')) as Record<string, unknown>;
-    expect(projectSettings.enabledPlugins).toBeUndefined();
-    expect(projectSettings.extraKnownMarketplaces).toBeUndefined();
+    expect(projectSettings.enabledPlugins).toEqual({ 'serena@claude-plugins-official': true });
+    expect(projectSettings.extraKnownMarketplaces).toEqual({ 'claude-plugins-official': true });
 
     expect(await fs.pathExists(path.join(projectRoot, '.claude', 'hooks', 'quality-check.cjs'))).toBe(false);
     expect(await fs.pathExists(path.join(projectRoot, '.claude', 'hooks', 'specialists-complete.mjs'))).toBe(true);

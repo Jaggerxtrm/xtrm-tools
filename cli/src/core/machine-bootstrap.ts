@@ -42,6 +42,9 @@ interface InstallStep {
     sudo?: boolean;
 }
 
+const OFFICIAL_CLAUDE_PLUGINS = ['serena', 'context7'] as const;
+const OFFICIAL_MARKETPLACE = 'claude-plugins-official';
+
 const MANAGED_DEPS: ManagedDependency[] = [
     {
         id: 'bd',
@@ -321,6 +324,101 @@ export function verifyBootstrap(): BootstrapPlan {
     return plan;
 }
 
+function normalizePluginName(name: string): string {
+    const trimmed = name.trim();
+    if (!trimmed) {
+        return '';
+    }
+
+    if (trimmed.startsWith('@')) {
+        return trimmed;
+    }
+
+    const atIndex = trimmed.indexOf('@');
+    return atIndex === -1 ? trimmed : trimmed.slice(0, atIndex);
+}
+
+function readInstalledOfficialPlugins(): Set<string> | null {
+    const listResult = spawnSync('claude', ['plugin', 'list', '--json'], {
+        encoding: 'utf8',
+        stdio: 'pipe',
+        timeout: 10000,
+    });
+
+    if (listResult.status !== 0) {
+        return null;
+    }
+
+    let parsed: unknown;
+    try {
+        parsed = JSON.parse(listResult.stdout ?? '[]');
+    } catch {
+        return null;
+    }
+
+    if (!Array.isArray(parsed)) {
+        return null;
+    }
+
+    const installedNames = new Set<string>();
+    for (const entry of parsed) {
+        const rawName = typeof entry === 'string'
+            ? entry
+            : (entry && typeof entry === 'object' && 'name' in entry && typeof (entry as { name: unknown }).name === 'string')
+                ? (entry as { name: string }).name
+                : '';
+
+        const normalized = normalizePluginName(rawName);
+        if (normalized) {
+            installedNames.add(normalized);
+        }
+    }
+
+    return installedNames;
+}
+
+function tryInstallOfficialPlugin(pluginName: string): boolean {
+    const directInstall = spawnSync('claude', ['plugin', 'install', pluginName, '--scope', 'user'], { stdio: 'inherit' });
+    if (directInstall.status === 0) {
+        return true;
+    }
+
+    const marketplaceQualified = `${pluginName}@${OFFICIAL_MARKETPLACE}`;
+    const marketplaceInstall = spawnSync('claude', ['plugin', 'install', marketplaceQualified, '--scope', 'user'], { stdio: 'inherit' });
+    return marketplaceInstall.status === 0;
+}
+
+function ensureOfficialPlugins(dryRun: boolean): void {
+    const installed = readInstalledOfficialPlugins();
+    if (!installed) {
+        console.log(kleur.yellow('  ⚠ Could not determine Claude plugin state; skipping official plugin install check.'));
+        return;
+    }
+
+    const missing = OFFICIAL_CLAUDE_PLUGINS.filter(pluginName => !installed.has(pluginName));
+    if (missing.length === 0) {
+        console.log(kleur.dim('  ✓ Official Claude plugins already installed: serena, context7'));
+        return;
+    }
+
+    console.log(kleur.bold('\n  Ensuring official Claude plugins...'));
+
+    for (const pluginName of missing) {
+        if (dryRun) {
+            console.log(kleur.dim(`  [DRY RUN] claude plugin install ${pluginName} --scope user`));
+            continue;
+        }
+
+        console.log(kleur.dim(`  Installing ${pluginName}...`));
+        const installedOk = tryInstallOfficialPlugin(pluginName);
+        if (installedOk) {
+            console.log(t.success(`  ✓ ${pluginName} installed`));
+        } else {
+            console.log(kleur.yellow(`  ⚠ Failed to install ${pluginName}. Try: claude plugin install ${pluginName}@${OFFICIAL_MARKETPLACE}`));
+        }
+    }
+}
+
 // ── Convenience: Full Bootstrap Flow ──────────────────────────────────────────
 // Runs inventory -> plan -> execute -> verify in one call.
 // Used by the init orchestrator's machine-bootstrap phase.
@@ -330,6 +428,7 @@ export async function runMachineBootstrapPhase(opts: { dryRun?: boolean } = {}):
     renderBootstrapPlan(plan);
 
     if (plan.allPresent) {
+        ensureOfficialPlugins(opts.dryRun ?? false);
         return { installed: [], failed: [], skipped: [] };
     }
 
@@ -341,6 +440,8 @@ export async function runMachineBootstrapPhase(opts: { dryRun?: boolean } = {}):
     if (!opts.dryRun) {
         verifyBootstrap();
     }
+
+    ensureOfficialPlugins(opts.dryRun ?? false);
 
     return result;
 }

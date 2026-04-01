@@ -1,0 +1,259 @@
+---
+title: Skills Tier Architecture
+scope: skills-tier
+category: architecture
+version: 1.0.0
+updated: 2026-04-01
+description: "Three-tier skills model: default, optional packs, and user packs with runtime active views"
+source_of_truth_for:
+  - ".xtrm/skills/**"
+  - "cli/src/core/skills-*.ts"
+  - "cli/src/core/pack-metadata.ts"
+domain: [skills, cli, architecture]
+---
+
+<!-- INDEX: auto-generated -->
+| Section | Summary |
+|---|---|
+| [Overview](#overview) | Skills are organized into three tiers with runtime-specific active views |
+| [Directory Structure](#directory-structure) | `.xtrm/skills/{default,optional,user/packs,active/{claude,pi}}` |
+| [Tier Definitions](#tier-definitions) | default (read-only), optional (managed packs), user (local overlays) |
+| [Runtime Active Views](#runtime-active-views) | Per-runtime symlink directories resolved from state.json |
+| [state.json Schema](#statejson-schema) | Tracks enabled packs per runtime |
+| [PACK.json Schema](#packjson-schema) | Metadata for optional and user packs |
+| [Invariants](#invariants) | Contract enforced by skill-discovery.ts |
+| [CLI Commands](#cli-commands) | `xt skills list/enable/disable/create-pack` |
+---
+
+# Skills Tier Architecture
+
+## Overview
+
+Skills are organized into a **three-tier model** under `.xtrm/skills/`:
+
+| Tier | Source | Mutability | Purpose |
+|---|---|---|---|
+| `default` | npm/plugin bundle shipped with xtrm | Read-only (managed) | Baseline skill set for core workflows |
+| `optional` | Optional packs installed by user | Managed (replaceable) | Add-on packs, domain bundles |
+| `user` | Local author-owned overlays | User-writable | Custom skills, overrides |
+
+Each runtime (Claude, Pi) has an **active view** under `.xtrm/skills/active/{claude,pi}/` containing symlinks to the resolved skill set.
+
+## Directory Structure
+
+```
+.xtrm/skills/
+├── default/                   # Tier 1: baseline skills (symlink to repo skills/)
+│   ├── using-xtrm/SKILL.md
+│   ├── documenting/SKILL.md
+│   └── ...                    # ~30 skills
+│
+├── optional/                  # Tier 2: managed optional packs
+│   ├── README.txt             # Empty placeholder + docs
+│   └── <pack>/                # Optional packs (if installed)
+│       ├── PACK.json
+│       └── <skill>/SKILL.md
+│
+├── user/                      # Tier 3: user-authored overlays
+│   ├── packs/
+│   │   ├── README.txt
+│   │   └── <pack>/            # User-created packs
+│   │       ├── PACK.json
+│   │       └── <skill>/SKILL.md
+│   └── README.txt
+│
+├── active/                    # Runtime materialization targets
+│   ├── claude/                # Symlinks to resolved Claude skills
+│   │   ├── using-xtrm -> ../../default/using-xtrm
+│   │   └── ...                # + enabled pack skills
+│   └── pi/                    # Symlinks to resolved Pi skills
+│       ├── using-xtrm -> ../../default/using-xtrm
+│       └── ...                # + enabled pack skills
+│
+├── state.json                 # Runtime enablement state
+└── INVARIANTS.md              # Contract documentation
+```
+
+The `.xtrm/skills/default/` entry is a symlink to `../../skills` (repo skills directory), giving the registry a live view without copying.
+
+## Tier Definitions
+
+### default (Tier 1)
+
+- **Source**: Bundled with xtrm npm package / plugin payload
+- **Required**: Yes — always present after `xt init`
+- **Mutability**: Read-only — managed by xtrm updates
+- **Discovery**: Direct child directories with `SKILL.md`
+
+Contains baseline skills required for bootstrapping and core workflows: `using-xtrm`, `documenting`, `planning`, `test-planning`, `xt-end`, `xt-merge`, GitNexus skills, senior-* specialists, etc.
+
+### optional (Tier 2)
+
+- **Source**: Installed via `xt skills enable <pack>`
+- **Required**: No — opt-in
+- **Mutability**: Managed — replaceable via pack lifecycle
+- **Discovery**: Direct child directories with `PACK.json`
+
+Contains add-on packs that extend or replace default definitions. Packs can provide new skills or managed replacements.
+
+### user (Tier 3)
+
+- **Source**: User-authored local files
+- **Required**: No — opt-in
+- **Mutability**: User-writable — preserved across syncs
+- **Discovery**: Direct child directories with `PACK.json` under `user/packs/`
+
+Contains custom skills and override directives. Never overwritten by managed sync operations.
+
+## Runtime Active Views
+
+Each runtime has an **active view** directory:
+
+```
+.xtrm/skills/active/{claude,pi}/
+```
+
+These are populated by **materialization** (`rebuildRuntimeActiveView`):
+
+1. Read `state.json` to get enabled packs for the runtime
+2. Discover all default skills + skills from enabled packs
+3. Create symlinks in the active view pointing to source skill directories
+4. Atomic swap: build temp view, then rename to replace old view
+
+Resolution order (precedence):
+
+1. `user` tier (highest priority)
+2. `optional` tier
+3. `default` tier (fallback)
+
+The first tier providing a valid definition wins.
+
+## state.json Schema
+
+```json
+{
+  "schemaVersion": "1",
+  "enabledPacks": {
+    "claude": ["pack-a", "pack-b"],
+    "pi": ["pack-a"]
+  }
+}
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `schemaVersion` | `"1"` | Schema version (constant) |
+| `enabledPacks.claude` | `string[]` | Pack names enabled for Claude runtime |
+| `enabledPacks.pi` | `string[]` | Pack names enabled for Pi runtime |
+
+The state file is the **source of truth** for runtime enablement. Empty arrays mean no packs enabled (only default skills active).
+
+## PACK.json Schema
+
+Located at `<pack-root>/PACK.json`:
+
+```json
+{
+  "schemaVersion": "1",
+  "name": "my-pack",
+  "version": "1.0.0",
+  "description": "Description of the pack",
+  "skills": ["skill-a", "skill-b"]
+}
+```
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `schemaVersion` | `"1"` | Yes | Schema version |
+| `name` | `string` | Yes | Pack name (must match directory name) |
+| `version` | `string` | Yes | Semver version |
+| `description` | `string` | Yes | Human-readable description |
+| `skills` | `string[]` | No | Skill names in this pack (synced from filesystem) |
+
+Validation rules:
+
+- `name` must match the pack directory name
+- User packs cannot use `default-*` prefix (reserved)
+- `skills` array is synced from filesystem skill directories on enable
+
+## Invariants
+
+Enforced by `cli/src/core/skill-discovery.ts`:
+
+1. **Direct skill detection only**: A skill is only a direct child directory with `SKILL.md`. Nested `SKILL.md` files do not register.
+
+2. **Mutual exclusivity**: A directory cannot be both skill and pack (`SKILL.md` XOR `PACK.json`).
+
+3. **No nested runtime roots**: Skill directories must not contain `.claude/`, `.agents/`, or `.pi/`.
+
+4. **Pack metadata validation**: `PACK.json` validated (schema/name consistency). Filesystem skills remain authoritative.
+
+5. **Pack identity collisions**: Optional and user packs cannot share the same pack name.
+
+See `.xtrm/skills/INVARIANTS.md` for the full contract.
+
+## CLI Commands
+
+### xt skills list
+
+```bash
+xt skills list [--global|--local] [--claude|--pi] [--json]
+```
+
+Show tiered skill inventory and runtime active resolution:
+
+- `--global`: Use `~/.xtrm/skills`
+- `--local`: Use `./.xtrm/skills` (default)
+- `--claude`: Show Claude runtime view
+- `--pi`: Show Pi runtime view
+- `--json`: JSON output
+
+Output includes:
+- Default skills (from tier 1)
+- Packs (optional + user) with enabled status
+- Runtime status (enabled packs, active skill count)
+
+### xt skills enable
+
+```bash
+xt skills enable <pack> [--global|--local] [--claude|--pi] [--json]
+```
+
+Enable a skill pack for specified runtimes:
+
+- Adds pack to `state.json.enabledPacks[runtime]`
+- Rebuilds active view for affected runtime(s)
+- Syncs `PACK.json.skills` from filesystem if mismatch detected
+- `--claude` and `--pi` target specific runtimes; omitting both enables for all
+
+### xt skills disable
+
+```bash
+xt skills disable <pack> [--global|--local] [--claude|--pi] [--json]
+```
+
+Disable a skill pack for specified runtimes:
+
+- Removes pack from `state.json.enabledPacks[runtime]`
+- Rebuilds active view for affected runtime(s)
+- Use `disable all` to disable all packs for target runtimes
+- Cannot disable default skills (they're always present)
+
+### xt skills create-pack
+
+```bash
+xt skills create-pack <name> [--global|--local] [--json]
+```
+
+Create a user skill pack scaffold:
+
+- Creates `.xtrm/skills/user/packs/<name>/`
+- Writes initial `PACK.json` with empty skills array
+- Pack name must be lowercase alphanumerics + hyphens
+
+## Related Docs
+
+- [skills.md](skills.md) — Skills catalog overview
+- [skills-registry-exploration.md](skills-registry-exploration.md) — Full design spec and migration plan
+- [cli-architecture.md](cli-architecture.md) — CLI module reference
+- [XTRM-GUIDE.md](XTRM-GUIDE.md) — User guide

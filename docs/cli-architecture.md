@@ -2,9 +2,9 @@
 title: CLI Architecture
 scope: cli-architecture
 category: reference
-version: 1.4.0
-updated: 2026-03-31
-synced_at: 50e04da9
+version: 1.5.0
+updated: 2026-04-01
+synced_at: HEAD
 source_of_truth_for:
   - "cli/src/**/*.ts"
 domain: [cli]
@@ -54,8 +54,9 @@ xt / xtrm
 │   └── report diff        → compare two reports
 ├── skills           → commands/skills.ts
 │   ├── skills list       → lists installed skills from .xtrm/skills/default (or plugin fallback)
-│   ├── skills enable     → enable a skill pack (v0.8 stub; pack activation in v0.9)
-│   └── skills disable    → disable a skill pack (v0.8 stub; pack deactivation in v0.9)
+│   ├── skills enable     → enable pack for Claude/Pi, rebuild active view
+│   ├── skills disable    → disable pack for Claude/Pi, rebuild active view
+│   └── skills create-pack → create user pack scaffold with PACK.json
 └── help             → commands/help.ts
 ```
 
@@ -161,19 +162,31 @@ See the `session-close-report` skill (`skills/session-close-report/SKILL.md`) fo
 the full fill workflow and quality bar reference.
 
 
+
+**`createSkillsCommand()`**
+
+
 ### `commands/skills.ts`
 
 **`createSkillsCommand()`**
 
-Registers `xt skills`, the skill registry control surface for v0.8 foundation.
+Registers `xt skills`, the skill registry control surface for managing tiered skills and runtime active views.
 
-- **`xt skills list [--global|--local] [--json]`**: reads skills from `.xtrm/skills/default/` (registry path) with fallback to `${CLAUDE_PLUGIN_ROOT}/skills/` (plugin-bundled path). Emits `name`, `tier`, `source`, and `path` per skill. Source is `registry` when `.xtrm` path resolves, `plugin-fallback` otherwise.
-- **`xt skills enable <pack> [--global|--local] [--json]`**: v0.8 stub; returns `not-implemented` status. Full pack activation deferred to v0.9.
-- **`xt skills disable <pack> [--global|--local] [--json]`**: v0.8 stub; returns `not-implemented` status. Full pack deactivation deferred to v0.9.
+- **`xt skills list [--global|--local] [--claude|--pi] [--json]`**: shows tiered skill inventory. Reads from `.xtrm/skills/default/` plus optional/user packs. Emits `defaultSkills`, `packs[]`, and `runtimeStatus[]` per runtime.
+- **`xt skills enable <pack> [--global|--local] [--claude|--pi] [--json]`**: enables a pack for target runtime(s). Updates `state.json.enabledPacks[runtime]`, rebuilds active view, syncs `PACK.json.skills` from filesystem if mismatch detected.
+- **`xt skills disable <pack> [--global|--local] [--claude|--pi] [--json]`**: disables a pack for target runtime(s). Removes from `state.json`, rebuilds active view. Use `disable all` to clear all enabled packs.
+- **`xt skills create-pack <name> [--global|--local] [--json]`**: creates user pack scaffold at `.xtrm/skills/user/packs/<name>/` with initial `PACK.json`.
 
-Scope resolution: `--global` → `~/.xtrm/skills`; `--local` (default) → `./.xtrm/skills` (project root via `findRepoRoot()`). Passing both flags is an error.
+Scope resolution: `--global` → `~/.xtrm/skills`; `--local` (default) → `./.xtrm/skills`. Runtime flags `--claude` and `--pi` target specific runtimes; omitting both applies to all.
 
-The `.xtrm/skills/default` entry is a symlink to `../../skills` in the project repo, giving the registry a live view of `skills/` without copying.
+The skills.ts module imports from:
+- `core/skills-layout.ts` — path constants and resolvers
+- `core/skills-state.ts` — state.json read/write
+- `core/skill-discovery.ts` — tier discovery and invariant validation
+- `core/skills-materializer.ts` — runtime active view rebuild
+- `core/pack-metadata.ts` — PACK.json schema
+
+See [skills-tier-architecture.md](skills-tier-architecture.md) for the full architecture and CLI reference, and [skills-registry-exploration.md](skills-registry-exploration.md) for the design spec and migration roadmap.
 
 See `docs/skills-registry-exploration.md` for the full three-tier model, CLI contract, and migration roadmap.
 

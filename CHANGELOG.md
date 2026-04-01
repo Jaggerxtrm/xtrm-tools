@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.7.1] - 2026-04-01
+
+### Added
+- **`docs/skills-tier-architecture.md`**: New reference document covering three-tier skills model (default/optional/user), state.json schema, PACK.json schema, runtime active views, and xt skills CLI commands.
+- **`docs/xtrm-directory.md`**: New reference document for centralized `.xtrm/` directory layout — skills, hooks, extensions, worktrees, reports, registry.json.
+
+### Changed
+- **`docs/skills.md`**: Rewritten to cover tier architecture, xt skills CLI, and updated skill catalog (v2.0.0).
+- **`docs/cli-architecture.md`**: Updated skills.ts section — enable/disable/create-pack now fully implemented, added runtime flags documentation (v1.5.0).
+- **`docs/skills-registry-exploration.md`**: Updated implementation status — Phase v0.9 pack lifecycle delivered, enable/disable/create-pack implemented (v1.2.0).
+- **`docs/XTRM-GUIDE.md`**: Added xt skills section, fixed stale .agents/skills references.
+- **`XTRM-GUIDE.md` (root)**: Fixed stale .agents/skills references in architecture diagram.
+
+### Deprecated
+- **`.agents/skills/`**: Documentation updated to reflect migration to `.xtrm/skills/` (see xtrm-directory.md).
+
+
 ## [0.7.0] - 2026-03-31
 
 ### Added

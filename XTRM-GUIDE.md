@@ -52,7 +52,7 @@ XTRM-Tools is a **dual-runtime workflow system** — a Claude Code plugin and a 
 ├──────────────────────────┤     ├─────────────────────────────────┤
 │ Plugin hooks (hooks/)    │     │ Extensions (config/pi/          │
 │ Skills (skills/)         │     │   extensions/)                  │
-│ MCP Servers (.mcp.json)  │     │ Skills (.agents/skills/)        │
+│ MCP Servers (.mcp.json)  │     │ Skills (.xtrm/skills/)        │
 │                          │     │ MCP Servers (.mcp.json)         │
 └──────────────────────────┘     └─────────────────────────────────┘
 ```
@@ -221,7 +221,7 @@ Enriches tool output with knowledge graph context via `gitnexus augment`.
 
 ## Skills Catalog
 
-### Global Skills (`skills/` → `~/.agents/skills/`)
+### Skills Tier Architecture (`.xtrm/skills/`)
 
 | Skill | Purpose |
 |-------|---------|

@@ -2,9 +2,9 @@
 title: Skills Registry Exploration
 scope: skills-registry
 category: architecture
-version: 1.1.0
-updated: 2026-03-31
-synced_at: 50e04da9
+version: 1.2.0
+updated: 2026-04-01
+synced_at: HEAD
 description: "Skills registry design: three-tier model, CLI contract, migration plan"
 source_of_truth_for:
   - "cli/src/commands/skills.ts"
@@ -302,9 +302,10 @@ xt skills profile <name> [--global|--local]
 Implementation status (2026-03-31):
 
 - `xt skills list`: **IMPLEMENTED** (v0.8 foundation)
-- `xt skills enable`: **IMPLEMENTED** as v0.8 stub (pack activation deferred to v0.9)
-- `xt skills disable`: **IMPLEMENTED** as v0.8 stub (pack deactivation deferred to v0.9)
+- `xt skills enable`: **IMPLEMENTED** (v0.9 full pack lifecycle)
+- `xt skills disable`: **IMPLEMENTED** (v0.9 full pack lifecycle)
 - `xt skills profile`: deferred
+- `xt skills create-pack`: **IMPLEMENTED** (v0.9 user pack scaffold)
 
 Deferred from MVP (explicitly out of baseline contract):
 
@@ -341,9 +342,16 @@ xt skills select <skill...> [--global|--local]
 Goal: transition safely from copy-based installs to registry-driven behavior with idempotency and rollback.
 
 ## Phase v0.8 — Foundation ✅ DELIVERED (2026-03-31)
+## Phase v0.9 — Pack Lifecycle ✅ DELIVERED (2026-04-01)
+
+- `xt skills enable <pack>` — **IMPLEMENTED**: full pack activation (state.json + active view rebuild).
+- `xt skills disable <pack>` — **IMPLEMENTED**: full pack deactivation.
+- `xt skills create-pack <name>` — **IMPLEMENTED**: user pack scaffold creation.
+- Runtime-specific enablement (`--claude`, `--pi` flags) — **IMPLEMENTED**.
+- PACK.json skills sync from filesystem on enable — **IMPLEMENTED**.
 
 - `xt skills list [--global|--local] [--json]` — **IMPLEMENTED**: reads from `.xtrm/skills/default/` with plugin-root fallback.
-- `xt skills enable <pack>` / `xt skills disable <pack>` — **IMPLEMENTED as stubs**: return `not-implemented` / `v0.9` message.
+- `xt skills enable <pack>` / `xt skills disable <pack>` — **IMPLEMENTED (full pack lifecycle)**: updates state.json + rebuilds active view.
 - `.xtrm/skills/default → ../../skills` symlink — **IN PLACE**: project repo live view without copying.
 - `hooks/using-xtrm-reminder.mjs` dual-path resolution — **IMPLEMENTED**: prefers `.xtrm/skills/default/using-xtrm/SKILL.md`, falls back to `${CLAUDE_PLUGIN_ROOT}/skills/using-xtrm/SKILL.md`.
 - No breaking runtime behavior change (existing copy-based paths preserved).

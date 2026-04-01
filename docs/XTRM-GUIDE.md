@@ -2,8 +2,8 @@
 title: XTRM-Tools Complete Guide
 scope: xtrm-guide
 category: reference
-version: 1.1.0
-updated: 2026-03-31
+version: 1.2.0
+updated: 2026-04-01
 domain: []
 ---
 
@@ -63,6 +63,10 @@ xt report generate          # collect session data, write skeleton report
 xt report show              # display latest (or named) report
 xt report list              # list all reports with metadata summary
 xt report diff <a> <b>      # compare two reports
+xt skills list              # show tiered skill inventory and runtime status
+xt skills enable <pack>     # enable a skill pack for Claude/Pi
+xt skills disable <pack>    # disable a skill pack
+xt skills create-pack <name> # create user pack scaffold
 ```
 
 `xt` and `xtrm` are equivalent command names.

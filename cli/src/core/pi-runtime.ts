@@ -654,10 +654,13 @@ export async function runPiRuntimeSync(opts: PiRuntimeOptions = {}): Promise<PiS
     await updatePiSettings(resolvedProjectRoot, dryRun, log);
     await ensureCorePackageSymlink(path.join(sourceDir, 'core'), resolvedProjectRoot, dryRun, log);
 
-    const allRequiredPresent = missingPackages.every(s => !s.pkg.required);
-    if (missingPackages.length === 0) {
-        console.log(t.success('  ✓ All extensions and packages present.\n'));
-    } else if (allRequiredPresent) {
+    // Base summary on what failed, not on pre-install missingPackages list
+    const requiredFailed = missingPackages.filter(
+        s => s.pkg.required && result.failed.includes(s.pkg.id)
+    );
+    if (missingPackages.length === 0 || result.failed.length === 0) {
+        console.log(t.success('  ✓ All required items present.\n'));
+    } else if (requiredFailed.length === 0) {
         console.log(t.success('  ✓ All required items present.\n'));
     } else {
         console.log(kleur.yellow('  ⚠ Missing required items.\n'));

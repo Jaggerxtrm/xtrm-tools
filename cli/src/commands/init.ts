@@ -476,44 +476,73 @@ export function deepMergeHooks(existing: Record<string, any>, incoming: Record<s
     return result;
 }
 
-async function ensureAgentsSkillsSymlink(projectRoot: string): Promise<void> {
-    const sourceDir = path.join(projectRoot, '.xtrm', 'skills', 'default');
-    if (!await fs.pathExists(sourceDir)) {
-        return;
-    }
-
-    const agentsDir = path.join(projectRoot, '.agents');
-    const agentsSkillsLink = path.join(agentsDir, 'skills');
-    const symlinkTarget = path.join('..', '.xtrm', 'skills', 'default');
-
-    let needsSymlink = true;
-    if (await fs.pathExists(agentsSkillsLink)) {
-        try {
-            const stat = await fs.lstat(agentsSkillsLink);
-            if (stat.isSymbolicLink()) {
-                const current = await fs.readlink(agentsSkillsLink);
-                if (current === symlinkTarget) {
-                    needsSymlink = false;
-                } else {
-                    await fs.remove(agentsSkillsLink);
-                }
-            } else {
-                console.log(kleur.yellow('  ⚠ .agents/skills/ is a real directory — skipping Pi symlink'));
+async function ensureSkillsSymlink(
+    linkPath: string,
+    symlinkTarget: string,
+    label: string,
+): Promise<void> {
+    const existing = await fs.lstat(linkPath).catch(() => null);
+    if (existing) {
+        if (existing.isSymbolicLink()) {
+            const current = await fs.readlink(linkPath);
+            if (current === symlinkTarget) {
+                console.log(kleur.dim(`  ✓ ${label} symlink already in place`));
                 return;
             }
-        } catch {
-            needsSymlink = true;
+            await fs.remove(linkPath);
+        } else {
+            console.log(kleur.yellow(`  ⚠ ${label} is a real directory — skipping symlink`));
+            return;
         }
     }
+    await fs.mkdirp(path.dirname(linkPath));
+    await fs.symlink(symlinkTarget, linkPath);
+    console.log(`${kleur.green('  ✓')} ${label} → ${symlinkTarget}`);
+}
 
-    if (!needsSymlink) {
-        console.log(kleur.dim('  ✓ .agents/skills symlink already in place'));
-        return;
+async function ensureAgentsSkillsSymlink(projectRoot: string): Promise<void> {
+    const sourceDir = path.join(projectRoot, '.xtrm', 'skills', 'default');
+    if (!await fs.pathExists(sourceDir)) return;
+
+    // .agents/skills → ../.xtrm/skills/default (directory-level symlink for Pi discovery)
+    await ensureSkillsSymlink(
+        path.join(projectRoot, '.agents', 'skills'),
+        path.join('..', '.xtrm', 'skills', 'default'),
+        '.agents/skills',
+    );
+
+    // .claude/skills: per-skill symlinks so gitnexus skills coexist with xtrm skills.
+    // Claude Code reads from .claude/skills/; we can't use a directory-level symlink
+    // because tools like gitnexus also write real subdirs there (e.g. gitnexus/).
+    await ensureClaudeSkillSymlinks(projectRoot, sourceDir);
+}
+
+async function ensureClaudeSkillSymlinks(projectRoot: string, sourceDir: string): Promise<void> {
+    const claudeSkillsDir = path.join(projectRoot, '.claude', 'skills');
+    await fs.ensureDir(claudeSkillsDir);
+
+    const entries = await fs.readdir(sourceDir, { withFileTypes: true });
+    let added = 0;
+
+    for (const entry of entries) {
+        if (!entry.isDirectory() && !entry.isSymbolicLink()) continue;
+        const skillName = entry.name;
+        const linkPath = path.join(claudeSkillsDir, skillName);
+
+        const existing = await fs.lstat(linkPath).catch(() => null);
+        if (existing) continue;  // real dir (e.g. gitnexus/) or existing symlink — preserve
+
+        // Relative: from .claude/skills/<name> up to project root then into .xtrm
+        const relTarget = path.join('..', '..', '.xtrm', 'skills', 'default', skillName);
+        await fs.symlink(relTarget, linkPath);
+        added++;
     }
 
-    await fs.mkdirp(agentsDir);
-    await fs.symlink(symlinkTarget, agentsSkillsLink);
-    console.log(`${kleur.green('  ✓')} .agents/skills → ../.xtrm/skills/default`);
+    if (added > 0) {
+        console.log(`${kleur.green('  ✓')} .claude/skills: added ${added} xtrm skill symlink(s)`);
+    } else {
+        console.log(kleur.dim('  ✓ .claude/skills symlinks already in place'));
+    }
 }
 
 async function installServiceSkillHooks(_projectRoot: string): Promise<void> {
@@ -653,7 +682,7 @@ async function runProjectBootstrap(projectRoot: string): Promise<void> {
     await injectProjectInstructionHeaders(projectRoot);
     await runGitNexusInitForProject(projectRoot);
     await installServiceSkillHooks(projectRoot);
-    await ensureAgentsSkillsSymlink(projectRoot);
+    // Note: ensureAgentsSkillsSymlink runs in Phase 6b (before gitnexus init)
 }
 
 // ── Main Orchestrator ─────────────────────────────────────────────────────────
@@ -710,6 +739,11 @@ export async function runProjectInit(opts: InstallOpts = {}): Promise<void> {
     // skipMachineBootstrap=true: machine deps already handled in Phase 4.
     // skipClaudeRuntimeSync=true: Claude runtime is now its own explicit phase.
     await runInstall({ ...opts, yes: true, backport: false, skipMachineBootstrap: true, skipClaudeRuntimeSync: true });
+
+    // Phase 6b: Wire skills symlinks BEFORE project bootstrap (gitnexus init
+    // creates .claude/skills/gitnexus/ as a real dir; we must run first so the
+    // per-skill symlinks are in place before that dir-level entry is created).
+    await ensureAgentsSkillsSymlink(projectRoot);
 
     // ── Phase 7: Project Bootstrap ───────────────────────────────────────────
     // Initialize beads workspace, inject CLAUDE.md/AGENTS.md instruction

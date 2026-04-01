@@ -31873,10 +31873,12 @@ async function runPiRuntimeSync(opts = {}) {
   }
   await updatePiSettings(resolvedProjectRoot, dryRun, log);
   await ensureCorePackageSymlink(import_path3.default.join(sourceDir, "core"), resolvedProjectRoot, dryRun, log);
-  const allRequiredPresent = missingPackages.every((s) => !s.pkg.required);
-  if (missingPackages.length === 0) {
-    console.log(t.success("  \u2713 All extensions and packages present.\n"));
-  } else if (allRequiredPresent) {
+  const requiredFailed = missingPackages.filter(
+    (s) => s.pkg.required && result.failed.includes(s.pkg.id)
+  );
+  if (missingPackages.length === 0 || result.failed.length === 0) {
+    console.log(t.success("  \u2713 All required items present.\n"));
+  } else if (requiredFailed.length === 0) {
     console.log(t.success("  \u2713 All required items present.\n"));
   } else {
     console.log(kleur_default.yellow("  \u26A0 Missing required items.\n"));
@@ -35394,40 +35396,55 @@ async function injectProjectInstructionHeaders(projectRoot) {
     console.log(`${kleur_default.green("  \u2713")} updated ${target.output}`);
   }
 }
-async function ensureAgentsSkillsSymlink(projectRoot) {
-  const sourceDir = import_path14.default.join(projectRoot, ".xtrm", "skills", "default");
-  if (!await import_fs_extra15.default.pathExists(sourceDir)) {
-    return;
-  }
-  const agentsDir = import_path14.default.join(projectRoot, ".agents");
-  const agentsSkillsLink = import_path14.default.join(agentsDir, "skills");
-  const symlinkTarget = import_path14.default.join("..", ".xtrm", "skills", "default");
-  let needsSymlink = true;
-  if (await import_fs_extra15.default.pathExists(agentsSkillsLink)) {
-    try {
-      const stat = await import_fs_extra15.default.lstat(agentsSkillsLink);
-      if (stat.isSymbolicLink()) {
-        const current = await import_fs_extra15.default.readlink(agentsSkillsLink);
-        if (current === symlinkTarget) {
-          needsSymlink = false;
-        } else {
-          await import_fs_extra15.default.remove(agentsSkillsLink);
-        }
-      } else {
-        console.log(kleur_default.yellow("  \u26A0 .agents/skills/ is a real directory \u2014 skipping Pi symlink"));
+async function ensureSkillsSymlink(linkPath, symlinkTarget, label) {
+  const existing = await import_fs_extra15.default.lstat(linkPath).catch(() => null);
+  if (existing) {
+    if (existing.isSymbolicLink()) {
+      const current = await import_fs_extra15.default.readlink(linkPath);
+      if (current === symlinkTarget) {
+        console.log(kleur_default.dim(`  \u2713 ${label} symlink already in place`));
         return;
       }
-    } catch {
-      needsSymlink = true;
+      await import_fs_extra15.default.remove(linkPath);
+    } else {
+      console.log(kleur_default.yellow(`  \u26A0 ${label} is a real directory \u2014 skipping symlink`));
+      return;
     }
   }
-  if (!needsSymlink) {
-    console.log(kleur_default.dim("  \u2713 .agents/skills symlink already in place"));
-    return;
+  await import_fs_extra15.default.mkdirp(import_path14.default.dirname(linkPath));
+  await import_fs_extra15.default.symlink(symlinkTarget, linkPath);
+  console.log(`${kleur_default.green("  \u2713")} ${label} \u2192 ${symlinkTarget}`);
+}
+async function ensureAgentsSkillsSymlink(projectRoot) {
+  const sourceDir = import_path14.default.join(projectRoot, ".xtrm", "skills", "default");
+  if (!await import_fs_extra15.default.pathExists(sourceDir)) return;
+  await ensureSkillsSymlink(
+    import_path14.default.join(projectRoot, ".agents", "skills"),
+    import_path14.default.join("..", ".xtrm", "skills", "default"),
+    ".agents/skills"
+  );
+  await ensureClaudeSkillSymlinks(projectRoot, sourceDir);
+}
+async function ensureClaudeSkillSymlinks(projectRoot, sourceDir) {
+  const claudeSkillsDir = import_path14.default.join(projectRoot, ".claude", "skills");
+  await import_fs_extra15.default.ensureDir(claudeSkillsDir);
+  const entries = await import_fs_extra15.default.readdir(sourceDir, { withFileTypes: true });
+  let added = 0;
+  for (const entry of entries) {
+    if (!entry.isDirectory() && !entry.isSymbolicLink()) continue;
+    const skillName = entry.name;
+    const linkPath = import_path14.default.join(claudeSkillsDir, skillName);
+    const existing = await import_fs_extra15.default.lstat(linkPath).catch(() => null);
+    if (existing) continue;
+    const relTarget = import_path14.default.join("..", "..", ".xtrm", "skills", "default", skillName);
+    await import_fs_extra15.default.symlink(relTarget, linkPath);
+    added++;
   }
-  await import_fs_extra15.default.mkdirp(agentsDir);
-  await import_fs_extra15.default.symlink(symlinkTarget, agentsSkillsLink);
-  console.log(`${kleur_default.green("  \u2713")} .agents/skills \u2192 ../.xtrm/skills/default`);
+  if (added > 0) {
+    console.log(`${kleur_default.green("  \u2713")} .claude/skills: added ${added} xtrm skill symlink(s)`);
+  } else {
+    console.log(kleur_default.dim("  \u2713 .claude/skills symlinks already in place"));
+  }
 }
 async function installServiceSkillHooks(_projectRoot) {
 }
@@ -35513,7 +35530,6 @@ async function runProjectBootstrap(projectRoot) {
   await injectProjectInstructionHeaders(projectRoot);
   await runGitNexusInitForProject(projectRoot);
   await installServiceSkillHooks(projectRoot);
-  await ensureAgentsSkillsSymlink(projectRoot);
 }
 async function runProjectInit(opts = {}) {
   const { dryRun = false, yes = false } = opts;
@@ -35541,6 +35557,7 @@ async function runProjectInit(opts = {}) {
   await runMachineBootstrapPhase({ dryRun: false });
   await runClaudeRuntimeSyncPhase({ repoRoot: projectRoot, dryRun: false, isGlobal: false });
   await runInstall({ ...opts, yes: true, backport: false, skipMachineBootstrap: true, skipClaudeRuntimeSync: true });
+  await ensureAgentsSkillsSymlink(projectRoot);
   await runProjectBootstrap(projectRoot);
   const verification = await runInitVerification(projectRoot);
   renderVerificationSummary(verification);

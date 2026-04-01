@@ -342,20 +342,20 @@ xt skills select <skill...> [--global|--local]
 Goal: transition safely from copy-based installs to registry-driven behavior with idempotency and rollback.
 
 ## Phase v0.8 — Foundation ✅ DELIVERED (2026-03-31)
-## Phase v0.9 — Pack Lifecycle ✅ DELIVERED (2026-04-01)
+
+- `xt skills list [--global|--local] [--json]` — **IMPLEMENTED**.
+- `.xtrm/skills/default → ../../skills` symlink — **IN PLACE**.
+- Registry metadata and inventory foundation established.
+
+## Phase v0.9 — Pack Lifecycle + Plugin Skill Bundle Removal ✅ DELIVERED (2026-04-01)
 
 - `xt skills enable <pack>` — **IMPLEMENTED**: full pack activation (state.json + active view rebuild).
 - `xt skills disable <pack>` — **IMPLEMENTED**: full pack deactivation.
 - `xt skills create-pack <name>` — **IMPLEMENTED**: user pack scaffold creation.
 - Runtime-specific enablement (`--claude`, `--pi` flags) — **IMPLEMENTED**.
 - PACK.json skills sync from filesystem on enable — **IMPLEMENTED**.
-
-- `xt skills list [--global|--local] [--json]` — **IMPLEMENTED**: reads from `.xtrm/skills/default/` with plugin-root fallback.
-- `xt skills enable <pack>` / `xt skills disable <pack>` — **IMPLEMENTED (full pack lifecycle)**: updates state.json + rebuilds active view.
-- `.xtrm/skills/default → ../../skills` symlink — **IN PLACE**: project repo live view without copying.
-- `hooks/using-xtrm-reminder.mjs` dual-path resolution — **IMPLEMENTED**: prefers `.xtrm/skills/default/using-xtrm/SKILL.md`, falls back to `${CLAUDE_PLUGIN_ROOT}/skills/using-xtrm/SKILL.md`.
-- No breaking runtime behavior change (existing copy-based paths preserved).
-- Registry metadata and inventory foundation established.
+- Plugin-bundled `skills/` subtree removed from publish flow; `.xtrm/skills/default/` is now the sole runtime source for the reminder hook.
+- `hooks/using-xtrm-reminder.mjs` now reads only `.xtrm/skills/default/using-xtrm/SKILL.md` (no plugin fallback).
 
 ## Phase v0.9 — Dual-mode bridge
 

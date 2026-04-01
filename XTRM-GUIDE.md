@@ -51,8 +51,8 @@ XTRM-Tools is a **dual-runtime workflow system** — a Claude Code plugin and a 
 │    Claude Code Session   │     │          Pi Session             │
 ├──────────────────────────┤     ├─────────────────────────────────┤
 │ Plugin hooks (hooks/)    │     │ Extensions (config/pi/          │
-│ Skills (skills/)         │     │   extensions/)                  │
-│ MCP Servers (.mcp.json)  │     │ Skills (.xtrm/skills/)        │
+│ MCP Servers (.mcp.json)  │     │   extensions/)                  │
+│                          │     │ Skills (.xtrm/skills/)          │
 │                          │     │ MCP Servers (.mcp.json)         │
 └──────────────────────────┘     └─────────────────────────────────┘
 ```
@@ -104,7 +104,6 @@ This runs:
 plugins/xtrm-tools/
 ├── .claude-plugin/plugin.json   # Manifest
 ├── hooks → ../../hooks           # All hook scripts
-├── skills → ../../skills         # Auto-discovered skills
 └── .mcp.json → ../../.mcp.json   # MCP server definitions
 ```
 

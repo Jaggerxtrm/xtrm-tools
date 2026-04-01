@@ -31684,7 +31684,8 @@ async function ensureCorePackageSymlink(coreSrcDir, projectRoot, dryRun, log) {
   if (!await import_fs_extra3.default.pathExists(coreSrcDir)) return;
   const nodeModulesDir = import_path3.default.join(projectRoot, ".pi", "node_modules", "@xtrm");
   const symlinkPath = import_path3.default.join(nodeModulesDir, "pi-core");
-  if (await import_fs_extra3.default.pathExists(symlinkPath)) return;
+  const existing = await import_fs_extra3.default.lstat(symlinkPath).catch(() => null);
+  if (existing) return;
   if (dryRun) {
     log?.(kleur_default.dim(`[DRY RUN] would create @xtrm/pi-core symlink`));
     return;

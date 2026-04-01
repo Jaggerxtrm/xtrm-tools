@@ -383,7 +383,9 @@ export async function ensureCorePackageSymlink(
     const nodeModulesDir = path.join(projectRoot, '.pi', 'node_modules', '@xtrm');
     const symlinkPath = path.join(nodeModulesDir, 'pi-core');
 
-    if (await fs.pathExists(symlinkPath)) return;
+    // Use lstat (not pathExists) so we detect broken symlinks too
+    const existing = await fs.lstat(symlinkPath).catch(() => null);
+    if (existing) return;
 
     if (dryRun) {
         log?.(kleur.dim(`[DRY RUN] would create @xtrm/pi-core symlink`));

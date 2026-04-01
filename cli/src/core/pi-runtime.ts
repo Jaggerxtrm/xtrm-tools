@@ -229,7 +229,6 @@ export async function inventoryPiRuntime(
         const status: ExtensionStatus = {
             ext,
             installed: true,
-            hash: dstHash,
             stale: isStale,
         };
         extensionStatuses.push(status);
@@ -371,16 +370,15 @@ export interface PiSyncResult {
 
 /**
  * Ensure @xtrm/pi-core is resolvable from .pi/node_modules/@xtrm/pi-core.
- * Creates a symlink pointing to the extensions/core directory.
+ * Creates a symlink pointing to the actual core source (not a mirror).
  */
 export async function ensureCorePackageSymlink(
-    extensionsDst: string,
+    coreSrcDir: string,    // path to .xtrm/extensions/core (the actual source)
     projectRoot: string,
     dryRun: boolean,
     log?: (message: string) => void,
 ): Promise<void> {
-    const coreDir = path.join(extensionsDst, 'core');
-    if (!await fs.pathExists(coreDir)) return;
+    if (!await fs.pathExists(coreSrcDir)) return;
 
     const nodeModulesDir = path.join(projectRoot, '.pi', 'node_modules', '@xtrm');
     const symlinkPath = path.join(nodeModulesDir, 'pi-core');
@@ -393,7 +391,8 @@ export async function ensureCorePackageSymlink(
     }
 
     await fs.ensureDir(nodeModulesDir);
-    await fs.symlink('../../extensions/core', symlinkPath);
+    const relTarget = path.relative(nodeModulesDir, coreSrcDir);
+    await fs.symlink(relTarget, symlinkPath);
     log?.(kleur.dim(`Created @xtrm/pi-core symlink for module resolution`));
 }
 
@@ -546,13 +545,6 @@ export async function executePiSync(
         }
     }
 
-    // Project-scoped post-sync: symlink + settings.json
-    const syncedExtensions = result.extensionsAdded.length + result.extensionsUpdated.length;
-    if (!isGlobal && projectRoot && syncedExtensions > 0) {
-        await ensureCorePackageSymlink(targetDir, projectRoot, dryRun, log);
-        await updatePiSettings(targetDir, projectRoot, dryRun, log);
-    }
-
     return result;
 }
 
@@ -566,49 +558,108 @@ export interface PiRuntimeOptions {
 
 /**
  * Run full Pi runtime sync flow: inventory -> plan -> sync.
+ *
+ * Global installs mirror extensions into ~/.pi/agent/extensions/ (Pi reads them automatically).
+ * Project installs skip the extension mirror — Pi discovers extensions directly via
+ * .pi/settings.json pointing at ../.xtrm/extensions. Only packages are synced for project installs.
  */
 export async function runPiRuntimeSync(opts: PiRuntimeOptions = {}): Promise<PiSyncResult> {
     const { dryRun = false, isGlobal = false, projectRoot } = opts;
 
-    // Resolve source from package root
     const pkgRoot = resolvePkgRoot();
     const sourceDir = path.join(pkgRoot, '.xtrm', 'extensions');
-
-    // Resolve target (ensure string, not undefined)
     const resolvedProjectRoot = projectRoot || process.cwd();
-    const targetDir = isGlobal
-        ? path.join(PI_AGENT_DIR, 'extensions')
-        : path.join(resolvedProjectRoot, '.pi', 'extensions');
+    const log = (msg: string) => console.log(kleur.dim(`    ${msg}`));
 
-    // Check if managed extensions are bundled
+    const emptyResult: PiSyncResult = {
+        extensionsAdded: [],
+        extensionsUpdated: [],
+        extensionsRemoved: [],
+        packagesInstalled: [],
+        failed: [],
+    };
+
     if (!await fs.pathExists(sourceDir)) {
         console.log(kleur.dim('\n  Managed extensions: skipped (not bundled in npm package)\n'));
-        return {
-            extensionsAdded: [],
-            extensionsUpdated: [],
-            extensionsRemoved: [],
-            packagesInstalled: [],
-            failed: [],
-        };
+        return emptyResult;
     }
 
-    const plan = await inventoryPiRuntime(sourceDir, targetDir);
-    renderPiRuntimePlan(plan);
-
-    if (plan.allPresent) {
-        return {
-            extensionsAdded: [],
-            extensionsUpdated: [],
-            extensionsRemoved: [],
-            packagesInstalled: [],
-            failed: [],
-        };
+    // ── Global install: mirror extensions into ~/.pi/agent/extensions/ ──────────
+    if (isGlobal) {
+        const targetDir = path.join(PI_AGENT_DIR, 'extensions');
+        const plan = await inventoryPiRuntime(sourceDir, targetDir);
+        renderPiRuntimePlan(plan);
+        if (plan.allPresent) return emptyResult;
+        return await executePiSync(plan, sourceDir, targetDir, {
+            dryRun,
+            isGlobal: true,
+            removeOrphaned: true,
+        });
     }
 
-    return await executePiSync(plan, sourceDir, targetDir, {
-        dryRun,
-        isGlobal,
-        projectRoot: resolvedProjectRoot,
-        removeOrphaned: true,
-    });
+    // ── Project install: no extension mirror ─────────────────────────────────────
+    // Pi discovers extensions directly from .xtrm/extensions via .pi/settings.json.
+    // Only manage packages + settings.json + core symlink here.
+
+    const installedPkgIds = getInstalledPiPackages();
+    const packageStatuses: PackageStatus[] = [];
+    const missingPackages: PackageStatus[] = [];
+
+    for (const pkg of MANAGED_PACKAGES) {
+        const isInstalled = installedPkgIds.includes(pkg.id);
+        const status: PackageStatus = { pkg, installed: isInstalled };
+        packageStatuses.push(status);
+        if (!isInstalled) missingPackages.push(status);
+    }
+
+    // Render summary
+    console.log(kleur.bold('\n  Pi Runtime'));
+    console.log(kleur.dim('  ' + '-'.repeat(50)));
+    console.log(kleur.dim(`  Extensions: via .xtrm/extensions (settings.json)`));
+    const pkgOk = packageStatuses.filter(s => s.installed).length;
+    console.log(kleur.dim(`  Packages:   ${pkgOk}/${packageStatuses.length} installed`));
+    if (missingPackages.length > 0) {
+        const names = missingPackages.map(s => s.pkg.displayName).join(', ');
+        console.log(kleur.yellow(`  Missing:    ${names}`));
+    }
+    console.log(kleur.dim('  ' + '-'.repeat(50)));
+
+    const result: PiSyncResult = { ...emptyResult };
+
+    // Install missing packages
+    for (const status of missingPackages) {
+        const { pkg } = status;
+        if (dryRun) {
+            log(`[DRY RUN] pi install ${pkg.id} -l`);
+            continue;
+        }
+        try {
+            const r = spawnSync('pi', ['install', pkg.id, '-l'], { stdio: 'pipe', encoding: 'utf8' });
+            if (r.status === 0) {
+                result.packagesInstalled.push(pkg.id);
+                log(`${sym.ok} ${pkg.displayName}`);
+            } else {
+                result.failed.push(pkg.id);
+                log(kleur.yellow(`⚠ ${pkg.displayName} — install failed`));
+            }
+        } catch (err) {
+            result.failed.push(pkg.id);
+            log(kleur.red(`✗ ${pkg.displayName}: ${err}`));
+        }
+    }
+
+    // Always update settings.json + core symlink for project installs
+    await updatePiSettings(resolvedProjectRoot, dryRun, log);
+    await ensureCorePackageSymlink(path.join(sourceDir, 'core'), resolvedProjectRoot, dryRun, log);
+
+    const allRequiredPresent = missingPackages.every(s => !s.pkg.required);
+    if (missingPackages.length === 0) {
+        console.log(t.success('  ✓ All extensions and packages present.\n'));
+    } else if (allRequiredPresent) {
+        console.log(t.success('  ✓ All required items present.\n'));
+    } else {
+        console.log(kleur.yellow('  ⚠ Missing required items.\n'));
+    }
+
+    return result;
 }

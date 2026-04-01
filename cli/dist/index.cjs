@@ -31596,7 +31596,6 @@ async function inventoryPiRuntime(sourceDir, targetDir) {
     const status = {
       ext,
       installed: true,
-      hash: dstHash,
       stale: isStale
     };
     extensionStatuses.push(status);
@@ -31681,9 +31680,8 @@ function renderPiRuntimePlan(plan) {
     console.log(kleur_default.yellow("  \u26A0 Missing required items.\n"));
   }
 }
-async function ensureCorePackageSymlink(extensionsDst, projectRoot, dryRun, log) {
-  const coreDir = import_path3.default.join(extensionsDst, "core");
-  if (!await import_fs_extra3.default.pathExists(coreDir)) return;
+async function ensureCorePackageSymlink(coreSrcDir, projectRoot, dryRun, log) {
+  if (!await import_fs_extra3.default.pathExists(coreSrcDir)) return;
   const nodeModulesDir = import_path3.default.join(projectRoot, ".pi", "node_modules", "@xtrm");
   const symlinkPath = import_path3.default.join(nodeModulesDir, "pi-core");
   if (await import_fs_extra3.default.pathExists(symlinkPath)) return;
@@ -31692,7 +31690,8 @@ async function ensureCorePackageSymlink(extensionsDst, projectRoot, dryRun, log)
     return;
   }
   await import_fs_extra3.default.ensureDir(nodeModulesDir);
-  await import_fs_extra3.default.symlink("../../extensions/core", symlinkPath);
+  const relTarget = import_path3.default.relative(nodeModulesDir, coreSrcDir);
+  await import_fs_extra3.default.symlink(relTarget, symlinkPath);
   log?.(kleur_default.dim(`Created @xtrm/pi-core symlink for module resolution`));
 }
 async function updatePiSettings(projectRoot, dryRun, log) {
@@ -31801,11 +31800,6 @@ async function executePiSync(plan, sourceDir, targetDir, opts = {}) {
       log(kleur_default.red(`\u2717 ${pkg.displayName}: ${err}`));
     }
   }
-  const syncedExtensions = result.extensionsAdded.length + result.extensionsUpdated.length;
-  if (!isGlobal && projectRoot && syncedExtensions > 0) {
-    await ensureCorePackageSymlink(targetDir, projectRoot, dryRun, log);
-    await updatePiSettings(targetDir, projectRoot, dryRun, log);
-  }
   return result;
 }
 async function runPiRuntimeSync(opts = {}) {
@@ -31813,34 +31807,80 @@ async function runPiRuntimeSync(opts = {}) {
   const pkgRoot = resolvePkgRoot();
   const sourceDir = import_path3.default.join(pkgRoot, ".xtrm", "extensions");
   const resolvedProjectRoot = projectRoot || process.cwd();
-  const targetDir = isGlobal ? import_path3.default.join(PI_AGENT_DIR, "extensions") : import_path3.default.join(resolvedProjectRoot, ".pi", "extensions");
+  const log = (msg) => console.log(kleur_default.dim(`    ${msg}`));
+  const emptyResult = {
+    extensionsAdded: [],
+    extensionsUpdated: [],
+    extensionsRemoved: [],
+    packagesInstalled: [],
+    failed: []
+  };
   if (!await import_fs_extra3.default.pathExists(sourceDir)) {
     console.log(kleur_default.dim("\n  Managed extensions: skipped (not bundled in npm package)\n"));
-    return {
-      extensionsAdded: [],
-      extensionsUpdated: [],
-      extensionsRemoved: [],
-      packagesInstalled: [],
-      failed: []
-    };
+    return emptyResult;
   }
-  const plan = await inventoryPiRuntime(sourceDir, targetDir);
-  renderPiRuntimePlan(plan);
-  if (plan.allPresent) {
-    return {
-      extensionsAdded: [],
-      extensionsUpdated: [],
-      extensionsRemoved: [],
-      packagesInstalled: [],
-      failed: []
-    };
+  if (isGlobal) {
+    const targetDir = import_path3.default.join(PI_AGENT_DIR, "extensions");
+    const plan = await inventoryPiRuntime(sourceDir, targetDir);
+    renderPiRuntimePlan(plan);
+    if (plan.allPresent) return emptyResult;
+    return await executePiSync(plan, sourceDir, targetDir, {
+      dryRun,
+      isGlobal: true,
+      removeOrphaned: true
+    });
   }
-  return await executePiSync(plan, sourceDir, targetDir, {
-    dryRun,
-    isGlobal,
-    projectRoot: resolvedProjectRoot,
-    removeOrphaned: true
-  });
+  const installedPkgIds = getInstalledPiPackages();
+  const packageStatuses = [];
+  const missingPackages = [];
+  for (const pkg of MANAGED_PACKAGES) {
+    const isInstalled = installedPkgIds.includes(pkg.id);
+    const status = { pkg, installed: isInstalled };
+    packageStatuses.push(status);
+    if (!isInstalled) missingPackages.push(status);
+  }
+  console.log(kleur_default.bold("\n  Pi Runtime"));
+  console.log(kleur_default.dim("  " + "-".repeat(50)));
+  console.log(kleur_default.dim(`  Extensions: via .xtrm/extensions (settings.json)`));
+  const pkgOk = packageStatuses.filter((s) => s.installed).length;
+  console.log(kleur_default.dim(`  Packages:   ${pkgOk}/${packageStatuses.length} installed`));
+  if (missingPackages.length > 0) {
+    const names = missingPackages.map((s) => s.pkg.displayName).join(", ");
+    console.log(kleur_default.yellow(`  Missing:    ${names}`));
+  }
+  console.log(kleur_default.dim("  " + "-".repeat(50)));
+  const result = { ...emptyResult };
+  for (const status of missingPackages) {
+    const { pkg } = status;
+    if (dryRun) {
+      log(`[DRY RUN] pi install ${pkg.id} -l`);
+      continue;
+    }
+    try {
+      const r = (0, import_child_process2.spawnSync)("pi", ["install", pkg.id, "-l"], { stdio: "pipe", encoding: "utf8" });
+      if (r.status === 0) {
+        result.packagesInstalled.push(pkg.id);
+        log(`${sym.ok} ${pkg.displayName}`);
+      } else {
+        result.failed.push(pkg.id);
+        log(kleur_default.yellow(`\u26A0 ${pkg.displayName} \u2014 install failed`));
+      }
+    } catch (err) {
+      result.failed.push(pkg.id);
+      log(kleur_default.red(`\u2717 ${pkg.displayName}: ${err}`));
+    }
+  }
+  await updatePiSettings(resolvedProjectRoot, dryRun, log);
+  await ensureCorePackageSymlink(import_path3.default.join(sourceDir, "core"), resolvedProjectRoot, dryRun, log);
+  const allRequiredPresent = missingPackages.every((s) => !s.pkg.required);
+  if (missingPackages.length === 0) {
+    console.log(t.success("  \u2713 All extensions and packages present.\n"));
+  } else if (allRequiredPresent) {
+    console.log(t.success("  \u2713 All required items present.\n"));
+  } else {
+    console.log(kleur_default.yellow("  \u26A0 Missing required items.\n"));
+  }
+  return result;
 }
 
 // src/utils/worktree-session.ts
@@ -34930,8 +34970,7 @@ function verifyClaudeRuntime(projectRoot) {
 }
 async function verifyPiRuntime(projectRoot) {
   const pkgRoot = resolvePkgRoot3();
-  const sourceDir = import_path10.default.join(pkgRoot, ".xtrm", "config", "pi", "extensions");
-  const targetDir = import_path10.default.join(projectRoot, ".pi", "extensions");
+  const sourceDir = import_path10.default.join(pkgRoot, ".xtrm", "extensions");
   if (!await import_fs_extra12.default.pathExists(sourceDir)) {
     return {
       extensions: [],
@@ -34944,7 +34983,8 @@ async function verifyPiRuntime(projectRoot) {
       allPresent: true
     };
   }
-  return await inventoryPiRuntime(sourceDir, targetDir);
+  void projectRoot;
+  return await inventoryPiRuntime(sourceDir, sourceDir);
 }
 function verifyProjectBootstrap(projectRoot) {
   const beadsInitialized = import_fs_extra12.default.pathExistsSync(import_path10.default.join(projectRoot, ".beads"));
@@ -34963,7 +35003,7 @@ function resolvePkgRoot3() {
     import_path10.default.resolve(__dirname, "../../..")
   ];
   for (const c of candidates) {
-    if (import_fs_extra12.default.existsSync(import_path10.default.join(c, ".xtrm", "config", "pi", "extensions"))) return c;
+    if (import_fs_extra12.default.existsSync(import_path10.default.join(c, ".xtrm", "extensions"))) return c;
   }
   return candidates[0];
 }

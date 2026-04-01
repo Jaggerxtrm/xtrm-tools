@@ -131,8 +131,7 @@ function verifyClaudeRuntime(projectRoot: string): {
 
 async function verifyPiRuntime(projectRoot: string): Promise<PiRuntimePlan> {
     const pkgRoot = resolvePkgRoot();
-    const sourceDir = path.join(pkgRoot, '.xtrm', 'config', 'pi', 'extensions');
-    const targetDir = path.join(projectRoot, '.pi', 'extensions');
+    const sourceDir = path.join(pkgRoot, '.xtrm', 'extensions');
 
     if (!await fs.pathExists(sourceDir)) {
         // Not bundled — return empty plan
@@ -148,7 +147,11 @@ async function verifyPiRuntime(projectRoot: string): Promise<PiRuntimePlan> {
         };
     }
 
-    return await inventoryPiRuntime(sourceDir, targetDir);
+    // Project installs no longer mirror extensions to .pi/extensions/ — Pi reads
+    // directly from .xtrm/extensions via settings.json. Verify packages only;
+    // pass sourceDir as targetDir so extension checks always return present.
+    void projectRoot;
+    return await inventoryPiRuntime(sourceDir, sourceDir);
 }
 
 function verifyProjectBootstrap(projectRoot: string): { beadsInitialized: boolean; gitnexusIndexed: boolean; instructionHeaders: boolean } {
@@ -178,7 +181,7 @@ function resolvePkgRoot(): string {
         path.resolve(__dirname, '../../..'),
     ];
     for (const c of candidates) {
-        if (fs.existsSync(path.join(c, '.xtrm', 'config', 'pi', 'extensions'))) return c;
+        if (fs.existsSync(path.join(c, '.xtrm', 'extensions'))) return c;
     }
     return candidates[0];
 }

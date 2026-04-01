@@ -504,45 +504,21 @@ async function ensureAgentsSkillsSymlink(projectRoot: string): Promise<void> {
     const sourceDir = path.join(projectRoot, '.xtrm', 'skills', 'default');
     if (!await fs.pathExists(sourceDir)) return;
 
-    // .agents/skills → ../.xtrm/skills/default (directory-level symlink for Pi discovery)
+    const xtrmTarget = path.join('..', '.xtrm', 'skills', 'default');
+
+    // .agents/skills and .claude/skills both point at .xtrm/skills/default (real dir).
+    // gitnexus analyze writes .xtrm/skills/default/gitnexus/ through the .claude/skills
+    // symlink, coexisting with registry-managed skill files.
     await ensureSkillsSymlink(
         path.join(projectRoot, '.agents', 'skills'),
-        path.join('..', '.xtrm', 'skills', 'default'),
+        xtrmTarget,
         '.agents/skills',
     );
-
-    // .claude/skills: per-skill symlinks so gitnexus skills coexist with xtrm skills.
-    // Claude Code reads from .claude/skills/; we can't use a directory-level symlink
-    // because tools like gitnexus also write real subdirs there (e.g. gitnexus/).
-    await ensureClaudeSkillSymlinks(projectRoot, sourceDir);
-}
-
-async function ensureClaudeSkillSymlinks(projectRoot: string, sourceDir: string): Promise<void> {
-    const claudeSkillsDir = path.join(projectRoot, '.claude', 'skills');
-    await fs.ensureDir(claudeSkillsDir);
-
-    const entries = await fs.readdir(sourceDir, { withFileTypes: true });
-    let added = 0;
-
-    for (const entry of entries) {
-        if (!entry.isDirectory() && !entry.isSymbolicLink()) continue;
-        const skillName = entry.name;
-        const linkPath = path.join(claudeSkillsDir, skillName);
-
-        const existing = await fs.lstat(linkPath).catch(() => null);
-        if (existing) continue;  // real dir (e.g. gitnexus/) or existing symlink — preserve
-
-        // Relative: from .claude/skills/<name> up to project root then into .xtrm
-        const relTarget = path.join('..', '..', '.xtrm', 'skills', 'default', skillName);
-        await fs.symlink(relTarget, linkPath);
-        added++;
-    }
-
-    if (added > 0) {
-        console.log(`${kleur.green('  ✓')} .claude/skills: added ${added} xtrm skill symlink(s)`);
-    } else {
-        console.log(kleur.dim('  ✓ .claude/skills symlinks already in place'));
-    }
+    await ensureSkillsSymlink(
+        path.join(projectRoot, '.claude', 'skills'),
+        xtrmTarget,
+        '.claude/skills',
+    );
 }
 
 async function installServiceSkillHooks(_projectRoot: string): Promise<void> {

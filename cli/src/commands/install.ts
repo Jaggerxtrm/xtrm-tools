@@ -280,28 +280,6 @@ async function installFromRegistry(params: {
         }
     }
 
-    const mode = await scaffoldSkillsDefaultFromPackage({
-        packageRoot,
-        userXtrmDir,
-        dryRun,
-    });
-
-    if (mode === 'symlink') {
-        console.log(kleur.dim('  ✓ .xtrm/skills/default created as symlink'));
-        for (const relativePath of [...missingSet]) {
-            if (!isSkillsDefaultPath(relativePath)) continue;
-            missingSet.delete(relativePath);
-            upToDateSet.add(relativePath);
-        }
-    } else if (mode === 'copy') {
-        console.log(kleur.yellow('  ⚠ Could not create .xtrm/skills/default symlink; used copy fallback'));
-        for (const relativePath of [...missingSet]) {
-            if (!isSkillsDefaultPath(relativePath)) continue;
-            missingSet.delete(relativePath);
-            upToDateSet.add(relativePath);
-        }
-    }
-
     let installed = 0;
     let forced = 0;
 

@@ -31585,13 +31585,15 @@ async function inventoryPiRuntime(sourceDir, targetDir) {
       continue;
     }
     let isStale = false;
-    const dstStat = await import_fs_extra3.default.lstat(dstPath);
-    if (dstStat.isSymbolicLink()) {
-      const linkTarget = await import_fs_extra3.default.readlink(dstPath);
-      const resolvedTarget = import_path3.default.resolve(import_path3.default.dirname(dstPath), linkTarget);
-      isStale = resolvedTarget !== import_path3.default.resolve(srcPath);
-    } else {
-      isStale = true;
+    if (srcPath !== dstPath) {
+      const dstStat = await import_fs_extra3.default.lstat(dstPath);
+      if (dstStat.isSymbolicLink()) {
+        const linkTarget = await import_fs_extra3.default.readlink(dstPath);
+        const resolvedTarget = import_path3.default.resolve(import_path3.default.dirname(dstPath), linkTarget);
+        isStale = resolvedTarget !== import_path3.default.resolve(srcPath);
+      } else {
+        isStale = true;
+      }
     }
     const status = {
       ext,
@@ -34703,25 +34705,6 @@ async function hashFile2(filePath) {
   const content = await import_fs_extra11.default.readFile(filePath);
   return import_node_crypto3.default.createHash("sha256").update(content).digest("hex");
 }
-async function scaffoldSkillsDefaultFromPackage(params) {
-  const { packageRoot, userXtrmDir, dryRun } = params;
-  const sourceDir = import_path9.default.join(packageRoot, ".xtrm", "skills", "default");
-  const targetDir = import_path9.default.join(userXtrmDir, "skills", "default");
-  if (await import_fs_extra11.default.pathExists(targetDir)) {
-    return "noop";
-  }
-  if (dryRun) {
-    return "noop";
-  }
-  await import_fs_extra11.default.ensureDir(import_path9.default.dirname(targetDir));
-  try {
-    await import_fs_extra11.default.ensureSymlink(sourceDir, targetDir);
-    return "symlink";
-  } catch {
-    await import_fs_extra11.default.copy(sourceDir, targetDir);
-    return "copy";
-  }
-}
 function getProjectRoot() {
   const gitResult = (0, import_node_child_process6.spawnSync)("git", ["rev-parse", "--show-toplevel"], {
     cwd: process.cwd(),
@@ -34790,26 +34773,6 @@ async function installFromRegistry(params) {
         driftedSkipped: drift.drifted.length,
         forced: 0
       };
-    }
-  }
-  const mode = await scaffoldSkillsDefaultFromPackage({
-    packageRoot,
-    userXtrmDir,
-    dryRun
-  });
-  if (mode === "symlink") {
-    console.log(kleur_default.dim("  \u2713 .xtrm/skills/default created as symlink"));
-    for (const relativePath of [...missingSet]) {
-      if (!isSkillsDefaultPath(relativePath)) continue;
-      missingSet.delete(relativePath);
-      upToDateSet.add(relativePath);
-    }
-  } else if (mode === "copy") {
-    console.log(kleur_default.yellow("  \u26A0 Could not create .xtrm/skills/default symlink; used copy fallback"));
-    for (const relativePath of [...missingSet]) {
-      if (!isSkillsDefaultPath(relativePath)) continue;
-      missingSet.delete(relativePath);
-      upToDateSet.add(relativePath);
     }
   }
   let installed = 0;
@@ -35418,33 +35381,17 @@ async function ensureSkillsSymlink(linkPath, symlinkTarget, label) {
 async function ensureAgentsSkillsSymlink(projectRoot) {
   const sourceDir = import_path14.default.join(projectRoot, ".xtrm", "skills", "default");
   if (!await import_fs_extra15.default.pathExists(sourceDir)) return;
+  const xtrmTarget = import_path14.default.join("..", ".xtrm", "skills", "default");
   await ensureSkillsSymlink(
     import_path14.default.join(projectRoot, ".agents", "skills"),
-    import_path14.default.join("..", ".xtrm", "skills", "default"),
+    xtrmTarget,
     ".agents/skills"
   );
-  await ensureClaudeSkillSymlinks(projectRoot, sourceDir);
-}
-async function ensureClaudeSkillSymlinks(projectRoot, sourceDir) {
-  const claudeSkillsDir = import_path14.default.join(projectRoot, ".claude", "skills");
-  await import_fs_extra15.default.ensureDir(claudeSkillsDir);
-  const entries = await import_fs_extra15.default.readdir(sourceDir, { withFileTypes: true });
-  let added = 0;
-  for (const entry of entries) {
-    if (!entry.isDirectory() && !entry.isSymbolicLink()) continue;
-    const skillName = entry.name;
-    const linkPath = import_path14.default.join(claudeSkillsDir, skillName);
-    const existing = await import_fs_extra15.default.lstat(linkPath).catch(() => null);
-    if (existing) continue;
-    const relTarget = import_path14.default.join("..", "..", ".xtrm", "skills", "default", skillName);
-    await import_fs_extra15.default.symlink(relTarget, linkPath);
-    added++;
-  }
-  if (added > 0) {
-    console.log(`${kleur_default.green("  \u2713")} .claude/skills: added ${added} xtrm skill symlink(s)`);
-  } else {
-    console.log(kleur_default.dim("  \u2713 .claude/skills symlinks already in place"));
-  }
+  await ensureSkillsSymlink(
+    import_path14.default.join(projectRoot, ".claude", "skills"),
+    xtrmTarget,
+    ".claude/skills"
+  );
 }
 async function installServiceSkillHooks(_projectRoot) {
 }

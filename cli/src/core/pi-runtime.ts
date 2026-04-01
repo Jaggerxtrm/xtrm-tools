@@ -216,15 +216,19 @@ export async function inventoryPiRuntime(
 
         // Stale detection: if dstPath is a symlink, verify it resolves to srcPath.
         // If it's a real copy (legacy), treat as stale so it gets replaced with a symlink.
+        // Skip stale check when srcPath === dstPath (verification mode: Pi reads extensions
+        // directly from source dir, no copy/symlink needed).
         let isStale = false;
-        const dstStat = await fs.lstat(dstPath);
-        if (dstStat.isSymbolicLink()) {
-            const linkTarget = await fs.readlink(dstPath);
-            const resolvedTarget = path.resolve(path.dirname(dstPath), linkTarget);
-            isStale = resolvedTarget !== path.resolve(srcPath);
-        } else {
-            // Real copy — replace with symlink
-            isStale = true;
+        if (srcPath !== dstPath) {
+            const dstStat = await fs.lstat(dstPath);
+            if (dstStat.isSymbolicLink()) {
+                const linkTarget = await fs.readlink(dstPath);
+                const resolvedTarget = path.resolve(path.dirname(dstPath), linkTarget);
+                isStale = resolvedTarget !== path.resolve(srcPath);
+            } else {
+                // Real copy — replace with symlink
+                isStale = true;
+            }
         }
         const status: ExtensionStatus = {
             ext,

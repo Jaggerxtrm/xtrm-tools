@@ -1202,8 +1202,8 @@ var require_command = __commonJS({
     "use strict";
     var EventEmitter = require("events").EventEmitter;
     var childProcess = require("child_process");
-    var path29 = require("path");
-    var fs28 = require("fs");
+    var path30 = require("path");
+    var fs29 = require("fs");
     var process11 = require("process");
     var { Argument: Argument2, humanReadableArgName } = require_argument();
     var { CommanderError: CommanderError2 } = require_error();
@@ -2197,7 +2197,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
        * @param {string} subcommandName
        */
       _checkForMissingExecutable(executableFile, executableDir, subcommandName) {
-        if (fs28.existsSync(executableFile)) return;
+        if (fs29.existsSync(executableFile)) return;
         const executableDirMessage = executableDir ? `searched for local subcommand relative to directory '${executableDir}'` : "no directory for search for local subcommand, use .executableDir() to supply a custom directory";
         const executableMissing = `'${executableFile}' does not exist
  - if '${subcommandName}' is not meant to be an executable command, remove description parameter from '.command()' and use '.description()' instead
@@ -2215,11 +2215,11 @@ Expecting one of '${allowedValues.join("', '")}'`);
         let launchWithNode = false;
         const sourceExt = [".js", ".ts", ".tsx", ".mjs", ".cjs"];
         function findFile(baseDir, baseName) {
-          const localBin = path29.resolve(baseDir, baseName);
-          if (fs28.existsSync(localBin)) return localBin;
-          if (sourceExt.includes(path29.extname(baseName))) return void 0;
+          const localBin = path30.resolve(baseDir, baseName);
+          if (fs29.existsSync(localBin)) return localBin;
+          if (sourceExt.includes(path30.extname(baseName))) return void 0;
           const foundExt = sourceExt.find(
-            (ext) => fs28.existsSync(`${localBin}${ext}`)
+            (ext) => fs29.existsSync(`${localBin}${ext}`)
           );
           if (foundExt) return `${localBin}${foundExt}`;
           return void 0;
@@ -2231,21 +2231,21 @@ Expecting one of '${allowedValues.join("', '")}'`);
         if (this._scriptPath) {
           let resolvedScriptPath;
           try {
-            resolvedScriptPath = fs28.realpathSync(this._scriptPath);
+            resolvedScriptPath = fs29.realpathSync(this._scriptPath);
           } catch {
             resolvedScriptPath = this._scriptPath;
           }
-          executableDir = path29.resolve(
-            path29.dirname(resolvedScriptPath),
+          executableDir = path30.resolve(
+            path30.dirname(resolvedScriptPath),
             executableDir
           );
         }
         if (executableDir) {
           let localFile = findFile(executableDir, executableFile);
           if (!localFile && !subcommand._executableFile && this._scriptPath) {
-            const legacyName = path29.basename(
+            const legacyName = path30.basename(
               this._scriptPath,
-              path29.extname(this._scriptPath)
+              path30.extname(this._scriptPath)
             );
             if (legacyName !== this._name) {
               localFile = findFile(
@@ -2256,7 +2256,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
           }
           executableFile = localFile || executableFile;
         }
-        launchWithNode = sourceExt.includes(path29.extname(executableFile));
+        launchWithNode = sourceExt.includes(path30.extname(executableFile));
         let proc;
         if (process11.platform !== "win32") {
           if (launchWithNode) {
@@ -3171,7 +3171,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
        * @return {Command}
        */
       nameFromFilename(filename) {
-        this._name = path29.basename(filename, path29.extname(filename));
+        this._name = path30.basename(filename, path30.extname(filename));
         return this;
       }
       /**
@@ -3185,9 +3185,9 @@ Expecting one of '${allowedValues.join("', '")}'`);
        * @param {string} [path]
        * @return {(string|null|Command)}
        */
-      executableDir(path30) {
-        if (path30 === void 0) return this._executableDir;
-        this._executableDir = path30;
+      executableDir(path31) {
+        if (path31 === void 0) return this._executableDir;
+        this._executableDir = path31;
         return this;
       }
       /**
@@ -3521,54 +3521,54 @@ var require_polyfills = __commonJS({
     }
     var chdir;
     module2.exports = patch;
-    function patch(fs28) {
+    function patch(fs29) {
       if (constants.hasOwnProperty("O_SYMLINK") && process.version.match(/^v0\.6\.[0-2]|^v0\.5\./)) {
-        patchLchmod(fs28);
+        patchLchmod(fs29);
       }
-      if (!fs28.lutimes) {
-        patchLutimes(fs28);
+      if (!fs29.lutimes) {
+        patchLutimes(fs29);
       }
-      fs28.chown = chownFix(fs28.chown);
-      fs28.fchown = chownFix(fs28.fchown);
-      fs28.lchown = chownFix(fs28.lchown);
-      fs28.chmod = chmodFix(fs28.chmod);
-      fs28.fchmod = chmodFix(fs28.fchmod);
-      fs28.lchmod = chmodFix(fs28.lchmod);
-      fs28.chownSync = chownFixSync(fs28.chownSync);
-      fs28.fchownSync = chownFixSync(fs28.fchownSync);
-      fs28.lchownSync = chownFixSync(fs28.lchownSync);
-      fs28.chmodSync = chmodFixSync(fs28.chmodSync);
-      fs28.fchmodSync = chmodFixSync(fs28.fchmodSync);
-      fs28.lchmodSync = chmodFixSync(fs28.lchmodSync);
-      fs28.stat = statFix(fs28.stat);
-      fs28.fstat = statFix(fs28.fstat);
-      fs28.lstat = statFix(fs28.lstat);
-      fs28.statSync = statFixSync(fs28.statSync);
-      fs28.fstatSync = statFixSync(fs28.fstatSync);
-      fs28.lstatSync = statFixSync(fs28.lstatSync);
-      if (fs28.chmod && !fs28.lchmod) {
-        fs28.lchmod = function(path29, mode, cb) {
+      fs29.chown = chownFix(fs29.chown);
+      fs29.fchown = chownFix(fs29.fchown);
+      fs29.lchown = chownFix(fs29.lchown);
+      fs29.chmod = chmodFix(fs29.chmod);
+      fs29.fchmod = chmodFix(fs29.fchmod);
+      fs29.lchmod = chmodFix(fs29.lchmod);
+      fs29.chownSync = chownFixSync(fs29.chownSync);
+      fs29.fchownSync = chownFixSync(fs29.fchownSync);
+      fs29.lchownSync = chownFixSync(fs29.lchownSync);
+      fs29.chmodSync = chmodFixSync(fs29.chmodSync);
+      fs29.fchmodSync = chmodFixSync(fs29.fchmodSync);
+      fs29.lchmodSync = chmodFixSync(fs29.lchmodSync);
+      fs29.stat = statFix(fs29.stat);
+      fs29.fstat = statFix(fs29.fstat);
+      fs29.lstat = statFix(fs29.lstat);
+      fs29.statSync = statFixSync(fs29.statSync);
+      fs29.fstatSync = statFixSync(fs29.fstatSync);
+      fs29.lstatSync = statFixSync(fs29.lstatSync);
+      if (fs29.chmod && !fs29.lchmod) {
+        fs29.lchmod = function(path30, mode, cb) {
           if (cb) process.nextTick(cb);
         };
-        fs28.lchmodSync = function() {
+        fs29.lchmodSync = function() {
         };
       }
-      if (fs28.chown && !fs28.lchown) {
-        fs28.lchown = function(path29, uid, gid, cb) {
+      if (fs29.chown && !fs29.lchown) {
+        fs29.lchown = function(path30, uid, gid, cb) {
           if (cb) process.nextTick(cb);
         };
-        fs28.lchownSync = function() {
+        fs29.lchownSync = function() {
         };
       }
       if (platform === "win32") {
-        fs28.rename = typeof fs28.rename !== "function" ? fs28.rename : (function(fs$rename) {
+        fs29.rename = typeof fs29.rename !== "function" ? fs29.rename : (function(fs$rename) {
           function rename(from, to, cb) {
             var start = Date.now();
             var backoff = 0;
             fs$rename(from, to, function CB(er) {
               if (er && (er.code === "EACCES" || er.code === "EPERM" || er.code === "EBUSY") && Date.now() - start < 6e4) {
                 setTimeout(function() {
-                  fs28.stat(to, function(stater, st) {
+                  fs29.stat(to, function(stater, st) {
                     if (stater && stater.code === "ENOENT")
                       fs$rename(from, to, CB);
                     else
@@ -3584,9 +3584,9 @@ var require_polyfills = __commonJS({
           }
           if (Object.setPrototypeOf) Object.setPrototypeOf(rename, fs$rename);
           return rename;
-        })(fs28.rename);
+        })(fs29.rename);
       }
-      fs28.read = typeof fs28.read !== "function" ? fs28.read : (function(fs$read) {
+      fs29.read = typeof fs29.read !== "function" ? fs29.read : (function(fs$read) {
         function read(fd, buffer, offset, length, position, callback_) {
           var callback;
           if (callback_ && typeof callback_ === "function") {
@@ -3594,22 +3594,22 @@ var require_polyfills = __commonJS({
             callback = function(er, _, __) {
               if (er && er.code === "EAGAIN" && eagCounter < 10) {
                 eagCounter++;
-                return fs$read.call(fs28, fd, buffer, offset, length, position, callback);
+                return fs$read.call(fs29, fd, buffer, offset, length, position, callback);
               }
               callback_.apply(this, arguments);
             };
           }
-          return fs$read.call(fs28, fd, buffer, offset, length, position, callback);
+          return fs$read.call(fs29, fd, buffer, offset, length, position, callback);
         }
         if (Object.setPrototypeOf) Object.setPrototypeOf(read, fs$read);
         return read;
-      })(fs28.read);
-      fs28.readSync = typeof fs28.readSync !== "function" ? fs28.readSync : /* @__PURE__ */ (function(fs$readSync) {
+      })(fs29.read);
+      fs29.readSync = typeof fs29.readSync !== "function" ? fs29.readSync : /* @__PURE__ */ (function(fs$readSync) {
         return function(fd, buffer, offset, length, position) {
           var eagCounter = 0;
           while (true) {
             try {
-              return fs$readSync.call(fs28, fd, buffer, offset, length, position);
+              return fs$readSync.call(fs29, fd, buffer, offset, length, position);
             } catch (er) {
               if (er.code === "EAGAIN" && eagCounter < 10) {
                 eagCounter++;
@@ -3619,11 +3619,11 @@ var require_polyfills = __commonJS({
             }
           }
         };
-      })(fs28.readSync);
-      function patchLchmod(fs29) {
-        fs29.lchmod = function(path29, mode, callback) {
-          fs29.open(
-            path29,
+      })(fs29.readSync);
+      function patchLchmod(fs30) {
+        fs30.lchmod = function(path30, mode, callback) {
+          fs30.open(
+            path30,
             constants.O_WRONLY | constants.O_SYMLINK,
             mode,
             function(err, fd) {
@@ -3631,80 +3631,80 @@ var require_polyfills = __commonJS({
                 if (callback) callback(err);
                 return;
               }
-              fs29.fchmod(fd, mode, function(err2) {
-                fs29.close(fd, function(err22) {
+              fs30.fchmod(fd, mode, function(err2) {
+                fs30.close(fd, function(err22) {
                   if (callback) callback(err2 || err22);
                 });
               });
             }
           );
         };
-        fs29.lchmodSync = function(path29, mode) {
-          var fd = fs29.openSync(path29, constants.O_WRONLY | constants.O_SYMLINK, mode);
+        fs30.lchmodSync = function(path30, mode) {
+          var fd = fs30.openSync(path30, constants.O_WRONLY | constants.O_SYMLINK, mode);
           var threw = true;
           var ret;
           try {
-            ret = fs29.fchmodSync(fd, mode);
+            ret = fs30.fchmodSync(fd, mode);
             threw = false;
           } finally {
             if (threw) {
               try {
-                fs29.closeSync(fd);
+                fs30.closeSync(fd);
               } catch (er) {
               }
             } else {
-              fs29.closeSync(fd);
+              fs30.closeSync(fd);
             }
           }
           return ret;
         };
       }
-      function patchLutimes(fs29) {
-        if (constants.hasOwnProperty("O_SYMLINK") && fs29.futimes) {
-          fs29.lutimes = function(path29, at, mt, cb) {
-            fs29.open(path29, constants.O_SYMLINK, function(er, fd) {
+      function patchLutimes(fs30) {
+        if (constants.hasOwnProperty("O_SYMLINK") && fs30.futimes) {
+          fs30.lutimes = function(path30, at, mt, cb) {
+            fs30.open(path30, constants.O_SYMLINK, function(er, fd) {
               if (er) {
                 if (cb) cb(er);
                 return;
               }
-              fs29.futimes(fd, at, mt, function(er2) {
-                fs29.close(fd, function(er22) {
+              fs30.futimes(fd, at, mt, function(er2) {
+                fs30.close(fd, function(er22) {
                   if (cb) cb(er2 || er22);
                 });
               });
             });
           };
-          fs29.lutimesSync = function(path29, at, mt) {
-            var fd = fs29.openSync(path29, constants.O_SYMLINK);
+          fs30.lutimesSync = function(path30, at, mt) {
+            var fd = fs30.openSync(path30, constants.O_SYMLINK);
             var ret;
             var threw = true;
             try {
-              ret = fs29.futimesSync(fd, at, mt);
+              ret = fs30.futimesSync(fd, at, mt);
               threw = false;
             } finally {
               if (threw) {
                 try {
-                  fs29.closeSync(fd);
+                  fs30.closeSync(fd);
                 } catch (er) {
                 }
               } else {
-                fs29.closeSync(fd);
+                fs30.closeSync(fd);
               }
             }
             return ret;
           };
-        } else if (fs29.futimes) {
-          fs29.lutimes = function(_a2, _b, _c, cb) {
+        } else if (fs30.futimes) {
+          fs30.lutimes = function(_a2, _b, _c, cb) {
             if (cb) process.nextTick(cb);
           };
-          fs29.lutimesSync = function() {
+          fs30.lutimesSync = function() {
           };
         }
       }
       function chmodFix(orig) {
         if (!orig) return orig;
         return function(target, mode, cb) {
-          return orig.call(fs28, target, mode, function(er) {
+          return orig.call(fs29, target, mode, function(er) {
             if (chownErOk(er)) er = null;
             if (cb) cb.apply(this, arguments);
           });
@@ -3714,7 +3714,7 @@ var require_polyfills = __commonJS({
         if (!orig) return orig;
         return function(target, mode) {
           try {
-            return orig.call(fs28, target, mode);
+            return orig.call(fs29, target, mode);
           } catch (er) {
             if (!chownErOk(er)) throw er;
           }
@@ -3723,7 +3723,7 @@ var require_polyfills = __commonJS({
       function chownFix(orig) {
         if (!orig) return orig;
         return function(target, uid, gid, cb) {
-          return orig.call(fs28, target, uid, gid, function(er) {
+          return orig.call(fs29, target, uid, gid, function(er) {
             if (chownErOk(er)) er = null;
             if (cb) cb.apply(this, arguments);
           });
@@ -3733,7 +3733,7 @@ var require_polyfills = __commonJS({
         if (!orig) return orig;
         return function(target, uid, gid) {
           try {
-            return orig.call(fs28, target, uid, gid);
+            return orig.call(fs29, target, uid, gid);
           } catch (er) {
             if (!chownErOk(er)) throw er;
           }
@@ -3753,13 +3753,13 @@ var require_polyfills = __commonJS({
             }
             if (cb) cb.apply(this, arguments);
           }
-          return options ? orig.call(fs28, target, options, callback) : orig.call(fs28, target, callback);
+          return options ? orig.call(fs29, target, options, callback) : orig.call(fs29, target, callback);
         };
       }
       function statFixSync(orig) {
         if (!orig) return orig;
         return function(target, options) {
-          var stats = options ? orig.call(fs28, target, options) : orig.call(fs28, target);
+          var stats = options ? orig.call(fs29, target, options) : orig.call(fs29, target);
           if (stats) {
             if (stats.uid < 0) stats.uid += 4294967296;
             if (stats.gid < 0) stats.gid += 4294967296;
@@ -3789,16 +3789,16 @@ var require_legacy_streams = __commonJS({
     "use strict";
     var Stream = require("stream").Stream;
     module2.exports = legacy;
-    function legacy(fs28) {
+    function legacy(fs29) {
       return {
         ReadStream,
         WriteStream
       };
-      function ReadStream(path29, options) {
-        if (!(this instanceof ReadStream)) return new ReadStream(path29, options);
+      function ReadStream(path30, options) {
+        if (!(this instanceof ReadStream)) return new ReadStream(path30, options);
         Stream.call(this);
         var self = this;
-        this.path = path29;
+        this.path = path30;
         this.fd = null;
         this.readable = true;
         this.paused = false;
@@ -3832,7 +3832,7 @@ var require_legacy_streams = __commonJS({
           });
           return;
         }
-        fs28.open(this.path, this.flags, this.mode, function(err, fd) {
+        fs29.open(this.path, this.flags, this.mode, function(err, fd) {
           if (err) {
             self.emit("error", err);
             self.readable = false;
@@ -3843,10 +3843,10 @@ var require_legacy_streams = __commonJS({
           self._read();
         });
       }
-      function WriteStream(path29, options) {
-        if (!(this instanceof WriteStream)) return new WriteStream(path29, options);
+      function WriteStream(path30, options) {
+        if (!(this instanceof WriteStream)) return new WriteStream(path30, options);
         Stream.call(this);
-        this.path = path29;
+        this.path = path30;
         this.fd = null;
         this.writable = true;
         this.flags = "w";
@@ -3871,7 +3871,7 @@ var require_legacy_streams = __commonJS({
         this.busy = false;
         this._queue = [];
         if (this.fd === null) {
-          this._open = fs28.open;
+          this._open = fs29.open;
           this._queue.push([this._open, this.path, this.flags, this.mode, void 0]);
           this.flush();
         }
@@ -3907,7 +3907,7 @@ var require_clone = __commonJS({
 var require_graceful_fs = __commonJS({
   "../node_modules/graceful-fs/graceful-fs.js"(exports2, module2) {
     "use strict";
-    var fs28 = require("fs");
+    var fs29 = require("fs");
     var polyfills = require_polyfills();
     var legacy = require_legacy_streams();
     var clone2 = require_clone();
@@ -3939,12 +3939,12 @@ var require_graceful_fs = __commonJS({
         m = "GFS4: " + m.split(/\n/).join("\nGFS4: ");
         console.error(m);
       };
-    if (!fs28[gracefulQueue]) {
+    if (!fs29[gracefulQueue]) {
       queue = global[gracefulQueue] || [];
-      publishQueue(fs28, queue);
-      fs28.close = (function(fs$close) {
+      publishQueue(fs29, queue);
+      fs29.close = (function(fs$close) {
         function close(fd, cb) {
-          return fs$close.call(fs28, fd, function(err) {
+          return fs$close.call(fs29, fd, function(err) {
             if (!err) {
               resetQueue();
             }
@@ -3956,48 +3956,48 @@ var require_graceful_fs = __commonJS({
           value: fs$close
         });
         return close;
-      })(fs28.close);
-      fs28.closeSync = (function(fs$closeSync) {
+      })(fs29.close);
+      fs29.closeSync = (function(fs$closeSync) {
         function closeSync(fd) {
-          fs$closeSync.apply(fs28, arguments);
+          fs$closeSync.apply(fs29, arguments);
           resetQueue();
         }
         Object.defineProperty(closeSync, previousSymbol, {
           value: fs$closeSync
         });
         return closeSync;
-      })(fs28.closeSync);
+      })(fs29.closeSync);
       if (/\bgfs4\b/i.test(process.env.NODE_DEBUG || "")) {
         process.on("exit", function() {
-          debug(fs28[gracefulQueue]);
-          require("assert").equal(fs28[gracefulQueue].length, 0);
+          debug(fs29[gracefulQueue]);
+          require("assert").equal(fs29[gracefulQueue].length, 0);
         });
       }
     }
     var queue;
     if (!global[gracefulQueue]) {
-      publishQueue(global, fs28[gracefulQueue]);
+      publishQueue(global, fs29[gracefulQueue]);
     }
-    module2.exports = patch(clone2(fs28));
-    if (process.env.TEST_GRACEFUL_FS_GLOBAL_PATCH && !fs28.__patched) {
-      module2.exports = patch(fs28);
-      fs28.__patched = true;
+    module2.exports = patch(clone2(fs29));
+    if (process.env.TEST_GRACEFUL_FS_GLOBAL_PATCH && !fs29.__patched) {
+      module2.exports = patch(fs29);
+      fs29.__patched = true;
     }
-    function patch(fs29) {
-      polyfills(fs29);
-      fs29.gracefulify = patch;
-      fs29.createReadStream = createReadStream;
-      fs29.createWriteStream = createWriteStream2;
-      var fs$readFile = fs29.readFile;
-      fs29.readFile = readFile;
-      function readFile(path29, options, cb) {
+    function patch(fs30) {
+      polyfills(fs30);
+      fs30.gracefulify = patch;
+      fs30.createReadStream = createReadStream;
+      fs30.createWriteStream = createWriteStream2;
+      var fs$readFile = fs30.readFile;
+      fs30.readFile = readFile;
+      function readFile(path30, options, cb) {
         if (typeof options === "function")
           cb = options, options = null;
-        return go$readFile(path29, options, cb);
-        function go$readFile(path30, options2, cb2, startTime) {
-          return fs$readFile(path30, options2, function(err) {
+        return go$readFile(path30, options, cb);
+        function go$readFile(path31, options2, cb2, startTime) {
+          return fs$readFile(path31, options2, function(err) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-              enqueue([go$readFile, [path30, options2, cb2], err, startTime || Date.now(), Date.now()]);
+              enqueue([go$readFile, [path31, options2, cb2], err, startTime || Date.now(), Date.now()]);
             else {
               if (typeof cb2 === "function")
                 cb2.apply(this, arguments);
@@ -4005,16 +4005,16 @@ var require_graceful_fs = __commonJS({
           });
         }
       }
-      var fs$writeFile = fs29.writeFile;
-      fs29.writeFile = writeFile;
-      function writeFile(path29, data, options, cb) {
+      var fs$writeFile = fs30.writeFile;
+      fs30.writeFile = writeFile;
+      function writeFile(path30, data, options, cb) {
         if (typeof options === "function")
           cb = options, options = null;
-        return go$writeFile(path29, data, options, cb);
-        function go$writeFile(path30, data2, options2, cb2, startTime) {
-          return fs$writeFile(path30, data2, options2, function(err) {
+        return go$writeFile(path30, data, options, cb);
+        function go$writeFile(path31, data2, options2, cb2, startTime) {
+          return fs$writeFile(path31, data2, options2, function(err) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-              enqueue([go$writeFile, [path30, data2, options2, cb2], err, startTime || Date.now(), Date.now()]);
+              enqueue([go$writeFile, [path31, data2, options2, cb2], err, startTime || Date.now(), Date.now()]);
             else {
               if (typeof cb2 === "function")
                 cb2.apply(this, arguments);
@@ -4022,17 +4022,17 @@ var require_graceful_fs = __commonJS({
           });
         }
       }
-      var fs$appendFile = fs29.appendFile;
+      var fs$appendFile = fs30.appendFile;
       if (fs$appendFile)
-        fs29.appendFile = appendFile;
-      function appendFile(path29, data, options, cb) {
+        fs30.appendFile = appendFile;
+      function appendFile(path30, data, options, cb) {
         if (typeof options === "function")
           cb = options, options = null;
-        return go$appendFile(path29, data, options, cb);
-        function go$appendFile(path30, data2, options2, cb2, startTime) {
-          return fs$appendFile(path30, data2, options2, function(err) {
+        return go$appendFile(path30, data, options, cb);
+        function go$appendFile(path31, data2, options2, cb2, startTime) {
+          return fs$appendFile(path31, data2, options2, function(err) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-              enqueue([go$appendFile, [path30, data2, options2, cb2], err, startTime || Date.now(), Date.now()]);
+              enqueue([go$appendFile, [path31, data2, options2, cb2], err, startTime || Date.now(), Date.now()]);
             else {
               if (typeof cb2 === "function")
                 cb2.apply(this, arguments);
@@ -4040,9 +4040,9 @@ var require_graceful_fs = __commonJS({
           });
         }
       }
-      var fs$copyFile = fs29.copyFile;
+      var fs$copyFile = fs30.copyFile;
       if (fs$copyFile)
-        fs29.copyFile = copyFile;
+        fs30.copyFile = copyFile;
       function copyFile(src, dest, flags, cb) {
         if (typeof flags === "function") {
           cb = flags;
@@ -4060,34 +4060,34 @@ var require_graceful_fs = __commonJS({
           });
         }
       }
-      var fs$readdir = fs29.readdir;
-      fs29.readdir = readdir;
+      var fs$readdir = fs30.readdir;
+      fs30.readdir = readdir;
       var noReaddirOptionVersions = /^v[0-5]\./;
-      function readdir(path29, options, cb) {
+      function readdir(path30, options, cb) {
         if (typeof options === "function")
           cb = options, options = null;
-        var go$readdir = noReaddirOptionVersions.test(process.version) ? function go$readdir2(path30, options2, cb2, startTime) {
-          return fs$readdir(path30, fs$readdirCallback(
-            path30,
+        var go$readdir = noReaddirOptionVersions.test(process.version) ? function go$readdir2(path31, options2, cb2, startTime) {
+          return fs$readdir(path31, fs$readdirCallback(
+            path31,
             options2,
             cb2,
             startTime
           ));
-        } : function go$readdir2(path30, options2, cb2, startTime) {
-          return fs$readdir(path30, options2, fs$readdirCallback(
-            path30,
+        } : function go$readdir2(path31, options2, cb2, startTime) {
+          return fs$readdir(path31, options2, fs$readdirCallback(
+            path31,
             options2,
             cb2,
             startTime
           ));
         };
-        return go$readdir(path29, options, cb);
-        function fs$readdirCallback(path30, options2, cb2, startTime) {
+        return go$readdir(path30, options, cb);
+        function fs$readdirCallback(path31, options2, cb2, startTime) {
           return function(err, files) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
               enqueue([
                 go$readdir,
-                [path30, options2, cb2],
+                [path31, options2, cb2],
                 err,
                 startTime || Date.now(),
                 Date.now()
@@ -4102,21 +4102,21 @@ var require_graceful_fs = __commonJS({
         }
       }
       if (process.version.substr(0, 4) === "v0.8") {
-        var legStreams = legacy(fs29);
+        var legStreams = legacy(fs30);
         ReadStream = legStreams.ReadStream;
         WriteStream = legStreams.WriteStream;
       }
-      var fs$ReadStream = fs29.ReadStream;
+      var fs$ReadStream = fs30.ReadStream;
       if (fs$ReadStream) {
         ReadStream.prototype = Object.create(fs$ReadStream.prototype);
         ReadStream.prototype.open = ReadStream$open;
       }
-      var fs$WriteStream = fs29.WriteStream;
+      var fs$WriteStream = fs30.WriteStream;
       if (fs$WriteStream) {
         WriteStream.prototype = Object.create(fs$WriteStream.prototype);
         WriteStream.prototype.open = WriteStream$open;
       }
-      Object.defineProperty(fs29, "ReadStream", {
+      Object.defineProperty(fs30, "ReadStream", {
         get: function() {
           return ReadStream;
         },
@@ -4126,7 +4126,7 @@ var require_graceful_fs = __commonJS({
         enumerable: true,
         configurable: true
       });
-      Object.defineProperty(fs29, "WriteStream", {
+      Object.defineProperty(fs30, "WriteStream", {
         get: function() {
           return WriteStream;
         },
@@ -4137,7 +4137,7 @@ var require_graceful_fs = __commonJS({
         configurable: true
       });
       var FileReadStream = ReadStream;
-      Object.defineProperty(fs29, "FileReadStream", {
+      Object.defineProperty(fs30, "FileReadStream", {
         get: function() {
           return FileReadStream;
         },
@@ -4148,7 +4148,7 @@ var require_graceful_fs = __commonJS({
         configurable: true
       });
       var FileWriteStream = WriteStream;
-      Object.defineProperty(fs29, "FileWriteStream", {
+      Object.defineProperty(fs30, "FileWriteStream", {
         get: function() {
           return FileWriteStream;
         },
@@ -4158,7 +4158,7 @@ var require_graceful_fs = __commonJS({
         enumerable: true,
         configurable: true
       });
-      function ReadStream(path29, options) {
+      function ReadStream(path30, options) {
         if (this instanceof ReadStream)
           return fs$ReadStream.apply(this, arguments), this;
         else
@@ -4178,7 +4178,7 @@ var require_graceful_fs = __commonJS({
           }
         });
       }
-      function WriteStream(path29, options) {
+      function WriteStream(path30, options) {
         if (this instanceof WriteStream)
           return fs$WriteStream.apply(this, arguments), this;
         else
@@ -4196,22 +4196,22 @@ var require_graceful_fs = __commonJS({
           }
         });
       }
-      function createReadStream(path29, options) {
-        return new fs29.ReadStream(path29, options);
+      function createReadStream(path30, options) {
+        return new fs30.ReadStream(path30, options);
       }
-      function createWriteStream2(path29, options) {
-        return new fs29.WriteStream(path29, options);
+      function createWriteStream2(path30, options) {
+        return new fs30.WriteStream(path30, options);
       }
-      var fs$open = fs29.open;
-      fs29.open = open;
-      function open(path29, flags, mode, cb) {
+      var fs$open = fs30.open;
+      fs30.open = open;
+      function open(path30, flags, mode, cb) {
         if (typeof mode === "function")
           cb = mode, mode = null;
-        return go$open(path29, flags, mode, cb);
-        function go$open(path30, flags2, mode2, cb2, startTime) {
-          return fs$open(path30, flags2, mode2, function(err, fd) {
+        return go$open(path30, flags, mode, cb);
+        function go$open(path31, flags2, mode2, cb2, startTime) {
+          return fs$open(path31, flags2, mode2, function(err, fd) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-              enqueue([go$open, [path30, flags2, mode2, cb2], err, startTime || Date.now(), Date.now()]);
+              enqueue([go$open, [path31, flags2, mode2, cb2], err, startTime || Date.now(), Date.now()]);
             else {
               if (typeof cb2 === "function")
                 cb2.apply(this, arguments);
@@ -4219,20 +4219,20 @@ var require_graceful_fs = __commonJS({
           });
         }
       }
-      return fs29;
+      return fs30;
     }
     function enqueue(elem) {
       debug("ENQUEUE", elem[0].name, elem[1]);
-      fs28[gracefulQueue].push(elem);
+      fs29[gracefulQueue].push(elem);
       retry();
     }
     var retryTimer;
     function resetQueue() {
       var now = Date.now();
-      for (var i = 0; i < fs28[gracefulQueue].length; ++i) {
-        if (fs28[gracefulQueue][i].length > 2) {
-          fs28[gracefulQueue][i][3] = now;
-          fs28[gracefulQueue][i][4] = now;
+      for (var i = 0; i < fs29[gracefulQueue].length; ++i) {
+        if (fs29[gracefulQueue][i].length > 2) {
+          fs29[gracefulQueue][i][3] = now;
+          fs29[gracefulQueue][i][4] = now;
         }
       }
       retry();
@@ -4240,9 +4240,9 @@ var require_graceful_fs = __commonJS({
     function retry() {
       clearTimeout(retryTimer);
       retryTimer = void 0;
-      if (fs28[gracefulQueue].length === 0)
+      if (fs29[gracefulQueue].length === 0)
         return;
-      var elem = fs28[gracefulQueue].shift();
+      var elem = fs29[gracefulQueue].shift();
       var fn = elem[0];
       var args = elem[1];
       var err = elem[2];
@@ -4264,7 +4264,7 @@ var require_graceful_fs = __commonJS({
           debug("RETRY", fn.name, args);
           fn.apply(null, args.concat([startTime]));
         } else {
-          fs28[gracefulQueue].push(elem);
+          fs29[gracefulQueue].push(elem);
         }
       }
       if (retryTimer === void 0) {
@@ -4279,7 +4279,7 @@ var require_fs = __commonJS({
   "../node_modules/fs-extra/lib/fs/index.js"(exports2) {
     "use strict";
     var u = require_universalify().fromCallback;
-    var fs28 = require_graceful_fs();
+    var fs29 = require_graceful_fs();
     var api = [
       "access",
       "appendFile",
@@ -4320,26 +4320,26 @@ var require_fs = __commonJS({
       "utimes",
       "writeFile"
     ].filter((key) => {
-      return typeof fs28[key] === "function";
+      return typeof fs29[key] === "function";
     });
-    Object.assign(exports2, fs28);
+    Object.assign(exports2, fs29);
     api.forEach((method) => {
-      exports2[method] = u(fs28[method]);
+      exports2[method] = u(fs29[method]);
     });
     exports2.exists = function(filename, callback) {
       if (typeof callback === "function") {
-        return fs28.exists(filename, callback);
+        return fs29.exists(filename, callback);
       }
       return new Promise((resolve4) => {
-        return fs28.exists(filename, resolve4);
+        return fs29.exists(filename, resolve4);
       });
     };
     exports2.read = function(fd, buffer, offset, length, position, callback) {
       if (typeof callback === "function") {
-        return fs28.read(fd, buffer, offset, length, position, callback);
+        return fs29.read(fd, buffer, offset, length, position, callback);
       }
       return new Promise((resolve4, reject) => {
-        fs28.read(fd, buffer, offset, length, position, (err, bytesRead, buffer2) => {
+        fs29.read(fd, buffer, offset, length, position, (err, bytesRead, buffer2) => {
           if (err) return reject(err);
           resolve4({ bytesRead, buffer: buffer2 });
         });
@@ -4347,10 +4347,10 @@ var require_fs = __commonJS({
     };
     exports2.write = function(fd, buffer, ...args) {
       if (typeof args[args.length - 1] === "function") {
-        return fs28.write(fd, buffer, ...args);
+        return fs29.write(fd, buffer, ...args);
       }
       return new Promise((resolve4, reject) => {
-        fs28.write(fd, buffer, ...args, (err, bytesWritten, buffer2) => {
+        fs29.write(fd, buffer, ...args, (err, bytesWritten, buffer2) => {
           if (err) return reject(err);
           resolve4({ bytesWritten, buffer: buffer2 });
         });
@@ -4358,10 +4358,10 @@ var require_fs = __commonJS({
     };
     exports2.readv = function(fd, buffers, ...args) {
       if (typeof args[args.length - 1] === "function") {
-        return fs28.readv(fd, buffers, ...args);
+        return fs29.readv(fd, buffers, ...args);
       }
       return new Promise((resolve4, reject) => {
-        fs28.readv(fd, buffers, ...args, (err, bytesRead, buffers2) => {
+        fs29.readv(fd, buffers, ...args, (err, bytesRead, buffers2) => {
           if (err) return reject(err);
           resolve4({ bytesRead, buffers: buffers2 });
         });
@@ -4369,17 +4369,17 @@ var require_fs = __commonJS({
     };
     exports2.writev = function(fd, buffers, ...args) {
       if (typeof args[args.length - 1] === "function") {
-        return fs28.writev(fd, buffers, ...args);
+        return fs29.writev(fd, buffers, ...args);
       }
       return new Promise((resolve4, reject) => {
-        fs28.writev(fd, buffers, ...args, (err, bytesWritten, buffers2) => {
+        fs29.writev(fd, buffers, ...args, (err, bytesWritten, buffers2) => {
           if (err) return reject(err);
           resolve4({ bytesWritten, buffers: buffers2 });
         });
       });
     };
-    if (typeof fs28.realpath.native === "function") {
-      exports2.realpath.native = u(fs28.realpath.native);
+    if (typeof fs29.realpath.native === "function") {
+      exports2.realpath.native = u(fs29.realpath.native);
     } else {
       process.emitWarning(
         "fs.realpath.native is not a function. Is fs being monkey-patched?",
@@ -4394,10 +4394,10 @@ var require_fs = __commonJS({
 var require_utils = __commonJS({
   "../node_modules/fs-extra/lib/mkdirs/utils.js"(exports2, module2) {
     "use strict";
-    var path29 = require("path");
+    var path30 = require("path");
     module2.exports.checkPath = function checkPath(pth) {
       if (process.platform === "win32") {
-        const pathHasInvalidWinCharacters = /[<>:"|?*]/.test(pth.replace(path29.parse(pth).root, ""));
+        const pathHasInvalidWinCharacters = /[<>:"|?*]/.test(pth.replace(path30.parse(pth).root, ""));
         if (pathHasInvalidWinCharacters) {
           const error48 = new Error(`Path contains invalid characters: ${pth}`);
           error48.code = "EINVAL";
@@ -4412,7 +4412,7 @@ var require_utils = __commonJS({
 var require_make_dir = __commonJS({
   "../node_modules/fs-extra/lib/mkdirs/make-dir.js"(exports2, module2) {
     "use strict";
-    var fs28 = require_fs();
+    var fs29 = require_fs();
     var { checkPath } = require_utils();
     var getMode = (options) => {
       const defaults = { mode: 511 };
@@ -4421,14 +4421,14 @@ var require_make_dir = __commonJS({
     };
     module2.exports.makeDir = async (dir, options) => {
       checkPath(dir);
-      return fs28.mkdir(dir, {
+      return fs29.mkdir(dir, {
         mode: getMode(options),
         recursive: true
       });
     };
     module2.exports.makeDirSync = (dir, options) => {
       checkPath(dir);
-      return fs28.mkdirSync(dir, {
+      return fs29.mkdirSync(dir, {
         mode: getMode(options),
         recursive: true
       });
@@ -4460,13 +4460,13 @@ var require_path_exists = __commonJS({
   "../node_modules/fs-extra/lib/path-exists/index.js"(exports2, module2) {
     "use strict";
     var u = require_universalify().fromPromise;
-    var fs28 = require_fs();
-    function pathExists(path29) {
-      return fs28.access(path29).then(() => true).catch(() => false);
+    var fs29 = require_fs();
+    function pathExists(path30) {
+      return fs29.access(path30).then(() => true).catch(() => false);
     }
     module2.exports = {
       pathExists: u(pathExists),
-      pathExistsSync: fs28.existsSync
+      pathExistsSync: fs29.existsSync
     };
   }
 });
@@ -4475,16 +4475,16 @@ var require_path_exists = __commonJS({
 var require_utimes = __commonJS({
   "../node_modules/fs-extra/lib/util/utimes.js"(exports2, module2) {
     "use strict";
-    var fs28 = require_fs();
+    var fs29 = require_fs();
     var u = require_universalify().fromPromise;
-    async function utimesMillis(path29, atime, mtime) {
-      const fd = await fs28.open(path29, "r+");
+    async function utimesMillis(path30, atime, mtime) {
+      const fd = await fs29.open(path30, "r+");
       let closeErr = null;
       try {
-        await fs28.futimes(fd, atime, mtime);
+        await fs29.futimes(fd, atime, mtime);
       } finally {
         try {
-          await fs28.close(fd);
+          await fs29.close(fd);
         } catch (e) {
           closeErr = e;
         }
@@ -4493,10 +4493,10 @@ var require_utimes = __commonJS({
         throw closeErr;
       }
     }
-    function utimesMillisSync(path29, atime, mtime) {
-      const fd = fs28.openSync(path29, "r+");
-      fs28.futimesSync(fd, atime, mtime);
-      return fs28.closeSync(fd);
+    function utimesMillisSync(path30, atime, mtime) {
+      const fd = fs29.openSync(path30, "r+");
+      fs29.futimesSync(fd, atime, mtime);
+      return fs29.closeSync(fd);
     }
     module2.exports = {
       utimesMillis: u(utimesMillis),
@@ -4509,11 +4509,11 @@ var require_utimes = __commonJS({
 var require_stat = __commonJS({
   "../node_modules/fs-extra/lib/util/stat.js"(exports2, module2) {
     "use strict";
-    var fs28 = require_fs();
-    var path29 = require("path");
+    var fs29 = require_fs();
+    var path30 = require("path");
     var u = require_universalify().fromPromise;
     function getStats(src, dest, opts) {
-      const statFunc = opts.dereference ? (file2) => fs28.stat(file2, { bigint: true }) : (file2) => fs28.lstat(file2, { bigint: true });
+      const statFunc = opts.dereference ? (file2) => fs29.stat(file2, { bigint: true }) : (file2) => fs29.lstat(file2, { bigint: true });
       return Promise.all([
         statFunc(src),
         statFunc(dest).catch((err) => {
@@ -4524,7 +4524,7 @@ var require_stat = __commonJS({
     }
     function getStatsSync(src, dest, opts) {
       let destStat;
-      const statFunc = opts.dereference ? (file2) => fs28.statSync(file2, { bigint: true }) : (file2) => fs28.lstatSync(file2, { bigint: true });
+      const statFunc = opts.dereference ? (file2) => fs29.statSync(file2, { bigint: true }) : (file2) => fs29.lstatSync(file2, { bigint: true });
       const srcStat = statFunc(src);
       try {
         destStat = statFunc(dest);
@@ -4538,8 +4538,8 @@ var require_stat = __commonJS({
       const { srcStat, destStat } = await getStats(src, dest, opts);
       if (destStat) {
         if (areIdentical(srcStat, destStat)) {
-          const srcBaseName = path29.basename(src);
-          const destBaseName = path29.basename(dest);
+          const srcBaseName = path30.basename(src);
+          const destBaseName = path30.basename(dest);
           if (funcName === "move" && srcBaseName !== destBaseName && srcBaseName.toLowerCase() === destBaseName.toLowerCase()) {
             return { srcStat, destStat, isChangingCase: true };
           }
@@ -4561,8 +4561,8 @@ var require_stat = __commonJS({
       const { srcStat, destStat } = getStatsSync(src, dest, opts);
       if (destStat) {
         if (areIdentical(srcStat, destStat)) {
-          const srcBaseName = path29.basename(src);
-          const destBaseName = path29.basename(dest);
+          const srcBaseName = path30.basename(src);
+          const destBaseName = path30.basename(dest);
           if (funcName === "move" && srcBaseName !== destBaseName && srcBaseName.toLowerCase() === destBaseName.toLowerCase()) {
             return { srcStat, destStat, isChangingCase: true };
           }
@@ -4581,12 +4581,12 @@ var require_stat = __commonJS({
       return { srcStat, destStat };
     }
     async function checkParentPaths(src, srcStat, dest, funcName) {
-      const srcParent = path29.resolve(path29.dirname(src));
-      const destParent = path29.resolve(path29.dirname(dest));
-      if (destParent === srcParent || destParent === path29.parse(destParent).root) return;
+      const srcParent = path30.resolve(path30.dirname(src));
+      const destParent = path30.resolve(path30.dirname(dest));
+      if (destParent === srcParent || destParent === path30.parse(destParent).root) return;
       let destStat;
       try {
-        destStat = await fs28.stat(destParent, { bigint: true });
+        destStat = await fs29.stat(destParent, { bigint: true });
       } catch (err) {
         if (err.code === "ENOENT") return;
         throw err;
@@ -4597,12 +4597,12 @@ var require_stat = __commonJS({
       return checkParentPaths(src, srcStat, destParent, funcName);
     }
     function checkParentPathsSync(src, srcStat, dest, funcName) {
-      const srcParent = path29.resolve(path29.dirname(src));
-      const destParent = path29.resolve(path29.dirname(dest));
-      if (destParent === srcParent || destParent === path29.parse(destParent).root) return;
+      const srcParent = path30.resolve(path30.dirname(src));
+      const destParent = path30.resolve(path30.dirname(dest));
+      if (destParent === srcParent || destParent === path30.parse(destParent).root) return;
       let destStat;
       try {
-        destStat = fs28.statSync(destParent, { bigint: true });
+        destStat = fs29.statSync(destParent, { bigint: true });
       } catch (err) {
         if (err.code === "ENOENT") return;
         throw err;
@@ -4616,8 +4616,8 @@ var require_stat = __commonJS({
       return destStat.ino !== void 0 && destStat.dev !== void 0 && destStat.ino === srcStat.ino && destStat.dev === srcStat.dev;
     }
     function isSrcSubdir(src, dest) {
-      const srcArr = path29.resolve(src).split(path29.sep).filter((i) => i);
-      const destArr = path29.resolve(dest).split(path29.sep).filter((i) => i);
+      const srcArr = path30.resolve(src).split(path30.sep).filter((i) => i);
+      const destArr = path30.resolve(dest).split(path30.sep).filter((i) => i);
       return srcArr.every((cur, i) => destArr[i] === cur);
     }
     function errMsg(src, dest, funcName) {
@@ -4669,8 +4669,8 @@ var require_async = __commonJS({
 var require_copy = __commonJS({
   "../node_modules/fs-extra/lib/copy/copy.js"(exports2, module2) {
     "use strict";
-    var fs28 = require_fs();
-    var path29 = require("path");
+    var fs29 = require_fs();
+    var path30 = require("path");
     var { mkdirs } = require_mkdirs();
     var { pathExists } = require_path_exists();
     var { utimesMillis } = require_utimes();
@@ -4693,7 +4693,7 @@ var require_copy = __commonJS({
       await stat.checkParentPaths(src, srcStat, dest, "copy");
       const include = await runFilter(src, dest, opts);
       if (!include) return;
-      const destParent = path29.dirname(dest);
+      const destParent = path30.dirname(dest);
       const dirExists = await pathExists(destParent);
       if (!dirExists) {
         await mkdirs(destParent);
@@ -4705,7 +4705,7 @@ var require_copy = __commonJS({
       return opts.filter(src, dest);
     }
     async function getStatsAndPerformCopy(destStat, src, dest, opts) {
-      const statFn = opts.dereference ? fs28.stat : fs28.lstat;
+      const statFn = opts.dereference ? fs29.stat : fs29.lstat;
       const srcStat = await statFn(src);
       if (srcStat.isDirectory()) return onDir(srcStat, destStat, src, dest, opts);
       if (srcStat.isFile() || srcStat.isCharacterDevice() || srcStat.isBlockDevice()) return onFile(srcStat, destStat, src, dest, opts);
@@ -4717,7 +4717,7 @@ var require_copy = __commonJS({
     async function onFile(srcStat, destStat, src, dest, opts) {
       if (!destStat) return copyFile(srcStat, src, dest, opts);
       if (opts.overwrite) {
-        await fs28.unlink(dest);
+        await fs29.unlink(dest);
         return copyFile(srcStat, src, dest, opts);
       }
       if (opts.errorOnExist) {
@@ -4725,29 +4725,29 @@ var require_copy = __commonJS({
       }
     }
     async function copyFile(srcStat, src, dest, opts) {
-      await fs28.copyFile(src, dest);
+      await fs29.copyFile(src, dest);
       if (opts.preserveTimestamps) {
         if (fileIsNotWritable(srcStat.mode)) {
           await makeFileWritable(dest, srcStat.mode);
         }
-        const updatedSrcStat = await fs28.stat(src);
+        const updatedSrcStat = await fs29.stat(src);
         await utimesMillis(dest, updatedSrcStat.atime, updatedSrcStat.mtime);
       }
-      return fs28.chmod(dest, srcStat.mode);
+      return fs29.chmod(dest, srcStat.mode);
     }
     function fileIsNotWritable(srcMode) {
       return (srcMode & 128) === 0;
     }
     function makeFileWritable(dest, srcMode) {
-      return fs28.chmod(dest, srcMode | 128);
+      return fs29.chmod(dest, srcMode | 128);
     }
     async function onDir(srcStat, destStat, src, dest, opts) {
       if (!destStat) {
-        await fs28.mkdir(dest);
+        await fs29.mkdir(dest);
       }
-      await asyncIteratorConcurrentProcess(await fs28.opendir(src), async (item) => {
-        const srcItem = path29.join(src, item.name);
-        const destItem = path29.join(dest, item.name);
+      await asyncIteratorConcurrentProcess(await fs29.opendir(src), async (item) => {
+        const srcItem = path30.join(src, item.name);
+        const destItem = path30.join(dest, item.name);
         const include = await runFilter(srcItem, destItem, opts);
         if (include) {
           const { destStat: destStat2 } = await stat.checkPaths(srcItem, destItem, "copy", opts);
@@ -4755,26 +4755,26 @@ var require_copy = __commonJS({
         }
       });
       if (!destStat) {
-        await fs28.chmod(dest, srcStat.mode);
+        await fs29.chmod(dest, srcStat.mode);
       }
     }
     async function onLink(destStat, src, dest, opts) {
-      let resolvedSrc = await fs28.readlink(src);
+      let resolvedSrc = await fs29.readlink(src);
       if (opts.dereference) {
-        resolvedSrc = path29.resolve(process.cwd(), resolvedSrc);
+        resolvedSrc = path30.resolve(process.cwd(), resolvedSrc);
       }
       if (!destStat) {
-        return fs28.symlink(resolvedSrc, dest);
+        return fs29.symlink(resolvedSrc, dest);
       }
       let resolvedDest = null;
       try {
-        resolvedDest = await fs28.readlink(dest);
+        resolvedDest = await fs29.readlink(dest);
       } catch (e) {
-        if (e.code === "EINVAL" || e.code === "UNKNOWN") return fs28.symlink(resolvedSrc, dest);
+        if (e.code === "EINVAL" || e.code === "UNKNOWN") return fs29.symlink(resolvedSrc, dest);
         throw e;
       }
       if (opts.dereference) {
-        resolvedDest = path29.resolve(process.cwd(), resolvedDest);
+        resolvedDest = path30.resolve(process.cwd(), resolvedDest);
       }
       if (resolvedSrc !== resolvedDest) {
         if (stat.isSrcSubdir(resolvedSrc, resolvedDest)) {
@@ -4784,8 +4784,8 @@ var require_copy = __commonJS({
           throw new Error(`Cannot overwrite '${resolvedDest}' with '${resolvedSrc}'.`);
         }
       }
-      await fs28.unlink(dest);
-      return fs28.symlink(resolvedSrc, dest);
+      await fs29.unlink(dest);
+      return fs29.symlink(resolvedSrc, dest);
     }
     module2.exports = copy;
   }
@@ -4795,8 +4795,8 @@ var require_copy = __commonJS({
 var require_copy_sync = __commonJS({
   "../node_modules/fs-extra/lib/copy/copy-sync.js"(exports2, module2) {
     "use strict";
-    var fs28 = require_graceful_fs();
-    var path29 = require("path");
+    var fs29 = require_graceful_fs();
+    var path30 = require("path");
     var mkdirsSync = require_mkdirs().mkdirsSync;
     var utimesMillisSync = require_utimes().utimesMillisSync;
     var stat = require_stat();
@@ -4817,12 +4817,12 @@ var require_copy_sync = __commonJS({
       const { srcStat, destStat } = stat.checkPathsSync(src, dest, "copy", opts);
       stat.checkParentPathsSync(src, srcStat, dest, "copy");
       if (opts.filter && !opts.filter(src, dest)) return;
-      const destParent = path29.dirname(dest);
-      if (!fs28.existsSync(destParent)) mkdirsSync(destParent);
+      const destParent = path30.dirname(dest);
+      if (!fs29.existsSync(destParent)) mkdirsSync(destParent);
       return getStats(destStat, src, dest, opts);
     }
     function getStats(destStat, src, dest, opts) {
-      const statSync2 = opts.dereference ? fs28.statSync : fs28.lstatSync;
+      const statSync2 = opts.dereference ? fs29.statSync : fs29.lstatSync;
       const srcStat = statSync2(src);
       if (srcStat.isDirectory()) return onDir(srcStat, destStat, src, dest, opts);
       else if (srcStat.isFile() || srcStat.isCharacterDevice() || srcStat.isBlockDevice()) return onFile(srcStat, destStat, src, dest, opts);
@@ -4837,14 +4837,14 @@ var require_copy_sync = __commonJS({
     }
     function mayCopyFile(srcStat, src, dest, opts) {
       if (opts.overwrite) {
-        fs28.unlinkSync(dest);
+        fs29.unlinkSync(dest);
         return copyFile(srcStat, src, dest, opts);
       } else if (opts.errorOnExist) {
         throw new Error(`'${dest}' already exists`);
       }
     }
     function copyFile(srcStat, src, dest, opts) {
-      fs28.copyFileSync(src, dest);
+      fs29.copyFileSync(src, dest);
       if (opts.preserveTimestamps) handleTimestamps(srcStat.mode, src, dest);
       return setDestMode(dest, srcStat.mode);
     }
@@ -4859,10 +4859,10 @@ var require_copy_sync = __commonJS({
       return setDestMode(dest, srcMode | 128);
     }
     function setDestMode(dest, srcMode) {
-      return fs28.chmodSync(dest, srcMode);
+      return fs29.chmodSync(dest, srcMode);
     }
     function setDestTimestamps(src, dest) {
-      const updatedSrcStat = fs28.statSync(src);
+      const updatedSrcStat = fs29.statSync(src);
       return utimesMillisSync(dest, updatedSrcStat.atime, updatedSrcStat.mtime);
     }
     function onDir(srcStat, destStat, src, dest, opts) {
@@ -4870,12 +4870,12 @@ var require_copy_sync = __commonJS({
       return copyDir(src, dest, opts);
     }
     function mkDirAndCopy(srcMode, src, dest, opts) {
-      fs28.mkdirSync(dest);
+      fs29.mkdirSync(dest);
       copyDir(src, dest, opts);
       return setDestMode(dest, srcMode);
     }
     function copyDir(src, dest, opts) {
-      const dir = fs28.opendirSync(src);
+      const dir = fs29.opendirSync(src);
       try {
         let dirent;
         while ((dirent = dir.readSync()) !== null) {
@@ -4886,29 +4886,29 @@ var require_copy_sync = __commonJS({
       }
     }
     function copyDirItem(item, src, dest, opts) {
-      const srcItem = path29.join(src, item);
-      const destItem = path29.join(dest, item);
+      const srcItem = path30.join(src, item);
+      const destItem = path30.join(dest, item);
       if (opts.filter && !opts.filter(srcItem, destItem)) return;
       const { destStat } = stat.checkPathsSync(srcItem, destItem, "copy", opts);
       return getStats(destStat, srcItem, destItem, opts);
     }
     function onLink(destStat, src, dest, opts) {
-      let resolvedSrc = fs28.readlinkSync(src);
+      let resolvedSrc = fs29.readlinkSync(src);
       if (opts.dereference) {
-        resolvedSrc = path29.resolve(process.cwd(), resolvedSrc);
+        resolvedSrc = path30.resolve(process.cwd(), resolvedSrc);
       }
       if (!destStat) {
-        return fs28.symlinkSync(resolvedSrc, dest);
+        return fs29.symlinkSync(resolvedSrc, dest);
       } else {
         let resolvedDest;
         try {
-          resolvedDest = fs28.readlinkSync(dest);
+          resolvedDest = fs29.readlinkSync(dest);
         } catch (err) {
-          if (err.code === "EINVAL" || err.code === "UNKNOWN") return fs28.symlinkSync(resolvedSrc, dest);
+          if (err.code === "EINVAL" || err.code === "UNKNOWN") return fs29.symlinkSync(resolvedSrc, dest);
           throw err;
         }
         if (opts.dereference) {
-          resolvedDest = path29.resolve(process.cwd(), resolvedDest);
+          resolvedDest = path30.resolve(process.cwd(), resolvedDest);
         }
         if (resolvedSrc !== resolvedDest) {
           if (stat.isSrcSubdir(resolvedSrc, resolvedDest)) {
@@ -4922,8 +4922,8 @@ var require_copy_sync = __commonJS({
       }
     }
     function copyLink(resolvedSrc, dest) {
-      fs28.unlinkSync(dest);
-      return fs28.symlinkSync(resolvedSrc, dest);
+      fs29.unlinkSync(dest);
+      return fs29.symlinkSync(resolvedSrc, dest);
     }
     module2.exports = copySync;
   }
@@ -4945,13 +4945,13 @@ var require_copy2 = __commonJS({
 var require_remove = __commonJS({
   "../node_modules/fs-extra/lib/remove/index.js"(exports2, module2) {
     "use strict";
-    var fs28 = require_graceful_fs();
+    var fs29 = require_graceful_fs();
     var u = require_universalify().fromCallback;
-    function remove(path29, callback) {
-      fs28.rm(path29, { recursive: true, force: true }, callback);
+    function remove(path30, callback) {
+      fs29.rm(path30, { recursive: true, force: true }, callback);
     }
-    function removeSync(path29) {
-      fs28.rmSync(path29, { recursive: true, force: true });
+    function removeSync(path30) {
+      fs29.rmSync(path30, { recursive: true, force: true });
     }
     module2.exports = {
       remove: u(remove),
@@ -4965,28 +4965,28 @@ var require_empty = __commonJS({
   "../node_modules/fs-extra/lib/empty/index.js"(exports2, module2) {
     "use strict";
     var u = require_universalify().fromPromise;
-    var fs28 = require_fs();
-    var path29 = require("path");
+    var fs29 = require_fs();
+    var path30 = require("path");
     var mkdir = require_mkdirs();
     var remove = require_remove();
     var emptyDir = u(async function emptyDir2(dir) {
       let items;
       try {
-        items = await fs28.readdir(dir);
+        items = await fs29.readdir(dir);
       } catch {
         return mkdir.mkdirs(dir);
       }
-      return Promise.all(items.map((item) => remove.remove(path29.join(dir, item))));
+      return Promise.all(items.map((item) => remove.remove(path30.join(dir, item))));
     });
     function emptyDirSync(dir) {
       let items;
       try {
-        items = fs28.readdirSync(dir);
+        items = fs29.readdirSync(dir);
       } catch {
         return mkdir.mkdirsSync(dir);
       }
       items.forEach((item) => {
-        item = path29.join(dir, item);
+        item = path30.join(dir, item);
         remove.removeSync(item);
       });
     }
@@ -5004,52 +5004,52 @@ var require_file = __commonJS({
   "../node_modules/fs-extra/lib/ensure/file.js"(exports2, module2) {
     "use strict";
     var u = require_universalify().fromPromise;
-    var path29 = require("path");
-    var fs28 = require_fs();
+    var path30 = require("path");
+    var fs29 = require_fs();
     var mkdir = require_mkdirs();
     async function createFile(file2) {
       let stats;
       try {
-        stats = await fs28.stat(file2);
+        stats = await fs29.stat(file2);
       } catch {
       }
       if (stats && stats.isFile()) return;
-      const dir = path29.dirname(file2);
+      const dir = path30.dirname(file2);
       let dirStats = null;
       try {
-        dirStats = await fs28.stat(dir);
+        dirStats = await fs29.stat(dir);
       } catch (err) {
         if (err.code === "ENOENT") {
           await mkdir.mkdirs(dir);
-          await fs28.writeFile(file2, "");
+          await fs29.writeFile(file2, "");
           return;
         } else {
           throw err;
         }
       }
       if (dirStats.isDirectory()) {
-        await fs28.writeFile(file2, "");
+        await fs29.writeFile(file2, "");
       } else {
-        await fs28.readdir(dir);
+        await fs29.readdir(dir);
       }
     }
     function createFileSync(file2) {
       let stats;
       try {
-        stats = fs28.statSync(file2);
+        stats = fs29.statSync(file2);
       } catch {
       }
       if (stats && stats.isFile()) return;
-      const dir = path29.dirname(file2);
+      const dir = path30.dirname(file2);
       try {
-        if (!fs28.statSync(dir).isDirectory()) {
-          fs28.readdirSync(dir);
+        if (!fs29.statSync(dir).isDirectory()) {
+          fs29.readdirSync(dir);
         }
       } catch (err) {
         if (err && err.code === "ENOENT") mkdir.mkdirsSync(dir);
         else throw err;
       }
-      fs28.writeFileSync(file2, "");
+      fs29.writeFileSync(file2, "");
     }
     module2.exports = {
       createFile: u(createFile),
@@ -5063,50 +5063,50 @@ var require_link = __commonJS({
   "../node_modules/fs-extra/lib/ensure/link.js"(exports2, module2) {
     "use strict";
     var u = require_universalify().fromPromise;
-    var path29 = require("path");
-    var fs28 = require_fs();
+    var path30 = require("path");
+    var fs29 = require_fs();
     var mkdir = require_mkdirs();
     var { pathExists } = require_path_exists();
     var { areIdentical } = require_stat();
     async function createLink(srcpath, dstpath) {
       let dstStat;
       try {
-        dstStat = await fs28.lstat(dstpath);
+        dstStat = await fs29.lstat(dstpath);
       } catch {
       }
       let srcStat;
       try {
-        srcStat = await fs28.lstat(srcpath);
+        srcStat = await fs29.lstat(srcpath);
       } catch (err) {
         err.message = err.message.replace("lstat", "ensureLink");
         throw err;
       }
       if (dstStat && areIdentical(srcStat, dstStat)) return;
-      const dir = path29.dirname(dstpath);
+      const dir = path30.dirname(dstpath);
       const dirExists = await pathExists(dir);
       if (!dirExists) {
         await mkdir.mkdirs(dir);
       }
-      await fs28.link(srcpath, dstpath);
+      await fs29.link(srcpath, dstpath);
     }
     function createLinkSync(srcpath, dstpath) {
       let dstStat;
       try {
-        dstStat = fs28.lstatSync(dstpath);
+        dstStat = fs29.lstatSync(dstpath);
       } catch {
       }
       try {
-        const srcStat = fs28.lstatSync(srcpath);
+        const srcStat = fs29.lstatSync(srcpath);
         if (dstStat && areIdentical(srcStat, dstStat)) return;
       } catch (err) {
         err.message = err.message.replace("lstat", "ensureLink");
         throw err;
       }
-      const dir = path29.dirname(dstpath);
-      const dirExists = fs28.existsSync(dir);
-      if (dirExists) return fs28.linkSync(srcpath, dstpath);
+      const dir = path30.dirname(dstpath);
+      const dirExists = fs29.existsSync(dir);
+      if (dirExists) return fs29.linkSync(srcpath, dstpath);
       mkdir.mkdirsSync(dir);
-      return fs28.linkSync(srcpath, dstpath);
+      return fs29.linkSync(srcpath, dstpath);
     }
     module2.exports = {
       createLink: u(createLink),
@@ -5119,14 +5119,14 @@ var require_link = __commonJS({
 var require_symlink_paths = __commonJS({
   "../node_modules/fs-extra/lib/ensure/symlink-paths.js"(exports2, module2) {
     "use strict";
-    var path29 = require("path");
-    var fs28 = require_fs();
+    var path30 = require("path");
+    var fs29 = require_fs();
     var { pathExists } = require_path_exists();
     var u = require_universalify().fromPromise;
     async function symlinkPaths(srcpath, dstpath) {
-      if (path29.isAbsolute(srcpath)) {
+      if (path30.isAbsolute(srcpath)) {
         try {
-          await fs28.lstat(srcpath);
+          await fs29.lstat(srcpath);
         } catch (err) {
           err.message = err.message.replace("lstat", "ensureSymlink");
           throw err;
@@ -5136,8 +5136,8 @@ var require_symlink_paths = __commonJS({
           toDst: srcpath
         };
       }
-      const dstdir = path29.dirname(dstpath);
-      const relativeToDst = path29.join(dstdir, srcpath);
+      const dstdir = path30.dirname(dstpath);
+      const relativeToDst = path30.join(dstdir, srcpath);
       const exists = await pathExists(relativeToDst);
       if (exists) {
         return {
@@ -5146,39 +5146,39 @@ var require_symlink_paths = __commonJS({
         };
       }
       try {
-        await fs28.lstat(srcpath);
+        await fs29.lstat(srcpath);
       } catch (err) {
         err.message = err.message.replace("lstat", "ensureSymlink");
         throw err;
       }
       return {
         toCwd: srcpath,
-        toDst: path29.relative(dstdir, srcpath)
+        toDst: path30.relative(dstdir, srcpath)
       };
     }
     function symlinkPathsSync(srcpath, dstpath) {
-      if (path29.isAbsolute(srcpath)) {
-        const exists2 = fs28.existsSync(srcpath);
+      if (path30.isAbsolute(srcpath)) {
+        const exists2 = fs29.existsSync(srcpath);
         if (!exists2) throw new Error("absolute srcpath does not exist");
         return {
           toCwd: srcpath,
           toDst: srcpath
         };
       }
-      const dstdir = path29.dirname(dstpath);
-      const relativeToDst = path29.join(dstdir, srcpath);
-      const exists = fs28.existsSync(relativeToDst);
+      const dstdir = path30.dirname(dstpath);
+      const relativeToDst = path30.join(dstdir, srcpath);
+      const exists = fs29.existsSync(relativeToDst);
       if (exists) {
         return {
           toCwd: relativeToDst,
           toDst: srcpath
         };
       }
-      const srcExists = fs28.existsSync(srcpath);
+      const srcExists = fs29.existsSync(srcpath);
       if (!srcExists) throw new Error("relative srcpath does not exist");
       return {
         toCwd: srcpath,
-        toDst: path29.relative(dstdir, srcpath)
+        toDst: path30.relative(dstdir, srcpath)
       };
     }
     module2.exports = {
@@ -5192,13 +5192,13 @@ var require_symlink_paths = __commonJS({
 var require_symlink_type = __commonJS({
   "../node_modules/fs-extra/lib/ensure/symlink-type.js"(exports2, module2) {
     "use strict";
-    var fs28 = require_fs();
+    var fs29 = require_fs();
     var u = require_universalify().fromPromise;
     async function symlinkType(srcpath, type) {
       if (type) return type;
       let stats;
       try {
-        stats = await fs28.lstat(srcpath);
+        stats = await fs29.lstat(srcpath);
       } catch {
         return "file";
       }
@@ -5208,7 +5208,7 @@ var require_symlink_type = __commonJS({
       if (type) return type;
       let stats;
       try {
-        stats = fs28.lstatSync(srcpath);
+        stats = fs29.lstatSync(srcpath);
       } catch {
         return "file";
       }
@@ -5226,8 +5226,8 @@ var require_symlink = __commonJS({
   "../node_modules/fs-extra/lib/ensure/symlink.js"(exports2, module2) {
     "use strict";
     var u = require_universalify().fromPromise;
-    var path29 = require("path");
-    var fs28 = require_fs();
+    var path30 = require("path");
+    var fs29 = require_fs();
     var { mkdirs, mkdirsSync } = require_mkdirs();
     var { symlinkPaths, symlinkPathsSync } = require_symlink_paths();
     var { symlinkType, symlinkTypeSync } = require_symlink_type();
@@ -5236,44 +5236,44 @@ var require_symlink = __commonJS({
     async function createSymlink(srcpath, dstpath, type) {
       let stats;
       try {
-        stats = await fs28.lstat(dstpath);
+        stats = await fs29.lstat(dstpath);
       } catch {
       }
       if (stats && stats.isSymbolicLink()) {
         const [srcStat, dstStat] = await Promise.all([
-          fs28.stat(srcpath),
-          fs28.stat(dstpath)
+          fs29.stat(srcpath),
+          fs29.stat(dstpath)
         ]);
         if (areIdentical(srcStat, dstStat)) return;
       }
       const relative = await symlinkPaths(srcpath, dstpath);
       srcpath = relative.toDst;
       const toType = await symlinkType(relative.toCwd, type);
-      const dir = path29.dirname(dstpath);
+      const dir = path30.dirname(dstpath);
       if (!await pathExists(dir)) {
         await mkdirs(dir);
       }
-      return fs28.symlink(srcpath, dstpath, toType);
+      return fs29.symlink(srcpath, dstpath, toType);
     }
     function createSymlinkSync(srcpath, dstpath, type) {
       let stats;
       try {
-        stats = fs28.lstatSync(dstpath);
+        stats = fs29.lstatSync(dstpath);
       } catch {
       }
       if (stats && stats.isSymbolicLink()) {
-        const srcStat = fs28.statSync(srcpath);
-        const dstStat = fs28.statSync(dstpath);
+        const srcStat = fs29.statSync(srcpath);
+        const dstStat = fs29.statSync(dstpath);
         if (areIdentical(srcStat, dstStat)) return;
       }
       const relative = symlinkPathsSync(srcpath, dstpath);
       srcpath = relative.toDst;
       type = symlinkTypeSync(relative.toCwd, type);
-      const dir = path29.dirname(dstpath);
-      const exists = fs28.existsSync(dir);
-      if (exists) return fs28.symlinkSync(srcpath, dstpath, type);
+      const dir = path30.dirname(dstpath);
+      const exists = fs29.existsSync(dir);
+      if (exists) return fs29.symlinkSync(srcpath, dstpath, type);
       mkdirsSync(dir);
-      return fs28.symlinkSync(srcpath, dstpath, type);
+      return fs29.symlinkSync(srcpath, dstpath, type);
     }
     module2.exports = {
       createSymlink: u(createSymlink),
@@ -5342,9 +5342,9 @@ var require_jsonfile = __commonJS({
       if (typeof options === "string") {
         options = { encoding: options };
       }
-      const fs28 = options.fs || _fs;
+      const fs29 = options.fs || _fs;
       const shouldThrow = "throws" in options ? options.throws : true;
-      let data = await universalify.fromCallback(fs28.readFile)(file2, options);
+      let data = await universalify.fromCallback(fs29.readFile)(file2, options);
       data = stripBom(data);
       let obj;
       try {
@@ -5364,10 +5364,10 @@ var require_jsonfile = __commonJS({
       if (typeof options === "string") {
         options = { encoding: options };
       }
-      const fs28 = options.fs || _fs;
+      const fs29 = options.fs || _fs;
       const shouldThrow = "throws" in options ? options.throws : true;
       try {
-        let content = fs28.readFileSync(file2, options);
+        let content = fs29.readFileSync(file2, options);
         content = stripBom(content);
         return JSON.parse(content, options.reviver);
       } catch (err) {
@@ -5380,15 +5380,15 @@ var require_jsonfile = __commonJS({
       }
     }
     async function _writeFile(file2, obj, options = {}) {
-      const fs28 = options.fs || _fs;
+      const fs29 = options.fs || _fs;
       const str = stringify2(obj, options);
-      await universalify.fromCallback(fs28.writeFile)(file2, str, options);
+      await universalify.fromCallback(fs29.writeFile)(file2, str, options);
     }
     var writeFile = universalify.fromPromise(_writeFile);
     function writeFileSync3(file2, obj, options = {}) {
-      const fs28 = options.fs || _fs;
+      const fs29 = options.fs || _fs;
       const str = stringify2(obj, options);
-      return fs28.writeFileSync(file2, str, options);
+      return fs29.writeFileSync(file2, str, options);
     }
     module2.exports = {
       readFile,
@@ -5419,23 +5419,23 @@ var require_output_file = __commonJS({
   "../node_modules/fs-extra/lib/output-file/index.js"(exports2, module2) {
     "use strict";
     var u = require_universalify().fromPromise;
-    var fs28 = require_fs();
-    var path29 = require("path");
+    var fs29 = require_fs();
+    var path30 = require("path");
     var mkdir = require_mkdirs();
     var pathExists = require_path_exists().pathExists;
     async function outputFile(file2, data, encoding = "utf-8") {
-      const dir = path29.dirname(file2);
+      const dir = path30.dirname(file2);
       if (!await pathExists(dir)) {
         await mkdir.mkdirs(dir);
       }
-      return fs28.writeFile(file2, data, encoding);
+      return fs29.writeFile(file2, data, encoding);
     }
     function outputFileSync(file2, ...args) {
-      const dir = path29.dirname(file2);
-      if (!fs28.existsSync(dir)) {
+      const dir = path30.dirname(file2);
+      if (!fs29.existsSync(dir)) {
         mkdir.mkdirsSync(dir);
       }
-      fs28.writeFileSync(file2, ...args);
+      fs29.writeFileSync(file2, ...args);
     }
     module2.exports = {
       outputFile: u(outputFile),
@@ -5494,8 +5494,8 @@ var require_json = __commonJS({
 var require_move = __commonJS({
   "../node_modules/fs-extra/lib/move/move.js"(exports2, module2) {
     "use strict";
-    var fs28 = require_fs();
-    var path29 = require("path");
+    var fs29 = require_fs();
+    var path30 = require("path");
     var { copy } = require_copy2();
     var { remove } = require_remove();
     var { mkdirp } = require_mkdirs();
@@ -5505,8 +5505,8 @@ var require_move = __commonJS({
       const overwrite = opts.overwrite || opts.clobber || false;
       const { srcStat, isChangingCase = false } = await stat.checkPaths(src, dest, "move", opts);
       await stat.checkParentPaths(src, srcStat, dest, "move");
-      const destParent = path29.dirname(dest);
-      const parsedParentPath = path29.parse(destParent);
+      const destParent = path30.dirname(dest);
+      const parsedParentPath = path30.parse(destParent);
       if (parsedParentPath.root !== destParent) {
         await mkdirp(destParent);
       }
@@ -5521,7 +5521,7 @@ var require_move = __commonJS({
         }
       }
       try {
-        await fs28.rename(src, dest);
+        await fs29.rename(src, dest);
       } catch (err) {
         if (err.code !== "EXDEV") {
           throw err;
@@ -5546,8 +5546,8 @@ var require_move = __commonJS({
 var require_move_sync = __commonJS({
   "../node_modules/fs-extra/lib/move/move-sync.js"(exports2, module2) {
     "use strict";
-    var fs28 = require_graceful_fs();
-    var path29 = require("path");
+    var fs29 = require_graceful_fs();
+    var path30 = require("path");
     var copySync = require_copy2().copySync;
     var removeSync = require_remove().removeSync;
     var mkdirpSync = require_mkdirs().mkdirpSync;
@@ -5557,12 +5557,12 @@ var require_move_sync = __commonJS({
       const overwrite = opts.overwrite || opts.clobber || false;
       const { srcStat, isChangingCase = false } = stat.checkPathsSync(src, dest, "move", opts);
       stat.checkParentPathsSync(src, srcStat, dest, "move");
-      if (!isParentRoot(dest)) mkdirpSync(path29.dirname(dest));
+      if (!isParentRoot(dest)) mkdirpSync(path30.dirname(dest));
       return doRename(src, dest, overwrite, isChangingCase);
     }
     function isParentRoot(dest) {
-      const parent = path29.dirname(dest);
-      const parsedPath = path29.parse(parent);
+      const parent = path30.dirname(dest);
+      const parsedPath = path30.parse(parent);
       return parsedPath.root === parent;
     }
     function doRename(src, dest, overwrite, isChangingCase) {
@@ -5571,12 +5571,12 @@ var require_move_sync = __commonJS({
         removeSync(dest);
         return rename(src, dest, overwrite);
       }
-      if (fs28.existsSync(dest)) throw new Error("dest already exists.");
+      if (fs29.existsSync(dest)) throw new Error("dest already exists.");
       return rename(src, dest, overwrite);
     }
     function rename(src, dest, overwrite) {
       try {
-        fs28.renameSync(src, dest);
+        fs29.renameSync(src, dest);
       } catch (err) {
         if (err.code !== "EXDEV") throw err;
         return moveAcrossDevice(src, dest, overwrite);
@@ -13676,8 +13676,8 @@ var require_utils3 = __commonJS({
       }
       return ind;
     }
-    function removeDotSegments(path29) {
-      let input = path29;
+    function removeDotSegments(path30) {
+      let input = path30;
       const output = [];
       let nextSlash = -1;
       let len = 0;
@@ -13876,8 +13876,8 @@ var require_schemes = __commonJS({
         wsComponent.secure = void 0;
       }
       if (wsComponent.resourceName) {
-        const [path29, query] = wsComponent.resourceName.split("?");
-        wsComponent.path = path29 && path29 !== "/" ? path29 : void 0;
+        const [path30, query] = wsComponent.resourceName.split("?");
+        wsComponent.path = path30 && path30 !== "/" ? path30 : void 0;
         wsComponent.query = query;
         wsComponent.resourceName = void 0;
       }
@@ -17203,12 +17203,12 @@ var require_dist2 = __commonJS({
         throw new Error(`Unknown format "${name}"`);
       return f;
     };
-    function addFormats(ajv, list, fs28, exportName) {
+    function addFormats(ajv, list, fs29, exportName) {
       var _a2;
       var _b;
       (_a2 = (_b = ajv.opts.code).formats) !== null && _a2 !== void 0 ? _a2 : _b.formats = codegen_1._`require("ajv-formats/dist/formats").${exportName}`;
       for (const f of list)
-        ajv.addFormat(f, fs28[f]);
+        ajv.addFormat(f, fs29[f]);
     }
     module2.exports = exports2 = formatsPlugin;
     Object.defineProperty(exports2, "__esModule", { value: true });
@@ -20882,1826 +20882,6 @@ var init_boxen = __esm({
     isColorValid = (color) => typeof color === "string" && (source_default[color] ?? isHex(color));
     getColorFunction = (color) => isHex(color) ? source_default.hex(color) : source_default[color];
     getBGColorFunction = (color) => isHex(color) ? source_default.bgHex(color) : source_default[camelCase(["bg", color])];
-  }
-});
-
-// ../node_modules/cli-table3/src/debug.js
-var require_debug2 = __commonJS({
-  "../node_modules/cli-table3/src/debug.js"(exports2, module2) {
-    "use strict";
-    var messages = [];
-    var level = 0;
-    var debug = (msg, min) => {
-      if (level >= min) {
-        messages.push(msg);
-      }
-    };
-    debug.WARN = 1;
-    debug.INFO = 2;
-    debug.DEBUG = 3;
-    debug.reset = () => {
-      messages = [];
-    };
-    debug.setDebugLevel = (v) => {
-      level = v;
-    };
-    debug.warn = (msg) => debug(msg, debug.WARN);
-    debug.info = (msg) => debug(msg, debug.INFO);
-    debug.debug = (msg) => debug(msg, debug.DEBUG);
-    debug.debugMessages = () => messages;
-    module2.exports = debug;
-  }
-});
-
-// ../node_modules/cli-table3/node_modules/ansi-regex/index.js
-var require_ansi_regex2 = __commonJS({
-  "../node_modules/cli-table3/node_modules/ansi-regex/index.js"(exports2, module2) {
-    "use strict";
-    module2.exports = ({ onlyFirst = false } = {}) => {
-      const pattern = [
-        "[\\u001B\\u009B][[\\]()#;?]*(?:(?:(?:(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]+)*|[a-zA-Z\\d]+(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]*)*)?\\u0007)",
-        "(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PR-TZcf-ntqry=><~]))"
-      ].join("|");
-      return new RegExp(pattern, onlyFirst ? void 0 : "g");
-    };
-  }
-});
-
-// ../node_modules/cli-table3/node_modules/strip-ansi/index.js
-var require_strip_ansi2 = __commonJS({
-  "../node_modules/cli-table3/node_modules/strip-ansi/index.js"(exports2, module2) {
-    "use strict";
-    var ansiRegex2 = require_ansi_regex2();
-    module2.exports = (string4) => typeof string4 === "string" ? string4.replace(ansiRegex2(), "") : string4;
-  }
-});
-
-// ../node_modules/cli-table3/node_modules/is-fullwidth-code-point/index.js
-var require_is_fullwidth_code_point2 = __commonJS({
-  "../node_modules/cli-table3/node_modules/is-fullwidth-code-point/index.js"(exports2, module2) {
-    "use strict";
-    var isFullwidthCodePoint = (codePoint) => {
-      if (Number.isNaN(codePoint)) {
-        return false;
-      }
-      if (codePoint >= 4352 && (codePoint <= 4447 || // Hangul Jamo
-      codePoint === 9001 || // LEFT-POINTING ANGLE BRACKET
-      codePoint === 9002 || // RIGHT-POINTING ANGLE BRACKET
-      // CJK Radicals Supplement .. Enclosed CJK Letters and Months
-      11904 <= codePoint && codePoint <= 12871 && codePoint !== 12351 || // Enclosed CJK Letters and Months .. CJK Unified Ideographs Extension A
-      12880 <= codePoint && codePoint <= 19903 || // CJK Unified Ideographs .. Yi Radicals
-      19968 <= codePoint && codePoint <= 42182 || // Hangul Jamo Extended-A
-      43360 <= codePoint && codePoint <= 43388 || // Hangul Syllables
-      44032 <= codePoint && codePoint <= 55203 || // CJK Compatibility Ideographs
-      63744 <= codePoint && codePoint <= 64255 || // Vertical Forms
-      65040 <= codePoint && codePoint <= 65049 || // CJK Compatibility Forms .. Small Form Variants
-      65072 <= codePoint && codePoint <= 65131 || // Halfwidth and Fullwidth Forms
-      65281 <= codePoint && codePoint <= 65376 || 65504 <= codePoint && codePoint <= 65510 || // Kana Supplement
-      110592 <= codePoint && codePoint <= 110593 || // Enclosed Ideographic Supplement
-      127488 <= codePoint && codePoint <= 127569 || // CJK Unified Ideographs Extension B .. Tertiary Ideographic Plane
-      131072 <= codePoint && codePoint <= 262141)) {
-        return true;
-      }
-      return false;
-    };
-    module2.exports = isFullwidthCodePoint;
-    module2.exports.default = isFullwidthCodePoint;
-  }
-});
-
-// ../node_modules/cli-table3/node_modules/emoji-regex/index.js
-var require_emoji_regex2 = __commonJS({
-  "../node_modules/cli-table3/node_modules/emoji-regex/index.js"(exports2, module2) {
-    "use strict";
-    module2.exports = function() {
-      return /\uD83C\uDFF4\uDB40\uDC67\uDB40\uDC62(?:\uDB40\uDC65\uDB40\uDC6E\uDB40\uDC67|\uDB40\uDC73\uDB40\uDC63\uDB40\uDC74|\uDB40\uDC77\uDB40\uDC6C\uDB40\uDC73)\uDB40\uDC7F|\uD83D\uDC68(?:\uD83C\uDFFC\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68\uD83C\uDFFB|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFF\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB-\uDFFE])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFE\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB-\uDFFD])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFD\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB\uDFFC])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\u200D(?:\u2764\uFE0F\u200D(?:\uD83D\uDC8B\u200D)?\uD83D\uDC68|(?:\uD83D[\uDC68\uDC69])\u200D(?:\uD83D\uDC66\u200D\uD83D\uDC66|\uD83D\uDC67\u200D(?:\uD83D[\uDC66\uDC67]))|\uD83D\uDC66\u200D\uD83D\uDC66|\uD83D\uDC67\u200D(?:\uD83D[\uDC66\uDC67])|(?:\uD83D[\uDC68\uDC69])\u200D(?:\uD83D[\uDC66\uDC67])|[\u2695\u2696\u2708]\uFE0F|\uD83D[\uDC66\uDC67]|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|(?:\uD83C\uDFFB\u200D[\u2695\u2696\u2708]|\uD83C\uDFFF\u200D[\u2695\u2696\u2708]|\uD83C\uDFFE\u200D[\u2695\u2696\u2708]|\uD83C\uDFFD\u200D[\u2695\u2696\u2708]|\uD83C\uDFFC\u200D[\u2695\u2696\u2708])\uFE0F|\uD83C\uDFFB\u200D(?:\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C[\uDFFB-\uDFFF])|(?:\uD83E\uDDD1\uD83C\uDFFB\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1|\uD83D\uDC69\uD83C\uDFFC\u200D\uD83E\uDD1D\u200D\uD83D\uDC69)\uD83C\uDFFB|\uD83E\uDDD1(?:\uD83C\uDFFF\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1(?:\uD83C[\uDFFB-\uDFFF])|\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1)|(?:\uD83E\uDDD1\uD83C\uDFFE\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1|\uD83D\uDC69\uD83C\uDFFF\u200D\uD83E\uDD1D\u200D(?:\uD83D[\uDC68\uDC69]))(?:\uD83C[\uDFFB-\uDFFE])|(?:\uD83E\uDDD1\uD83C\uDFFC\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1|\uD83D\uDC69\uD83C\uDFFD\u200D\uD83E\uDD1D\u200D\uD83D\uDC69)(?:\uD83C[\uDFFB\uDFFC])|\uD83D\uDC69(?:\uD83C\uDFFE\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB-\uDFFD\uDFFF])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFC\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB\uDFFD-\uDFFF])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFB\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFC-\uDFFF])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFD\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB\uDFFC\uDFFE\uDFFF])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\u200D(?:\u2764\uFE0F\u200D(?:\uD83D\uDC8B\u200D(?:\uD83D[\uDC68\uDC69])|\uD83D[\uDC68\uDC69])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFF\u200D(?:\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD]))|\uD83D\uDC69\u200D\uD83D\uDC69\u200D(?:\uD83D\uDC66\u200D\uD83D\uDC66|\uD83D\uDC67\u200D(?:\uD83D[\uDC66\uDC67]))|(?:\uD83E\uDDD1\uD83C\uDFFD\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1|\uD83D\uDC69\uD83C\uDFFE\u200D\uD83E\uDD1D\u200D\uD83D\uDC69)(?:\uD83C[\uDFFB-\uDFFD])|\uD83D\uDC69\u200D\uD83D\uDC66\u200D\uD83D\uDC66|\uD83D\uDC69\u200D\uD83D\uDC69\u200D(?:\uD83D[\uDC66\uDC67])|(?:\uD83D\uDC41\uFE0F\u200D\uD83D\uDDE8|\uD83D\uDC69(?:\uD83C\uDFFF\u200D[\u2695\u2696\u2708]|\uD83C\uDFFE\u200D[\u2695\u2696\u2708]|\uD83C\uDFFC\u200D[\u2695\u2696\u2708]|\uD83C\uDFFB\u200D[\u2695\u2696\u2708]|\uD83C\uDFFD\u200D[\u2695\u2696\u2708]|\u200D[\u2695\u2696\u2708])|(?:(?:\u26F9|\uD83C[\uDFCB\uDFCC]|\uD83D\uDD75)\uFE0F|\uD83D\uDC6F|\uD83E[\uDD3C\uDDDE\uDDDF])\u200D[\u2640\u2642]|(?:\u26F9|\uD83C[\uDFCB\uDFCC]|\uD83D\uDD75)(?:\uD83C[\uDFFB-\uDFFF])\u200D[\u2640\u2642]|(?:\uD83C[\uDFC3\uDFC4\uDFCA]|\uD83D[\uDC6E\uDC71\uDC73\uDC77\uDC81\uDC82\uDC86\uDC87\uDE45-\uDE47\uDE4B\uDE4D\uDE4E\uDEA3\uDEB4-\uDEB6]|\uD83E[\uDD26\uDD37-\uDD39\uDD3D\uDD3E\uDDB8\uDDB9\uDDCD-\uDDCF\uDDD6-\uDDDD])(?:(?:\uD83C[\uDFFB-\uDFFF])\u200D[\u2640\u2642]|\u200D[\u2640\u2642])|\uD83C\uDFF4\u200D\u2620)\uFE0F|\uD83D\uDC69\u200D\uD83D\uDC67\u200D(?:\uD83D[\uDC66\uDC67])|\uD83C\uDFF3\uFE0F\u200D\uD83C\uDF08|\uD83D\uDC15\u200D\uD83E\uDDBA|\uD83D\uDC69\u200D\uD83D\uDC66|\uD83D\uDC69\u200D\uD83D\uDC67|\uD83C\uDDFD\uD83C\uDDF0|\uD83C\uDDF4\uD83C\uDDF2|\uD83C\uDDF6\uD83C\uDDE6|[#\*0-9]\uFE0F\u20E3|\uD83C\uDDE7(?:\uD83C[\uDDE6\uDDE7\uDDE9-\uDDEF\uDDF1-\uDDF4\uDDF6-\uDDF9\uDDFB\uDDFC\uDDFE\uDDFF])|\uD83C\uDDF9(?:\uD83C[\uDDE6\uDDE8\uDDE9\uDDEB-\uDDED\uDDEF-\uDDF4\uDDF7\uDDF9\uDDFB\uDDFC\uDDFF])|\uD83C\uDDEA(?:\uD83C[\uDDE6\uDDE8\uDDEA\uDDEC\uDDED\uDDF7-\uDDFA])|\uD83E\uDDD1(?:\uD83C[\uDFFB-\uDFFF])|\uD83C\uDDF7(?:\uD83C[\uDDEA\uDDF4\uDDF8\uDDFA\uDDFC])|\uD83D\uDC69(?:\uD83C[\uDFFB-\uDFFF])|\uD83C\uDDF2(?:\uD83C[\uDDE6\uDDE8-\uDDED\uDDF0-\uDDFF])|\uD83C\uDDE6(?:\uD83C[\uDDE8-\uDDEC\uDDEE\uDDF1\uDDF2\uDDF4\uDDF6-\uDDFA\uDDFC\uDDFD\uDDFF])|\uD83C\uDDF0(?:\uD83C[\uDDEA\uDDEC-\uDDEE\uDDF2\uDDF3\uDDF5\uDDF7\uDDFC\uDDFE\uDDFF])|\uD83C\uDDED(?:\uD83C[\uDDF0\uDDF2\uDDF3\uDDF7\uDDF9\uDDFA])|\uD83C\uDDE9(?:\uD83C[\uDDEA\uDDEC\uDDEF\uDDF0\uDDF2\uDDF4\uDDFF])|\uD83C\uDDFE(?:\uD83C[\uDDEA\uDDF9])|\uD83C\uDDEC(?:\uD83C[\uDDE6\uDDE7\uDDE9-\uDDEE\uDDF1-\uDDF3\uDDF5-\uDDFA\uDDFC\uDDFE])|\uD83C\uDDF8(?:\uD83C[\uDDE6-\uDDEA\uDDEC-\uDDF4\uDDF7-\uDDF9\uDDFB\uDDFD-\uDDFF])|\uD83C\uDDEB(?:\uD83C[\uDDEE-\uDDF0\uDDF2\uDDF4\uDDF7])|\uD83C\uDDF5(?:\uD83C[\uDDE6\uDDEA-\uDDED\uDDF0-\uDDF3\uDDF7-\uDDF9\uDDFC\uDDFE])|\uD83C\uDDFB(?:\uD83C[\uDDE6\uDDE8\uDDEA\uDDEC\uDDEE\uDDF3\uDDFA])|\uD83C\uDDF3(?:\uD83C[\uDDE6\uDDE8\uDDEA-\uDDEC\uDDEE\uDDF1\uDDF4\uDDF5\uDDF7\uDDFA\uDDFF])|\uD83C\uDDE8(?:\uD83C[\uDDE6\uDDE8\uDDE9\uDDEB-\uDDEE\uDDF0-\uDDF5\uDDF7\uDDFA-\uDDFF])|\uD83C\uDDF1(?:\uD83C[\uDDE6-\uDDE8\uDDEE\uDDF0\uDDF7-\uDDFB\uDDFE])|\uD83C\uDDFF(?:\uD83C[\uDDE6\uDDF2\uDDFC])|\uD83C\uDDFC(?:\uD83C[\uDDEB\uDDF8])|\uD83C\uDDFA(?:\uD83C[\uDDE6\uDDEC\uDDF2\uDDF3\uDDF8\uDDFE\uDDFF])|\uD83C\uDDEE(?:\uD83C[\uDDE8-\uDDEA\uDDF1-\uDDF4\uDDF6-\uDDF9])|\uD83C\uDDEF(?:\uD83C[\uDDEA\uDDF2\uDDF4\uDDF5])|(?:\uD83C[\uDFC3\uDFC4\uDFCA]|\uD83D[\uDC6E\uDC71\uDC73\uDC77\uDC81\uDC82\uDC86\uDC87\uDE45-\uDE47\uDE4B\uDE4D\uDE4E\uDEA3\uDEB4-\uDEB6]|\uD83E[\uDD26\uDD37-\uDD39\uDD3D\uDD3E\uDDB8\uDDB9\uDDCD-\uDDCF\uDDD6-\uDDDD])(?:\uD83C[\uDFFB-\uDFFF])|(?:\u26F9|\uD83C[\uDFCB\uDFCC]|\uD83D\uDD75)(?:\uD83C[\uDFFB-\uDFFF])|(?:[\u261D\u270A-\u270D]|\uD83C[\uDF85\uDFC2\uDFC7]|\uD83D[\uDC42\uDC43\uDC46-\uDC50\uDC66\uDC67\uDC6B-\uDC6D\uDC70\uDC72\uDC74-\uDC76\uDC78\uDC7C\uDC83\uDC85\uDCAA\uDD74\uDD7A\uDD90\uDD95\uDD96\uDE4C\uDE4F\uDEC0\uDECC]|\uD83E[\uDD0F\uDD18-\uDD1C\uDD1E\uDD1F\uDD30-\uDD36\uDDB5\uDDB6\uDDBB\uDDD2-\uDDD5])(?:\uD83C[\uDFFB-\uDFFF])|(?:[\u231A\u231B\u23E9-\u23EC\u23F0\u23F3\u25FD\u25FE\u2614\u2615\u2648-\u2653\u267F\u2693\u26A1\u26AA\u26AB\u26BD\u26BE\u26C4\u26C5\u26CE\u26D4\u26EA\u26F2\u26F3\u26F5\u26FA\u26FD\u2705\u270A\u270B\u2728\u274C\u274E\u2753-\u2755\u2757\u2795-\u2797\u27B0\u27BF\u2B1B\u2B1C\u2B50\u2B55]|\uD83C[\uDC04\uDCCF\uDD8E\uDD91-\uDD9A\uDDE6-\uDDFF\uDE01\uDE1A\uDE2F\uDE32-\uDE36\uDE38-\uDE3A\uDE50\uDE51\uDF00-\uDF20\uDF2D-\uDF35\uDF37-\uDF7C\uDF7E-\uDF93\uDFA0-\uDFCA\uDFCF-\uDFD3\uDFE0-\uDFF0\uDFF4\uDFF8-\uDFFF]|\uD83D[\uDC00-\uDC3E\uDC40\uDC42-\uDCFC\uDCFF-\uDD3D\uDD4B-\uDD4E\uDD50-\uDD67\uDD7A\uDD95\uDD96\uDDA4\uDDFB-\uDE4F\uDE80-\uDEC5\uDECC\uDED0-\uDED2\uDED5\uDEEB\uDEEC\uDEF4-\uDEFA\uDFE0-\uDFEB]|\uD83E[\uDD0D-\uDD3A\uDD3C-\uDD45\uDD47-\uDD71\uDD73-\uDD76\uDD7A-\uDDA2\uDDA5-\uDDAA\uDDAE-\uDDCA\uDDCD-\uDDFF\uDE70-\uDE73\uDE78-\uDE7A\uDE80-\uDE82\uDE90-\uDE95])|(?:[#\*0-9\xA9\xAE\u203C\u2049\u2122\u2139\u2194-\u2199\u21A9\u21AA\u231A\u231B\u2328\u23CF\u23E9-\u23F3\u23F8-\u23FA\u24C2\u25AA\u25AB\u25B6\u25C0\u25FB-\u25FE\u2600-\u2604\u260E\u2611\u2614\u2615\u2618\u261D\u2620\u2622\u2623\u2626\u262A\u262E\u262F\u2638-\u263A\u2640\u2642\u2648-\u2653\u265F\u2660\u2663\u2665\u2666\u2668\u267B\u267E\u267F\u2692-\u2697\u2699\u269B\u269C\u26A0\u26A1\u26AA\u26AB\u26B0\u26B1\u26BD\u26BE\u26C4\u26C5\u26C8\u26CE\u26CF\u26D1\u26D3\u26D4\u26E9\u26EA\u26F0-\u26F5\u26F7-\u26FA\u26FD\u2702\u2705\u2708-\u270D\u270F\u2712\u2714\u2716\u271D\u2721\u2728\u2733\u2734\u2744\u2747\u274C\u274E\u2753-\u2755\u2757\u2763\u2764\u2795-\u2797\u27A1\u27B0\u27BF\u2934\u2935\u2B05-\u2B07\u2B1B\u2B1C\u2B50\u2B55\u3030\u303D\u3297\u3299]|\uD83C[\uDC04\uDCCF\uDD70\uDD71\uDD7E\uDD7F\uDD8E\uDD91-\uDD9A\uDDE6-\uDDFF\uDE01\uDE02\uDE1A\uDE2F\uDE32-\uDE3A\uDE50\uDE51\uDF00-\uDF21\uDF24-\uDF93\uDF96\uDF97\uDF99-\uDF9B\uDF9E-\uDFF0\uDFF3-\uDFF5\uDFF7-\uDFFF]|\uD83D[\uDC00-\uDCFD\uDCFF-\uDD3D\uDD49-\uDD4E\uDD50-\uDD67\uDD6F\uDD70\uDD73-\uDD7A\uDD87\uDD8A-\uDD8D\uDD90\uDD95\uDD96\uDDA4\uDDA5\uDDA8\uDDB1\uDDB2\uDDBC\uDDC2-\uDDC4\uDDD1-\uDDD3\uDDDC-\uDDDE\uDDE1\uDDE3\uDDE8\uDDEF\uDDF3\uDDFA-\uDE4F\uDE80-\uDEC5\uDECB-\uDED2\uDED5\uDEE0-\uDEE5\uDEE9\uDEEB\uDEEC\uDEF0\uDEF3-\uDEFA\uDFE0-\uDFEB]|\uD83E[\uDD0D-\uDD3A\uDD3C-\uDD45\uDD47-\uDD71\uDD73-\uDD76\uDD7A-\uDDA2\uDDA5-\uDDAA\uDDAE-\uDDCA\uDDCD-\uDDFF\uDE70-\uDE73\uDE78-\uDE7A\uDE80-\uDE82\uDE90-\uDE95])\uFE0F|(?:[\u261D\u26F9\u270A-\u270D]|\uD83C[\uDF85\uDFC2-\uDFC4\uDFC7\uDFCA-\uDFCC]|\uD83D[\uDC42\uDC43\uDC46-\uDC50\uDC66-\uDC78\uDC7C\uDC81-\uDC83\uDC85-\uDC87\uDC8F\uDC91\uDCAA\uDD74\uDD75\uDD7A\uDD90\uDD95\uDD96\uDE45-\uDE47\uDE4B-\uDE4F\uDEA3\uDEB4-\uDEB6\uDEC0\uDECC]|\uD83E[\uDD0F\uDD18-\uDD1F\uDD26\uDD30-\uDD39\uDD3C-\uDD3E\uDDB5\uDDB6\uDDB8\uDDB9\uDDBB\uDDCD-\uDDCF\uDDD1-\uDDDD])/g;
-    };
-  }
-});
-
-// ../node_modules/cli-table3/node_modules/string-width/index.js
-var require_string_width2 = __commonJS({
-  "../node_modules/cli-table3/node_modules/string-width/index.js"(exports2, module2) {
-    "use strict";
-    var stripAnsi2 = require_strip_ansi2();
-    var isFullwidthCodePoint = require_is_fullwidth_code_point2();
-    var emojiRegex = require_emoji_regex2();
-    var stringWidth2 = (string4) => {
-      if (typeof string4 !== "string" || string4.length === 0) {
-        return 0;
-      }
-      string4 = stripAnsi2(string4);
-      if (string4.length === 0) {
-        return 0;
-      }
-      string4 = string4.replace(emojiRegex(), "  ");
-      let width = 0;
-      for (let i = 0; i < string4.length; i++) {
-        const code = string4.codePointAt(i);
-        if (code <= 31 || code >= 127 && code <= 159) {
-          continue;
-        }
-        if (code >= 768 && code <= 879) {
-          continue;
-        }
-        if (code > 65535) {
-          i++;
-        }
-        width += isFullwidthCodePoint(code) ? 2 : 1;
-      }
-      return width;
-    };
-    module2.exports = stringWidth2;
-    module2.exports.default = stringWidth2;
-  }
-});
-
-// ../node_modules/cli-table3/src/utils.js
-var require_utils4 = __commonJS({
-  "../node_modules/cli-table3/src/utils.js"(exports2, module2) {
-    "use strict";
-    var stringWidth2 = require_string_width2();
-    function codeRegex(capture) {
-      return capture ? /\u001b\[((?:\d*;){0,5}\d*)m/g : /\u001b\[(?:\d*;){0,5}\d*m/g;
-    }
-    function strlen(str) {
-      let code = codeRegex();
-      let stripped = ("" + str).replace(code, "");
-      let split = stripped.split("\n");
-      return split.reduce(function(memo, s) {
-        return stringWidth2(s) > memo ? stringWidth2(s) : memo;
-      }, 0);
-    }
-    function repeat(str, times) {
-      return Array(times + 1).join(str);
-    }
-    function pad(str, len, pad2, dir) {
-      let length = strlen(str);
-      if (len + 1 >= length) {
-        let padlen = len - length;
-        switch (dir) {
-          case "right": {
-            str = repeat(pad2, padlen) + str;
-            break;
-          }
-          case "center": {
-            let right = Math.ceil(padlen / 2);
-            let left = padlen - right;
-            str = repeat(pad2, left) + str + repeat(pad2, right);
-            break;
-          }
-          default: {
-            str = str + repeat(pad2, padlen);
-            break;
-          }
-        }
-      }
-      return str;
-    }
-    var codeCache = {};
-    function addToCodeCache(name, on, off) {
-      on = "\x1B[" + on + "m";
-      off = "\x1B[" + off + "m";
-      codeCache[on] = { set: name, to: true };
-      codeCache[off] = { set: name, to: false };
-      codeCache[name] = { on, off };
-    }
-    addToCodeCache("bold", 1, 22);
-    addToCodeCache("italics", 3, 23);
-    addToCodeCache("underline", 4, 24);
-    addToCodeCache("inverse", 7, 27);
-    addToCodeCache("strikethrough", 9, 29);
-    function updateState(state, controlChars) {
-      let controlCode = controlChars[1] ? parseInt(controlChars[1].split(";")[0]) : 0;
-      if (controlCode >= 30 && controlCode <= 39 || controlCode >= 90 && controlCode <= 97) {
-        state.lastForegroundAdded = controlChars[0];
-        return;
-      }
-      if (controlCode >= 40 && controlCode <= 49 || controlCode >= 100 && controlCode <= 107) {
-        state.lastBackgroundAdded = controlChars[0];
-        return;
-      }
-      if (controlCode === 0) {
-        for (let i in state) {
-          if (Object.prototype.hasOwnProperty.call(state, i)) {
-            delete state[i];
-          }
-        }
-        return;
-      }
-      let info = codeCache[controlChars[0]];
-      if (info) {
-        state[info.set] = info.to;
-      }
-    }
-    function readState(line) {
-      let code = codeRegex(true);
-      let controlChars = code.exec(line);
-      let state = {};
-      while (controlChars !== null) {
-        updateState(state, controlChars);
-        controlChars = code.exec(line);
-      }
-      return state;
-    }
-    function unwindState(state, ret) {
-      let lastBackgroundAdded = state.lastBackgroundAdded;
-      let lastForegroundAdded = state.lastForegroundAdded;
-      delete state.lastBackgroundAdded;
-      delete state.lastForegroundAdded;
-      Object.keys(state).forEach(function(key) {
-        if (state[key]) {
-          ret += codeCache[key].off;
-        }
-      });
-      if (lastBackgroundAdded && lastBackgroundAdded != "\x1B[49m") {
-        ret += "\x1B[49m";
-      }
-      if (lastForegroundAdded && lastForegroundAdded != "\x1B[39m") {
-        ret += "\x1B[39m";
-      }
-      return ret;
-    }
-    function rewindState(state, ret) {
-      let lastBackgroundAdded = state.lastBackgroundAdded;
-      let lastForegroundAdded = state.lastForegroundAdded;
-      delete state.lastBackgroundAdded;
-      delete state.lastForegroundAdded;
-      Object.keys(state).forEach(function(key) {
-        if (state[key]) {
-          ret = codeCache[key].on + ret;
-        }
-      });
-      if (lastBackgroundAdded && lastBackgroundAdded != "\x1B[49m") {
-        ret = lastBackgroundAdded + ret;
-      }
-      if (lastForegroundAdded && lastForegroundAdded != "\x1B[39m") {
-        ret = lastForegroundAdded + ret;
-      }
-      return ret;
-    }
-    function truncateWidth(str, desiredLength) {
-      if (str.length === strlen(str)) {
-        return str.substr(0, desiredLength);
-      }
-      while (strlen(str) > desiredLength) {
-        str = str.slice(0, -1);
-      }
-      return str;
-    }
-    function truncateWidthWithAnsi(str, desiredLength) {
-      let code = codeRegex(true);
-      let split = str.split(codeRegex());
-      let splitIndex = 0;
-      let retLen = 0;
-      let ret = "";
-      let myArray;
-      let state = {};
-      while (retLen < desiredLength) {
-        myArray = code.exec(str);
-        let toAdd = split[splitIndex];
-        splitIndex++;
-        if (retLen + strlen(toAdd) > desiredLength) {
-          toAdd = truncateWidth(toAdd, desiredLength - retLen);
-        }
-        ret += toAdd;
-        retLen += strlen(toAdd);
-        if (retLen < desiredLength) {
-          if (!myArray) {
-            break;
-          }
-          ret += myArray[0];
-          updateState(state, myArray);
-        }
-      }
-      return unwindState(state, ret);
-    }
-    function truncate(str, desiredLength, truncateChar) {
-      truncateChar = truncateChar || "\u2026";
-      let lengthOfStr = strlen(str);
-      if (lengthOfStr <= desiredLength) {
-        return str;
-      }
-      desiredLength -= strlen(truncateChar);
-      let ret = truncateWidthWithAnsi(str, desiredLength);
-      ret += truncateChar;
-      const hrefTag = "\x1B]8;;\x07";
-      if (str.includes(hrefTag) && !ret.includes(hrefTag)) {
-        ret += hrefTag;
-      }
-      return ret;
-    }
-    function defaultOptions() {
-      return {
-        chars: {
-          top: "\u2500",
-          "top-mid": "\u252C",
-          "top-left": "\u250C",
-          "top-right": "\u2510",
-          bottom: "\u2500",
-          "bottom-mid": "\u2534",
-          "bottom-left": "\u2514",
-          "bottom-right": "\u2518",
-          left: "\u2502",
-          "left-mid": "\u251C",
-          mid: "\u2500",
-          "mid-mid": "\u253C",
-          right: "\u2502",
-          "right-mid": "\u2524",
-          middle: "\u2502"
-        },
-        truncate: "\u2026",
-        colWidths: [],
-        rowHeights: [],
-        colAligns: [],
-        rowAligns: [],
-        style: {
-          "padding-left": 1,
-          "padding-right": 1,
-          head: ["red"],
-          border: ["grey"],
-          compact: false
-        },
-        head: []
-      };
-    }
-    function mergeOptions(options, defaults) {
-      options = options || {};
-      defaults = defaults || defaultOptions();
-      let ret = Object.assign({}, defaults, options);
-      ret.chars = Object.assign({}, defaults.chars, options.chars);
-      ret.style = Object.assign({}, defaults.style, options.style);
-      return ret;
-    }
-    function wordWrap(maxLength, input) {
-      let lines = [];
-      let split = input.split(/(\s+)/g);
-      let line = [];
-      let lineLength = 0;
-      let whitespace;
-      for (let i = 0; i < split.length; i += 2) {
-        let word = split[i];
-        let newLength = lineLength + strlen(word);
-        if (lineLength > 0 && whitespace) {
-          newLength += whitespace.length;
-        }
-        if (newLength > maxLength) {
-          if (lineLength !== 0) {
-            lines.push(line.join(""));
-          }
-          line = [word];
-          lineLength = strlen(word);
-        } else {
-          line.push(whitespace || "", word);
-          lineLength = newLength;
-        }
-        whitespace = split[i + 1];
-      }
-      if (lineLength) {
-        lines.push(line.join(""));
-      }
-      return lines;
-    }
-    function textWrap(maxLength, input) {
-      let lines = [];
-      let line = "";
-      function pushLine(str, ws) {
-        if (line.length && ws) line += ws;
-        line += str;
-        while (line.length > maxLength) {
-          lines.push(line.slice(0, maxLength));
-          line = line.slice(maxLength);
-        }
-      }
-      let split = input.split(/(\s+)/g);
-      for (let i = 0; i < split.length; i += 2) {
-        pushLine(split[i], i && split[i - 1]);
-      }
-      if (line.length) lines.push(line);
-      return lines;
-    }
-    function multiLineWordWrap(maxLength, input, wrapOnWordBoundary = true) {
-      let output = [];
-      input = input.split("\n");
-      const handler = wrapOnWordBoundary ? wordWrap : textWrap;
-      for (let i = 0; i < input.length; i++) {
-        output.push.apply(output, handler(maxLength, input[i]));
-      }
-      return output;
-    }
-    function colorizeLines(input) {
-      let state = {};
-      let output = [];
-      for (let i = 0; i < input.length; i++) {
-        let line = rewindState(state, input[i]);
-        state = readState(line);
-        let temp = Object.assign({}, state);
-        output.push(unwindState(temp, line));
-      }
-      return output;
-    }
-    function hyperlink(url2, text) {
-      const OSC = "\x1B]";
-      const BEL = "\x07";
-      const SEP = ";";
-      return [OSC, "8", SEP, SEP, url2 || text, BEL, text, OSC, "8", SEP, SEP, BEL].join("");
-    }
-    module2.exports = {
-      strlen,
-      repeat,
-      pad,
-      truncate,
-      mergeOptions,
-      wordWrap: multiLineWordWrap,
-      colorizeLines,
-      hyperlink
-    };
-  }
-});
-
-// ../node_modules/@colors/colors/lib/styles.js
-var require_styles = __commonJS({
-  "../node_modules/@colors/colors/lib/styles.js"(exports2, module2) {
-    "use strict";
-    var styles4 = {};
-    module2["exports"] = styles4;
-    var codes = {
-      reset: [0, 0],
-      bold: [1, 22],
-      dim: [2, 22],
-      italic: [3, 23],
-      underline: [4, 24],
-      inverse: [7, 27],
-      hidden: [8, 28],
-      strikethrough: [9, 29],
-      black: [30, 39],
-      red: [31, 39],
-      green: [32, 39],
-      yellow: [33, 39],
-      blue: [34, 39],
-      magenta: [35, 39],
-      cyan: [36, 39],
-      white: [37, 39],
-      gray: [90, 39],
-      grey: [90, 39],
-      brightRed: [91, 39],
-      brightGreen: [92, 39],
-      brightYellow: [93, 39],
-      brightBlue: [94, 39],
-      brightMagenta: [95, 39],
-      brightCyan: [96, 39],
-      brightWhite: [97, 39],
-      bgBlack: [40, 49],
-      bgRed: [41, 49],
-      bgGreen: [42, 49],
-      bgYellow: [43, 49],
-      bgBlue: [44, 49],
-      bgMagenta: [45, 49],
-      bgCyan: [46, 49],
-      bgWhite: [47, 49],
-      bgGray: [100, 49],
-      bgGrey: [100, 49],
-      bgBrightRed: [101, 49],
-      bgBrightGreen: [102, 49],
-      bgBrightYellow: [103, 49],
-      bgBrightBlue: [104, 49],
-      bgBrightMagenta: [105, 49],
-      bgBrightCyan: [106, 49],
-      bgBrightWhite: [107, 49],
-      // legacy styles for colors pre v1.0.0
-      blackBG: [40, 49],
-      redBG: [41, 49],
-      greenBG: [42, 49],
-      yellowBG: [43, 49],
-      blueBG: [44, 49],
-      magentaBG: [45, 49],
-      cyanBG: [46, 49],
-      whiteBG: [47, 49]
-    };
-    Object.keys(codes).forEach(function(key) {
-      var val = codes[key];
-      var style = styles4[key] = [];
-      style.open = "\x1B[" + val[0] + "m";
-      style.close = "\x1B[" + val[1] + "m";
-    });
-  }
-});
-
-// ../node_modules/@colors/colors/lib/system/has-flag.js
-var require_has_flag = __commonJS({
-  "../node_modules/@colors/colors/lib/system/has-flag.js"(exports2, module2) {
-    "use strict";
-    module2.exports = function(flag, argv) {
-      argv = argv || process.argv;
-      var terminatorPos = argv.indexOf("--");
-      var prefix = /^-{1,2}/.test(flag) ? "" : "--";
-      var pos = argv.indexOf(prefix + flag);
-      return pos !== -1 && (terminatorPos === -1 ? true : pos < terminatorPos);
-    };
-  }
-});
-
-// ../node_modules/@colors/colors/lib/system/supports-colors.js
-var require_supports_colors = __commonJS({
-  "../node_modules/@colors/colors/lib/system/supports-colors.js"(exports2, module2) {
-    "use strict";
-    var os9 = require("os");
-    var hasFlag2 = require_has_flag();
-    var env3 = process.env;
-    var forceColor = void 0;
-    if (hasFlag2("no-color") || hasFlag2("no-colors") || hasFlag2("color=false")) {
-      forceColor = false;
-    } else if (hasFlag2("color") || hasFlag2("colors") || hasFlag2("color=true") || hasFlag2("color=always")) {
-      forceColor = true;
-    }
-    if ("FORCE_COLOR" in env3) {
-      forceColor = env3.FORCE_COLOR.length === 0 || parseInt(env3.FORCE_COLOR, 10) !== 0;
-    }
-    function translateLevel2(level) {
-      if (level === 0) {
-        return false;
-      }
-      return {
-        level,
-        hasBasic: true,
-        has256: level >= 2,
-        has16m: level >= 3
-      };
-    }
-    function supportsColor2(stream) {
-      if (forceColor === false) {
-        return 0;
-      }
-      if (hasFlag2("color=16m") || hasFlag2("color=full") || hasFlag2("color=truecolor")) {
-        return 3;
-      }
-      if (hasFlag2("color=256")) {
-        return 2;
-      }
-      if (stream && !stream.isTTY && forceColor !== true) {
-        return 0;
-      }
-      var min = forceColor ? 1 : 0;
-      if (process.platform === "win32") {
-        var osRelease = os9.release().split(".");
-        if (Number(process.versions.node.split(".")[0]) >= 8 && Number(osRelease[0]) >= 10 && Number(osRelease[2]) >= 10586) {
-          return Number(osRelease[2]) >= 14931 ? 3 : 2;
-        }
-        return 1;
-      }
-      if ("CI" in env3) {
-        if (["TRAVIS", "CIRCLECI", "APPVEYOR", "GITLAB_CI"].some(function(sign) {
-          return sign in env3;
-        }) || env3.CI_NAME === "codeship") {
-          return 1;
-        }
-        return min;
-      }
-      if ("TEAMCITY_VERSION" in env3) {
-        return /^(9\.(0*[1-9]\d*)\.|\d{2,}\.)/.test(env3.TEAMCITY_VERSION) ? 1 : 0;
-      }
-      if ("TERM_PROGRAM" in env3) {
-        var version3 = parseInt((env3.TERM_PROGRAM_VERSION || "").split(".")[0], 10);
-        switch (env3.TERM_PROGRAM) {
-          case "iTerm.app":
-            return version3 >= 3 ? 3 : 2;
-          case "Hyper":
-            return 3;
-          case "Apple_Terminal":
-            return 2;
-        }
-      }
-      if (/-256(color)?$/i.test(env3.TERM)) {
-        return 2;
-      }
-      if (/^screen|^xterm|^vt100|^rxvt|color|ansi|cygwin|linux/i.test(env3.TERM)) {
-        return 1;
-      }
-      if ("COLORTERM" in env3) {
-        return 1;
-      }
-      if (env3.TERM === "dumb") {
-        return min;
-      }
-      return min;
-    }
-    function getSupportLevel(stream) {
-      var level = supportsColor2(stream);
-      return translateLevel2(level);
-    }
-    module2.exports = {
-      supportsColor: getSupportLevel,
-      stdout: getSupportLevel(process.stdout),
-      stderr: getSupportLevel(process.stderr)
-    };
-  }
-});
-
-// ../node_modules/@colors/colors/lib/custom/trap.js
-var require_trap = __commonJS({
-  "../node_modules/@colors/colors/lib/custom/trap.js"(exports2, module2) {
-    "use strict";
-    module2["exports"] = function runTheTrap(text, options) {
-      var result = "";
-      text = text || "Run the trap, drop the bass";
-      text = text.split("");
-      var trap = {
-        a: ["@", "\u0104", "\u023A", "\u0245", "\u0394", "\u039B", "\u0414"],
-        b: ["\xDF", "\u0181", "\u0243", "\u026E", "\u03B2", "\u0E3F"],
-        c: ["\xA9", "\u023B", "\u03FE"],
-        d: ["\xD0", "\u018A", "\u0500", "\u0501", "\u0502", "\u0503"],
-        e: [
-          "\xCB",
-          "\u0115",
-          "\u018E",
-          "\u0258",
-          "\u03A3",
-          "\u03BE",
-          "\u04BC",
-          "\u0A6C"
-        ],
-        f: ["\u04FA"],
-        g: ["\u0262"],
-        h: ["\u0126", "\u0195", "\u04A2", "\u04BA", "\u04C7", "\u050A"],
-        i: ["\u0F0F"],
-        j: ["\u0134"],
-        k: ["\u0138", "\u04A0", "\u04C3", "\u051E"],
-        l: ["\u0139"],
-        m: ["\u028D", "\u04CD", "\u04CE", "\u0520", "\u0521", "\u0D69"],
-        n: ["\xD1", "\u014B", "\u019D", "\u0376", "\u03A0", "\u048A"],
-        o: [
-          "\xD8",
-          "\xF5",
-          "\xF8",
-          "\u01FE",
-          "\u0298",
-          "\u047A",
-          "\u05DD",
-          "\u06DD",
-          "\u0E4F"
-        ],
-        p: ["\u01F7", "\u048E"],
-        q: ["\u09CD"],
-        r: ["\xAE", "\u01A6", "\u0210", "\u024C", "\u0280", "\u042F"],
-        s: ["\xA7", "\u03DE", "\u03DF", "\u03E8"],
-        t: ["\u0141", "\u0166", "\u0373"],
-        u: ["\u01B1", "\u054D"],
-        v: ["\u05D8"],
-        w: ["\u0428", "\u0460", "\u047C", "\u0D70"],
-        x: ["\u04B2", "\u04FE", "\u04FC", "\u04FD"],
-        y: ["\xA5", "\u04B0", "\u04CB"],
-        z: ["\u01B5", "\u0240"]
-      };
-      text.forEach(function(c) {
-        c = c.toLowerCase();
-        var chars = trap[c] || [" "];
-        var rand = Math.floor(Math.random() * chars.length);
-        if (typeof trap[c] !== "undefined") {
-          result += trap[c][rand];
-        } else {
-          result += c;
-        }
-      });
-      return result;
-    };
-  }
-});
-
-// ../node_modules/@colors/colors/lib/custom/zalgo.js
-var require_zalgo = __commonJS({
-  "../node_modules/@colors/colors/lib/custom/zalgo.js"(exports2, module2) {
-    "use strict";
-    module2["exports"] = function zalgo(text, options) {
-      text = text || "   he is here   ";
-      var soul = {
-        "up": [
-          "\u030D",
-          "\u030E",
-          "\u0304",
-          "\u0305",
-          "\u033F",
-          "\u0311",
-          "\u0306",
-          "\u0310",
-          "\u0352",
-          "\u0357",
-          "\u0351",
-          "\u0307",
-          "\u0308",
-          "\u030A",
-          "\u0342",
-          "\u0313",
-          "\u0308",
-          "\u034A",
-          "\u034B",
-          "\u034C",
-          "\u0303",
-          "\u0302",
-          "\u030C",
-          "\u0350",
-          "\u0300",
-          "\u0301",
-          "\u030B",
-          "\u030F",
-          "\u0312",
-          "\u0313",
-          "\u0314",
-          "\u033D",
-          "\u0309",
-          "\u0363",
-          "\u0364",
-          "\u0365",
-          "\u0366",
-          "\u0367",
-          "\u0368",
-          "\u0369",
-          "\u036A",
-          "\u036B",
-          "\u036C",
-          "\u036D",
-          "\u036E",
-          "\u036F",
-          "\u033E",
-          "\u035B",
-          "\u0346",
-          "\u031A"
-        ],
-        "down": [
-          "\u0316",
-          "\u0317",
-          "\u0318",
-          "\u0319",
-          "\u031C",
-          "\u031D",
-          "\u031E",
-          "\u031F",
-          "\u0320",
-          "\u0324",
-          "\u0325",
-          "\u0326",
-          "\u0329",
-          "\u032A",
-          "\u032B",
-          "\u032C",
-          "\u032D",
-          "\u032E",
-          "\u032F",
-          "\u0330",
-          "\u0331",
-          "\u0332",
-          "\u0333",
-          "\u0339",
-          "\u033A",
-          "\u033B",
-          "\u033C",
-          "\u0345",
-          "\u0347",
-          "\u0348",
-          "\u0349",
-          "\u034D",
-          "\u034E",
-          "\u0353",
-          "\u0354",
-          "\u0355",
-          "\u0356",
-          "\u0359",
-          "\u035A",
-          "\u0323"
-        ],
-        "mid": [
-          "\u0315",
-          "\u031B",
-          "\u0300",
-          "\u0301",
-          "\u0358",
-          "\u0321",
-          "\u0322",
-          "\u0327",
-          "\u0328",
-          "\u0334",
-          "\u0335",
-          "\u0336",
-          "\u035C",
-          "\u035D",
-          "\u035E",
-          "\u035F",
-          "\u0360",
-          "\u0362",
-          "\u0338",
-          "\u0337",
-          "\u0361",
-          " \u0489"
-        ]
-      };
-      var all = [].concat(soul.up, soul.down, soul.mid);
-      function randomNumber(range) {
-        var r = Math.floor(Math.random() * range);
-        return r;
-      }
-      function isChar(character) {
-        var bool = false;
-        all.filter(function(i) {
-          bool = i === character;
-        });
-        return bool;
-      }
-      function heComes(text2, options2) {
-        var result = "";
-        var counts;
-        var l;
-        options2 = options2 || {};
-        options2["up"] = typeof options2["up"] !== "undefined" ? options2["up"] : true;
-        options2["mid"] = typeof options2["mid"] !== "undefined" ? options2["mid"] : true;
-        options2["down"] = typeof options2["down"] !== "undefined" ? options2["down"] : true;
-        options2["size"] = typeof options2["size"] !== "undefined" ? options2["size"] : "maxi";
-        text2 = text2.split("");
-        for (l in text2) {
-          if (isChar(l)) {
-            continue;
-          }
-          result = result + text2[l];
-          counts = { "up": 0, "down": 0, "mid": 0 };
-          switch (options2.size) {
-            case "mini":
-              counts.up = randomNumber(8);
-              counts.mid = randomNumber(2);
-              counts.down = randomNumber(8);
-              break;
-            case "maxi":
-              counts.up = randomNumber(16) + 3;
-              counts.mid = randomNumber(4) + 1;
-              counts.down = randomNumber(64) + 3;
-              break;
-            default:
-              counts.up = randomNumber(8) + 1;
-              counts.mid = randomNumber(6) / 2;
-              counts.down = randomNumber(8) + 1;
-              break;
-          }
-          var arr = ["up", "mid", "down"];
-          for (var d in arr) {
-            var index = arr[d];
-            for (var i = 0; i <= counts[index]; i++) {
-              if (options2[index]) {
-                result = result + soul[index][randomNumber(soul[index].length)];
-              }
-            }
-          }
-        }
-        return result;
-      }
-      return heComes(text, options);
-    };
-  }
-});
-
-// ../node_modules/@colors/colors/lib/maps/america.js
-var require_america = __commonJS({
-  "../node_modules/@colors/colors/lib/maps/america.js"(exports2, module2) {
-    "use strict";
-    module2["exports"] = function(colors) {
-      return function(letter, i, exploded) {
-        if (letter === " ") return letter;
-        switch (i % 3) {
-          case 0:
-            return colors.red(letter);
-          case 1:
-            return colors.white(letter);
-          case 2:
-            return colors.blue(letter);
-        }
-      };
-    };
-  }
-});
-
-// ../node_modules/@colors/colors/lib/maps/zebra.js
-var require_zebra = __commonJS({
-  "../node_modules/@colors/colors/lib/maps/zebra.js"(exports2, module2) {
-    "use strict";
-    module2["exports"] = function(colors) {
-      return function(letter, i, exploded) {
-        return i % 2 === 0 ? letter : colors.inverse(letter);
-      };
-    };
-  }
-});
-
-// ../node_modules/@colors/colors/lib/maps/rainbow.js
-var require_rainbow = __commonJS({
-  "../node_modules/@colors/colors/lib/maps/rainbow.js"(exports2, module2) {
-    "use strict";
-    module2["exports"] = function(colors) {
-      var rainbowColors = ["red", "yellow", "green", "blue", "magenta"];
-      return function(letter, i, exploded) {
-        if (letter === " ") {
-          return letter;
-        } else {
-          return colors[rainbowColors[i++ % rainbowColors.length]](letter);
-        }
-      };
-    };
-  }
-});
-
-// ../node_modules/@colors/colors/lib/maps/random.js
-var require_random = __commonJS({
-  "../node_modules/@colors/colors/lib/maps/random.js"(exports2, module2) {
-    "use strict";
-    module2["exports"] = function(colors) {
-      var available = [
-        "underline",
-        "inverse",
-        "grey",
-        "yellow",
-        "red",
-        "green",
-        "blue",
-        "white",
-        "cyan",
-        "magenta",
-        "brightYellow",
-        "brightRed",
-        "brightGreen",
-        "brightBlue",
-        "brightWhite",
-        "brightCyan",
-        "brightMagenta"
-      ];
-      return function(letter, i, exploded) {
-        return letter === " " ? letter : colors[available[Math.round(Math.random() * (available.length - 2))]](letter);
-      };
-    };
-  }
-});
-
-// ../node_modules/@colors/colors/lib/colors.js
-var require_colors = __commonJS({
-  "../node_modules/@colors/colors/lib/colors.js"(exports2, module2) {
-    "use strict";
-    var colors = {};
-    module2["exports"] = colors;
-    colors.themes = {};
-    var util = require("util");
-    var ansiStyles3 = colors.styles = require_styles();
-    var defineProps = Object.defineProperties;
-    var newLineRegex = new RegExp(/[\r\n]+/g);
-    colors.supportsColor = require_supports_colors().supportsColor;
-    if (typeof colors.enabled === "undefined") {
-      colors.enabled = colors.supportsColor() !== false;
-    }
-    colors.enable = function() {
-      colors.enabled = true;
-    };
-    colors.disable = function() {
-      colors.enabled = false;
-    };
-    colors.stripColors = colors.strip = function(str) {
-      return ("" + str).replace(/\x1B\[\d+m/g, "");
-    };
-    var stylize = colors.stylize = function stylize2(str, style) {
-      if (!colors.enabled) {
-        return str + "";
-      }
-      var styleMap = ansiStyles3[style];
-      if (!styleMap && style in colors) {
-        return colors[style](str);
-      }
-      return styleMap.open + str + styleMap.close;
-    };
-    var matchOperatorsRe = /[|\\{}()[\]^$+*?.]/g;
-    var escapeStringRegexp = function(str) {
-      if (typeof str !== "string") {
-        throw new TypeError("Expected a string");
-      }
-      return str.replace(matchOperatorsRe, "\\$&");
-    };
-    function build(_styles) {
-      var builder = function builder2() {
-        return applyStyle2.apply(builder2, arguments);
-      };
-      builder._styles = _styles;
-      builder.__proto__ = proto2;
-      return builder;
-    }
-    var styles4 = (function() {
-      var ret = {};
-      ansiStyles3.grey = ansiStyles3.gray;
-      Object.keys(ansiStyles3).forEach(function(key) {
-        ansiStyles3[key].closeRe = new RegExp(escapeStringRegexp(ansiStyles3[key].close), "g");
-        ret[key] = {
-          get: function() {
-            return build(this._styles.concat(key));
-          }
-        };
-      });
-      return ret;
-    })();
-    var proto2 = defineProps(function colors2() {
-    }, styles4);
-    function applyStyle2() {
-      var args = Array.prototype.slice.call(arguments);
-      var str = args.map(function(arg) {
-        if (arg != null && arg.constructor === String) {
-          return arg;
-        } else {
-          return util.inspect(arg);
-        }
-      }).join(" ");
-      if (!colors.enabled || !str) {
-        return str;
-      }
-      var newLinesPresent = str.indexOf("\n") != -1;
-      var nestedStyles = this._styles;
-      var i = nestedStyles.length;
-      while (i--) {
-        var code = ansiStyles3[nestedStyles[i]];
-        str = code.open + str.replace(code.closeRe, code.open) + code.close;
-        if (newLinesPresent) {
-          str = str.replace(newLineRegex, function(match) {
-            return code.close + match + code.open;
-          });
-        }
-      }
-      return str;
-    }
-    colors.setTheme = function(theme) {
-      if (typeof theme === "string") {
-        console.log("colors.setTheme now only accepts an object, not a string.  If you are trying to set a theme from a file, it is now your (the caller's) responsibility to require the file.  The old syntax looked like colors.setTheme(__dirname + '/../themes/generic-logging.js'); The new syntax looks like colors.setTheme(require(__dirname + '/../themes/generic-logging.js'));");
-        return;
-      }
-      for (var style in theme) {
-        (function(style2) {
-          colors[style2] = function(str) {
-            if (typeof theme[style2] === "object") {
-              var out = str;
-              for (var i in theme[style2]) {
-                out = colors[theme[style2][i]](out);
-              }
-              return out;
-            }
-            return colors[theme[style2]](str);
-          };
-        })(style);
-      }
-    };
-    function init2() {
-      var ret = {};
-      Object.keys(styles4).forEach(function(name) {
-        ret[name] = {
-          get: function() {
-            return build([name]);
-          }
-        };
-      });
-      return ret;
-    }
-    var sequencer = function sequencer2(map3, str) {
-      var exploded = str.split("");
-      exploded = exploded.map(map3);
-      return exploded.join("");
-    };
-    colors.trap = require_trap();
-    colors.zalgo = require_zalgo();
-    colors.maps = {};
-    colors.maps.america = require_america()(colors);
-    colors.maps.zebra = require_zebra()(colors);
-    colors.maps.rainbow = require_rainbow()(colors);
-    colors.maps.random = require_random()(colors);
-    for (map2 in colors.maps) {
-      (function(map3) {
-        colors[map3] = function(str) {
-          return sequencer(colors.maps[map3], str);
-        };
-      })(map2);
-    }
-    var map2;
-    defineProps(colors, init2());
-  }
-});
-
-// ../node_modules/@colors/colors/safe.js
-var require_safe = __commonJS({
-  "../node_modules/@colors/colors/safe.js"(exports2, module2) {
-    "use strict";
-    var colors = require_colors();
-    module2["exports"] = colors;
-  }
-});
-
-// ../node_modules/cli-table3/src/cell.js
-var require_cell = __commonJS({
-  "../node_modules/cli-table3/src/cell.js"(exports2, module2) {
-    "use strict";
-    var { info, debug } = require_debug2();
-    var utils = require_utils4();
-    var Cell = class _Cell {
-      /**
-       * A representation of a cell within the table.
-       * Implementations must have `init` and `draw` methods,
-       * as well as `colSpan`, `rowSpan`, `desiredHeight` and `desiredWidth` properties.
-       * @param options
-       * @constructor
-       */
-      constructor(options) {
-        this.setOptions(options);
-        this.x = null;
-        this.y = null;
-      }
-      setOptions(options) {
-        if (["boolean", "number", "bigint", "string"].indexOf(typeof options) !== -1) {
-          options = { content: "" + options };
-        }
-        options = options || {};
-        this.options = options;
-        let content = options.content;
-        if (["boolean", "number", "bigint", "string"].indexOf(typeof content) !== -1) {
-          this.content = String(content);
-        } else if (!content) {
-          this.content = this.options.href || "";
-        } else {
-          throw new Error("Content needs to be a primitive, got: " + typeof content);
-        }
-        this.colSpan = options.colSpan || 1;
-        this.rowSpan = options.rowSpan || 1;
-        if (this.options.href) {
-          Object.defineProperty(this, "href", {
-            get() {
-              return this.options.href;
-            }
-          });
-        }
-      }
-      mergeTableOptions(tableOptions, cells) {
-        this.cells = cells;
-        let optionsChars = this.options.chars || {};
-        let tableChars = tableOptions.chars;
-        let chars = this.chars = {};
-        CHAR_NAMES.forEach(function(name) {
-          setOption(optionsChars, tableChars, name, chars);
-        });
-        this.truncate = this.options.truncate || tableOptions.truncate;
-        let style = this.options.style = this.options.style || {};
-        let tableStyle = tableOptions.style;
-        setOption(style, tableStyle, "padding-left", this);
-        setOption(style, tableStyle, "padding-right", this);
-        this.head = style.head || tableStyle.head;
-        this.border = style.border || tableStyle.border;
-        this.fixedWidth = tableOptions.colWidths[this.x];
-        this.lines = this.computeLines(tableOptions);
-        this.desiredWidth = utils.strlen(this.content) + this.paddingLeft + this.paddingRight;
-        this.desiredHeight = this.lines.length;
-      }
-      computeLines(tableOptions) {
-        const tableWordWrap = tableOptions.wordWrap || tableOptions.textWrap;
-        const { wordWrap = tableWordWrap } = this.options;
-        if (this.fixedWidth && wordWrap) {
-          this.fixedWidth -= this.paddingLeft + this.paddingRight;
-          if (this.colSpan) {
-            let i = 1;
-            while (i < this.colSpan) {
-              this.fixedWidth += tableOptions.colWidths[this.x + i];
-              i++;
-            }
-          }
-          const { wrapOnWordBoundary: tableWrapOnWordBoundary = true } = tableOptions;
-          const { wrapOnWordBoundary = tableWrapOnWordBoundary } = this.options;
-          return this.wrapLines(utils.wordWrap(this.fixedWidth, this.content, wrapOnWordBoundary));
-        }
-        return this.wrapLines(this.content.split("\n"));
-      }
-      wrapLines(computedLines) {
-        const lines = utils.colorizeLines(computedLines);
-        if (this.href) {
-          return lines.map((line) => utils.hyperlink(this.href, line));
-        }
-        return lines;
-      }
-      /**
-       * Initializes the Cells data structure.
-       *
-       * @param tableOptions - A fully populated set of tableOptions.
-       * In addition to the standard default values, tableOptions must have fully populated the
-       * `colWidths` and `rowWidths` arrays. Those arrays must have lengths equal to the number
-       * of columns or rows (respectively) in this table, and each array item must be a Number.
-       *
-       */
-      init(tableOptions) {
-        let x = this.x;
-        let y = this.y;
-        this.widths = tableOptions.colWidths.slice(x, x + this.colSpan);
-        this.heights = tableOptions.rowHeights.slice(y, y + this.rowSpan);
-        this.width = this.widths.reduce(sumPlusOne, -1);
-        this.height = this.heights.reduce(sumPlusOne, -1);
-        this.hAlign = this.options.hAlign || tableOptions.colAligns[x];
-        this.vAlign = this.options.vAlign || tableOptions.rowAligns[y];
-        this.drawRight = x + this.colSpan == tableOptions.colWidths.length;
-      }
-      /**
-       * Draws the given line of the cell.
-       * This default implementation defers to methods `drawTop`, `drawBottom`, `drawLine` and `drawEmpty`.
-       * @param lineNum - can be `top`, `bottom` or a numerical line number.
-       * @param spanningCell - will be a number if being called from a RowSpanCell, and will represent how
-       * many rows below it's being called from. Otherwise it's undefined.
-       * @returns {String} The representation of this line.
-       */
-      draw(lineNum, spanningCell) {
-        if (lineNum == "top") return this.drawTop(this.drawRight);
-        if (lineNum == "bottom") return this.drawBottom(this.drawRight);
-        let content = utils.truncate(this.content, 10, this.truncate);
-        if (!lineNum) {
-          info(`${this.y}-${this.x}: ${this.rowSpan - lineNum}x${this.colSpan} Cell ${content}`);
-        } else {
-        }
-        let padLen = Math.max(this.height - this.lines.length, 0);
-        let padTop;
-        switch (this.vAlign) {
-          case "center":
-            padTop = Math.ceil(padLen / 2);
-            break;
-          case "bottom":
-            padTop = padLen;
-            break;
-          default:
-            padTop = 0;
-        }
-        if (lineNum < padTop || lineNum >= padTop + this.lines.length) {
-          return this.drawEmpty(this.drawRight, spanningCell);
-        }
-        let forceTruncation = this.lines.length > this.height && lineNum + 1 >= this.height;
-        return this.drawLine(lineNum - padTop, this.drawRight, forceTruncation, spanningCell);
-      }
-      /**
-       * Renders the top line of the cell.
-       * @param drawRight - true if this method should render the right edge of the cell.
-       * @returns {String}
-       */
-      drawTop(drawRight) {
-        let content = [];
-        if (this.cells) {
-          this.widths.forEach(function(width, index) {
-            content.push(this._topLeftChar(index));
-            content.push(utils.repeat(this.chars[this.y == 0 ? "top" : "mid"], width));
-          }, this);
-        } else {
-          content.push(this._topLeftChar(0));
-          content.push(utils.repeat(this.chars[this.y == 0 ? "top" : "mid"], this.width));
-        }
-        if (drawRight) {
-          content.push(this.chars[this.y == 0 ? "topRight" : "rightMid"]);
-        }
-        return this.wrapWithStyleColors("border", content.join(""));
-      }
-      _topLeftChar(offset) {
-        let x = this.x + offset;
-        let leftChar;
-        if (this.y == 0) {
-          leftChar = x == 0 ? "topLeft" : offset == 0 ? "topMid" : "top";
-        } else {
-          if (x == 0) {
-            leftChar = "leftMid";
-          } else {
-            leftChar = offset == 0 ? "midMid" : "bottomMid";
-            if (this.cells) {
-              let spanAbove = this.cells[this.y - 1][x] instanceof _Cell.ColSpanCell;
-              if (spanAbove) {
-                leftChar = offset == 0 ? "topMid" : "mid";
-              }
-              if (offset == 0) {
-                let i = 1;
-                while (this.cells[this.y][x - i] instanceof _Cell.ColSpanCell) {
-                  i++;
-                }
-                if (this.cells[this.y][x - i] instanceof _Cell.RowSpanCell) {
-                  leftChar = "leftMid";
-                }
-              }
-            }
-          }
-        }
-        return this.chars[leftChar];
-      }
-      wrapWithStyleColors(styleProperty, content) {
-        if (this[styleProperty] && this[styleProperty].length) {
-          try {
-            let colors = require_safe();
-            for (let i = this[styleProperty].length - 1; i >= 0; i--) {
-              colors = colors[this[styleProperty][i]];
-            }
-            return colors(content);
-          } catch (e) {
-            return content;
-          }
-        } else {
-          return content;
-        }
-      }
-      /**
-       * Renders a line of text.
-       * @param lineNum - Which line of text to render. This is not necessarily the line within the cell.
-       * There may be top-padding above the first line of text.
-       * @param drawRight - true if this method should render the right edge of the cell.
-       * @param forceTruncationSymbol - `true` if the rendered text should end with the truncation symbol even
-       * if the text fits. This is used when the cell is vertically truncated. If `false` the text should
-       * only include the truncation symbol if the text will not fit horizontally within the cell width.
-       * @param spanningCell - a number of if being called from a RowSpanCell. (how many rows below). otherwise undefined.
-       * @returns {String}
-       */
-      drawLine(lineNum, drawRight, forceTruncationSymbol, spanningCell) {
-        let left = this.chars[this.x == 0 ? "left" : "middle"];
-        if (this.x && spanningCell && this.cells) {
-          let cellLeft = this.cells[this.y + spanningCell][this.x - 1];
-          while (cellLeft instanceof ColSpanCell) {
-            cellLeft = this.cells[cellLeft.y][cellLeft.x - 1];
-          }
-          if (!(cellLeft instanceof RowSpanCell)) {
-            left = this.chars["rightMid"];
-          }
-        }
-        let leftPadding = utils.repeat(" ", this.paddingLeft);
-        let right = drawRight ? this.chars["right"] : "";
-        let rightPadding = utils.repeat(" ", this.paddingRight);
-        let line = this.lines[lineNum];
-        let len = this.width - (this.paddingLeft + this.paddingRight);
-        if (forceTruncationSymbol) line += this.truncate || "\u2026";
-        let content = utils.truncate(line, len, this.truncate);
-        content = utils.pad(content, len, " ", this.hAlign);
-        content = leftPadding + content + rightPadding;
-        return this.stylizeLine(left, content, right);
-      }
-      stylizeLine(left, content, right) {
-        left = this.wrapWithStyleColors("border", left);
-        right = this.wrapWithStyleColors("border", right);
-        if (this.y === 0) {
-          content = this.wrapWithStyleColors("head", content);
-        }
-        return left + content + right;
-      }
-      /**
-       * Renders the bottom line of the cell.
-       * @param drawRight - true if this method should render the right edge of the cell.
-       * @returns {String}
-       */
-      drawBottom(drawRight) {
-        let left = this.chars[this.x == 0 ? "bottomLeft" : "bottomMid"];
-        let content = utils.repeat(this.chars.bottom, this.width);
-        let right = drawRight ? this.chars["bottomRight"] : "";
-        return this.wrapWithStyleColors("border", left + content + right);
-      }
-      /**
-       * Renders a blank line of text within the cell. Used for top and/or bottom padding.
-       * @param drawRight - true if this method should render the right edge of the cell.
-       * @param spanningCell - a number of if being called from a RowSpanCell. (how many rows below). otherwise undefined.
-       * @returns {String}
-       */
-      drawEmpty(drawRight, spanningCell) {
-        let left = this.chars[this.x == 0 ? "left" : "middle"];
-        if (this.x && spanningCell && this.cells) {
-          let cellLeft = this.cells[this.y + spanningCell][this.x - 1];
-          while (cellLeft instanceof ColSpanCell) {
-            cellLeft = this.cells[cellLeft.y][cellLeft.x - 1];
-          }
-          if (!(cellLeft instanceof RowSpanCell)) {
-            left = this.chars["rightMid"];
-          }
-        }
-        let right = drawRight ? this.chars["right"] : "";
-        let content = utils.repeat(" ", this.width);
-        return this.stylizeLine(left, content, right);
-      }
-    };
-    var ColSpanCell = class {
-      /**
-       * A Cell that doesn't do anything. It just draws empty lines.
-       * Used as a placeholder in column spanning.
-       * @constructor
-       */
-      constructor() {
-      }
-      draw(lineNum) {
-        if (typeof lineNum === "number") {
-          debug(`${this.y}-${this.x}: 1x1 ColSpanCell`);
-        }
-        return "";
-      }
-      init() {
-      }
-      mergeTableOptions() {
-      }
-    };
-    var RowSpanCell = class {
-      /**
-       * A placeholder Cell for a Cell that spans multiple rows.
-       * It delegates rendering to the original cell, but adds the appropriate offset.
-       * @param originalCell
-       * @constructor
-       */
-      constructor(originalCell) {
-        this.originalCell = originalCell;
-      }
-      init(tableOptions) {
-        let y = this.y;
-        let originalY = this.originalCell.y;
-        this.cellOffset = y - originalY;
-        this.offset = findDimension(tableOptions.rowHeights, originalY, this.cellOffset);
-      }
-      draw(lineNum) {
-        if (lineNum == "top") {
-          return this.originalCell.draw(this.offset, this.cellOffset);
-        }
-        if (lineNum == "bottom") {
-          return this.originalCell.draw("bottom");
-        }
-        debug(`${this.y}-${this.x}: 1x${this.colSpan} RowSpanCell for ${this.originalCell.content}`);
-        return this.originalCell.draw(this.offset + 1 + lineNum);
-      }
-      mergeTableOptions() {
-      }
-    };
-    function firstDefined(...args) {
-      return args.filter((v) => v !== void 0 && v !== null).shift();
-    }
-    function setOption(objA, objB, nameB, targetObj) {
-      let nameA = nameB.split("-");
-      if (nameA.length > 1) {
-        nameA[1] = nameA[1].charAt(0).toUpperCase() + nameA[1].substr(1);
-        nameA = nameA.join("");
-        targetObj[nameA] = firstDefined(objA[nameA], objA[nameB], objB[nameA], objB[nameB]);
-      } else {
-        targetObj[nameB] = firstDefined(objA[nameB], objB[nameB]);
-      }
-    }
-    function findDimension(dimensionTable, startingIndex, span) {
-      let ret = dimensionTable[startingIndex];
-      for (let i = 1; i < span; i++) {
-        ret += 1 + dimensionTable[startingIndex + i];
-      }
-      return ret;
-    }
-    function sumPlusOne(a, b) {
-      return a + b + 1;
-    }
-    var CHAR_NAMES = [
-      "top",
-      "top-mid",
-      "top-left",
-      "top-right",
-      "bottom",
-      "bottom-mid",
-      "bottom-left",
-      "bottom-right",
-      "left",
-      "left-mid",
-      "mid",
-      "mid-mid",
-      "right",
-      "right-mid",
-      "middle"
-    ];
-    module2.exports = Cell;
-    module2.exports.ColSpanCell = ColSpanCell;
-    module2.exports.RowSpanCell = RowSpanCell;
-  }
-});
-
-// ../node_modules/cli-table3/src/layout-manager.js
-var require_layout_manager = __commonJS({
-  "../node_modules/cli-table3/src/layout-manager.js"(exports2, module2) {
-    "use strict";
-    var { warn, debug } = require_debug2();
-    var Cell = require_cell();
-    var { ColSpanCell, RowSpanCell } = Cell;
-    (function() {
-      function next(alloc, col) {
-        if (alloc[col] > 0) {
-          return next(alloc, col + 1);
-        }
-        return col;
-      }
-      function layoutTable(table) {
-        let alloc = {};
-        table.forEach(function(row, rowIndex) {
-          let col = 0;
-          row.forEach(function(cell) {
-            cell.y = rowIndex;
-            cell.x = rowIndex ? next(alloc, col) : col;
-            const rowSpan = cell.rowSpan || 1;
-            const colSpan = cell.colSpan || 1;
-            if (rowSpan > 1) {
-              for (let cs = 0; cs < colSpan; cs++) {
-                alloc[cell.x + cs] = rowSpan;
-              }
-            }
-            col = cell.x + colSpan;
-          });
-          Object.keys(alloc).forEach((idx) => {
-            alloc[idx]--;
-            if (alloc[idx] < 1) delete alloc[idx];
-          });
-        });
-      }
-      function maxWidth(table) {
-        let mw = 0;
-        table.forEach(function(row) {
-          row.forEach(function(cell) {
-            mw = Math.max(mw, cell.x + (cell.colSpan || 1));
-          });
-        });
-        return mw;
-      }
-      function maxHeight(table) {
-        return table.length;
-      }
-      function cellsConflict(cell1, cell2) {
-        let yMin1 = cell1.y;
-        let yMax1 = cell1.y - 1 + (cell1.rowSpan || 1);
-        let yMin2 = cell2.y;
-        let yMax2 = cell2.y - 1 + (cell2.rowSpan || 1);
-        let yConflict = !(yMin1 > yMax2 || yMin2 > yMax1);
-        let xMin1 = cell1.x;
-        let xMax1 = cell1.x - 1 + (cell1.colSpan || 1);
-        let xMin2 = cell2.x;
-        let xMax2 = cell2.x - 1 + (cell2.colSpan || 1);
-        let xConflict = !(xMin1 > xMax2 || xMin2 > xMax1);
-        return yConflict && xConflict;
-      }
-      function conflictExists(rows, x, y) {
-        let i_max = Math.min(rows.length - 1, y);
-        let cell = { x, y };
-        for (let i = 0; i <= i_max; i++) {
-          let row = rows[i];
-          for (let j = 0; j < row.length; j++) {
-            if (cellsConflict(cell, row[j])) {
-              return true;
-            }
-          }
-        }
-        return false;
-      }
-      function allBlank(rows, y, xMin, xMax) {
-        for (let x = xMin; x < xMax; x++) {
-          if (conflictExists(rows, x, y)) {
-            return false;
-          }
-        }
-        return true;
-      }
-      function addRowSpanCells(table) {
-        table.forEach(function(row, rowIndex) {
-          row.forEach(function(cell) {
-            for (let i = 1; i < cell.rowSpan; i++) {
-              let rowSpanCell = new RowSpanCell(cell);
-              rowSpanCell.x = cell.x;
-              rowSpanCell.y = cell.y + i;
-              rowSpanCell.colSpan = cell.colSpan;
-              insertCell(rowSpanCell, table[rowIndex + i]);
-            }
-          });
-        });
-      }
-      function addColSpanCells(cellRows) {
-        for (let rowIndex = cellRows.length - 1; rowIndex >= 0; rowIndex--) {
-          let cellColumns = cellRows[rowIndex];
-          for (let columnIndex = 0; columnIndex < cellColumns.length; columnIndex++) {
-            let cell = cellColumns[columnIndex];
-            for (let k = 1; k < cell.colSpan; k++) {
-              let colSpanCell = new ColSpanCell();
-              colSpanCell.x = cell.x + k;
-              colSpanCell.y = cell.y;
-              cellColumns.splice(columnIndex + 1, 0, colSpanCell);
-            }
-          }
-        }
-      }
-      function insertCell(cell, row) {
-        let x = 0;
-        while (x < row.length && row[x].x < cell.x) {
-          x++;
-        }
-        row.splice(x, 0, cell);
-      }
-      function fillInTable(table) {
-        let h_max = maxHeight(table);
-        let w_max = maxWidth(table);
-        debug(`Max rows: ${h_max}; Max cols: ${w_max}`);
-        for (let y = 0; y < h_max; y++) {
-          for (let x = 0; x < w_max; x++) {
-            if (!conflictExists(table, x, y)) {
-              let opts = { x, y, colSpan: 1, rowSpan: 1 };
-              x++;
-              while (x < w_max && !conflictExists(table, x, y)) {
-                opts.colSpan++;
-                x++;
-              }
-              let y2 = y + 1;
-              while (y2 < h_max && allBlank(table, y2, opts.x, opts.x + opts.colSpan)) {
-                opts.rowSpan++;
-                y2++;
-              }
-              let cell = new Cell(opts);
-              cell.x = opts.x;
-              cell.y = opts.y;
-              warn(`Missing cell at ${cell.y}-${cell.x}.`);
-              insertCell(cell, table[y]);
-            }
-          }
-        }
-      }
-      function generateCells(rows) {
-        return rows.map(function(row) {
-          if (!Array.isArray(row)) {
-            let key = Object.keys(row)[0];
-            row = row[key];
-            if (Array.isArray(row)) {
-              row = row.slice();
-              row.unshift(key);
-            } else {
-              row = [key, row];
-            }
-          }
-          return row.map(function(cell) {
-            return new Cell(cell);
-          });
-        });
-      }
-      function makeTableLayout(rows) {
-        let cellRows = generateCells(rows);
-        layoutTable(cellRows);
-        fillInTable(cellRows);
-        addRowSpanCells(cellRows);
-        addColSpanCells(cellRows);
-        return cellRows;
-      }
-      module2.exports = {
-        makeTableLayout,
-        layoutTable,
-        addRowSpanCells,
-        maxWidth,
-        fillInTable,
-        computeWidths: makeComputeWidths("colSpan", "desiredWidth", "x", 1),
-        computeHeights: makeComputeWidths("rowSpan", "desiredHeight", "y", 1)
-      };
-    })();
-    function makeComputeWidths(colSpan, desiredWidth, x, forcedMin) {
-      return function(vals, table) {
-        let result = [];
-        let spanners = [];
-        let auto = {};
-        table.forEach(function(row) {
-          row.forEach(function(cell) {
-            if ((cell[colSpan] || 1) > 1) {
-              spanners.push(cell);
-            } else {
-              result[cell[x]] = Math.max(result[cell[x]] || 0, cell[desiredWidth] || 0, forcedMin);
-            }
-          });
-        });
-        vals.forEach(function(val, index) {
-          if (typeof val === "number") {
-            result[index] = val;
-          }
-        });
-        for (let k = spanners.length - 1; k >= 0; k--) {
-          let cell = spanners[k];
-          let span = cell[colSpan];
-          let col = cell[x];
-          let existingWidth = result[col];
-          let editableCols = typeof vals[col] === "number" ? 0 : 1;
-          if (typeof existingWidth === "number") {
-            for (let i = 1; i < span; i++) {
-              existingWidth += 1 + result[col + i];
-              if (typeof vals[col + i] !== "number") {
-                editableCols++;
-              }
-            }
-          } else {
-            existingWidth = desiredWidth === "desiredWidth" ? cell.desiredWidth - 1 : 1;
-            if (!auto[col] || auto[col] < existingWidth) {
-              auto[col] = existingWidth;
-            }
-          }
-          if (cell[desiredWidth] > existingWidth) {
-            let i = 0;
-            while (editableCols > 0 && cell[desiredWidth] > existingWidth) {
-              if (typeof vals[col + i] !== "number") {
-                let dif = Math.round((cell[desiredWidth] - existingWidth) / editableCols);
-                existingWidth += dif;
-                result[col + i] += dif;
-                editableCols--;
-              }
-              i++;
-            }
-          }
-        }
-        Object.assign(vals, result, auto);
-        for (let j = 0; j < vals.length; j++) {
-          vals[j] = Math.max(forcedMin, vals[j] || 0);
-        }
-      };
-    }
-  }
-});
-
-// ../node_modules/cli-table3/src/table.js
-var require_table = __commonJS({
-  "../node_modules/cli-table3/src/table.js"(exports2, module2) {
-    "use strict";
-    var debug = require_debug2();
-    var utils = require_utils4();
-    var tableLayout = require_layout_manager();
-    var Table = class extends Array {
-      constructor(opts) {
-        super();
-        const options = utils.mergeOptions(opts);
-        Object.defineProperty(this, "options", {
-          value: options,
-          enumerable: options.debug
-        });
-        if (options.debug) {
-          switch (typeof options.debug) {
-            case "boolean":
-              debug.setDebugLevel(debug.WARN);
-              break;
-            case "number":
-              debug.setDebugLevel(options.debug);
-              break;
-            case "string":
-              debug.setDebugLevel(parseInt(options.debug, 10));
-              break;
-            default:
-              debug.setDebugLevel(debug.WARN);
-              debug.warn(`Debug option is expected to be boolean, number, or string. Received a ${typeof options.debug}`);
-          }
-          Object.defineProperty(this, "messages", {
-            get() {
-              return debug.debugMessages();
-            }
-          });
-        }
-      }
-      toString() {
-        let array2 = this;
-        let headersPresent = this.options.head && this.options.head.length;
-        if (headersPresent) {
-          array2 = [this.options.head];
-          if (this.length) {
-            array2.push.apply(array2, this);
-          }
-        } else {
-          this.options.style.head = [];
-        }
-        let cells = tableLayout.makeTableLayout(array2);
-        cells.forEach(function(row) {
-          row.forEach(function(cell) {
-            cell.mergeTableOptions(this.options, cells);
-          }, this);
-        }, this);
-        tableLayout.computeWidths(this.options.colWidths, cells);
-        tableLayout.computeHeights(this.options.rowHeights, cells);
-        cells.forEach(function(row) {
-          row.forEach(function(cell) {
-            cell.init(this.options);
-          }, this);
-        }, this);
-        let result = [];
-        for (let rowIndex = 0; rowIndex < cells.length; rowIndex++) {
-          let row = cells[rowIndex];
-          let heightOfRow = this.options.rowHeights[rowIndex];
-          if (rowIndex === 0 || !this.options.style.compact || rowIndex == 1 && headersPresent) {
-            doDraw(row, "top", result);
-          }
-          for (let lineNum = 0; lineNum < heightOfRow; lineNum++) {
-            doDraw(row, lineNum, result);
-          }
-          if (rowIndex + 1 == cells.length) {
-            doDraw(row, "bottom", result);
-          }
-        }
-        return result.join("\n");
-      }
-      get width() {
-        let str = this.toString().split("\n");
-        return str[0].length;
-      }
-    };
-    Table.reset = () => debug.reset();
-    function doDraw(row, lineNum, result) {
-      let line = [];
-      row.forEach(function(cell) {
-        line.push(cell.draw(lineNum));
-      });
-      let str = line.join("");
-      if (str.length) result.push(str);
-    }
-    module2.exports = Table;
-  }
-});
-
-// ../node_modules/cli-table3/index.js
-var require_cli_table3 = __commonJS({
-  "../node_modules/cli-table3/index.js"(exports2, module2) {
-    "use strict";
-    module2.exports = require_table();
   }
 });
 
@@ -30849,9 +29029,9 @@ var require_package = __commonJS({
 var require_main = __commonJS({
   "node_modules/dotenv/lib/main.js"(exports2, module2) {
     "use strict";
-    var fs28 = require("fs");
-    var path29 = require("path");
-    var os9 = require("os");
+    var fs29 = require("fs");
+    var path30 = require("path");
+    var os10 = require("os");
     var crypto4 = require("crypto");
     var packageJson = require_package();
     var version3 = packageJson.version;
@@ -30958,7 +29138,7 @@ var require_main = __commonJS({
       if (options && options.path && options.path.length > 0) {
         if (Array.isArray(options.path)) {
           for (const filepath of options.path) {
-            if (fs28.existsSync(filepath)) {
+            if (fs29.existsSync(filepath)) {
               possibleVaultPath = filepath.endsWith(".vault") ? filepath : `${filepath}.vault`;
             }
           }
@@ -30966,15 +29146,15 @@ var require_main = __commonJS({
           possibleVaultPath = options.path.endsWith(".vault") ? options.path : `${options.path}.vault`;
         }
       } else {
-        possibleVaultPath = path29.resolve(process.cwd(), ".env.vault");
+        possibleVaultPath = path30.resolve(process.cwd(), ".env.vault");
       }
-      if (fs28.existsSync(possibleVaultPath)) {
+      if (fs29.existsSync(possibleVaultPath)) {
         return possibleVaultPath;
       }
       return null;
     }
     function _resolveHome(envPath) {
-      return envPath[0] === "~" ? path29.join(os9.homedir(), envPath.slice(1)) : envPath;
+      return envPath[0] === "~" ? path30.join(os10.homedir(), envPath.slice(1)) : envPath;
     }
     function _configVault(options) {
       const debug = Boolean(options && options.debug);
@@ -30991,7 +29171,7 @@ var require_main = __commonJS({
       return { parsed };
     }
     function configDotenv(options) {
-      const dotenvPath = path29.resolve(process.cwd(), ".env");
+      const dotenvPath = path30.resolve(process.cwd(), ".env");
       let encoding = "utf8";
       const debug = Boolean(options && options.debug);
       const quiet = options && "quiet" in options ? options.quiet : true;
@@ -31015,13 +29195,13 @@ var require_main = __commonJS({
       }
       let lastError;
       const parsedAll = {};
-      for (const path30 of optionPaths) {
+      for (const path31 of optionPaths) {
         try {
-          const parsed = DotenvModule.parse(fs28.readFileSync(path30, { encoding }));
+          const parsed = DotenvModule.parse(fs29.readFileSync(path31, { encoding }));
           DotenvModule.populate(parsedAll, parsed, options);
         } catch (e) {
           if (debug) {
-            _debug(`Failed to load ${path30} ${e.message}`);
+            _debug(`Failed to load ${path31} ${e.message}`);
           }
           lastError = e;
         }
@@ -31036,7 +29216,7 @@ var require_main = __commonJS({
         const shortPaths = [];
         for (const filePath of optionPaths) {
           try {
-            const relative = path29.relative(process.cwd(), filePath);
+            const relative = path30.relative(process.cwd(), filePath);
             shortPaths.push(relative);
           } catch (e) {
             if (debug) {
@@ -31133,6 +29313,1826 @@ var require_main = __commonJS({
     module2.exports.parse = DotenvModule.parse;
     module2.exports.populate = DotenvModule.populate;
     module2.exports = DotenvModule;
+  }
+});
+
+// ../node_modules/cli-table3/src/debug.js
+var require_debug2 = __commonJS({
+  "../node_modules/cli-table3/src/debug.js"(exports2, module2) {
+    "use strict";
+    var messages = [];
+    var level = 0;
+    var debug = (msg, min) => {
+      if (level >= min) {
+        messages.push(msg);
+      }
+    };
+    debug.WARN = 1;
+    debug.INFO = 2;
+    debug.DEBUG = 3;
+    debug.reset = () => {
+      messages = [];
+    };
+    debug.setDebugLevel = (v) => {
+      level = v;
+    };
+    debug.warn = (msg) => debug(msg, debug.WARN);
+    debug.info = (msg) => debug(msg, debug.INFO);
+    debug.debug = (msg) => debug(msg, debug.DEBUG);
+    debug.debugMessages = () => messages;
+    module2.exports = debug;
+  }
+});
+
+// ../node_modules/cli-table3/node_modules/ansi-regex/index.js
+var require_ansi_regex2 = __commonJS({
+  "../node_modules/cli-table3/node_modules/ansi-regex/index.js"(exports2, module2) {
+    "use strict";
+    module2.exports = ({ onlyFirst = false } = {}) => {
+      const pattern = [
+        "[\\u001B\\u009B][[\\]()#;?]*(?:(?:(?:(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]+)*|[a-zA-Z\\d]+(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]*)*)?\\u0007)",
+        "(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PR-TZcf-ntqry=><~]))"
+      ].join("|");
+      return new RegExp(pattern, onlyFirst ? void 0 : "g");
+    };
+  }
+});
+
+// ../node_modules/cli-table3/node_modules/strip-ansi/index.js
+var require_strip_ansi2 = __commonJS({
+  "../node_modules/cli-table3/node_modules/strip-ansi/index.js"(exports2, module2) {
+    "use strict";
+    var ansiRegex2 = require_ansi_regex2();
+    module2.exports = (string4) => typeof string4 === "string" ? string4.replace(ansiRegex2(), "") : string4;
+  }
+});
+
+// ../node_modules/cli-table3/node_modules/is-fullwidth-code-point/index.js
+var require_is_fullwidth_code_point2 = __commonJS({
+  "../node_modules/cli-table3/node_modules/is-fullwidth-code-point/index.js"(exports2, module2) {
+    "use strict";
+    var isFullwidthCodePoint = (codePoint) => {
+      if (Number.isNaN(codePoint)) {
+        return false;
+      }
+      if (codePoint >= 4352 && (codePoint <= 4447 || // Hangul Jamo
+      codePoint === 9001 || // LEFT-POINTING ANGLE BRACKET
+      codePoint === 9002 || // RIGHT-POINTING ANGLE BRACKET
+      // CJK Radicals Supplement .. Enclosed CJK Letters and Months
+      11904 <= codePoint && codePoint <= 12871 && codePoint !== 12351 || // Enclosed CJK Letters and Months .. CJK Unified Ideographs Extension A
+      12880 <= codePoint && codePoint <= 19903 || // CJK Unified Ideographs .. Yi Radicals
+      19968 <= codePoint && codePoint <= 42182 || // Hangul Jamo Extended-A
+      43360 <= codePoint && codePoint <= 43388 || // Hangul Syllables
+      44032 <= codePoint && codePoint <= 55203 || // CJK Compatibility Ideographs
+      63744 <= codePoint && codePoint <= 64255 || // Vertical Forms
+      65040 <= codePoint && codePoint <= 65049 || // CJK Compatibility Forms .. Small Form Variants
+      65072 <= codePoint && codePoint <= 65131 || // Halfwidth and Fullwidth Forms
+      65281 <= codePoint && codePoint <= 65376 || 65504 <= codePoint && codePoint <= 65510 || // Kana Supplement
+      110592 <= codePoint && codePoint <= 110593 || // Enclosed Ideographic Supplement
+      127488 <= codePoint && codePoint <= 127569 || // CJK Unified Ideographs Extension B .. Tertiary Ideographic Plane
+      131072 <= codePoint && codePoint <= 262141)) {
+        return true;
+      }
+      return false;
+    };
+    module2.exports = isFullwidthCodePoint;
+    module2.exports.default = isFullwidthCodePoint;
+  }
+});
+
+// ../node_modules/cli-table3/node_modules/emoji-regex/index.js
+var require_emoji_regex2 = __commonJS({
+  "../node_modules/cli-table3/node_modules/emoji-regex/index.js"(exports2, module2) {
+    "use strict";
+    module2.exports = function() {
+      return /\uD83C\uDFF4\uDB40\uDC67\uDB40\uDC62(?:\uDB40\uDC65\uDB40\uDC6E\uDB40\uDC67|\uDB40\uDC73\uDB40\uDC63\uDB40\uDC74|\uDB40\uDC77\uDB40\uDC6C\uDB40\uDC73)\uDB40\uDC7F|\uD83D\uDC68(?:\uD83C\uDFFC\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68\uD83C\uDFFB|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFF\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB-\uDFFE])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFE\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB-\uDFFD])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFD\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB\uDFFC])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\u200D(?:\u2764\uFE0F\u200D(?:\uD83D\uDC8B\u200D)?\uD83D\uDC68|(?:\uD83D[\uDC68\uDC69])\u200D(?:\uD83D\uDC66\u200D\uD83D\uDC66|\uD83D\uDC67\u200D(?:\uD83D[\uDC66\uDC67]))|\uD83D\uDC66\u200D\uD83D\uDC66|\uD83D\uDC67\u200D(?:\uD83D[\uDC66\uDC67])|(?:\uD83D[\uDC68\uDC69])\u200D(?:\uD83D[\uDC66\uDC67])|[\u2695\u2696\u2708]\uFE0F|\uD83D[\uDC66\uDC67]|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|(?:\uD83C\uDFFB\u200D[\u2695\u2696\u2708]|\uD83C\uDFFF\u200D[\u2695\u2696\u2708]|\uD83C\uDFFE\u200D[\u2695\u2696\u2708]|\uD83C\uDFFD\u200D[\u2695\u2696\u2708]|\uD83C\uDFFC\u200D[\u2695\u2696\u2708])\uFE0F|\uD83C\uDFFB\u200D(?:\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C[\uDFFB-\uDFFF])|(?:\uD83E\uDDD1\uD83C\uDFFB\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1|\uD83D\uDC69\uD83C\uDFFC\u200D\uD83E\uDD1D\u200D\uD83D\uDC69)\uD83C\uDFFB|\uD83E\uDDD1(?:\uD83C\uDFFF\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1(?:\uD83C[\uDFFB-\uDFFF])|\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1)|(?:\uD83E\uDDD1\uD83C\uDFFE\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1|\uD83D\uDC69\uD83C\uDFFF\u200D\uD83E\uDD1D\u200D(?:\uD83D[\uDC68\uDC69]))(?:\uD83C[\uDFFB-\uDFFE])|(?:\uD83E\uDDD1\uD83C\uDFFC\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1|\uD83D\uDC69\uD83C\uDFFD\u200D\uD83E\uDD1D\u200D\uD83D\uDC69)(?:\uD83C[\uDFFB\uDFFC])|\uD83D\uDC69(?:\uD83C\uDFFE\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB-\uDFFD\uDFFF])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFC\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB\uDFFD-\uDFFF])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFB\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFC-\uDFFF])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFD\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB\uDFFC\uDFFE\uDFFF])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\u200D(?:\u2764\uFE0F\u200D(?:\uD83D\uDC8B\u200D(?:\uD83D[\uDC68\uDC69])|\uD83D[\uDC68\uDC69])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFF\u200D(?:\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD]))|\uD83D\uDC69\u200D\uD83D\uDC69\u200D(?:\uD83D\uDC66\u200D\uD83D\uDC66|\uD83D\uDC67\u200D(?:\uD83D[\uDC66\uDC67]))|(?:\uD83E\uDDD1\uD83C\uDFFD\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1|\uD83D\uDC69\uD83C\uDFFE\u200D\uD83E\uDD1D\u200D\uD83D\uDC69)(?:\uD83C[\uDFFB-\uDFFD])|\uD83D\uDC69\u200D\uD83D\uDC66\u200D\uD83D\uDC66|\uD83D\uDC69\u200D\uD83D\uDC69\u200D(?:\uD83D[\uDC66\uDC67])|(?:\uD83D\uDC41\uFE0F\u200D\uD83D\uDDE8|\uD83D\uDC69(?:\uD83C\uDFFF\u200D[\u2695\u2696\u2708]|\uD83C\uDFFE\u200D[\u2695\u2696\u2708]|\uD83C\uDFFC\u200D[\u2695\u2696\u2708]|\uD83C\uDFFB\u200D[\u2695\u2696\u2708]|\uD83C\uDFFD\u200D[\u2695\u2696\u2708]|\u200D[\u2695\u2696\u2708])|(?:(?:\u26F9|\uD83C[\uDFCB\uDFCC]|\uD83D\uDD75)\uFE0F|\uD83D\uDC6F|\uD83E[\uDD3C\uDDDE\uDDDF])\u200D[\u2640\u2642]|(?:\u26F9|\uD83C[\uDFCB\uDFCC]|\uD83D\uDD75)(?:\uD83C[\uDFFB-\uDFFF])\u200D[\u2640\u2642]|(?:\uD83C[\uDFC3\uDFC4\uDFCA]|\uD83D[\uDC6E\uDC71\uDC73\uDC77\uDC81\uDC82\uDC86\uDC87\uDE45-\uDE47\uDE4B\uDE4D\uDE4E\uDEA3\uDEB4-\uDEB6]|\uD83E[\uDD26\uDD37-\uDD39\uDD3D\uDD3E\uDDB8\uDDB9\uDDCD-\uDDCF\uDDD6-\uDDDD])(?:(?:\uD83C[\uDFFB-\uDFFF])\u200D[\u2640\u2642]|\u200D[\u2640\u2642])|\uD83C\uDFF4\u200D\u2620)\uFE0F|\uD83D\uDC69\u200D\uD83D\uDC67\u200D(?:\uD83D[\uDC66\uDC67])|\uD83C\uDFF3\uFE0F\u200D\uD83C\uDF08|\uD83D\uDC15\u200D\uD83E\uDDBA|\uD83D\uDC69\u200D\uD83D\uDC66|\uD83D\uDC69\u200D\uD83D\uDC67|\uD83C\uDDFD\uD83C\uDDF0|\uD83C\uDDF4\uD83C\uDDF2|\uD83C\uDDF6\uD83C\uDDE6|[#\*0-9]\uFE0F\u20E3|\uD83C\uDDE7(?:\uD83C[\uDDE6\uDDE7\uDDE9-\uDDEF\uDDF1-\uDDF4\uDDF6-\uDDF9\uDDFB\uDDFC\uDDFE\uDDFF])|\uD83C\uDDF9(?:\uD83C[\uDDE6\uDDE8\uDDE9\uDDEB-\uDDED\uDDEF-\uDDF4\uDDF7\uDDF9\uDDFB\uDDFC\uDDFF])|\uD83C\uDDEA(?:\uD83C[\uDDE6\uDDE8\uDDEA\uDDEC\uDDED\uDDF7-\uDDFA])|\uD83E\uDDD1(?:\uD83C[\uDFFB-\uDFFF])|\uD83C\uDDF7(?:\uD83C[\uDDEA\uDDF4\uDDF8\uDDFA\uDDFC])|\uD83D\uDC69(?:\uD83C[\uDFFB-\uDFFF])|\uD83C\uDDF2(?:\uD83C[\uDDE6\uDDE8-\uDDED\uDDF0-\uDDFF])|\uD83C\uDDE6(?:\uD83C[\uDDE8-\uDDEC\uDDEE\uDDF1\uDDF2\uDDF4\uDDF6-\uDDFA\uDDFC\uDDFD\uDDFF])|\uD83C\uDDF0(?:\uD83C[\uDDEA\uDDEC-\uDDEE\uDDF2\uDDF3\uDDF5\uDDF7\uDDFC\uDDFE\uDDFF])|\uD83C\uDDED(?:\uD83C[\uDDF0\uDDF2\uDDF3\uDDF7\uDDF9\uDDFA])|\uD83C\uDDE9(?:\uD83C[\uDDEA\uDDEC\uDDEF\uDDF0\uDDF2\uDDF4\uDDFF])|\uD83C\uDDFE(?:\uD83C[\uDDEA\uDDF9])|\uD83C\uDDEC(?:\uD83C[\uDDE6\uDDE7\uDDE9-\uDDEE\uDDF1-\uDDF3\uDDF5-\uDDFA\uDDFC\uDDFE])|\uD83C\uDDF8(?:\uD83C[\uDDE6-\uDDEA\uDDEC-\uDDF4\uDDF7-\uDDF9\uDDFB\uDDFD-\uDDFF])|\uD83C\uDDEB(?:\uD83C[\uDDEE-\uDDF0\uDDF2\uDDF4\uDDF7])|\uD83C\uDDF5(?:\uD83C[\uDDE6\uDDEA-\uDDED\uDDF0-\uDDF3\uDDF7-\uDDF9\uDDFC\uDDFE])|\uD83C\uDDFB(?:\uD83C[\uDDE6\uDDE8\uDDEA\uDDEC\uDDEE\uDDF3\uDDFA])|\uD83C\uDDF3(?:\uD83C[\uDDE6\uDDE8\uDDEA-\uDDEC\uDDEE\uDDF1\uDDF4\uDDF5\uDDF7\uDDFA\uDDFF])|\uD83C\uDDE8(?:\uD83C[\uDDE6\uDDE8\uDDE9\uDDEB-\uDDEE\uDDF0-\uDDF5\uDDF7\uDDFA-\uDDFF])|\uD83C\uDDF1(?:\uD83C[\uDDE6-\uDDE8\uDDEE\uDDF0\uDDF7-\uDDFB\uDDFE])|\uD83C\uDDFF(?:\uD83C[\uDDE6\uDDF2\uDDFC])|\uD83C\uDDFC(?:\uD83C[\uDDEB\uDDF8])|\uD83C\uDDFA(?:\uD83C[\uDDE6\uDDEC\uDDF2\uDDF3\uDDF8\uDDFE\uDDFF])|\uD83C\uDDEE(?:\uD83C[\uDDE8-\uDDEA\uDDF1-\uDDF4\uDDF6-\uDDF9])|\uD83C\uDDEF(?:\uD83C[\uDDEA\uDDF2\uDDF4\uDDF5])|(?:\uD83C[\uDFC3\uDFC4\uDFCA]|\uD83D[\uDC6E\uDC71\uDC73\uDC77\uDC81\uDC82\uDC86\uDC87\uDE45-\uDE47\uDE4B\uDE4D\uDE4E\uDEA3\uDEB4-\uDEB6]|\uD83E[\uDD26\uDD37-\uDD39\uDD3D\uDD3E\uDDB8\uDDB9\uDDCD-\uDDCF\uDDD6-\uDDDD])(?:\uD83C[\uDFFB-\uDFFF])|(?:\u26F9|\uD83C[\uDFCB\uDFCC]|\uD83D\uDD75)(?:\uD83C[\uDFFB-\uDFFF])|(?:[\u261D\u270A-\u270D]|\uD83C[\uDF85\uDFC2\uDFC7]|\uD83D[\uDC42\uDC43\uDC46-\uDC50\uDC66\uDC67\uDC6B-\uDC6D\uDC70\uDC72\uDC74-\uDC76\uDC78\uDC7C\uDC83\uDC85\uDCAA\uDD74\uDD7A\uDD90\uDD95\uDD96\uDE4C\uDE4F\uDEC0\uDECC]|\uD83E[\uDD0F\uDD18-\uDD1C\uDD1E\uDD1F\uDD30-\uDD36\uDDB5\uDDB6\uDDBB\uDDD2-\uDDD5])(?:\uD83C[\uDFFB-\uDFFF])|(?:[\u231A\u231B\u23E9-\u23EC\u23F0\u23F3\u25FD\u25FE\u2614\u2615\u2648-\u2653\u267F\u2693\u26A1\u26AA\u26AB\u26BD\u26BE\u26C4\u26C5\u26CE\u26D4\u26EA\u26F2\u26F3\u26F5\u26FA\u26FD\u2705\u270A\u270B\u2728\u274C\u274E\u2753-\u2755\u2757\u2795-\u2797\u27B0\u27BF\u2B1B\u2B1C\u2B50\u2B55]|\uD83C[\uDC04\uDCCF\uDD8E\uDD91-\uDD9A\uDDE6-\uDDFF\uDE01\uDE1A\uDE2F\uDE32-\uDE36\uDE38-\uDE3A\uDE50\uDE51\uDF00-\uDF20\uDF2D-\uDF35\uDF37-\uDF7C\uDF7E-\uDF93\uDFA0-\uDFCA\uDFCF-\uDFD3\uDFE0-\uDFF0\uDFF4\uDFF8-\uDFFF]|\uD83D[\uDC00-\uDC3E\uDC40\uDC42-\uDCFC\uDCFF-\uDD3D\uDD4B-\uDD4E\uDD50-\uDD67\uDD7A\uDD95\uDD96\uDDA4\uDDFB-\uDE4F\uDE80-\uDEC5\uDECC\uDED0-\uDED2\uDED5\uDEEB\uDEEC\uDEF4-\uDEFA\uDFE0-\uDFEB]|\uD83E[\uDD0D-\uDD3A\uDD3C-\uDD45\uDD47-\uDD71\uDD73-\uDD76\uDD7A-\uDDA2\uDDA5-\uDDAA\uDDAE-\uDDCA\uDDCD-\uDDFF\uDE70-\uDE73\uDE78-\uDE7A\uDE80-\uDE82\uDE90-\uDE95])|(?:[#\*0-9\xA9\xAE\u203C\u2049\u2122\u2139\u2194-\u2199\u21A9\u21AA\u231A\u231B\u2328\u23CF\u23E9-\u23F3\u23F8-\u23FA\u24C2\u25AA\u25AB\u25B6\u25C0\u25FB-\u25FE\u2600-\u2604\u260E\u2611\u2614\u2615\u2618\u261D\u2620\u2622\u2623\u2626\u262A\u262E\u262F\u2638-\u263A\u2640\u2642\u2648-\u2653\u265F\u2660\u2663\u2665\u2666\u2668\u267B\u267E\u267F\u2692-\u2697\u2699\u269B\u269C\u26A0\u26A1\u26AA\u26AB\u26B0\u26B1\u26BD\u26BE\u26C4\u26C5\u26C8\u26CE\u26CF\u26D1\u26D3\u26D4\u26E9\u26EA\u26F0-\u26F5\u26F7-\u26FA\u26FD\u2702\u2705\u2708-\u270D\u270F\u2712\u2714\u2716\u271D\u2721\u2728\u2733\u2734\u2744\u2747\u274C\u274E\u2753-\u2755\u2757\u2763\u2764\u2795-\u2797\u27A1\u27B0\u27BF\u2934\u2935\u2B05-\u2B07\u2B1B\u2B1C\u2B50\u2B55\u3030\u303D\u3297\u3299]|\uD83C[\uDC04\uDCCF\uDD70\uDD71\uDD7E\uDD7F\uDD8E\uDD91-\uDD9A\uDDE6-\uDDFF\uDE01\uDE02\uDE1A\uDE2F\uDE32-\uDE3A\uDE50\uDE51\uDF00-\uDF21\uDF24-\uDF93\uDF96\uDF97\uDF99-\uDF9B\uDF9E-\uDFF0\uDFF3-\uDFF5\uDFF7-\uDFFF]|\uD83D[\uDC00-\uDCFD\uDCFF-\uDD3D\uDD49-\uDD4E\uDD50-\uDD67\uDD6F\uDD70\uDD73-\uDD7A\uDD87\uDD8A-\uDD8D\uDD90\uDD95\uDD96\uDDA4\uDDA5\uDDA8\uDDB1\uDDB2\uDDBC\uDDC2-\uDDC4\uDDD1-\uDDD3\uDDDC-\uDDDE\uDDE1\uDDE3\uDDE8\uDDEF\uDDF3\uDDFA-\uDE4F\uDE80-\uDEC5\uDECB-\uDED2\uDED5\uDEE0-\uDEE5\uDEE9\uDEEB\uDEEC\uDEF0\uDEF3-\uDEFA\uDFE0-\uDFEB]|\uD83E[\uDD0D-\uDD3A\uDD3C-\uDD45\uDD47-\uDD71\uDD73-\uDD76\uDD7A-\uDDA2\uDDA5-\uDDAA\uDDAE-\uDDCA\uDDCD-\uDDFF\uDE70-\uDE73\uDE78-\uDE7A\uDE80-\uDE82\uDE90-\uDE95])\uFE0F|(?:[\u261D\u26F9\u270A-\u270D]|\uD83C[\uDF85\uDFC2-\uDFC4\uDFC7\uDFCA-\uDFCC]|\uD83D[\uDC42\uDC43\uDC46-\uDC50\uDC66-\uDC78\uDC7C\uDC81-\uDC83\uDC85-\uDC87\uDC8F\uDC91\uDCAA\uDD74\uDD75\uDD7A\uDD90\uDD95\uDD96\uDE45-\uDE47\uDE4B-\uDE4F\uDEA3\uDEB4-\uDEB6\uDEC0\uDECC]|\uD83E[\uDD0F\uDD18-\uDD1F\uDD26\uDD30-\uDD39\uDD3C-\uDD3E\uDDB5\uDDB6\uDDB8\uDDB9\uDDBB\uDDCD-\uDDCF\uDDD1-\uDDDD])/g;
+    };
+  }
+});
+
+// ../node_modules/cli-table3/node_modules/string-width/index.js
+var require_string_width2 = __commonJS({
+  "../node_modules/cli-table3/node_modules/string-width/index.js"(exports2, module2) {
+    "use strict";
+    var stripAnsi2 = require_strip_ansi2();
+    var isFullwidthCodePoint = require_is_fullwidth_code_point2();
+    var emojiRegex = require_emoji_regex2();
+    var stringWidth2 = (string4) => {
+      if (typeof string4 !== "string" || string4.length === 0) {
+        return 0;
+      }
+      string4 = stripAnsi2(string4);
+      if (string4.length === 0) {
+        return 0;
+      }
+      string4 = string4.replace(emojiRegex(), "  ");
+      let width = 0;
+      for (let i = 0; i < string4.length; i++) {
+        const code = string4.codePointAt(i);
+        if (code <= 31 || code >= 127 && code <= 159) {
+          continue;
+        }
+        if (code >= 768 && code <= 879) {
+          continue;
+        }
+        if (code > 65535) {
+          i++;
+        }
+        width += isFullwidthCodePoint(code) ? 2 : 1;
+      }
+      return width;
+    };
+    module2.exports = stringWidth2;
+    module2.exports.default = stringWidth2;
+  }
+});
+
+// ../node_modules/cli-table3/src/utils.js
+var require_utils4 = __commonJS({
+  "../node_modules/cli-table3/src/utils.js"(exports2, module2) {
+    "use strict";
+    var stringWidth2 = require_string_width2();
+    function codeRegex(capture) {
+      return capture ? /\u001b\[((?:\d*;){0,5}\d*)m/g : /\u001b\[(?:\d*;){0,5}\d*m/g;
+    }
+    function strlen(str) {
+      let code = codeRegex();
+      let stripped = ("" + str).replace(code, "");
+      let split = stripped.split("\n");
+      return split.reduce(function(memo, s) {
+        return stringWidth2(s) > memo ? stringWidth2(s) : memo;
+      }, 0);
+    }
+    function repeat(str, times) {
+      return Array(times + 1).join(str);
+    }
+    function pad(str, len, pad2, dir) {
+      let length = strlen(str);
+      if (len + 1 >= length) {
+        let padlen = len - length;
+        switch (dir) {
+          case "right": {
+            str = repeat(pad2, padlen) + str;
+            break;
+          }
+          case "center": {
+            let right = Math.ceil(padlen / 2);
+            let left = padlen - right;
+            str = repeat(pad2, left) + str + repeat(pad2, right);
+            break;
+          }
+          default: {
+            str = str + repeat(pad2, padlen);
+            break;
+          }
+        }
+      }
+      return str;
+    }
+    var codeCache = {};
+    function addToCodeCache(name, on, off) {
+      on = "\x1B[" + on + "m";
+      off = "\x1B[" + off + "m";
+      codeCache[on] = { set: name, to: true };
+      codeCache[off] = { set: name, to: false };
+      codeCache[name] = { on, off };
+    }
+    addToCodeCache("bold", 1, 22);
+    addToCodeCache("italics", 3, 23);
+    addToCodeCache("underline", 4, 24);
+    addToCodeCache("inverse", 7, 27);
+    addToCodeCache("strikethrough", 9, 29);
+    function updateState(state, controlChars) {
+      let controlCode = controlChars[1] ? parseInt(controlChars[1].split(";")[0]) : 0;
+      if (controlCode >= 30 && controlCode <= 39 || controlCode >= 90 && controlCode <= 97) {
+        state.lastForegroundAdded = controlChars[0];
+        return;
+      }
+      if (controlCode >= 40 && controlCode <= 49 || controlCode >= 100 && controlCode <= 107) {
+        state.lastBackgroundAdded = controlChars[0];
+        return;
+      }
+      if (controlCode === 0) {
+        for (let i in state) {
+          if (Object.prototype.hasOwnProperty.call(state, i)) {
+            delete state[i];
+          }
+        }
+        return;
+      }
+      let info = codeCache[controlChars[0]];
+      if (info) {
+        state[info.set] = info.to;
+      }
+    }
+    function readState(line) {
+      let code = codeRegex(true);
+      let controlChars = code.exec(line);
+      let state = {};
+      while (controlChars !== null) {
+        updateState(state, controlChars);
+        controlChars = code.exec(line);
+      }
+      return state;
+    }
+    function unwindState(state, ret) {
+      let lastBackgroundAdded = state.lastBackgroundAdded;
+      let lastForegroundAdded = state.lastForegroundAdded;
+      delete state.lastBackgroundAdded;
+      delete state.lastForegroundAdded;
+      Object.keys(state).forEach(function(key) {
+        if (state[key]) {
+          ret += codeCache[key].off;
+        }
+      });
+      if (lastBackgroundAdded && lastBackgroundAdded != "\x1B[49m") {
+        ret += "\x1B[49m";
+      }
+      if (lastForegroundAdded && lastForegroundAdded != "\x1B[39m") {
+        ret += "\x1B[39m";
+      }
+      return ret;
+    }
+    function rewindState(state, ret) {
+      let lastBackgroundAdded = state.lastBackgroundAdded;
+      let lastForegroundAdded = state.lastForegroundAdded;
+      delete state.lastBackgroundAdded;
+      delete state.lastForegroundAdded;
+      Object.keys(state).forEach(function(key) {
+        if (state[key]) {
+          ret = codeCache[key].on + ret;
+        }
+      });
+      if (lastBackgroundAdded && lastBackgroundAdded != "\x1B[49m") {
+        ret = lastBackgroundAdded + ret;
+      }
+      if (lastForegroundAdded && lastForegroundAdded != "\x1B[39m") {
+        ret = lastForegroundAdded + ret;
+      }
+      return ret;
+    }
+    function truncateWidth(str, desiredLength) {
+      if (str.length === strlen(str)) {
+        return str.substr(0, desiredLength);
+      }
+      while (strlen(str) > desiredLength) {
+        str = str.slice(0, -1);
+      }
+      return str;
+    }
+    function truncateWidthWithAnsi(str, desiredLength) {
+      let code = codeRegex(true);
+      let split = str.split(codeRegex());
+      let splitIndex = 0;
+      let retLen = 0;
+      let ret = "";
+      let myArray;
+      let state = {};
+      while (retLen < desiredLength) {
+        myArray = code.exec(str);
+        let toAdd = split[splitIndex];
+        splitIndex++;
+        if (retLen + strlen(toAdd) > desiredLength) {
+          toAdd = truncateWidth(toAdd, desiredLength - retLen);
+        }
+        ret += toAdd;
+        retLen += strlen(toAdd);
+        if (retLen < desiredLength) {
+          if (!myArray) {
+            break;
+          }
+          ret += myArray[0];
+          updateState(state, myArray);
+        }
+      }
+      return unwindState(state, ret);
+    }
+    function truncate(str, desiredLength, truncateChar) {
+      truncateChar = truncateChar || "\u2026";
+      let lengthOfStr = strlen(str);
+      if (lengthOfStr <= desiredLength) {
+        return str;
+      }
+      desiredLength -= strlen(truncateChar);
+      let ret = truncateWidthWithAnsi(str, desiredLength);
+      ret += truncateChar;
+      const hrefTag = "\x1B]8;;\x07";
+      if (str.includes(hrefTag) && !ret.includes(hrefTag)) {
+        ret += hrefTag;
+      }
+      return ret;
+    }
+    function defaultOptions() {
+      return {
+        chars: {
+          top: "\u2500",
+          "top-mid": "\u252C",
+          "top-left": "\u250C",
+          "top-right": "\u2510",
+          bottom: "\u2500",
+          "bottom-mid": "\u2534",
+          "bottom-left": "\u2514",
+          "bottom-right": "\u2518",
+          left: "\u2502",
+          "left-mid": "\u251C",
+          mid: "\u2500",
+          "mid-mid": "\u253C",
+          right: "\u2502",
+          "right-mid": "\u2524",
+          middle: "\u2502"
+        },
+        truncate: "\u2026",
+        colWidths: [],
+        rowHeights: [],
+        colAligns: [],
+        rowAligns: [],
+        style: {
+          "padding-left": 1,
+          "padding-right": 1,
+          head: ["red"],
+          border: ["grey"],
+          compact: false
+        },
+        head: []
+      };
+    }
+    function mergeOptions(options, defaults) {
+      options = options || {};
+      defaults = defaults || defaultOptions();
+      let ret = Object.assign({}, defaults, options);
+      ret.chars = Object.assign({}, defaults.chars, options.chars);
+      ret.style = Object.assign({}, defaults.style, options.style);
+      return ret;
+    }
+    function wordWrap(maxLength, input) {
+      let lines = [];
+      let split = input.split(/(\s+)/g);
+      let line = [];
+      let lineLength = 0;
+      let whitespace;
+      for (let i = 0; i < split.length; i += 2) {
+        let word = split[i];
+        let newLength = lineLength + strlen(word);
+        if (lineLength > 0 && whitespace) {
+          newLength += whitespace.length;
+        }
+        if (newLength > maxLength) {
+          if (lineLength !== 0) {
+            lines.push(line.join(""));
+          }
+          line = [word];
+          lineLength = strlen(word);
+        } else {
+          line.push(whitespace || "", word);
+          lineLength = newLength;
+        }
+        whitespace = split[i + 1];
+      }
+      if (lineLength) {
+        lines.push(line.join(""));
+      }
+      return lines;
+    }
+    function textWrap(maxLength, input) {
+      let lines = [];
+      let line = "";
+      function pushLine(str, ws) {
+        if (line.length && ws) line += ws;
+        line += str;
+        while (line.length > maxLength) {
+          lines.push(line.slice(0, maxLength));
+          line = line.slice(maxLength);
+        }
+      }
+      let split = input.split(/(\s+)/g);
+      for (let i = 0; i < split.length; i += 2) {
+        pushLine(split[i], i && split[i - 1]);
+      }
+      if (line.length) lines.push(line);
+      return lines;
+    }
+    function multiLineWordWrap(maxLength, input, wrapOnWordBoundary = true) {
+      let output = [];
+      input = input.split("\n");
+      const handler = wrapOnWordBoundary ? wordWrap : textWrap;
+      for (let i = 0; i < input.length; i++) {
+        output.push.apply(output, handler(maxLength, input[i]));
+      }
+      return output;
+    }
+    function colorizeLines(input) {
+      let state = {};
+      let output = [];
+      for (let i = 0; i < input.length; i++) {
+        let line = rewindState(state, input[i]);
+        state = readState(line);
+        let temp = Object.assign({}, state);
+        output.push(unwindState(temp, line));
+      }
+      return output;
+    }
+    function hyperlink(url2, text) {
+      const OSC = "\x1B]";
+      const BEL = "\x07";
+      const SEP = ";";
+      return [OSC, "8", SEP, SEP, url2 || text, BEL, text, OSC, "8", SEP, SEP, BEL].join("");
+    }
+    module2.exports = {
+      strlen,
+      repeat,
+      pad,
+      truncate,
+      mergeOptions,
+      wordWrap: multiLineWordWrap,
+      colorizeLines,
+      hyperlink
+    };
+  }
+});
+
+// ../node_modules/@colors/colors/lib/styles.js
+var require_styles = __commonJS({
+  "../node_modules/@colors/colors/lib/styles.js"(exports2, module2) {
+    "use strict";
+    var styles4 = {};
+    module2["exports"] = styles4;
+    var codes = {
+      reset: [0, 0],
+      bold: [1, 22],
+      dim: [2, 22],
+      italic: [3, 23],
+      underline: [4, 24],
+      inverse: [7, 27],
+      hidden: [8, 28],
+      strikethrough: [9, 29],
+      black: [30, 39],
+      red: [31, 39],
+      green: [32, 39],
+      yellow: [33, 39],
+      blue: [34, 39],
+      magenta: [35, 39],
+      cyan: [36, 39],
+      white: [37, 39],
+      gray: [90, 39],
+      grey: [90, 39],
+      brightRed: [91, 39],
+      brightGreen: [92, 39],
+      brightYellow: [93, 39],
+      brightBlue: [94, 39],
+      brightMagenta: [95, 39],
+      brightCyan: [96, 39],
+      brightWhite: [97, 39],
+      bgBlack: [40, 49],
+      bgRed: [41, 49],
+      bgGreen: [42, 49],
+      bgYellow: [43, 49],
+      bgBlue: [44, 49],
+      bgMagenta: [45, 49],
+      bgCyan: [46, 49],
+      bgWhite: [47, 49],
+      bgGray: [100, 49],
+      bgGrey: [100, 49],
+      bgBrightRed: [101, 49],
+      bgBrightGreen: [102, 49],
+      bgBrightYellow: [103, 49],
+      bgBrightBlue: [104, 49],
+      bgBrightMagenta: [105, 49],
+      bgBrightCyan: [106, 49],
+      bgBrightWhite: [107, 49],
+      // legacy styles for colors pre v1.0.0
+      blackBG: [40, 49],
+      redBG: [41, 49],
+      greenBG: [42, 49],
+      yellowBG: [43, 49],
+      blueBG: [44, 49],
+      magentaBG: [45, 49],
+      cyanBG: [46, 49],
+      whiteBG: [47, 49]
+    };
+    Object.keys(codes).forEach(function(key) {
+      var val = codes[key];
+      var style = styles4[key] = [];
+      style.open = "\x1B[" + val[0] + "m";
+      style.close = "\x1B[" + val[1] + "m";
+    });
+  }
+});
+
+// ../node_modules/@colors/colors/lib/system/has-flag.js
+var require_has_flag = __commonJS({
+  "../node_modules/@colors/colors/lib/system/has-flag.js"(exports2, module2) {
+    "use strict";
+    module2.exports = function(flag, argv) {
+      argv = argv || process.argv;
+      var terminatorPos = argv.indexOf("--");
+      var prefix = /^-{1,2}/.test(flag) ? "" : "--";
+      var pos = argv.indexOf(prefix + flag);
+      return pos !== -1 && (terminatorPos === -1 ? true : pos < terminatorPos);
+    };
+  }
+});
+
+// ../node_modules/@colors/colors/lib/system/supports-colors.js
+var require_supports_colors = __commonJS({
+  "../node_modules/@colors/colors/lib/system/supports-colors.js"(exports2, module2) {
+    "use strict";
+    var os10 = require("os");
+    var hasFlag2 = require_has_flag();
+    var env3 = process.env;
+    var forceColor = void 0;
+    if (hasFlag2("no-color") || hasFlag2("no-colors") || hasFlag2("color=false")) {
+      forceColor = false;
+    } else if (hasFlag2("color") || hasFlag2("colors") || hasFlag2("color=true") || hasFlag2("color=always")) {
+      forceColor = true;
+    }
+    if ("FORCE_COLOR" in env3) {
+      forceColor = env3.FORCE_COLOR.length === 0 || parseInt(env3.FORCE_COLOR, 10) !== 0;
+    }
+    function translateLevel2(level) {
+      if (level === 0) {
+        return false;
+      }
+      return {
+        level,
+        hasBasic: true,
+        has256: level >= 2,
+        has16m: level >= 3
+      };
+    }
+    function supportsColor2(stream) {
+      if (forceColor === false) {
+        return 0;
+      }
+      if (hasFlag2("color=16m") || hasFlag2("color=full") || hasFlag2("color=truecolor")) {
+        return 3;
+      }
+      if (hasFlag2("color=256")) {
+        return 2;
+      }
+      if (stream && !stream.isTTY && forceColor !== true) {
+        return 0;
+      }
+      var min = forceColor ? 1 : 0;
+      if (process.platform === "win32") {
+        var osRelease = os10.release().split(".");
+        if (Number(process.versions.node.split(".")[0]) >= 8 && Number(osRelease[0]) >= 10 && Number(osRelease[2]) >= 10586) {
+          return Number(osRelease[2]) >= 14931 ? 3 : 2;
+        }
+        return 1;
+      }
+      if ("CI" in env3) {
+        if (["TRAVIS", "CIRCLECI", "APPVEYOR", "GITLAB_CI"].some(function(sign) {
+          return sign in env3;
+        }) || env3.CI_NAME === "codeship") {
+          return 1;
+        }
+        return min;
+      }
+      if ("TEAMCITY_VERSION" in env3) {
+        return /^(9\.(0*[1-9]\d*)\.|\d{2,}\.)/.test(env3.TEAMCITY_VERSION) ? 1 : 0;
+      }
+      if ("TERM_PROGRAM" in env3) {
+        var version3 = parseInt((env3.TERM_PROGRAM_VERSION || "").split(".")[0], 10);
+        switch (env3.TERM_PROGRAM) {
+          case "iTerm.app":
+            return version3 >= 3 ? 3 : 2;
+          case "Hyper":
+            return 3;
+          case "Apple_Terminal":
+            return 2;
+        }
+      }
+      if (/-256(color)?$/i.test(env3.TERM)) {
+        return 2;
+      }
+      if (/^screen|^xterm|^vt100|^rxvt|color|ansi|cygwin|linux/i.test(env3.TERM)) {
+        return 1;
+      }
+      if ("COLORTERM" in env3) {
+        return 1;
+      }
+      if (env3.TERM === "dumb") {
+        return min;
+      }
+      return min;
+    }
+    function getSupportLevel(stream) {
+      var level = supportsColor2(stream);
+      return translateLevel2(level);
+    }
+    module2.exports = {
+      supportsColor: getSupportLevel,
+      stdout: getSupportLevel(process.stdout),
+      stderr: getSupportLevel(process.stderr)
+    };
+  }
+});
+
+// ../node_modules/@colors/colors/lib/custom/trap.js
+var require_trap = __commonJS({
+  "../node_modules/@colors/colors/lib/custom/trap.js"(exports2, module2) {
+    "use strict";
+    module2["exports"] = function runTheTrap(text, options) {
+      var result = "";
+      text = text || "Run the trap, drop the bass";
+      text = text.split("");
+      var trap = {
+        a: ["@", "\u0104", "\u023A", "\u0245", "\u0394", "\u039B", "\u0414"],
+        b: ["\xDF", "\u0181", "\u0243", "\u026E", "\u03B2", "\u0E3F"],
+        c: ["\xA9", "\u023B", "\u03FE"],
+        d: ["\xD0", "\u018A", "\u0500", "\u0501", "\u0502", "\u0503"],
+        e: [
+          "\xCB",
+          "\u0115",
+          "\u018E",
+          "\u0258",
+          "\u03A3",
+          "\u03BE",
+          "\u04BC",
+          "\u0A6C"
+        ],
+        f: ["\u04FA"],
+        g: ["\u0262"],
+        h: ["\u0126", "\u0195", "\u04A2", "\u04BA", "\u04C7", "\u050A"],
+        i: ["\u0F0F"],
+        j: ["\u0134"],
+        k: ["\u0138", "\u04A0", "\u04C3", "\u051E"],
+        l: ["\u0139"],
+        m: ["\u028D", "\u04CD", "\u04CE", "\u0520", "\u0521", "\u0D69"],
+        n: ["\xD1", "\u014B", "\u019D", "\u0376", "\u03A0", "\u048A"],
+        o: [
+          "\xD8",
+          "\xF5",
+          "\xF8",
+          "\u01FE",
+          "\u0298",
+          "\u047A",
+          "\u05DD",
+          "\u06DD",
+          "\u0E4F"
+        ],
+        p: ["\u01F7", "\u048E"],
+        q: ["\u09CD"],
+        r: ["\xAE", "\u01A6", "\u0210", "\u024C", "\u0280", "\u042F"],
+        s: ["\xA7", "\u03DE", "\u03DF", "\u03E8"],
+        t: ["\u0141", "\u0166", "\u0373"],
+        u: ["\u01B1", "\u054D"],
+        v: ["\u05D8"],
+        w: ["\u0428", "\u0460", "\u047C", "\u0D70"],
+        x: ["\u04B2", "\u04FE", "\u04FC", "\u04FD"],
+        y: ["\xA5", "\u04B0", "\u04CB"],
+        z: ["\u01B5", "\u0240"]
+      };
+      text.forEach(function(c) {
+        c = c.toLowerCase();
+        var chars = trap[c] || [" "];
+        var rand = Math.floor(Math.random() * chars.length);
+        if (typeof trap[c] !== "undefined") {
+          result += trap[c][rand];
+        } else {
+          result += c;
+        }
+      });
+      return result;
+    };
+  }
+});
+
+// ../node_modules/@colors/colors/lib/custom/zalgo.js
+var require_zalgo = __commonJS({
+  "../node_modules/@colors/colors/lib/custom/zalgo.js"(exports2, module2) {
+    "use strict";
+    module2["exports"] = function zalgo(text, options) {
+      text = text || "   he is here   ";
+      var soul = {
+        "up": [
+          "\u030D",
+          "\u030E",
+          "\u0304",
+          "\u0305",
+          "\u033F",
+          "\u0311",
+          "\u0306",
+          "\u0310",
+          "\u0352",
+          "\u0357",
+          "\u0351",
+          "\u0307",
+          "\u0308",
+          "\u030A",
+          "\u0342",
+          "\u0313",
+          "\u0308",
+          "\u034A",
+          "\u034B",
+          "\u034C",
+          "\u0303",
+          "\u0302",
+          "\u030C",
+          "\u0350",
+          "\u0300",
+          "\u0301",
+          "\u030B",
+          "\u030F",
+          "\u0312",
+          "\u0313",
+          "\u0314",
+          "\u033D",
+          "\u0309",
+          "\u0363",
+          "\u0364",
+          "\u0365",
+          "\u0366",
+          "\u0367",
+          "\u0368",
+          "\u0369",
+          "\u036A",
+          "\u036B",
+          "\u036C",
+          "\u036D",
+          "\u036E",
+          "\u036F",
+          "\u033E",
+          "\u035B",
+          "\u0346",
+          "\u031A"
+        ],
+        "down": [
+          "\u0316",
+          "\u0317",
+          "\u0318",
+          "\u0319",
+          "\u031C",
+          "\u031D",
+          "\u031E",
+          "\u031F",
+          "\u0320",
+          "\u0324",
+          "\u0325",
+          "\u0326",
+          "\u0329",
+          "\u032A",
+          "\u032B",
+          "\u032C",
+          "\u032D",
+          "\u032E",
+          "\u032F",
+          "\u0330",
+          "\u0331",
+          "\u0332",
+          "\u0333",
+          "\u0339",
+          "\u033A",
+          "\u033B",
+          "\u033C",
+          "\u0345",
+          "\u0347",
+          "\u0348",
+          "\u0349",
+          "\u034D",
+          "\u034E",
+          "\u0353",
+          "\u0354",
+          "\u0355",
+          "\u0356",
+          "\u0359",
+          "\u035A",
+          "\u0323"
+        ],
+        "mid": [
+          "\u0315",
+          "\u031B",
+          "\u0300",
+          "\u0301",
+          "\u0358",
+          "\u0321",
+          "\u0322",
+          "\u0327",
+          "\u0328",
+          "\u0334",
+          "\u0335",
+          "\u0336",
+          "\u035C",
+          "\u035D",
+          "\u035E",
+          "\u035F",
+          "\u0360",
+          "\u0362",
+          "\u0338",
+          "\u0337",
+          "\u0361",
+          " \u0489"
+        ]
+      };
+      var all = [].concat(soul.up, soul.down, soul.mid);
+      function randomNumber(range) {
+        var r = Math.floor(Math.random() * range);
+        return r;
+      }
+      function isChar(character) {
+        var bool = false;
+        all.filter(function(i) {
+          bool = i === character;
+        });
+        return bool;
+      }
+      function heComes(text2, options2) {
+        var result = "";
+        var counts;
+        var l;
+        options2 = options2 || {};
+        options2["up"] = typeof options2["up"] !== "undefined" ? options2["up"] : true;
+        options2["mid"] = typeof options2["mid"] !== "undefined" ? options2["mid"] : true;
+        options2["down"] = typeof options2["down"] !== "undefined" ? options2["down"] : true;
+        options2["size"] = typeof options2["size"] !== "undefined" ? options2["size"] : "maxi";
+        text2 = text2.split("");
+        for (l in text2) {
+          if (isChar(l)) {
+            continue;
+          }
+          result = result + text2[l];
+          counts = { "up": 0, "down": 0, "mid": 0 };
+          switch (options2.size) {
+            case "mini":
+              counts.up = randomNumber(8);
+              counts.mid = randomNumber(2);
+              counts.down = randomNumber(8);
+              break;
+            case "maxi":
+              counts.up = randomNumber(16) + 3;
+              counts.mid = randomNumber(4) + 1;
+              counts.down = randomNumber(64) + 3;
+              break;
+            default:
+              counts.up = randomNumber(8) + 1;
+              counts.mid = randomNumber(6) / 2;
+              counts.down = randomNumber(8) + 1;
+              break;
+          }
+          var arr = ["up", "mid", "down"];
+          for (var d in arr) {
+            var index = arr[d];
+            for (var i = 0; i <= counts[index]; i++) {
+              if (options2[index]) {
+                result = result + soul[index][randomNumber(soul[index].length)];
+              }
+            }
+          }
+        }
+        return result;
+      }
+      return heComes(text, options);
+    };
+  }
+});
+
+// ../node_modules/@colors/colors/lib/maps/america.js
+var require_america = __commonJS({
+  "../node_modules/@colors/colors/lib/maps/america.js"(exports2, module2) {
+    "use strict";
+    module2["exports"] = function(colors) {
+      return function(letter, i, exploded) {
+        if (letter === " ") return letter;
+        switch (i % 3) {
+          case 0:
+            return colors.red(letter);
+          case 1:
+            return colors.white(letter);
+          case 2:
+            return colors.blue(letter);
+        }
+      };
+    };
+  }
+});
+
+// ../node_modules/@colors/colors/lib/maps/zebra.js
+var require_zebra = __commonJS({
+  "../node_modules/@colors/colors/lib/maps/zebra.js"(exports2, module2) {
+    "use strict";
+    module2["exports"] = function(colors) {
+      return function(letter, i, exploded) {
+        return i % 2 === 0 ? letter : colors.inverse(letter);
+      };
+    };
+  }
+});
+
+// ../node_modules/@colors/colors/lib/maps/rainbow.js
+var require_rainbow = __commonJS({
+  "../node_modules/@colors/colors/lib/maps/rainbow.js"(exports2, module2) {
+    "use strict";
+    module2["exports"] = function(colors) {
+      var rainbowColors = ["red", "yellow", "green", "blue", "magenta"];
+      return function(letter, i, exploded) {
+        if (letter === " ") {
+          return letter;
+        } else {
+          return colors[rainbowColors[i++ % rainbowColors.length]](letter);
+        }
+      };
+    };
+  }
+});
+
+// ../node_modules/@colors/colors/lib/maps/random.js
+var require_random = __commonJS({
+  "../node_modules/@colors/colors/lib/maps/random.js"(exports2, module2) {
+    "use strict";
+    module2["exports"] = function(colors) {
+      var available = [
+        "underline",
+        "inverse",
+        "grey",
+        "yellow",
+        "red",
+        "green",
+        "blue",
+        "white",
+        "cyan",
+        "magenta",
+        "brightYellow",
+        "brightRed",
+        "brightGreen",
+        "brightBlue",
+        "brightWhite",
+        "brightCyan",
+        "brightMagenta"
+      ];
+      return function(letter, i, exploded) {
+        return letter === " " ? letter : colors[available[Math.round(Math.random() * (available.length - 2))]](letter);
+      };
+    };
+  }
+});
+
+// ../node_modules/@colors/colors/lib/colors.js
+var require_colors = __commonJS({
+  "../node_modules/@colors/colors/lib/colors.js"(exports2, module2) {
+    "use strict";
+    var colors = {};
+    module2["exports"] = colors;
+    colors.themes = {};
+    var util = require("util");
+    var ansiStyles3 = colors.styles = require_styles();
+    var defineProps = Object.defineProperties;
+    var newLineRegex = new RegExp(/[\r\n]+/g);
+    colors.supportsColor = require_supports_colors().supportsColor;
+    if (typeof colors.enabled === "undefined") {
+      colors.enabled = colors.supportsColor() !== false;
+    }
+    colors.enable = function() {
+      colors.enabled = true;
+    };
+    colors.disable = function() {
+      colors.enabled = false;
+    };
+    colors.stripColors = colors.strip = function(str) {
+      return ("" + str).replace(/\x1B\[\d+m/g, "");
+    };
+    var stylize = colors.stylize = function stylize2(str, style) {
+      if (!colors.enabled) {
+        return str + "";
+      }
+      var styleMap = ansiStyles3[style];
+      if (!styleMap && style in colors) {
+        return colors[style](str);
+      }
+      return styleMap.open + str + styleMap.close;
+    };
+    var matchOperatorsRe = /[|\\{}()[\]^$+*?.]/g;
+    var escapeStringRegexp = function(str) {
+      if (typeof str !== "string") {
+        throw new TypeError("Expected a string");
+      }
+      return str.replace(matchOperatorsRe, "\\$&");
+    };
+    function build(_styles) {
+      var builder = function builder2() {
+        return applyStyle2.apply(builder2, arguments);
+      };
+      builder._styles = _styles;
+      builder.__proto__ = proto2;
+      return builder;
+    }
+    var styles4 = (function() {
+      var ret = {};
+      ansiStyles3.grey = ansiStyles3.gray;
+      Object.keys(ansiStyles3).forEach(function(key) {
+        ansiStyles3[key].closeRe = new RegExp(escapeStringRegexp(ansiStyles3[key].close), "g");
+        ret[key] = {
+          get: function() {
+            return build(this._styles.concat(key));
+          }
+        };
+      });
+      return ret;
+    })();
+    var proto2 = defineProps(function colors2() {
+    }, styles4);
+    function applyStyle2() {
+      var args = Array.prototype.slice.call(arguments);
+      var str = args.map(function(arg) {
+        if (arg != null && arg.constructor === String) {
+          return arg;
+        } else {
+          return util.inspect(arg);
+        }
+      }).join(" ");
+      if (!colors.enabled || !str) {
+        return str;
+      }
+      var newLinesPresent = str.indexOf("\n") != -1;
+      var nestedStyles = this._styles;
+      var i = nestedStyles.length;
+      while (i--) {
+        var code = ansiStyles3[nestedStyles[i]];
+        str = code.open + str.replace(code.closeRe, code.open) + code.close;
+        if (newLinesPresent) {
+          str = str.replace(newLineRegex, function(match) {
+            return code.close + match + code.open;
+          });
+        }
+      }
+      return str;
+    }
+    colors.setTheme = function(theme) {
+      if (typeof theme === "string") {
+        console.log("colors.setTheme now only accepts an object, not a string.  If you are trying to set a theme from a file, it is now your (the caller's) responsibility to require the file.  The old syntax looked like colors.setTheme(__dirname + '/../themes/generic-logging.js'); The new syntax looks like colors.setTheme(require(__dirname + '/../themes/generic-logging.js'));");
+        return;
+      }
+      for (var style in theme) {
+        (function(style2) {
+          colors[style2] = function(str) {
+            if (typeof theme[style2] === "object") {
+              var out = str;
+              for (var i in theme[style2]) {
+                out = colors[theme[style2][i]](out);
+              }
+              return out;
+            }
+            return colors[theme[style2]](str);
+          };
+        })(style);
+      }
+    };
+    function init2() {
+      var ret = {};
+      Object.keys(styles4).forEach(function(name) {
+        ret[name] = {
+          get: function() {
+            return build([name]);
+          }
+        };
+      });
+      return ret;
+    }
+    var sequencer = function sequencer2(map3, str) {
+      var exploded = str.split("");
+      exploded = exploded.map(map3);
+      return exploded.join("");
+    };
+    colors.trap = require_trap();
+    colors.zalgo = require_zalgo();
+    colors.maps = {};
+    colors.maps.america = require_america()(colors);
+    colors.maps.zebra = require_zebra()(colors);
+    colors.maps.rainbow = require_rainbow()(colors);
+    colors.maps.random = require_random()(colors);
+    for (map2 in colors.maps) {
+      (function(map3) {
+        colors[map3] = function(str) {
+          return sequencer(colors.maps[map3], str);
+        };
+      })(map2);
+    }
+    var map2;
+    defineProps(colors, init2());
+  }
+});
+
+// ../node_modules/@colors/colors/safe.js
+var require_safe = __commonJS({
+  "../node_modules/@colors/colors/safe.js"(exports2, module2) {
+    "use strict";
+    var colors = require_colors();
+    module2["exports"] = colors;
+  }
+});
+
+// ../node_modules/cli-table3/src/cell.js
+var require_cell = __commonJS({
+  "../node_modules/cli-table3/src/cell.js"(exports2, module2) {
+    "use strict";
+    var { info, debug } = require_debug2();
+    var utils = require_utils4();
+    var Cell = class _Cell {
+      /**
+       * A representation of a cell within the table.
+       * Implementations must have `init` and `draw` methods,
+       * as well as `colSpan`, `rowSpan`, `desiredHeight` and `desiredWidth` properties.
+       * @param options
+       * @constructor
+       */
+      constructor(options) {
+        this.setOptions(options);
+        this.x = null;
+        this.y = null;
+      }
+      setOptions(options) {
+        if (["boolean", "number", "bigint", "string"].indexOf(typeof options) !== -1) {
+          options = { content: "" + options };
+        }
+        options = options || {};
+        this.options = options;
+        let content = options.content;
+        if (["boolean", "number", "bigint", "string"].indexOf(typeof content) !== -1) {
+          this.content = String(content);
+        } else if (!content) {
+          this.content = this.options.href || "";
+        } else {
+          throw new Error("Content needs to be a primitive, got: " + typeof content);
+        }
+        this.colSpan = options.colSpan || 1;
+        this.rowSpan = options.rowSpan || 1;
+        if (this.options.href) {
+          Object.defineProperty(this, "href", {
+            get() {
+              return this.options.href;
+            }
+          });
+        }
+      }
+      mergeTableOptions(tableOptions, cells) {
+        this.cells = cells;
+        let optionsChars = this.options.chars || {};
+        let tableChars = tableOptions.chars;
+        let chars = this.chars = {};
+        CHAR_NAMES.forEach(function(name) {
+          setOption(optionsChars, tableChars, name, chars);
+        });
+        this.truncate = this.options.truncate || tableOptions.truncate;
+        let style = this.options.style = this.options.style || {};
+        let tableStyle = tableOptions.style;
+        setOption(style, tableStyle, "padding-left", this);
+        setOption(style, tableStyle, "padding-right", this);
+        this.head = style.head || tableStyle.head;
+        this.border = style.border || tableStyle.border;
+        this.fixedWidth = tableOptions.colWidths[this.x];
+        this.lines = this.computeLines(tableOptions);
+        this.desiredWidth = utils.strlen(this.content) + this.paddingLeft + this.paddingRight;
+        this.desiredHeight = this.lines.length;
+      }
+      computeLines(tableOptions) {
+        const tableWordWrap = tableOptions.wordWrap || tableOptions.textWrap;
+        const { wordWrap = tableWordWrap } = this.options;
+        if (this.fixedWidth && wordWrap) {
+          this.fixedWidth -= this.paddingLeft + this.paddingRight;
+          if (this.colSpan) {
+            let i = 1;
+            while (i < this.colSpan) {
+              this.fixedWidth += tableOptions.colWidths[this.x + i];
+              i++;
+            }
+          }
+          const { wrapOnWordBoundary: tableWrapOnWordBoundary = true } = tableOptions;
+          const { wrapOnWordBoundary = tableWrapOnWordBoundary } = this.options;
+          return this.wrapLines(utils.wordWrap(this.fixedWidth, this.content, wrapOnWordBoundary));
+        }
+        return this.wrapLines(this.content.split("\n"));
+      }
+      wrapLines(computedLines) {
+        const lines = utils.colorizeLines(computedLines);
+        if (this.href) {
+          return lines.map((line) => utils.hyperlink(this.href, line));
+        }
+        return lines;
+      }
+      /**
+       * Initializes the Cells data structure.
+       *
+       * @param tableOptions - A fully populated set of tableOptions.
+       * In addition to the standard default values, tableOptions must have fully populated the
+       * `colWidths` and `rowWidths` arrays. Those arrays must have lengths equal to the number
+       * of columns or rows (respectively) in this table, and each array item must be a Number.
+       *
+       */
+      init(tableOptions) {
+        let x = this.x;
+        let y = this.y;
+        this.widths = tableOptions.colWidths.slice(x, x + this.colSpan);
+        this.heights = tableOptions.rowHeights.slice(y, y + this.rowSpan);
+        this.width = this.widths.reduce(sumPlusOne, -1);
+        this.height = this.heights.reduce(sumPlusOne, -1);
+        this.hAlign = this.options.hAlign || tableOptions.colAligns[x];
+        this.vAlign = this.options.vAlign || tableOptions.rowAligns[y];
+        this.drawRight = x + this.colSpan == tableOptions.colWidths.length;
+      }
+      /**
+       * Draws the given line of the cell.
+       * This default implementation defers to methods `drawTop`, `drawBottom`, `drawLine` and `drawEmpty`.
+       * @param lineNum - can be `top`, `bottom` or a numerical line number.
+       * @param spanningCell - will be a number if being called from a RowSpanCell, and will represent how
+       * many rows below it's being called from. Otherwise it's undefined.
+       * @returns {String} The representation of this line.
+       */
+      draw(lineNum, spanningCell) {
+        if (lineNum == "top") return this.drawTop(this.drawRight);
+        if (lineNum == "bottom") return this.drawBottom(this.drawRight);
+        let content = utils.truncate(this.content, 10, this.truncate);
+        if (!lineNum) {
+          info(`${this.y}-${this.x}: ${this.rowSpan - lineNum}x${this.colSpan} Cell ${content}`);
+        } else {
+        }
+        let padLen = Math.max(this.height - this.lines.length, 0);
+        let padTop;
+        switch (this.vAlign) {
+          case "center":
+            padTop = Math.ceil(padLen / 2);
+            break;
+          case "bottom":
+            padTop = padLen;
+            break;
+          default:
+            padTop = 0;
+        }
+        if (lineNum < padTop || lineNum >= padTop + this.lines.length) {
+          return this.drawEmpty(this.drawRight, spanningCell);
+        }
+        let forceTruncation = this.lines.length > this.height && lineNum + 1 >= this.height;
+        return this.drawLine(lineNum - padTop, this.drawRight, forceTruncation, spanningCell);
+      }
+      /**
+       * Renders the top line of the cell.
+       * @param drawRight - true if this method should render the right edge of the cell.
+       * @returns {String}
+       */
+      drawTop(drawRight) {
+        let content = [];
+        if (this.cells) {
+          this.widths.forEach(function(width, index) {
+            content.push(this._topLeftChar(index));
+            content.push(utils.repeat(this.chars[this.y == 0 ? "top" : "mid"], width));
+          }, this);
+        } else {
+          content.push(this._topLeftChar(0));
+          content.push(utils.repeat(this.chars[this.y == 0 ? "top" : "mid"], this.width));
+        }
+        if (drawRight) {
+          content.push(this.chars[this.y == 0 ? "topRight" : "rightMid"]);
+        }
+        return this.wrapWithStyleColors("border", content.join(""));
+      }
+      _topLeftChar(offset) {
+        let x = this.x + offset;
+        let leftChar;
+        if (this.y == 0) {
+          leftChar = x == 0 ? "topLeft" : offset == 0 ? "topMid" : "top";
+        } else {
+          if (x == 0) {
+            leftChar = "leftMid";
+          } else {
+            leftChar = offset == 0 ? "midMid" : "bottomMid";
+            if (this.cells) {
+              let spanAbove = this.cells[this.y - 1][x] instanceof _Cell.ColSpanCell;
+              if (spanAbove) {
+                leftChar = offset == 0 ? "topMid" : "mid";
+              }
+              if (offset == 0) {
+                let i = 1;
+                while (this.cells[this.y][x - i] instanceof _Cell.ColSpanCell) {
+                  i++;
+                }
+                if (this.cells[this.y][x - i] instanceof _Cell.RowSpanCell) {
+                  leftChar = "leftMid";
+                }
+              }
+            }
+          }
+        }
+        return this.chars[leftChar];
+      }
+      wrapWithStyleColors(styleProperty, content) {
+        if (this[styleProperty] && this[styleProperty].length) {
+          try {
+            let colors = require_safe();
+            for (let i = this[styleProperty].length - 1; i >= 0; i--) {
+              colors = colors[this[styleProperty][i]];
+            }
+            return colors(content);
+          } catch (e) {
+            return content;
+          }
+        } else {
+          return content;
+        }
+      }
+      /**
+       * Renders a line of text.
+       * @param lineNum - Which line of text to render. This is not necessarily the line within the cell.
+       * There may be top-padding above the first line of text.
+       * @param drawRight - true if this method should render the right edge of the cell.
+       * @param forceTruncationSymbol - `true` if the rendered text should end with the truncation symbol even
+       * if the text fits. This is used when the cell is vertically truncated. If `false` the text should
+       * only include the truncation symbol if the text will not fit horizontally within the cell width.
+       * @param spanningCell - a number of if being called from a RowSpanCell. (how many rows below). otherwise undefined.
+       * @returns {String}
+       */
+      drawLine(lineNum, drawRight, forceTruncationSymbol, spanningCell) {
+        let left = this.chars[this.x == 0 ? "left" : "middle"];
+        if (this.x && spanningCell && this.cells) {
+          let cellLeft = this.cells[this.y + spanningCell][this.x - 1];
+          while (cellLeft instanceof ColSpanCell) {
+            cellLeft = this.cells[cellLeft.y][cellLeft.x - 1];
+          }
+          if (!(cellLeft instanceof RowSpanCell)) {
+            left = this.chars["rightMid"];
+          }
+        }
+        let leftPadding = utils.repeat(" ", this.paddingLeft);
+        let right = drawRight ? this.chars["right"] : "";
+        let rightPadding = utils.repeat(" ", this.paddingRight);
+        let line = this.lines[lineNum];
+        let len = this.width - (this.paddingLeft + this.paddingRight);
+        if (forceTruncationSymbol) line += this.truncate || "\u2026";
+        let content = utils.truncate(line, len, this.truncate);
+        content = utils.pad(content, len, " ", this.hAlign);
+        content = leftPadding + content + rightPadding;
+        return this.stylizeLine(left, content, right);
+      }
+      stylizeLine(left, content, right) {
+        left = this.wrapWithStyleColors("border", left);
+        right = this.wrapWithStyleColors("border", right);
+        if (this.y === 0) {
+          content = this.wrapWithStyleColors("head", content);
+        }
+        return left + content + right;
+      }
+      /**
+       * Renders the bottom line of the cell.
+       * @param drawRight - true if this method should render the right edge of the cell.
+       * @returns {String}
+       */
+      drawBottom(drawRight) {
+        let left = this.chars[this.x == 0 ? "bottomLeft" : "bottomMid"];
+        let content = utils.repeat(this.chars.bottom, this.width);
+        let right = drawRight ? this.chars["bottomRight"] : "";
+        return this.wrapWithStyleColors("border", left + content + right);
+      }
+      /**
+       * Renders a blank line of text within the cell. Used for top and/or bottom padding.
+       * @param drawRight - true if this method should render the right edge of the cell.
+       * @param spanningCell - a number of if being called from a RowSpanCell. (how many rows below). otherwise undefined.
+       * @returns {String}
+       */
+      drawEmpty(drawRight, spanningCell) {
+        let left = this.chars[this.x == 0 ? "left" : "middle"];
+        if (this.x && spanningCell && this.cells) {
+          let cellLeft = this.cells[this.y + spanningCell][this.x - 1];
+          while (cellLeft instanceof ColSpanCell) {
+            cellLeft = this.cells[cellLeft.y][cellLeft.x - 1];
+          }
+          if (!(cellLeft instanceof RowSpanCell)) {
+            left = this.chars["rightMid"];
+          }
+        }
+        let right = drawRight ? this.chars["right"] : "";
+        let content = utils.repeat(" ", this.width);
+        return this.stylizeLine(left, content, right);
+      }
+    };
+    var ColSpanCell = class {
+      /**
+       * A Cell that doesn't do anything. It just draws empty lines.
+       * Used as a placeholder in column spanning.
+       * @constructor
+       */
+      constructor() {
+      }
+      draw(lineNum) {
+        if (typeof lineNum === "number") {
+          debug(`${this.y}-${this.x}: 1x1 ColSpanCell`);
+        }
+        return "";
+      }
+      init() {
+      }
+      mergeTableOptions() {
+      }
+    };
+    var RowSpanCell = class {
+      /**
+       * A placeholder Cell for a Cell that spans multiple rows.
+       * It delegates rendering to the original cell, but adds the appropriate offset.
+       * @param originalCell
+       * @constructor
+       */
+      constructor(originalCell) {
+        this.originalCell = originalCell;
+      }
+      init(tableOptions) {
+        let y = this.y;
+        let originalY = this.originalCell.y;
+        this.cellOffset = y - originalY;
+        this.offset = findDimension(tableOptions.rowHeights, originalY, this.cellOffset);
+      }
+      draw(lineNum) {
+        if (lineNum == "top") {
+          return this.originalCell.draw(this.offset, this.cellOffset);
+        }
+        if (lineNum == "bottom") {
+          return this.originalCell.draw("bottom");
+        }
+        debug(`${this.y}-${this.x}: 1x${this.colSpan} RowSpanCell for ${this.originalCell.content}`);
+        return this.originalCell.draw(this.offset + 1 + lineNum);
+      }
+      mergeTableOptions() {
+      }
+    };
+    function firstDefined(...args) {
+      return args.filter((v) => v !== void 0 && v !== null).shift();
+    }
+    function setOption(objA, objB, nameB, targetObj) {
+      let nameA = nameB.split("-");
+      if (nameA.length > 1) {
+        nameA[1] = nameA[1].charAt(0).toUpperCase() + nameA[1].substr(1);
+        nameA = nameA.join("");
+        targetObj[nameA] = firstDefined(objA[nameA], objA[nameB], objB[nameA], objB[nameB]);
+      } else {
+        targetObj[nameB] = firstDefined(objA[nameB], objB[nameB]);
+      }
+    }
+    function findDimension(dimensionTable, startingIndex, span) {
+      let ret = dimensionTable[startingIndex];
+      for (let i = 1; i < span; i++) {
+        ret += 1 + dimensionTable[startingIndex + i];
+      }
+      return ret;
+    }
+    function sumPlusOne(a, b) {
+      return a + b + 1;
+    }
+    var CHAR_NAMES = [
+      "top",
+      "top-mid",
+      "top-left",
+      "top-right",
+      "bottom",
+      "bottom-mid",
+      "bottom-left",
+      "bottom-right",
+      "left",
+      "left-mid",
+      "mid",
+      "mid-mid",
+      "right",
+      "right-mid",
+      "middle"
+    ];
+    module2.exports = Cell;
+    module2.exports.ColSpanCell = ColSpanCell;
+    module2.exports.RowSpanCell = RowSpanCell;
+  }
+});
+
+// ../node_modules/cli-table3/src/layout-manager.js
+var require_layout_manager = __commonJS({
+  "../node_modules/cli-table3/src/layout-manager.js"(exports2, module2) {
+    "use strict";
+    var { warn, debug } = require_debug2();
+    var Cell = require_cell();
+    var { ColSpanCell, RowSpanCell } = Cell;
+    (function() {
+      function next(alloc, col) {
+        if (alloc[col] > 0) {
+          return next(alloc, col + 1);
+        }
+        return col;
+      }
+      function layoutTable(table) {
+        let alloc = {};
+        table.forEach(function(row, rowIndex) {
+          let col = 0;
+          row.forEach(function(cell) {
+            cell.y = rowIndex;
+            cell.x = rowIndex ? next(alloc, col) : col;
+            const rowSpan = cell.rowSpan || 1;
+            const colSpan = cell.colSpan || 1;
+            if (rowSpan > 1) {
+              for (let cs = 0; cs < colSpan; cs++) {
+                alloc[cell.x + cs] = rowSpan;
+              }
+            }
+            col = cell.x + colSpan;
+          });
+          Object.keys(alloc).forEach((idx) => {
+            alloc[idx]--;
+            if (alloc[idx] < 1) delete alloc[idx];
+          });
+        });
+      }
+      function maxWidth(table) {
+        let mw = 0;
+        table.forEach(function(row) {
+          row.forEach(function(cell) {
+            mw = Math.max(mw, cell.x + (cell.colSpan || 1));
+          });
+        });
+        return mw;
+      }
+      function maxHeight(table) {
+        return table.length;
+      }
+      function cellsConflict(cell1, cell2) {
+        let yMin1 = cell1.y;
+        let yMax1 = cell1.y - 1 + (cell1.rowSpan || 1);
+        let yMin2 = cell2.y;
+        let yMax2 = cell2.y - 1 + (cell2.rowSpan || 1);
+        let yConflict = !(yMin1 > yMax2 || yMin2 > yMax1);
+        let xMin1 = cell1.x;
+        let xMax1 = cell1.x - 1 + (cell1.colSpan || 1);
+        let xMin2 = cell2.x;
+        let xMax2 = cell2.x - 1 + (cell2.colSpan || 1);
+        let xConflict = !(xMin1 > xMax2 || xMin2 > xMax1);
+        return yConflict && xConflict;
+      }
+      function conflictExists(rows, x, y) {
+        let i_max = Math.min(rows.length - 1, y);
+        let cell = { x, y };
+        for (let i = 0; i <= i_max; i++) {
+          let row = rows[i];
+          for (let j = 0; j < row.length; j++) {
+            if (cellsConflict(cell, row[j])) {
+              return true;
+            }
+          }
+        }
+        return false;
+      }
+      function allBlank(rows, y, xMin, xMax) {
+        for (let x = xMin; x < xMax; x++) {
+          if (conflictExists(rows, x, y)) {
+            return false;
+          }
+        }
+        return true;
+      }
+      function addRowSpanCells(table) {
+        table.forEach(function(row, rowIndex) {
+          row.forEach(function(cell) {
+            for (let i = 1; i < cell.rowSpan; i++) {
+              let rowSpanCell = new RowSpanCell(cell);
+              rowSpanCell.x = cell.x;
+              rowSpanCell.y = cell.y + i;
+              rowSpanCell.colSpan = cell.colSpan;
+              insertCell(rowSpanCell, table[rowIndex + i]);
+            }
+          });
+        });
+      }
+      function addColSpanCells(cellRows) {
+        for (let rowIndex = cellRows.length - 1; rowIndex >= 0; rowIndex--) {
+          let cellColumns = cellRows[rowIndex];
+          for (let columnIndex = 0; columnIndex < cellColumns.length; columnIndex++) {
+            let cell = cellColumns[columnIndex];
+            for (let k = 1; k < cell.colSpan; k++) {
+              let colSpanCell = new ColSpanCell();
+              colSpanCell.x = cell.x + k;
+              colSpanCell.y = cell.y;
+              cellColumns.splice(columnIndex + 1, 0, colSpanCell);
+            }
+          }
+        }
+      }
+      function insertCell(cell, row) {
+        let x = 0;
+        while (x < row.length && row[x].x < cell.x) {
+          x++;
+        }
+        row.splice(x, 0, cell);
+      }
+      function fillInTable(table) {
+        let h_max = maxHeight(table);
+        let w_max = maxWidth(table);
+        debug(`Max rows: ${h_max}; Max cols: ${w_max}`);
+        for (let y = 0; y < h_max; y++) {
+          for (let x = 0; x < w_max; x++) {
+            if (!conflictExists(table, x, y)) {
+              let opts = { x, y, colSpan: 1, rowSpan: 1 };
+              x++;
+              while (x < w_max && !conflictExists(table, x, y)) {
+                opts.colSpan++;
+                x++;
+              }
+              let y2 = y + 1;
+              while (y2 < h_max && allBlank(table, y2, opts.x, opts.x + opts.colSpan)) {
+                opts.rowSpan++;
+                y2++;
+              }
+              let cell = new Cell(opts);
+              cell.x = opts.x;
+              cell.y = opts.y;
+              warn(`Missing cell at ${cell.y}-${cell.x}.`);
+              insertCell(cell, table[y]);
+            }
+          }
+        }
+      }
+      function generateCells(rows) {
+        return rows.map(function(row) {
+          if (!Array.isArray(row)) {
+            let key = Object.keys(row)[0];
+            row = row[key];
+            if (Array.isArray(row)) {
+              row = row.slice();
+              row.unshift(key);
+            } else {
+              row = [key, row];
+            }
+          }
+          return row.map(function(cell) {
+            return new Cell(cell);
+          });
+        });
+      }
+      function makeTableLayout(rows) {
+        let cellRows = generateCells(rows);
+        layoutTable(cellRows);
+        fillInTable(cellRows);
+        addRowSpanCells(cellRows);
+        addColSpanCells(cellRows);
+        return cellRows;
+      }
+      module2.exports = {
+        makeTableLayout,
+        layoutTable,
+        addRowSpanCells,
+        maxWidth,
+        fillInTable,
+        computeWidths: makeComputeWidths("colSpan", "desiredWidth", "x", 1),
+        computeHeights: makeComputeWidths("rowSpan", "desiredHeight", "y", 1)
+      };
+    })();
+    function makeComputeWidths(colSpan, desiredWidth, x, forcedMin) {
+      return function(vals, table) {
+        let result = [];
+        let spanners = [];
+        let auto = {};
+        table.forEach(function(row) {
+          row.forEach(function(cell) {
+            if ((cell[colSpan] || 1) > 1) {
+              spanners.push(cell);
+            } else {
+              result[cell[x]] = Math.max(result[cell[x]] || 0, cell[desiredWidth] || 0, forcedMin);
+            }
+          });
+        });
+        vals.forEach(function(val, index) {
+          if (typeof val === "number") {
+            result[index] = val;
+          }
+        });
+        for (let k = spanners.length - 1; k >= 0; k--) {
+          let cell = spanners[k];
+          let span = cell[colSpan];
+          let col = cell[x];
+          let existingWidth = result[col];
+          let editableCols = typeof vals[col] === "number" ? 0 : 1;
+          if (typeof existingWidth === "number") {
+            for (let i = 1; i < span; i++) {
+              existingWidth += 1 + result[col + i];
+              if (typeof vals[col + i] !== "number") {
+                editableCols++;
+              }
+            }
+          } else {
+            existingWidth = desiredWidth === "desiredWidth" ? cell.desiredWidth - 1 : 1;
+            if (!auto[col] || auto[col] < existingWidth) {
+              auto[col] = existingWidth;
+            }
+          }
+          if (cell[desiredWidth] > existingWidth) {
+            let i = 0;
+            while (editableCols > 0 && cell[desiredWidth] > existingWidth) {
+              if (typeof vals[col + i] !== "number") {
+                let dif = Math.round((cell[desiredWidth] - existingWidth) / editableCols);
+                existingWidth += dif;
+                result[col + i] += dif;
+                editableCols--;
+              }
+              i++;
+            }
+          }
+        }
+        Object.assign(vals, result, auto);
+        for (let j = 0; j < vals.length; j++) {
+          vals[j] = Math.max(forcedMin, vals[j] || 0);
+        }
+      };
+    }
+  }
+});
+
+// ../node_modules/cli-table3/src/table.js
+var require_table = __commonJS({
+  "../node_modules/cli-table3/src/table.js"(exports2, module2) {
+    "use strict";
+    var debug = require_debug2();
+    var utils = require_utils4();
+    var tableLayout = require_layout_manager();
+    var Table = class extends Array {
+      constructor(opts) {
+        super();
+        const options = utils.mergeOptions(opts);
+        Object.defineProperty(this, "options", {
+          value: options,
+          enumerable: options.debug
+        });
+        if (options.debug) {
+          switch (typeof options.debug) {
+            case "boolean":
+              debug.setDebugLevel(debug.WARN);
+              break;
+            case "number":
+              debug.setDebugLevel(options.debug);
+              break;
+            case "string":
+              debug.setDebugLevel(parseInt(options.debug, 10));
+              break;
+            default:
+              debug.setDebugLevel(debug.WARN);
+              debug.warn(`Debug option is expected to be boolean, number, or string. Received a ${typeof options.debug}`);
+          }
+          Object.defineProperty(this, "messages", {
+            get() {
+              return debug.debugMessages();
+            }
+          });
+        }
+      }
+      toString() {
+        let array2 = this;
+        let headersPresent = this.options.head && this.options.head.length;
+        if (headersPresent) {
+          array2 = [this.options.head];
+          if (this.length) {
+            array2.push.apply(array2, this);
+          }
+        } else {
+          this.options.style.head = [];
+        }
+        let cells = tableLayout.makeTableLayout(array2);
+        cells.forEach(function(row) {
+          row.forEach(function(cell) {
+            cell.mergeTableOptions(this.options, cells);
+          }, this);
+        }, this);
+        tableLayout.computeWidths(this.options.colWidths, cells);
+        tableLayout.computeHeights(this.options.rowHeights, cells);
+        cells.forEach(function(row) {
+          row.forEach(function(cell) {
+            cell.init(this.options);
+          }, this);
+        }, this);
+        let result = [];
+        for (let rowIndex = 0; rowIndex < cells.length; rowIndex++) {
+          let row = cells[rowIndex];
+          let heightOfRow = this.options.rowHeights[rowIndex];
+          if (rowIndex === 0 || !this.options.style.compact || rowIndex == 1 && headersPresent) {
+            doDraw(row, "top", result);
+          }
+          for (let lineNum = 0; lineNum < heightOfRow; lineNum++) {
+            doDraw(row, lineNum, result);
+          }
+          if (rowIndex + 1 == cells.length) {
+            doDraw(row, "bottom", result);
+          }
+        }
+        return result.join("\n");
+      }
+      get width() {
+        let str = this.toString().split("\n");
+        return str[0].length;
+      }
+    };
+    Table.reset = () => debug.reset();
+    function doDraw(row, lineNum, result) {
+      let line = [];
+      row.forEach(function(cell) {
+        line.push(cell.draw(lineNum));
+      });
+      let str = line.join("");
+      if (str.length) result.push(str);
+    }
+    module2.exports = Table;
+  }
+});
+
+// ../node_modules/cli-table3/index.js
+var require_cli_table3 = __commonJS({
+  "../node_modules/cli-table3/index.js"(exports2, module2) {
+    "use strict";
+    module2.exports = require_table();
   }
 });
 
@@ -31335,7 +31335,7 @@ function renderClaudeRuntimePlanSummary() {
   console.log(`${kleur_default.cyan("  \u2022")}  preserve existing settings (permissions/model/skillSuggestions)`);
 }
 async function runClaudeRuntimeSyncPhase(opts) {
-  const { repoRoot, dryRun = false, isGlobal = false } = opts;
+  const { repoRoot, dryRun = false, isGlobal = false, prune = false } = opts;
   console.log(t.bold("\n  \u2699  xtrm-tools  (Claude hooks wiring)"));
   warnIfOutdated();
   const packageRoot = await resolvePackageRoot();
@@ -31349,6 +31349,10 @@ async function runClaudeRuntimeSyncPhase(opts) {
   const baseSettings = await readBaseSettings(settingsTemplatePath);
   const existingSettings = hasExistingSettings ? await readSettings(settingsPath) : {};
   const mergedSettings = hasExistingSettings ? { ...existingSettings, hooks: generatedHooks } : { ...baseSettings, hooks: generatedHooks };
+  if (prune) {
+    delete mergedSettings.enabledPlugins;
+    delete mergedSettings.extraKnownMarketplaces;
+  }
   const hooksEventsWritten = Object.keys(generatedHooks).length;
   const hooksEntriesWritten = countHookEntries(generatedHooks);
   console.log(t.label(`  \u2022 hooks source: ${hooksConfigPath}`));
@@ -31370,7 +31374,11 @@ async function runClaudeRuntimeSyncPhase(opts) {
   }
   if (dryRun) {
     console.log(kleur_default.dim(`  [DRY RUN] Would write ${hooksEntriesWritten} hook commands across ${hooksEventsWritten} events`));
-    console.log(kleur_default.dim("  [DRY RUN] Hooks section would be replaced entirely\n"));
+    console.log(kleur_default.dim("  [DRY RUN] Hooks section would be replaced entirely"));
+    if (prune) {
+      console.log(kleur_default.dim("  [DRY RUN] Plugin-era settings keys would be removed (enabledPlugins, extraKnownMarketplaces)"));
+    }
+    console.log("");
     return {
       settingsPath,
       hooksEventsWritten,
@@ -31381,6 +31389,9 @@ async function runClaudeRuntimeSyncPhase(opts) {
   await import_fs_extra2.default.ensureDir(import_path2.default.dirname(settingsPath));
   await import_fs_extra2.default.writeJson(settingsPath, mergedSettings, { spaces: 2 });
   console.log(t.success(`  \u2713 Wrote ${hooksEntriesWritten} hook commands across ${hooksEventsWritten} events`));
+  if (prune) {
+    console.log(t.success("  \u2713 Removed plugin-era settings keys (enabledPlugins, extraKnownMarketplaces)"));
+  }
   console.log(t.success("  \u2713 Claude settings hooks synced\n"));
   return {
     settingsPath,
@@ -32814,8 +32825,8 @@ function createPiCommand() {
 }
 
 // src/commands/init.ts
-var import_path14 = __toESM(require("path"), 1);
-var import_fs_extra15 = __toESM(require_lib(), 1);
+var import_path15 = __toESM(require("path"), 1);
+var import_fs_extra16 = __toESM(require_lib(), 1);
 var import_child_process6 = require("child_process");
 
 // src/commands/install-service-skills.ts
@@ -32827,17 +32838,92 @@ function resolvePkgRoot3() {
     import_path7.default.resolve(__dirname, "../.."),
     import_path7.default.resolve(__dirname, "../../..")
   ];
-  const match = candidates.find((candidate) => import_fs_extra8.default.existsSync(import_path7.default.join(candidate, "project-skills")));
+  const match = candidates.find((candidate) => import_fs_extra8.default.existsSync(import_path7.default.join(candidate, ".xtrm", "registry.json")));
   if (!match) {
-    throw new Error("Unable to locate project-skills directory from CLI runtime.");
+    throw new Error("Unable to locate package root from CLI runtime.");
   }
   return match;
 }
 var PKG_ROOT = resolvePkgRoot3();
-var SKILLS_SRC = import_path7.default.join(PKG_ROOT, "project-skills", "service-skills-set", ".claude");
+var SKILLS_SRC = import_path7.default.join(PKG_ROOT, ".xtrm", "skills", "default", "service-skills-set", ".claude");
+var TRINITY = [
+  "creating-service-skills",
+  "using-service-skills",
+  "updating-service-skills",
+  "scoping-service-skills"
+];
+var SETTINGS_HOOKS = {
+  SessionStart: [
+    {
+      hooks: [{
+        type: "command",
+        command: 'python3 "$CLAUDE_PROJECT_DIR/.claude/skills/using-service-skills/scripts/cataloger.py"'
+      }]
+    }
+  ],
+  PreToolUse: [
+    {
+      matcher: "Read|Write|Edit|Glob|Grep|Bash|mcp__serena__rename_symbol|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol",
+      hooks: [{
+        type: "command",
+        command: 'python3 "$CLAUDE_PROJECT_DIR/.claude/skills/using-service-skills/scripts/skill_activator.py"'
+      }]
+    }
+  ],
+  PostToolUse: [
+    {
+      matcher: "Write|Edit|mcp__serena__rename_symbol|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol",
+      hooks: [{
+        type: "command",
+        command: 'python3 "$CLAUDE_PROJECT_DIR/.claude/skills/updating-service-skills/scripts/drift_detector.py" check-hook',
+        timeout: 10
+      }]
+    }
+  ]
+};
 var MARKER_DOC = "# [jaggers] doc-reminder";
 var MARKER_STALENESS = "# [jaggers] skill-staleness";
 var MARKER_CHAIN = "# [jaggers] chain-githooks";
+function mergeSettingsHooks(existing) {
+  const result = { ...existing };
+  const hooks = result.hooks ?? {};
+  result.hooks = hooks;
+  const added = [];
+  const skipped = [];
+  for (const [event, config3] of Object.entries(SETTINGS_HOOKS)) {
+    const existingEventHooks = hooks[event];
+    if (!Array.isArray(existingEventHooks)) {
+      hooks[event] = config3;
+      added.push(event);
+      continue;
+    }
+    const normalizedExisting = new Set(existingEventHooks.map((item) => JSON.stringify(item)));
+    const additions = config3.filter((item) => !normalizedExisting.has(JSON.stringify(item)));
+    if (additions.length === 0) {
+      skipped.push(event);
+      continue;
+    }
+    hooks[event] = [...existingEventHooks, ...additions];
+    added.push(event);
+  }
+  return { result, added, skipped };
+}
+async function installSkills(projectRoot, skillsSrc = SKILLS_SRC) {
+  const results = [];
+  for (const skill of TRINITY) {
+    const src = import_path7.default.join(skillsSrc, "skills", skill);
+    const dest = import_path7.default.join(projectRoot, ".claude", "skills", skill);
+    const existed = await import_fs_extra8.default.pathExists(dest);
+    if (existed) {
+      await import_fs_extra8.default.remove(dest);
+    }
+    await import_fs_extra8.default.copy(src, dest, {
+      filter: (src2) => !src2.includes(".Zone.Identifier") && !src2.includes("__pycache__") && !src2.includes(".pytest_cache") && !src2.endsWith(".pyc")
+    });
+    results.push({ skill, status: existed ? "updated" : "installed" });
+  }
+  return results;
+}
 async function installGitHooks(projectRoot, skillsSrc = SKILLS_SRC) {
   const gitHooksSrc = import_path7.default.join(skillsSrc, "git-hooks");
   const gitHooksDest = import_path7.default.join(projectRoot, ".claude", "git-hooks");
@@ -32919,10 +33005,24 @@ fi
   }
   return { hookFiles };
 }
+async function installSettings(projectRoot) {
+  const settingsPath = import_path7.default.join(projectRoot, ".claude", "settings.json");
+  await import_fs_extra8.default.mkdirp(import_path7.default.dirname(settingsPath));
+  let existing = {};
+  if (await import_fs_extra8.default.pathExists(settingsPath)) {
+    try {
+      existing = JSON.parse(await import_fs_extra8.default.readFile(settingsPath, "utf8"));
+    } catch {
+    }
+  }
+  const { result, added, skipped } = mergeSettingsHooks(existing);
+  await import_fs_extra8.default.writeFile(settingsPath, JSON.stringify(result, null, 2) + "\n");
+  return { added, skipped };
+}
 
 // src/commands/install.ts
-var import_fs_extra11 = __toESM(require_lib(), 1);
-var import_path9 = __toESM(require("path"), 1);
+var import_fs_extra12 = __toESM(require_lib(), 1);
+var import_path10 = __toESM(require("path"), 1);
 var import_node_child_process6 = require("child_process");
 var import_node_crypto3 = __toESM(require("crypto"), 1);
 
@@ -32950,12 +33050,12 @@ var disallowedKeys = /* @__PURE__ */ new Set([
   "constructor"
 ]);
 var digits = new Set("0123456789");
-function getPathSegments(path29) {
+function getPathSegments(path30) {
   const parts = [];
   let currentSegment = "";
   let currentPart = "start";
   let isIgnoring = false;
-  for (const character of path29) {
+  for (const character of path30) {
     switch (character) {
       case "\\": {
         if (currentPart === "index") {
@@ -33077,11 +33177,11 @@ function assertNotStringIndex(object2, key) {
     throw new Error("Cannot use string index");
   }
 }
-function getProperty(object2, path29, value) {
-  if (!isObject(object2) || typeof path29 !== "string") {
+function getProperty(object2, path30, value) {
+  if (!isObject(object2) || typeof path30 !== "string") {
     return value === void 0 ? object2 : value;
   }
-  const pathArray = getPathSegments(path29);
+  const pathArray = getPathSegments(path30);
   if (pathArray.length === 0) {
     return value;
   }
@@ -33101,12 +33201,12 @@ function getProperty(object2, path29, value) {
   }
   return object2 === void 0 ? value : object2;
 }
-function setProperty(object2, path29, value) {
-  if (!isObject(object2) || typeof path29 !== "string") {
+function setProperty(object2, path30, value) {
+  if (!isObject(object2) || typeof path30 !== "string") {
     return object2;
   }
   const root = object2;
-  const pathArray = getPathSegments(path29);
+  const pathArray = getPathSegments(path30);
   for (let index = 0; index < pathArray.length; index++) {
     const key = pathArray[index];
     assertNotStringIndex(object2, key);
@@ -33119,11 +33219,11 @@ function setProperty(object2, path29, value) {
   }
   return root;
 }
-function deleteProperty(object2, path29) {
-  if (!isObject(object2) || typeof path29 !== "string") {
+function deleteProperty(object2, path30) {
+  if (!isObject(object2) || typeof path30 !== "string") {
     return false;
   }
-  const pathArray = getPathSegments(path29);
+  const pathArray = getPathSegments(path30);
   for (let index = 0; index < pathArray.length; index++) {
     const key = pathArray[index];
     assertNotStringIndex(object2, key);
@@ -33137,11 +33237,11 @@ function deleteProperty(object2, path29) {
     }
   }
 }
-function hasProperty(object2, path29) {
-  if (!isObject(object2) || typeof path29 !== "string") {
+function hasProperty(object2, path30) {
+  if (!isObject(object2) || typeof path30 !== "string") {
     return false;
   }
-  const pathArray = getPathSegments(path29);
+  const pathArray = getPathSegments(path30);
   if (pathArray.length === 0) {
     return false;
   }
@@ -34247,6 +34347,298 @@ async function checkDrift(registryPath, userXtrmDir) {
   };
 }
 
+// src/core/plugin-era-cleanup.ts
+var import_fs_extra11 = __toESM(require_lib(), 1);
+var import_os3 = __toESM(require("os"), 1);
+var import_path9 = __toESM(require("path"), 1);
+var SETTINGS_PLUGIN_KEYS = ["enabledPlugins", "extraKnownMarketplaces"];
+var XTRM_MANAGED_PI_EXTENSIONS = /* @__PURE__ */ new Set([
+  "beads",
+  "session-flow",
+  "quality-gates",
+  "service-skills",
+  "xtrm-loader",
+  "custom-footer",
+  "lsp-bootstrap",
+  "plan-mode",
+  "auto-session-name",
+  "auto-update",
+  "compact-header",
+  "git-checkpoint",
+  "pi-serena-compact",
+  "xtrm-ui",
+  "core"
+]);
+var LEGACY_PROJECT_HOOK_FILES = [
+  { legacyFile: "hook-config.json", duplicatePath: import_path9.default.join(".xtrm", "config", "hooks.json") },
+  { legacyFile: "quality-check.cjs", duplicatePath: import_path9.default.join(".xtrm", "hooks", "quality-check.cjs") },
+  { legacyFile: "quality-check.py", duplicatePath: import_path9.default.join(".xtrm", "hooks", "quality-check.py") },
+  { legacyFile: "specialists-complete.mjs", duplicatePath: import_path9.default.join(".xtrm", "hooks", "specialists-complete.mjs") },
+  { legacyFile: "specialists-session-start.mjs", duplicatePath: import_path9.default.join(".xtrm", "hooks", "specialists-session-start.mjs") }
+];
+var PLUGIN_ERA_ARTIFACTS = {
+  settingsKeys: SETTINGS_PLUGIN_KEYS,
+  piExtensionIds: Array.from(XTRM_MANAGED_PI_EXTENSIONS),
+  legacyProjectHookFiles: LEGACY_PROJECT_HOOK_FILES.map((entry) => entry.legacyFile)
+};
+async function runPluginEraCleanup(opts = {}) {
+  const dryRun = opts.dryRun ?? false;
+  const yes = opts.yes ?? false;
+  const scope = opts.scope ?? "all";
+  const repoRoot = opts.repoRoot ?? process.cwd();
+  const scopes = resolveScopes(scope);
+  const managedAgentSkills = await getManagedAgentSkillNames(repoRoot);
+  const operations = await planCleanupOperations({
+    repoRoot,
+    scopes,
+    managedAgentSkills
+  });
+  if (operations.length === 0) {
+    console.log(kleur_default.dim("  \u2713 Plugin-era prune: nothing to remove"));
+    return {
+      dryRun,
+      scopesProcessed: scopes,
+      planned: [],
+      removedPaths: [],
+      updatedSettings: []
+    };
+  }
+  console.log(kleur_default.bold("\n  Plugin-era cleanup (--prune)"));
+  printCleanupPlan(operations, dryRun);
+  const removedPaths = [];
+  const updatedSettings = [];
+  for (const currentScope of scopes) {
+    const scopeOperations = operations.filter((operation) => operation.scope === currentScope);
+    if (scopeOperations.length === 0) {
+      continue;
+    }
+    if (!dryRun) {
+      const confirmed = await confirmDestructiveAction({
+        yes,
+        initial: false,
+        message: `Apply plugin-era cleanup for ${currentScope} scope?`
+      });
+      if (!confirmed) {
+        console.log(kleur_default.yellow(`  \u21B7 Skipped ${currentScope} cleanup by user choice`));
+        continue;
+      }
+    }
+    for (const operation of scopeOperations) {
+      if (operation.type === "delete-path") {
+        if (!dryRun) {
+          await import_fs_extra11.default.remove(operation.targetPath);
+        }
+        removedPaths.push(operation.targetPath);
+      }
+      if (operation.type === "delete-settings-keys") {
+        if (!dryRun) {
+          await deleteSettingsKeys(operation.targetPath, operation.settingsKeys ?? SETTINGS_PLUGIN_KEYS);
+        }
+        updatedSettings.push(operation.targetPath);
+      }
+    }
+  }
+  return {
+    dryRun,
+    scopesProcessed: scopes,
+    planned: operations,
+    removedPaths,
+    updatedSettings
+  };
+}
+function resolveScopes(scope) {
+  if (scope === "all") {
+    return ["global", "project"];
+  }
+  return [scope];
+}
+async function planCleanupOperations(params) {
+  const operations = [];
+  if (params.scopes.includes("global")) {
+    operations.push(...await planGlobalOperations(params.managedAgentSkills));
+  }
+  if (params.scopes.includes("project")) {
+    operations.push(...await planProjectOperations(params.repoRoot));
+  }
+  return operations;
+}
+async function planGlobalOperations(managedAgentSkills) {
+  const operations = [];
+  const claudeDir = import_path9.default.join(import_os3.default.homedir(), ".claude");
+  const pluginDir = import_path9.default.join(claudeDir, "plugins");
+  const claudeSkillsDir = import_path9.default.join(claudeDir, "skills");
+  const claudeHooksDir = import_path9.default.join(claudeDir, "hooks");
+  const claudeSettingsPath = import_path9.default.join(claudeDir, "settings.json");
+  if (await import_fs_extra11.default.pathExists(pluginDir)) {
+    operations.push({
+      scope: "global",
+      type: "delete-path",
+      targetPath: pluginDir,
+      label: "~/.claude/plugins/"
+    });
+  }
+  if (await hasSettingsKeys(claudeSettingsPath, SETTINGS_PLUGIN_KEYS)) {
+    operations.push({
+      scope: "global",
+      type: "delete-settings-keys",
+      targetPath: claudeSettingsPath,
+      label: "~/.claude/settings.json keys: enabledPlugins, extraKnownMarketplaces",
+      settingsKeys: SETTINGS_PLUGIN_KEYS
+    });
+  }
+  if (await import_fs_extra11.default.pathExists(claudeSkillsDir)) {
+    operations.push({
+      scope: "global",
+      type: "delete-path",
+      targetPath: claudeSkillsDir,
+      label: "~/.claude/skills/"
+    });
+  }
+  if (await import_fs_extra11.default.pathExists(claudeHooksDir)) {
+    operations.push({
+      scope: "global",
+      type: "delete-path",
+      targetPath: claudeHooksDir,
+      label: "~/.claude/hooks/"
+    });
+  }
+  const piExtensionsDir2 = import_path9.default.join(import_os3.default.homedir(), ".pi", "agent", "extensions");
+  operations.push(...await planManagedDirectoryEntryDeletes({
+    scope: "global",
+    baseDir: piExtensionsDir2,
+    managedNames: XTRM_MANAGED_PI_EXTENSIONS,
+    labelPrefix: "~/.pi/agent/extensions/"
+  }));
+  const agentsSkillsDir = import_path9.default.join(import_os3.default.homedir(), ".agents", "skills");
+  operations.push(...await planManagedDirectoryEntryDeletes({
+    scope: "global",
+    baseDir: agentsSkillsDir,
+    managedNames: managedAgentSkills,
+    labelPrefix: "~/.agents/skills/"
+  }));
+  return operations;
+}
+async function planProjectOperations(repoRoot) {
+  const operations = [];
+  const claudeSettingsPath = import_path9.default.join(repoRoot, ".claude", "settings.json");
+  if (await hasSettingsKeys(claudeSettingsPath, SETTINGS_PLUGIN_KEYS)) {
+    operations.push({
+      scope: "project",
+      type: "delete-settings-keys",
+      targetPath: claudeSettingsPath,
+      label: ".claude/settings.json keys: enabledPlugins, extraKnownMarketplaces",
+      settingsKeys: SETTINGS_PLUGIN_KEYS
+    });
+  }
+  const projectHooksDir = import_path9.default.join(repoRoot, ".claude", "hooks");
+  for (const { legacyFile, duplicatePath } of LEGACY_PROJECT_HOOK_FILES) {
+    const legacyPath = import_path9.default.join(projectHooksDir, legacyFile);
+    const canonicalPath = import_path9.default.join(repoRoot, duplicatePath);
+    if (!await import_fs_extra11.default.pathExists(legacyPath)) {
+      continue;
+    }
+    if (!await import_fs_extra11.default.pathExists(canonicalPath)) {
+      continue;
+    }
+    operations.push({
+      scope: "project",
+      type: "delete-path",
+      targetPath: legacyPath,
+      label: `.claude/hooks/${legacyFile}`
+    });
+  }
+  return operations;
+}
+async function planManagedDirectoryEntryDeletes(params) {
+  if (!await import_fs_extra11.default.pathExists(params.baseDir)) {
+    return [];
+  }
+  const entries = await import_fs_extra11.default.readdir(params.baseDir);
+  return entries.filter((entry) => params.managedNames.has(entry)).map((entry) => ({
+    scope: params.scope,
+    type: "delete-path",
+    targetPath: import_path9.default.join(params.baseDir, entry),
+    label: `${params.labelPrefix}${entry}`
+  }));
+}
+function printCleanupPlan(operations, dryRun) {
+  const byScope = {
+    global: [],
+    project: []
+  };
+  for (const operation of operations) {
+    byScope[operation.scope].push(operation);
+  }
+  for (const [scopeName, scopeOps] of Object.entries(byScope)) {
+    if (scopeOps.length === 0) {
+      continue;
+    }
+    console.log(kleur_default.cyan(`  ${scopeName}:`));
+    for (const operation of scopeOps) {
+      const action = operation.type === "delete-settings-keys" ? "update" : "delete";
+      const prefix = dryRun ? "[DRY RUN] would" : "will";
+      console.log(kleur_default.dim(`    \u2022 ${prefix} ${action} ${operation.label}`));
+    }
+  }
+  console.log("");
+}
+async function hasSettingsKeys(settingsPath, keys) {
+  const settings = await readJsonObject(settingsPath);
+  if (!settings) {
+    return false;
+  }
+  return keys.some((key) => key in settings);
+}
+async function deleteSettingsKeys(settingsPath, keys) {
+  const settings = await readJsonObject(settingsPath);
+  if (!settings) {
+    return;
+  }
+  for (const key of keys) {
+    delete settings[key];
+  }
+  await import_fs_extra11.default.ensureDir(import_path9.default.dirname(settingsPath));
+  await import_fs_extra11.default.writeJson(settingsPath, settings, { spaces: 2 });
+}
+async function readJsonObject(filePath) {
+  if (!await import_fs_extra11.default.pathExists(filePath)) {
+    return null;
+  }
+  try {
+    const parsed = await import_fs_extra11.default.readJson(filePath);
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      return parsed;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+async function getManagedAgentSkillNames(repoRoot) {
+  const candidates = [
+    import_path9.default.join(repoRoot, ".xtrm", "skills", "default"),
+    import_path9.default.resolve(__dirname, "..", "..", ".xtrm", "skills", "default"),
+    import_path9.default.resolve(__dirname, "..", "..", "..", ".xtrm", "skills", "default")
+  ];
+  for (const candidate of candidates) {
+    if (!await import_fs_extra11.default.pathExists(candidate)) {
+      continue;
+    }
+    const entries = await import_fs_extra11.default.readdir(candidate);
+    const managed = /* @__PURE__ */ new Set();
+    for (const entry of entries) {
+      const entryPath = import_path9.default.join(candidate, entry);
+      if ((await import_fs_extra11.default.stat(entryPath)).isDirectory()) {
+        managed.add(entry);
+      }
+    }
+    if (managed.size > 0) {
+      return managed;
+    }
+  }
+  return /* @__PURE__ */ new Set();
+}
+
 // src/commands/install.ts
 function printNextSteps() {
   const d = (s) => kleur_default.dim(s);
@@ -34291,48 +34683,48 @@ async function runMachineBootstrap(opts = {}) {
 }
 function resolvePackageRoot2() {
   const candidates = [
-    import_path9.default.resolve(__dirname, "../.."),
-    import_path9.default.resolve(__dirname, "../../..")
+    import_path10.default.resolve(__dirname, "../.."),
+    import_path10.default.resolve(__dirname, "../../..")
   ];
   for (const candidate of candidates) {
-    if (import_fs_extra11.default.existsSync(import_path9.default.join(candidate, ".xtrm", "registry.json"))) {
+    if (import_fs_extra12.default.existsSync(import_path10.default.join(candidate, ".xtrm", "registry.json"))) {
       return candidate;
     }
   }
   throw new Error("Failed to locate package root: .xtrm/registry.json not found.");
 }
 function toPosix2(value) {
-  return value.split(import_path9.default.sep).join("/");
+  return value.split(import_path10.default.sep).join("/");
 }
 function stripXtrmPrefix2(sourceDir) {
   return sourceDir.replace(/^\.xtrm\/?/, "");
 }
 function toUserRelativePath(sourceDir, filePath) {
-  return toPosix2(import_path9.default.posix.join(stripXtrmPrefix2(sourceDir), filePath));
+  return toPosix2(import_path10.default.posix.join(stripXtrmPrefix2(sourceDir), filePath));
 }
 function isSkillsDefaultPath(relativePath) {
   return relativePath.startsWith("skills/default/");
 }
 async function hashFile2(filePath) {
-  const content = await import_fs_extra11.default.readFile(filePath);
+  const content = await import_fs_extra12.default.readFile(filePath);
   return import_node_crypto3.default.createHash("sha256").update(content).digest("hex");
 }
 async function scaffoldSkillsDefaultFromPackage(params) {
   const { packageRoot, userXtrmDir, dryRun } = params;
-  const sourceDir = import_path9.default.join(packageRoot, ".xtrm", "skills", "default");
-  const targetDir = import_path9.default.join(userXtrmDir, "skills", "default");
-  if (await import_fs_extra11.default.pathExists(targetDir)) {
+  const sourceDir = import_path10.default.join(packageRoot, ".xtrm", "skills", "default");
+  const targetDir = import_path10.default.join(userXtrmDir, "skills", "default");
+  if (await import_fs_extra12.default.pathExists(targetDir)) {
     return "noop";
   }
   if (dryRun) {
     return "noop";
   }
-  await import_fs_extra11.default.ensureDir(import_path9.default.dirname(targetDir));
+  await import_fs_extra12.default.ensureDir(import_path10.default.dirname(targetDir));
   try {
-    await import_fs_extra11.default.ensureSymlink(sourceDir, targetDir);
+    await import_fs_extra12.default.ensureSymlink(sourceDir, targetDir);
     return "symlink";
   } catch {
-    await import_fs_extra11.default.copy(sourceDir, targetDir);
+    await import_fs_extra12.default.copy(sourceDir, targetDir);
     return "copy";
   }
 }
@@ -34355,7 +34747,7 @@ function buildExpectedHashes(registry2) {
 }
 async function installFromRegistry(params) {
   const { packageRoot, registry: registry2, userXtrmDir, dryRun, force, yes } = params;
-  const registryPath = import_path9.default.join(packageRoot, ".xtrm", "registry.json");
+  const registryPath = import_path10.default.join(packageRoot, ".xtrm", "registry.json");
   const drift = await checkDrift(registryPath, userXtrmDir);
   const expectedHashes = buildExpectedHashes(registry2);
   const missingSet = new Set(drift.missing);
@@ -34366,7 +34758,7 @@ async function installFromRegistry(params) {
     if (driftedSkills.length > 0) {
       console.log(kleur_default.yellow("\n  \u26A0 Drift detected in .xtrm files (local modifications preserved by default):"));
       for (const relativePath of driftedSkills.slice(0, 10)) {
-        const absolutePath = import_path9.default.join(userXtrmDir, relativePath);
+        const absolutePath = import_path10.default.join(userXtrmDir, relativePath);
         const actualHash = await hashFile2(absolutePath);
         const expectedHash = expectedHashes.get(relativePath) ?? "unknown";
         console.log(kleur_default.yellow(`    \u2022 ${relativePath}`));
@@ -34379,7 +34771,7 @@ async function installFromRegistry(params) {
         console.log(kleur_default.yellow("\n  \u26A0 Drift detected in .xtrm files (local modifications preserved by default):"));
       }
       for (const relativePath of nonSkillDrifted.slice(0, 20)) {
-        const absolutePath = import_path9.default.join(userXtrmDir, relativePath);
+        const absolutePath = import_path10.default.join(userXtrmDir, relativePath);
         const actualHash = await hashFile2(absolutePath);
         const expectedHash = expectedHashes.get(relativePath) ?? "unknown";
         console.log(kleur_default.yellow(`    \u2022 ${relativePath}`));
@@ -34431,8 +34823,8 @@ async function installFromRegistry(params) {
   for (const asset of Object.values(registry2.assets)) {
     for (const [filePath] of Object.entries(asset.files)) {
       const relativePath = toUserRelativePath(asset.source_dir, filePath);
-      const sourcePath = import_path9.default.join(packageRoot, asset.source_dir, filePath);
-      const targetPath = import_path9.default.join(userXtrmDir, relativePath);
+      const sourcePath = import_path10.default.join(packageRoot, asset.source_dir, filePath);
+      const targetPath = import_path10.default.join(userXtrmDir, relativePath);
       if (upToDateSet.has(relativePath)) {
         continue;
       }
@@ -34453,8 +34845,8 @@ async function installFromRegistry(params) {
         installed += 1;
         continue;
       }
-      await import_fs_extra11.default.ensureDir(import_path9.default.dirname(targetPath));
-      await import_fs_extra11.default.copy(sourcePath, targetPath, { overwrite: true });
+      await import_fs_extra12.default.ensureDir(import_path10.default.dirname(targetPath));
+      await import_fs_extra12.default.copy(sourcePath, targetPath, { overwrite: true });
       installed += 1;
     }
   }
@@ -34471,6 +34863,7 @@ async function runInstall(opts = {}) {
     yes = false,
     force = false,
     backport = false,
+    prune = false,
     global: isGlobal = false,
     skipMachineBootstrap = false,
     skipClaudeRuntimeSync = false
@@ -34491,8 +34884,8 @@ async function runInstall(opts = {}) {
     projectRoot
   });
   const userXtrmDir = ctx.targets[0];
-  const registryPath = import_path9.default.join(packageRoot, ".xtrm", "registry.json");
-  const registry2 = await import_fs_extra11.default.readJson(registryPath);
+  const registryPath = import_path10.default.join(packageRoot, ".xtrm", "registry.json");
+  const registry2 = await import_fs_extra12.default.readJson(registryPath);
   console.log(kleur_default.bold("\n  \u2699  xtrm install (.xtrm registry scaffold)"));
   console.log(kleur_default.dim(`  \u2022 registry: ${registryPath}`));
   console.log(kleur_default.dim(`  \u2022 target: ${userXtrmDir}`));
@@ -34504,8 +34897,16 @@ async function runInstall(opts = {}) {
     force,
     yes: effectiveYes
   });
+  if (prune) {
+    await runPluginEraCleanup({
+      dryRun,
+      yes: effectiveYes,
+      scope: "all",
+      repoRoot: projectRoot
+    });
+  }
   if (!skipClaudeRuntimeSync) {
-    await runClaudeRuntimeSyncPhase({ repoRoot: projectRoot, dryRun, isGlobal });
+    await runClaudeRuntimeSyncPhase({ repoRoot: projectRoot, dryRun, isGlobal, prune });
   }
   await runPiInstall(dryRun, isGlobal, projectRoot);
   await renderSummaryCard(stats, dryRun);
@@ -34516,9 +34917,9 @@ async function runInstall(opts = {}) {
 
 // src/core/init-verification.ts
 var import_child_process5 = require("child_process");
-var import_fs_extra12 = __toESM(require_lib(), 1);
-var import_os3 = __toESM(require("os"), 1);
-var import_path10 = __toESM(require("path"), 1);
+var import_fs_extra13 = __toESM(require_lib(), 1);
+var import_os4 = __toESM(require("os"), 1);
+var import_path11 = __toESM(require("path"), 1);
 function verifyMachineBootstrap() {
   return inventoryDeps();
 }
@@ -34544,10 +34945,10 @@ function hasXtrmHookCommand(hooks) {
   return false;
 }
 function verifyClaudeRuntime(projectRoot) {
-  const settingsPath = import_path10.default.join(projectRoot, ".claude", "settings.json");
-  const fallbackSettingsPath = import_path10.default.join(import_os3.default.homedir(), ".claude", "settings.json");
-  const resolvedSettingsPath = import_fs_extra12.default.pathExistsSync(settingsPath) ? settingsPath : fallbackSettingsPath;
-  if (!import_fs_extra12.default.pathExistsSync(resolvedSettingsPath)) {
+  const settingsPath = import_path11.default.join(projectRoot, ".claude", "settings.json");
+  const fallbackSettingsPath = import_path11.default.join(import_os4.default.homedir(), ".claude", "settings.json");
+  const resolvedSettingsPath = import_fs_extra13.default.pathExistsSync(settingsPath) ? settingsPath : fallbackSettingsPath;
+  if (!import_fs_extra13.default.pathExistsSync(resolvedSettingsPath)) {
     return {
       hooksWired: false,
       hooksEvents: 0,
@@ -34556,7 +34957,7 @@ function verifyClaudeRuntime(projectRoot) {
     };
   }
   try {
-    const settings = import_fs_extra12.default.readJsonSync(resolvedSettingsPath);
+    const settings = import_fs_extra13.default.readJsonSync(resolvedSettingsPath);
     const hooks = settings.hooks ?? {};
     const hooksEvents = Object.keys(hooks).length;
     const hookCommands = countHookCommands(hooks);
@@ -34578,9 +34979,9 @@ function verifyClaudeRuntime(projectRoot) {
 }
 async function verifyPiRuntime(projectRoot) {
   const pkgRoot = resolvePkgRoot4();
-  const sourceDir = import_path10.default.join(pkgRoot, ".xtrm", "config", "pi", "extensions");
-  const targetDir = import_path10.default.join(projectRoot, ".pi", "extensions");
-  if (!await import_fs_extra12.default.pathExists(sourceDir)) {
+  const sourceDir = import_path11.default.join(pkgRoot, ".xtrm", "config", "pi", "extensions");
+  const targetDir = import_path11.default.join(projectRoot, ".pi", "extensions");
+  if (!await import_fs_extra13.default.pathExists(sourceDir)) {
     return {
       extensions: [],
       packages: [],
@@ -34595,23 +34996,23 @@ async function verifyPiRuntime(projectRoot) {
   return await inventoryPiRuntime(sourceDir, targetDir);
 }
 function verifyProjectBootstrap(projectRoot) {
-  const beadsInitialized = import_fs_extra12.default.pathExistsSync(import_path10.default.join(projectRoot, ".beads"));
+  const beadsInitialized = import_fs_extra13.default.pathExistsSync(import_path11.default.join(projectRoot, ".beads"));
   const gnStatus = (0, import_child_process5.spawnSync)("gitnexus", ["status"], { cwd: projectRoot, encoding: "utf8", timeout: 5e3 });
   const gnText = `${gnStatus.stdout ?? ""}
 ${gnStatus.stderr ?? ""}`.toLowerCase();
   const gitnexusIndexed = gnStatus.status === 0 && !gnText.includes("stale") && !gnText.includes("not indexed") && !gnText.includes("missing");
-  const agentsMd = import_fs_extra12.default.pathExistsSync(import_path10.default.join(projectRoot, "AGENTS.md"));
-  const claudeMd = import_fs_extra12.default.pathExistsSync(import_path10.default.join(projectRoot, "CLAUDE.md"));
+  const agentsMd = import_fs_extra13.default.pathExistsSync(import_path11.default.join(projectRoot, "AGENTS.md"));
+  const claudeMd = import_fs_extra13.default.pathExistsSync(import_path11.default.join(projectRoot, "CLAUDE.md"));
   const instructionHeaders = agentsMd || claudeMd;
   return { beadsInitialized, gitnexusIndexed, instructionHeaders };
 }
 function resolvePkgRoot4() {
   const candidates = [
-    import_path10.default.resolve(__dirname, "../.."),
-    import_path10.default.resolve(__dirname, "../../..")
+    import_path11.default.resolve(__dirname, "../.."),
+    import_path11.default.resolve(__dirname, "../../..")
   ];
   for (const c of candidates) {
-    if (import_fs_extra12.default.existsSync(import_path10.default.join(c, ".xtrm", "config", "pi", "extensions"))) return c;
+    if (import_fs_extra13.default.existsSync(import_path11.default.join(c, ".xtrm", "config", "pi", "extensions"))) return c;
   }
   return candidates[0];
 }
@@ -34688,40 +35089,40 @@ function renderVerificationSummary(result) {
 }
 
 // src/core/diff.ts
-var import_path13 = require("path");
-var import_fs_extra14 = __toESM(require_lib(), 1);
+var import_path14 = require("path");
+var import_fs_extra15 = __toESM(require_lib(), 1);
 
 // src/utils/hash.ts
 var import_crypto = require("crypto");
-var import_fs_extra13 = __toESM(require_lib(), 1);
-var import_path11 = require("path");
+var import_fs_extra14 = __toESM(require_lib(), 1);
+var import_path12 = require("path");
 async function hashFile3(filePath) {
-  const content = await import_fs_extra13.default.readFile(filePath);
+  const content = await import_fs_extra14.default.readFile(filePath);
   return (0, import_crypto.createHash)("md5").update(content).digest("hex");
 }
 async function hashDirectory(dirPath) {
-  if (!await import_fs_extra13.default.pathExists(dirPath)) return "";
-  const stats = await import_fs_extra13.default.stat(dirPath);
+  if (!await import_fs_extra14.default.pathExists(dirPath)) return "";
+  const stats = await import_fs_extra14.default.stat(dirPath);
   if (!stats.isDirectory()) {
     return hashFile3(dirPath);
   }
-  const children = await import_fs_extra13.default.readdir(dirPath);
+  const children = await import_fs_extra14.default.readdir(dirPath);
   const childHashes = await Promise.all(
     children.sort().map(async (child) => {
-      const h = await hashDirectory((0, import_path11.join)(dirPath, child));
+      const h = await hashDirectory((0, import_path12.join)(dirPath, child));
       return `${child}:${h}`;
     })
   );
   return (0, import_crypto.createHash)("md5").update(childHashes.join("|")).digest("hex");
 }
 async function getNewestMtime(targetPath) {
-  if (!await import_fs_extra13.default.pathExists(targetPath)) return 0;
-  const stats = await import_fs_extra13.default.stat(targetPath);
+  if (!await import_fs_extra14.default.pathExists(targetPath)) return 0;
+  const stats = await import_fs_extra14.default.stat(targetPath);
   let maxTime = 0;
   if (stats.isDirectory()) {
-    const children = await import_fs_extra13.default.readdir(targetPath);
+    const children = await import_fs_extra14.default.readdir(targetPath);
     for (const child of children) {
-      const childTime = await getNewestMtime((0, import_path11.join)(targetPath, child));
+      const childTime = await getNewestMtime((0, import_path12.join)(targetPath, child));
       if (childTime > maxTime) maxTime = childTime;
     }
   }
@@ -34729,7 +35130,7 @@ async function getNewestMtime(targetPath) {
 }
 
 // src/adapters/claude.ts
-var import_path12 = require("path");
+var import_path13 = require("path");
 
 // src/adapters/base.ts
 var ToolAdapter = class {
@@ -34748,13 +35149,13 @@ var ClaudeAdapter = class extends ToolAdapter {
     return this.config.baseDir;
   }
   getSkillsDir() {
-    return (0, import_path12.join)(this.config.baseDir, "skills");
+    return (0, import_path13.join)(this.config.baseDir, "skills");
   }
   getHooksDir() {
-    return (0, import_path12.join)(this.config.baseDir, "hooks");
+    return (0, import_path13.join)(this.config.baseDir, "hooks");
   }
   getCommandsDir() {
-    return (0, import_path12.join)(this.config.baseDir, "commands");
+    return (0, import_path13.join)(this.config.baseDir, "commands");
   }
   getCapabilities() {
     return {
@@ -34779,15 +35180,15 @@ function detectAdapter(systemRoot) {
 // src/core/diff.ts
 var IGNORED_ITEMS = /* @__PURE__ */ new Set(["__pycache__", ".DS_Store", "Thumbs.db", ".gitkeep", "node_modules"]);
 var PruneModeReadError = class extends Error {
-  constructor(path29) {
-    super(`Cannot read ${path29} in prune mode \u2014 aborting to prevent accidental deletion`);
+  constructor(path30) {
+    super(`Cannot read ${path30} in prune mode \u2014 aborting to prevent accidental deletion`);
     this.name = "PruneModeReadError";
   }
 };
 async function calculateDiff(repoRoot, systemRoot, pruneMode = false) {
   const adapter = detectAdapter(systemRoot);
   const isClaude = adapter?.toolName === "claude-code";
-  const normalizedRoot = (0, import_path13.normalize)(systemRoot).replace(/\\/g, "/");
+  const normalizedRoot = (0, import_path14.normalize)(systemRoot).replace(/\\/g, "/");
   const isAgentsSkills = normalizedRoot.includes(".agents/skills");
   const changeSet = {
     skills: { missing: [], outdated: [], drifted: [], total: 0 },
@@ -34795,11 +35196,11 @@ async function calculateDiff(repoRoot, systemRoot, pruneMode = false) {
     config: { missing: [], outdated: [], drifted: [], total: 0 },
     commands: { missing: [], outdated: [], drifted: [], total: 0 }
   };
-  const manifestPath = (0, import_path13.join)(systemRoot, ".jaggers-sync-manifest.json");
+  const manifestPath = (0, import_path14.join)(systemRoot, ".jaggers-sync-manifest.json");
   let installedHashes = null;
   try {
-    if (await import_fs_extra14.default.pathExists(manifestPath)) {
-      const manifest = await import_fs_extra14.default.readJson(manifestPath);
+    if (await import_fs_extra15.default.pathExists(manifestPath)) {
+      const manifest = await import_fs_extra15.default.readJson(manifestPath);
       if (manifest.fileHashes && typeof manifest.fileHashes === "object") {
         installedHashes = manifest.fileHashes;
       }
@@ -34807,29 +35208,29 @@ async function calculateDiff(repoRoot, systemRoot, pruneMode = false) {
   } catch {
   }
   if (isAgentsSkills) {
-    const repoPath = (0, import_path13.join)(repoRoot, "skills");
-    if (!await import_fs_extra14.default.pathExists(repoPath)) return changeSet;
-    const items = (await import_fs_extra14.default.readdir(repoPath)).filter((i) => !IGNORED_ITEMS.has(i));
+    const repoPath = (0, import_path14.join)(repoRoot, "skills");
+    if (!await import_fs_extra15.default.pathExists(repoPath)) return changeSet;
+    const items = (await import_fs_extra15.default.readdir(repoPath)).filter((i) => !IGNORED_ITEMS.has(i));
     changeSet.skills.total = items.length;
     for (const item of items) {
-      await compareItem("skills", item, (0, import_path13.join)(repoPath, item), (0, import_path13.join)(systemRoot, item), changeSet, pruneMode, installedHashes);
+      await compareItem("skills", item, (0, import_path14.join)(repoPath, item), (0, import_path14.join)(systemRoot, item), changeSet, pruneMode, installedHashes);
     }
     return changeSet;
   }
   const folders = ["skills", "hooks"];
   if (!isClaude) folders.push("commands");
   for (const category of folders) {
-    const repoPath = (0, import_path13.join)(repoRoot, category);
-    const systemPath = (0, import_path13.join)(systemRoot, category);
-    if (!await import_fs_extra14.default.pathExists(repoPath)) continue;
-    const items = (await import_fs_extra14.default.readdir(repoPath)).filter((i) => !IGNORED_ITEMS.has(i));
+    const repoPath = (0, import_path14.join)(repoRoot, category);
+    const systemPath = (0, import_path14.join)(systemRoot, category);
+    if (!await import_fs_extra15.default.pathExists(repoPath)) continue;
+    const items = (await import_fs_extra15.default.readdir(repoPath)).filter((i) => !IGNORED_ITEMS.has(i));
     changeSet[category].total = items.length;
     for (const item of items) {
       await compareItem(
         category,
         item,
-        (0, import_path13.join)(repoPath, item),
-        (0, import_path13.join)(systemPath, item),
+        (0, import_path14.join)(repoPath, item),
+        (0, import_path14.join)(systemPath, item),
         changeSet,
         pruneMode,
         installedHashes
@@ -34841,9 +35242,9 @@ async function calculateDiff(repoRoot, systemRoot, pruneMode = false) {
   };
   for (const [name, paths] of Object.entries(configMapping)) {
     if (name === "settings.json" && adapter !== null) continue;
-    const itemRepoPath = (0, import_path13.join)(repoRoot, paths.repo);
-    const itemSystemPath = (0, import_path13.join)(systemRoot, paths.sys);
-    if (await import_fs_extra14.default.pathExists(itemRepoPath)) {
+    const itemRepoPath = (0, import_path14.join)(repoRoot, paths.repo);
+    const itemSystemPath = (0, import_path14.join)(systemRoot, paths.sys);
+    if (await import_fs_extra15.default.pathExists(itemRepoPath)) {
       await compareItem("config", name, itemRepoPath, itemSystemPath, changeSet, false, installedHashes);
     }
   }
@@ -34851,7 +35252,7 @@ async function calculateDiff(repoRoot, systemRoot, pruneMode = false) {
 }
 async function compareItem(category, item, repoPath, systemPath, changeSet, pruneMode = false, installedHashes = null) {
   const cat = changeSet[category];
-  if (!await import_fs_extra14.default.pathExists(systemPath)) {
+  if (!await import_fs_extra15.default.pathExists(systemPath)) {
     cat.missing.push(item);
     return;
   }
@@ -34890,19 +35291,18 @@ async function compareItem(category, item, repoPath, systemPath, changeSet, prun
 // src/commands/init.ts
 function resolvePkgRoot5() {
   const candidates = [
-    import_path14.default.resolve(__dirname, "../.."),
-    import_path14.default.resolve(__dirname, "../../..")
+    import_path15.default.resolve(__dirname, "../.."),
+    import_path15.default.resolve(__dirname, "../../..")
   ];
-  const match = candidates.find((candidate) => import_fs_extra15.default.existsSync(import_path14.default.join(candidate, "project-skills")));
+  const match = candidates.find((candidate) => import_fs_extra16.default.existsSync(import_path15.default.join(candidate, ".xtrm", "registry.json")));
   if (!match) {
-    throw new Error("Unable to locate project-skills directory from CLI runtime.");
+    throw new Error("Unable to locate package root from CLI runtime.");
   }
   return match;
 }
 var PKG_ROOT2 = resolvePkgRoot5();
-var PROJECT_SKILLS_DIR = import_path14.default.join(PKG_ROOT2, "project-skills");
-var MCP_CORE_CONFIG_PATH = import_path14.default.join(PKG_ROOT2, "config", "mcp_servers.json");
-var INSTRUCTIONS_DIR = import_path14.default.join(PKG_ROOT2, "config", "instructions");
+var MCP_CORE_CONFIG_PATH = import_path15.default.join(PKG_ROOT2, "config", "mcp_servers.json");
+var INSTRUCTIONS_DIR = import_path15.default.join(PKG_ROOT2, "config", "instructions");
 var XTRM_BLOCK_START = "<!-- xtrm:start -->";
 var XTRM_BLOCK_END = "<!-- xtrm:end -->";
 function parseComposeServices(content) {
@@ -34928,8 +35328,8 @@ function parseComposeServices(content) {
   return [...services];
 }
 async function detectProjectFeatures(projectRoot) {
-  const hasTypeScript = await import_fs_extra15.default.pathExists(import_path14.default.join(projectRoot, "tsconfig.json"));
-  const hasPython = await import_fs_extra15.default.pathExists(import_path14.default.join(projectRoot, "pyproject.toml")) || await import_fs_extra15.default.pathExists(import_path14.default.join(projectRoot, "setup.py")) || await import_fs_extra15.default.pathExists(import_path14.default.join(projectRoot, "requirements.txt"));
+  const hasTypeScript = await import_fs_extra16.default.pathExists(import_path15.default.join(projectRoot, "tsconfig.json"));
+  const hasPython = await import_fs_extra16.default.pathExists(import_path15.default.join(projectRoot, "pyproject.toml")) || await import_fs_extra16.default.pathExists(import_path15.default.join(projectRoot, "setup.py")) || await import_fs_extra16.default.pathExists(import_path15.default.join(projectRoot, "requirements.txt"));
   const composeCandidates = [
     "docker-compose.yml",
     "docker-compose.yaml",
@@ -34938,19 +35338,19 @@ async function detectProjectFeatures(projectRoot) {
   ];
   const dockerServices = /* @__PURE__ */ new Set();
   for (const composeFile of composeCandidates) {
-    const composePath = import_path14.default.join(projectRoot, composeFile);
-    if (!await import_fs_extra15.default.pathExists(composePath)) continue;
+    const composePath = import_path15.default.join(projectRoot, composeFile);
+    if (!await import_fs_extra16.default.pathExists(composePath)) continue;
     try {
-      const content = await import_fs_extra15.default.readFile(composePath, "utf8");
+      const content = await import_fs_extra16.default.readFile(composePath, "utf8");
       for (const service of parseComposeServices(content)) {
         dockerServices.add(service);
       }
     } catch {
     }
   }
-  const hasDockerfile = await import_fs_extra15.default.pathExists(import_path14.default.join(projectRoot, "Dockerfile"));
+  const hasDockerfile = await import_fs_extra16.default.pathExists(import_path15.default.join(projectRoot, "Dockerfile"));
   if (hasDockerfile && dockerServices.size === 0) {
-    dockerServices.add(import_path14.default.basename(projectRoot));
+    dockerServices.add(import_path15.default.basename(projectRoot));
   }
   return {
     hasTypeScript,
@@ -34984,339 +35384,77 @@ async function injectProjectInstructionHeaders(projectRoot) {
   ];
   console.log(kleur_default.bold("Injecting xtrm agent instruction headers..."));
   for (const target of targets) {
-    const templatePath = import_path14.default.join(INSTRUCTIONS_DIR, target.template);
-    if (!await import_fs_extra15.default.pathExists(templatePath)) {
+    const templatePath = import_path15.default.join(INSTRUCTIONS_DIR, target.template);
+    if (!await import_fs_extra16.default.pathExists(templatePath)) {
       console.log(kleur_default.yellow(`  \u26A0 Missing template: ${target.template}`));
       continue;
     }
-    const template = await import_fs_extra15.default.readFile(templatePath, "utf8");
-    const outputPath = import_path14.default.join(projectRoot, target.output);
-    const existing = await import_fs_extra15.default.pathExists(outputPath) ? await import_fs_extra15.default.readFile(outputPath, "utf8") : "";
+    const template = await import_fs_extra16.default.readFile(templatePath, "utf8");
+    const outputPath = import_path15.default.join(projectRoot, target.output);
+    const existing = await import_fs_extra16.default.pathExists(outputPath) ? await import_fs_extra16.default.readFile(outputPath, "utf8") : "";
     const next = upsertManagedBlock(existing, template);
     if (next === existing) {
       console.log(kleur_default.dim(`  \u2713 ${target.output} already up to date`));
       continue;
     }
-    await import_fs_extra15.default.writeFile(outputPath, next.endsWith("\n") ? next : `${next}
+    await import_fs_extra16.default.writeFile(outputPath, next.endsWith("\n") ? next : `${next}
 `, "utf8");
     console.log(`${kleur_default.green("  \u2713")} updated ${target.output}`);
   }
 }
-async function getAvailableProjectSkills() {
-  if (!await import_fs_extra15.default.pathExists(PROJECT_SKILLS_DIR)) {
-    return [];
-  }
-  const entries = await import_fs_extra15.default.readdir(PROJECT_SKILLS_DIR);
-  const skills = [];
-  for (const entry of entries) {
-    const entryPath = import_path14.default.join(PROJECT_SKILLS_DIR, entry);
-    const stat = await import_fs_extra15.default.stat(entryPath);
-    if (stat.isDirectory() && await import_fs_extra15.default.pathExists(import_path14.default.join(entryPath, ".claude"))) {
-      skills.push(entry);
-    }
-  }
-  return skills.sort();
-}
-function getScriptFilename(hook) {
-  const cmd = hook.command || hook.hooks?.[0]?.command || "";
-  if (typeof cmd !== "string") return null;
-  const m = cmd.match(/\/hooks\/([A-Za-z0-9_/-]+\.(?:py|cjs|mjs|js))/);
-  if (m) return m[1];
-  const m2 = cmd.match(/([A-Za-z0-9_-]+\.(?:py|cjs|mjs|js))(?!.*[A-Za-z0-9._-]+\.(?:py|cjs|mjs|js))/);
-  return m2?.[1] ?? null;
-}
-function pruneStaleHooks(existing, canonical) {
-  const result = { ...existing };
-  const removed = [];
-  if (!result.hooks || typeof result.hooks !== "object") {
-    return { result, removed };
-  }
-  if (!canonical.hooks || typeof canonical.hooks !== "object") {
-    return { result, removed };
-  }
-  const canonicalScripts = /* @__PURE__ */ new Set();
-  const canonicalBasenames = /* @__PURE__ */ new Set();
-  for (const hooks of Object.values(canonical.hooks)) {
-    const hookList = Array.isArray(hooks) ? hooks : [hooks];
-    for (const wrapper of hookList) {
-      const innerHooks = wrapper.hooks || [wrapper];
-      for (const hook of innerHooks) {
-        const script = getScriptFilename(hook);
-        if (!script) continue;
-        canonicalScripts.add(script);
-        canonicalBasenames.add(import_path14.default.basename(script));
-      }
-    }
-  }
-  for (const [event, hooks] of Object.entries(result.hooks)) {
-    if (!Array.isArray(hooks)) continue;
-    const prunedWrappers = [];
-    for (const wrapper of hooks) {
-      const innerHooks = wrapper.hooks || [wrapper];
-      const keptInner = [];
-      for (const hook of innerHooks) {
-        const script = getScriptFilename(hook);
-        if (!script) {
-          keptInner.push(hook);
-          continue;
-        }
-        if (canonicalScripts.has(script)) {
-          keptInner.push(hook);
-          continue;
-        }
-        const sameSkillFamily = canonicalBasenames.has(import_path14.default.basename(script));
-        if (sameSkillFamily) {
-          removed.push(`${event}:${script}`);
-          continue;
-        }
-        keptInner.push(hook);
-      }
-      if (keptInner.length > 0) {
-        if (wrapper.hooks) {
-          prunedWrappers.push({ ...wrapper, hooks: keptInner });
-        } else if (keptInner.length === 1) {
-          prunedWrappers.push(keptInner[0]);
-        } else {
-          prunedWrappers.push({ ...wrapper, hooks: keptInner });
-        }
-      }
-    }
-    if (prunedWrappers.length > 0) {
-      result.hooks[event] = prunedWrappers;
-    } else {
-      delete result.hooks[event];
-    }
-  }
-  return { result, removed };
-}
-function deepMergeHooks(existing, incoming) {
-  const result = { ...existing };
-  if (!result.hooks) result.hooks = {};
-  if (!incoming.hooks) return result;
-  for (const [event, incomingHooks] of Object.entries(incoming.hooks)) {
-    if (!result.hooks[event]) {
-      result.hooks[event] = incomingHooks;
-    } else {
-      const existingEventHooks = Array.isArray(result.hooks[event]) ? result.hooks[event] : [result.hooks[event]];
-      const incomingEventHooks = Array.isArray(incomingHooks) ? incomingHooks : [incomingHooks];
-      const getCommand = (h) => h.command || h.hooks?.[0]?.command;
-      const getCommandKey = (cmd) => {
-        if (!cmd || typeof cmd !== "string") return null;
-        const m = cmd.match(/([A-Za-z0-9._-]+\.(?:py|cjs|mjs|js))(?!.*[A-Za-z0-9._-]+\.(?:py|cjs|mjs|js))/);
-        return m?.[1] ?? null;
-      };
-      const mergeMatcher2 = (existingMatcher, incomingMatcher) => {
-        const existingParts = existingMatcher.split("|").map((s) => s.trim()).filter(Boolean);
-        const incomingParts = incomingMatcher.split("|").map((s) => s.trim()).filter(Boolean);
-        const merged = [...existingParts];
-        for (const part of incomingParts) {
-          if (!merged.includes(part)) merged.push(part);
-        }
-        return merged.join("|");
-      };
-      const mergedEventHooks = [...existingEventHooks];
-      for (const incomingHook of incomingEventHooks) {
-        const incomingCmd = getCommand(incomingHook);
-        if (!incomingCmd) {
-          mergedEventHooks.push(incomingHook);
-          continue;
-        }
-        const incomingKey = getCommandKey(incomingCmd);
-        const existingIndex = mergedEventHooks.findIndex((h) => {
-          const existingCmd = getCommand(h);
-          if (existingCmd === incomingCmd) return true;
-          if (!incomingKey) return false;
-          return getCommandKey(existingCmd) === incomingKey;
-        });
-        if (existingIndex === -1) {
-          mergedEventHooks.push(incomingHook);
-          continue;
-        }
-        const existingHook = mergedEventHooks[existingIndex];
-        if (typeof existingHook.matcher === "string" && typeof incomingHook.matcher === "string") {
-          existingHook.matcher = mergeMatcher2(existingHook.matcher, incomingHook.matcher);
-        }
-      }
-      result.hooks[event] = mergedEventHooks;
-    }
-  }
-  return result;
-}
-function extractReadmeDescription(readmeContent) {
-  const lines = readmeContent.split("\n");
-  const headingIndex = lines.findIndex((line) => line.trim().startsWith("# "));
-  const searchStart = headingIndex >= 0 ? headingIndex + 1 : 0;
-  for (const rawLine of lines.slice(searchStart)) {
-    const line = rawLine.trim();
-    if (!line || line.startsWith("#") || line.startsWith("[![") || line.startsWith("<")) {
-      continue;
-    }
-    return line.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1").replace(/[*_`]/g, "").trim();
-  }
-  return "No description available";
-}
-async function installProjectSkill(toolName, projectRootOverride) {
-  const skillPath = import_path14.default.join(PROJECT_SKILLS_DIR, toolName);
-  if (!await import_fs_extra15.default.pathExists(skillPath)) {
-    console.error(kleur_default.red(`
-\u2717 Project skill '${toolName}' not found.
-`));
-    console.error(kleur_default.dim(`  Available project skills:
-`));
-    await listProjectSkills();
-    process.exit(1);
-  }
-  const projectRoot = projectRootOverride ?? getProjectRoot2();
-  const claudeDir = import_path14.default.join(projectRoot, ".claude");
-  console.log(kleur_default.dim(`
-  Installing project skill: ${kleur_default.cyan(toolName)}`));
-  console.log(kleur_default.dim(`  Target: ${projectRoot}
-`));
-  const skillClaudeDir = import_path14.default.join(skillPath, ".claude");
-  const skillSettingsPath = import_path14.default.join(skillClaudeDir, "settings.json");
-  const skillSkillsDir = import_path14.default.join(skillClaudeDir, "skills");
-  const skillReadmePath = import_path14.default.join(skillPath, "README.md");
-  if (await import_fs_extra15.default.pathExists(skillSettingsPath)) {
-    console.log(kleur_default.bold("\u2500\u2500 Installing Hooks \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
-    const targetSettingsPath = import_path14.default.join(claudeDir, "settings.json");
-    await import_fs_extra15.default.mkdirp(import_path14.default.dirname(targetSettingsPath));
-    let existingSettings = {};
-    if (await import_fs_extra15.default.pathExists(targetSettingsPath)) {
-      try {
-        existingSettings = JSON.parse(await import_fs_extra15.default.readFile(targetSettingsPath, "utf8"));
-      } catch {
-      }
-    }
-    const incomingSettings = JSON.parse(await import_fs_extra15.default.readFile(skillSettingsPath, "utf8"));
-    const { result: prunedSettings, removed } = pruneStaleHooks(existingSettings, incomingSettings);
-    if (removed.length > 0) {
-      console.log(kleur_default.yellow(`  \u21B3 Pruned ${removed.length} stale hook(s): ${removed.join(", ")}`));
-    }
-    const mergedSettings = deepMergeHooks(prunedSettings, incomingSettings);
-    await import_fs_extra15.default.writeFile(targetSettingsPath, JSON.stringify(mergedSettings, null, 2) + "\n");
-    console.log(`${kleur_default.green("  \u2713")} settings.json (hooks merged)`);
-  }
-  if (await import_fs_extra15.default.pathExists(skillSkillsDir)) {
-    console.log(kleur_default.bold("\n\u2500\u2500 Installing Skills \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
-    const targetSkillsDir = import_path14.default.join(claudeDir, "skills");
-    const skillEntries = await import_fs_extra15.default.readdir(skillSkillsDir);
-    for (const entry of skillEntries) {
-      const src = import_path14.default.join(skillSkillsDir, entry);
-      const dest = import_path14.default.join(targetSkillsDir, entry);
-      await import_fs_extra15.default.copy(src, dest, {
-        filter: (src2) => !src2.includes(".Zone.Identifier") && !src2.includes("__pycache__") && !src2.includes(".pytest_cache") && !src2.endsWith(".pyc")
-      });
-      console.log(`${kleur_default.green("  \u2713")} .claude/skills/${entry}/`);
-    }
-  }
-  if (await import_fs_extra15.default.pathExists(skillClaudeDir)) {
-    const claudeEntries = await import_fs_extra15.default.readdir(skillClaudeDir);
-    for (const entry of claudeEntries) {
-      if (entry === "settings.json" || entry === "skills") {
-        continue;
-      }
-      const src = import_path14.default.join(skillClaudeDir, entry);
-      const dest = import_path14.default.join(claudeDir, entry);
-      await import_fs_extra15.default.copy(src, dest, {
-        filter: (src2) => !src2.includes(".Zone.Identifier") && !src2.includes("__pycache__") && !src2.includes(".pytest_cache") && !src2.endsWith(".pyc")
-      });
-      console.log(`${kleur_default.green("  \u2713")} .claude/${entry}/`);
-    }
-  }
-  const claudeSkillsDir = import_path14.default.join(claudeDir, "skills");
-  if (await import_fs_extra15.default.pathExists(claudeSkillsDir)) {
-    const agentsDir = import_path14.default.join(projectRoot, ".agents");
-    const agentsSkillsLink = import_path14.default.join(agentsDir, "skills");
-    const symlinkTarget = import_path14.default.join("..", ".claude", "skills");
-    let needsSymlink = true;
-    if (await import_fs_extra15.default.pathExists(agentsSkillsLink)) {
-      try {
-        const stat = await import_fs_extra15.default.lstat(agentsSkillsLink);
-        if (stat.isSymbolicLink()) {
-          const current = await import_fs_extra15.default.readlink(agentsSkillsLink);
-          if (current === symlinkTarget) {
-            needsSymlink = false;
-          } else {
-            await import_fs_extra15.default.remove(agentsSkillsLink);
-          }
-        } else {
-          console.log(kleur_default.yellow("  \u26A0 .agents/skills/ is a real directory \u2014 skipping Pi symlink"));
-          needsSymlink = false;
-        }
-      } catch {
-        needsSymlink = true;
-      }
-    }
-    if (needsSymlink) {
-      await import_fs_extra15.default.mkdirp(agentsDir);
-      await import_fs_extra15.default.symlink(symlinkTarget, agentsSkillsLink);
-      console.log(`${kleur_default.green("  \u2713")} .agents/skills \u2192 ../.claude/skills`);
-    } else {
-      console.log(kleur_default.dim("  \u2713 .agents/skills symlink already in place"));
-    }
-  }
-  if (await import_fs_extra15.default.pathExists(skillReadmePath)) {
-    console.log(kleur_default.bold("\n\u2500\u2500 Installing Documentation \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
-    const docsDir = import_path14.default.join(claudeDir, "docs");
-    await import_fs_extra15.default.mkdirp(docsDir);
-    const destReadme = import_path14.default.join(docsDir, `${toolName}-readme.md`);
-    await import_fs_extra15.default.copy(skillReadmePath, destReadme);
-    console.log(`${kleur_default.green("  \u2713")} .claude/docs/${toolName}-readme.md`);
-  }
-  if (toolName === "service-skills-set") {
-    console.log(kleur_default.bold("\n\u2500\u2500 Installing Git Hooks \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
-    await installGitHooks(projectRoot, skillClaudeDir);
-    console.log(`${kleur_default.green("  \u2713")} .githooks/pre-commit`);
-    console.log(`${kleur_default.green("  \u2713")} .githooks/pre-push`);
-    console.log(`${kleur_default.green("  \u2713")} activated in .git/hooks/`);
-  }
-  console.log(kleur_default.bold("\n\u2500\u2500 Post-Install Steps \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
-  console.log(kleur_default.yellow("\n  \u26A0 IMPORTANT: Manual setup required!\n"));
-  console.log(kleur_default.white(`  ${toolName} requires additional configuration.`));
-  console.log(kleur_default.white(`  Please read: ${kleur_default.cyan(".claude/docs/" + toolName + "-readme.md")}
-`));
-  if (toolName === "tdd-guard") {
-    const tddGuardCheck = (0, import_child_process6.spawnSync)("tdd-guard", ["--version"], { stdio: "pipe" });
-    if (tddGuardCheck.status !== 0) {
-      console.log(kleur_default.red("  \u2717 tdd-guard CLI not found globally!\n"));
-      console.log(kleur_default.white("  Install the global CLI:"));
-      console.log(kleur_default.cyan("    npm install -g tdd-guard\n"));
-    } else {
-      console.log(kleur_default.green("  \u2713 tdd-guard CLI found globally"));
-    }
-    console.log(kleur_default.white("\n  Install a test reporter (choose one):"));
-    console.log(kleur_default.dim("    npm install --save-dev tdd-guard-vitest    # Vitest"));
-    console.log(kleur_default.dim("    npm install --save-dev tdd-guard-jest      # Jest"));
-    console.log(kleur_default.dim("    pip install tdd-guard-pytest               # pytest\n"));
-  }
-  if (toolName === "quality-gates") {
-    console.log(kleur_default.white("  Install language dependencies:\n"));
-    console.log(kleur_default.white("  TypeScript:"));
-    console.log(kleur_default.dim("    npm install --save-dev typescript eslint prettier"));
-    console.log(kleur_default.white("\n  Python:"));
-    console.log(kleur_default.dim("    pip install ruff mypy"));
-    console.log(kleur_default.white("\n  For TDD (test-first) enforcement, install separately:"));
-    console.log(kleur_default.dim("    npm install -g tdd-guard"));
-    console.log(kleur_default.dim("    xtrm install project tdd-guard\n"));
-  }
-  console.log(kleur_default.green("  \u2713 Installation complete!\n"));
-}
-async function installAllProjectSkills(projectRootOverride) {
-  const skills = await getAvailableProjectSkills();
-  if (skills.length === 0) {
-    console.log(kleur_default.dim("  No project skills available.\n"));
+async function ensureAgentsSkillsSymlink(projectRoot) {
+  const sourceDir = import_path15.default.join(projectRoot, ".xtrm", "skills", "default");
+  if (!await import_fs_extra16.default.pathExists(sourceDir)) {
     return;
   }
-  const projectRoot = projectRootOverride ?? getProjectRoot2();
-  console.log(kleur_default.bold(`
-Installing ${skills.length} project skills:
-`));
-  for (const skill of skills) {
-    console.log(kleur_default.dim(`  \u2022 ${skill}`));
+  const agentsDir = import_path15.default.join(projectRoot, ".agents");
+  const agentsSkillsLink = import_path15.default.join(agentsDir, "skills");
+  const symlinkTarget = import_path15.default.join("..", ".xtrm", "skills", "default");
+  let needsSymlink = true;
+  if (await import_fs_extra16.default.pathExists(agentsSkillsLink)) {
+    try {
+      const stat = await import_fs_extra16.default.lstat(agentsSkillsLink);
+      if (stat.isSymbolicLink()) {
+        const current = await import_fs_extra16.default.readlink(agentsSkillsLink);
+        if (current === symlinkTarget) {
+          needsSymlink = false;
+        } else {
+          await import_fs_extra16.default.remove(agentsSkillsLink);
+        }
+      } else {
+        console.log(kleur_default.yellow("  \u26A0 .agents/skills/ is a real directory \u2014 skipping Pi symlink"));
+        return;
+      }
+    } catch {
+      needsSymlink = true;
+    }
   }
-  console.log("");
-  for (const skill of skills) {
-    await installProjectSkill(skill, projectRoot);
+  if (!needsSymlink) {
+    console.log(kleur_default.dim("  \u2713 .agents/skills symlink already in place"));
+    return;
+  }
+  await import_fs_extra16.default.mkdirp(agentsDir);
+  await import_fs_extra16.default.symlink(symlinkTarget, agentsSkillsLink);
+  console.log(`${kleur_default.green("  \u2713")} .agents/skills \u2192 ../.xtrm/skills/default`);
+}
+async function installServiceSkillHooks(projectRoot) {
+  const serviceSkillRoot = import_path15.default.join(projectRoot, ".xtrm", "skills", "default", "service-skills-set", ".claude");
+  if (!await import_fs_extra16.default.pathExists(serviceSkillRoot)) {
+    console.log(kleur_default.yellow("  \u26A0 service-skills-set package not found under .xtrm/skills/default; skipping project hook wiring"));
+    return;
+  }
+  console.log(kleur_default.bold("Installing service-skills-set project hooks..."));
+  await installSkills(projectRoot, serviceSkillRoot);
+  const { added, skipped } = await installSettings(projectRoot);
+  const { hookFiles } = await installGitHooks(projectRoot, serviceSkillRoot);
+  if (added.length > 0) {
+    console.log(kleur_default.dim(`  \u21B3 settings hooks added: ${added.join(", ")}`));
+  }
+  if (skipped.length > 0) {
+    console.log(kleur_default.dim(`  \u21B3 settings hooks already present: ${skipped.join(", ")}`));
+  }
+  if (hookFiles.some((file2) => file2.status === "added")) {
+    console.log(kleur_default.dim("  \u21B3 git hooks updated"));
   }
 }
 async function runPreflight(projectRoot, opts) {
@@ -35342,7 +35480,7 @@ async function runPreflight(projectRoot, opts) {
     }
   } catch {
   }
-  const needsBdInit = !await import_fs_extra15.default.pathExists(import_path14.default.join(projectRoot, ".beads"));
+  const needsBdInit = !await import_fs_extra16.default.pathExists(import_path15.default.join(projectRoot, ".beads"));
   const gitnexusStatus = (0, import_child_process6.spawnSync)("gitnexus", ["status"], {
     cwd: projectRoot,
     encoding: "utf8",
@@ -35377,7 +35515,7 @@ function renderInitPlan(inventory) {
     needsBdInit ? "bd init \u2014 initialize beads workspace" : null,
     needsGitNexus ? "gitnexus analyze \u2014 build code index" : null,
     "AGENTS.md + CLAUDE.md \u2014 workflow headers",
-    "project-skills \u2014 service-skills-set, quality-gates"
+    "service-skills-set hooks + git hooks wiring"
   ].filter(Boolean);
   for (const action of projActions) {
     console.log(`${kleur_default.cyan("  \u2022")}  ${action}`);
@@ -35401,7 +35539,8 @@ async function runProjectBootstrap(projectRoot) {
   await runBdInitForProject(projectRoot);
   await injectProjectInstructionHeaders(projectRoot);
   await runGitNexusInitForProject(projectRoot);
-  await installAllProjectSkills(projectRoot);
+  await installServiceSkillHooks(projectRoot);
+  await ensureAgentsSkillsSymlink(projectRoot);
 }
 async function runProjectInit(opts = {}) {
   const { dryRun = false, yes = false } = opts;
@@ -35510,44 +35649,6 @@ ${status.stderr || ""}`.toLowerCase();
   if (analyze.stderr) process.stderr.write(analyze.stderr);
   console.log(kleur_default.yellow(`  \u26A0 gitnexus analyze exited with code ${analyze.status}`));
 }
-async function listProjectSkills() {
-  const entries = await getAvailableProjectSkills();
-  if (entries.length === 0) {
-    console.log(kleur_default.dim("  No project skills available.\n"));
-    return;
-  }
-  const skills = [];
-  for (const entry of entries) {
-    const readmePath = import_path14.default.join(PROJECT_SKILLS_DIR, entry, "README.md");
-    let description = "No description available";
-    if (await import_fs_extra15.default.pathExists(readmePath)) {
-      const readmeContent = await import_fs_extra15.default.readFile(readmePath, "utf8");
-      description = extractReadmeDescription(readmeContent).slice(0, 80);
-    }
-    skills.push({ name: entry, description });
-  }
-  if (skills.length === 0) {
-    console.log(kleur_default.dim("  No project skills available.\n"));
-    return;
-  }
-  console.log(kleur_default.bold("\nAvailable Project Skills:\n"));
-  const Table = require_cli_table3();
-  const table = new Table({
-    head: [kleur_default.cyan("Skill"), kleur_default.cyan("Description")],
-    colWidths: [25, 60],
-    style: { head: [], border: [] }
-  });
-  for (const skill of skills) {
-    table.push([kleur_default.white(skill.name), kleur_default.dim(skill.description)]);
-  }
-  console.log(table.toString());
-  console.log(kleur_default.bold("\n\nUsage (legacy):\n"));
-  console.log(kleur_default.dim("  xtrm install project <skill-name>   Install a legacy project skill"));
-  console.log(kleur_default.dim("  xtrm install project all            Install all legacy project skills"));
-  console.log(kleur_default.dim("  xtrm install project list           List available legacy skills\n"));
-  console.log(kleur_default.bold("Preferred:\n"));
-  console.log(kleur_default.dim("  xtrm init                           Bootstrap project data for global hooks/skills\n"));
-}
 function getProjectRoot2() {
   const result = (0, import_child_process6.spawnSync)("git", ["rev-parse", "--show-toplevel"], {
     encoding: "utf8",
@@ -35556,19 +35657,19 @@ function getProjectRoot2() {
   if (result.status !== 0) {
     throw new Error("Not inside a git repository. Run this command from your target project directory.");
   }
-  return import_path14.default.resolve(result.stdout.trim());
+  return import_path15.default.resolve(result.stdout.trim());
 }
 
 // src/commands/status.ts
 var import_prompts3 = __toESM(require_prompts3(), 1);
 
 // src/core/sync-executor.ts
-var import_path17 = __toESM(require("path"), 1);
-var import_fs_extra18 = __toESM(require_lib(), 1);
+var import_path18 = __toESM(require("path"), 1);
+var import_fs_extra19 = __toESM(require_lib(), 1);
 
 // src/utils/atomic-config.ts
 var import_node_crypto4 = require("crypto");
-var import_fs_extra16 = __toESM(require_lib(), 1);
+var import_fs_extra17 = __toESM(require_lib(), 1);
 var import_comment_json = __toESM(require_src3(), 1);
 var PROTECTED_KEYS = [
   "permissions.allow",
@@ -35796,20 +35897,20 @@ async function atomicWrite(filePath, data, options = {}) {
     } else {
       content = JSON.stringify(data, null, 2);
     }
-    await import_fs_extra16.default.writeFile(tempFilePath, content, "utf8");
-    const tempStats = await import_fs_extra16.default.stat(tempFilePath);
+    await import_fs_extra17.default.writeFile(tempFilePath, content, "utf8");
+    const tempStats = await import_fs_extra17.default.stat(tempFilePath);
     if (tempStats.size === 0) {
       throw new Error("Temporary file is empty - write failed");
     }
-    if (backupOnSuccess && await import_fs_extra16.default.pathExists(filePath)) {
+    if (backupOnSuccess && await import_fs_extra17.default.pathExists(filePath)) {
       const backupPath = `${filePath}${backupSuffix}`;
-      await import_fs_extra16.default.copy(filePath, backupPath);
+      await import_fs_extra17.default.copy(filePath, backupPath);
     }
-    await import_fs_extra16.default.rename(tempFilePath, filePath);
+    await import_fs_extra17.default.rename(tempFilePath, filePath);
   } catch (error48) {
     try {
-      if (await import_fs_extra16.default.pathExists(tempFilePath)) {
-        await import_fs_extra16.default.unlink(tempFilePath);
+      if (await import_fs_extra17.default.pathExists(tempFilePath)) {
+        await import_fs_extra17.default.unlink(tempFilePath);
       }
     } catch (cleanupError) {
     }
@@ -35818,10 +35919,10 @@ async function atomicWrite(filePath, data, options = {}) {
 }
 async function safeReadConfig(filePath) {
   try {
-    if (!await import_fs_extra16.default.pathExists(filePath)) {
+    if (!await import_fs_extra17.default.pathExists(filePath)) {
       return {};
     }
-    const content = await import_fs_extra16.default.readFile(filePath, "utf8");
+    const content = await import_fs_extra17.default.readFile(filePath, "utf8");
     try {
       return (0, import_comment_json.parse)(content);
     } catch (parseError) {
@@ -35872,16 +35973,16 @@ async function safeMergeConfig(localConfigPath, repoConfig, options = {}) {
 }
 
 // src/utils/config-adapter.ts
-var import_path15 = __toESM(require("path"), 1);
-var import_os4 = __toESM(require("os"), 1);
+var import_path16 = __toESM(require("path"), 1);
+var import_os5 = __toESM(require("os"), 1);
 var ConfigAdapter = class {
   systemRoot;
   homeDir;
   hooksDir;
   constructor(systemRoot) {
     this.systemRoot = systemRoot;
-    this.homeDir = import_os4.default.homedir();
-    this.hooksDir = import_path15.default.join(this.systemRoot, "hooks");
+    this.homeDir = import_os5.default.homedir();
+    this.hooksDir = import_path16.default.join(this.systemRoot, "hooks");
   }
   /**
    * Adapt hooks config for Claude Code format.
@@ -35903,7 +36004,7 @@ var ConfigAdapter = class {
         if (Array.isArray(hooks)) {
           hooksConfig.hooks[event] = hooks.map((hook) => {
             if (hook.script) {
-              const resolvedScriptPath = this.resolvePath(import_path15.default.join(this.hooksDir, hook.script));
+              const resolvedScriptPath = this.resolvePath(import_path16.default.join(this.hooksDir, hook.script));
               const command = this.buildScriptCommand(hook.script, resolvedScriptPath);
               const innerHook = { type: "command", command };
               if (hook.timeout) innerHook.timeout = hook.timeout;
@@ -35917,13 +36018,13 @@ var ConfigAdapter = class {
       }
     }
     if (hooksConfig.statusLine && hooksConfig.statusLine.script) {
-      const resolvedScriptPath = this.resolvePath(import_path15.default.join(this.hooksDir, hooksConfig.statusLine.script));
+      const resolvedScriptPath = this.resolvePath(import_path16.default.join(this.hooksDir, hooksConfig.statusLine.script));
       const command = this.buildScriptCommand(hooksConfig.statusLine.script, resolvedScriptPath);
       hooksConfig.statusLine = { type: "command", command };
     }
   }
   buildScriptCommand(scriptName, resolvedPath) {
-    const ext = import_path15.default.extname(scriptName).toLowerCase();
+    const ext = import_path16.default.extname(scriptName).toLowerCase();
     if (ext === ".js" || ext === ".cjs" || ext === ".mjs") {
       return `node "${resolvedPath}"`;
     } else if (ext === ".sh") {
@@ -35948,23 +36049,23 @@ var import_child_process7 = require("child_process");
 var import_util = require("util");
 
 // src/utils/env-manager.ts
-var import_path16 = __toESM(require("path"), 1);
-var import_os5 = __toESM(require("os"), 1);
+var import_path17 = __toESM(require("path"), 1);
+var import_os6 = __toESM(require("os"), 1);
 var import_dotenv = __toESM(require_main(), 1);
-var CONFIG_DIR = import_path16.default.join(import_os5.default.homedir(), ".config", "jaggers-agent-tools");
-var ENV_FILE = import_path16.default.join(CONFIG_DIR, ".env");
-var ENV_EXAMPLE_FILE = import_path16.default.join(CONFIG_DIR, ".env.example");
+var CONFIG_DIR = import_path17.default.join(import_os6.default.homedir(), ".config", "jaggers-agent-tools");
+var ENV_FILE = import_path17.default.join(CONFIG_DIR, ".env");
+var ENV_EXAMPLE_FILE = import_path17.default.join(CONFIG_DIR, ".env.example");
 
 // src/utils/sync-mcp-cli.ts
 var execAsync = (0, import_util.promisify)(import_child_process7.exec);
 
 // src/core/rollback.ts
-var import_fs_extra17 = __toESM(require_lib(), 1);
+var import_fs_extra18 = __toESM(require_lib(), 1);
 async function createBackup(filePath) {
   const timestamp = Date.now();
   const backupPath = `${filePath}.backup-${timestamp}`;
-  if (await import_fs_extra17.default.pathExists(filePath)) {
-    await import_fs_extra17.default.copy(filePath, backupPath);
+  if (await import_fs_extra18.default.pathExists(filePath)) {
+    await import_fs_extra18.default.copy(filePath, backupPath);
   }
   return {
     originalPath: filePath,
@@ -35973,12 +36074,12 @@ async function createBackup(filePath) {
   };
 }
 async function restoreBackup(backup) {
-  if (await import_fs_extra17.default.pathExists(backup.backupPath)) {
-    await import_fs_extra17.default.move(backup.backupPath, backup.originalPath, { overwrite: true });
+  if (await import_fs_extra18.default.pathExists(backup.backupPath)) {
+    await import_fs_extra18.default.move(backup.backupPath, backup.originalPath, { overwrite: true });
   }
 }
 async function cleanupBackup(backup) {
-  await import_fs_extra17.default.remove(backup.backupPath);
+  await import_fs_extra18.default.remove(backup.backupPath);
 }
 
 // src/core/sync-executor.ts
@@ -36001,8 +36102,8 @@ var SAFE_GIT_BASH_ALLOWLIST = [
   "Bash(git fetch:*)"
 ];
 async function normalizeLegacyBashAllowlist(settingsPath, isDryRun) {
-  if (!await import_fs_extra18.default.pathExists(settingsPath)) return false;
-  const settings = await import_fs_extra18.default.readJson(settingsPath);
+  if (!await import_fs_extra19.default.pathExists(settingsPath)) return false;
+  const settings = await import_fs_extra19.default.readJson(settingsPath);
   const allow = settings?.permissions?.allow;
   if (!Array.isArray(allow)) return false;
   const hasLegacy = allow.some(
@@ -36021,7 +36122,7 @@ async function normalizeLegacyBashAllowlist(settingsPath, isDryRun) {
     return true;
   }
   settings.permissions.allow = filteredAllow;
-  await import_fs_extra18.default.writeJson(settingsPath, settings, { spaces: 2 });
+  await import_fs_extra19.default.writeJson(settingsPath, settings, { spaces: 2 });
   console.log(kleur_default.dim("      (Replaced legacy Bash(bd:*)/Bash(git:*) allowlist entries)"));
   return true;
 }
@@ -36048,7 +36149,7 @@ async function filterHooksByInstalledScripts(hooksConfig) {
         if (typeof command !== "string" || !command.trim()) continue;
         const scriptPath = extractHookCommandPath(command);
         if (!scriptPath) continue;
-        if (await import_fs_extra18.default.pathExists(scriptPath)) {
+        if (await import_fs_extra19.default.pathExists(scriptPath)) {
           keptInner.push(inner);
         }
       }
@@ -36061,7 +36162,7 @@ async function filterHooksByInstalledScripts(hooksConfig) {
   return hooksConfig;
 }
 async function executeSync(repoRoot, systemRoot, changeSet, mode, actionType, isDryRun = false, options) {
-  const normalizedRoot = import_path17.default.normalize(systemRoot).replace(/\\/g, "/");
+  const normalizedRoot = import_path18.default.normalize(systemRoot).replace(/\\/g, "/");
   const isAgentsSkills = normalizedRoot.includes(".agents/skills");
   if (isAgentsSkills) {
     return executeSyncAgentsSkills(repoRoot, systemRoot, changeSet, mode, actionType, isDryRun);
@@ -36083,12 +36184,12 @@ async function executeSync(repoRoot, systemRoot, changeSet, mode, actionType, is
         }
         if (mode === "prune") {
           for (const itemToDelete of cat.drifted || []) {
-            const dest = import_path17.default.join(systemRoot, category, itemToDelete);
+            const dest = import_path18.default.join(systemRoot, category, itemToDelete);
             console.log(kleur_default.red(`  [x] PRUNING ${category}/${itemToDelete}`));
             if (!isDryRun) {
-              if (await import_fs_extra18.default.pathExists(dest)) {
+              if (await import_fs_extra19.default.pathExists(dest)) {
                 backups.push(await createBackup(dest));
-                await import_fs_extra18.default.remove(dest);
+                await import_fs_extra19.default.remove(dest);
               }
             }
             count++;
@@ -36101,17 +36202,17 @@ async function executeSync(repoRoot, systemRoot, changeSet, mode, actionType, is
       for (const item of itemsToProcess) {
         let src, dest;
         if (category === "config" && item === "settings.json" && actionType === "sync") {
-          src = import_path17.default.join(repoRoot, "config", "settings.json");
-          dest = import_path17.default.join(systemRoot, "settings.json");
+          src = import_path18.default.join(repoRoot, "config", "settings.json");
+          dest = import_path18.default.join(systemRoot, "settings.json");
           console.log(kleur_default.gray(`  --> config/settings.json`));
-          if (!isDryRun && await import_fs_extra18.default.pathExists(dest)) {
+          if (!isDryRun && await import_fs_extra19.default.pathExists(dest)) {
             backups.push(await createBackup(dest));
           }
-          const repoConfig = await import_fs_extra18.default.readJson(src);
+          const repoConfig = await import_fs_extra19.default.readJson(src);
           let finalRepoConfig = resolveConfigPaths(repoConfig, systemRoot);
-          const hooksSrc = import_path17.default.join(repoRoot, "config", "hooks.json");
-          if (await import_fs_extra18.default.pathExists(hooksSrc)) {
-            const hooksRaw = await import_fs_extra18.default.readJson(hooksSrc);
+          const hooksSrc = import_path18.default.join(repoRoot, "config", "hooks.json");
+          if (await import_fs_extra19.default.pathExists(hooksSrc)) {
+            const hooksRaw = await import_fs_extra19.default.readJson(hooksSrc);
             const hooksAdapted = await filterHooksByInstalledScripts(adapter.adaptHooksConfig(hooksRaw));
             if (hooksAdapted.hooks) {
               finalRepoConfig.hooks = hooksAdapted.hooks;
@@ -36121,8 +36222,8 @@ async function executeSync(repoRoot, systemRoot, changeSet, mode, actionType, is
               finalRepoConfig.statusLine = hooksAdapted.statusLine;
             }
           }
-          if (import_fs_extra18.default.existsSync(dest)) {
-            const localConfig = await import_fs_extra18.default.readJson(dest);
+          if (import_fs_extra19.default.existsSync(dest)) {
+            const localConfig = await import_fs_extra19.default.readJson(dest);
             const resolvedLocalConfig = resolveConfigPaths(localConfig, systemRoot);
             if (mode === "prune") {
               if (localConfig.mcpServers && finalRepoConfig.mcpServers) {
@@ -36151,42 +36252,42 @@ async function executeSync(repoRoot, systemRoot, changeSet, mode, actionType, is
             await normalizeLegacyBashAllowlist(dest, isDryRun);
           } else {
             if (!isDryRun) {
-              await import_fs_extra18.default.ensureDir(import_path17.default.dirname(dest));
-              await import_fs_extra18.default.writeJson(dest, finalRepoConfig, { spaces: 2 });
+              await import_fs_extra19.default.ensureDir(import_path18.default.dirname(dest));
+              await import_fs_extra19.default.writeJson(dest, finalRepoConfig, { spaces: 2 });
             }
             console.log(kleur_default.green(`      (Created new configuration)`));
           }
           count++;
           continue;
         }
-        const repoPath = import_path17.default.join(repoRoot, category);
-        const systemPath = import_path17.default.join(systemRoot, category);
+        const repoPath = import_path18.default.join(repoRoot, category);
+        const systemPath = import_path18.default.join(systemRoot, category);
         if (actionType === "backport") {
-          src = import_path17.default.join(systemPath, item);
-          dest = import_path17.default.join(repoPath, item);
+          src = import_path18.default.join(systemPath, item);
+          dest = import_path18.default.join(repoPath, item);
         } else {
-          src = import_path17.default.join(repoPath, item);
-          dest = import_path17.default.join(systemPath, item);
+          src = import_path18.default.join(repoPath, item);
+          dest = import_path18.default.join(systemPath, item);
         }
         console.log(kleur_default.gray(`  ${actionType === "backport" ? "<--" : "-->"} ${category}/${item}`));
-        if (!isDryRun && actionType === "sync" && await import_fs_extra18.default.pathExists(dest)) {
+        if (!isDryRun && actionType === "sync" && await import_fs_extra19.default.pathExists(dest)) {
           backups.push(await createBackup(dest));
         }
         if (mode === "symlink" && actionType === "sync" && category !== "config") {
           if (!isDryRun) {
             if (process.platform === "win32") {
               console.log(kleur_default.yellow("  \u26A0 Symlinks require Developer Mode on Windows \u2014 falling back to copy."));
-              await import_fs_extra18.default.remove(dest);
-              await import_fs_extra18.default.copy(src, dest);
+              await import_fs_extra19.default.remove(dest);
+              await import_fs_extra19.default.copy(src, dest);
             } else {
-              await import_fs_extra18.default.remove(dest);
-              await import_fs_extra18.default.ensureSymlink(src, dest);
+              await import_fs_extra19.default.remove(dest);
+              await import_fs_extra19.default.ensureSymlink(src, dest);
             }
           }
         } else {
           if (!isDryRun) {
-            await import_fs_extra18.default.remove(dest);
-            await import_fs_extra18.default.copy(src, dest);
+            await import_fs_extra19.default.remove(dest);
+            await import_fs_extra19.default.copy(src, dest);
           }
         }
         if (!isDryRun && actionType === "sync") {
@@ -36196,9 +36297,9 @@ async function executeSync(repoRoot, systemRoot, changeSet, mode, actionType, is
       }
     }
     if (!isDryRun && actionType === "sync") {
-      const manifestPath = import_path17.default.join(systemRoot, ".jaggers-sync-manifest.json");
-      const existing = await import_fs_extra18.default.pathExists(manifestPath) ? await import_fs_extra18.default.readJson(manifestPath) : {};
-      await import_fs_extra18.default.writeJson(manifestPath, {
+      const manifestPath = import_path18.default.join(systemRoot, ".jaggers-sync-manifest.json");
+      const existing = await import_fs_extra19.default.pathExists(manifestPath) ? await import_fs_extra19.default.readJson(manifestPath) : {};
+      await import_fs_extra19.default.writeJson(manifestPath, {
         ...existing,
         lastSync: (/* @__PURE__ */ new Date()).toISOString(),
         repoRoot,
@@ -36227,7 +36328,7 @@ async function executeSyncAgentsSkills(repoRoot, systemRoot, changeSet, mode, ac
   let count = 0;
   const backups = [];
   try {
-    const repoSkillsPath = import_path17.default.join(repoRoot, "skills");
+    const repoSkillsPath = import_path18.default.join(repoRoot, "skills");
     const itemsToProcess = [];
     if (actionType === "sync") {
       itemsToProcess.push(...changeSet.skills.missing, ...changeSet.skills.outdated);
@@ -36235,24 +36336,24 @@ async function executeSyncAgentsSkills(repoRoot, systemRoot, changeSet, mode, ac
       itemsToProcess.push(...changeSet.skills.drifted);
     }
     for (const item of itemsToProcess) {
-      const src = actionType === "backport" ? import_path17.default.join(systemRoot, item) : import_path17.default.join(repoSkillsPath, item);
-      const dest = actionType === "backport" ? import_path17.default.join(repoSkillsPath, item) : import_path17.default.join(systemRoot, item);
+      const src = actionType === "backport" ? import_path18.default.join(systemRoot, item) : import_path18.default.join(repoSkillsPath, item);
+      const dest = actionType === "backport" ? import_path18.default.join(repoSkillsPath, item) : import_path18.default.join(systemRoot, item);
       console.log(kleur_default.gray(`  ${actionType === "backport" ? "<--" : "-->"} ${item}`));
       if (!isDryRun) {
-        if (await import_fs_extra18.default.pathExists(dest)) backups.push(await createBackup(dest));
-        await import_fs_extra18.default.ensureDir(import_path17.default.dirname(dest));
+        if (await import_fs_extra19.default.pathExists(dest)) backups.push(await createBackup(dest));
+        await import_fs_extra19.default.ensureDir(import_path18.default.dirname(dest));
         if (mode === "symlink" && actionType === "sync") {
           if (process.platform === "win32") {
             console.log(kleur_default.yellow("  \u26A0 Symlinks require Developer Mode on Windows \u2014 falling back to copy."));
-            await import_fs_extra18.default.remove(dest);
-            await import_fs_extra18.default.copy(src, dest);
+            await import_fs_extra19.default.remove(dest);
+            await import_fs_extra19.default.copy(src, dest);
           } else {
-            await import_fs_extra18.default.remove(dest);
-            await import_fs_extra18.default.ensureSymlink(src, dest);
+            await import_fs_extra19.default.remove(dest);
+            await import_fs_extra19.default.ensureSymlink(src, dest);
           }
         } else {
-          await import_fs_extra18.default.remove(dest);
-          await import_fs_extra18.default.copy(src, dest);
+          await import_fs_extra19.default.remove(dest);
+          await import_fs_extra19.default.copy(src, dest);
         }
       }
       count++;
@@ -36280,7 +36381,7 @@ function resolveConfigPaths(config3, targetDir) {
         let val = obj[key];
         if (!val.startsWith("$") && !val.startsWith("~")) {
           if (val.match(/\/[^\s"']+\/hooks\//)) {
-            const hooksDir = import_path17.default.join(targetDir, "hooks");
+            const hooksDir = import_path18.default.join(targetDir, "hooks");
             let replacementDir = `${hooksDir}/`;
             if (process.platform === "win32") {
               replacementDir = replacementDir.replace(/\\/g, "/");
@@ -36298,7 +36399,7 @@ function resolveConfigPaths(config3, targetDir) {
 }
 
 // src/core/manifest.ts
-var import_path18 = require("path");
+var import_path19 = require("path");
 
 // ../node_modules/zod/v4/classic/external.js
 var external_exports = {};
@@ -37067,10 +37168,10 @@ function mergeDefs(...defs) {
 function cloneDef(schema) {
   return mergeDefs(schema._zod.def);
 }
-function getElementAtPath(obj, path29) {
-  if (!path29)
+function getElementAtPath(obj, path30) {
+  if (!path30)
     return obj;
-  return path29.reduce((acc, key) => acc?.[key], obj);
+  return path30.reduce((acc, key) => acc?.[key], obj);
 }
 function promiseAllObject(promisesObj) {
   const keys = Object.keys(promisesObj);
@@ -37453,11 +37554,11 @@ function aborted(x, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues(path29, issues) {
+function prefixIssues(path30, issues) {
   return issues.map((iss) => {
     var _a2;
     (_a2 = iss).path ?? (_a2.path = []);
-    iss.path.unshift(path29);
+    iss.path.unshift(path30);
     return iss;
   });
 }
@@ -37640,7 +37741,7 @@ function formatError(error48, mapper = (issue2) => issue2.message) {
 }
 function treeifyError(error48, mapper = (issue2) => issue2.message) {
   const result = { errors: [] };
-  const processError = (error49, path29 = []) => {
+  const processError = (error49, path30 = []) => {
     var _a2, _b;
     for (const issue2 of error49.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
@@ -37650,7 +37751,7 @@ function treeifyError(error48, mapper = (issue2) => issue2.message) {
       } else if (issue2.code === "invalid_element") {
         processError({ issues: issue2.issues }, issue2.path);
       } else {
-        const fullpath = [...path29, ...issue2.path];
+        const fullpath = [...path30, ...issue2.path];
         if (fullpath.length === 0) {
           result.errors.push(mapper(issue2));
           continue;
@@ -37682,8 +37783,8 @@ function treeifyError(error48, mapper = (issue2) => issue2.message) {
 }
 function toDotPath(_path) {
   const segs = [];
-  const path29 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
-  for (const seg of path29) {
+  const path30 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
+  for (const seg of path30) {
     if (typeof seg === "number")
       segs.push(`[${seg}]`);
     else if (typeof seg === "symbol")
@@ -49660,13 +49761,13 @@ function resolveRef(ref, ctx) {
   if (!ref.startsWith("#")) {
     throw new Error("External $ref is not supported, only local refs (#/...) are allowed");
   }
-  const path29 = ref.slice(1).split("/").filter(Boolean);
-  if (path29.length === 0) {
+  const path30 = ref.slice(1).split("/").filter(Boolean);
+  if (path30.length === 0) {
     return ctx.rootSchema;
   }
   const defsKey = ctx.version === "draft-2020-12" ? "$defs" : "definitions";
-  if (path29[0] === defsKey) {
-    const key = path29[1];
+  if (path30[0] === defsKey) {
+    const key = path30[1];
     if (!key || !ctx.defs[key]) {
       throw new Error(`Reference not found: ${ref}`);
     }
@@ -50107,17 +50208,17 @@ var ManifestSchema = external_exports.object({
 // src/core/manifest.ts
 var MANIFEST_FILE = ".jaggers-sync-manifest.json";
 function getManifestPath(projectDir) {
-  return (0, import_path18.join)(projectDir, MANIFEST_FILE);
+  return (0, import_path19.join)(projectDir, MANIFEST_FILE);
 }
 
 // src/commands/status.ts
-var import_fs_extra19 = __toESM(require_lib(), 1);
-var import_path19 = __toESM(require("path"), 1);
+var import_fs_extra20 = __toESM(require_lib(), 1);
+var import_path20 = __toESM(require("path"), 1);
 function formatTargetLabel(target) {
   const normalized = target.replace(/\\/g, "/").toLowerCase();
   if (normalized.endsWith("/.agents/skills") || normalized.includes("/.agents/skills/")) return "~/.agents/skills";
   if (normalized.endsWith("/.claude") || normalized.includes("/.claude/")) return "~/.claude";
-  return import_path19.default.basename(target);
+  return import_path20.default.basename(target);
 }
 function formatRelativeTime(timestamp) {
   const now = Date.now();
@@ -50137,7 +50238,7 @@ function createStatusCommand() {
     const candidates = getCandidatePaths();
     const targets = [];
     for (const c of candidates) {
-      if (await import_fs_extra19.default.pathExists(c.path)) targets.push(c.path);
+      if (await import_fs_extra20.default.pathExists(c.path)) targets.push(c.path);
     }
     if (targets.length === 0) {
       console.log(kleur_default.yellow("\n  No agent environments found (~/.claude, ~/.agents/skills)\n"));
@@ -50148,8 +50249,8 @@ function createStatusCommand() {
       const manifestPath = getManifestPath(target);
       let lastSync = null;
       try {
-        if (await import_fs_extra19.default.pathExists(manifestPath)) {
-          const manifest = await import_fs_extra19.default.readJson(manifestPath);
+        if (await import_fs_extra20.default.pathExists(manifestPath)) {
+          const manifest = await import_fs_extra20.default.readJson(manifestPath);
           if (manifest.lastSync) lastSync = manifest.lastSync;
         }
       } catch {
@@ -50378,9 +50479,9 @@ function createHelpCommand() {
 }
 
 // src/commands/clean.ts
-var import_fs_extra20 = __toESM(require_lib(), 1);
-var import_path20 = __toESM(require("path"), 1);
-var import_os6 = require("os");
+var import_fs_extra21 = __toESM(require_lib(), 1);
+var import_path21 = __toESM(require("path"), 1);
+var import_os7 = require("os");
 var CANONICAL_HOOKS = /* @__PURE__ */ new Set([
   "using-xtrm-reminder.mjs",
   "beads-gate-core.mjs",
@@ -50442,18 +50543,18 @@ var IGNORED_ITEMS2 = /* @__PURE__ */ new Set([
   "node_modules"
 ]);
 async function cleanHooks(dryRun) {
-  const hooksDir = import_path20.default.join((0, import_os6.homedir)(), ".claude", "hooks");
+  const hooksDir = import_path21.default.join((0, import_os7.homedir)(), ".claude", "hooks");
   const removed = [];
   const cache = [];
-  if (!await import_fs_extra20.default.pathExists(hooksDir)) {
+  if (!await import_fs_extra21.default.pathExists(hooksDir)) {
     return { removed, cache };
   }
-  const entries = await import_fs_extra20.default.readdir(hooksDir);
+  const entries = await import_fs_extra21.default.readdir(hooksDir);
   for (const entry of entries) {
     if (IGNORED_ITEMS2.has(entry)) {
       if (!dryRun) {
-        const fullPath2 = import_path20.default.join(hooksDir, entry);
-        await import_fs_extra20.default.remove(fullPath2);
+        const fullPath2 = import_path21.default.join(hooksDir, entry);
+        await import_fs_extra21.default.remove(fullPath2);
       }
       cache.push(entry);
       continue;
@@ -50461,11 +50562,11 @@ async function cleanHooks(dryRun) {
     if (CANONICAL_HOOKS.has(entry)) {
       continue;
     }
-    const fullPath = import_path20.default.join(hooksDir, entry);
-    const stat = await import_fs_extra20.default.stat(fullPath);
+    const fullPath = import_path21.default.join(hooksDir, entry);
+    const stat = await import_fs_extra21.default.stat(fullPath);
     if (stat.isFile() || stat.isDirectory() && IGNORED_ITEMS2.has(entry)) {
       if (!dryRun) {
-        await import_fs_extra20.default.remove(fullPath);
+        await import_fs_extra21.default.remove(fullPath);
       }
       removed.push(entry);
     }
@@ -50473,12 +50574,12 @@ async function cleanHooks(dryRun) {
   return { removed, cache };
 }
 async function cleanSkills(dryRun) {
-  const skillsDir = import_path20.default.join((0, import_os6.homedir)(), ".agents", "skills");
+  const skillsDir = import_path21.default.join((0, import_os7.homedir)(), ".agents", "skills");
   const removed = [];
-  if (!await import_fs_extra20.default.pathExists(skillsDir)) {
+  if (!await import_fs_extra21.default.pathExists(skillsDir)) {
     return removed;
   }
-  const entries = await import_fs_extra20.default.readdir(skillsDir);
+  const entries = await import_fs_extra21.default.readdir(skillsDir);
   for (const entry of entries) {
     if (IGNORED_ITEMS2.has(entry)) {
       continue;
@@ -50489,11 +50590,11 @@ async function cleanSkills(dryRun) {
     if (CANONICAL_SKILLS.has(entry)) {
       continue;
     }
-    const fullPath = import_path20.default.join(skillsDir, entry);
-    const stat = await import_fs_extra20.default.stat(fullPath);
+    const fullPath = import_path21.default.join(skillsDir, entry);
+    const stat = await import_fs_extra21.default.stat(fullPath);
     if (stat.isDirectory()) {
       if (!dryRun) {
-        await import_fs_extra20.default.remove(fullPath);
+        await import_fs_extra21.default.remove(fullPath);
       }
       removed.push(entry);
     }
@@ -50501,14 +50602,14 @@ async function cleanSkills(dryRun) {
   return removed;
 }
 async function cleanOrphanedHookEntries(dryRun, repoRoot) {
-  const settingsPath = import_path20.default.join((0, import_os6.homedir)(), ".claude", "settings.json");
+  const settingsPath = import_path21.default.join((0, import_os7.homedir)(), ".claude", "settings.json");
   const removed = [];
-  if (!await import_fs_extra20.default.pathExists(settingsPath)) {
+  if (!await import_fs_extra21.default.pathExists(settingsPath)) {
     return removed;
   }
   let settings = {};
   try {
-    settings = await import_fs_extra20.default.readJson(settingsPath);
+    settings = await import_fs_extra21.default.readJson(settingsPath);
   } catch {
     return removed;
   }
@@ -50524,10 +50625,10 @@ async function cleanOrphanedHookEntries(dryRun, repoRoot) {
   canonicalScripts.add("gitnexus/gitnexus-hook.cjs");
   const canonicalWiringKeys = /* @__PURE__ */ new Map();
   if (repoRoot) {
-    const hooksJsonPath = import_path20.default.join(repoRoot, "config", "hooks.json");
+    const hooksJsonPath = import_path21.default.join(repoRoot, "config", "hooks.json");
     try {
-      if (await import_fs_extra20.default.pathExists(hooksJsonPath)) {
-        const hooksJson = await import_fs_extra20.default.readJson(hooksJsonPath);
+      if (await import_fs_extra21.default.pathExists(hooksJsonPath)) {
+        const hooksJson = await import_fs_extra21.default.readJson(hooksJsonPath);
         for (const [event, entries] of Object.entries(hooksJson.hooks ?? {})) {
           for (const entry of entries) {
             const script = entry.script;
@@ -50589,7 +50690,7 @@ async function cleanOrphanedHookEntries(dryRun, repoRoot) {
     }
   }
   if (modified && !dryRun) {
-    await import_fs_extra20.default.writeJson(settingsPath, settings, { spaces: 2 });
+    await import_fs_extra21.default.writeJson(settingsPath, settings, { spaces: 2 });
   }
   return removed;
 }
@@ -51512,12 +51613,12 @@ async function pickRuntime() {
 }
 
 // src/commands/docs.ts
-var import_fs_extra23 = __toESM(require_lib(), 1);
-var import_path23 = __toESM(require("path"), 1);
+var import_fs_extra24 = __toESM(require_lib(), 1);
+var import_path24 = __toESM(require("path"), 1);
 
 // src/utils/docs-scanner.ts
-var import_fs_extra21 = __toESM(require_lib(), 1);
-var import_path21 = __toESM(require("path"), 1);
+var import_fs_extra22 = __toESM(require_lib(), 1);
+var import_path22 = __toESM(require("path"), 1);
 function parseFrontmatter(content) {
   const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
   if (!match) return null;
@@ -51559,22 +51660,22 @@ async function scanDocFiles(repoRoot, options = {}) {
   const { dir, pattern, filter, recursive = true } = options;
   let gitignorePatterns = [];
   try {
-    const raw = await import_fs_extra21.default.readFile(import_path21.default.join(repoRoot, ".gitignore"), "utf8");
+    const raw = await import_fs_extra22.default.readFile(import_path22.default.join(repoRoot, ".gitignore"), "utf8");
     gitignorePatterns = parseGitignorePatterns(raw);
   } catch {
   }
   const results = [];
-  const startDir = dir ? import_path21.default.join(repoRoot, dir) : repoRoot;
+  const startDir = dir ? import_path22.default.join(repoRoot, dir) : repoRoot;
   async function walk(dirPath) {
     let entries;
     try {
-      entries = await import_fs_extra21.default.readdir(dirPath, { withFileTypes: true });
+      entries = await import_fs_extra22.default.readdir(dirPath, { withFileTypes: true });
     } catch {
       return;
     }
     for (const entry of entries) {
-      const fullPath = import_path21.default.join(dirPath, entry.name);
-      const relPath = import_path21.default.relative(repoRoot, fullPath).replace(/\\/g, "/");
+      const fullPath = import_path22.default.join(dirPath, entry.name);
+      const relPath = import_path22.default.relative(repoRoot, fullPath).replace(/\\/g, "/");
       if (entry.isDirectory()) {
         if (ALWAYS_SKIP.has(entry.name)) continue;
         if (matchesGitignore(relPath, gitignorePatterns)) continue;
@@ -51587,8 +51688,8 @@ async function scanDocFiles(repoRoot, options = {}) {
       if (pattern && !entry.name.includes(pattern)) continue;
       let docEntry;
       try {
-        const stat = await import_fs_extra21.default.stat(fullPath);
-        const content = await import_fs_extra21.default.readFile(fullPath, "utf8");
+        const stat = await import_fs_extra22.default.stat(fullPath);
+        const content = await import_fs_extra22.default.readFile(fullPath, "utf8");
         const frontmatter = parseFrontmatter(content);
         if (filter && (!frontmatter || frontmatter[filter.field] !== filter.value)) continue;
         docEntry = {
@@ -51617,13 +51718,13 @@ async function scanDocFiles(repoRoot, options = {}) {
 }
 
 // src/utils/docs-cache.ts
-var import_fs_extra22 = __toESM(require_lib(), 1);
-var import_path22 = __toESM(require("path"), 1);
-var CACHE_PATH = import_path22.default.join(".xtrm", "cache", "docs-list.json");
+var import_fs_extra23 = __toESM(require_lib(), 1);
+var import_path23 = __toESM(require("path"), 1);
+var CACHE_PATH = import_path23.default.join(".xtrm", "cache", "docs-list.json");
 var DEFAULT_TTL_MS = 6e4;
 async function readCache(repoRoot) {
   try {
-    const raw = await import_fs_extra22.default.readFile(import_path22.default.join(repoRoot, CACHE_PATH), "utf8");
+    const raw = await import_fs_extra23.default.readFile(import_path23.default.join(repoRoot, CACHE_PATH), "utf8");
     const parsed = JSON.parse(raw);
     parsed.entries = parsed.entries.map((e) => ({
       ...e,
@@ -51635,14 +51736,14 @@ async function readCache(repoRoot) {
   }
 }
 async function writeCache(repoRoot, entries) {
-  const cachePath = import_path22.default.join(repoRoot, CACHE_PATH);
-  await import_fs_extra22.default.ensureDir(import_path22.default.dirname(cachePath));
+  const cachePath = import_path23.default.join(repoRoot, CACHE_PATH);
+  await import_fs_extra23.default.ensureDir(import_path23.default.dirname(cachePath));
   const cache = {
     timestamp: Date.now(),
     repoRoot,
     entries
   };
-  await import_fs_extra22.default.writeFile(cachePath, JSON.stringify(cache, null, 2), "utf8");
+  await import_fs_extra23.default.writeFile(cachePath, JSON.stringify(cache, null, 2), "utf8");
 }
 function isCacheValid(cache, entries, ttlMs = DEFAULT_TTL_MS) {
   if (Date.now() - cache.timestamp > ttlMs) return false;
@@ -51852,23 +51953,23 @@ function buildReport(findings, docsChecked) {
 var REQUIRED_FIELDS = /* @__PURE__ */ new Set(["title", "type", "status", "updated_at", "version"]);
 async function collectDocFiles(repoRoot, filterPattern) {
   const candidates = [];
-  const docsDir = import_path23.default.join(repoRoot, "docs");
-  if (await import_fs_extra23.default.pathExists(docsDir)) {
-    const entries = await import_fs_extra23.default.readdir(docsDir);
+  const docsDir = import_path24.default.join(repoRoot, "docs");
+  if (await import_fs_extra24.default.pathExists(docsDir)) {
+    const entries = await import_fs_extra24.default.readdir(docsDir);
     for (const entry of entries) {
-      if (entry.endsWith(".md")) candidates.push(import_path23.default.join(docsDir, entry));
+      if (entry.endsWith(".md")) candidates.push(import_path24.default.join(docsDir, entry));
     }
   }
   const results = [];
   for (const filePath of candidates) {
-    const rel = import_path23.default.relative(repoRoot, filePath);
-    if (filterPattern && !rel.includes(filterPattern) && !import_path23.default.basename(filePath).includes(filterPattern)) {
+    const rel = import_path24.default.relative(repoRoot, filePath);
+    if (filterPattern && !rel.includes(filterPattern) && !import_path24.default.basename(filePath).includes(filterPattern)) {
       continue;
     }
     let entry;
     try {
-      const stat = await import_fs_extra23.default.stat(filePath);
-      const content = await import_fs_extra23.default.readFile(filePath, "utf8");
+      const stat = await import_fs_extra24.default.stat(filePath);
+      const content = await import_fs_extra24.default.readFile(filePath, "utf8");
       const frontmatter = parseFrontmatter(content);
       entry = {
         filePath,
@@ -52076,7 +52177,7 @@ function createDocsCommand() {
       const docContents = /* @__PURE__ */ new Map();
       for (const doc of docEntries) {
         try {
-          const content = await import_fs_extra23.default.readFile(doc.filePath, "utf8");
+          const content = await import_fs_extra24.default.readFile(doc.filePath, "utf8");
           docContents.set(doc.relativePath, content);
         } catch {
         }
@@ -52123,7 +52224,7 @@ function createDocsCommand() {
         if (!fm || !fm[field]) {
           if (opts.fix && field === "updated_at") {
             try {
-              const content = await import_fs_extra23.default.readFile(entry.filePath, "utf8");
+              const content = await import_fs_extra24.default.readFile(entry.filePath, "utf8");
               const today = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
               let fixed;
               if (content.startsWith("---")) {
@@ -52136,7 +52237,7 @@ updated_at: ${today}
 
 ${content}`;
               }
-              await import_fs_extra23.default.writeFile(entry.filePath, fixed, "utf8");
+              await import_fs_extra24.default.writeFile(entry.filePath, fixed, "utf8");
               autoFixed.push(`${rel}: added updated_at: ${today}`);
             } catch {
               findings.push({ severity: "error", file: rel, message: `Missing required field: ${field}` });
@@ -52172,7 +52273,7 @@ ${content}`;
         });
       }
       try {
-        const content = await import_fs_extra23.default.readFile(entry.filePath, "utf8");
+        const content = await import_fs_extra24.default.readFile(entry.filePath, "utf8");
         const linkRe = /\[([^\]]+)\]\(([^)]+)\)/g;
         let m;
         while ((m = linkRe.exec(content)) !== null) {
@@ -52180,7 +52281,7 @@ ${content}`;
           if (href.startsWith("#") || href.startsWith("http") || href.startsWith("mailto:")) continue;
           const target = href.split("#")[0];
           if (!target.endsWith(".md")) continue;
-          const resolved = import_path23.default.join(import_path23.default.dirname(rel), target).replace(/\\/g, "/");
+          const resolved = import_path24.default.join(import_path24.default.dirname(rel), target).replace(/\\/g, "/");
           if (!knownPaths.has(resolved)) {
             findings.push({
               severity: "warning",
@@ -52588,8 +52689,8 @@ function createDebugCommand() {
 }
 
 // src/commands/report.ts
-var import_fs_extra24 = __toESM(require_lib(), 1);
-var import_path24 = __toESM(require("path"), 1);
+var import_fs_extra25 = __toESM(require_lib(), 1);
+var import_path25 = __toESM(require("path"), 1);
 var import_node_child_process15 = require("child_process");
 function run2(cmd, args, cwd) {
   const r = (0, import_node_child_process15.spawnSync)(cmd, args, { cwd, encoding: "utf8", stdio: "pipe" });
@@ -52686,18 +52787,18 @@ function collectOpenIssues(cwd) {
   return issues;
 }
 function collectSpecialistJobs(cwd) {
-  const jobsDir = import_path24.default.join(cwd, ".specialists", "jobs");
-  if (!import_fs_extra24.default.pathExistsSync(jobsDir)) return [];
+  const jobsDir = import_path25.default.join(cwd, ".specialists", "jobs");
+  if (!import_fs_extra25.default.pathExistsSync(jobsDir)) return [];
   const jobs = [];
   try {
-    const dirs = import_fs_extra24.default.readdirSync(jobsDir).filter(
-      (d) => import_fs_extra24.default.statSync(import_path24.default.join(jobsDir, d)).isDirectory()
+    const dirs = import_fs_extra25.default.readdirSync(jobsDir).filter(
+      (d) => import_fs_extra25.default.statSync(import_path25.default.join(jobsDir, d)).isDirectory()
     );
     for (const dir of dirs) {
-      const statusFile = import_path24.default.join(jobsDir, dir, "status.json");
-      if (!import_fs_extra24.default.pathExistsSync(statusFile)) continue;
+      const statusFile = import_path25.default.join(jobsDir, dir, "status.json");
+      if (!import_fs_extra25.default.pathExistsSync(statusFile)) continue;
       try {
-        const data = JSON.parse(import_fs_extra24.default.readFileSync(statusFile, "utf8"));
+        const data = JSON.parse(import_fs_extra25.default.readFileSync(statusFile, "utf8"));
         jobs.push({
           name: dir,
           status: data.status ?? "unknown",
@@ -52883,60 +52984,60 @@ async function generateReport(cwd) {
     specialistJobs,
     memories
   });
-  const reportsDir = import_path24.default.join(cwd, ".xtrm", "reports");
-  await import_fs_extra24.default.ensureDir(reportsDir);
+  const reportsDir = import_path25.default.join(cwd, ".xtrm", "reports");
+  await import_fs_extra25.default.ensureDir(reportsDir);
   const filename = `${date5}-${sessionHash}.md`;
-  const filePath = import_path24.default.join(reportsDir, filename);
-  await import_fs_extra24.default.writeFile(filePath, skeleton, "utf8");
+  const filePath = import_path25.default.join(reportsDir, filename);
+  await import_fs_extra25.default.writeFile(filePath, skeleton, "utf8");
   return filePath;
 }
 async function showReport(cwd, target) {
-  const reportsDir = import_path24.default.join(cwd, ".xtrm", "reports");
-  if (!await import_fs_extra24.default.pathExists(reportsDir)) {
+  const reportsDir = import_path25.default.join(cwd, ".xtrm", "reports");
+  if (!await import_fs_extra25.default.pathExists(reportsDir)) {
     console.error(kleur_default.red("\n  No reports found at .xtrm/reports/\n"));
     process.exit(1);
   }
   let filePath;
   if (target) {
-    if (await import_fs_extra24.default.pathExists(target)) {
+    if (await import_fs_extra25.default.pathExists(target)) {
       filePath = target;
     } else {
-      const candidate = import_path24.default.join(reportsDir, target.endsWith(".md") ? target : `${target}.md`);
-      if (await import_fs_extra24.default.pathExists(candidate)) {
+      const candidate = import_path25.default.join(reportsDir, target.endsWith(".md") ? target : `${target}.md`);
+      if (await import_fs_extra25.default.pathExists(candidate)) {
         filePath = candidate;
       } else {
-        const files = (await import_fs_extra24.default.readdir(reportsDir)).filter((f) => f.endsWith(".md") && f.includes(target));
+        const files = (await import_fs_extra25.default.readdir(reportsDir)).filter((f) => f.endsWith(".md") && f.includes(target));
         if (files.length === 0) {
           console.error(kleur_default.red(`
   No report matching "${target}"
 `));
           process.exit(1);
         }
-        filePath = import_path24.default.join(reportsDir, files[files.length - 1]);
+        filePath = import_path25.default.join(reportsDir, files[files.length - 1]);
       }
     }
   } else {
-    const files = (await import_fs_extra24.default.readdir(reportsDir)).filter((f) => f.endsWith(".md")).sort();
+    const files = (await import_fs_extra25.default.readdir(reportsDir)).filter((f) => f.endsWith(".md")).sort();
     if (files.length === 0) {
       console.error(kleur_default.red("\n  No reports found\n"));
       process.exit(1);
     }
-    filePath = import_path24.default.join(reportsDir, files[files.length - 1]);
+    filePath = import_path25.default.join(reportsDir, files[files.length - 1]);
   }
-  const content = await import_fs_extra24.default.readFile(filePath, "utf8");
-  const rel = import_path24.default.relative(cwd, filePath);
+  const content = await import_fs_extra25.default.readFile(filePath, "utf8");
+  const rel = import_path25.default.relative(cwd, filePath);
   console.log(kleur_default.dim(`
   ${rel}
 `));
   console.log(content);
 }
 async function listReports(cwd) {
-  const reportsDir = import_path24.default.join(cwd, ".xtrm", "reports");
-  if (!await import_fs_extra24.default.pathExists(reportsDir)) {
+  const reportsDir = import_path25.default.join(cwd, ".xtrm", "reports");
+  if (!await import_fs_extra25.default.pathExists(reportsDir)) {
     console.log(kleur_default.dim("\n  No reports directory at .xtrm/reports/\n"));
     return;
   }
-  const files = (await import_fs_extra24.default.readdir(reportsDir)).filter((f) => f.endsWith(".md")).sort();
+  const files = (await import_fs_extra25.default.readdir(reportsDir)).filter((f) => f.endsWith(".md")).sort();
   if (files.length === 0) {
     console.log(kleur_default.dim("\n  No reports found\n"));
     return;
@@ -52945,8 +53046,8 @@ async function listReports(cwd) {
   Session Reports (${files.length})
 `));
   for (const file2 of files) {
-    const filePath = import_path24.default.join(reportsDir, file2);
-    const content = await import_fs_extra24.default.readFile(filePath, "utf8");
+    const filePath = import_path25.default.join(reportsDir, file2);
+    const content = await import_fs_extra25.default.readFile(filePath, "utf8");
     const fmMatch = content.match(/^---\n([\s\S]*?)\n---/);
     let summary = "";
     if (fmMatch) {
@@ -52962,13 +53063,13 @@ async function listReports(cwd) {
   console.log("");
 }
 async function diffReports(cwd, a, b) {
-  const reportsDir = import_path24.default.join(cwd, ".xtrm", "reports");
+  const reportsDir = import_path25.default.join(cwd, ".xtrm", "reports");
   const resolve4 = async (ref) => {
-    if (await import_fs_extra24.default.pathExists(ref)) return ref;
-    const candidate = import_path24.default.join(reportsDir, ref.endsWith(".md") ? ref : `${ref}.md`);
-    if (await import_fs_extra24.default.pathExists(candidate)) return candidate;
-    const files = (await import_fs_extra24.default.readdir(reportsDir)).filter((f) => f.endsWith(".md") && f.includes(ref));
-    if (files.length > 0) return import_path24.default.join(reportsDir, files[files.length - 1]);
+    if (await import_fs_extra25.default.pathExists(ref)) return ref;
+    const candidate = import_path25.default.join(reportsDir, ref.endsWith(".md") ? ref : `${ref}.md`);
+    if (await import_fs_extra25.default.pathExists(candidate)) return candidate;
+    const files = (await import_fs_extra25.default.readdir(reportsDir)).filter((f) => f.endsWith(".md") && f.includes(ref));
+    if (files.length > 0) return import_path25.default.join(reportsDir, files[files.length - 1]);
     console.error(kleur_default.red(`  No report matching "${ref}"`));
     process.exit(1);
   };
@@ -52987,7 +53088,7 @@ function createReportCommand() {
     const cwd = process.cwd();
     console.log(kleur_default.dim("\n  Collecting session data..."));
     const filePath = await generateReport(cwd);
-    const rel = import_path24.default.relative(cwd, filePath);
+    const rel = import_path25.default.relative(cwd, filePath);
     console.log(t.success(`
   Generated: ${rel}`));
     console.log(kleur_default.dim("  Fill <!-- FILL --> sections with session insights, then commit.\n"));
@@ -53006,7 +53107,7 @@ function createReportCommand() {
 }
 
 // src/commands/skills.ts
-var import_fs_extra25 = __toESM(require_lib(), 1);
+var import_fs_extra26 = __toESM(require_lib(), 1);
 var import_node_os7 = __toESM(require("os"), 1);
 var import_node_path13 = __toESM(require("path"), 1);
 function resolveScope(opts) {
@@ -53023,22 +53124,22 @@ async function resolveScopeRoot(scope) {
 }
 async function resolveDefaultSkillsRoot(scopeRoot) {
   const registryRoot = import_node_path13.default.join(scopeRoot, ".xtrm", "skills", "default");
-  if (!await import_fs_extra25.default.pathExists(registryRoot)) {
+  if (!await import_fs_extra26.default.pathExists(registryRoot)) {
     return null;
   }
   return { root: registryRoot, source: "registry" };
 }
 async function collectDefaultSkills(root, source) {
-  const names = await import_fs_extra25.default.readdir(root);
+  const names = await import_fs_extra26.default.readdir(root);
   const skills = [];
   for (const name of names) {
     const skillPath = import_node_path13.default.join(root, name);
-    const stat = await import_fs_extra25.default.stat(skillPath).catch(() => null);
+    const stat = await import_fs_extra26.default.stat(skillPath).catch(() => null);
     if (!stat?.isDirectory()) {
       continue;
     }
     const skillFile = import_node_path13.default.join(skillPath, "SKILL.md");
-    if (!await import_fs_extra25.default.pathExists(skillFile)) {
+    if (!await import_fs_extra26.default.pathExists(skillFile)) {
       continue;
     }
     skills.push({

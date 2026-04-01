@@ -11,15 +11,15 @@ function resolvePkgRoot(): string {
         path.resolve(__dirname, '../../..'),
     ];
 
-    const match = candidates.find(candidate => fs.existsSync(path.join(candidate, 'project-skills')));
+    const match = candidates.find(candidate => fs.existsSync(path.join(candidate, '.xtrm', 'registry.json')));
     if (!match) {
-        throw new Error('Unable to locate project-skills directory from CLI runtime.');
+        throw new Error('Unable to locate package root from CLI runtime.');
     }
     return match;
 }
 
 const PKG_ROOT = resolvePkgRoot();
-const SKILLS_SRC = path.join(PKG_ROOT, 'project-skills', 'service-skills-set', '.claude');
+const SKILLS_SRC = path.join(PKG_ROOT, '.xtrm', 'skills', 'default', 'service-skills-set', '.claude');
 
 const TRINITY = [
     'creating-service-skills',
@@ -77,12 +77,24 @@ export function mergeSettingsHooks(existing: Record<string, unknown>): {
     const skipped: string[] = [];
 
     for (const [event, config] of Object.entries(SETTINGS_HOOKS)) {
-        if (event in hooks) {
-            skipped.push(event);
-        } else {
+        const existingEventHooks = hooks[event];
+
+        if (!Array.isArray(existingEventHooks)) {
             hooks[event] = config;
             added.push(event);
+            continue;
         }
+
+        const normalizedExisting = new Set(existingEventHooks.map(item => JSON.stringify(item)));
+        const additions = config.filter(item => !normalizedExisting.has(JSON.stringify(item)));
+
+        if (additions.length === 0) {
+            skipped.push(event);
+            continue;
+        }
+
+        hooks[event] = [...existingEventHooks, ...additions];
+        added.push(event);
     }
 
     return { result, added, skipped };
@@ -91,7 +103,7 @@ export function mergeSettingsHooks(existing: Record<string, unknown>): {
 export async function installSkills(projectRoot: string, skillsSrc: string = SKILLS_SRC): Promise<{ skill: string; status: 'installed' | 'updated' }[]> {
     const results: { skill: string; status: 'installed' | 'updated' }[] = [];
     for (const skill of TRINITY) {
-        const src = path.join(skillsSrc, skill);
+        const src = path.join(skillsSrc, 'skills', skill);
         const dest = path.join(projectRoot, '.claude', 'skills', skill);
         const existed = await fs.pathExists(dest);
         if (existed) {

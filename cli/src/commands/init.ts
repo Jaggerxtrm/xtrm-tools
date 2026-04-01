@@ -3,7 +3,11 @@ import kleur from 'kleur';
 import path from 'path';
 import fs from 'fs-extra';
 import { spawnSync } from 'child_process';
-import { installGitHooks as installServiceGitHooks } from './install-service-skills.js';
+import {
+    installGitHooks as installServiceGitHooks,
+    installSettings as installServiceSettings,
+    installSkills as installServiceSkills,
+} from './install-service-skills.js';
 import { runInstall, type InstallOpts } from './install.js';
 import { runClaudeRuntimeSyncPhase, renderClaudeRuntimePlanSummary } from '../core/claude-runtime-sync.js';
 import { inventoryDeps, renderBootstrapPlan, runMachineBootstrapPhase, type BootstrapPlan } from '../core/machine-bootstrap.js';
@@ -20,15 +24,14 @@ function resolvePkgRoot(): string {
         path.resolve(__dirname, '../../..'),
     ];
 
-    const match = candidates.find(candidate => fs.existsSync(path.join(candidate, 'project-skills')));
+    const match = candidates.find(candidate => fs.existsSync(path.join(candidate, '.xtrm', 'registry.json')));
     if (!match) {
-        throw new Error('Unable to locate project-skills directory from CLI runtime.');
+        throw new Error('Unable to locate package root from CLI runtime.');
     }
     return match;
 }
 
 const PKG_ROOT = resolvePkgRoot();
-const PROJECT_SKILLS_DIR = path.join(PKG_ROOT, 'project-skills');
 const MCP_CORE_CONFIG_PATH = path.join(PKG_ROOT, 'config', 'mcp_servers.json');
 const INSTRUCTIONS_DIR = path.join(PKG_ROOT, 'config', 'instructions');
 const XTRM_BLOCK_START = '<!-- xtrm:start -->';
@@ -307,25 +310,6 @@ export async function injectProjectInstructionHeaders(projectRoot: string): Prom
     }
 }
 
-export async function getAvailableProjectSkills(): Promise<string[]> {
-    if (!await fs.pathExists(PROJECT_SKILLS_DIR)) {
-        return [];
-    }
-
-    const entries = await fs.readdir(PROJECT_SKILLS_DIR);
-    const skills: string[] = [];
-
-    for (const entry of entries) {
-        const entryPath = path.join(PROJECT_SKILLS_DIR, entry);
-        const stat = await fs.stat(entryPath);
-        if (stat.isDirectory() && await fs.pathExists(path.join(entryPath, '.claude'))) {
-            skills.push(entry);
-        }
-    }
-
-    return skills.sort();
-}
-
 /**
  * Deep merge settings.json hooks without overwriting existing user hooks.
  * Appends new hooks to existing events intelligently.
@@ -497,233 +481,66 @@ export function deepMergeHooks(existing: Record<string, any>, incoming: Record<s
     return result;
 }
 
-export function extractReadmeDescription(readmeContent: string): string {
-    const lines = readmeContent.split('\n');
-    const headingIndex = lines.findIndex(line => line.trim().startsWith('# '));
-    const searchStart = headingIndex >= 0 ? headingIndex + 1 : 0;
-
-    for (const rawLine of lines.slice(searchStart)) {
-        const line = rawLine.trim();
-        if (!line || line.startsWith('#') || line.startsWith('[![') || line.startsWith('<')) {
-            continue;
-        }
-
-        return line
-            .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-            .replace(/[*_`]/g, '')
-            .trim();
-    }
-
-    return 'No description available';
-}
-
-/**
- * Install a project skill package into the current project.
- */
-export async function installProjectSkill(toolName: string, projectRootOverride?: string): Promise<void> {
-    const skillPath = path.join(PROJECT_SKILLS_DIR, toolName);
-
-    // Validation: Check if project skill exists
-    if (!await fs.pathExists(skillPath)) {
-        console.error(kleur.red(`\n✗ Project skill '${toolName}' not found.\n`));
-        console.error(kleur.dim(`  Available project skills:\n`));
-        await listProjectSkills();
-        process.exit(1);
-    }
-
-    // Get target project root
-    const projectRoot = projectRootOverride ?? getProjectRoot();
-    const claudeDir = path.join(projectRoot, '.claude');
-
-    console.log(kleur.dim(`\n  Installing project skill: ${kleur.cyan(toolName)}`));
-    console.log(kleur.dim(`  Target: ${projectRoot}\n`));
-
-    const skillClaudeDir = path.join(skillPath, '.claude');
-    const skillSettingsPath = path.join(skillClaudeDir, 'settings.json');
-    const skillSkillsDir = path.join(skillClaudeDir, 'skills');
-    const skillReadmePath = path.join(skillPath, 'README.md');
-
-    // Step 1: Hook Injection (deep merge settings.json)
-    if (await fs.pathExists(skillSettingsPath)) {
-        console.log(kleur.bold('── Installing Hooks ──────────────────────'));
-        const targetSettingsPath = path.join(claudeDir, 'settings.json');
-
-        await fs.mkdirp(path.dirname(targetSettingsPath));
-
-        let existingSettings: Record<string, any> = {};
-        if (await fs.pathExists(targetSettingsPath)) {
-            try {
-                existingSettings = JSON.parse(await fs.readFile(targetSettingsPath, 'utf8'));
-            } catch {
-                // malformed JSON — start fresh
-            }
-        }
-
-        const incomingSettings = JSON.parse(await fs.readFile(skillSettingsPath, 'utf8'));
-        
-        // First prune stale hooks not in canonical config
-        const { result: prunedSettings, removed } = pruneStaleHooks(existingSettings, incomingSettings);
-        if (removed.length > 0) {
-            console.log(kleur.yellow(`  ↳ Pruned ${removed.length} stale hook(s): ${removed.join(', ')}`));
-        }
-        
-        // Then merge canonical hooks
-        const mergedSettings = deepMergeHooks(prunedSettings, incomingSettings);
-
-        await fs.writeFile(targetSettingsPath, JSON.stringify(mergedSettings, null, 2) + '\n');
-        console.log(`${kleur.green('  ✓')} settings.json (hooks merged)`);
-    }
-
-    // Step 2: Skill Copy
-    if (await fs.pathExists(skillSkillsDir)) {
-        console.log(kleur.bold('\n── Installing Skills ─────────────────────'));
-        const targetSkillsDir = path.join(claudeDir, 'skills');
-
-        const skillEntries = await fs.readdir(skillSkillsDir);
-        for (const entry of skillEntries) {
-            const src = path.join(skillSkillsDir, entry);
-            const dest = path.join(targetSkillsDir, entry);
-            await fs.copy(src, dest, {
-                filter: (src: string) => !src.includes('.Zone.Identifier')
-                && !src.includes('__pycache__')
-                && !src.includes('.pytest_cache')
-                && !src.endsWith('.pyc'),
-            });
-            console.log(`${kleur.green('  ✓')} .claude/skills/${entry}/`);
-        }
-    }
-
-    // Step 2b: Copy additional Claude assets (hooks, docs, etc.) shipped with the skill
-    if (await fs.pathExists(skillClaudeDir)) {
-        const claudeEntries = await fs.readdir(skillClaudeDir);
-
-        for (const entry of claudeEntries) {
-            if (entry === 'settings.json' || entry === 'skills') {
-                continue;
-            }
-
-            const src = path.join(skillClaudeDir, entry);
-            const dest = path.join(claudeDir, entry);
-            await fs.copy(src, dest, {
-                filter: (src: string) => !src.includes('.Zone.Identifier')
-                && !src.includes('__pycache__')
-                && !src.includes('.pytest_cache')
-                && !src.endsWith('.pyc'),
-            });
-            console.log(`${kleur.green('  ✓')} .claude/${entry}/`);
-        }
-    }
-
-    // Step 2c: Symlink .agents/skills → ../.claude/skills for Pi compatibility
-    // .claude/skills is the SSOT; Pi reads .agents/skills natively from cwd.
-    const claudeSkillsDir = path.join(claudeDir, 'skills');
-    if (await fs.pathExists(claudeSkillsDir)) {
-        const agentsDir = path.join(projectRoot, '.agents');
-        const agentsSkillsLink = path.join(agentsDir, 'skills');
-        const symlinkTarget = path.join('..', '.claude', 'skills');
-
-        let needsSymlink = true;
-        if (await fs.pathExists(agentsSkillsLink)) {
-            try {
-                const stat = await fs.lstat(agentsSkillsLink);
-                if (stat.isSymbolicLink()) {
-                    const current = await fs.readlink(agentsSkillsLink);
-                    if (current === symlinkTarget) {
-                        needsSymlink = false;
-                    } else {
-                        await fs.remove(agentsSkillsLink); // stale symlink — recreate
-                    }
-                } else {
-                    console.log(kleur.yellow('  ⚠ .agents/skills/ is a real directory — skipping Pi symlink'));
-                    needsSymlink = false;
-                }
-            } catch {
-                needsSymlink = true;
-            }
-        }
-
-        if (needsSymlink) {
-            await fs.mkdirp(agentsDir);
-            await fs.symlink(symlinkTarget, agentsSkillsLink);
-            console.log(`${kleur.green('  ✓')} .agents/skills → ../.claude/skills`);
-        } else {
-            console.log(kleur.dim('  ✓ .agents/skills symlink already in place'));
-        }
-    }
-
-    // Step 3: Documentation Copy
-    if (await fs.pathExists(skillReadmePath)) {
-        console.log(kleur.bold('\n── Installing Documentation ──────────────'));
-        const docsDir = path.join(claudeDir, 'docs');
-        await fs.mkdirp(docsDir);
-
-        const destReadme = path.join(docsDir, `${toolName}-readme.md`);
-        await fs.copy(skillReadmePath, destReadme);
-        console.log(`${kleur.green('  ✓')} .claude/docs/${toolName}-readme.md`);
-    }
-
-    // Step 4: Post-Install Guidance
-    if (toolName === 'service-skills-set') {
-        console.log(kleur.bold('\n── Installing Git Hooks ─────────────────'));
-        await installServiceGitHooks(projectRoot, skillClaudeDir);
-        console.log(`${kleur.green('  ✓')} .githooks/pre-commit`);
-        console.log(`${kleur.green('  ✓')} .githooks/pre-push`);
-        console.log(`${kleur.green('  ✓')} activated in .git/hooks/`);
-    }
-
-    // Step 5: Post-Install Guidance
-    console.log(kleur.bold('\n── Post-Install Steps ────────────────────'));
-    console.log(kleur.yellow('\n  ⚠ IMPORTANT: Manual setup required!\n'));
-    console.log(kleur.white(`  ${toolName} requires additional configuration.`));
-    console.log(kleur.white(`  Please read: ${kleur.cyan('.claude/docs/' + toolName + '-readme.md')}\n`));
-
-    if (toolName === 'tdd-guard') {
-        const tddGuardCheck = spawnSync('tdd-guard', ['--version'], { stdio: 'pipe' });
-        if (tddGuardCheck.status !== 0) {
-            console.log(kleur.red('  ✗ tdd-guard CLI not found globally!\n'));
-            console.log(kleur.white('  Install the global CLI:'));
-            console.log(kleur.cyan('    npm install -g tdd-guard\n'));
-        } else {
-            console.log(kleur.green('  ✓ tdd-guard CLI found globally'));
-        }
-        console.log(kleur.white('\n  Install a test reporter (choose one):'));
-        console.log(kleur.dim('    npm install --save-dev tdd-guard-vitest    # Vitest'));
-        console.log(kleur.dim('    npm install --save-dev tdd-guard-jest      # Jest'));
-        console.log(kleur.dim('    pip install tdd-guard-pytest               # pytest\n'));
-    }
-
-    if (toolName === 'quality-gates') {
-        console.log(kleur.white('  Install language dependencies:\n'));
-        console.log(kleur.white('  TypeScript:'));
-        console.log(kleur.dim('    npm install --save-dev typescript eslint prettier'));
-        console.log(kleur.white('\n  Python:'));
-        console.log(kleur.dim('    pip install ruff mypy'));
-        console.log(kleur.white('\n  For TDD (test-first) enforcement, install separately:'));
-        console.log(kleur.dim('    npm install -g tdd-guard'));
-        console.log(kleur.dim('    xtrm install project tdd-guard\n'));
-    }
-
-    console.log(kleur.green('  ✓ Installation complete!\n'));
-}
-
-export async function installAllProjectSkills(projectRootOverride?: string): Promise<void> {
-    const skills = await getAvailableProjectSkills();
-
-    if (skills.length === 0) {
-        console.log(kleur.dim('  No project skills available.\n'));
+async function ensureAgentsSkillsSymlink(projectRoot: string): Promise<void> {
+    const sourceDir = path.join(projectRoot, '.xtrm', 'skills', 'default');
+    if (!await fs.pathExists(sourceDir)) {
         return;
     }
 
-    const projectRoot = projectRootOverride ?? getProjectRoot();
+    const agentsDir = path.join(projectRoot, '.agents');
+    const agentsSkillsLink = path.join(agentsDir, 'skills');
+    const symlinkTarget = path.join('..', '.xtrm', 'skills', 'default');
 
-    console.log(kleur.bold(`\nInstalling ${skills.length} project skills:\n`));
-    for (const skill of skills) {
-        console.log(kleur.dim(`  • ${skill}`));
+    let needsSymlink = true;
+    if (await fs.pathExists(agentsSkillsLink)) {
+        try {
+            const stat = await fs.lstat(agentsSkillsLink);
+            if (stat.isSymbolicLink()) {
+                const current = await fs.readlink(agentsSkillsLink);
+                if (current === symlinkTarget) {
+                    needsSymlink = false;
+                } else {
+                    await fs.remove(agentsSkillsLink);
+                }
+            } else {
+                console.log(kleur.yellow('  ⚠ .agents/skills/ is a real directory — skipping Pi symlink'));
+                return;
+            }
+        } catch {
+            needsSymlink = true;
+        }
     }
-    console.log('');
 
-    for (const skill of skills) {
-        await installProjectSkill(skill, projectRoot);
+    if (!needsSymlink) {
+        console.log(kleur.dim('  ✓ .agents/skills symlink already in place'));
+        return;
+    }
+
+    await fs.mkdirp(agentsDir);
+    await fs.symlink(symlinkTarget, agentsSkillsLink);
+    console.log(`${kleur.green('  ✓')} .agents/skills → ../.xtrm/skills/default`);
+}
+
+async function installServiceSkillHooks(projectRoot: string): Promise<void> {
+    const serviceSkillRoot = path.join(projectRoot, '.xtrm', 'skills', 'default', 'service-skills-set', '.claude');
+    if (!await fs.pathExists(serviceSkillRoot)) {
+        console.log(kleur.yellow('  ⚠ service-skills-set package not found under .xtrm/skills/default; skipping project hook wiring'));
+        return;
+    }
+
+    console.log(kleur.bold('Installing service-skills-set project hooks...'));
+    await installServiceSkills(projectRoot, serviceSkillRoot);
+    const { added, skipped } = await installServiceSettings(projectRoot);
+    const { hookFiles } = await installServiceGitHooks(projectRoot, serviceSkillRoot);
+
+    if (added.length > 0) {
+        console.log(kleur.dim(`  ↳ settings hooks added: ${added.join(', ')}`));
+    }
+    if (skipped.length > 0) {
+        console.log(kleur.dim(`  ↳ settings hooks already present: ${skipped.join(', ')}`));
+    }
+    if (hookFiles.some(file => file.status === 'added')) {
+        console.log(kleur.dim('  ↳ git hooks updated'));
     }
 }
 
@@ -823,7 +640,7 @@ function renderInitPlan(inventory: InitInventory): void {
         needsBdInit ? 'bd init — initialize beads workspace' : null,
         needsGitNexus ? 'gitnexus analyze — build code index' : null,
         'AGENTS.md + CLAUDE.md — workflow headers',
-        'project-skills — service-skills-set, quality-gates',
+        'service-skills-set hooks + git hooks wiring',
     ].filter(Boolean) as string[];
     for (const action of projActions) {
         console.log(`${kleur.cyan('  •')}  ${action}`);
@@ -853,13 +670,15 @@ async function confirmInitPlan(yes: boolean): Promise<boolean> {
 
 // ── Phase 7: Project Bootstrap ────────────────────────────────────────────────
 // Initializes project-level tooling: beads workspace, GitNexus index,
-// CLAUDE.md / AGENTS.md instruction headers, and project-skills.
+// CLAUDE.md / AGENTS.md instruction headers, service-skills hook wiring,
+// and .agents/skills symlink for Pi compatibility.
 
 async function runProjectBootstrap(projectRoot: string): Promise<void> {
     await runBdInitForProject(projectRoot);
     await injectProjectInstructionHeaders(projectRoot);
     await runGitNexusInitForProject(projectRoot);
-    await installAllProjectSkills(projectRoot);
+    await installServiceSkillHooks(projectRoot);
+    await ensureAgentsSkillsSymlink(projectRoot);
 }
 
 // ── Main Orchestrator ─────────────────────────────────────────────────────────
@@ -870,7 +689,7 @@ async function runProjectBootstrap(projectRoot: string): Promise<void> {
 //   4. Machine Bootstrap  — install missing system tools (bd, dolt, bv, pi, pnpm)
 //   5. Claude Runtime     — .xtrm hook wiring into .claude/settings.json
 //   6. Pi Runtime         — extensions + packages + skills sync (via runInstall)
-//   7. Project Bootstrap  — bd init, gitnexus index, CLAUDE.md/AGENTS.md headers, project-skills
+//   7. Project Bootstrap  — bd init, gitnexus index, CLAUDE.md/AGENTS.md headers, service hook wiring
 //   8. Verification       — unified summary of all phase outcomes
 //   9. Next Steps         — guidance based on verification result
 
@@ -1021,60 +840,6 @@ async function runGitNexusInitForProject(projectRoot: string): Promise<void> {
     if (analyze.stdout) process.stdout.write(analyze.stdout);
     if (analyze.stderr) process.stderr.write(analyze.stderr);
     console.log(kleur.yellow(`  ⚠ gitnexus analyze exited with code ${analyze.status}`));
-}
-
-/**
- * List available project skills.
- */
-async function listProjectSkills(): Promise<void> {
-    const entries = await getAvailableProjectSkills();
-    if (entries.length === 0) {
-        console.log(kleur.dim('  No project skills available.\n'));
-        return;
-    }
-
-    const skills: Array<{ name: string; description: string }> = [];
-
-    for (const entry of entries) {
-        const readmePath = path.join(PROJECT_SKILLS_DIR, entry, 'README.md');
-        let description = 'No description available';
-
-        if (await fs.pathExists(readmePath)) {
-            const readmeContent = await fs.readFile(readmePath, 'utf8');
-            description = extractReadmeDescription(readmeContent).slice(0, 80);
-        }
-
-        skills.push({ name: entry, description });
-    }
-
-    if (skills.length === 0) {
-        console.log(kleur.dim('  No project skills available.\n'));
-        return;
-    }
-
-    console.log(kleur.bold('\nAvailable Project Skills:\n'));
-
-    // Dynamic import for Table
-    const Table = require('cli-table3');
-    const table = new Table({
-        head: [kleur.cyan('Skill'), kleur.cyan('Description')],
-        colWidths: [25, 60],
-        style: { head: [], border: [] },
-    });
-
-    for (const skill of skills) {
-        table.push([kleur.white(skill.name), kleur.dim(skill.description)]);
-    }
-
-    console.log(table.toString());
-
-    console.log(kleur.bold('\n\nUsage (legacy):\n'));
-    console.log(kleur.dim('  xtrm install project <skill-name>   Install a legacy project skill'));
-    console.log(kleur.dim('  xtrm install project all            Install all legacy project skills'));
-    console.log(kleur.dim('  xtrm install project list           List available legacy skills\n'));
-
-    console.log(kleur.bold('Preferred:\n'));
-    console.log(kleur.dim('  xtrm init                           Bootstrap project data for global hooks/skills\n'));
 }
 
 function getProjectRoot(): string {

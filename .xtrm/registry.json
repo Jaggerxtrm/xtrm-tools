@@ -391,6 +391,82 @@
           "hash": "98ce1865de021c57f416bb41c9630a9d0ee85c790e8d512d4a8c9f2ebc63b501",
           "version": "0.7.0"
         },
+        "quality-gates/.claude/hooks/hook-config.json": {
+          "hash": "f29b118917ec714bfa2dfefe478ea512f84b8f7ad80aebf647011b22d18a2717",
+          "version": "0.7.0"
+        },
+        "quality-gates/.claude/hooks/quality-check.cjs": {
+          "hash": "c6bbff2b05dcb810a5dc7437104a253398ef162b4a2403ba676ee136fe698dfb",
+          "version": "0.7.0"
+        },
+        "quality-gates/.claude/hooks/quality-check.py": {
+          "hash": "b46e1361dcdc0b41401c3a2b5872356391b2bc9877c4a72c058bc158eee82118",
+          "version": "0.7.0"
+        },
+        "quality-gates/.claude/settings.json": {
+          "hash": "78922a784ee78e9e50587e93628cd3b9d4dfbe49087adc4514e6781cea38cbb9",
+          "version": "0.7.0"
+        },
+        "quality-gates/.claude/skills/using-quality-gates/SKILL.md": {
+          "hash": "0570f34a7fbca7f4a53fd751503a78152401b0697e95baf06bf1c221b1000f83",
+          "version": "0.7.0"
+        },
+        "quality-gates/evals/evals.json": {
+          "hash": "2997124435c7cb6b773ae176d7475e76fd9299e7faa8436d27d745698b0d6ed2",
+          "version": "0.7.0"
+        },
+        "quality-gates/README.md": {
+          "hash": "f161db6c1c6b6cea904057bb89dba559d8518d8e1bdbba7838a343162c4e6cf5",
+          "version": "0.7.0"
+        },
+        "quality-gates/workspace/iteration-1/edge-case-auto-fix-verification/with_skill/outputs/response.md": {
+          "hash": "be1bd60d6f7e820c9cbb4d6b0b154ebd60531e7cf30070914f88d0171e56dfb7",
+          "version": "0.7.0"
+        },
+        "quality-gates/workspace/iteration-1/edge-case-mixed-language-project/with_skill/outputs/response.md": {
+          "hash": "b04e06a67b8b3746c0abffcd1c1769172ecd71f298c29348758df04842159fee",
+          "version": "0.7.0"
+        },
+        "quality-gates/workspace/iteration-1/eval-summary.md": {
+          "hash": "65f0689c54e6f6eda68d0a86a1cef83324e11f9128ddc07c67339fddfaf156de",
+          "version": "0.7.0"
+        },
+        "quality-gates/workspace/iteration-1/FINAL-EVAL-SUMMARY.md": {
+          "hash": "e336e5c7b936fc110076c3e18417db685a187b61c31de6c160bcb1f192aa4dab",
+          "version": "0.7.0"
+        },
+        "quality-gates/workspace/iteration-1/partial-install-python-only/with_skill/outputs/response.md": {
+          "hash": "3f00e57f56e8364b62af15d9ec247f6d2d22568cc115ff855248d2f8febf071a",
+          "version": "0.7.0"
+        },
+        "quality-gates/workspace/iteration-1/python-refactor-request/with_skill/outputs/response.md": {
+          "hash": "6b24e12b82fd005784c9e538eca76b94819880f21e71886aecb962e504eee078",
+          "version": "0.7.0"
+        },
+        "quality-gates/workspace/iteration-1/quality-gate-error-fix/with_skill/outputs/response.md": {
+          "hash": "56e4170d3093952d223cab07d36003773e52951ba4a474c52c7d87ed287f4b9b",
+          "version": "0.7.0"
+        },
+        "quality-gates/workspace/iteration-1/should-not-trigger-general-chat/with_skill/outputs/response.md": {
+          "hash": "7fc4b4166bc7b4d2c4986688a064c1954cf7a61830b797be0d9b73293f500a61",
+          "version": "0.7.0"
+        },
+        "quality-gates/workspace/iteration-1/should-not-trigger-math-question/with_skill/outputs/response.md": {
+          "hash": "1704dc4936ba99371f72ad2af257e88ecd7ce31503e94db5e8331559e86a5432",
+          "version": "0.7.0"
+        },
+        "quality-gates/workspace/iteration-1/should-not-trigger-unrelated-coding/with_skill/outputs/response.md": {
+          "hash": "584b15e74029287511c57eee9095638ad3ce503ed144c6fc2843f9c8382f84b4",
+          "version": "0.7.0"
+        },
+        "quality-gates/workspace/iteration-1/tdd-guard-blocking-confusion/with_skill/outputs/response.md": {
+          "hash": "ce0b097032c05e32bb129f8cf50b7de41fbe2d2eb3a16eba79236dcc70cd5f10",
+          "version": "0.7.0"
+        },
+        "quality-gates/workspace/iteration-1/typescript-feature-with-tests/with_skill/outputs/response.md": {
+          "hash": "dbb5fdd2b2cde70654ba45440172437de10f7418f6be8057893cce36dcec3854",
+          "version": "0.7.0"
+        },
         "README.txt": {
           "hash": "d28484cda62e8712fecbaf0fa8871d4f72fb7188557e5bc362caca79ef72cd45",
           "version": "0.7.0"
@@ -513,6 +589,90 @@
         },
         "senior-security/SKILL.md": {
           "hash": "d7e26f159d81a9e5ca9a7bc9ff3af116876068349d727b894c6b50020efbd7a7",
+          "version": "0.7.0"
+        },
+        "service-skills-set/.claude/git-hooks/doc_reminder.py": {
+          "hash": "90d33305dcc8fcc73bae2f9ad7390be118617743dbb38808d61710dc1662879b",
+          "version": "0.7.0"
+        },
+        "service-skills-set/.claude/git-hooks/skill_staleness.py": {
+          "hash": "39d1ac16dee329bab34a646216e2d851856a07d53f6c0f909709fe217f2ba22f",
+          "version": "0.7.0"
+        },
+        "service-skills-set/.claude/service-registry.json": {
+          "hash": "ffee34d71d46e325bfc205e8e7bfba1165b7781495624f868c590e8da681bf32",
+          "version": "0.7.0"
+        },
+        "service-skills-set/.claude/settings.json": {
+          "hash": "c5a9cb6df7f77b7a12a98663971cccdae0940a477e5023933afb7bb38b7e3621",
+          "version": "0.7.0"
+        },
+        "service-skills-set/.claude/skills/creating-service-skills/references/script_quality_standards.md": {
+          "hash": "964476a17aea08505edddae1616899ebcc9f6f1f990e060cf37c1676a7f54b7c",
+          "version": "0.7.0"
+        },
+        "service-skills-set/.claude/skills/creating-service-skills/references/service_skill_system_guide.md": {
+          "hash": "72504d474d9b9cc1550ceb97dd16fc02900666803d523840d7eb31ee0ad52755",
+          "version": "0.7.0"
+        },
+        "service-skills-set/.claude/skills/creating-service-skills/scripts/bootstrap.py": {
+          "hash": "7587d091799220f5df5f78ef87f81fcfd7e92685b442c1c7420936690d4ce074",
+          "version": "0.7.0"
+        },
+        "service-skills-set/.claude/skills/creating-service-skills/scripts/deep_dive.py": {
+          "hash": "e27f4e0b0307888e2377b8d62b0a8e86fc0d177f3ac8f1d82ab75ec1fc72e63a",
+          "version": "0.7.0"
+        },
+        "service-skills-set/.claude/skills/creating-service-skills/scripts/scaffolder.py": {
+          "hash": "eee0bda36ad3a72e87a5867c194faebfbb2887614583681c120ed6336e342915",
+          "version": "0.7.0"
+        },
+        "service-skills-set/.claude/skills/creating-service-skills/SKILL.md": {
+          "hash": "38801ee1f92d2ed6b0ca9306495f1a4106676bc5a5c89c6d15c2710593fade24",
+          "version": "0.7.0"
+        },
+        "service-skills-set/.claude/skills/scoping-service-skills/scripts/scope.py": {
+          "hash": "f1b38f1e080276dd12191f4924395a4f53c7d2fbdcc5d88dc16b8e83a04c9906",
+          "version": "0.7.0"
+        },
+        "service-skills-set/.claude/skills/scoping-service-skills/SKILL.md": {
+          "hash": "4fbfba50ffaa8fd42227bdc3e64bfede9c09c2b4fec894f9500299a2f14317ef",
+          "version": "0.7.0"
+        },
+        "service-skills-set/.claude/skills/updating-service-skills/scripts/drift_detector.py": {
+          "hash": "22f5655ee505242a7c9e59e71e13bfab4bc58971b19221646caee2425348f4e4",
+          "version": "0.7.0"
+        },
+        "service-skills-set/.claude/skills/updating-service-skills/SKILL.md": {
+          "hash": "5b60d48463deef56ecd5198ef6d1f58120682438d64bf3db30b41ba6516a1ede",
+          "version": "0.7.0"
+        },
+        "service-skills-set/.claude/skills/using-service-skills/scripts/cataloger.py": {
+          "hash": "99e6784bb682598a38dfdaea2137dfa2091c977ca127dbb3f4be9523d71868e8",
+          "version": "0.7.0"
+        },
+        "service-skills-set/.claude/skills/using-service-skills/scripts/skill_activator.py": {
+          "hash": "0e0dc7f15357580f0914f1dde7b00dbc3f757b16dba4623d9c7d8b303815b267",
+          "version": "0.7.0"
+        },
+        "service-skills-set/.claude/skills/using-service-skills/scripts/test_skill_activator.py": {
+          "hash": "484d957d7682a5f604d3bbc314c448d85ab78766ecb2f6fff3e7990692d1a8cd",
+          "version": "0.7.0"
+        },
+        "service-skills-set/.claude/skills/using-service-skills/SKILL.md": {
+          "hash": "3ca830174c3bf13ce573443618b43c5b03575f0cd13660c3206dd3eae21c39a7",
+          "version": "0.7.0"
+        },
+        "service-skills-set/install-service-skills.py": {
+          "hash": "4a12967d14d214bea5f347167ac60907c9714db882e7a9efef718764976410b1",
+          "version": "0.7.0"
+        },
+        "service-skills-set/README.md": {
+          "hash": "07bb676a19c7bd1b3a6b50651a688816117dff8cff0c152dcc45fb7468988fd7",
+          "version": "0.7.0"
+        },
+        "service-skills-set/service-skills-readme.md": {
+          "hash": "2bb1cdabc22ff346c0218152169b5ca7202d9ab9fdb2877f09e2dddf05fb0621",
           "version": "0.7.0"
         },
         "session-close-report/SKILL.md": {

@@ -9,6 +9,7 @@ import { checkDrift } from '../core/drift.js';
 import { t } from '../utils/theme.js';
 import { runPiInstall } from './pi-install.js';
 import { runClaudeRuntimeSyncPhase } from '../core/claude-runtime-sync.js';
+import { runPluginEraCleanup } from '../core/plugin-era-cleanup.js';
 import { confirmDestructiveAction } from '../utils/confirmation.js';
 import {
     runMachineBootstrapPhase,
@@ -356,6 +357,7 @@ export async function runInstall(opts: InstallOpts = {}): Promise<void> {
         yes = false,
         force = false,
         backport = false,
+        prune = false,
         global: isGlobal = false,
         skipMachineBootstrap = false,
         skipClaudeRuntimeSync = false,
@@ -397,8 +399,17 @@ export async function runInstall(opts: InstallOpts = {}): Promise<void> {
         yes: effectiveYes,
     });
 
+    if (prune) {
+        await runPluginEraCleanup({
+            dryRun,
+            yes: effectiveYes,
+            scope: 'all',
+            repoRoot: projectRoot,
+        });
+    }
+
     if (!skipClaudeRuntimeSync) {
-        await runClaudeRuntimeSyncPhase({ repoRoot: projectRoot, dryRun, isGlobal });
+        await runClaudeRuntimeSyncPhase({ repoRoot: projectRoot, dryRun, isGlobal, prune });
     }
 
     await runPiInstall(dryRun, isGlobal, projectRoot);

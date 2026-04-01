@@ -45,6 +45,7 @@ export interface ClaudeRuntimeSyncOptions {
     repoRoot: string;
     dryRun?: boolean;
     isGlobal?: boolean;
+    prune?: boolean;
 }
 
 export interface ClaudeRuntimeSyncResult {
@@ -63,7 +64,7 @@ export function renderClaudeRuntimePlanSummary(): void {
 }
 
 export async function runClaudeRuntimeSyncPhase(opts: ClaudeRuntimeSyncOptions): Promise<ClaudeRuntimeSyncResult> {
-    const { repoRoot, dryRun = false, isGlobal = false } = opts;
+    const { repoRoot, dryRun = false, isGlobal = false, prune = false } = opts;
 
     console.log(t.bold('\n  ⚙  xtrm-tools  (Claude hooks wiring)'));
     warnIfOutdated();
@@ -87,6 +88,11 @@ export async function runClaudeRuntimeSyncPhase(opts: ClaudeRuntimeSyncOptions):
     const mergedSettings: ClaudeSettings = hasExistingSettings
         ? { ...existingSettings, hooks: generatedHooks }
         : { ...baseSettings, hooks: generatedHooks };
+
+    if (prune) {
+        delete mergedSettings.enabledPlugins;
+        delete mergedSettings.extraKnownMarketplaces;
+    }
 
     const hooksEventsWritten = Object.keys(generatedHooks).length;
     const hooksEntriesWritten = countHookEntries(generatedHooks);
@@ -112,7 +118,11 @@ export async function runClaudeRuntimeSyncPhase(opts: ClaudeRuntimeSyncOptions):
 
     if (dryRun) {
         console.log(kleur.dim(`  [DRY RUN] Would write ${hooksEntriesWritten} hook commands across ${hooksEventsWritten} events`));
-        console.log(kleur.dim('  [DRY RUN] Hooks section would be replaced entirely\n'));
+        console.log(kleur.dim('  [DRY RUN] Hooks section would be replaced entirely'));
+        if (prune) {
+            console.log(kleur.dim('  [DRY RUN] Plugin-era settings keys would be removed (enabledPlugins, extraKnownMarketplaces)'));
+        }
+        console.log('');
         return {
             settingsPath,
             hooksEventsWritten,
@@ -125,6 +135,9 @@ export async function runClaudeRuntimeSyncPhase(opts: ClaudeRuntimeSyncOptions):
     await fs.writeJson(settingsPath, mergedSettings, { spaces: 2 });
 
     console.log(t.success(`  ✓ Wrote ${hooksEntriesWritten} hook commands across ${hooksEventsWritten} events`));
+    if (prune) {
+        console.log(t.success('  ✓ Removed plugin-era settings keys (enabledPlugins, extraKnownMarketplaces)'));
+    }
     console.log(t.success('  ✓ Claude settings hooks synced\n'));
 
     return {

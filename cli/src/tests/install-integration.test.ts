@@ -173,4 +173,48 @@ describe('xtrm install integration', () => {
     expect(serializedSettings.toLowerCase().includes('marketplace')).toBe(false);
     expect(serializedSettings.toLowerCase().includes('claude plugin')).toBe(false);
   });
+
+  it('prune mode removes plugin-era settings keys and rewrites hooks to .xtrm absolute paths', async () => {
+    const settingsPath = path.join(tmpDir, '.claude', 'settings.json');
+    fs.ensureDirSync(path.dirname(settingsPath));
+    fs.writeJsonSync(settingsPath, {
+      permissions: {
+        allow: ['Bash(git status)'],
+        defaultMode: 'acceptEdits',
+      },
+      model: 'claude-sonnet-4-5',
+      skillSuggestions: { enabled: false },
+      statusLine: { type: 'command', command: 'echo status' },
+      enabledPlugins: { 'xtrm-tools@xtrm-tools': true },
+      extraKnownMarketplaces: { xtrm: true },
+      hooks: {
+        PostToolUse: [{ hooks: [{ type: 'command', command: 'node "$CLAUDE_PLUGIN_ROOT/legacy-hook.mjs"' }] }],
+      },
+    }, { spaces: 2 });
+
+    await runInstallCli(['--yes', '--prune']);
+
+    const settings = fs.readJsonSync(settingsPath) as {
+      hooks?: Record<string, Array<{ hooks: Array<{ command: string }> }>>;
+      enabledPlugins?: unknown;
+      extraKnownMarketplaces?: unknown;
+      permissions?: { allow?: string[] };
+      model?: string;
+      skillSuggestions?: { enabled?: boolean };
+      statusLine?: unknown;
+    };
+
+    expect(settings.enabledPlugins).toBeUndefined();
+    expect(settings.extraKnownMarketplaces).toBeUndefined();
+    expect(settings.permissions?.allow).toEqual(['Bash(git status)']);
+    expect(settings.model).toBe('claude-sonnet-4-5');
+    expect(settings.skillSuggestions?.enabled).toBe(false);
+    expect(settings.statusLine).toBeTruthy();
+
+    const postToolHooks = settings.hooks?.PostToolUse ?? [];
+    expect(postToolHooks.length).toBeGreaterThan(0);
+    const flattenedCommands = postToolHooks.flatMap(wrapper => wrapper.hooks.map(hook => hook.command));
+    expect(flattenedCommands.some(command => command.includes('.xtrm/hooks/'))).toBe(true);
+    expect(flattenedCommands.some(command => command.includes('CLAUDE_PLUGIN_ROOT'))).toBe(false);
+  });
 });

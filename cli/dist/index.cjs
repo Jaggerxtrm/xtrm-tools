@@ -47990,23 +47990,28 @@ async function confirmInitPlan(yes) {
     initial: true
   });
 }
-async function runProjectBootstrap(projectRoot) {
-  await runBdInitForProject(projectRoot);
+async function runProjectBootstrap(projectRoot, isGitRepo) {
+  if (isGitRepo) {
+    await runBdInitForProject(projectRoot);
+  }
   await injectProjectInstructionHeaders(projectRoot);
-  await runGitNexusInitForProject(projectRoot);
+  if (isGitRepo) {
+    await runGitNexusInitForProject(projectRoot);
+  }
   await installServiceSkillHooks(projectRoot);
 }
 async function runProjectInit(opts = {}) {
   const { dryRun = false, yes = false } = opts;
   const effectiveYes = yes || process.argv.includes("--yes") || process.argv.includes("-y");
   let projectRoot;
+  let isGitRepo = true;
   try {
     projectRoot = getProjectRoot();
-  } catch (err) {
-    console.log(kleur_default.yellow(`
-  \u26A0 Skipping project bootstrap: ${err.message}
-`));
-    return;
+  } catch {
+    projectRoot = process.cwd();
+    isGitRepo = false;
+    console.log(kleur_default.yellow("\n  \u26A0 Not a git repository \u2014 git-dependent phases (beads, gitnexus) will be skipped"));
+    console.log(kleur_default.dim("    Run git init first, then: gitnexus analyze\n"));
   }
   const inventory = await runPreflight(projectRoot, opts);
   renderInitPlan(inventory);
@@ -48060,7 +48065,7 @@ async function runProjectInit(opts = {}) {
   await runPiInstall(false, Boolean(opts.global), projectRoot);
   await ensureAgentsSkillsSymlink(projectRoot);
   await assertRuntimeSkillsViews(projectRoot);
-  await runProjectBootstrap(projectRoot);
+  await runProjectBootstrap(projectRoot, isGitRepo);
   const verification = await runInitVerification(projectRoot);
   renderVerificationSummary(verification);
   if (verification.allPassed) {
@@ -48112,6 +48117,16 @@ async function runGitNexusInitForProject(projectRoot) {
   if (gitnexusCheck.status !== 0) {
     console.log(kleur_default.yellow("  \u26A0 gitnexus not found; skipping index bootstrap"));
     console.log(kleur_default.dim("    Install with: npm install -g gitnexus"));
+    return;
+  }
+  const hasCommits = (0, import_child_process5.spawnSync)("git", ["rev-parse", "HEAD"], {
+    cwd: projectRoot,
+    encoding: "utf8",
+    timeout: 5e3
+  });
+  if (hasCommits.status !== 0) {
+    console.log(kleur_default.yellow("  \u26A0 No commits yet \u2014 skipping gitnexus analyze"));
+    console.log(kleur_default.dim("    Run manually after your first commit: gitnexus analyze"));
     return;
   }
   console.log(kleur_default.bold("Checking GitNexus index status..."));

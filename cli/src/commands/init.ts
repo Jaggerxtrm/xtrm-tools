@@ -605,10 +605,14 @@ async function confirmInitPlan(yes: boolean): Promise<boolean> {
 // Initializes project-level tooling: beads workspace, GitNexus index,
 // CLAUDE.md / AGENTS.md instruction headers and service-skills hook wiring.
 
-async function runProjectBootstrap(projectRoot: string): Promise<void> {
-    await runBdInitForProject(projectRoot);
+async function runProjectBootstrap(projectRoot: string, isGitRepo: boolean): Promise<void> {
+    if (isGitRepo) {
+        await runBdInitForProject(projectRoot);
+    }
     await injectProjectInstructionHeaders(projectRoot);
-    await runGitNexusInitForProject(projectRoot);
+    if (isGitRepo) {
+        await runGitNexusInitForProject(projectRoot);
+    }
     await installServiceSkillHooks(projectRoot);
     // Note: ensureAgentsSkillsSymlink runs in Phase 6b (before gitnexus init)
 }
@@ -630,11 +634,14 @@ export async function runProjectInit(opts: InstallOpts = {}): Promise<void> {
     const effectiveYes = yes || process.argv.includes('--yes') || process.argv.includes('-y');
 
     let projectRoot: string;
+    let isGitRepo = true;
     try {
         projectRoot = getProjectRoot();
-    } catch (err: any) {
-        console.log(kleur.yellow(`\n  ⚠ Skipping project bootstrap: ${err.message}\n`));
-        return;
+    } catch {
+        projectRoot = process.cwd();
+        isGitRepo = false;
+        console.log(kleur.yellow('\n  ⚠ Not a git repository — git-dependent phases (beads, gitnexus) will be skipped'));
+        console.log(kleur.dim('    Run git init first, then: gitnexus analyze\n'));
     }
 
     // ── Phase 1: Preflight / Inventory ──────────────────────────────────────
@@ -715,7 +722,7 @@ export async function runProjectInit(opts: InstallOpts = {}): Promise<void> {
     // ── Phase 7: Project Bootstrap ───────────────────────────────────────────
     // Initialize beads workspace, inject CLAUDE.md/AGENTS.md instruction
     // headers, and ensure the GitNexus code intelligence index is current.
-    await runProjectBootstrap(projectRoot);
+    await runProjectBootstrap(projectRoot, isGitRepo);
 
     // ── Phase 8: Verification ────────────────────────────────────────────────
     // Unified verification across all phases: machine, Claude, Pi, project.
@@ -779,6 +786,18 @@ async function runGitNexusInitForProject(projectRoot: string): Promise<void> {
     if (gitnexusCheck.status !== 0) {
         console.log(kleur.yellow('  ⚠ gitnexus not found; skipping index bootstrap'));
         console.log(kleur.dim('    Install with: npm install -g gitnexus'));
+        return;
+    }
+
+    // Pre-check: git repo with at least one commit required for meaningful indexing
+    const hasCommits = spawnSync('git', ['rev-parse', 'HEAD'], {
+        cwd: projectRoot,
+        encoding: 'utf8',
+        timeout: 5000,
+    });
+    if (hasCommits.status !== 0) {
+        console.log(kleur.yellow('  ⚠ No commits yet — skipping gitnexus analyze'));
+        console.log(kleur.dim('    Run manually after your first commit: gitnexus analyze'));
         return;
     }
 

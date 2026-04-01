@@ -1,13 +1,1 @@
-{
-  "mcpServers": {
-    "specialists": {
-      "command": "specialists",
-      "args": [],
-      "lifecycle": "lazy",
-      "idleTimeout": 10
-    }
-  },
-  "settings": {
-    "idleTimeout": 10
-  }
-}
+../.xtrm/config/pi/mcp.json

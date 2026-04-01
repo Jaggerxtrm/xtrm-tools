@@ -52,6 +52,7 @@ program
     .option('--dry-run', 'Preview changes without making any modifications', false)
     .option('-y, --yes', 'Skip confirmation prompts', false)
     .option('--global', 'Install tooling to user-global scope instead of project-local', false)
+    .option('--prune', 'Remove plugin-era artifacts (Claude plugin cache, stale settings keys)', false)
     .action(async (opts) => {
         await runProjectInit(opts);
     });

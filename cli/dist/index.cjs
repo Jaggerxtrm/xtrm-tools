@@ -31695,7 +31695,7 @@ async function ensureCorePackageSymlink(extensionsDst, projectRoot, dryRun, log)
   await import_fs_extra3.default.symlink("../../extensions/core", symlinkPath);
   log?.(kleur_default.dim(`Created @xtrm/pi-core symlink for module resolution`));
 }
-async function updatePiSettings(extensionsDst, projectRoot, dryRun, log) {
+async function updatePiSettings(projectRoot, dryRun, log) {
   const piSettingsPath = import_path3.default.join(projectRoot, ".pi", "settings.json");
   if (dryRun) {
     log?.(kleur_default.dim(`[DRY RUN] would update .pi/settings.json`));
@@ -31706,22 +31706,19 @@ async function updatePiSettings(extensionsDst, projectRoot, dryRun, log) {
     existingSettings = await import_fs_extra3.default.readJson(piSettingsPath);
   } catch {
   }
-  const entries = await import_fs_extra3.default.readdir(extensionsDst, { withFileTypes: true });
-  const extPaths = entries.filter((e) => (e.isDirectory() || e.isSymbolicLink()) && e.name !== "core").map((e) => `./extensions/${e.name}`);
+  const extensionsEntry = "../.xtrm/extensions";
+  const skillsEntry = "../.xtrm/skills/default";
   const existingPackages = (existingSettings.packages ?? []).filter(
     (p) => !p.startsWith("./extensions/")
   );
-  const skillsPath = "../.xtrm/skills/default";
-  const existingSkills = (existingSettings.skills ?? []).filter((s) => s !== skillsPath);
-  const updatedSkills = [skillsPath, ...existingSkills];
   await import_fs_extra3.default.ensureDir(import_path3.default.join(projectRoot, ".pi"));
   await import_fs_extra3.default.writeJson(piSettingsPath, {
     ...existingSettings,
-    extensions: extPaths,
-    skills: updatedSkills,
+    extensions: [extensionsEntry],
+    skills: [skillsEntry],
     packages: existingPackages
   }, { spaces: 2 });
-  log?.(kleur_default.dim(`Updated .pi/settings.json: ${extPaths.length} extension(s), skills \u2192 .xtrm/skills/default`));
+  log?.(kleur_default.dim(`Updated .pi/settings.json \u2192 .xtrm/extensions + .xtrm/skills/default`));
 }
 async function executePiSync(plan, sourceDir, targetDir, opts = {}) {
   const {

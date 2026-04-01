@@ -402,7 +402,6 @@ export async function ensureCorePackageSymlink(
  * Pi only auto-discovers global extensions — project-scoped needs settings.json.
  */
 async function updatePiSettings(
-    extensionsDst: string,
     projectRoot: string,
     dryRun: boolean,
     log?: (message: string) => void,
@@ -419,30 +418,23 @@ async function updatePiSettings(
         existingSettings = await fs.readJson(piSettingsPath);
     } catch { /* no existing settings */ }
 
-    // Collect extension dirs (exclude 'core' — it's a library)
-    const entries = await fs.readdir(extensionsDst, { withFileTypes: true });
-    const extPaths = entries
-        .filter(e => (e.isDirectory() || e.isSymbolicLink()) && e.name !== 'core')
-        .map(e => `./extensions/${e.name}`);
+    // Point directly at .xtrm/ — Pi scans the directory for all extensions/skills
+    const extensionsEntry = '../.xtrm/extensions';
+    const skillsEntry = '../.xtrm/skills/default';
 
-    // Preserve non-extension packages (npm:/git:/local paths)
+    // Preserve user packages (npm:/git:/local), strip any old per-extension entries
     const existingPackages = (existingSettings.packages ?? []).filter(
         p => !p.startsWith('./extensions/')
     );
 
-    // Skills: point Pi at .xtrm/skills/default (relative to .pi/)
-    const skillsPath = '../.xtrm/skills/default';
-    const existingSkills = (existingSettings.skills ?? []).filter(s => s !== skillsPath);
-    const updatedSkills = [skillsPath, ...existingSkills];
-
     await fs.ensureDir(path.join(projectRoot, '.pi'));
     await fs.writeJson(piSettingsPath, {
         ...existingSettings,
-        extensions: extPaths,
-        skills: updatedSkills,
+        extensions: [extensionsEntry],
+        skills: [skillsEntry],
         packages: existingPackages,
     }, { spaces: 2 });
-    log?.(kleur.dim(`Updated .pi/settings.json: ${extPaths.length} extension(s), skills → .xtrm/skills/default`));
+    log?.(kleur.dim(`Updated .pi/settings.json → .xtrm/extensions + .xtrm/skills/default`));
 }
 
 /**

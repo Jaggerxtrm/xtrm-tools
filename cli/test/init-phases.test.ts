@@ -4,7 +4,6 @@ import os from 'node:os';
 import path from 'node:path';
 
 const mocked = vi.hoisted(() => {
-    const runInstall = vi.fn(async () => undefined);
     const runMachineBootstrap = vi.fn(async () => undefined);
     const runClaudeRuntimeSync = vi.fn(async () => ({
         installedOfficial: 0,
@@ -27,8 +26,13 @@ const mocked = vi.hoisted(() => {
     const findRepoRoot = vi.fn(async () => '/tmp/repo-root');
     const prompts = vi.fn(async () => ({ confirm: true }));
     const spawnSync = vi.fn();
+    const installFromRegistry = vi.fn(async () => ({ installed: 1, upToDate: 0, driftedSkipped: 0, forced: 0 }));
+    const scaffoldSkillsDefaultFromPackage = vi.fn(async () => 'noop');
+    const runPiInstall = vi.fn(async () => undefined);
+    const runPluginEraCleanup = vi.fn(async () => undefined);
+    const ensureAgentsSkillsSymlink = vi.fn(async () => undefined);
+
     return {
-        runInstall,
         runMachineBootstrap,
         runClaudeRuntimeSync,
         runInitVerification,
@@ -38,17 +42,13 @@ const mocked = vi.hoisted(() => {
         findRepoRoot,
         prompts,
         spawnSync,
+        installFromRegistry,
+        scaffoldSkillsDefaultFromPackage,
+        runPiInstall,
+        runPluginEraCleanup,
+        ensureAgentsSkillsSymlink,
     };
 });
-
-vi.mock('../src/commands/install.js', () => ({
-    runInstall: mocked.runInstall,
-    runMachineBootstrap: mocked.runMachineBootstrap,
-    isBeadsInstalled: vi.fn(() => true),
-    isDoltInstalled: vi.fn(() => true),
-    isBvInstalled: vi.fn(() => true),
-    isDeepwikiInstalled: vi.fn(() => true),
-}));
 
 vi.mock('../src/core/machine-bootstrap.js', () => ({
     inventoryDeps: vi.fn(() => ({
@@ -84,6 +84,24 @@ vi.mock('../src/utils/repo-root.js', () => ({
     findRepoRoot: mocked.findRepoRoot,
 }));
 
+vi.mock('../src/core/registry-scaffold.js', () => ({
+    resolvePackageRoot: vi.fn(() => '/tmp/xtrm-pkg-root'),
+    installFromRegistry: mocked.installFromRegistry,
+    scaffoldSkillsDefaultFromPackage: mocked.scaffoldSkillsDefaultFromPackage,
+}));
+
+vi.mock('../src/commands/pi-install.js', () => ({
+    runPiInstall: mocked.runPiInstall,
+}));
+
+vi.mock('../src/core/plugin-era-cleanup.js', () => ({
+    runPluginEraCleanup: mocked.runPluginEraCleanup,
+}));
+
+vi.mock('../src/core/skills-scaffold.js', () => ({
+    ensureAgentsSkillsSymlink: mocked.ensureAgentsSkillsSymlink,
+}));
+
 vi.mock('prompts', () => ({
     default: mocked.prompts,
 }));
@@ -96,28 +114,23 @@ function setupSpawnSync(projectRoot: string, calls: string[]): void {
     mocked.spawnSync.mockImplementation((command: string, args: string[] = [], options: any = {}) => {
         const key = `${command} ${args.join(' ')}`.trim();
 
-        // git rev-parse for getProjectRoot()
         if (key === 'git rev-parse --show-toplevel') {
             return { status: 0, stdout: `${projectRoot}\n`, stderr: '' };
         }
 
-        // gitnexus status check in runGitNexusInitForProject
         if (key === 'gitnexus status') {
             return { status: 1, stdout: 'not indexed', stderr: '' };
         }
 
-        // gitnexus --version check
         if (key === 'gitnexus --version') {
             return { status: 0, stdout: 'gitnexus 1.0.0', stderr: '' };
         }
 
-        // gitnexus analyze in runGitNexusInitForProject
         if (key === 'gitnexus analyze') {
             calls.push('gitnexus analyze');
             return { status: 0, stdout: 'indexed', stderr: '' };
         }
 
-        // bd init in runBdInitForProject
         if (key === 'bd init') {
             calls.push('bd init');
             return { status: 0, stdout: 'initialized', stderr: '' };
@@ -141,6 +154,10 @@ describe('xtrm init phased orchestrator', () => {
         projectRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'xtrm-init-project-'));
         await fs.writeFile(path.join(projectRoot, 'tsconfig.json'), '{}');
 
+        const packageRoot = '/tmp/xtrm-pkg-root';
+        await fs.ensureDir(path.join(packageRoot, '.xtrm'));
+        await fs.writeJson(path.join(packageRoot, '.xtrm', 'registry.json'), { version: '1.0.0', assets: {} });
+
         consoleLogSpy = vi.spyOn(console, 'log').mockImplementation((...args) => {
             logs.push(args.join(' '));
         });
@@ -153,6 +170,7 @@ describe('xtrm init phased orchestrator', () => {
         stdoutWriteSpy.mockRestore();
         stderrWriteSpy.mockRestore();
         await fs.remove(projectRoot);
+        await fs.remove('/tmp/xtrm-pkg-root');
     });
 
     it('renders the plan and stops before mutation in dry-run mode', async () => {
@@ -167,7 +185,10 @@ describe('xtrm init phased orchestrator', () => {
         expect(logs.join('\n')).toContain('Dry run — no changes written');
         expect(mocked.prompts).not.toHaveBeenCalled();
         expect(mocked.runMachineBootstrap).not.toHaveBeenCalled();
-        expect(mocked.runInstall).not.toHaveBeenCalled();
+        expect(mocked.installFromRegistry).not.toHaveBeenCalled();
+        expect(mocked.scaffoldSkillsDefaultFromPackage).not.toHaveBeenCalled();
+        expect(mocked.ensureAgentsSkillsSymlink).not.toHaveBeenCalled();
+        expect(mocked.runPiInstall).not.toHaveBeenCalled();
         expect(calls).toEqual([]);
     });
 
@@ -182,7 +203,10 @@ describe('xtrm init phased orchestrator', () => {
         expect(mocked.prompts).toHaveBeenCalledTimes(1);
         expect(logs.join('\n')).toContain('Init cancelled.');
         expect(mocked.runMachineBootstrap).not.toHaveBeenCalled();
-        expect(mocked.runInstall).not.toHaveBeenCalled();
+        expect(mocked.installFromRegistry).not.toHaveBeenCalled();
+        expect(mocked.scaffoldSkillsDefaultFromPackage).not.toHaveBeenCalled();
+        expect(mocked.ensureAgentsSkillsSymlink).not.toHaveBeenCalled();
+        expect(mocked.runPiInstall).not.toHaveBeenCalled();
         expect(calls).toEqual([]);
     });
 
@@ -192,14 +216,46 @@ describe('xtrm init phased orchestrator', () => {
         mocked.runMachineBootstrap.mockImplementation(async () => {
             calls.push('runMachineBootstrap');
         });
-        mocked.runInstall.mockImplementation(async () => {
-            calls.push('runInstall');
+        mocked.runClaudeRuntimeSync.mockImplementation(async () => {
+            calls.push('runClaudeRuntimeSync');
+            return {
+                installedOfficial: 0,
+                alreadyInstalledOfficial: 4,
+                failedOfficial: [],
+                verificationPassed: true,
+            };
         });
+        mocked.installFromRegistry.mockImplementation(async () => {
+            calls.push('installFromRegistry');
+            return { installed: 1, upToDate: 0, driftedSkipped: 0, forced: 0 };
+        });
+        mocked.scaffoldSkillsDefaultFromPackage.mockImplementation(async () => {
+            calls.push('scaffoldSkillsDefaultFromPackage');
+            return 'noop';
+        });
+        mocked.runPiInstall.mockImplementation(async () => {
+            calls.push('runPiInstall');
+        });
+        mocked.ensureAgentsSkillsSymlink.mockImplementation(async () => {
+            calls.push('ensureAgentsSkillsSymlink');
+        });
+        mocked.runInitVerification.mockImplementation(async () => {
+            calls.push('runInitVerification');
+            return {
+                machineBootstrap: { allRequiredPresent: true, missingRequired: [] },
+                claudeRuntime: { xtrmToolsPlugin: true, officialPlugins: ['serena'], missingPlugins: [] },
+                piRuntime: { allRequiredPresent: true, missingExtensions: [], missingPackages: [] },
+                projectBootstrap: { beadsInitialized: true, gitnexusIndexed: true, instructionHeaders: true },
+                allPassed: true,
+            };
+        });
+
+        const installModule = await import('../src/commands/install.js');
+        const runInstallSpy = vi.spyOn(installModule, 'runInstall');
 
         const { runProjectInit } = await import('../src/commands/init.js?t=ordered-' + Date.now());
         await runProjectInit({ yes: true });
 
-        // Verify phase order: machine bootstrap -> Claude runtime -> Pi runtime -> project bootstrap -> verification
         expect(mocked.prompts).not.toHaveBeenCalled();
         expect(mocked.runMachineBootstrap).toHaveBeenCalledWith({ dryRun: false });
         expect(mocked.runClaudeRuntimeSync).toHaveBeenCalledWith(expect.objectContaining({
@@ -207,19 +263,36 @@ describe('xtrm init phased orchestrator', () => {
             dryRun: false,
             isGlobal: false,
         }));
-        expect(mocked.runInstall).toHaveBeenCalledWith(expect.objectContaining({
-            yes: true,
-            backport: false,
-            skipMachineBootstrap: true,
-            skipClaudeRuntimeSync: true,
-        }));
-        expect(calls).toEqual(['runMachineBootstrap', 'runInstall', 'bd init', 'gitnexus analyze']);
-        
-        // Verify verification phase was called
+        expect(mocked.installFromRegistry).toHaveBeenCalledTimes(1);
+        expect(mocked.scaffoldSkillsDefaultFromPackage).toHaveBeenCalledTimes(1);
+        expect(mocked.runPiInstall).toHaveBeenCalledWith(false, false, projectRoot);
+        expect(mocked.ensureAgentsSkillsSymlink).toHaveBeenCalledWith(projectRoot);
+        expect(runInstallSpy).not.toHaveBeenCalled();
+        expect(calls).toEqual([
+            'runMachineBootstrap',
+            'runClaudeRuntimeSync',
+            'installFromRegistry',
+            'scaffoldSkillsDefaultFromPackage',
+            'runPiInstall',
+            'ensureAgentsSkillsSymlink',
+            'bd init',
+            'gitnexus analyze',
+            'runInitVerification',
+        ]);
+
+        const machineOrder = mocked.runMachineBootstrap.mock.invocationCallOrder[0];
+        const runtimeOrder = mocked.runClaudeRuntimeSync.mock.invocationCallOrder[0];
+        const registryOrder = mocked.installFromRegistry.mock.invocationCallOrder[0];
+        const symlinkOrder = mocked.ensureAgentsSkillsSymlink.mock.invocationCallOrder[0];
+        const verificationOrder = mocked.runInitVerification.mock.invocationCallOrder[0];
+
+        expect(machineOrder).toBeLessThan(runtimeOrder);
+        expect(runtimeOrder).toBeLessThan(registryOrder);
+        expect(registryOrder).toBeLessThan(symlinkOrder);
+        expect(symlinkOrder).toBeLessThan(verificationOrder);
+
         expect(mocked.runInitVerification).toHaveBeenCalledWith(projectRoot);
         expect(mocked.renderVerificationSummary).toHaveBeenCalled();
-        
-        // Verify new next-steps output
         expect(logs.join('\n')).toContain('Next steps:');
     });
 });

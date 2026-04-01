@@ -3,8 +3,17 @@ import kleur from 'kleur';
 import path from 'path';
 import fs from 'fs-extra';
 import { spawnSync } from 'child_process';
-import { runInstall, type InstallOpts } from './install.js';
+import type { InstallOpts } from './install.js';
+import { runPiInstall } from './pi-install.js';
 import { runClaudeRuntimeSyncPhase, renderClaudeRuntimePlanSummary } from '../core/claude-runtime-sync.js';
+import {
+    installFromRegistry,
+    resolvePackageRoot,
+    scaffoldSkillsDefaultFromPackage,
+    type RegistryManifest,
+} from '../core/registry-scaffold.js';
+import { runPluginEraCleanup } from '../core/plugin-era-cleanup.js';
+import { ensureAgentsSkillsSymlink } from '../core/skills-scaffold.js';
 import { inventoryDeps, renderBootstrapPlan, runMachineBootstrapPhase, type BootstrapPlan } from '../core/machine-bootstrap.js';
 import { runInitVerification, renderVerificationSummary } from '../core/init-verification.js';
 import { getContext } from '../core/context.js';
@@ -12,21 +21,7 @@ import { calculateDiff } from '../core/diff.js';
 import { findRepoRoot } from '../utils/repo-root.js';
 import { confirmDestructiveAction } from '../utils/confirmation.js';
 
-declare const __dirname: string;
-function resolvePkgRoot(): string {
-    const candidates = [
-        path.resolve(__dirname, '../..'),
-        path.resolve(__dirname, '../../..'),
-    ];
-
-    const match = candidates.find(candidate => fs.existsSync(path.join(candidate, '.xtrm', 'registry.json')));
-    if (!match) {
-        throw new Error('Unable to locate package root from CLI runtime.');
-    }
-    return match;
-}
-
-const PKG_ROOT = resolvePkgRoot();
+const PKG_ROOT = resolvePackageRoot();
 const MCP_CORE_CONFIG_PATH = path.join(PKG_ROOT, 'config', 'mcp_servers.json');
 const INSTRUCTIONS_DIR = path.join(PKG_ROOT, 'config', 'instructions');
 const XTRM_BLOCK_START = '<!-- xtrm:start -->';
@@ -476,51 +471,6 @@ export function deepMergeHooks(existing: Record<string, any>, incoming: Record<s
     return result;
 }
 
-async function ensureSkillsSymlink(
-    linkPath: string,
-    symlinkTarget: string,
-    label: string,
-): Promise<void> {
-    const existing = await fs.lstat(linkPath).catch(() => null);
-    if (existing) {
-        if (existing.isSymbolicLink()) {
-            const current = await fs.readlink(linkPath);
-            if (current === symlinkTarget) {
-                console.log(kleur.dim(`  ✓ ${label} symlink already in place`));
-                return;
-            }
-            await fs.remove(linkPath);
-        } else {
-            console.log(kleur.yellow(`  ⚠ ${label} is a real directory — skipping symlink`));
-            return;
-        }
-    }
-    await fs.mkdirp(path.dirname(linkPath));
-    await fs.symlink(symlinkTarget, linkPath);
-    console.log(`${kleur.green('  ✓')} ${label} → ${symlinkTarget}`);
-}
-
-async function ensureAgentsSkillsSymlink(projectRoot: string): Promise<void> {
-    const sourceDir = path.join(projectRoot, '.xtrm', 'skills', 'default');
-    if (!await fs.pathExists(sourceDir)) return;
-
-    const xtrmTarget = path.join('..', '.xtrm', 'skills', 'default');
-
-    // .agents/skills and .claude/skills both point at .xtrm/skills/default (real dir).
-    // gitnexus analyze writes .xtrm/skills/default/gitnexus/ through the .claude/skills
-    // symlink, coexisting with registry-managed skill files.
-    await ensureSkillsSymlink(
-        path.join(projectRoot, '.agents', 'skills'),
-        xtrmTarget,
-        '.agents/skills',
-    );
-    await ensureSkillsSymlink(
-        path.join(projectRoot, '.claude', 'skills'),
-        xtrmTarget,
-        '.claude/skills',
-    );
-}
-
 async function installServiceSkillHooks(_projectRoot: string): Promise<void> {
     // service-skills hooks are opt-in via `xt install service-skills`, not auto-wired on init.
 }
@@ -607,7 +557,7 @@ function renderInitPlan(inventory: InitInventory): void {
     console.log(kleur.bold('\n  Pi Runtime'));
     console.log(kleur.dim('  ↻  extensions + packages sync'));
 
-    // Phase 6b: Skills (part of Pi runtime sync via runInstall)
+    // Phase 6b: Skills symlinks (ensures .agents/.claude point at .xtrm/skills/default)
     console.log(kleur.bold('\n  Skills'));
     if (skillsChanges > 0) {
         console.log(`${kleur.cyan('  ↑')}  ${skillsChanges} change${skillsChanges !== 1 ? 's' : ''} pending`);
@@ -668,7 +618,7 @@ async function runProjectBootstrap(projectRoot: string): Promise<void> {
 //   3. Confirm            — single gate; all mutations happen only after this
 //   4. Machine Bootstrap  — install missing system tools (bd, dolt, bv, pi, pnpm)
 //   5. Claude Runtime     — .xtrm hook wiring into .claude/settings.json
-//   6. Pi Runtime         — extensions + packages + skills sync (via runInstall)
+//   6. Pi Runtime         — .xtrm registry scaffold + extensions + packages + skills sync
 //   7. Project Bootstrap  — bd init, gitnexus index, CLAUDE.md/AGENTS.md headers, service hook wiring
 //   8. Verification       — unified summary of all phase outcomes
 //   9. Next Steps         — guidance based on verification result
@@ -711,14 +661,44 @@ export async function runProjectInit(opts: InstallOpts = {}): Promise<void> {
     // ── Phase 5: Claude Runtime Sync (.xtrm hooks wiring) ───────────────────
     await runClaudeRuntimeSyncPhase({ repoRoot: projectRoot, dryRun: false, isGlobal: false });
 
-    // ── Phase 6: Pi Runtime Sync + Skills Sync ───────────────────────────────
-    // skipMachineBootstrap=true: machine deps already handled in Phase 4.
-    // skipClaudeRuntimeSync=true: Claude runtime is now its own explicit phase.
-    await runInstall({ ...opts, yes: true, backport: false, skipMachineBootstrap: true, skipClaudeRuntimeSync: true });
+    // ── Phase 6: Registry scaffold (.xtrm files copy) ───────────────────────
+    const packageRoot = PKG_ROOT;
+    const ctx = await getContext({
+        createMissingDirs: true,
+        isGlobal: opts.global,
+        projectRoot,
+    });
+    const userXtrmDir = ctx.targets[0];
+    const registryPath = path.join(packageRoot, '.xtrm', 'registry.json');
+    const registry = await fs.readJson(registryPath) as RegistryManifest;
 
-    // Phase 6b: Wire skills symlinks BEFORE project bootstrap (gitnexus init
-    // creates .claude/skills/gitnexus/ as a real dir; we must run first so the
-    // per-skill symlinks are in place before that dir-level entry is created).
+    await installFromRegistry({
+        packageRoot,
+        registry,
+        userXtrmDir,
+        dryRun: false,
+        force: false,
+        yes: true,
+    });
+    await scaffoldSkillsDefaultFromPackage({ packageRoot, userXtrmDir, dryRun: false });
+
+    // Optional plugin-era cleanup (matches install --prune behavior).
+    if (opts.prune) {
+        await runPluginEraCleanup({
+            dryRun: false,
+            yes: true,
+            scope: 'all',
+            repoRoot: projectRoot,
+        });
+    }
+
+    // ── Phase 6a: Pi Runtime Sync (extensions + packages) ────────────────────
+    await runPiInstall(false, Boolean(opts.global), projectRoot);
+
+    // ── Phase 6b: Wire skills symlinks BEFORE project bootstrap ──────────────
+    // gitnexus init creates .claude/skills/gitnexus/ as a real dir; we must run
+    // first so the per-skill symlinks are in place before that dir-level entry
+    // is created.
     await ensureAgentsSkillsSymlink(projectRoot);
 
     // ── Phase 7: Project Bootstrap ───────────────────────────────────────────

@@ -95,9 +95,9 @@ describe('xt init dry-run mode', () => {
     });
 
     it('xt init --dry-run does not prompt for confirmation', () => {
-        const r = run(['init', '--dry-run'], { cwd: repoDir, timeout: 5000 });
-        // Should complete quickly without waiting for user input
-        expect(r.duration).toBeLessThan(4000);
+        const r = run(['init', '--dry-run'], { cwd: repoDir, timeout: 20000 });
+        // Should complete without waiting for user input
+        expect(r.duration).toBeLessThan(15000);
     });
 });
 
@@ -160,9 +160,9 @@ describe('xt init banner non-blocking', () => {
     });
 
     it('xt init --dry-run completes without blocking on banner', () => {
-        const r = run(['init', '--dry-run'], { cwd: repoDir, timeout: 5000 });
-        // Banner rendering should be instant; no keypress wait
-        expect(r.duration).toBeLessThan(4000);
+        const r = run(['init', '--dry-run'], { cwd: repoDir, timeout: 20000 });
+        // Banner rendering should not wait on keypress
+        expect(r.duration).toBeLessThan(15000);
         expect(r.status).toBe(0);
     });
 

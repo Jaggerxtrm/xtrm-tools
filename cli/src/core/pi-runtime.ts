@@ -17,6 +17,9 @@ import kleur from 'kleur';
 import path from 'path';
 import { homedir } from 'node:os';
 import { t, sym } from '../utils/theme.js';
+import { resolveSkillsRoot } from './skills-layout.js';
+import { validateSkillsInvariants } from './skill-discovery.js';
+import { rebuildRuntimeActiveView } from './skills-materializer.js';
 
 // Resolve xtrm-tools package root from __dirname (cli/dist/ -> ../..)
 declare const __dirname: string;
@@ -425,7 +428,7 @@ async function updatePiSettings(
 
     // Point directly at .xtrm/ — Pi scans the directory for all extensions/skills
     const extensionsEntry = '../.xtrm/extensions';
-    const skillsEntry = '../.xtrm/skills/default';
+    const skillsEntry = '../.xtrm/skills/active/pi';
 
     // Preserve user packages (npm:/git:/local), strip any old per-extension entries
     const existingPackages = (existingSettings.packages ?? []).filter(
@@ -439,7 +442,7 @@ async function updatePiSettings(
         skills: [skillsEntry],
         packages: existingPackages,
     }, { spaces: 2 });
-    log?.(kleur.dim(`Updated .pi/settings.json → .xtrm/extensions + .xtrm/skills/default`));
+    log?.(kleur.dim(`Updated .pi/settings.json → .xtrm/extensions + .xtrm/skills/active/pi`));
 }
 
 /**
@@ -654,7 +657,20 @@ export async function runPiRuntimeSync(opts: PiRuntimeOptions = {}): Promise<PiS
         }
     }
 
-    // Always update settings.json + core symlink for project installs
+    // Always rebuild active Pi skills view + update settings.json for project installs.
+    const skillsRoot = resolveSkillsRoot(resolvedProjectRoot);
+    if (await fs.pathExists(path.join(skillsRoot, 'default'))) {
+        const invariantViolations = await validateSkillsInvariants(skillsRoot);
+        if (invariantViolations.length > 0) {
+            const summary = invariantViolations.map(violation => `${violation.code}: ${violation.message}`).join('; ');
+            throw new Error(`Skills invariants failed. ${summary}`);
+        }
+
+        if (!dryRun) {
+            await rebuildRuntimeActiveView('pi', skillsRoot);
+        }
+    }
+
     await updatePiSettings(resolvedProjectRoot, dryRun, log);
     await ensureCorePackageSymlink(path.join(sourceDir, 'core'), resolvedProjectRoot, dryRun, log);
 

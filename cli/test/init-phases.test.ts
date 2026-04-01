@@ -31,6 +31,14 @@ const mocked = vi.hoisted(() => {
     const runPiInstall = vi.fn(async () => undefined);
     const runPluginEraCleanup = vi.fn(async () => undefined);
     const ensureAgentsSkillsSymlink = vi.fn(async () => undefined);
+    const assertRuntimeSkillsViews = vi.fn(async () => undefined);
+    const syncProjectMcpConfig = vi.fn(async () => ({
+        addedServers: ['serena'],
+        missingEnvWarnings: [],
+        wroteFile: true,
+        createdFile: true,
+        mcpPath: '/tmp/project/.mcp.json',
+    }));
 
     return {
         runMachineBootstrap,
@@ -47,6 +55,8 @@ const mocked = vi.hoisted(() => {
         runPiInstall,
         runPluginEraCleanup,
         ensureAgentsSkillsSymlink,
+        assertRuntimeSkillsViews,
+        syncProjectMcpConfig,
     };
 });
 
@@ -100,6 +110,14 @@ vi.mock('../src/core/plugin-era-cleanup.js', () => ({
 
 vi.mock('../src/core/skills-scaffold.js', () => ({
     ensureAgentsSkillsSymlink: mocked.ensureAgentsSkillsSymlink,
+}));
+
+vi.mock('../src/core/skills-runtime-views.js', () => ({
+    assertRuntimeSkillsViews: mocked.assertRuntimeSkillsViews,
+}));
+
+vi.mock('../src/core/project-mcp-sync.js', () => ({
+    syncProjectMcpConfig: mocked.syncProjectMcpConfig,
 }));
 
 vi.mock('prompts', () => ({
@@ -266,6 +284,7 @@ describe('xtrm init phased orchestrator', () => {
         expect(mocked.installFromRegistry).toHaveBeenCalledTimes(1);
         expect(mocked.scaffoldSkillsDefaultFromPackage).toHaveBeenCalledTimes(1);
         expect(mocked.runPiInstall).toHaveBeenCalledWith(false, false, projectRoot);
+        expect(mocked.syncProjectMcpConfig).toHaveBeenCalledWith(projectRoot);
         expect(mocked.ensureAgentsSkillsSymlink).toHaveBeenCalledWith(projectRoot);
         expect(runInstallSpy).not.toHaveBeenCalled();
         expect(calls).toEqual([

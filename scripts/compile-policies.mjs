@@ -1,14 +1,14 @@
 #!/usr/bin/env node
-// compile-policies.mjs — generate hooks/hooks.json from policies/*.json
+// compile-policies.mjs — generate .xtrm/config/hooks.json from policies/*.json
 //
 // Usage:
-//   node scripts/compile-policies.mjs             # write hooks/hooks.json
+//   node scripts/compile-policies.mjs             # write .xtrm/config/hooks.json
 //   node scripts/compile-policies.mjs --dry-run   # print output, no write
 //   node scripts/compile-policies.mjs --check     # exit 1 if hooks.json would change
 //   node scripts/compile-policies.mjs --check-pi  # verify deployed Pi extensions match policy declarations
 //
 // Policy files: policies/*.json (schema: policies/schema.json)
-// Output:       hooks/hooks.json
+// Output:       .xtrm/config/hooks.json
 
 import { readFileSync, writeFileSync, readdirSync, existsSync, statSync } from 'node:fs';
 import { join, dirname } from 'node:path';
@@ -29,7 +29,7 @@ const WRITE_TOOLS = [
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
 const POLICIES_DIR = join(ROOT, 'policies');
-const OUTPUT_FILE = join(ROOT, 'hooks', 'hooks.json');
+const OUTPUT_FILE = join(ROOT, '.xtrm', 'config', 'hooks.json');
 
 const args = process.argv.slice(2);
 const DRY_RUN = args.includes('--dry-run');
@@ -170,17 +170,17 @@ if (CHECK_PI) {
 if (CHECK) {
   const current = readFileSync(OUTPUT_FILE, 'utf8');
   if (current === output) {
-    console.log('✓ hooks/hooks.json is up to date');
+    console.log('✓ .xtrm/config/hooks.json is up to date');
     process.exit(0);
   } else {
-    console.error('✗ hooks/hooks.json is out of sync with policies/');
+    console.error('✗ .xtrm/config/hooks.json is out of sync with policies/');
     console.error('  Run: node scripts/compile-policies.mjs');
     process.exit(1);
   }
 }
 
 writeFileSync(OUTPUT_FILE, output);
-console.log(`✓ Generated hooks/hooks.json from ${policies.length} policies`);
+console.log(`✓ Generated .xtrm/config/hooks.json from ${policies.length} policies`);
 policies.forEach(p => {
   const count = (p.claude?.hooks ?? []).length;
   if (count > 0) console.log(`  ${p.file}: ${count} hook(s)`);

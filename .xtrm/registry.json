@@ -139,10 +139,6 @@
           "hash": "bb1c8ed316735afb98d1d5b8f32e07f869091f8a56d079c9a1ac359f8ee67a9b",
           "version": "0.7.0"
         },
-        "docker-expert/SKILL.md": {
-          "hash": "e33b08feeaa8e110c08dddd030970547356514d42aa484e52f51e2fd2d4f451b",
-          "version": "0.7.0"
-        },
         "documenting/CHANGELOG.md": {
           "hash": "a3990e4ae7d5b509d8da9ca0dc08c2837e10db63f04711cb53159817ecf0ed00",
           "version": "0.7.0"
@@ -319,38 +315,6 @@
           "hash": "5d2c2d85e7bbe091ba394817f4a1b200570e259af765131440f80f270b7fe0ee",
           "version": "0.7.0"
         },
-        "obsidian-cli/SKILL.md": {
-          "hash": "b54257cdc0e5d04488b35b0c797bfe427b24359f0848d3c73924dcacf8da6358",
-          "version": "0.7.0"
-        },
-        "orchestrating-agents/config.yaml": {
-          "hash": "a0e325acc6b752d9533e556576a69f3f6f22a6b05ddf6db2002ce7d11d349cad",
-          "version": "0.7.0"
-        },
-        "orchestrating-agents/references/agent-context-integration.md": {
-          "hash": "0b12acac99837fe8dc8b91043cd45b89c30ccb9f1e68b06eb6f88e47e93bea2e",
-          "version": "0.7.0"
-        },
-        "orchestrating-agents/references/examples.md": {
-          "hash": "47ae053718f6b0d1d260fee69590e2ed95f7d308b199a4e36fcad7cc86c3c348",
-          "version": "0.7.0"
-        },
-        "orchestrating-agents/references/handover-protocol.md": {
-          "hash": "05713eba5874fe39fbdb990af71b097f8bc60c8335414c601e9fb6375dca81d0",
-          "version": "0.7.0"
-        },
-        "orchestrating-agents/references/workflows.md": {
-          "hash": "b007c1bbf47974fa53817b1dd101b376d679840ec29ae48af831e27b56662ac1",
-          "version": "0.7.0"
-        },
-        "orchestrating-agents/scripts/detect_neighbors.py": {
-          "hash": "7823fab710a7104f72b9f3884c0202665ccc4da08f7ecd543fee87e2d310f4ec",
-          "version": "0.7.0"
-        },
-        "orchestrating-agents/SKILL.md": {
-          "hash": "6db59f2b9fff35f4f27aeb80f31c7516212c18dc9f8c0de669523242409f65e5",
-          "version": "0.7.0"
-        },
         "planning/evals/evals.json": {
           "hash": "d8cdaeebbf23c6e59ed182f34a64cf40a556d863a0b237aff5d175015289c8a2",
           "version": "0.7.0"
@@ -385,10 +349,6 @@
         },
         "prompt-improving/SKILL.md": {
           "hash": "3eb21391e4512e6dfa47051159cb6f68d130bba068dbe5b6b4744c422ed18387",
-          "version": "0.7.0"
-        },
-        "python-testing/SKILL.md": {
-          "hash": "98ce1865de021c57f416bb41c9630a9d0ee85c790e8d512d4a8c9f2ebc63b501",
           "version": "0.7.0"
         },
         "quality-gates/.claude/hooks/hook-config.json": {
@@ -479,188 +439,12 @@
           "hash": "4fbfba50ffaa8fd42227bdc3e64bfede9c09c2b4fec894f9500299a2f14317ef",
           "version": "0.7.0"
         },
-        "senior-backend/references/api_design_patterns.md": {
-          "hash": "5bef532218c1a4f994eef546fd102d124d6052eef4f472ef490079d747d1ccc7",
-          "version": "0.7.0"
-        },
-        "senior-backend/references/backend_security_practices.md": {
-          "hash": "c565222bd5ce1452614e62f1af0dc3e1b17e140ff261e92238d626b5d821a454",
-          "version": "0.7.0"
-        },
-        "senior-backend/references/database_optimization_guide.md": {
-          "hash": "e399dfdcf755186f54c34bdb37efda089e359932abb543adac2d5c398252243a",
-          "version": "0.7.0"
-        },
-        "senior-backend/scripts/api_load_tester.py": {
-          "hash": "dca9b04f0a8e643c720561e1549411064be77c3d85879e93edc5d49633a0f0cf",
-          "version": "0.7.0"
-        },
-        "senior-backend/scripts/api_scaffolder.py": {
-          "hash": "34c43d83d0f6aacfdba2b82576b2613b398fb0b69c7aaa78c8815d3cd76c0681",
-          "version": "0.7.0"
-        },
-        "senior-backend/scripts/database_migration_tool.py": {
-          "hash": "37ee8a932c440abf9b400f9b9f5ba046068c64e1e4d268bea49dc80a6dd4ea0d",
-          "version": "0.7.0"
-        },
-        "senior-backend/SKILL.md": {
-          "hash": "de1c35674ab09c38b0895ab29eddfaf501ceff19ecf4db39617d7fb1cbf8762d",
-          "version": "0.7.0"
-        },
-        "senior-data-scientist/references/experiment_design_frameworks.md": {
-          "hash": "4bb669406f3a3e2482bfc775e328643bda472a334dea7cdcb41c1b0bb87b4673",
-          "version": "0.7.0"
-        },
-        "senior-data-scientist/references/feature_engineering_patterns.md": {
-          "hash": "6657db3b24fc5fc721f4a29ce6be0ff0a6da1dae92aca67d56945ecc74858cd0",
-          "version": "0.7.0"
-        },
-        "senior-data-scientist/references/statistical_methods_advanced.md": {
-          "hash": "2ad183277b8e57a307085ca7265258d31a08761bc5d3f5844a33dbc79a40a48b",
-          "version": "0.7.0"
-        },
-        "senior-data-scientist/scripts/experiment_designer.py": {
-          "hash": "e086c9d66a67910d114c0831e16d6a658c712f11d5356b82f28687ba43de30fb",
-          "version": "0.7.0"
-        },
-        "senior-data-scientist/scripts/feature_engineering_pipeline.py": {
-          "hash": "706602f103fa3403196ceb0d110e91b56b039c0f21fc0302ebfc7856c1874168",
-          "version": "0.7.0"
-        },
-        "senior-data-scientist/scripts/model_evaluation_suite.py": {
-          "hash": "e7ce48ead1011fcf20f1cbed140061914ddc76b9ecf022101630bbec816fcc39",
-          "version": "0.7.0"
-        },
-        "senior-data-scientist/SKILL.md": {
-          "hash": "1e6974ea60451055b3b11ff8b12d6bbb8ef90ab2bf973830718271c8ed53de06",
-          "version": "0.7.0"
-        },
-        "senior-devops/references/cicd_pipeline_guide.md": {
-          "hash": "1a9081fd856eaad7643ddbb1b704b1e7dcf66f0e531e42e8740b21dd09439ddc",
-          "version": "0.7.0"
-        },
-        "senior-devops/references/deployment_strategies.md": {
-          "hash": "63d164425e4d097a60d947f2fe515e4e8e60966cba97b418858a6ee5b144660f",
-          "version": "0.7.0"
-        },
-        "senior-devops/references/infrastructure_as_code.md": {
-          "hash": "82f85a94d900384b7f57b13d4519af5c6f4b47a0d2a53129f0b4452f11945374",
-          "version": "0.7.0"
-        },
-        "senior-devops/scripts/deployment_manager.py": {
-          "hash": "11644f32cacc37d6340c805f698e96f8b3692a79352c16f500f96ccc7dde30f9",
-          "version": "0.7.0"
-        },
-        "senior-devops/scripts/pipeline_generator.py": {
-          "hash": "716dccacc6edd012e3295880138e28a573eba5185ed843f883f56866b50e387b",
-          "version": "0.7.0"
-        },
-        "senior-devops/scripts/terraform_scaffolder.py": {
-          "hash": "f5c3a34fa93cc91635a957163525cbb0324489451cb869225dccb38f927c6794",
-          "version": "0.7.0"
-        },
-        "senior-devops/SKILL.md": {
-          "hash": "478aed6e0ef1a629cd1e7b8d3805935ab154a15ed83a9fd928c1114d16abcaad",
-          "version": "0.7.0"
-        },
-        "senior-security/references/cryptography_implementation.md": {
-          "hash": "d4d994d22c107903fe29c6f6bde732f92e7a5eb26eaa9b200f10a3d4ddbe4adb",
-          "version": "0.7.0"
-        },
-        "senior-security/references/penetration_testing_guide.md": {
-          "hash": "06aaca9578eb2b91664f0ef964c03621b80c47469260b2982764615aaacdc512",
-          "version": "0.7.0"
-        },
-        "senior-security/references/security_architecture_patterns.md": {
-          "hash": "86619c5fb1ae5432b2d0be75b897144161f260afaa2ded33fae0988f5da50b1d",
-          "version": "0.7.0"
-        },
-        "senior-security/scripts/pentest_automator.py": {
-          "hash": "8b2280d6ee02a852b9fe92dc400fae1787998c4ad1d1d3bfbb19d06c05f40b30",
-          "version": "0.7.0"
-        },
-        "senior-security/scripts/security_auditor.py": {
-          "hash": "ce767c5773cbdd5d99601819061670839b521b6b9d13a4de6f10bd189caa2fe9",
-          "version": "0.7.0"
-        },
-        "senior-security/scripts/threat_modeler.py": {
-          "hash": "2a62f3043d9d402b15a5e749b3eecc657c0c390e8ddb8d36d9900f57c55ed2a5",
-          "version": "0.7.0"
-        },
-        "senior-security/SKILL.md": {
-          "hash": "d7e26f159d81a9e5ca9a7bc9ff3af116876068349d727b894c6b50020efbd7a7",
-          "version": "0.7.0"
-        },
-        "service-skills-set/.claude/git-hooks/doc_reminder.py": {
+        "service-skills-set/git-hooks/doc_reminder.py": {
           "hash": "90d33305dcc8fcc73bae2f9ad7390be118617743dbb38808d61710dc1662879b",
           "version": "0.7.0"
         },
-        "service-skills-set/.claude/git-hooks/skill_staleness.py": {
+        "service-skills-set/git-hooks/skill_staleness.py": {
           "hash": "39d1ac16dee329bab34a646216e2d851856a07d53f6c0f909709fe217f2ba22f",
-          "version": "0.7.0"
-        },
-        "service-skills-set/.claude/service-registry.json": {
-          "hash": "ffee34d71d46e325bfc205e8e7bfba1165b7781495624f868c590e8da681bf32",
-          "version": "0.7.0"
-        },
-        "service-skills-set/.claude/settings.json": {
-          "hash": "c5a9cb6df7f77b7a12a98663971cccdae0940a477e5023933afb7bb38b7e3621",
-          "version": "0.7.0"
-        },
-        "service-skills-set/.claude/skills/creating-service-skills/references/script_quality_standards.md": {
-          "hash": "964476a17aea08505edddae1616899ebcc9f6f1f990e060cf37c1676a7f54b7c",
-          "version": "0.7.0"
-        },
-        "service-skills-set/.claude/skills/creating-service-skills/references/service_skill_system_guide.md": {
-          "hash": "72504d474d9b9cc1550ceb97dd16fc02900666803d523840d7eb31ee0ad52755",
-          "version": "0.7.0"
-        },
-        "service-skills-set/.claude/skills/creating-service-skills/scripts/bootstrap.py": {
-          "hash": "7587d091799220f5df5f78ef87f81fcfd7e92685b442c1c7420936690d4ce074",
-          "version": "0.7.0"
-        },
-        "service-skills-set/.claude/skills/creating-service-skills/scripts/deep_dive.py": {
-          "hash": "e27f4e0b0307888e2377b8d62b0a8e86fc0d177f3ac8f1d82ab75ec1fc72e63a",
-          "version": "0.7.0"
-        },
-        "service-skills-set/.claude/skills/creating-service-skills/scripts/scaffolder.py": {
-          "hash": "eee0bda36ad3a72e87a5867c194faebfbb2887614583681c120ed6336e342915",
-          "version": "0.7.0"
-        },
-        "service-skills-set/.claude/skills/creating-service-skills/SKILL.md": {
-          "hash": "38801ee1f92d2ed6b0ca9306495f1a4106676bc5a5c89c6d15c2710593fade24",
-          "version": "0.7.0"
-        },
-        "service-skills-set/.claude/skills/scoping-service-skills/scripts/scope.py": {
-          "hash": "f1b38f1e080276dd12191f4924395a4f53c7d2fbdcc5d88dc16b8e83a04c9906",
-          "version": "0.7.0"
-        },
-        "service-skills-set/.claude/skills/scoping-service-skills/SKILL.md": {
-          "hash": "4fbfba50ffaa8fd42227bdc3e64bfede9c09c2b4fec894f9500299a2f14317ef",
-          "version": "0.7.0"
-        },
-        "service-skills-set/.claude/skills/updating-service-skills/scripts/drift_detector.py": {
-          "hash": "22f5655ee505242a7c9e59e71e13bfab4bc58971b19221646caee2425348f4e4",
-          "version": "0.7.0"
-        },
-        "service-skills-set/.claude/skills/updating-service-skills/SKILL.md": {
-          "hash": "5b60d48463deef56ecd5198ef6d1f58120682438d64bf3db30b41ba6516a1ede",
-          "version": "0.7.0"
-        },
-        "service-skills-set/.claude/skills/using-service-skills/scripts/cataloger.py": {
-          "hash": "99e6784bb682598a38dfdaea2137dfa2091c977ca127dbb3f4be9523d71868e8",
-          "version": "0.7.0"
-        },
-        "service-skills-set/.claude/skills/using-service-skills/scripts/skill_activator.py": {
-          "hash": "0e0dc7f15357580f0914f1dde7b00dbc3f757b16dba4623d9c7d8b303815b267",
-          "version": "0.7.0"
-        },
-        "service-skills-set/.claude/skills/using-service-skills/scripts/test_skill_activator.py": {
-          "hash": "484d957d7682a5f604d3bbc314c448d85ab78766ecb2f6fff3e7990692d1a8cd",
-          "version": "0.7.0"
-        },
-        "service-skills-set/.claude/skills/using-service-skills/SKILL.md": {
-          "hash": "3ca830174c3bf13ce573443618b43c5b03575f0cd13660c3206dd3eae21c39a7",
           "version": "0.7.0"
         },
         "service-skills-set/install-service-skills.py": {
@@ -671,8 +455,16 @@
           "hash": "07bb676a19c7bd1b3a6b50651a688816117dff8cff0c152dcc45fb7468988fd7",
           "version": "0.7.0"
         },
+        "service-skills-set/service-registry.json": {
+          "hash": "ffee34d71d46e325bfc205e8e7bfba1165b7781495624f868c590e8da681bf32",
+          "version": "0.7.0"
+        },
         "service-skills-set/service-skills-readme.md": {
           "hash": "2bb1cdabc22ff346c0218152169b5ca7202d9ab9fdb2877f09e2dddf05fb0621",
+          "version": "0.7.0"
+        },
+        "service-skills-set/settings.json": {
+          "hash": "c5a9cb6df7f77b7a12a98663971cccdae0940a477e5023933afb7bb38b7e3621",
           "version": "0.7.0"
         },
         "session-close-report/SKILL.md": {
@@ -808,19 +600,7 @@
           "version": "0.7.0"
         },
         "using-quality-gates/SKILL.md": {
-          "hash": "0570f34a7fbca7f4a53fd751503a78152401b0697e95baf06bf1c221b1000f83",
-          "version": "0.7.0"
-        },
-        "using-serena-lsp/README.md": {
-          "hash": "1196c81c52c00d0cfda581bb7bd54846d480fec52f73c88fe40128f4ab41d8bf",
-          "version": "0.7.0"
-        },
-        "using-serena-lsp/REFERENCE.md": {
-          "hash": "26b41e649532dac5141c3a1e8c05c0dfcb33d9d896439cecce60e84d7c8c3c73",
-          "version": "0.7.0"
-        },
-        "using-serena-lsp/SKILL.md": {
-          "hash": "ecb720463dc6e10f4446e6af258cf340de147531ad84b045268ce5a5868988a8",
+          "hash": "4445e363a2930b8d233d79028eff3759dd90eed031a68f1ef6295fc5167fda93",
           "version": "0.7.0"
         },
         "using-service-skills/scripts/cataloger.py": {
@@ -1046,7 +826,7 @@
           "version": "0.7.0"
         },
         "pi/install-schema.json": {
-          "hash": "ddfae6afbd96dff52b47a3b2f5d0f5063b3a5ca0e03f992cb2a115c81807ce54",
+          "hash": "44d91fd7b9ca6eb7198f1e4cd0f5f849a42dcb3df119b741746211218acf0c2b",
           "version": "0.7.0"
         },
         "pi/models.json.template": {

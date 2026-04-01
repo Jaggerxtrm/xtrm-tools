@@ -9,6 +9,7 @@ import { runPiInstall } from './pi-install.js';
 import { runClaudeRuntimeSyncPhase } from '../core/claude-runtime-sync.js';
 import { runPluginEraCleanup } from '../core/plugin-era-cleanup.js';
 import { ensureAgentsSkillsSymlink } from '../core/skills-scaffold.js';
+import { assertRuntimeSkillsViews } from '../core/skills-runtime-views.js';
 import {
     runMachineBootstrapPhase,
 } from '../core/machine-bootstrap.js';
@@ -18,6 +19,7 @@ import {
     type InstallStats,
     type RegistryManifest,
 } from '../core/registry-scaffold.js';
+import { syncProjectMcpConfig } from '../core/project-mcp-sync.js';
 
 export interface InstallOpts {
     dryRun?: boolean;
@@ -172,6 +174,17 @@ export async function runInstall(opts: InstallOpts = {}): Promise<void> {
         });
     }
 
+    const mcpSync = await syncProjectMcpConfig(projectRoot, { dryRun });
+    if (mcpSync.wroteFile) {
+        const verb = mcpSync.createdFile ? 'Created' : 'Updated';
+        console.log(kleur.dim(`  • ${verb} ${mcpSync.mcpPath} (+${mcpSync.addedServers.length} server${mcpSync.addedServers.length === 1 ? '' : 's'})`));
+    } else {
+        console.log(kleur.dim(`  • ${mcpSync.mcpPath} already up to date`));
+    }
+    for (const warning of mcpSync.missingEnvWarnings) {
+        console.log(kleur.yellow(`  ⚠ MCP server ${warning}`));
+    }
+
     if (!skipClaudeRuntimeSync) {
         await runClaudeRuntimeSyncPhase({ repoRoot: projectRoot, dryRun, isGlobal, prune });
     }
@@ -180,6 +193,7 @@ export async function runInstall(opts: InstallOpts = {}): Promise<void> {
 
     if (!dryRun) {
         await ensureAgentsSkillsSymlink(projectRoot);
+        await assertRuntimeSkillsViews(projectRoot);
     }
 
     await renderSummaryCard(stats, dryRun);

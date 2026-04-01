@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.join(__dirname, '../..');
 const SCRIPT = path.join(REPO_ROOT, 'scripts/compile-policies.mjs');
-const HOOKS_OUTPUT = path.join(REPO_ROOT, 'hooks/hooks.json');
+const HOOKS_OUTPUT = path.join(REPO_ROOT, '.xtrm', 'config', 'hooks.json');
 const POLICIES_DIR = path.join(REPO_ROOT, 'policies');
 
 function runCompiler(args: string[]) {
@@ -20,7 +20,7 @@ function runCompiler(args: string[]) {
 // ── Golden file ───────────────────────────────────────────────────────────────
 
 describe('compile-policies — golden file', () => {
-  it('--dry-run output matches hooks/hooks.json on disk', () => {
+  it('--dry-run output matches .xtrm/config/hooks.json on disk', () => {
     const result = runCompiler(['--dry-run']);
     expect(result.status).toBe(0);
     const onDisk = readFileSync(HOOKS_OUTPUT, 'utf8');
@@ -76,7 +76,7 @@ describe('compile-policies — write mode', () => {
     try {
       const result = runCompiler([]);
       expect(result.status).toBe(0);
-      expect(result.stdout).toContain('Generated hooks/hooks.json');
+      expect(result.stdout).toContain('Generated .xtrm/config/hooks.json');
       const written = readFileSync(HOOKS_OUTPUT, 'utf8');
       const parsed = JSON.parse(written);
       expect(parsed).toHaveProperty('hooks');

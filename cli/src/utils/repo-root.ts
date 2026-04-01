@@ -1,39 +1,68 @@
 import fs from 'fs-extra';
 import path from 'path';
 
-async function walkUp(startDir: string): Promise<string | null> {
-    let dir = path.resolve(startDir);
+async function walkUp(startDir: string, predicate: (dir: string) => Promise<boolean>): Promise<string | null> {
+  let dir = path.resolve(startDir);
 
-    while (true) {
-        const skillsPath = path.join(dir, 'skills');
-        const hooksPath  = path.join(dir, 'hooks');
-
-        if (await fs.pathExists(skillsPath) && await fs.pathExists(hooksPath)) {
-            return dir;
-        }
-
-        const parent = path.dirname(dir);
-        if (parent === dir) return null;
-        dir = parent;
+  while (true) {
+    if (await predicate(dir)) {
+      return dir;
     }
+
+    const parent = path.dirname(dir);
+    if (parent === dir) {
+      return null;
+    }
+
+    dir = parent;
+  }
+}
+
+async function isSourceRepoRoot(dir: string): Promise<boolean> {
+  const skillsPath = path.join(dir, 'skills');
+  const hooksPath = path.join(dir, 'hooks');
+  return fs.pathExists(skillsPath) && fs.pathExists(hooksPath);
+}
+
+async function isProjectRoot(dir: string): Promise<boolean> {
+  const xtrmPath = path.join(dir, '.xtrm');
+  const gitPath = path.join(dir, '.git');
+  return fs.pathExists(xtrmPath) || fs.pathExists(gitPath);
 }
 
 /**
- * Finds the jaggers-agent-tools repo root by:
- * 1. Walking up from process.cwd() — works when run inside a cloned repo.
- * 2. Walking up from __dirname    — works when run via `npx`, where the
- *    package is extracted to a temp/cache directory that contains skills/ & hooks/.
+ * Finds the xtrm-tools source repository root (bundle root).
  */
 export async function findRepoRoot(): Promise<string> {
-    const fromCwd = await walkUp(process.cwd());
-    if (fromCwd) return fromCwd;
+  const fromCwd = await walkUp(process.cwd(), isSourceRepoRoot);
+  if (fromCwd) {
+    return fromCwd;
+  }
 
-    // __dirname is cli/dist/ inside the package — two levels up is the repo root.
-    const fromBundle = await walkUp(path.resolve(__dirname, '..', '..'));
-    if (fromBundle) return fromBundle;
+  const fromBundle = await walkUp(path.resolve(__dirname, '..', '..'), isSourceRepoRoot);
+  if (fromBundle) {
+    return fromBundle;
+  }
 
-    throw new Error(
-        'Could not locate jaggers-agent-tools repo root.\n' +
-        'Run via `npx -y github:Jaggerxtrm/jaggers-agent-tools` or from within the cloned repository.'
-    );
+  throw new Error(
+    'Could not locate xtrm-tools source repo root.\n' +
+      'Run via `npx -y github:Jaggerxtrm/jaggers-agent-tools` or from within the cloned repository.',
+  );
+}
+
+/**
+ * Finds the current project root for local operations.
+ *
+ * Resolution order:
+ * 1. Nearest ancestor containing `.xtrm/`
+ * 2. Nearest ancestor containing `.git/`
+ * 3. Fallback to the current working directory
+ */
+export async function findProjectRoot(): Promise<string> {
+  const fromCwd = await walkUp(process.cwd(), isProjectRoot);
+  if (fromCwd) {
+    return fromCwd;
+  }
+
+  return process.cwd();
 }

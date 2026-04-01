@@ -7,14 +7,8 @@ import { t } from '../utils/theme.js';
 
 declare const __dirname: string;
 
-interface CanonicalHookDefinition {
-    script: string;
-    matcher?: string;
-    timeout?: number;
-}
-
-interface CanonicalHooksConfig {
-    hooks: Record<string, CanonicalHookDefinition[]>;
+interface NativeHooksConfig {
+    hooks: Record<string, HookWrapper[]>;
 }
 
 interface CommandHook {
@@ -72,10 +66,9 @@ export async function runClaudeRuntimeSyncPhase(opts: ClaudeRuntimeSyncOptions):
     const packageRoot = await resolvePackageRoot();
     const hooksConfigPath = path.join(packageRoot, '.xtrm', 'config', 'hooks.json');
     const settingsTemplatePath = path.join(packageRoot, '.xtrm', 'config', 'settings.json');
-    const hooksDir = path.resolve(repoRoot, '.xtrm', 'hooks');
 
-    const hooksConfig = await fs.readJson(hooksConfigPath) as CanonicalHooksConfig;
-    const generatedHooks = generateHooks(hooksConfig, hooksDir);
+    const hooksConfig = await fs.readJson(hooksConfigPath) as NativeHooksConfig;
+    const generatedHooks: Record<string, HookWrapper[]> = hooksConfig.hooks ?? {};
 
     const settingsPath = isGlobal
         ? path.join(os.homedir(), '.claude', 'settings.json')
@@ -98,7 +91,7 @@ export async function runClaudeRuntimeSyncPhase(opts: ClaudeRuntimeSyncOptions):
     const hooksEntriesWritten = countHookEntries(generatedHooks);
 
     console.log(t.label(`  • hooks source: ${hooksConfigPath}`));
-    console.log(t.label(`  • hooks dir: ${hooksDir}`));
+
     console.log(t.label(`  • target settings: ${settingsPath}`));
 
     if (hasExistingSettings) {
@@ -148,44 +141,7 @@ export async function runClaudeRuntimeSyncPhase(opts: ClaudeRuntimeSyncOptions):
     };
 }
 
-function generateHooks(hooksConfig: CanonicalHooksConfig, hooksDir: string): Record<string, HookWrapper[]> {
-    const generated: Record<string, HookWrapper[]> = {};
 
-    for (const [event, hookDefinitions] of Object.entries(hooksConfig.hooks ?? {})) {
-        generated[event] = hookDefinitions.map((definition) => {
-            const scriptPath = normalizePath(path.resolve(hooksDir, definition.script));
-            const commandHook: CommandHook = {
-                type: 'command',
-                command: buildScriptCommand(definition.script, scriptPath),
-            };
-
-            if (typeof definition.timeout === 'number') {
-                commandHook.timeout = definition.timeout;
-            }
-
-            const wrapper: HookWrapper = { hooks: [commandHook] };
-            if (definition.matcher) {
-                wrapper.matcher = definition.matcher;
-            }
-            return wrapper;
-        });
-    }
-
-    return generated;
-}
-
-function buildScriptCommand(scriptName: string, absoluteScriptPath: string): string {
-    const extension = path.extname(scriptName).toLowerCase();
-    if (extension === '.mjs' || extension === '.cjs' || extension === '.js') {
-        return `node "${absoluteScriptPath}"`;
-    }
-    if (extension === '.sh') {
-        return `bash "${absoluteScriptPath}"`;
-    }
-
-    const pythonBin = process.platform === 'win32' ? 'python' : 'python3';
-    return `${pythonBin} "${absoluteScriptPath}"`;
-}
 
 function countHookEntries(hooks: Record<string, HookWrapper[]>): number {
     let count = 0;
@@ -195,12 +151,6 @@ function countHookEntries(hooks: Record<string, HookWrapper[]>): number {
     return count;
 }
 
-function normalizePath(inputPath: string): string {
-    if (process.platform !== 'win32') {
-        return inputPath;
-    }
-    return inputPath.replace(/\\/g, '/');
-}
 
 async function readSettings(settingsPath: string): Promise<ClaudeSettings> {
     try {

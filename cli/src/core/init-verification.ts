@@ -16,6 +16,7 @@ import path from 'path';
 import { t, sym } from '../utils/theme.js';
 import { inventoryDeps, type BootstrapPlan } from './machine-bootstrap.js';
 import { inventoryPiRuntime, type PiRuntimePlan } from './pi-runtime.js';
+import { checkRuntimeSkillsViews } from './skills-runtime-views.js';
 
 interface CommandHook {
     type?: string;
@@ -45,6 +46,13 @@ export interface VerificationResult {
         allRequiredPresent: boolean;
         missingExtensions: string[];
         missingPackages: string[];
+    };
+    skillsRuntime: {
+        activeClaudeReady: boolean;
+        activePiReady: boolean;
+        claudePointerReady: boolean;
+        piPointerReady: boolean;
+        hasDeprecatedAgentsSkillsPath: boolean;
     };
     projectBootstrap: {
         beadsInitialized: boolean;
@@ -193,11 +201,16 @@ export async function runInitVerification(projectRoot: string): Promise<Verifica
     const claudeResult = verifyClaudeRuntime(projectRoot);
     const piPlan = await verifyPiRuntime(projectRoot);
     const projectResult = verifyProjectBootstrap(projectRoot);
+    const skillsRuntimeResult = await checkRuntimeSkillsViews(projectRoot);
 
     const allPassed =
         machinePlan.allRequiredPresent &&
         claudeResult.hooksWired &&
         piPlan.allRequiredPresent &&
+        skillsRuntimeResult.activeClaudeReady &&
+        skillsRuntimeResult.activePiReady &&
+        skillsRuntimeResult.claudePointerReady &&
+        skillsRuntimeResult.piPointerReady &&
         projectResult.beadsInitialized;
 
     return {
@@ -210,6 +223,13 @@ export async function runInitVerification(projectRoot: string): Promise<Verifica
             allRequiredPresent: piPlan.allRequiredPresent,
             missingExtensions: piPlan.missingExtensions.filter(s => s.ext.required).map(s => s.ext.displayName),
             missingPackages: piPlan.missingPackages.filter(s => s.pkg.required).map(s => s.pkg.displayName),
+        },
+        skillsRuntime: {
+            activeClaudeReady: skillsRuntimeResult.activeClaudeReady,
+            activePiReady: skillsRuntimeResult.activePiReady,
+            claudePointerReady: skillsRuntimeResult.claudePointerReady,
+            piPointerReady: skillsRuntimeResult.piPointerReady,
+            hasDeprecatedAgentsSkillsPath: skillsRuntimeResult.hasDeprecatedAgentsSkillsPath,
         },
         projectBootstrap: projectResult,
         allPassed,
@@ -255,6 +275,22 @@ export function renderVerificationSummary(result: VerificationResult): void {
             parts.push(`packages: ${result.piRuntime.missingPackages.join(', ')}`);
         }
         console.log(`  ${prIcon} ${prLabel} — ${parts.join('; ')}`);
+    }
+
+    // Skills runtime
+    const skillsParts: string[] = [];
+    if (!result.skillsRuntime.activeClaudeReady) skillsParts.push('active/claude');
+    if (!result.skillsRuntime.activePiReady) skillsParts.push('active/pi');
+    if (!result.skillsRuntime.claudePointerReady) skillsParts.push('.claude/skills pointer');
+    if (!result.skillsRuntime.piPointerReady) skillsParts.push('.pi settings skills pointer');
+    const srIcon = skillsParts.length === 0 ? sym.ok : sym.warn;
+    if (skillsParts.length === 0) {
+        console.log(`  ${srIcon} Skills Runtime`);
+    } else {
+        console.log(`  ${srIcon} Skills Runtime — incomplete: ${skillsParts.join(', ')}`);
+    }
+    if (result.skillsRuntime.hasDeprecatedAgentsSkillsPath) {
+        console.log(`  ${sym.warn} Deprecated path present: .agents/skills`);
     }
 
     // Project bootstrap

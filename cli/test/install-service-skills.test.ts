@@ -5,11 +5,12 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import fsExtra from 'fs-extra';
 import { mergeSettingsHooks, installSkills, installGitHooks } from '../src/commands/install-service-skills.js';
+import { ensureAgentsSkillsSymlink } from '../src/core/skills-scaffold.js';
 
 // __dirname in vitest context = cli/test/
 const REPO_ROOT = path.resolve(__dirname, '../..');
-const ACTUAL_SKILLS_SRC = path.join(REPO_ROOT, 'project-skills', 'service-skills-set', '.claude', 'skills');
-const ACTUAL_CLAUDE_SRC = path.join(REPO_ROOT, 'project-skills', 'service-skills-set', '.claude');
+const ACTUAL_SKILLS_ROOT = path.join(REPO_ROOT, '.xtrm', 'skills');
+const ACTUAL_SERVICE_SKILLS_ASSETS = path.join(REPO_ROOT, '.xtrm', 'skills', 'default', 'service-skills-set');
 
 describe('mergeSettingsHooks', () => {
     it('adds all three hooks to empty settings', () => {
@@ -22,13 +23,14 @@ describe('mergeSettingsHooks', () => {
         expect(hooks).toHaveProperty('PostToolUse');
     });
 
-    it('preserves existing keys and skips them', () => {
+    it('preserves existing keys and appends missing hook entries', () => {
         const existing = { hooks: { SessionStart: [{ custom: true }] } };
         const { result, added, skipped } = mergeSettingsHooks(existing);
-        const hooks = result.hooks as Record<string, unknown>;
-        expect(skipped).toEqual(['SessionStart']);
-        expect(added).toEqual(['PreToolUse', 'PostToolUse']);
-        expect(hooks.SessionStart).toEqual([{ custom: true }]);
+        const hooks = result.hooks as Record<string, unknown[]>;
+
+        expect(skipped).toEqual([]);
+        expect(added).toEqual(['SessionStart', 'PreToolUse', 'PostToolUse']);
+        expect(hooks.SessionStart).toEqual(expect.arrayContaining([{ custom: true }]));
     });
 
     it('preserves non-hook keys in settings', () => {
@@ -44,23 +46,28 @@ describe('installSkills', () => {
 
     beforeEach(async () => {
         tmpDir = await mkdtemp(path.join(tmpdir(), 'jaggers-test-'));
+        await fsExtra.ensureDir(path.join(tmpDir, '.xtrm', 'skills'));
+        await fsExtra.copy(ACTUAL_SKILLS_ROOT, path.join(tmpDir, '.xtrm', 'skills'));
+        await ensureAgentsSkillsSymlink(tmpDir);
     });
 
     afterEach(async () => {
         await rm(tmpDir, { recursive: true, force: true });
     });
 
-    it('creates .claude/skills/<skill> directories', async () => {
-        await installSkills(tmpDir, ACTUAL_SKILLS_SRC);
-        for (const skill of ['creating-service-skills', 'using-service-skills', 'updating-service-skills', 'scoping-service-skills']) {
-            const dest = path.join(tmpDir, '.claude', 'skills', skill);
-            expect(await fsExtra.pathExists(dest)).toBe(true);
+    it('verifies trinity skills are reachable through active .claude/skills view', async () => {
+        const results = await installSkills(tmpDir, ACTUAL_SKILLS_ROOT);
+
+        for (const { skill, status } of results) {
+            expect(status).toBe('active');
+            expect(await fsExtra.pathExists(path.join(tmpDir, '.claude', 'skills', skill, 'SKILL.md'))).toBe(true);
         }
     });
 
-    it('is idempotent (safe to run twice)', async () => {
-        await installSkills(tmpDir, ACTUAL_SKILLS_SRC);
-        await expect(installSkills(tmpDir, ACTUAL_SKILLS_SRC)).resolves.not.toThrow();
+    it('fails when active runtime view is missing a trinity skill', async () => {
+        await fsExtra.remove(path.join(tmpDir, '.xtrm', 'skills', 'active', 'claude', 'using-service-skills'));
+
+        await expect(installSkills(tmpDir, ACTUAL_SKILLS_ROOT)).rejects.toThrow(/using-service-skills/);
     });
 });
 
@@ -77,34 +84,34 @@ describe('installGitHooks', () => {
     });
 
     it('creates .githooks/pre-commit with doc-reminder snippet', async () => {
-        await installGitHooks(tmpDir, ACTUAL_CLAUDE_SRC);
+        await installGitHooks(tmpDir, ACTUAL_SERVICE_SKILLS_ASSETS);
         const content = await fsExtra.readFile(path.join(tmpDir, '.githooks', 'pre-commit'), 'utf8');
         expect(content).toContain('# [jaggers] doc-reminder');
         expect(content).toContain('.claude/git-hooks/doc_reminder.py');
     });
 
     it('creates .githooks/pre-push with skill-staleness snippet', async () => {
-        await installGitHooks(tmpDir, ACTUAL_CLAUDE_SRC);
+        await installGitHooks(tmpDir, ACTUAL_SERVICE_SKILLS_ASSETS);
         const content = await fsExtra.readFile(path.join(tmpDir, '.githooks', 'pre-push'), 'utf8');
         expect(content).toContain('# [jaggers] skill-staleness');
         expect(content).toContain('.claude/git-hooks/skill_staleness.py');
     });
 
     it('copies hook scripts into .claude/git-hooks/', async () => {
-        await installGitHooks(tmpDir, ACTUAL_CLAUDE_SRC);
+        await installGitHooks(tmpDir, ACTUAL_SERVICE_SKILLS_ASSETS);
         expect(await fsExtra.pathExists(path.join(tmpDir, '.claude', 'git-hooks', 'doc_reminder.py'))).toBe(true);
         expect(await fsExtra.pathExists(path.join(tmpDir, '.claude', 'git-hooks', 'skill_staleness.py'))).toBe(true);
     });
 
     it('activates hooks in .git/hooks/', async () => {
-        await installGitHooks(tmpDir, ACTUAL_CLAUDE_SRC);
+        await installGitHooks(tmpDir, ACTUAL_SERVICE_SKILLS_ASSETS);
         expect(await fsExtra.pathExists(path.join(tmpDir, '.git', 'hooks', 'pre-commit'))).toBe(true);
         expect(await fsExtra.pathExists(path.join(tmpDir, '.git', 'hooks', 'pre-push'))).toBe(true);
     });
 
     it('is idempotent — does not duplicate snippets on re-run', async () => {
-        await installGitHooks(tmpDir, ACTUAL_CLAUDE_SRC);
-        await installGitHooks(tmpDir, ACTUAL_CLAUDE_SRC);
+        await installGitHooks(tmpDir, ACTUAL_SERVICE_SKILLS_ASSETS);
+        await installGitHooks(tmpDir, ACTUAL_SERVICE_SKILLS_ASSETS);
         const content = await fsExtra.readFile(path.join(tmpDir, '.githooks', 'pre-commit'), 'utf8');
         const count = (content.match(/# \[jaggers\] doc-reminder/g) ?? []).length;
         expect(count).toBe(1);
@@ -114,7 +121,7 @@ describe('installGitHooks', () => {
         spawnSync('git', ['init'], { cwd: tmpDir, stdio: 'pipe' });
         spawnSync('git', ['config', 'core.hooksPath', '.beads/hooks'], { cwd: tmpDir, stdio: 'pipe' });
 
-        await installGitHooks(tmpDir, ACTUAL_CLAUDE_SRC);
+        await installGitHooks(tmpDir, ACTUAL_SERVICE_SKILLS_ASSETS);
 
         const beadsPreCommit = path.join(tmpDir, '.beads', 'hooks', 'pre-commit');
         const beadsPrePush = path.join(tmpDir, '.beads', 'hooks', 'pre-push');

@@ -5,7 +5,7 @@
  * 1. Each policy file passes structural validation
  * 2. Policies with runtime:both have both Claude hooks and Pi extension metadata
  * 3. All referenced hook scripts and Pi extension files exist on disk
- * 4. The policy compiler produces up-to-date hooks/hooks.json (--check passes)
+ * 4. The policy compiler produces up-to-date .xtrm/config/hooks.json (--check passes)
  */
 
 import { describe, it, expect } from 'vitest';
@@ -94,10 +94,10 @@ describe('runtime:both parity', () => {
 
 describe('matcher macro expansion parity', () => {
   it('compiled hooks contain no unresolved matcher macros', () => {
-    const compiledHooks = JSON.parse(readFileSync(join(ROOT, 'hooks', 'hooks.json'), 'utf8'));
+    const compiledHooks = JSON.parse(readFileSync(join(ROOT, '.xtrm', 'config', 'hooks.json'), 'utf8'));
     const allGroups = Object.values(compiledHooks?.hooks ?? {}).flat() as Array<{ matcher?: string }>;
     const unresolved = allGroups.filter((group) => typeof group.matcher === 'string' && group.matcher.includes('$'));
-    expect(unresolved, 'found unresolved matcher macros in hooks/hooks.json').toHaveLength(0);
+    expect(unresolved, 'found unresolved matcher macros in .xtrm/config/hooks.json').toHaveLength(0);
   });
 });
 
@@ -133,7 +133,7 @@ describe('referenced files exist', () => {
 // ── Compiler consistency ──────────────────────────────────────────────────────
 
 describe('compiler', () => {
-  it('hooks/hooks.json is up to date with policies/', () => {
+  it('.xtrm/config/hooks.json is up to date with policies/', () => {
     const result = spawnSync(
       'node',
       [join(ROOT, 'scripts', 'compile-policies.mjs'), '--check'],
@@ -141,7 +141,7 @@ describe('compiler', () => {
     );
     expect(
       result.status,
-      `hooks.json drift detected — run: npm run compile-policies\n${result.stdout}${result.stderr}`,
+      `.xtrm/config/hooks.json drift detected — run: npm run compile-policies\n${result.stdout}${result.stderr}`,
     ).toBe(0);
   });
 

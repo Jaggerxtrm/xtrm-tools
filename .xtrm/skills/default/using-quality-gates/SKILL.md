@@ -20,8 +20,8 @@ description: 'Quality Gates workflow for Claude Code. Use when editing code in p
 │  QUALITY GATES (this skill)                                     │
 │  ─────────────────────────────                                  │
 │  PostToolUse Hooks (installed by this skill):                   │
-│  • .claude/hooks/quality-check.cjs  → TS/JS files              │
-│  • .claude/hooks/quality-check.py   → Python files             │
+│  • .xtrm/hooks/quality-check.cjs  → TS/JS files              │
+│  • .xtrm/hooks/quality-check.py   → Python files             │
 │  • .claude/settings.json            → Hook registration        │
 └─────────────────────────────────────────────────────────────────┘
 

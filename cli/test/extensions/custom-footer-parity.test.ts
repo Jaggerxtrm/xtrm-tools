@@ -27,7 +27,11 @@ describe("custom-footer parity", () => {
 			footerRenderer = factory(
 				{ requestRender: vi.fn() },
 				{ fg: (_c: string, text: string) => text },
-				{ getGitBranch: () => "xt/demo", onBranchChange: () => () => {} },
+				{
+					getGitBranch: () => "xt/demo",
+					onBranchChange: () => () => {},
+					getAvailableProviderCount: () => 1,
+				},
 			);
 		});
 
@@ -70,12 +74,11 @@ describe("custom-footer parity", () => {
 		footerRenderer.render(120);
 		await vi.advanceTimersByTimeAsync(1);
 		const lines = footerRenderer.render(120);
-		expect(lines).toHaveLength(2);
-		expect(lines[0]).toContain("XTRM");
-		expect(lines[0]).toContain("gpt-5");
+		expect(lines).toHaveLength(3);
 		expect(lines[0]).toContain("xt/demo");
-		expect(lines[1]).toContain("◐ 123");
-		expect(lines[1]).toContain("Fix footer parity");
+		expect(lines[1]).toContain("gpt-5");
+		expect(lines[2]).toContain("◐ 123");
+		expect(lines[2]).toContain("Fix footer parity");
 	});
 
 	it("falls back to open issue count when no claim", async () => {
@@ -104,7 +107,7 @@ describe("custom-footer parity", () => {
 		footerRenderer.render(100);
 		await vi.advanceTimersByTimeAsync(1);
 		const lines = footerRenderer.render(100);
-		expect(lines[1]).toContain("○ 5 open");
+		expect(lines[2]).toContain("○ 5 open");
 	});
 
 	it("reapplies footer on model/session refresh events", async () => {

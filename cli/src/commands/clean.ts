@@ -32,36 +32,7 @@ const CANONICAL_HOOKS = new Set([
     'README.md',
 ]);
 
-// Canonical skills (directories in ~/.agents/skills/)
-const CANONICAL_SKILLS = new Set([
-    'clean-code',
-    'delegating',
-    'docker-expert',
-    'documenting',
-    'find-skills',
-    'gitnexus-debugging',
-    'gitnexus-exploring',
-    'gitnexus-impact-analysis',
-    'gitnexus-refactoring',
-    'hook-development',
-    'obsidian-cli',
-    'orchestrating-agents',
-    'prompt-improving',
-    'python-testing',
-    'senior-backend',
-    'senior-data-scientist',
-    'senior-devops',
-    'senior-security',
-    'skill-creator',
-    'using-serena-lsp',
-    'using-TDD',
-    'using-xtrm',
-    'using-quality-gates',
-    'using-service-skills',
-    'updating-service-skills',
-    'creating-service-skills',
-    'scoping-service-skills',
-]);
+const ACTIVE_SKILLS_RUNTIMES = ['claude', 'pi'] as const;
 
 // Directories/files to always ignore
 const IGNORED_ITEMS = new Set([
@@ -122,41 +93,60 @@ async function cleanHooks(dryRun: boolean): Promise<{ removed: string[]; cache: 
 }
 
 async function cleanSkills(dryRun: boolean): Promise<string[]> {
-    const skillsDir = path.join(homedir(), '.agents', 'skills');
     const removed: string[] = [];
+    const skillsRoot = path.join(homedir(), '.xtrm', 'skills');
 
-    if (!await fs.pathExists(skillsDir)) {
-        return removed;
+    for (const runtime of ACTIVE_SKILLS_RUNTIMES) {
+        const activeRoot = path.join(skillsRoot, 'active', runtime);
+        if (!await fs.pathExists(activeRoot)) {
+            continue;
+        }
+
+        const entries = await fs.readdir(activeRoot);
+        for (const entry of entries) {
+            if (IGNORED_ITEMS.has(entry)) {
+                continue;
+            }
+
+            const entryPath = path.join(activeRoot, entry);
+            const stat = await fs.lstat(entryPath).catch(() => null);
+            if (!stat) {
+                continue;
+            }
+
+            if (!stat.isSymbolicLink()) {
+                if (!dryRun) {
+                    await fs.remove(entryPath);
+                }
+                removed.push(`active/${runtime}/${entry} (non-symlink)`);
+                continue;
+            }
+
+            const linkTarget = await fs.readlink(entryPath).catch(() => null);
+            if (!linkTarget) {
+                if (!dryRun) {
+                    await fs.remove(entryPath);
+                }
+                removed.push(`active/${runtime}/${entry} (broken-link)`);
+                continue;
+            }
+
+            const resolvedTarget = path.resolve(path.dirname(entryPath), linkTarget);
+            if (!await fs.pathExists(resolvedTarget)) {
+                if (!dryRun) {
+                    await fs.remove(entryPath);
+                }
+                removed.push(`active/${runtime}/${entry} (dangling)`);
+            }
+        }
     }
 
-    const entries = await fs.readdir(skillsDir);
-
-    for (const entry of entries) {
-        // Skip ignored items
-        if (IGNORED_ITEMS.has(entry)) {
-            continue;
+    const legacyAgentsSkills = path.join(homedir(), '.agents', 'skills');
+    if (await fs.pathExists(legacyAgentsSkills)) {
+        if (!dryRun) {
+            await fs.remove(legacyAgentsSkills);
         }
-
-        // Skip README.txt
-        if (entry === 'README.txt') {
-            continue;
-        }
-
-        // Check if it's canonical
-        if (CANONICAL_SKILLS.has(entry)) {
-            continue;
-        }
-
-        // Remove non-canonical directory
-        const fullPath = path.join(skillsDir, entry);
-        const stat = await fs.stat(fullPath);
-
-        if (stat.isDirectory()) {
-            if (!dryRun) {
-                await fs.remove(fullPath);
-            }
-            removed.push(entry);
-        }
+        removed.push('.agents/skills (deprecated)');
     }
 
     return removed;
@@ -344,7 +334,7 @@ export function createCleanCommand(): Command {
 
             // Clean skills
             if (!hooksOnly) {
-                console.log(kleur.bold('\n  Scanning ~/.agents/skills/...'));
+                console.log(kleur.bold('\n  Scanning ~/.xtrm/skills/active/{claude,pi} and deprecated ~/.agents/skills/...'));
                 result.skillsRemoved = await cleanSkills(dryRun);
 
                 if (result.skillsRemoved.length > 0) {

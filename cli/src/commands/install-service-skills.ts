@@ -3,6 +3,7 @@ import kleur from 'kleur';
 import path from 'path';
 import fs from 'fs-extra';
 import { spawnSync } from 'child_process';
+import { ensureAgentsSkillsSymlink } from '../core/skills-scaffold.js';
 
 declare const __dirname: string;
 function resolvePkgRoot(): string {
@@ -19,7 +20,8 @@ function resolvePkgRoot(): string {
 }
 
 const PKG_ROOT = resolvePkgRoot();
-const SKILLS_SRC = path.join(PKG_ROOT, '.xtrm', 'skills', 'default', 'service-skills-set', '.claude');
+const SKILLS_ROOT = path.join(PKG_ROOT, '.xtrm', 'skills');
+const SERVICE_SKILLS_ASSETS_ROOT = path.join(SKILLS_ROOT, 'default', 'service-skills-set');
 
 const TRINITY = [
     'creating-service-skills',
@@ -100,31 +102,45 @@ export function mergeSettingsHooks(existing: Record<string, unknown>): {
     return { result, added, skipped };
 }
 
-export async function installSkills(projectRoot: string, skillsSrc: string = SKILLS_SRC): Promise<{ skill: string; status: 'installed' | 'updated' }[]> {
-    const results: { skill: string; status: 'installed' | 'updated' }[] = [];
-    for (const skill of TRINITY) {
-        const src = path.join(skillsSrc, 'skills', skill);
-        const dest = path.join(projectRoot, '.claude', 'skills', skill);
-        const existed = await fs.pathExists(dest);
-        if (existed) {
-            await fs.remove(dest);
-        }
-        await fs.copy(src, dest, {
-            filter: (src: string) => !src.includes('.Zone.Identifier')
-                && !src.includes('__pycache__')
-                && !src.includes('.pytest_cache')
-                && !src.endsWith('.pyc'),
-        });
-        results.push({ skill, status: existed ? 'updated' : 'installed' });
+function resolveSkillSourcePath(skillsRoot: string, skill: string): string {
+    const candidates = [
+        path.join(skillsRoot, 'default', skill),
+        path.join(skillsRoot, 'skills', skill),
+        path.join(skillsRoot, skill),
+    ];
+
+    const sourcePath = candidates.find(candidate => fs.existsSync(candidate));
+    if (!sourcePath) {
+        throw new Error(`Missing skill source '${skill}' under ${skillsRoot}.`);
     }
+
+    return sourcePath;
+}
+
+export async function installSkills(projectRoot: string, skillsRoot: string = SKILLS_ROOT): Promise<{ skill: string; status: 'active' }[]> {
+    const results: { skill: string; status: 'active' }[] = [];
+
+    for (const skill of TRINITY) {
+        resolveSkillSourcePath(skillsRoot, skill);
+
+        const runtimeSkillFile = path.join(projectRoot, '.claude', 'skills', skill, 'SKILL.md');
+        if (!await fs.pathExists(runtimeSkillFile)) {
+            throw new Error(
+                `Skill '${skill}' is not available in active Claude runtime view (${runtimeSkillFile}). Run xtrm init to rebuild active skills.`,
+            );
+        }
+
+        results.push({ skill, status: 'active' });
+    }
+
     return results;
 }
 
-export async function installGitHooks(projectRoot: string, skillsSrc: string = SKILLS_SRC): Promise<{
+export async function installGitHooks(projectRoot: string, assetsRoot: string = SERVICE_SKILLS_ASSETS_ROOT): Promise<{
     hookFiles: { name: string; status: 'added' | 'already-present' }[];
 }> {
     // Copy git-hook scripts into target project (no back-reference to jaggers package path)
-    const gitHooksSrc = path.join(skillsSrc, 'git-hooks');
+    const gitHooksSrc = path.join(assetsRoot, 'git-hooks');
     const gitHooksDest = path.join(projectRoot, '.claude', 'git-hooks');
     await fs.copy(gitHooksSrc, gitHooksDest, { overwrite: true });
 
@@ -258,10 +274,10 @@ export function createInstallServiceSkillsCommand(): Command {
             console.log(kleur.dim(`\n  Installing into: ${projectRoot}\n`));
 
             console.log(kleur.bold('── Skills ──────────────────────────────'));
+            await ensureAgentsSkillsSymlink(projectRoot);
             const skillResults = await installSkills(projectRoot);
-            for (const { skill, status } of skillResults) {
-                const icon = status === 'installed' ? kleur.green('  ✓') : kleur.yellow('  ↺');
-                console.log(`${icon} .claude/skills/${skill}/`);
+            for (const { skill } of skillResults) {
+                console.log(`${kleur.green('  ✓')} active: .claude/skills/${skill}/`);
             }
 
             console.log(kleur.bold('\n── settings.json ───────────────────────'));

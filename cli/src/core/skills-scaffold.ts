@@ -1,6 +1,9 @@
 import path from 'path';
 import fs from 'fs-extra';
 import kleur from 'kleur';
+import { rebuildAllRuntimeActiveViews } from './skills-materializer.js';
+import { resolveSkillsRoot } from './skills-layout.js';
+import { validateSkillsInvariants } from './skill-discovery.js';
 
 export async function ensureSkillsSymlink(
     linkPath: string,
@@ -17,8 +20,8 @@ export async function ensureSkillsSymlink(
             }
             await fs.remove(linkPath);
         } else {
-            console.log(kleur.yellow(`  ⚠ ${label} is a real directory — skipping symlink`));
-            return;
+            await fs.remove(linkPath);
+            console.log(kleur.yellow(`  ⚠ ${label} was a real path — replaced with managed symlink`));
         }
     }
     await fs.mkdirp(path.dirname(linkPath));
@@ -27,22 +30,25 @@ export async function ensureSkillsSymlink(
 }
 
 export async function ensureAgentsSkillsSymlink(projectRoot: string): Promise<void> {
-    const sourceDir = path.join(projectRoot, '.xtrm', 'skills', 'default');
-    if (!await fs.pathExists(sourceDir)) return;
+    const skillsRoot = resolveSkillsRoot(projectRoot);
+    if (!await fs.pathExists(path.join(skillsRoot, 'default'))) return;
 
-    const xtrmTarget = path.join('..', '.xtrm', 'skills', 'default');
+    const invariantViolations = await validateSkillsInvariants(skillsRoot);
+    if (invariantViolations.length > 0) {
+        const summary = invariantViolations.map(violation => `${violation.code}: ${violation.message}`).join('; ');
+        throw new Error(`Skills invariants failed. ${summary}`);
+    }
 
-    // .agents/skills and .claude/skills both point at .xtrm/skills/default (real dir).
-    // gitnexus analyze writes .xtrm/skills/default/gitnexus/ through the .claude/skills
-    // symlink, coexisting with registry-managed skill files.
-    await ensureSkillsSymlink(
-        path.join(projectRoot, '.agents', 'skills'),
-        xtrmTarget,
-        '.agents/skills',
-    );
+    await rebuildAllRuntimeActiveViews(skillsRoot);
+
     await ensureSkillsSymlink(
         path.join(projectRoot, '.claude', 'skills'),
-        xtrmTarget,
+        path.join('..', '.xtrm', 'skills', 'active', 'claude'),
         '.claude/skills',
     );
+
+    const agentsSkillsPath = path.join(projectRoot, '.agents', 'skills');
+    if (await fs.pathExists(agentsSkillsPath)) {
+        console.log(kleur.dim('  ○ .agents/skills is deprecated; runtime skills are generated under .xtrm/skills/active/*'));
+    }
 }

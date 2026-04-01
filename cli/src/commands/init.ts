@@ -16,14 +16,16 @@ import { runPluginEraCleanup } from '../core/plugin-era-cleanup.js';
 import { ensureAgentsSkillsSymlink } from '../core/skills-scaffold.js';
 import { inventoryDeps, renderBootstrapPlan, runMachineBootstrapPhase, type BootstrapPlan } from '../core/machine-bootstrap.js';
 import { runInitVerification, renderVerificationSummary } from '../core/init-verification.js';
+import { assertRuntimeSkillsViews } from '../core/skills-runtime-views.js';
+import { syncProjectMcpConfig } from '../core/project-mcp-sync.js';
 import { getContext } from '../core/context.js';
 import { calculateDiff } from '../core/diff.js';
 import { findRepoRoot } from '../utils/repo-root.js';
 import { confirmDestructiveAction } from '../utils/confirmation.js';
 
 const PKG_ROOT = resolvePackageRoot();
-const MCP_CORE_CONFIG_PATH = path.join(PKG_ROOT, 'config', 'mcp_servers.json');
-const INSTRUCTIONS_DIR = path.join(PKG_ROOT, 'config', 'instructions');
+const MCP_CORE_CONFIG_PATH = path.join(PKG_ROOT, '.xtrm', 'config', 'mcp_servers.json');
+const INSTRUCTIONS_DIR = path.join(PKG_ROOT, '.xtrm', 'config', 'instructions');
 const XTRM_BLOCK_START = '<!-- xtrm:start -->';
 const XTRM_BLOCK_END = '<!-- xtrm:end -->';
 const syncedProjectMcpRoots = new Set<string>();
@@ -556,8 +558,9 @@ function renderInitPlan(inventory: InitInventory): void {
     // Phase 6: Pi Runtime Sync (extensions + packages)
     console.log(kleur.bold('\n  Pi Runtime'));
     console.log(kleur.dim('  ↻  extensions + packages sync'));
+    console.log(kleur.dim('  ↻  .mcp.json sync from .xtrm/config/mcp_servers*.json'));
 
-    // Phase 6b: Skills symlinks (ensures .agents/.claude point at .xtrm/skills/default)
+    // Phase 6b: Runtime skills materialization + runtime pointers
     console.log(kleur.bold('\n  Skills'));
     if (skillsChanges > 0) {
         console.log(`${kleur.cyan('  ↑')}  ${skillsChanges} change${skillsChanges !== 1 ? 's' : ''} pending`);
@@ -600,8 +603,7 @@ async function confirmInitPlan(yes: boolean): Promise<boolean> {
 
 // ── Phase 7: Project Bootstrap ────────────────────────────────────────────────
 // Initializes project-level tooling: beads workspace, GitNexus index,
-// CLAUDE.md / AGENTS.md instruction headers, service-skills hook wiring,
-// and .agents/skills symlink for Pi compatibility.
+// CLAUDE.md / AGENTS.md instruction headers and service-skills hook wiring.
 
 async function runProjectBootstrap(projectRoot: string): Promise<void> {
     await runBdInitForProject(projectRoot);
@@ -682,6 +684,17 @@ export async function runProjectInit(opts: InstallOpts = {}): Promise<void> {
     });
     await scaffoldSkillsDefaultFromPackage({ packageRoot, userXtrmDir, dryRun: false });
 
+    const mcpSync = await syncProjectMcpConfig(projectRoot);
+    if (mcpSync.wroteFile) {
+        const verb = mcpSync.createdFile ? 'Created' : 'Updated';
+        console.log(kleur.dim(`  • ${verb} ${mcpSync.mcpPath} (+${mcpSync.addedServers.length} server${mcpSync.addedServers.length === 1 ? '' : 's'})`));
+    } else {
+        console.log(kleur.dim(`  • ${mcpSync.mcpPath} already up to date`));
+    }
+    for (const warning of mcpSync.missingEnvWarnings) {
+        console.log(kleur.yellow(`  ⚠ MCP server ${warning}`));
+    }
+
     // Optional plugin-era cleanup (matches install --prune behavior).
     if (opts.prune) {
         await runPluginEraCleanup({
@@ -695,11 +708,9 @@ export async function runProjectInit(opts: InstallOpts = {}): Promise<void> {
     // ── Phase 6a: Pi Runtime Sync (extensions + packages) ────────────────────
     await runPiInstall(false, Boolean(opts.global), projectRoot);
 
-    // ── Phase 6b: Wire skills symlinks BEFORE project bootstrap ──────────────
-    // gitnexus init creates .claude/skills/gitnexus/ as a real dir; we must run
-    // first so the per-skill symlinks are in place before that dir-level entry
-    // is created.
+    // ── Phase 6b: Rebuild runtime skills views + wire runtime pointers ───────
     await ensureAgentsSkillsSymlink(projectRoot);
+    await assertRuntimeSkillsViews(projectRoot);
 
     // ── Phase 7: Project Bootstrap ───────────────────────────────────────────
     // Initialize beads workspace, inject CLAUDE.md/AGENTS.md instruction

@@ -14,7 +14,7 @@ import Conf from 'conf';
 
 function formatTargetLabel(target: string): string {
     const normalized = target.replace(/\\/g, '/').toLowerCase();
-    if (normalized.endsWith('/.agents/skills') || normalized.includes('/.agents/skills/')) return '~/.agents/skills';
+    if (normalized.endsWith('/.xtrm') || normalized.includes('/.xtrm/')) return '.xtrm';
     if (normalized.endsWith('/.claude') || normalized.includes('/.claude/')) return '~/.claude';
     return path.basename(target);
 }
@@ -49,7 +49,7 @@ export function createStatusCommand(): Command {
                 if (await fs.pathExists(c.path)) targets.push(c.path);
             }
             if (targets.length === 0) {
-                console.log(kleur.yellow('\n  No agent environments found (~/.claude, ~/.agents/skills)\n'));
+                console.log(kleur.yellow('\n  No xtrm environments found (.xtrm target missing)\n'));
                 return;
             }
 

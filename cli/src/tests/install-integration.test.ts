@@ -4,7 +4,11 @@ import path from 'node:path';
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../commands/pi-install.js', () => ({
-  runPiInstall: vi.fn(async () => undefined),
+  runPiInstall: vi.fn(async (_dryRun: boolean, _isGlobal: boolean, projectRoot: string) => {
+    const settingsPath = path.join(projectRoot, '.pi', 'settings.json');
+    fs.ensureDirSync(path.dirname(settingsPath));
+    fs.writeJsonSync(settingsPath, { skills: ['../.xtrm/skills/active/pi'] }, { spaces: 2 });
+  }),
 }));
 
 vi.mock('../core/machine-bootstrap.js', async () => {
@@ -76,6 +80,16 @@ describe('xtrm install integration', () => {
     expect(fs.pathExistsSync(path.join(tmpDir, '.xtrm', 'config'))).toBe(true);
     expect(fs.pathExistsSync(path.join(tmpDir, '.xtrm', 'skills', 'default'))).toBe(true);
     expect(fs.pathExistsSync(path.join(tmpDir, '.xtrm', 'extensions'))).toBe(true);
+    expect(fs.pathExistsSync(path.join(tmpDir, '.mcp.json'))).toBe(true);
+
+    const mcpConfig = fs.readJsonSync(path.join(tmpDir, '.mcp.json')) as { mcpServers?: Record<string, unknown> };
+    expect(Object.keys(mcpConfig.mcpServers ?? {})).toEqual(expect.arrayContaining([
+      'serena',
+      'gitnexus',
+      'github-grep',
+      'deepwiki',
+      'context7',
+    ]));
 
     const settingsPath = path.join(tmpDir, '.claude', 'settings.json');
     expect(fs.pathExistsSync(settingsPath)).toBe(true);
@@ -98,6 +112,35 @@ describe('xtrm install integration', () => {
         expect(commandHook.command).toBe(expectedCommandForScript(definition.script, expectedAbsolutePath));
       });
     }
+  });
+
+  it('creates active runtime pointers for Claude and Pi and is idempotent across reruns', async () => {
+    await runInstallCli(['--yes']);
+
+    const claudeSkillsPath = path.join(tmpDir, '.claude', 'skills');
+    const activeClaudePath = path.join(tmpDir, '.xtrm', 'skills', 'active', 'claude');
+    const activePiPath = path.join(tmpDir, '.xtrm', 'skills', 'active', 'pi');
+    const piSettingsPath = path.join(tmpDir, '.pi', 'settings.json');
+
+    const claudeLinkStat = fs.lstatSync(claudeSkillsPath);
+
+    expect(claudeLinkStat.isSymbolicLink()).toBe(true);
+    expect(fs.readlinkSync(claudeSkillsPath)).toBe(path.join('..', '.xtrm', 'skills', 'active', 'claude'));
+    expect(fs.pathExistsSync(activeClaudePath)).toBe(true);
+    expect(fs.pathExistsSync(activePiPath)).toBe(true);
+
+    const piSettings = fs.readJsonSync(piSettingsPath) as { skills?: string[] };
+    expect(Array.isArray(piSettings.skills)).toBe(true);
+    expect(piSettings.skills).toContain('../.xtrm/skills/active/pi');
+
+    const claudeMtimeBefore = claudeLinkStat.mtimeMs;
+
+    await new Promise(resolve => setTimeout(resolve, 10));
+    await runInstallCli(['--yes']);
+
+    const claudeMtimeAfter = fs.lstatSync(claudeSkillsPath).mtimeMs;
+
+    expect(claudeMtimeAfter).toBe(claudeMtimeBefore);
   });
 
   it('second install is idempotent and does not overwrite up-to-date files', async () => {

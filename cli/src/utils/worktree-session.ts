@@ -1,8 +1,9 @@
 import kleur from 'kleur';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, writeFileSync, readFileSync, existsSync, symlinkSync, unlinkSync } from 'node:fs';
+import { mkdirSync, writeFileSync, readFileSync, existsSync, symlinkSync, unlinkSync, lstatSync, readlinkSync, rmSync } from 'node:fs';
 import { ensureCorePackageSymlink } from '../core/pi-runtime.js';
+import { ensureAgentsSkillsSymlink } from '../core/skills-scaffold.js';
 
 export interface WorktreeSessionOptions {
     runtime: 'claude' | 'pi';
@@ -204,15 +205,31 @@ export async function launchWorktreeSession(opts: WorktreeSessionOptions): Promi
     // Claude worktree: symlink gitignored dirs so the session has the same
     // environment as the main repo and wire local statusLine to .xtrm hooks.
     if (runtime === 'claude') {
-        // 1. Symlink .claude/skills/ (gitignored — not present in worktree checkout)
         const claudeDir = path.join(worktreePath, '.claude');
-        const mainSkillsDir = path.join(mainRepoRoot, '.claude', 'skills');
-        const wtSkillsDir = path.join(claudeDir, 'skills');
-        if (existsSync(mainSkillsDir) && !existsSync(wtSkillsDir)) {
+
+        // 1. Rebuild generated runtime skills view and pointer inside the worktree.
+        try {
+            await ensureAgentsSkillsSymlink(worktreePath);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            console.log(kleur.dim(`  warning: could not rebuild active Claude skills view (${message})`));
+
+            // Best-effort fallback symlink if rebuild fails.
+            const wtSkillsDir = path.join(claudeDir, 'skills');
+            const claudeSkillsTarget = path.join('..', '.xtrm', 'skills', 'active', 'claude');
             try {
-                mkdirSync(claudeDir, { recursive: true });
-                symlinkSync(mainSkillsDir, wtSkillsDir);
-            } catch { /* non-fatal */ }
+                const existing = lstatSync(wtSkillsDir);
+                if (!existing.isSymbolicLink() || readlinkSync(wtSkillsDir) !== claudeSkillsTarget) {
+                    rmSync(wtSkillsDir, { recursive: true, force: true });
+                    mkdirSync(claudeDir, { recursive: true });
+                    symlinkSync(claudeSkillsTarget, wtSkillsDir);
+                }
+            } catch {
+                try {
+                    mkdirSync(claudeDir, { recursive: true });
+                    symlinkSync(claudeSkillsTarget, wtSkillsDir);
+                } catch { /* non-fatal */ }
+            }
         }
 
         // 2. Write settings.local.json with statusLine bound to this worktree's

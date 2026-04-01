@@ -32325,6 +32325,21 @@ function readInstalledOfficialPlugins() {
   }
   return installedNames;
 }
+function ensureOfficialMarketplace() {
+  const listResult = (0, import_child_process3.spawnSync)("claude", ["plugin", "marketplace", "list"], {
+    encoding: "utf8",
+    stdio: "pipe",
+    timeout: 1e4
+  });
+  const output = listResult.stdout ?? "";
+  if (output.includes(OFFICIAL_MARKETPLACE)) return;
+  (0, import_child_process3.spawnSync)("claude", [
+    "plugin",
+    "marketplace",
+    "add",
+    "https://github.com/anthropics/claude-plugins-official.git"
+  ], { stdio: "inherit", timeout: 12e4 });
+}
 function tryInstallOfficialPlugin(pluginName) {
   const directInstall = (0, import_child_process3.spawnSync)("claude", ["plugin", "install", pluginName, "--scope", "user"], { stdio: "inherit" });
   if (directInstall.status === 0) {
@@ -32346,6 +32361,7 @@ function ensureOfficialPlugins(dryRun) {
     return;
   }
   console.log(kleur_default.bold("\n  Ensuring official Claude plugins..."));
+  ensureOfficialMarketplace();
   for (const pluginName of missing) {
     if (dryRun) {
       console.log(kleur_default.dim(`  [DRY RUN] claude plugin install ${pluginName} --scope user`));

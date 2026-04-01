@@ -377,6 +377,22 @@ function readInstalledOfficialPlugins(): Set<string> | null {
     return installedNames;
 }
 
+function ensureOfficialMarketplace(): void {
+    // Register claude-plugins-official if not already present.
+    // This can be wiped by --prune or a fresh Claude install.
+    const listResult = spawnSync('claude', ['plugin', 'marketplace', 'list'], {
+        encoding: 'utf8', stdio: 'pipe', timeout: 10000,
+    });
+
+    const output = listResult.stdout ?? '';
+    if (output.includes(OFFICIAL_MARKETPLACE)) return;
+
+    spawnSync('claude', [
+        'plugin', 'marketplace', 'add',
+        'https://github.com/anthropics/claude-plugins-official.git',
+    ], { stdio: 'inherit', timeout: 120000 });
+}
+
 function tryInstallOfficialPlugin(pluginName: string): boolean {
     const directInstall = spawnSync('claude', ['plugin', 'install', pluginName, '--scope', 'user'], { stdio: 'inherit' });
     if (directInstall.status === 0) {
@@ -402,6 +418,7 @@ function ensureOfficialPlugins(dryRun: boolean): void {
     }
 
     console.log(kleur.bold('\n  Ensuring official Claude plugins...'));
+    ensureOfficialMarketplace();
 
     for (const pluginName of missing) {
         if (dryRun) {

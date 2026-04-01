@@ -22,6 +22,12 @@ interface RegistryManifest {
   assets: Record<string, RegistryAsset>;
 }
 
+interface RegistrySchemaCase {
+  name: string;
+  manifest: unknown;
+  expectedError?: string;
+}
+
 const SHA256_REGEX = /^[a-f0-9]{64}$/;
 const tempDirs: string[] = [];
 
@@ -123,9 +129,10 @@ async function runGenRegistry(tempRoot: string): Promise<void> {
   expect(result.status, `gen-registry failed:\n${result.stdout}\n${result.stderr}`).toBe(0);
 }
 
-describe('registry.json schema', () => {
-  it('accepts a valid registry manifest', () => {
-    const validManifest: RegistryManifest = {
+const schemaCases: RegistrySchemaCase[] = [
+  {
+    name: 'accepts a valid registry manifest',
+    manifest: {
       version: '1',
       assets: {
         hooks: {
@@ -136,21 +143,16 @@ describe('registry.json schema', () => {
           },
         },
       },
-    };
-
-    expect(() => parseRegistryManifest(validManifest)).not.toThrow();
-  });
-
-  it('rejects a registry without version', () => {
-    const invalidManifest = {
-      assets: {},
-    };
-
-    expect(() => parseRegistryManifest(invalidManifest)).toThrow('registry.version must be "1"');
-  });
-
-  it('rejects non-sha256 hash values', () => {
-    const invalidManifest = {
+    } satisfies RegistryManifest,
+  },
+  {
+    name: 'rejects a registry without version',
+    manifest: { assets: {} },
+    expectedError: 'registry.version must be "1"',
+  },
+  {
+    name: 'rejects non-sha256 hash values',
+    manifest: {
       version: '1',
       assets: {
         hooks: {
@@ -161,13 +163,25 @@ describe('registry.json schema', () => {
           },
         },
       },
-    };
+    },
+    expectedError: 'invalid sha256 hash',
+  },
+  {
+    name: 'accepts an empty assets object',
+    manifest: { version: '1', assets: {} },
+  },
+];
 
-    expect(() => parseRegistryManifest(invalidManifest)).toThrow('invalid sha256 hash');
-  });
+describe('registry.json schema', () => {
+  describe.each(schemaCases)('$name', ({ manifest, expectedError }) => {
+    it('validates manifest', () => {
+      if (expectedError) {
+        expect(() => parseRegistryManifest(manifest)).toThrow(expectedError);
+        return;
+      }
 
-  it('accepts an empty assets object', () => {
-    expect(() => parseRegistryManifest({ version: '1', assets: {} })).not.toThrow();
+      expect(() => parseRegistryManifest(manifest)).not.toThrow();
+    });
   });
 });
 

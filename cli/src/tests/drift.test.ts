@@ -22,6 +22,18 @@ interface RegistryManifest {
   assets: Record<string, RegistryAsset>;
 }
 
+interface DriftReport {
+  missing: string[];
+  upToDate: string[];
+  drifted: string[];
+}
+
+interface DriftTestCase {
+  name: string;
+  setup: (tempDir: string) => Promise<{ registryPath: string; userXtrmDir: string }>;
+  expected: DriftReport;
+}
+
 const EMPTY_FILE_SHA256 = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
 
 const tempDirs: string[] = [];
@@ -48,72 +60,82 @@ async function writeRegistry(tempDir: string, manifest: RegistryManifest): Promi
   return registryPath;
 }
 
+const driftCases: DriftTestCase[] = [
+  {
+    name: 'matching/missing/drifted classification',
+    setup: async (tempDir) => {
+      const userXtrmDir = path.join(tempDir, '.xtrm-user');
+      await fs.mkdir(path.join(userXtrmDir, 'hooks'), { recursive: true });
+      await fs.writeFile(path.join(userXtrmDir, 'hooks', 'match.mjs'), 'match-content', 'utf8');
+      await fs.writeFile(path.join(userXtrmDir, 'hooks', 'drift.mjs'), 'user-modified', 'utf8');
+
+      const registryPath = await writeRegistry(tempDir, {
+        version: '1',
+        assets: {
+          hooks: {
+            source_dir: '.xtrm/hooks',
+            install_mode: 'copy',
+            files: {
+              'match.mjs': { hash: sha256('match-content'), version: '0.7.0' },
+              'missing.mjs': { hash: sha256('missing-content'), version: '0.7.0' },
+              'drift.mjs': { hash: sha256('expected-content'), version: '0.7.0' },
+            },
+          },
+        },
+      });
+
+      return { registryPath, userXtrmDir };
+    },
+    expected: {
+      upToDate: ['hooks/match.mjs'],
+      missing: ['hooks/missing.mjs'],
+      drifted: ['hooks/drift.mjs'],
+    },
+  },
+  {
+    name: 'empty registry',
+    setup: async (tempDir) => {
+      const registryPath = await writeRegistry(tempDir, { version: '1', assets: {} });
+      return { registryPath, userXtrmDir: path.join(tempDir, '.xtrm-user') };
+    },
+    expected: { missing: [], upToDate: [], drifted: [] },
+  },
+  {
+    name: 'missing user .xtrm directory',
+    setup: async (tempDir) => {
+      const registryPath = await writeRegistry(tempDir, {
+        version: '1',
+        assets: {
+          hooks: {
+            source_dir: '.xtrm/hooks',
+            install_mode: 'copy',
+            files: {
+              'a.mjs': { hash: sha256('a'), version: '0.7.0' },
+              'b.mjs': { hash: sha256('b'), version: '0.7.0' },
+            },
+          },
+        },
+      });
+
+      return { registryPath, userXtrmDir: path.join(tempDir, 'does-not-exist') };
+    },
+    expected: {
+      missing: ['hooks/a.mjs', 'hooks/b.mjs'],
+      upToDate: [],
+      drifted: [],
+    },
+  },
+];
+
 describe('checkDrift', () => {
-  it('classifies matching, missing, and drifted files correctly', async () => {
-    const tempDir = await createTempDir();
-    const userXtrmDir = path.join(tempDir, '.xtrm-user');
-    await fs.mkdir(path.join(userXtrmDir, 'hooks'), { recursive: true });
+  describe.each(driftCases)('checkDrift: $name', ({ setup, expected }) => {
+    it('returns expected buckets', async () => {
+      const tempDir = await createTempDir();
+      const { registryPath, userXtrmDir } = await setup(tempDir);
 
-    await fs.writeFile(path.join(userXtrmDir, 'hooks', 'match.mjs'), 'match-content', 'utf8');
-    await fs.writeFile(path.join(userXtrmDir, 'hooks', 'drift.mjs'), 'user-modified', 'utf8');
-
-    const manifest: RegistryManifest = {
-      version: '1',
-      assets: {
-        hooks: {
-          source_dir: '.xtrm/hooks',
-          install_mode: 'copy',
-          files: {
-            'match.mjs': { hash: sha256('match-content'), version: '0.7.0' },
-            'missing.mjs': { hash: sha256('missing-content'), version: '0.7.0' },
-            'drift.mjs': { hash: sha256('expected-content'), version: '0.7.0' },
-          },
-        },
-      },
-    };
-
-    const registryPath = await writeRegistry(tempDir, manifest);
-    const report = await checkDrift(registryPath, userXtrmDir);
-
-    expect(report.upToDate).toEqual(['hooks/match.mjs']);
-    expect(report.missing).toEqual(['hooks/missing.mjs']);
-    expect(report.drifted).toEqual(['hooks/drift.mjs']);
-  });
-
-  it('returns empty arrays for an empty registry', async () => {
-    const tempDir = await createTempDir();
-    const registryPath = await writeRegistry(tempDir, {
-      version: '1',
-      assets: {},
+      const report = await checkDrift(registryPath, userXtrmDir);
+      expect(report).toEqual(expected);
     });
-
-    const report = await checkDrift(registryPath, path.join(tempDir, '.xtrm-user'));
-
-    expect(report).toEqual({ missing: [], upToDate: [], drifted: [] });
-  });
-
-  it('reports every file as missing when user .xtrm directory does not exist', async () => {
-    const tempDir = await createTempDir();
-    const registryPath = await writeRegistry(tempDir, {
-      version: '1',
-      assets: {
-        hooks: {
-          source_dir: '.xtrm/hooks',
-          install_mode: 'copy',
-          files: {
-            'a.mjs': { hash: sha256('a'), version: '0.7.0' },
-            'b.mjs': { hash: sha256('b'), version: '0.7.0' },
-          },
-        },
-      },
-    });
-
-    const userXtrmDir = path.join(tempDir, 'does-not-exist');
-    const report = await checkDrift(registryPath, userXtrmDir);
-
-    expect(report.missing).toEqual(['hooks/a.mjs', 'hooks/b.mjs']);
-    expect(report.upToDate).toEqual([]);
-    expect(report.drifted).toEqual([]);
   });
 
   it('places each registry file in exactly one report bucket', async () => {

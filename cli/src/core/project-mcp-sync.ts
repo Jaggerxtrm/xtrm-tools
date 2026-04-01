@@ -2,7 +2,9 @@ import fs from 'fs-extra';
 import path from 'node:path';
 
 const CORE_MCP_CONFIG_FILE = 'mcp_servers.json';
+const PI_CORE_MCP_CONFIG_FILE = 'pi.mcp.json';
 const PROJECT_MCP_FILE = '.mcp.json';
+const PI_PROJECT_MCP_FILE = path.join('.pi', 'mcp.json');
 
 interface McpServerMap {
     [serverName: string]: Record<string, unknown>;
@@ -139,6 +141,62 @@ export async function syncProjectMcpConfig(projectRoot: string, options: SyncPro
     const wroteFile = addedServers.length > 0 || !hasExistingMcp;
 
     if (!dryRun && wroteFile) {
+        await fs.writeJson(targetMcpPath, mergedConfig, { spaces: 2 });
+    }
+
+    return {
+        addedServers,
+        missingEnvWarnings,
+        wroteFile,
+        createdFile: !hasExistingMcp,
+        mcpPath: targetMcpPath,
+    };
+}
+
+export async function syncPiMcpConfig(projectRoot: string, options: SyncProjectMcpOptions = {}): Promise<SyncProjectMcpResult> {
+    const { dryRun = false } = options;
+    const xtrmConfigDir = path.join(projectRoot, '.xtrm', 'config');
+    const coreConfigPath = path.join(xtrmConfigDir, PI_CORE_MCP_CONFIG_FILE);
+    const targetMcpPath = path.join(projectRoot, PI_PROJECT_MCP_FILE);
+
+    if (!await fs.pathExists(coreConfigPath)) {
+        return {
+            addedServers: [],
+            missingEnvWarnings: [`canonical MCP config not found at ${coreConfigPath}`],
+            wroteFile: false,
+            createdFile: false,
+            mcpPath: targetMcpPath,
+        };
+    }
+
+    const coreConfig = await fs.readJson(coreConfigPath) as McpConfigFile;
+    const canonicalServers = readMcpServers(coreConfig);
+    const missingEnvWarnings = getMissingEnvWarnings(canonicalServers);
+
+    const hasExistingMcp = await fs.pathExists(targetMcpPath);
+    const existingConfig = hasExistingMcp
+        ? (await fs.readJson(targetMcpPath) as Partial<McpProjectConfig>)
+        : {};
+
+    const existingServers = existingConfig.mcpServers && typeof existingConfig.mcpServers === 'object'
+        ? existingConfig.mcpServers
+        : {};
+
+    const addedServers = Object.keys(canonicalServers).filter((name) => !(name in existingServers));
+    const mergedServers: McpServerMap = {
+        ...canonicalServers,
+        ...existingServers,
+    };
+
+    const mergedConfig: McpProjectConfig = {
+        ...existingConfig,
+        mcpServers: mergedServers,
+    } as McpProjectConfig;
+
+    const wroteFile = addedServers.length > 0 || !hasExistingMcp;
+
+    if (!dryRun && wroteFile) {
+        await fs.ensureDir(path.dirname(targetMcpPath));
         await fs.writeJson(targetMcpPath, mergedConfig, { spaces: 2 });
     }
 

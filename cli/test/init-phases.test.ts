@@ -39,6 +39,13 @@ const mocked = vi.hoisted(() => {
         createdFile: true,
         mcpPath: '/tmp/project/.mcp.json',
     }));
+    const syncPiMcpConfig = vi.fn(async () => ({
+        addedServers: ['specialists'],
+        missingEnvWarnings: [],
+        wroteFile: true,
+        createdFile: true,
+        mcpPath: '/tmp/project/.pi/mcp.json',
+    }));
 
     return {
         runMachineBootstrap,
@@ -57,6 +64,7 @@ const mocked = vi.hoisted(() => {
         ensureAgentsSkillsSymlink,
         assertRuntimeSkillsViews,
         syncProjectMcpConfig,
+        syncPiMcpConfig,
     };
 });
 
@@ -118,6 +126,7 @@ vi.mock('../src/core/skills-runtime-views.js', () => ({
 
 vi.mock('../src/core/project-mcp-sync.js', () => ({
     syncProjectMcpConfig: mocked.syncProjectMcpConfig,
+    syncPiMcpConfig: mocked.syncPiMcpConfig,
 }));
 
 vi.mock('prompts', () => ({
@@ -142,6 +151,10 @@ function setupSpawnSync(projectRoot: string, calls: string[]): void {
 
         if (key === 'gitnexus --version') {
             return { status: 0, stdout: 'gitnexus 1.0.0', stderr: '' };
+        }
+
+        if (key === 'git rev-parse HEAD') {
+            return { status: 0, stdout: 'abc123\n', stderr: '' };
         }
 
         if (key === 'gitnexus analyze') {
@@ -285,6 +298,7 @@ describe('xtrm init phased orchestrator', () => {
         expect(mocked.scaffoldSkillsDefaultFromPackage).toHaveBeenCalledTimes(1);
         expect(mocked.runPiInstall).toHaveBeenCalledWith(false, false, projectRoot);
         expect(mocked.syncProjectMcpConfig).toHaveBeenCalledWith(projectRoot);
+        expect(mocked.syncPiMcpConfig).toHaveBeenCalledWith(projectRoot);
         expect(mocked.ensureAgentsSkillsSymlink).toHaveBeenCalledWith(projectRoot);
         expect(runInstallSpy).not.toHaveBeenCalled();
         expect(calls).toEqual([
@@ -302,12 +316,16 @@ describe('xtrm init phased orchestrator', () => {
         const machineOrder = mocked.runMachineBootstrap.mock.invocationCallOrder[0];
         const runtimeOrder = mocked.runClaudeRuntimeSync.mock.invocationCallOrder[0];
         const registryOrder = mocked.installFromRegistry.mock.invocationCallOrder[0];
+        const piMcpOrder = mocked.syncPiMcpConfig.mock.invocationCallOrder[0];
+        const piInstallOrder = mocked.runPiInstall.mock.invocationCallOrder[0];
         const symlinkOrder = mocked.ensureAgentsSkillsSymlink.mock.invocationCallOrder[0];
         const verificationOrder = mocked.runInitVerification.mock.invocationCallOrder[0];
 
         expect(machineOrder).toBeLessThan(runtimeOrder);
         expect(runtimeOrder).toBeLessThan(registryOrder);
-        expect(registryOrder).toBeLessThan(symlinkOrder);
+        expect(registryOrder).toBeLessThan(piMcpOrder);
+        expect(piMcpOrder).toBeLessThan(piInstallOrder);
+        expect(piInstallOrder).toBeLessThan(symlinkOrder);
         expect(symlinkOrder).toBeLessThan(verificationOrder);
 
         expect(mocked.runInitVerification).toHaveBeenCalledWith(projectRoot);

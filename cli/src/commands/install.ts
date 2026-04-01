@@ -19,7 +19,7 @@ import {
     type InstallStats,
     type RegistryManifest,
 } from '../core/registry-scaffold.js';
-import { syncProjectMcpConfig } from '../core/project-mcp-sync.js';
+import { syncPiMcpConfig, syncProjectMcpConfig } from '../core/project-mcp-sync.js';
 
 export interface InstallOpts {
     dryRun?: boolean;
@@ -183,6 +183,17 @@ export async function runInstall(opts: InstallOpts = {}): Promise<void> {
     }
     for (const warning of mcpSync.missingEnvWarnings) {
         console.log(kleur.yellow(`  ⚠ MCP server ${warning}`));
+    }
+
+    const piMcpSync = await syncPiMcpConfig(projectRoot, { dryRun });
+    if (piMcpSync.wroteFile) {
+        const verb = piMcpSync.createdFile ? 'Created' : 'Updated';
+        console.log(kleur.dim(`  • ${verb} ${piMcpSync.mcpPath} (+${piMcpSync.addedServers.length} server${piMcpSync.addedServers.length === 1 ? '' : 's'})`));
+    } else {
+        console.log(kleur.dim(`  • ${piMcpSync.mcpPath} already up to date`));
+    }
+    for (const warning of piMcpSync.missingEnvWarnings) {
+        console.log(kleur.yellow(`  ⚠ Pi MCP server ${warning}`));
     }
 
     if (!skipClaudeRuntimeSync) {

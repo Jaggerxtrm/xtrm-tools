@@ -10,6 +10,13 @@ import {
   writeSkillsState,
 } from '../core/skills-state.js';
 
+interface RuntimePackCase {
+  name: string;
+  apply: (skillsRoot: string) => Promise<void>;
+  expectedClaude: string[];
+  expectedPi: string[];
+}
+
 const tempDirs: string[] = [];
 
 afterEach(() => {
@@ -23,6 +30,31 @@ async function createTempSkillsRoot(): Promise<string> {
   tempDirs.push(tempDir);
   return path.join(tempDir, '.xtrm', 'skills');
 }
+
+const runtimePackCases: RuntimePackCase[] = [
+  {
+    name: 'deduplicates and sorts enabled packs',
+    apply: async (skillsRoot) => {
+      await writeSkillsState(skillsRoot, {
+        schemaVersion: '1',
+        enabledPacks: {
+          claude: ['zeta', 'alpha', 'alpha'],
+          pi: ['pi-pack', 'pi-pack'],
+        },
+      });
+    },
+    expectedClaude: ['alpha', 'zeta'],
+    expectedPi: ['pi-pack'],
+  },
+  {
+    name: 'updates per-runtime enabled packs',
+    apply: async (skillsRoot) => {
+      await setRuntimeEnabledPacks(skillsRoot, 'claude', ['service', 'service', 'alpha']);
+    },
+    expectedClaude: ['alpha', 'service'],
+    expectedPi: [],
+  },
+];
 
 describe('skills-state', () => {
   it('initializes missing state.json with schemaVersion 1 and runtime enabledPacks', async () => {
@@ -38,31 +70,13 @@ describe('skills-state', () => {
     expect(await fs.pathExists(path.join(skillsRoot, 'user', 'packs'))).toBe(true);
   });
 
-  it('deduplicates and sorts enabled packs', async () => {
+  it.each(runtimePackCases)('$name', async ({ apply, expectedClaude, expectedPi }) => {
     const skillsRoot = await createTempSkillsRoot();
 
-    await writeSkillsState(skillsRoot, {
-      schemaVersion: '1',
-      enabledPacks: {
-        claude: ['zeta', 'alpha', 'alpha'],
-        pi: ['pi-pack', 'pi-pack'],
-      },
-    });
-
+    await apply(skillsRoot);
     const state = await readSkillsState(skillsRoot);
 
-    expect(state.enabledPacks.claude).toEqual(['alpha', 'zeta']);
-    expect(state.enabledPacks.pi).toEqual(['pi-pack']);
-  });
-
-  it('updates per-runtime enabled packs', async () => {
-    const skillsRoot = await createTempSkillsRoot();
-
-    await setRuntimeEnabledPacks(skillsRoot, 'claude', ['service', 'service', 'alpha']);
-
-    const state = await readSkillsState(skillsRoot);
-
-    expect(state.enabledPacks.claude).toEqual(['alpha', 'service']);
-    expect(state.enabledPacks.pi).toEqual([]);
+    expect(state.enabledPacks.claude).toEqual(expectedClaude);
+    expect(state.enabledPacks.pi).toEqual(expectedPi);
   });
 });

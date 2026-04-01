@@ -17,7 +17,7 @@ import { ensureAgentsSkillsSymlink } from '../core/skills-scaffold.js';
 import { inventoryDeps, renderBootstrapPlan, runMachineBootstrapPhase, type BootstrapPlan } from '../core/machine-bootstrap.js';
 import { runInitVerification, renderVerificationSummary } from '../core/init-verification.js';
 import { assertRuntimeSkillsViews } from '../core/skills-runtime-views.js';
-import { syncProjectMcpConfig } from '../core/project-mcp-sync.js';
+import { syncPiMcpConfig, syncProjectMcpConfig } from '../core/project-mcp-sync.js';
 import { getContext } from '../core/context.js';
 import { calculateDiff } from '../core/diff.js';
 import { findRepoRoot } from '../utils/repo-root.js';
@@ -558,7 +558,7 @@ function renderInitPlan(inventory: InitInventory): void {
     // Phase 6: Pi Runtime Sync (extensions + packages)
     console.log(kleur.bold('\n  Pi Runtime'));
     console.log(kleur.dim('  ↻  extensions + packages sync'));
-    console.log(kleur.dim('  ↻  .mcp.json sync from .xtrm/config/mcp_servers*.json'));
+    console.log(kleur.dim('  ↻  .mcp.json + .pi/mcp.json sync from .xtrm/config/{mcp_servers.json,pi.mcp.json}'));
 
     // Phase 6b: Runtime skills materialization + runtime pointers
     console.log(kleur.bold('\n  Skills'));
@@ -712,7 +712,18 @@ export async function runProjectInit(opts: InstallOpts = {}): Promise<void> {
         });
     }
 
-    // ── Phase 6a: Pi Runtime Sync (extensions + packages) ────────────────────
+    // ── Phase 6a: Pi Runtime Sync (project MCP + extensions + packages) ──────
+    const piMcpSync = await syncPiMcpConfig(projectRoot);
+    if (piMcpSync.wroteFile) {
+        const verb = piMcpSync.createdFile ? 'Created' : 'Updated';
+        console.log(kleur.dim(`  • ${verb} ${piMcpSync.mcpPath} (+${piMcpSync.addedServers.length} server${piMcpSync.addedServers.length === 1 ? '' : 's'})`));
+    } else {
+        console.log(kleur.dim(`  • ${piMcpSync.mcpPath} already up to date`));
+    }
+    for (const warning of piMcpSync.missingEnvWarnings) {
+        console.log(kleur.yellow(`  ⚠ Pi MCP server ${warning}`));
+    }
+
     await runPiInstall(false, Boolean(opts.global), projectRoot);
 
     // ── Phase 6b: Rebuild runtime skills views + wire runtime pointers ───────

@@ -43729,12 +43729,18 @@ var import_fs_extra6 = __toESM(require_lib(), 1);
 
 // src/core/skills-state.ts
 var import_fs_extra5 = __toESM(require_lib(), 1);
-var runtimeEnabledPacksSchema = external_exports.object({
-  claude: external_exports.array(external_exports.string().min(1)).default([]),
-  pi: external_exports.array(external_exports.string().min(1)).default([])
+var runtimeEnabledPacksSchema = external_exports.strictObject({
+  claude: external_exports.array(external_exports.string().min(1, { error: "Pack name cannot be empty" }), {
+    error: "Claude enabled packs must be an array of strings"
+  }).default([]),
+  pi: external_exports.array(external_exports.string().min(1, { error: "Pack name cannot be empty" }), {
+    error: "Pi enabled packs must be an array of strings"
+  }).default([])
 });
-var skillsStateSchema = external_exports.object({
-  schemaVersion: external_exports.literal(SKILLS_STATE_SCHEMA_VERSION),
+var skillsStateSchema = external_exports.strictObject({
+  schemaVersion: external_exports.literal(SKILLS_STATE_SCHEMA_VERSION, {
+    error: `skills state schemaVersion must be ${SKILLS_STATE_SCHEMA_VERSION}`
+  }),
   enabledPacks: runtimeEnabledPacksSchema
 });
 function normalizePackList(packNames) {
@@ -46234,7 +46240,9 @@ function renderVerificationSummary(result) {
 var import_fs_extra17 = __toESM(require_lib(), 1);
 var import_node_path9 = __toESM(require("path"), 1);
 var CORE_MCP_CONFIG_FILE = "mcp_servers.json";
+var PI_CORE_MCP_CONFIG_FILE = "pi.mcp.json";
 var PROJECT_MCP_FILE = ".mcp.json";
+var PI_PROJECT_MCP_FILE = import_node_path9.default.join(".pi", "mcp.json");
 function sanitizeServerConfig(server) {
   const entries = Object.entries(server).filter(([key]) => !key.startsWith("_"));
   return Object.fromEntries(entries);
@@ -46315,6 +46323,48 @@ async function syncProjectMcpConfig(projectRoot, options = {}) {
   };
   const wroteFile = addedServers.length > 0 || !hasExistingMcp;
   if (!dryRun && wroteFile) {
+    await import_fs_extra17.default.writeJson(targetMcpPath, mergedConfig, { spaces: 2 });
+  }
+  return {
+    addedServers,
+    missingEnvWarnings,
+    wroteFile,
+    createdFile: !hasExistingMcp,
+    mcpPath: targetMcpPath
+  };
+}
+async function syncPiMcpConfig(projectRoot, options = {}) {
+  const { dryRun = false } = options;
+  const xtrmConfigDir = import_node_path9.default.join(projectRoot, ".xtrm", "config");
+  const coreConfigPath = import_node_path9.default.join(xtrmConfigDir, PI_CORE_MCP_CONFIG_FILE);
+  const targetMcpPath = import_node_path9.default.join(projectRoot, PI_PROJECT_MCP_FILE);
+  if (!await import_fs_extra17.default.pathExists(coreConfigPath)) {
+    return {
+      addedServers: [],
+      missingEnvWarnings: [`canonical MCP config not found at ${coreConfigPath}`],
+      wroteFile: false,
+      createdFile: false,
+      mcpPath: targetMcpPath
+    };
+  }
+  const coreConfig = await import_fs_extra17.default.readJson(coreConfigPath);
+  const canonicalServers = readMcpServers(coreConfig);
+  const missingEnvWarnings = getMissingEnvWarnings(canonicalServers);
+  const hasExistingMcp = await import_fs_extra17.default.pathExists(targetMcpPath);
+  const existingConfig = hasExistingMcp ? await import_fs_extra17.default.readJson(targetMcpPath) : {};
+  const existingServers = existingConfig.mcpServers && typeof existingConfig.mcpServers === "object" ? existingConfig.mcpServers : {};
+  const addedServers = Object.keys(canonicalServers).filter((name) => !(name in existingServers));
+  const mergedServers = {
+    ...canonicalServers,
+    ...existingServers
+  };
+  const mergedConfig = {
+    ...existingConfig,
+    mcpServers: mergedServers
+  };
+  const wroteFile = addedServers.length > 0 || !hasExistingMcp;
+  if (!dryRun && wroteFile) {
+    await import_fs_extra17.default.ensureDir(import_node_path9.default.dirname(targetMcpPath));
     await import_fs_extra17.default.writeJson(targetMcpPath, mergedConfig, { spaces: 2 });
   }
   return {
@@ -47954,7 +48004,7 @@ function renderInitPlan(inventory) {
   renderClaudeRuntimePlanSummary();
   console.log(kleur_default.bold("\n  Pi Runtime"));
   console.log(kleur_default.dim("  \u21BB  extensions + packages sync"));
-  console.log(kleur_default.dim("  \u21BB  .mcp.json sync from .xtrm/config/mcp_servers*.json"));
+  console.log(kleur_default.dim("  \u21BB  .mcp.json + .pi/mcp.json sync from .xtrm/config/{mcp_servers.json,pi.mcp.json}"));
   console.log(kleur_default.bold("\n  Skills"));
   if (skillsChanges > 0) {
     console.log(`${kleur_default.cyan("  \u2191")}  ${skillsChanges} change${skillsChanges !== 1 ? "s" : ""} pending`);
@@ -48056,6 +48106,16 @@ async function runProjectInit(opts = {}) {
       scope: "all",
       repoRoot: projectRoot
     });
+  }
+  const piMcpSync = await syncPiMcpConfig(projectRoot);
+  if (piMcpSync.wroteFile) {
+    const verb = piMcpSync.createdFile ? "Created" : "Updated";
+    console.log(kleur_default.dim(`  \u2022 ${verb} ${piMcpSync.mcpPath} (+${piMcpSync.addedServers.length} server${piMcpSync.addedServers.length === 1 ? "" : "s"})`));
+  } else {
+    console.log(kleur_default.dim(`  \u2022 ${piMcpSync.mcpPath} already up to date`));
+  }
+  for (const warning of piMcpSync.missingEnvWarnings) {
+    console.log(kleur_default.yellow(`  \u26A0 Pi MCP server ${warning}`));
   }
   await runPiInstall(false, Boolean(opts.global), projectRoot);
   await ensureAgentsSkillsSymlink(projectRoot);
@@ -48905,38 +48965,38 @@ var import_path19 = require("path");
 
 // src/types/config.ts
 var SyncModeSchema = external_exports.enum(["copy", "symlink", "prune"]);
-var TargetConfigSchema = external_exports.object({
-  label: external_exports.string(),
-  path: external_exports.string(),
-  exists: external_exports.boolean()
+var TargetConfigSchema = external_exports.strictObject({
+  label: external_exports.string({ error: "Target label is required" }).min(1, { error: "Target label is required" }),
+  path: external_exports.string({ error: "Target path is required" }).min(1, { error: "Target path is required" }),
+  exists: external_exports.boolean({ error: "Target exists flag must be a boolean" })
 });
-var ChangeSetCategorySchema = external_exports.object({
-  missing: external_exports.array(external_exports.string()),
-  outdated: external_exports.array(external_exports.string()),
-  drifted: external_exports.array(external_exports.string()),
-  total: external_exports.number()
+var ChangeSetCategorySchema = external_exports.strictObject({
+  missing: external_exports.array(external_exports.string(), { error: "Missing items must be a string array" }),
+  outdated: external_exports.array(external_exports.string(), { error: "Outdated items must be a string array" }),
+  drifted: external_exports.array(external_exports.string(), { error: "Drifted items must be a string array" }),
+  total: external_exports.number({ error: "Category total must be a number" })
 });
-var ChangeSetSchema = external_exports.object({
+var ChangeSetSchema = external_exports.strictObject({
   skills: ChangeSetCategorySchema,
   hooks: ChangeSetCategorySchema,
   config: ChangeSetCategorySchema,
   commands: ChangeSetCategorySchema
 });
-var SyncPlanSchema = external_exports.object({
+var SyncPlanSchema = external_exports.strictObject({
   mode: SyncModeSchema,
-  targets: external_exports.array(external_exports.string())
+  targets: external_exports.array(external_exports.string(), { error: "Sync targets must be a string array" })
 });
-var ManifestItemSchema = external_exports.object({
+var ManifestItemSchema = external_exports.strictObject({
   type: external_exports.enum(["skill", "hook", "config", "command"]),
-  name: external_exports.string(),
-  hash: external_exports.string(),
-  lastSync: external_exports.string(),
-  source: external_exports.string()
+  name: external_exports.string({ error: "Manifest item name is required" }).min(1, { error: "Manifest item name is required" }),
+  hash: external_exports.string({ error: "Manifest item hash is required" }).min(1, { error: "Manifest item hash is required" }),
+  lastSync: external_exports.string({ error: "Manifest item lastSync is required" }).min(1, { error: "Manifest item lastSync is required" }),
+  source: external_exports.string({ error: "Manifest item source is required" }).min(1, { error: "Manifest item source is required" })
 });
-var ManifestSchema = external_exports.object({
-  version: external_exports.string().optional().default("1"),
-  lastSync: external_exports.string(),
-  items: external_exports.number().optional().default(0)
+var ManifestSchema = external_exports.strictObject({
+  version: external_exports.string({ error: "Manifest version must be a string" }).optional().default("1"),
+  lastSync: external_exports.string({ error: "Manifest lastSync is required" }).min(1, { error: "Manifest lastSync is required" }),
+  items: external_exports.number({ error: "Manifest item count must be a number" }).optional().default(0)
 });
 
 // src/core/manifest.ts

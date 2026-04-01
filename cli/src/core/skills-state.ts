@@ -11,13 +11,19 @@ import {
   resolveUserPacksRoot,
 } from './skills-layout.js';
 
-const runtimeEnabledPacksSchema = z.object({
-  claude: z.array(z.string().min(1)).default([]),
-  pi: z.array(z.string().min(1)).default([]),
+const runtimeEnabledPacksSchema = z.strictObject({
+  claude: z.array(z.string().min(1, { error: 'Pack name cannot be empty' }), {
+    error: 'Claude enabled packs must be an array of strings',
+  }).default([]),
+  pi: z.array(z.string().min(1, { error: 'Pack name cannot be empty' }), {
+    error: 'Pi enabled packs must be an array of strings',
+  }).default([]),
 });
 
-const skillsStateSchema = z.object({
-  schemaVersion: z.literal(SKILLS_STATE_SCHEMA_VERSION),
+const skillsStateSchema = z.strictObject({
+  schemaVersion: z.literal(SKILLS_STATE_SCHEMA_VERSION, {
+    error: `skills state schemaVersion must be ${SKILLS_STATE_SCHEMA_VERSION}`,
+  }),
   enabledPacks: runtimeEnabledPacksSchema,
 });
 

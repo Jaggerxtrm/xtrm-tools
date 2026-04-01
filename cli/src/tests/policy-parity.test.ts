@@ -104,9 +104,11 @@ describe('matcher macro expansion parity', () => {
 // ── File existence ────────────────────────────────────────────────────────────
 
 describe('referenced files exist', () => {
-  // Resolve ${CLAUDE_PLUGIN_ROOT}/hooks/foo.mjs → hooks/foo.mjs (repo-relative)
+  // Resolve templated hook root commands to repo-relative script paths.
   const resolveCommand = (command: string): string =>
-    command.replace('node ${CLAUDE_PLUGIN_ROOT}/', '').replace('python3 ${CLAUDE_PLUGIN_ROOT}/', '');
+    command
+      .replace(/^node\s+\$\{[A-Z_]+\}\//, '')
+      .replace(/^python3\s+\$\{[A-Z_]+\}\//, '');
 
   const allHooks = policies.flatMap(({ file, policy }) =>
     (policy.claude?.hooks ?? []).map(hook => ({ file, command: hook.command })),

@@ -3,7 +3,7 @@
  *
  * Summarizes outcomes from all installer phases in one place:
  * - Machine bootstrap (third-party CLIs)
- * - Claude runtime (xtrm-tools plugin + official plugins)
+ * - Claude runtime (.xtrm hooks wired into settings.json)
  * - Pi runtime (extensions + packages)
  * - Project bootstrap (beads, GitNexus, instruction headers)
  */
@@ -11,10 +11,24 @@
 import { spawnSync } from 'child_process';
 import fs from 'fs-extra';
 import kleur from 'kleur';
+import os from 'os';
 import path from 'path';
 import { t, sym } from '../utils/theme.js';
 import { inventoryDeps, type BootstrapPlan } from './machine-bootstrap.js';
 import { inventoryPiRuntime, type PiRuntimePlan } from './pi-runtime.js';
+
+interface CommandHook {
+    type?: string;
+    command?: string;
+}
+
+interface HookWrapper {
+    hooks?: CommandHook[];
+}
+
+interface ClaudeSettings {
+    hooks?: Record<string, HookWrapper[]>;
+}
 
 export interface VerificationResult {
     machineBootstrap: {
@@ -22,9 +36,10 @@ export interface VerificationResult {
         missingRequired: string[];
     };
     claudeRuntime: {
-        xtrmToolsPlugin: boolean;
-        officialPlugins: string[];
-        missingPlugins: string[];
+        hooksWired: boolean;
+        hooksEvents: number;
+        hookCommands: number;
+        settingsPath: string;
     };
     piRuntime: {
         allRequiredPresent: boolean;
@@ -45,35 +60,78 @@ function verifyMachineBootstrap(): BootstrapPlan {
     return inventoryDeps();
 }
 
-function verifyClaudeRuntime(): { xtrmToolsPlugin: boolean; officialPlugins: string[]; missingPlugins: string[] } {
-    const OFFICIAL_PLUGINS = [
-        'serena@claude-plugins-official',
-        'context7@claude-plugins-official',
-        'github@claude-plugins-official',
-        'ralph-loop@claude-plugins-official',
-    ];
+function countHookCommands(hooks: Record<string, HookWrapper[]>): number {
+    let count = 0;
 
-    const result = spawnSync('claude', ['plugin', 'list'], { encoding: 'utf8', stdio: 'pipe' });
-    const output = result.stdout ?? '';
-
-    const xtrmToolsPlugin = output.includes('xtrm-tools@xtrm-tools') || output.includes('xtrm-tools');
-    const officialPlugins: string[] = [];
-    const missingPlugins: string[] = [];
-
-    for (const pluginId of OFFICIAL_PLUGINS) {
-        if (output.includes(pluginId)) {
-            officialPlugins.push(pluginId);
-        } else {
-            missingPlugins.push(pluginId);
+    for (const wrappers of Object.values(hooks)) {
+        for (const wrapper of wrappers) {
+            count += wrapper.hooks?.length ?? 0;
         }
     }
 
-    return { xtrmToolsPlugin, officialPlugins, missingPlugins };
+    return count;
+}
+
+function hasXtrmHookCommand(hooks: Record<string, HookWrapper[]>): boolean {
+    for (const wrappers of Object.values(hooks)) {
+        for (const wrapper of wrappers) {
+            for (const hook of wrapper.hooks ?? []) {
+                if (hook.type !== 'command') continue;
+                if (typeof hook.command !== 'string') continue;
+                if (hook.command.includes('.xtrm/hooks/')) return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+function verifyClaudeRuntime(projectRoot: string): {
+    hooksWired: boolean;
+    hooksEvents: number;
+    hookCommands: number;
+    settingsPath: string;
+} {
+    const settingsPath = path.join(projectRoot, '.claude', 'settings.json');
+    const fallbackSettingsPath = path.join(os.homedir(), '.claude', 'settings.json');
+
+    const resolvedSettingsPath = fs.pathExistsSync(settingsPath) ? settingsPath : fallbackSettingsPath;
+
+    if (!fs.pathExistsSync(resolvedSettingsPath)) {
+        return {
+            hooksWired: false,
+            hooksEvents: 0,
+            hookCommands: 0,
+            settingsPath: resolvedSettingsPath,
+        };
+    }
+
+    try {
+        const settings = fs.readJsonSync(resolvedSettingsPath) as ClaudeSettings;
+        const hooks = settings.hooks ?? {};
+        const hooksEvents = Object.keys(hooks).length;
+        const hookCommands = countHookCommands(hooks);
+        const hooksWired = hooksEvents > 0 && hookCommands > 0 && hasXtrmHookCommand(hooks);
+
+        return {
+            hooksWired,
+            hooksEvents,
+            hookCommands,
+            settingsPath: resolvedSettingsPath,
+        };
+    } catch {
+        return {
+            hooksWired: false,
+            hooksEvents: 0,
+            hookCommands: 0,
+            settingsPath: resolvedSettingsPath,
+        };
+    }
 }
 
 async function verifyPiRuntime(projectRoot: string): Promise<PiRuntimePlan> {
     const pkgRoot = resolvePkgRoot();
-    const sourceDir = path.join(pkgRoot, 'config', 'pi', 'extensions');
+    const sourceDir = path.join(pkgRoot, '.xtrm', 'config', 'pi', 'extensions');
     const targetDir = path.join(projectRoot, '.pi', 'extensions');
 
     if (!await fs.pathExists(sourceDir)) {
@@ -120,7 +178,7 @@ function resolvePkgRoot(): string {
         path.resolve(__dirname, '../../..'),
     ];
     for (const c of candidates) {
-        if (fs.existsSync(path.join(c, 'config', 'pi', 'extensions'))) return c;
+        if (fs.existsSync(path.join(c, '.xtrm', 'config', 'pi', 'extensions'))) return c;
     }
     return candidates[0];
 }
@@ -129,14 +187,13 @@ function resolvePkgRoot(): string {
 
 export async function runInitVerification(projectRoot: string): Promise<VerificationResult> {
     const machinePlan = verifyMachineBootstrap();
-    const claudeResult = verifyClaudeRuntime();
+    const claudeResult = verifyClaudeRuntime(projectRoot);
     const piPlan = await verifyPiRuntime(projectRoot);
     const projectResult = verifyProjectBootstrap(projectRoot);
 
     const allPassed =
         machinePlan.allRequiredPresent &&
-        claudeResult.xtrmToolsPlugin &&
-        claudeResult.missingPlugins.length === 0 &&
+        claudeResult.hooksWired &&
         piPlan.allRequiredPresent &&
         projectResult.beadsInitialized;
 
@@ -145,11 +202,7 @@ export async function runInitVerification(projectRoot: string): Promise<Verifica
             allRequiredPresent: machinePlan.allRequiredPresent,
             missingRequired: machinePlan.missingRequired.map(d => d.dep.displayName),
         },
-        claudeRuntime: {
-            xtrmToolsPlugin: claudeResult.xtrmToolsPlugin,
-            officialPlugins: claudeResult.officialPlugins,
-            missingPlugins: claudeResult.missingPlugins,
-        },
+        claudeRuntime: claudeResult,
         piRuntime: {
             allRequiredPresent: piPlan.allRequiredPresent,
             missingExtensions: piPlan.missingExtensions.filter(s => s.ext.required).map(s => s.ext.displayName),
@@ -177,16 +230,12 @@ export function renderVerificationSummary(result: VerificationResult): void {
     }
 
     // Claude runtime
-    const crIcon = result.claudeRuntime.xtrmToolsPlugin && result.claudeRuntime.missingPlugins.length === 0
-        ? sym.ok : sym.warn;
+    const crIcon = result.claudeRuntime.hooksWired ? sym.ok : sym.warn;
     const crLabel = 'Claude Runtime';
-    if (result.claudeRuntime.xtrmToolsPlugin && result.claudeRuntime.missingPlugins.length === 0) {
+    if (result.claudeRuntime.hooksWired) {
         console.log(`  ${crIcon} ${crLabel}`);
-    } else if (!result.claudeRuntime.xtrmToolsPlugin) {
-        console.log(`  ${crIcon} ${crLabel} — missing xtrm-tools plugin`);
     } else {
-        const missing = result.claudeRuntime.missingPlugins.join(', ');
-        console.log(`  ${crIcon} ${crLabel} — missing plugins: ${missing}`);
+        console.log(`  ${crIcon} ${crLabel} — missing .xtrm/hooks wiring in ${result.claudeRuntime.settingsPath}`);
     }
 
     // Pi runtime

@@ -1,6 +1,8 @@
 import { Command } from 'commander';
 import kleur from 'kleur';
-import { execSync, spawnSync } from 'node:child_process';
+import { execSync } from 'node:child_process';
+import fs from 'fs-extra';
+import path from 'node:path';
 import { findRepoRoot } from '../utils/repo-root.js';
 import { t } from '../utils/theme.js';
 import { runClaudeRuntimeSyncPhase } from '../core/claude-runtime-sync.js';
@@ -8,23 +10,51 @@ import { launchWorktreeSession } from '../utils/worktree-session.js';
 import { confirmDestructiveAction } from '../utils/confirmation.js';
 import { inventoryDeps, renderBootstrapPlan } from '../core/machine-bootstrap.js';
 
+function getProjectSettingsPath(repoRoot: string): string {
+    return path.join(repoRoot, '.claude', 'settings.json');
+}
+
+function hasXtrmHookWiring(settingsPath: string): boolean {
+    if (!fs.existsSync(settingsPath)) return false;
+
+    try {
+        const data = fs.readJsonSync(settingsPath) as {
+            hooks?: Record<string, Array<{ hooks?: Array<{ command?: string }> }>>;
+        };
+
+        const groups = Object.values(data.hooks ?? {});
+        for (const wrappers of groups) {
+            for (const wrapper of wrappers) {
+                for (const hook of wrapper.hooks ?? []) {
+                    if (typeof hook.command === 'string' && hook.command.includes('.xtrm/hooks/')) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    } catch {
+        return false;
+    }
+}
+
 export function createClaudeCommand(): Command {
     const cmd = new Command('claude')
-        .description('Launch a Claude session in a sandboxed worktree, or manage the Claude runtime')
+        .description('Launch a Claude session in a sandboxed worktree, or manage Claude hook wiring')
         .argument('[name]', 'Optional session name — used as xt/<name> branch (random if omitted)')
         .action(async (name: string | undefined) => {
             await launchWorktreeSession({ runtime: 'claude', name });
         });
 
     cmd.command('install')
-        .description('Install/refresh the xtrm-tools Claude plugin and official plugins')
+        .description('Install/refresh Claude settings hook wiring from .xtrm/config/hooks.json')
         .option('--dry-run', 'Preview without making changes', false)
         .option('-y, --yes', 'Skip confirmation prompt', false)
         .action(async (opts: { dryRun: boolean; yes: boolean }) => {
             if (!opts.dryRun) {
                 const confirmed = await confirmDestructiveAction({
                     yes: opts.yes,
-                    message: 'Sync Claude runtime and remove stale pre-plugin files?',
+                    message: 'Sync Claude hooks into settings.json?',
                     initial: true,
                 });
                 if (!confirmed) {
@@ -39,12 +69,12 @@ export function createClaudeCommand(): Command {
 
     cmd.command('reload')
         .alias('reinstall')
-        .description('Reinstall Claude plugin from live repo (refreshes cached copy)')
+        .description('Re-sync Claude settings hook wiring from the current repo')
         .option('-y, --yes', 'Skip confirmation prompt', false)
         .action(async (opts: { yes: boolean }) => {
             const confirmed = await confirmDestructiveAction({
                 yes: opts.yes,
-                message: 'Re-sync Claude runtime and remove stale pre-plugin files?',
+                message: 'Re-sync Claude hooks into settings.json?',
                 initial: true,
             });
             if (!confirmed) {
@@ -57,7 +87,7 @@ export function createClaudeCommand(): Command {
         });
 
     cmd.command('status')
-        .description('Show Claude CLI version, plugin status, and hook wiring')
+        .description('Show Claude CLI version and .xtrm hook wiring status')
         .action(async () => {
             console.log(t.bold('\n  Claude Code Status\n'));
 
@@ -70,12 +100,12 @@ export function createClaudeCommand(): Command {
                 return;
             }
 
-            const listResult = spawnSync('claude', ['plugin', 'list'], { encoding: 'utf8', stdio: 'pipe' });
-            const pluginOutput = listResult.stdout ?? '';
-            if (pluginOutput.includes('xtrm-tools')) {
-                console.log(t.success('  ✓ xtrm-tools plugin installed'));
+            const repoRoot = await findRepoRoot();
+            const settingsPath = getProjectSettingsPath(repoRoot);
+            if (hasXtrmHookWiring(settingsPath)) {
+                console.log(t.success(`  ✓ Claude hooks wired (${settingsPath})`));
             } else {
-                console.log(kleur.yellow('  ⚠ xtrm-tools plugin not installed — run: xt claude install'));
+                console.log(kleur.yellow('  ⚠ .xtrm hook wiring missing — run: xt claude install'));
             }
 
             try {
@@ -103,11 +133,12 @@ export function createClaudeCommand(): Command {
                 allOk = false;
             }
 
-            const listResult = spawnSync('claude', ['plugin', 'list'], { encoding: 'utf8', stdio: 'pipe' });
-            if (listResult.stdout?.includes('xtrm-tools')) {
-                console.log(t.success('  ✓ xtrm-tools plugin installed'));
+            const repoRoot = await findRepoRoot();
+            const settingsPath = getProjectSettingsPath(repoRoot);
+            if (hasXtrmHookWiring(settingsPath)) {
+                console.log(t.success('  ✓ .xtrm hooks are wired in .claude/settings.json'));
             } else {
-                console.log(kleur.yellow('  ⚠ xtrm-tools plugin missing — run: xt claude install'));
+                console.log(kleur.yellow('  ⚠ .xtrm hooks not wired — run: xt claude install'));
                 allOk = false;
             }
 

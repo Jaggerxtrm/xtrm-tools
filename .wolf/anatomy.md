@@ -1,7 +1,7 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-31T01:39:16.714Z
-> Files: 536 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-03-31T20:36:52.855Z
+> Files: 537 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ./
 
@@ -1198,3 +1198,7 @@
 ## .claude/worktrees/agent-a3d5b923/cli/test/hooks/
 
 - `quality-check-hooks.test.ts` — Declares temp (~524 tok)
+
+## .xtrm/reports/
+
+- `2026-03-31-eee5e2a6.md` — Session Report — 2026-03-31 (continuation) (~3327 tok)

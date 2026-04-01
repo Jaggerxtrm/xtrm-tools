@@ -96,6 +96,13 @@ Run on every file edit via PostToolUse extension:
 
 Gate output appears as extension context. Fix failures before proceeding — do not commit with lint errors.
 
+## Claude hook wiring (current model)
+
+- Source of truth: `.xtrm/config/hooks.json`
+- Installed scripts: `.xtrm/hooks/`
+- Wiring target: `.claude/settings.json` (`hooks` entries with absolute `.xtrm/hooks/...` command paths)
+- `xt install` and `xt claude install` manage this wiring directly; no plugin marketplace or plugin cache state is used.
+
 ## bv — Graph-Aware Triage
 
 bv is a graph-aware triage engine for the beads issue board. Use it instead of `bd ready` when you need ranked picks, dependency-aware scheduling, or project health signals.

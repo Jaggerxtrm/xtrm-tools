@@ -868,7 +868,7 @@ async function runProjectBootstrap(projectRoot: string): Promise<void> {
 //   2. Plan               — render a consolidated view of what will change
 //   3. Confirm            — single gate; all mutations happen only after this
 //   4. Machine Bootstrap  — install missing system tools (bd, dolt, bv, pi, pnpm)
-//   5. Claude Runtime     — xtrm-tools plugin + official plugins + cleanup
+//   5. Claude Runtime     — .xtrm hook wiring into .claude/settings.json
 //   6. Pi Runtime         — extensions + packages + skills sync (via runInstall)
 //   7. Project Bootstrap  — bd init, gitnexus index, CLAUDE.md/AGENTS.md headers, project-skills
 //   8. Verification       — unified summary of all phase outcomes
@@ -909,7 +909,7 @@ export async function runProjectInit(opts: InstallOpts = {}): Promise<void> {
     // depend on. Uses the pre-computed plan from Phase 1 inventory.
     await runMachineBootstrapPhase({ dryRun: false });
 
-    // ── Phase 5: Claude Runtime Sync ─────────────────────────────────────────
+    // ── Phase 5: Claude Runtime Sync (.xtrm hooks wiring) ───────────────────
     await runClaudeRuntimeSyncPhase({ repoRoot: projectRoot, dryRun: false, isGlobal: false });
 
     // ── Phase 6: Pi Runtime Sync + Skills Sync ───────────────────────────────

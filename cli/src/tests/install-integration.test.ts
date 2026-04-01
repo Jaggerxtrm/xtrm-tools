@@ -1,0 +1,176 @@
+import fs from 'fs-extra';
+import os from 'node:os';
+import path from 'node:path';
+import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
+
+vi.mock('../commands/pi-install.js', () => ({
+  runPiInstall: vi.fn(async () => undefined),
+}));
+
+vi.mock('../core/machine-bootstrap.js', async () => {
+  const actual = await vi.importActual<typeof import('../core/machine-bootstrap.js')>('../core/machine-bootstrap.js');
+  return {
+    ...actual,
+    runMachineBootstrapPhase: vi.fn(async () => undefined),
+  };
+});
+
+import { createInstallCommand } from '../commands/install.js';
+
+interface HooksConfig {
+  hooks: Record<string, Array<{ script: string; matcher?: string; timeout?: number }>>;
+}
+
+const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
+
+let tmpDir = '';
+let previousCwd = '';
+
+beforeEach(() => {
+  previousCwd = process.cwd();
+  tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'xtrm-install-test-'));
+  process.chdir(tmpDir);
+});
+
+afterEach(() => {
+  process.chdir(previousCwd);
+  fs.removeSync(tmpDir);
+  vi.restoreAllMocks();
+});
+
+async function runInstallCli(args: string[]): Promise<{ logs: string[] }> {
+  const logs: string[] = [];
+  const logSpy = vi.spyOn(console, 'log').mockImplementation((...values: unknown[]) => {
+    logs.push(values.map(String).join(' '));
+  });
+
+  try {
+    const command = createInstallCommand();
+    await command.parseAsync(['node', 'xtrm-install-test', ...args]);
+    return { logs };
+  } finally {
+    logSpy.mockRestore();
+  }
+}
+
+function readHooksConfig(): HooksConfig {
+  return fs.readJsonSync(path.join(REPO_ROOT, '.xtrm', 'config', 'hooks.json')) as HooksConfig;
+}
+
+function expectedCommandForScript(scriptName: string, absolutePath: string): string {
+  const extension = path.extname(scriptName).toLowerCase();
+  if (extension === '.mjs' || extension === '.cjs' || extension === '.js') {
+    return `node "${absolutePath}"`;
+  }
+  if (extension === '.sh') {
+    return `bash "${absolutePath}"`;
+  }
+  return `${process.platform === 'win32' ? 'python' : 'python3'} "${absolutePath}"`;
+}
+
+describe('xtrm install integration', () => {
+  it('fresh install scaffolds .xtrm and writes absolute hook commands to settings.json', async () => {
+    await runInstallCli(['--yes']);
+
+    expect(fs.pathExistsSync(path.join(tmpDir, '.xtrm', 'hooks'))).toBe(true);
+    expect(fs.pathExistsSync(path.join(tmpDir, '.xtrm', 'config'))).toBe(true);
+    expect(fs.pathExistsSync(path.join(tmpDir, '.xtrm', 'skills', 'default'))).toBe(true);
+    expect(fs.pathExistsSync(path.join(tmpDir, '.xtrm', 'extensions'))).toBe(true);
+
+    const settingsPath = path.join(tmpDir, '.claude', 'settings.json');
+    expect(fs.pathExistsSync(settingsPath)).toBe(true);
+
+    const settings = fs.readJsonSync(settingsPath) as {
+      hooks: Record<string, Array<{ matcher?: string; hooks: Array<{ type: string; command: string; timeout?: number }> }>>;
+    };
+    const hooksConfig = readHooksConfig();
+
+    for (const [eventName, definitions] of Object.entries(hooksConfig.hooks)) {
+      const wrappers = settings.hooks[eventName] ?? [];
+      expect(wrappers.length).toBe(definitions.length);
+
+      definitions.forEach((definition, index) => {
+        const wrapper = wrappers[index];
+        const commandHook = wrapper.hooks[0];
+        const expectedAbsolutePath = path.join(tmpDir, '.xtrm', 'hooks', definition.script);
+
+        expect(commandHook.type).toBe('command');
+        expect(commandHook.command).toBe(expectedCommandForScript(definition.script, expectedAbsolutePath));
+      });
+    }
+  });
+
+  it('second install is idempotent and does not overwrite up-to-date files', async () => {
+    await runInstallCli(['--yes']);
+
+    const targetFile = path.join(tmpDir, '.xtrm', 'hooks', 'beads-edit-gate.mjs');
+    const before = fs.statSync(targetFile).mtimeMs;
+
+    await new Promise(resolve => setTimeout(resolve, 10));
+    const { logs } = await runInstallCli(['--yes']);
+
+    const after = fs.statSync(targetFile).mtimeMs;
+    expect(after).toBe(before);
+    expect(logs.some(line => line.includes('Up-to-date'))).toBe(true);
+  });
+
+  it('drifted file is skipped without --force and overwritten with --force', async () => {
+    await runInstallCli(['--yes']);
+
+    const driftedFile = path.join(tmpDir, '.xtrm', 'hooks', 'beads-edit-gate.mjs');
+    const upstreamFile = path.join(REPO_ROOT, '.xtrm', 'hooks', 'beads-edit-gate.mjs');
+
+    fs.writeFileSync(driftedFile, '// user custom change\n', 'utf8');
+
+    const noForceResult = await runInstallCli(['--yes']);
+    expect(noForceResult.logs.some(line => line.includes('Drift detected'))).toBe(true);
+    expect(noForceResult.logs.some(line => line.includes('hooks/beads-edit-gate.mjs'))).toBe(true);
+    expect(fs.readFileSync(driftedFile, 'utf8')).toBe('// user custom change\n');
+
+    const forceResult = await runInstallCli(['--yes', '--force']);
+    expect(fs.readFileSync(driftedFile, 'utf8')).toBe(fs.readFileSync(upstreamFile, 'utf8'));
+    expect(forceResult.logs.some(line => line.includes('Drift detected'))).toBe(false);
+  });
+
+  it('dry-run prints scaffold actions and writes no files', async () => {
+    const { logs } = await runInstallCli(['--dry-run', '--yes']);
+
+    expect(logs.some(line => line.includes('[DRY RUN] would install'))).toBe(true);
+    expect(fs.pathExistsSync(path.join(tmpDir, '.xtrm'))).toBe(false);
+    expect(fs.pathExistsSync(path.join(tmpDir, '.claude', 'settings.json'))).toBe(false);
+  });
+
+  it('hook wiring includes all hooks and preserves existing permissions.allow on reinstall', async () => {
+    const settingsPath = path.join(tmpDir, '.claude', 'settings.json');
+    fs.ensureDirSync(path.dirname(settingsPath));
+    fs.writeJsonSync(settingsPath, {
+      permissions: {
+        allow: ['Bash(git status)', 'Read(README.md)'],
+        defaultMode: 'acceptEdits',
+      },
+      model: 'claude-sonnet-4-5',
+      skillSuggestions: { enabled: false },
+    }, { spaces: 2 });
+
+    await runInstallCli(['--yes']);
+    await runInstallCli(['--yes']);
+
+    const settings = fs.readJsonSync(settingsPath) as {
+      permissions?: { allow?: string[] };
+      hooks?: Record<string, unknown[]>;
+      model?: string;
+      skillSuggestions?: { enabled?: boolean };
+    };
+
+    const hooksConfig = readHooksConfig();
+
+    expect(settings.permissions?.allow).toEqual(['Bash(git status)', 'Read(README.md)']);
+    expect(settings.model).toBe('claude-sonnet-4-5');
+    expect(settings.skillSuggestions?.enabled).toBe(false);
+    expect(Object.keys(settings.hooks ?? {}).sort()).toEqual(Object.keys(hooksConfig.hooks).sort());
+
+    const serializedSettings = JSON.stringify(settings);
+    expect(serializedSettings.toLowerCase().includes('marketplace')).toBe(false);
+    expect(serializedSettings.toLowerCase().includes('claude plugin')).toBe(false);
+  });
+});

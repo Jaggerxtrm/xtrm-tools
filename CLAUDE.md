@@ -155,9 +155,9 @@ Gate output appears as hook context. Fix failures before proceeding — do not c
 # Claude Code Guide for Jaggers Agent Tools
 
 ## Architecture
-- **Skills**: stored in `skills/`. Each skill has `SKILL.md` and optional `README.md`.
-- **Hooks**: stored in `hooks/`. Python scripts (`.py`) for lifecycle events.
-- **Config**: stored in `config/`. `settings.json` template.
+- **Skills**: canonical install payload is in `.xtrm/skills/default/`.
+- **Hooks**: canonical install payload is in `.xtrm/hooks/`.
+- **Config**: canonical install payload is in `.xtrm/config/` (`hooks.json`, `settings.json`).
 - **CLI**: stored in `cli/`. Node.js tool for installation and sync.
 - **Documentation**: stored in `docs/` and `.serena/memories/` (SSOT).
 
@@ -173,6 +173,12 @@ Gate output appears as hook context. Fix failures before proceeding — do not c
 - **Dependencies**:
   - CLI: `npm install` in `cli/`
   - Python: Standard library only (no external deps for hooks)
+
+## Claude hook wiring model
+- `xt install` / `xt claude install` reads `.xtrm/config/hooks.json`.
+- Hook commands are written to `.claude/settings.json` as absolute `node "<project>/.xtrm/hooks/<script>.mjs"` entries.
+- Existing Claude settings are merged; the `hooks` section is replaced from `.xtrm/config/hooks.json`.
+- Do not use plugin marketplace or plugin cache paths for xtrm runtime wiring.
 
 ## Key Files & Directories
 - `cli/lib/sync.js`: Logic for syncing/backporting configurations. Includes dynamic path resolution for hardcoded repo paths.

@@ -1,5 +1,5 @@
 {
-  "timestamp": 1774921801597,
+  "timestamp": 1775000058776,
   "repoRoot": "/home/dawid/projects/xtrm-tools",
   "entries": [
     {
@@ -9,13 +9,13 @@
         "title": "XTRM-Tools Complete Guide",
         "scope": "xtrm-guide",
         "category": "reference",
-        "version": "1.0.0",
-        "updated": "2026-03-25",
+        "version": "1.1.0",
+        "updated": "2026-03-31",
         "domain": "[]",
         "summary": "| Section | Summary | |---|---| | [Overview](#overview) | XTRM is a policy-driven workflow layer | | [Installation](#ins"
       },
-      "sizeBytes": 5840,
-      "lastModified": "2026-03-31T00:42:41.181Z"
+      "sizeBytes": 7348,
+      "lastModified": "2026-03-31T13:31:59.512Z"
     },
     {
       "filePath": "/home/dawid/projects/xtrm-tools/docs/cli-architecture.md",
@@ -24,15 +24,15 @@
         "title": "CLI Architecture",
         "scope": "cli-architecture",
         "category": "reference",
-        "version": "1.2.0",
+        "version": "1.3.0",
         "updated": "2026-03-31",
-        "synced_at": "a0936a7",
+        "synced_at": "5ebb7506",
         "source_of_truth_for": "",
         "domain": "[cli]",
         "summary": "| Section | Summary | |---|---| | [Entry Point](#entry-point) | `cli/src/index | | [Install Flow (`xtrm install`)](#inst"
       },
-      "sizeBytes": 13191,
-      "lastModified": "2026-03-31T00:42:41.181Z"
+      "sizeBytes": 14860,
+      "lastModified": "2026-03-31T13:32:06.268Z"
     },
     {
       "filePath": "/home/dawid/projects/xtrm-tools/docs/docs-commands.md",
@@ -47,10 +47,10 @@
         "description": "Reference for xtrm docs subcommands: show, list, and cross-check",
         "source_of_truth_for": "",
         "domain": "[docs, cli]",
-        "summary": "| Section | Summary | |---|---| | [Command Suite](#command-suite) | | Command | Purpose | | | [`xtrm docs show`](#xtrm-d"
+        "summary": "| Section | Summary | |---|---| | [Command Suite](#command-suite) | Best for quick metadata inspection | | [`xtrm docs s"
       },
-      "sizeBytes": 3846,
-      "lastModified": "2026-03-31T00:42:41.182Z"
+      "sizeBytes": 3813,
+      "lastModified": "2026-03-31T13:31:59.516Z"
     },
     {
       "filePath": "/home/dawid/projects/xtrm-tools/docs/hooks.md",
@@ -65,10 +65,10 @@
         "description": "All hook events, scripts, and behavior for the xtrm plugin",
         "source_of_truth_for": "",
         "domain": "[hooks, claude, enforcement]",
-        "summary": "| Section | Summary | |---|---| | [Event Model](#event-model) | | Event | When | | | [Hook Groups](#hook-groups) | Alway"
+        "summary": "| Section | Summary | |---|---| | [Event Model](#event-model) | Always installed (`xtrm init`) | | [Hook Groups](#hook-g"
       },
-      "sizeBytes": 7192,
-      "lastModified": "2026-03-31T00:42:41.182Z"
+      "sizeBytes": 7274,
+      "lastModified": "2026-03-31T13:31:59.518Z"
     },
     {
       "filePath": "/home/dawid/projects/xtrm-tools/docs/mcp-servers.md",
@@ -83,8 +83,8 @@
         "domain": "[]",
         "summary": "| Section | Summary | |---|---| | [Overview](#overview) | _Describe what this document covers |"
       },
-      "sizeBytes": 494,
-      "lastModified": "2026-03-31T00:42:41.182Z"
+      "sizeBytes": 499,
+      "lastModified": "2026-03-31T13:31:59.519Z"
     },
     {
       "filePath": "/home/dawid/projects/xtrm-tools/docs/mcp.md",
@@ -98,10 +98,10 @@
         "description": "MCP server configuration, canonical sources, and operational workflow",
         "source_of_truth_for": "",
         "domain": "[mcp, claude, config]",
-        "summary": "| Section | Summary | |---|---| | [Canonical Sources](#canonical-sources) | | File | Purpose | | | [Operational Workflow"
+        "summary": "| Section | Summary | |---|---| | [Canonical Sources](#canonical-sources) | 1 | | [Operational Workflow](#operational-wo"
       },
-      "sizeBytes": 2235,
-      "lastModified": "2026-03-31T00:42:41.182Z"
+      "sizeBytes": 2106,
+      "lastModified": "2026-03-31T13:31:59.520Z"
     },
     {
       "filePath": "/home/dawid/projects/xtrm-tools/docs/pi-extensions.md",
@@ -115,10 +115,10 @@
         "synced_at": "ce0f13d",
         "source_of_truth_for": "",
         "domain": "[pi, extensions]",
-        "summary": "| Section | Summary | |---|---| | [Install Commands](#install-commands) | - `xtrm pi setup`, `xtrm pi install`, and `xtr"
+        "summary": "| Section | Summary | |---|---| | [Install Commands](#install-commands) | Each extension is a directory package: | | [Ma"
       },
-      "sizeBytes": 5426,
-      "lastModified": "2026-03-31T00:42:41.182Z"
+      "sizeBytes": 5264,
+      "lastModified": "2026-03-31T13:31:59.522Z"
     },
     {
       "filePath": "/home/dawid/projects/xtrm-tools/docs/policies.md",
@@ -132,10 +132,10 @@
         "synced_at": "0fc2a3b",
         "source_of_truth_for": "",
         "domain": "[hooks, enforcement]",
-        "summary": "| Section | Summary | |---|---| | [Active Policies](#active-policies) | | Policy | Runtime | Description | | | [Add / Up"
+        "summary": "| Section | Summary | |---|---| | [Active Policies](#active-policies) | 1 | | [Add / Update Workflow](#add-update-workfl"
       },
-      "sizeBytes": 2030,
-      "lastModified": "2026-03-31T00:42:41.190Z"
+      "sizeBytes": 2006,
+      "lastModified": "2026-03-31T13:31:59.524Z"
     },
     {
       "filePath": "/home/dawid/projects/xtrm-tools/docs/pre-install-cleanup.md",
@@ -150,8 +150,8 @@
         "domain": "[install, migration, claude, pi]",
         "summary": "| Section | Summary | |---|---| | [1) Remove legacy Claude hook files](#1-remove-legacy-claude-hook-files) | _no summary"
       },
-      "sizeBytes": 2505,
-      "lastModified": "2026-03-31T00:42:41.190Z"
+      "sizeBytes": 2510,
+      "lastModified": "2026-03-31T13:31:59.526Z"
     },
     {
       "filePath": "/home/dawid/projects/xtrm-tools/docs/project-skills.md",
@@ -168,8 +168,8 @@
         "domain": "[skills, claude, enforcement]",
         "summary": "| Section | Summary | |---|---| | [What This Module Is](#what-this-module-is) | `project-skills/` contains installable p"
       },
-      "sizeBytes": 4839,
-      "lastModified": "2026-03-31T00:42:41.190Z"
+      "sizeBytes": 4982,
+      "lastModified": "2026-03-31T13:31:59.527Z"
     },
     {
       "filePath": "/home/dawid/projects/xtrm-tools/docs/session-flow-test-report-hehp.md",
@@ -181,10 +181,10 @@
         "version": "1.0.0",
         "updated": "2026-03-20",
         "domain": "[pi, beads]",
-        "summary": "| Section | Summary | |---|---| | [1) Metadata](#1-metadata) | - Issue ID: jaggers-agent-tools-hehp | | [2) Scenarios Ex"
+        "summary": "| Section | Summary | |---|---| | [1) Metadata](#1-metadata) | **Command/Event:** `bd update jaggers-agent-tools-hehp --"
       },
-      "sizeBytes": 6829,
-      "lastModified": "2026-03-31T00:42:41.191Z"
+      "sizeBytes": 6844,
+      "lastModified": "2026-03-31T13:31:59.528Z"
     },
     {
       "filePath": "/home/dawid/projects/xtrm-tools/docs/session-flow-test-report-template.md",
@@ -196,17 +196,17 @@
         "version": "1.0.0",
         "updated": "2026-03-20",
         "domain": "[pi, beads]",
-        "summary": "| Section | Summary | |---|---| | [1) Metadata](#1-metadata) | - Issue ID: | | [2) Scenarios Executed](#2-scenarios-exec"
+        "summary": "| Section | Summary | |---|---| | [1) Metadata](#1-metadata) | For each scenario, fill **Expected**, **Observed**, and *"
       },
-      "sizeBytes": 2566,
-      "lastModified": "2026-03-31T00:42:41.191Z"
+      "sizeBytes": 2594,
+      "lastModified": "2026-03-31T13:31:59.529Z"
     },
     {
       "filePath": "/home/dawid/projects/xtrm-tools/docs/skills-registry-exploration.md",
       "relativePath": "docs/skills-registry-exploration.md",
       "frontmatter": null,
-      "sizeBytes": 8505,
-      "lastModified": "2026-03-31T01:40:12.690Z"
+      "sizeBytes": 21875,
+      "lastModified": "2026-03-31T22:02:43.089Z"
     },
     {
       "filePath": "/home/dawid/projects/xtrm-tools/docs/skills.md",
@@ -215,16 +215,16 @@
         "title": "Skills Catalog",
         "scope": "skills",
         "category": "overview",
-        "version": "1.3.0",
-        "updated": "2026-03-22",
-        "synced_at": "8e2f93c",
+        "version": "1.4.0",
+        "updated": "2026-03-31",
+        "synced_at": "5ebb7506",
         "description": "Global skills installed into the xtrm-managed agent environments",
         "source_of_truth_for": "",
         "domain": "[skills, claude, pi]",
-        "summary": "| Section | Summary | |---|---| | [Runtime Model](#runtime-model) | 1 | | [Core Skills](#core-skills) | | Skill | Primar"
+        "summary": "| Section | Summary | |---|---| | [Runtime Model](#runtime-model) | 1 | | [Core Skills](#core-skills) | Includes GitNexu"
       },
-      "sizeBytes": 2081,
-      "lastModified": "2026-03-31T00:42:41.191Z"
+      "sizeBytes": 2359,
+      "lastModified": "2026-03-31T13:32:06.357Z"
     },
     {
       "filePath": "/home/dawid/projects/xtrm-tools/docs/testing.md",
@@ -239,8 +239,8 @@
         "domain": "[testing, hooks, skills]",
         "summary": "| Section | Summary | |---|---| | [Scope](#scope) | Project skills covered: | | [Global Preflight](#global-preflight) | "
       },
-      "sizeBytes": 5303,
-      "lastModified": "2026-03-31T00:42:41.191Z"
+      "sizeBytes": 5188,
+      "lastModified": "2026-03-31T13:31:59.532Z"
     },
     {
       "filePath": "/home/dawid/projects/xtrm-tools/docs/todo.md",
@@ -272,8 +272,8 @@
         "domain": "[cli, worktrees, beads]",
         "summary": "| Section | Summary | |---|---| | [Quick Start](#quick-start) | `xt end` is the publish step for one worktree: it rebase"
       },
-      "sizeBytes": 12967,
-      "lastModified": "2026-03-31T00:42:41.192Z"
+      "sizeBytes": 12981,
+      "lastModified": "2026-03-31T13:31:59.534Z"
     },
     {
       "filePath": "/home/dawid/projects/xtrm-tools/docs/xtrm-ui.md",
@@ -290,8 +290,8 @@
         "domain": "[pi, extensions, ui, themes]",
         "summary": "| Section | Summary | |---|---| | [Overview](#overview) | `xtrm-ui` is a Pi extension that wraps the visual chrome from "
       },
-      "sizeBytes": 4067,
-      "lastModified": "2026-03-31T00:42:41.192Z"
+      "sizeBytes": 4126,
+      "lastModified": "2026-03-31T13:31:59.536Z"
     }
   ]
 }

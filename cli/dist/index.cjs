@@ -1200,17 +1200,17 @@ var require_suggestSimilar = __commonJS({
 var require_command = __commonJS({
   "../node_modules/commander/lib/command.js"(exports2) {
     "use strict";
-    var EventEmitter2 = require("events").EventEmitter;
+    var EventEmitter = require("events").EventEmitter;
     var childProcess = require("child_process");
-    var path26 = require("path");
-    var fs25 = require("fs");
-    var process16 = require("process");
+    var path29 = require("path");
+    var fs28 = require("fs");
+    var process11 = require("process");
     var { Argument: Argument2, humanReadableArgName } = require_argument();
     var { CommanderError: CommanderError2 } = require_error();
     var { Help: Help2, stripColor } = require_help();
     var { Option: Option2, DualOptions } = require_option();
     var { suggestSimilar } = require_suggestSimilar();
-    var Command2 = class _Command extends EventEmitter2 {
+    var Command2 = class _Command extends EventEmitter {
       /**
        * Initialize a new `Command`.
        *
@@ -1251,13 +1251,13 @@ var require_command = __commonJS({
         this._showSuggestionAfterError = true;
         this._savedState = null;
         this._outputConfiguration = {
-          writeOut: (str) => process16.stdout.write(str),
-          writeErr: (str) => process16.stderr.write(str),
+          writeOut: (str) => process11.stdout.write(str),
+          writeErr: (str) => process11.stderr.write(str),
           outputError: (str, write) => write(str),
-          getOutHelpWidth: () => process16.stdout.isTTY ? process16.stdout.columns : void 0,
-          getErrHelpWidth: () => process16.stderr.isTTY ? process16.stderr.columns : void 0,
-          getOutHasColors: () => useColor() ?? (process16.stdout.isTTY && process16.stdout.hasColors?.()),
-          getErrHasColors: () => useColor() ?? (process16.stderr.isTTY && process16.stderr.hasColors?.()),
+          getOutHelpWidth: () => process11.stdout.isTTY ? process11.stdout.columns : void 0,
+          getErrHelpWidth: () => process11.stderr.isTTY ? process11.stderr.columns : void 0,
+          getOutHasColors: () => useColor() ?? (process11.stdout.isTTY && process11.stdout.hasColors?.()),
+          getErrHasColors: () => useColor() ?? (process11.stderr.isTTY && process11.stderr.hasColors?.()),
           stripColor: (str) => stripColor(str)
         };
         this._hidden = false;
@@ -1651,7 +1651,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
         if (this._exitCallback) {
           this._exitCallback(new CommanderError2(exitCode, code, message));
         }
-        process16.exit(exitCode);
+        process11.exit(exitCode);
       }
       /**
        * Register callback `fn` for the command.
@@ -2051,16 +2051,16 @@ Expecting one of '${allowedValues.join("', '")}'`);
         }
         parseOptions = parseOptions || {};
         if (argv === void 0 && parseOptions.from === void 0) {
-          if (process16.versions?.electron) {
+          if (process11.versions?.electron) {
             parseOptions.from = "electron";
           }
-          const execArgv = process16.execArgv ?? [];
+          const execArgv = process11.execArgv ?? [];
           if (execArgv.includes("-e") || execArgv.includes("--eval") || execArgv.includes("-p") || execArgv.includes("--print")) {
             parseOptions.from = "eval";
           }
         }
         if (argv === void 0) {
-          argv = process16.argv;
+          argv = process11.argv;
         }
         this.rawArgs = argv.slice();
         let userArgs;
@@ -2071,7 +2071,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
             userArgs = argv.slice(2);
             break;
           case "electron":
-            if (process16.defaultApp) {
+            if (process11.defaultApp) {
               this._scriptPath = argv[1];
               userArgs = argv.slice(2);
             } else {
@@ -2197,7 +2197,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
        * @param {string} subcommandName
        */
       _checkForMissingExecutable(executableFile, executableDir, subcommandName) {
-        if (fs25.existsSync(executableFile)) return;
+        if (fs28.existsSync(executableFile)) return;
         const executableDirMessage = executableDir ? `searched for local subcommand relative to directory '${executableDir}'` : "no directory for search for local subcommand, use .executableDir() to supply a custom directory";
         const executableMissing = `'${executableFile}' does not exist
  - if '${subcommandName}' is not meant to be an executable command, remove description parameter from '.command()' and use '.description()' instead
@@ -2215,11 +2215,11 @@ Expecting one of '${allowedValues.join("', '")}'`);
         let launchWithNode = false;
         const sourceExt = [".js", ".ts", ".tsx", ".mjs", ".cjs"];
         function findFile(baseDir, baseName) {
-          const localBin = path26.resolve(baseDir, baseName);
-          if (fs25.existsSync(localBin)) return localBin;
-          if (sourceExt.includes(path26.extname(baseName))) return void 0;
+          const localBin = path29.resolve(baseDir, baseName);
+          if (fs28.existsSync(localBin)) return localBin;
+          if (sourceExt.includes(path29.extname(baseName))) return void 0;
           const foundExt = sourceExt.find(
-            (ext) => fs25.existsSync(`${localBin}${ext}`)
+            (ext) => fs28.existsSync(`${localBin}${ext}`)
           );
           if (foundExt) return `${localBin}${foundExt}`;
           return void 0;
@@ -2231,21 +2231,21 @@ Expecting one of '${allowedValues.join("', '")}'`);
         if (this._scriptPath) {
           let resolvedScriptPath;
           try {
-            resolvedScriptPath = fs25.realpathSync(this._scriptPath);
+            resolvedScriptPath = fs28.realpathSync(this._scriptPath);
           } catch {
             resolvedScriptPath = this._scriptPath;
           }
-          executableDir = path26.resolve(
-            path26.dirname(resolvedScriptPath),
+          executableDir = path29.resolve(
+            path29.dirname(resolvedScriptPath),
             executableDir
           );
         }
         if (executableDir) {
           let localFile = findFile(executableDir, executableFile);
           if (!localFile && !subcommand._executableFile && this._scriptPath) {
-            const legacyName = path26.basename(
+            const legacyName = path29.basename(
               this._scriptPath,
-              path26.extname(this._scriptPath)
+              path29.extname(this._scriptPath)
             );
             if (legacyName !== this._name) {
               localFile = findFile(
@@ -2256,13 +2256,13 @@ Expecting one of '${allowedValues.join("', '")}'`);
           }
           executableFile = localFile || executableFile;
         }
-        launchWithNode = sourceExt.includes(path26.extname(executableFile));
+        launchWithNode = sourceExt.includes(path29.extname(executableFile));
         let proc;
-        if (process16.platform !== "win32") {
+        if (process11.platform !== "win32") {
           if (launchWithNode) {
             args.unshift(executableFile);
-            args = incrementNodeInspectorPort(process16.execArgv).concat(args);
-            proc = childProcess.spawn(process16.argv[0], args, { stdio: "inherit" });
+            args = incrementNodeInspectorPort(process11.execArgv).concat(args);
+            proc = childProcess.spawn(process11.argv[0], args, { stdio: "inherit" });
           } else {
             proc = childProcess.spawn(executableFile, args, { stdio: "inherit" });
           }
@@ -2273,13 +2273,13 @@ Expecting one of '${allowedValues.join("', '")}'`);
             subcommand._name
           );
           args.unshift(executableFile);
-          args = incrementNodeInspectorPort(process16.execArgv).concat(args);
-          proc = childProcess.spawn(process16.execPath, args, { stdio: "inherit" });
+          args = incrementNodeInspectorPort(process11.execArgv).concat(args);
+          proc = childProcess.spawn(process11.execPath, args, { stdio: "inherit" });
         }
         if (!proc.killed) {
-          const signals2 = ["SIGUSR1", "SIGUSR2", "SIGTERM", "SIGINT", "SIGHUP"];
-          signals2.forEach((signal) => {
-            process16.on(signal, () => {
+          const signals = ["SIGUSR1", "SIGUSR2", "SIGTERM", "SIGINT", "SIGHUP"];
+          signals.forEach((signal) => {
+            process11.on(signal, () => {
               if (proc.killed === false && proc.exitCode === null) {
                 proc.kill(signal);
               }
@@ -2290,7 +2290,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
         proc.on("close", (code) => {
           code = code ?? 1;
           if (!exitCallback) {
-            process16.exit(code);
+            process11.exit(code);
           } else {
             exitCallback(
               new CommanderError2(
@@ -2312,7 +2312,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
             throw new Error(`'${executableFile}' not executable`);
           }
           if (!exitCallback) {
-            process16.exit(1);
+            process11.exit(1);
           } else {
             const wrappedError = new CommanderError2(
               1,
@@ -2812,13 +2812,13 @@ Expecting one of '${allowedValues.join("', '")}'`);
        */
       _parseOptionsEnv() {
         this.options.forEach((option) => {
-          if (option.envVar && option.envVar in process16.env) {
+          if (option.envVar && option.envVar in process11.env) {
             const optionKey = option.attributeName();
             if (this.getOptionValue(optionKey) === void 0 || ["default", "config", "env"].includes(
               this.getOptionValueSource(optionKey)
             )) {
               if (option.required || option.optional) {
-                this.emit(`optionEnv:${option.name()}`, process16.env[option.envVar]);
+                this.emit(`optionEnv:${option.name()}`, process11.env[option.envVar]);
               } else {
                 this.emit(`optionEnv:${option.name()}`);
               }
@@ -3171,7 +3171,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
        * @return {Command}
        */
       nameFromFilename(filename) {
-        this._name = path26.basename(filename, path26.extname(filename));
+        this._name = path29.basename(filename, path29.extname(filename));
         return this;
       }
       /**
@@ -3185,9 +3185,9 @@ Expecting one of '${allowedValues.join("', '")}'`);
        * @param {string} [path]
        * @return {(string|null|Command)}
        */
-      executableDir(path27) {
-        if (path27 === void 0) return this._executableDir;
-        this._executableDir = path27;
+      executableDir(path30) {
+        if (path30 === void 0) return this._executableDir;
+        this._executableDir = path30;
         return this;
       }
       /**
@@ -3342,7 +3342,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
        */
       help(contextOptions) {
         this.outputHelp(contextOptions);
-        let exitCode = Number(process16.exitCode ?? 0);
+        let exitCode = Number(process11.exitCode ?? 0);
         if (exitCode === 0 && contextOptions && typeof contextOptions !== "function" && contextOptions.error) {
           exitCode = 1;
         }
@@ -3432,9 +3432,9 @@ Expecting one of '${allowedValues.join("', '")}'`);
       });
     }
     function useColor() {
-      if (process16.env.NO_COLOR || process16.env.FORCE_COLOR === "0" || process16.env.FORCE_COLOR === "false")
+      if (process11.env.NO_COLOR || process11.env.FORCE_COLOR === "0" || process11.env.FORCE_COLOR === "false")
         return false;
-      if (process16.env.FORCE_COLOR || process16.env.CLICOLOR_FORCE !== void 0)
+      if (process11.env.FORCE_COLOR || process11.env.CLICOLOR_FORCE !== void 0)
         return true;
       return void 0;
     }
@@ -3501,7 +3501,7 @@ var require_polyfills = __commonJS({
     var constants = require("constants");
     var origCwd = process.cwd;
     var cwd = null;
-    var platform2 = process.env.GRACEFUL_FS_PLATFORM || process.platform;
+    var platform = process.env.GRACEFUL_FS_PLATFORM || process.platform;
     process.cwd = function() {
       if (!cwd)
         cwd = origCwd.call(process);
@@ -3521,54 +3521,54 @@ var require_polyfills = __commonJS({
     }
     var chdir;
     module2.exports = patch;
-    function patch(fs25) {
+    function patch(fs28) {
       if (constants.hasOwnProperty("O_SYMLINK") && process.version.match(/^v0\.6\.[0-2]|^v0\.5\./)) {
-        patchLchmod(fs25);
+        patchLchmod(fs28);
       }
-      if (!fs25.lutimes) {
-        patchLutimes(fs25);
+      if (!fs28.lutimes) {
+        patchLutimes(fs28);
       }
-      fs25.chown = chownFix(fs25.chown);
-      fs25.fchown = chownFix(fs25.fchown);
-      fs25.lchown = chownFix(fs25.lchown);
-      fs25.chmod = chmodFix(fs25.chmod);
-      fs25.fchmod = chmodFix(fs25.fchmod);
-      fs25.lchmod = chmodFix(fs25.lchmod);
-      fs25.chownSync = chownFixSync(fs25.chownSync);
-      fs25.fchownSync = chownFixSync(fs25.fchownSync);
-      fs25.lchownSync = chownFixSync(fs25.lchownSync);
-      fs25.chmodSync = chmodFixSync(fs25.chmodSync);
-      fs25.fchmodSync = chmodFixSync(fs25.fchmodSync);
-      fs25.lchmodSync = chmodFixSync(fs25.lchmodSync);
-      fs25.stat = statFix(fs25.stat);
-      fs25.fstat = statFix(fs25.fstat);
-      fs25.lstat = statFix(fs25.lstat);
-      fs25.statSync = statFixSync(fs25.statSync);
-      fs25.fstatSync = statFixSync(fs25.fstatSync);
-      fs25.lstatSync = statFixSync(fs25.lstatSync);
-      if (fs25.chmod && !fs25.lchmod) {
-        fs25.lchmod = function(path26, mode, cb) {
+      fs28.chown = chownFix(fs28.chown);
+      fs28.fchown = chownFix(fs28.fchown);
+      fs28.lchown = chownFix(fs28.lchown);
+      fs28.chmod = chmodFix(fs28.chmod);
+      fs28.fchmod = chmodFix(fs28.fchmod);
+      fs28.lchmod = chmodFix(fs28.lchmod);
+      fs28.chownSync = chownFixSync(fs28.chownSync);
+      fs28.fchownSync = chownFixSync(fs28.fchownSync);
+      fs28.lchownSync = chownFixSync(fs28.lchownSync);
+      fs28.chmodSync = chmodFixSync(fs28.chmodSync);
+      fs28.fchmodSync = chmodFixSync(fs28.fchmodSync);
+      fs28.lchmodSync = chmodFixSync(fs28.lchmodSync);
+      fs28.stat = statFix(fs28.stat);
+      fs28.fstat = statFix(fs28.fstat);
+      fs28.lstat = statFix(fs28.lstat);
+      fs28.statSync = statFixSync(fs28.statSync);
+      fs28.fstatSync = statFixSync(fs28.fstatSync);
+      fs28.lstatSync = statFixSync(fs28.lstatSync);
+      if (fs28.chmod && !fs28.lchmod) {
+        fs28.lchmod = function(path29, mode, cb) {
           if (cb) process.nextTick(cb);
         };
-        fs25.lchmodSync = function() {
+        fs28.lchmodSync = function() {
         };
       }
-      if (fs25.chown && !fs25.lchown) {
-        fs25.lchown = function(path26, uid, gid, cb) {
+      if (fs28.chown && !fs28.lchown) {
+        fs28.lchown = function(path29, uid, gid, cb) {
           if (cb) process.nextTick(cb);
         };
-        fs25.lchownSync = function() {
+        fs28.lchownSync = function() {
         };
       }
-      if (platform2 === "win32") {
-        fs25.rename = typeof fs25.rename !== "function" ? fs25.rename : (function(fs$rename) {
+      if (platform === "win32") {
+        fs28.rename = typeof fs28.rename !== "function" ? fs28.rename : (function(fs$rename) {
           function rename(from, to, cb) {
             var start = Date.now();
             var backoff = 0;
             fs$rename(from, to, function CB(er) {
               if (er && (er.code === "EACCES" || er.code === "EPERM" || er.code === "EBUSY") && Date.now() - start < 6e4) {
                 setTimeout(function() {
-                  fs25.stat(to, function(stater, st) {
+                  fs28.stat(to, function(stater, st) {
                     if (stater && stater.code === "ENOENT")
                       fs$rename(from, to, CB);
                     else
@@ -3584,9 +3584,9 @@ var require_polyfills = __commonJS({
           }
           if (Object.setPrototypeOf) Object.setPrototypeOf(rename, fs$rename);
           return rename;
-        })(fs25.rename);
+        })(fs28.rename);
       }
-      fs25.read = typeof fs25.read !== "function" ? fs25.read : (function(fs$read) {
+      fs28.read = typeof fs28.read !== "function" ? fs28.read : (function(fs$read) {
         function read(fd, buffer, offset, length, position, callback_) {
           var callback;
           if (callback_ && typeof callback_ === "function") {
@@ -3594,22 +3594,22 @@ var require_polyfills = __commonJS({
             callback = function(er, _, __) {
               if (er && er.code === "EAGAIN" && eagCounter < 10) {
                 eagCounter++;
-                return fs$read.call(fs25, fd, buffer, offset, length, position, callback);
+                return fs$read.call(fs28, fd, buffer, offset, length, position, callback);
               }
               callback_.apply(this, arguments);
             };
           }
-          return fs$read.call(fs25, fd, buffer, offset, length, position, callback);
+          return fs$read.call(fs28, fd, buffer, offset, length, position, callback);
         }
         if (Object.setPrototypeOf) Object.setPrototypeOf(read, fs$read);
         return read;
-      })(fs25.read);
-      fs25.readSync = typeof fs25.readSync !== "function" ? fs25.readSync : /* @__PURE__ */ (function(fs$readSync) {
+      })(fs28.read);
+      fs28.readSync = typeof fs28.readSync !== "function" ? fs28.readSync : /* @__PURE__ */ (function(fs$readSync) {
         return function(fd, buffer, offset, length, position) {
           var eagCounter = 0;
           while (true) {
             try {
-              return fs$readSync.call(fs25, fd, buffer, offset, length, position);
+              return fs$readSync.call(fs28, fd, buffer, offset, length, position);
             } catch (er) {
               if (er.code === "EAGAIN" && eagCounter < 10) {
                 eagCounter++;
@@ -3619,11 +3619,11 @@ var require_polyfills = __commonJS({
             }
           }
         };
-      })(fs25.readSync);
-      function patchLchmod(fs26) {
-        fs26.lchmod = function(path26, mode, callback) {
-          fs26.open(
-            path26,
+      })(fs28.readSync);
+      function patchLchmod(fs29) {
+        fs29.lchmod = function(path29, mode, callback) {
+          fs29.open(
+            path29,
             constants.O_WRONLY | constants.O_SYMLINK,
             mode,
             function(err, fd) {
@@ -3631,80 +3631,80 @@ var require_polyfills = __commonJS({
                 if (callback) callback(err);
                 return;
               }
-              fs26.fchmod(fd, mode, function(err2) {
-                fs26.close(fd, function(err22) {
+              fs29.fchmod(fd, mode, function(err2) {
+                fs29.close(fd, function(err22) {
                   if (callback) callback(err2 || err22);
                 });
               });
             }
           );
         };
-        fs26.lchmodSync = function(path26, mode) {
-          var fd = fs26.openSync(path26, constants.O_WRONLY | constants.O_SYMLINK, mode);
+        fs29.lchmodSync = function(path29, mode) {
+          var fd = fs29.openSync(path29, constants.O_WRONLY | constants.O_SYMLINK, mode);
           var threw = true;
           var ret;
           try {
-            ret = fs26.fchmodSync(fd, mode);
+            ret = fs29.fchmodSync(fd, mode);
             threw = false;
           } finally {
             if (threw) {
               try {
-                fs26.closeSync(fd);
+                fs29.closeSync(fd);
               } catch (er) {
               }
             } else {
-              fs26.closeSync(fd);
+              fs29.closeSync(fd);
             }
           }
           return ret;
         };
       }
-      function patchLutimes(fs26) {
-        if (constants.hasOwnProperty("O_SYMLINK") && fs26.futimes) {
-          fs26.lutimes = function(path26, at, mt, cb) {
-            fs26.open(path26, constants.O_SYMLINK, function(er, fd) {
+      function patchLutimes(fs29) {
+        if (constants.hasOwnProperty("O_SYMLINK") && fs29.futimes) {
+          fs29.lutimes = function(path29, at, mt, cb) {
+            fs29.open(path29, constants.O_SYMLINK, function(er, fd) {
               if (er) {
                 if (cb) cb(er);
                 return;
               }
-              fs26.futimes(fd, at, mt, function(er2) {
-                fs26.close(fd, function(er22) {
+              fs29.futimes(fd, at, mt, function(er2) {
+                fs29.close(fd, function(er22) {
                   if (cb) cb(er2 || er22);
                 });
               });
             });
           };
-          fs26.lutimesSync = function(path26, at, mt) {
-            var fd = fs26.openSync(path26, constants.O_SYMLINK);
+          fs29.lutimesSync = function(path29, at, mt) {
+            var fd = fs29.openSync(path29, constants.O_SYMLINK);
             var ret;
             var threw = true;
             try {
-              ret = fs26.futimesSync(fd, at, mt);
+              ret = fs29.futimesSync(fd, at, mt);
               threw = false;
             } finally {
               if (threw) {
                 try {
-                  fs26.closeSync(fd);
+                  fs29.closeSync(fd);
                 } catch (er) {
                 }
               } else {
-                fs26.closeSync(fd);
+                fs29.closeSync(fd);
               }
             }
             return ret;
           };
-        } else if (fs26.futimes) {
-          fs26.lutimes = function(_a2, _b, _c, cb) {
+        } else if (fs29.futimes) {
+          fs29.lutimes = function(_a2, _b, _c, cb) {
             if (cb) process.nextTick(cb);
           };
-          fs26.lutimesSync = function() {
+          fs29.lutimesSync = function() {
           };
         }
       }
       function chmodFix(orig) {
         if (!orig) return orig;
         return function(target, mode, cb) {
-          return orig.call(fs25, target, mode, function(er) {
+          return orig.call(fs28, target, mode, function(er) {
             if (chownErOk(er)) er = null;
             if (cb) cb.apply(this, arguments);
           });
@@ -3714,7 +3714,7 @@ var require_polyfills = __commonJS({
         if (!orig) return orig;
         return function(target, mode) {
           try {
-            return orig.call(fs25, target, mode);
+            return orig.call(fs28, target, mode);
           } catch (er) {
             if (!chownErOk(er)) throw er;
           }
@@ -3723,7 +3723,7 @@ var require_polyfills = __commonJS({
       function chownFix(orig) {
         if (!orig) return orig;
         return function(target, uid, gid, cb) {
-          return orig.call(fs25, target, uid, gid, function(er) {
+          return orig.call(fs28, target, uid, gid, function(er) {
             if (chownErOk(er)) er = null;
             if (cb) cb.apply(this, arguments);
           });
@@ -3733,7 +3733,7 @@ var require_polyfills = __commonJS({
         if (!orig) return orig;
         return function(target, uid, gid) {
           try {
-            return orig.call(fs25, target, uid, gid);
+            return orig.call(fs28, target, uid, gid);
           } catch (er) {
             if (!chownErOk(er)) throw er;
           }
@@ -3753,13 +3753,13 @@ var require_polyfills = __commonJS({
             }
             if (cb) cb.apply(this, arguments);
           }
-          return options ? orig.call(fs25, target, options, callback) : orig.call(fs25, target, callback);
+          return options ? orig.call(fs28, target, options, callback) : orig.call(fs28, target, callback);
         };
       }
       function statFixSync(orig) {
         if (!orig) return orig;
         return function(target, options) {
-          var stats = options ? orig.call(fs25, target, options) : orig.call(fs25, target);
+          var stats = options ? orig.call(fs28, target, options) : orig.call(fs28, target);
           if (stats) {
             if (stats.uid < 0) stats.uid += 4294967296;
             if (stats.gid < 0) stats.gid += 4294967296;
@@ -3789,16 +3789,16 @@ var require_legacy_streams = __commonJS({
     "use strict";
     var Stream = require("stream").Stream;
     module2.exports = legacy;
-    function legacy(fs25) {
+    function legacy(fs28) {
       return {
         ReadStream,
         WriteStream
       };
-      function ReadStream(path26, options) {
-        if (!(this instanceof ReadStream)) return new ReadStream(path26, options);
+      function ReadStream(path29, options) {
+        if (!(this instanceof ReadStream)) return new ReadStream(path29, options);
         Stream.call(this);
         var self = this;
-        this.path = path26;
+        this.path = path29;
         this.fd = null;
         this.readable = true;
         this.paused = false;
@@ -3832,7 +3832,7 @@ var require_legacy_streams = __commonJS({
           });
           return;
         }
-        fs25.open(this.path, this.flags, this.mode, function(err, fd) {
+        fs28.open(this.path, this.flags, this.mode, function(err, fd) {
           if (err) {
             self.emit("error", err);
             self.readable = false;
@@ -3843,10 +3843,10 @@ var require_legacy_streams = __commonJS({
           self._read();
         });
       }
-      function WriteStream(path26, options) {
-        if (!(this instanceof WriteStream)) return new WriteStream(path26, options);
+      function WriteStream(path29, options) {
+        if (!(this instanceof WriteStream)) return new WriteStream(path29, options);
         Stream.call(this);
-        this.path = path26;
+        this.path = path29;
         this.fd = null;
         this.writable = true;
         this.flags = "w";
@@ -3871,7 +3871,7 @@ var require_legacy_streams = __commonJS({
         this.busy = false;
         this._queue = [];
         if (this.fd === null) {
-          this._open = fs25.open;
+          this._open = fs28.open;
           this._queue.push([this._open, this.path, this.flags, this.mode, void 0]);
           this.flush();
         }
@@ -3884,11 +3884,11 @@ var require_legacy_streams = __commonJS({
 var require_clone = __commonJS({
   "../node_modules/graceful-fs/clone.js"(exports2, module2) {
     "use strict";
-    module2.exports = clone3;
+    module2.exports = clone2;
     var getPrototypeOf = Object.getPrototypeOf || function(obj) {
       return obj.__proto__;
     };
-    function clone3(obj) {
+    function clone2(obj) {
       if (obj === null || typeof obj !== "object")
         return obj;
       if (obj instanceof Object)
@@ -3907,10 +3907,10 @@ var require_clone = __commonJS({
 var require_graceful_fs = __commonJS({
   "../node_modules/graceful-fs/graceful-fs.js"(exports2, module2) {
     "use strict";
-    var fs25 = require("fs");
+    var fs28 = require("fs");
     var polyfills = require_polyfills();
     var legacy = require_legacy_streams();
-    var clone3 = require_clone();
+    var clone2 = require_clone();
     var util = require("util");
     var gracefulQueue;
     var previousSymbol;
@@ -3939,12 +3939,12 @@ var require_graceful_fs = __commonJS({
         m = "GFS4: " + m.split(/\n/).join("\nGFS4: ");
         console.error(m);
       };
-    if (!fs25[gracefulQueue]) {
+    if (!fs28[gracefulQueue]) {
       queue = global[gracefulQueue] || [];
-      publishQueue(fs25, queue);
-      fs25.close = (function(fs$close) {
+      publishQueue(fs28, queue);
+      fs28.close = (function(fs$close) {
         function close(fd, cb) {
-          return fs$close.call(fs25, fd, function(err) {
+          return fs$close.call(fs28, fd, function(err) {
             if (!err) {
               resetQueue();
             }
@@ -3956,48 +3956,48 @@ var require_graceful_fs = __commonJS({
           value: fs$close
         });
         return close;
-      })(fs25.close);
-      fs25.closeSync = (function(fs$closeSync) {
+      })(fs28.close);
+      fs28.closeSync = (function(fs$closeSync) {
         function closeSync(fd) {
-          fs$closeSync.apply(fs25, arguments);
+          fs$closeSync.apply(fs28, arguments);
           resetQueue();
         }
         Object.defineProperty(closeSync, previousSymbol, {
           value: fs$closeSync
         });
         return closeSync;
-      })(fs25.closeSync);
+      })(fs28.closeSync);
       if (/\bgfs4\b/i.test(process.env.NODE_DEBUG || "")) {
         process.on("exit", function() {
-          debug(fs25[gracefulQueue]);
-          require("assert").equal(fs25[gracefulQueue].length, 0);
+          debug(fs28[gracefulQueue]);
+          require("assert").equal(fs28[gracefulQueue].length, 0);
         });
       }
     }
     var queue;
     if (!global[gracefulQueue]) {
-      publishQueue(global, fs25[gracefulQueue]);
+      publishQueue(global, fs28[gracefulQueue]);
     }
-    module2.exports = patch(clone3(fs25));
-    if (process.env.TEST_GRACEFUL_FS_GLOBAL_PATCH && !fs25.__patched) {
-      module2.exports = patch(fs25);
-      fs25.__patched = true;
+    module2.exports = patch(clone2(fs28));
+    if (process.env.TEST_GRACEFUL_FS_GLOBAL_PATCH && !fs28.__patched) {
+      module2.exports = patch(fs28);
+      fs28.__patched = true;
     }
-    function patch(fs26) {
-      polyfills(fs26);
-      fs26.gracefulify = patch;
-      fs26.createReadStream = createReadStream;
-      fs26.createWriteStream = createWriteStream2;
-      var fs$readFile = fs26.readFile;
-      fs26.readFile = readFile;
-      function readFile(path26, options, cb) {
+    function patch(fs29) {
+      polyfills(fs29);
+      fs29.gracefulify = patch;
+      fs29.createReadStream = createReadStream;
+      fs29.createWriteStream = createWriteStream2;
+      var fs$readFile = fs29.readFile;
+      fs29.readFile = readFile;
+      function readFile(path29, options, cb) {
         if (typeof options === "function")
           cb = options, options = null;
-        return go$readFile(path26, options, cb);
-        function go$readFile(path27, options2, cb2, startTime) {
-          return fs$readFile(path27, options2, function(err) {
+        return go$readFile(path29, options, cb);
+        function go$readFile(path30, options2, cb2, startTime) {
+          return fs$readFile(path30, options2, function(err) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-              enqueue([go$readFile, [path27, options2, cb2], err, startTime || Date.now(), Date.now()]);
+              enqueue([go$readFile, [path30, options2, cb2], err, startTime || Date.now(), Date.now()]);
             else {
               if (typeof cb2 === "function")
                 cb2.apply(this, arguments);
@@ -4005,16 +4005,16 @@ var require_graceful_fs = __commonJS({
           });
         }
       }
-      var fs$writeFile = fs26.writeFile;
-      fs26.writeFile = writeFile;
-      function writeFile(path26, data, options, cb) {
+      var fs$writeFile = fs29.writeFile;
+      fs29.writeFile = writeFile;
+      function writeFile(path29, data, options, cb) {
         if (typeof options === "function")
           cb = options, options = null;
-        return go$writeFile(path26, data, options, cb);
-        function go$writeFile(path27, data2, options2, cb2, startTime) {
-          return fs$writeFile(path27, data2, options2, function(err) {
+        return go$writeFile(path29, data, options, cb);
+        function go$writeFile(path30, data2, options2, cb2, startTime) {
+          return fs$writeFile(path30, data2, options2, function(err) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-              enqueue([go$writeFile, [path27, data2, options2, cb2], err, startTime || Date.now(), Date.now()]);
+              enqueue([go$writeFile, [path30, data2, options2, cb2], err, startTime || Date.now(), Date.now()]);
             else {
               if (typeof cb2 === "function")
                 cb2.apply(this, arguments);
@@ -4022,17 +4022,17 @@ var require_graceful_fs = __commonJS({
           });
         }
       }
-      var fs$appendFile = fs26.appendFile;
+      var fs$appendFile = fs29.appendFile;
       if (fs$appendFile)
-        fs26.appendFile = appendFile;
-      function appendFile(path26, data, options, cb) {
+        fs29.appendFile = appendFile;
+      function appendFile(path29, data, options, cb) {
         if (typeof options === "function")
           cb = options, options = null;
-        return go$appendFile(path26, data, options, cb);
-        function go$appendFile(path27, data2, options2, cb2, startTime) {
-          return fs$appendFile(path27, data2, options2, function(err) {
+        return go$appendFile(path29, data, options, cb);
+        function go$appendFile(path30, data2, options2, cb2, startTime) {
+          return fs$appendFile(path30, data2, options2, function(err) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-              enqueue([go$appendFile, [path27, data2, options2, cb2], err, startTime || Date.now(), Date.now()]);
+              enqueue([go$appendFile, [path30, data2, options2, cb2], err, startTime || Date.now(), Date.now()]);
             else {
               if (typeof cb2 === "function")
                 cb2.apply(this, arguments);
@@ -4040,9 +4040,9 @@ var require_graceful_fs = __commonJS({
           });
         }
       }
-      var fs$copyFile = fs26.copyFile;
+      var fs$copyFile = fs29.copyFile;
       if (fs$copyFile)
-        fs26.copyFile = copyFile;
+        fs29.copyFile = copyFile;
       function copyFile(src, dest, flags, cb) {
         if (typeof flags === "function") {
           cb = flags;
@@ -4060,34 +4060,34 @@ var require_graceful_fs = __commonJS({
           });
         }
       }
-      var fs$readdir = fs26.readdir;
-      fs26.readdir = readdir;
+      var fs$readdir = fs29.readdir;
+      fs29.readdir = readdir;
       var noReaddirOptionVersions = /^v[0-5]\./;
-      function readdir(path26, options, cb) {
+      function readdir(path29, options, cb) {
         if (typeof options === "function")
           cb = options, options = null;
-        var go$readdir = noReaddirOptionVersions.test(process.version) ? function go$readdir2(path27, options2, cb2, startTime) {
-          return fs$readdir(path27, fs$readdirCallback(
-            path27,
+        var go$readdir = noReaddirOptionVersions.test(process.version) ? function go$readdir2(path30, options2, cb2, startTime) {
+          return fs$readdir(path30, fs$readdirCallback(
+            path30,
             options2,
             cb2,
             startTime
           ));
-        } : function go$readdir2(path27, options2, cb2, startTime) {
-          return fs$readdir(path27, options2, fs$readdirCallback(
-            path27,
+        } : function go$readdir2(path30, options2, cb2, startTime) {
+          return fs$readdir(path30, options2, fs$readdirCallback(
+            path30,
             options2,
             cb2,
             startTime
           ));
         };
-        return go$readdir(path26, options, cb);
-        function fs$readdirCallback(path27, options2, cb2, startTime) {
+        return go$readdir(path29, options, cb);
+        function fs$readdirCallback(path30, options2, cb2, startTime) {
           return function(err, files) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
               enqueue([
                 go$readdir,
-                [path27, options2, cb2],
+                [path30, options2, cb2],
                 err,
                 startTime || Date.now(),
                 Date.now()
@@ -4102,21 +4102,21 @@ var require_graceful_fs = __commonJS({
         }
       }
       if (process.version.substr(0, 4) === "v0.8") {
-        var legStreams = legacy(fs26);
+        var legStreams = legacy(fs29);
         ReadStream = legStreams.ReadStream;
         WriteStream = legStreams.WriteStream;
       }
-      var fs$ReadStream = fs26.ReadStream;
+      var fs$ReadStream = fs29.ReadStream;
       if (fs$ReadStream) {
         ReadStream.prototype = Object.create(fs$ReadStream.prototype);
         ReadStream.prototype.open = ReadStream$open;
       }
-      var fs$WriteStream = fs26.WriteStream;
+      var fs$WriteStream = fs29.WriteStream;
       if (fs$WriteStream) {
         WriteStream.prototype = Object.create(fs$WriteStream.prototype);
         WriteStream.prototype.open = WriteStream$open;
       }
-      Object.defineProperty(fs26, "ReadStream", {
+      Object.defineProperty(fs29, "ReadStream", {
         get: function() {
           return ReadStream;
         },
@@ -4126,7 +4126,7 @@ var require_graceful_fs = __commonJS({
         enumerable: true,
         configurable: true
       });
-      Object.defineProperty(fs26, "WriteStream", {
+      Object.defineProperty(fs29, "WriteStream", {
         get: function() {
           return WriteStream;
         },
@@ -4137,7 +4137,7 @@ var require_graceful_fs = __commonJS({
         configurable: true
       });
       var FileReadStream = ReadStream;
-      Object.defineProperty(fs26, "FileReadStream", {
+      Object.defineProperty(fs29, "FileReadStream", {
         get: function() {
           return FileReadStream;
         },
@@ -4148,7 +4148,7 @@ var require_graceful_fs = __commonJS({
         configurable: true
       });
       var FileWriteStream = WriteStream;
-      Object.defineProperty(fs26, "FileWriteStream", {
+      Object.defineProperty(fs29, "FileWriteStream", {
         get: function() {
           return FileWriteStream;
         },
@@ -4158,7 +4158,7 @@ var require_graceful_fs = __commonJS({
         enumerable: true,
         configurable: true
       });
-      function ReadStream(path26, options) {
+      function ReadStream(path29, options) {
         if (this instanceof ReadStream)
           return fs$ReadStream.apply(this, arguments), this;
         else
@@ -4178,7 +4178,7 @@ var require_graceful_fs = __commonJS({
           }
         });
       }
-      function WriteStream(path26, options) {
+      function WriteStream(path29, options) {
         if (this instanceof WriteStream)
           return fs$WriteStream.apply(this, arguments), this;
         else
@@ -4196,22 +4196,22 @@ var require_graceful_fs = __commonJS({
           }
         });
       }
-      function createReadStream(path26, options) {
-        return new fs26.ReadStream(path26, options);
+      function createReadStream(path29, options) {
+        return new fs29.ReadStream(path29, options);
       }
-      function createWriteStream2(path26, options) {
-        return new fs26.WriteStream(path26, options);
+      function createWriteStream2(path29, options) {
+        return new fs29.WriteStream(path29, options);
       }
-      var fs$open = fs26.open;
-      fs26.open = open;
-      function open(path26, flags, mode, cb) {
+      var fs$open = fs29.open;
+      fs29.open = open;
+      function open(path29, flags, mode, cb) {
         if (typeof mode === "function")
           cb = mode, mode = null;
-        return go$open(path26, flags, mode, cb);
-        function go$open(path27, flags2, mode2, cb2, startTime) {
-          return fs$open(path27, flags2, mode2, function(err, fd) {
+        return go$open(path29, flags, mode, cb);
+        function go$open(path30, flags2, mode2, cb2, startTime) {
+          return fs$open(path30, flags2, mode2, function(err, fd) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-              enqueue([go$open, [path27, flags2, mode2, cb2], err, startTime || Date.now(), Date.now()]);
+              enqueue([go$open, [path30, flags2, mode2, cb2], err, startTime || Date.now(), Date.now()]);
             else {
               if (typeof cb2 === "function")
                 cb2.apply(this, arguments);
@@ -4219,20 +4219,20 @@ var require_graceful_fs = __commonJS({
           });
         }
       }
-      return fs26;
+      return fs29;
     }
     function enqueue(elem) {
       debug("ENQUEUE", elem[0].name, elem[1]);
-      fs25[gracefulQueue].push(elem);
+      fs28[gracefulQueue].push(elem);
       retry();
     }
     var retryTimer;
     function resetQueue() {
       var now = Date.now();
-      for (var i = 0; i < fs25[gracefulQueue].length; ++i) {
-        if (fs25[gracefulQueue][i].length > 2) {
-          fs25[gracefulQueue][i][3] = now;
-          fs25[gracefulQueue][i][4] = now;
+      for (var i = 0; i < fs28[gracefulQueue].length; ++i) {
+        if (fs28[gracefulQueue][i].length > 2) {
+          fs28[gracefulQueue][i][3] = now;
+          fs28[gracefulQueue][i][4] = now;
         }
       }
       retry();
@@ -4240,9 +4240,9 @@ var require_graceful_fs = __commonJS({
     function retry() {
       clearTimeout(retryTimer);
       retryTimer = void 0;
-      if (fs25[gracefulQueue].length === 0)
+      if (fs28[gracefulQueue].length === 0)
         return;
-      var elem = fs25[gracefulQueue].shift();
+      var elem = fs28[gracefulQueue].shift();
       var fn = elem[0];
       var args = elem[1];
       var err = elem[2];
@@ -4264,7 +4264,7 @@ var require_graceful_fs = __commonJS({
           debug("RETRY", fn.name, args);
           fn.apply(null, args.concat([startTime]));
         } else {
-          fs25[gracefulQueue].push(elem);
+          fs28[gracefulQueue].push(elem);
         }
       }
       if (retryTimer === void 0) {
@@ -4279,7 +4279,7 @@ var require_fs = __commonJS({
   "../node_modules/fs-extra/lib/fs/index.js"(exports2) {
     "use strict";
     var u = require_universalify().fromCallback;
-    var fs25 = require_graceful_fs();
+    var fs28 = require_graceful_fs();
     var api = [
       "access",
       "appendFile",
@@ -4320,26 +4320,26 @@ var require_fs = __commonJS({
       "utimes",
       "writeFile"
     ].filter((key) => {
-      return typeof fs25[key] === "function";
+      return typeof fs28[key] === "function";
     });
-    Object.assign(exports2, fs25);
+    Object.assign(exports2, fs28);
     api.forEach((method) => {
-      exports2[method] = u(fs25[method]);
+      exports2[method] = u(fs28[method]);
     });
     exports2.exists = function(filename, callback) {
       if (typeof callback === "function") {
-        return fs25.exists(filename, callback);
+        return fs28.exists(filename, callback);
       }
       return new Promise((resolve4) => {
-        return fs25.exists(filename, resolve4);
+        return fs28.exists(filename, resolve4);
       });
     };
     exports2.read = function(fd, buffer, offset, length, position, callback) {
       if (typeof callback === "function") {
-        return fs25.read(fd, buffer, offset, length, position, callback);
+        return fs28.read(fd, buffer, offset, length, position, callback);
       }
       return new Promise((resolve4, reject) => {
-        fs25.read(fd, buffer, offset, length, position, (err, bytesRead, buffer2) => {
+        fs28.read(fd, buffer, offset, length, position, (err, bytesRead, buffer2) => {
           if (err) return reject(err);
           resolve4({ bytesRead, buffer: buffer2 });
         });
@@ -4347,10 +4347,10 @@ var require_fs = __commonJS({
     };
     exports2.write = function(fd, buffer, ...args) {
       if (typeof args[args.length - 1] === "function") {
-        return fs25.write(fd, buffer, ...args);
+        return fs28.write(fd, buffer, ...args);
       }
       return new Promise((resolve4, reject) => {
-        fs25.write(fd, buffer, ...args, (err, bytesWritten, buffer2) => {
+        fs28.write(fd, buffer, ...args, (err, bytesWritten, buffer2) => {
           if (err) return reject(err);
           resolve4({ bytesWritten, buffer: buffer2 });
         });
@@ -4358,10 +4358,10 @@ var require_fs = __commonJS({
     };
     exports2.readv = function(fd, buffers, ...args) {
       if (typeof args[args.length - 1] === "function") {
-        return fs25.readv(fd, buffers, ...args);
+        return fs28.readv(fd, buffers, ...args);
       }
       return new Promise((resolve4, reject) => {
-        fs25.readv(fd, buffers, ...args, (err, bytesRead, buffers2) => {
+        fs28.readv(fd, buffers, ...args, (err, bytesRead, buffers2) => {
           if (err) return reject(err);
           resolve4({ bytesRead, buffers: buffers2 });
         });
@@ -4369,17 +4369,17 @@ var require_fs = __commonJS({
     };
     exports2.writev = function(fd, buffers, ...args) {
       if (typeof args[args.length - 1] === "function") {
-        return fs25.writev(fd, buffers, ...args);
+        return fs28.writev(fd, buffers, ...args);
       }
       return new Promise((resolve4, reject) => {
-        fs25.writev(fd, buffers, ...args, (err, bytesWritten, buffers2) => {
+        fs28.writev(fd, buffers, ...args, (err, bytesWritten, buffers2) => {
           if (err) return reject(err);
           resolve4({ bytesWritten, buffers: buffers2 });
         });
       });
     };
-    if (typeof fs25.realpath.native === "function") {
-      exports2.realpath.native = u(fs25.realpath.native);
+    if (typeof fs28.realpath.native === "function") {
+      exports2.realpath.native = u(fs28.realpath.native);
     } else {
       process.emitWarning(
         "fs.realpath.native is not a function. Is fs being monkey-patched?",
@@ -4394,10 +4394,10 @@ var require_fs = __commonJS({
 var require_utils = __commonJS({
   "../node_modules/fs-extra/lib/mkdirs/utils.js"(exports2, module2) {
     "use strict";
-    var path26 = require("path");
+    var path29 = require("path");
     module2.exports.checkPath = function checkPath(pth) {
       if (process.platform === "win32") {
-        const pathHasInvalidWinCharacters = /[<>:"|?*]/.test(pth.replace(path26.parse(pth).root, ""));
+        const pathHasInvalidWinCharacters = /[<>:"|?*]/.test(pth.replace(path29.parse(pth).root, ""));
         if (pathHasInvalidWinCharacters) {
           const error48 = new Error(`Path contains invalid characters: ${pth}`);
           error48.code = "EINVAL";
@@ -4412,7 +4412,7 @@ var require_utils = __commonJS({
 var require_make_dir = __commonJS({
   "../node_modules/fs-extra/lib/mkdirs/make-dir.js"(exports2, module2) {
     "use strict";
-    var fs25 = require_fs();
+    var fs28 = require_fs();
     var { checkPath } = require_utils();
     var getMode = (options) => {
       const defaults = { mode: 511 };
@@ -4421,14 +4421,14 @@ var require_make_dir = __commonJS({
     };
     module2.exports.makeDir = async (dir, options) => {
       checkPath(dir);
-      return fs25.mkdir(dir, {
+      return fs28.mkdir(dir, {
         mode: getMode(options),
         recursive: true
       });
     };
     module2.exports.makeDirSync = (dir, options) => {
       checkPath(dir);
-      return fs25.mkdirSync(dir, {
+      return fs28.mkdirSync(dir, {
         mode: getMode(options),
         recursive: true
       });
@@ -4460,13 +4460,13 @@ var require_path_exists = __commonJS({
   "../node_modules/fs-extra/lib/path-exists/index.js"(exports2, module2) {
     "use strict";
     var u = require_universalify().fromPromise;
-    var fs25 = require_fs();
-    function pathExists(path26) {
-      return fs25.access(path26).then(() => true).catch(() => false);
+    var fs28 = require_fs();
+    function pathExists(path29) {
+      return fs28.access(path29).then(() => true).catch(() => false);
     }
     module2.exports = {
       pathExists: u(pathExists),
-      pathExistsSync: fs25.existsSync
+      pathExistsSync: fs28.existsSync
     };
   }
 });
@@ -4475,16 +4475,16 @@ var require_path_exists = __commonJS({
 var require_utimes = __commonJS({
   "../node_modules/fs-extra/lib/util/utimes.js"(exports2, module2) {
     "use strict";
-    var fs25 = require_fs();
+    var fs28 = require_fs();
     var u = require_universalify().fromPromise;
-    async function utimesMillis(path26, atime, mtime) {
-      const fd = await fs25.open(path26, "r+");
+    async function utimesMillis(path29, atime, mtime) {
+      const fd = await fs28.open(path29, "r+");
       let closeErr = null;
       try {
-        await fs25.futimes(fd, atime, mtime);
+        await fs28.futimes(fd, atime, mtime);
       } finally {
         try {
-          await fs25.close(fd);
+          await fs28.close(fd);
         } catch (e) {
           closeErr = e;
         }
@@ -4493,10 +4493,10 @@ var require_utimes = __commonJS({
         throw closeErr;
       }
     }
-    function utimesMillisSync(path26, atime, mtime) {
-      const fd = fs25.openSync(path26, "r+");
-      fs25.futimesSync(fd, atime, mtime);
-      return fs25.closeSync(fd);
+    function utimesMillisSync(path29, atime, mtime) {
+      const fd = fs28.openSync(path29, "r+");
+      fs28.futimesSync(fd, atime, mtime);
+      return fs28.closeSync(fd);
     }
     module2.exports = {
       utimesMillis: u(utimesMillis),
@@ -4509,11 +4509,11 @@ var require_utimes = __commonJS({
 var require_stat = __commonJS({
   "../node_modules/fs-extra/lib/util/stat.js"(exports2, module2) {
     "use strict";
-    var fs25 = require_fs();
-    var path26 = require("path");
+    var fs28 = require_fs();
+    var path29 = require("path");
     var u = require_universalify().fromPromise;
     function getStats(src, dest, opts) {
-      const statFunc = opts.dereference ? (file2) => fs25.stat(file2, { bigint: true }) : (file2) => fs25.lstat(file2, { bigint: true });
+      const statFunc = opts.dereference ? (file2) => fs28.stat(file2, { bigint: true }) : (file2) => fs28.lstat(file2, { bigint: true });
       return Promise.all([
         statFunc(src),
         statFunc(dest).catch((err) => {
@@ -4524,7 +4524,7 @@ var require_stat = __commonJS({
     }
     function getStatsSync(src, dest, opts) {
       let destStat;
-      const statFunc = opts.dereference ? (file2) => fs25.statSync(file2, { bigint: true }) : (file2) => fs25.lstatSync(file2, { bigint: true });
+      const statFunc = opts.dereference ? (file2) => fs28.statSync(file2, { bigint: true }) : (file2) => fs28.lstatSync(file2, { bigint: true });
       const srcStat = statFunc(src);
       try {
         destStat = statFunc(dest);
@@ -4538,8 +4538,8 @@ var require_stat = __commonJS({
       const { srcStat, destStat } = await getStats(src, dest, opts);
       if (destStat) {
         if (areIdentical(srcStat, destStat)) {
-          const srcBaseName = path26.basename(src);
-          const destBaseName = path26.basename(dest);
+          const srcBaseName = path29.basename(src);
+          const destBaseName = path29.basename(dest);
           if (funcName === "move" && srcBaseName !== destBaseName && srcBaseName.toLowerCase() === destBaseName.toLowerCase()) {
             return { srcStat, destStat, isChangingCase: true };
           }
@@ -4561,8 +4561,8 @@ var require_stat = __commonJS({
       const { srcStat, destStat } = getStatsSync(src, dest, opts);
       if (destStat) {
         if (areIdentical(srcStat, destStat)) {
-          const srcBaseName = path26.basename(src);
-          const destBaseName = path26.basename(dest);
+          const srcBaseName = path29.basename(src);
+          const destBaseName = path29.basename(dest);
           if (funcName === "move" && srcBaseName !== destBaseName && srcBaseName.toLowerCase() === destBaseName.toLowerCase()) {
             return { srcStat, destStat, isChangingCase: true };
           }
@@ -4581,12 +4581,12 @@ var require_stat = __commonJS({
       return { srcStat, destStat };
     }
     async function checkParentPaths(src, srcStat, dest, funcName) {
-      const srcParent = path26.resolve(path26.dirname(src));
-      const destParent = path26.resolve(path26.dirname(dest));
-      if (destParent === srcParent || destParent === path26.parse(destParent).root) return;
+      const srcParent = path29.resolve(path29.dirname(src));
+      const destParent = path29.resolve(path29.dirname(dest));
+      if (destParent === srcParent || destParent === path29.parse(destParent).root) return;
       let destStat;
       try {
-        destStat = await fs25.stat(destParent, { bigint: true });
+        destStat = await fs28.stat(destParent, { bigint: true });
       } catch (err) {
         if (err.code === "ENOENT") return;
         throw err;
@@ -4597,12 +4597,12 @@ var require_stat = __commonJS({
       return checkParentPaths(src, srcStat, destParent, funcName);
     }
     function checkParentPathsSync(src, srcStat, dest, funcName) {
-      const srcParent = path26.resolve(path26.dirname(src));
-      const destParent = path26.resolve(path26.dirname(dest));
-      if (destParent === srcParent || destParent === path26.parse(destParent).root) return;
+      const srcParent = path29.resolve(path29.dirname(src));
+      const destParent = path29.resolve(path29.dirname(dest));
+      if (destParent === srcParent || destParent === path29.parse(destParent).root) return;
       let destStat;
       try {
-        destStat = fs25.statSync(destParent, { bigint: true });
+        destStat = fs28.statSync(destParent, { bigint: true });
       } catch (err) {
         if (err.code === "ENOENT") return;
         throw err;
@@ -4616,8 +4616,8 @@ var require_stat = __commonJS({
       return destStat.ino !== void 0 && destStat.dev !== void 0 && destStat.ino === srcStat.ino && destStat.dev === srcStat.dev;
     }
     function isSrcSubdir(src, dest) {
-      const srcArr = path26.resolve(src).split(path26.sep).filter((i) => i);
-      const destArr = path26.resolve(dest).split(path26.sep).filter((i) => i);
+      const srcArr = path29.resolve(src).split(path29.sep).filter((i) => i);
+      const destArr = path29.resolve(dest).split(path29.sep).filter((i) => i);
       return srcArr.every((cur, i) => destArr[i] === cur);
     }
     function errMsg(src, dest, funcName) {
@@ -4669,8 +4669,8 @@ var require_async = __commonJS({
 var require_copy = __commonJS({
   "../node_modules/fs-extra/lib/copy/copy.js"(exports2, module2) {
     "use strict";
-    var fs25 = require_fs();
-    var path26 = require("path");
+    var fs28 = require_fs();
+    var path29 = require("path");
     var { mkdirs } = require_mkdirs();
     var { pathExists } = require_path_exists();
     var { utimesMillis } = require_utimes();
@@ -4693,7 +4693,7 @@ var require_copy = __commonJS({
       await stat.checkParentPaths(src, srcStat, dest, "copy");
       const include = await runFilter(src, dest, opts);
       if (!include) return;
-      const destParent = path26.dirname(dest);
+      const destParent = path29.dirname(dest);
       const dirExists = await pathExists(destParent);
       if (!dirExists) {
         await mkdirs(destParent);
@@ -4705,7 +4705,7 @@ var require_copy = __commonJS({
       return opts.filter(src, dest);
     }
     async function getStatsAndPerformCopy(destStat, src, dest, opts) {
-      const statFn = opts.dereference ? fs25.stat : fs25.lstat;
+      const statFn = opts.dereference ? fs28.stat : fs28.lstat;
       const srcStat = await statFn(src);
       if (srcStat.isDirectory()) return onDir(srcStat, destStat, src, dest, opts);
       if (srcStat.isFile() || srcStat.isCharacterDevice() || srcStat.isBlockDevice()) return onFile(srcStat, destStat, src, dest, opts);
@@ -4717,7 +4717,7 @@ var require_copy = __commonJS({
     async function onFile(srcStat, destStat, src, dest, opts) {
       if (!destStat) return copyFile(srcStat, src, dest, opts);
       if (opts.overwrite) {
-        await fs25.unlink(dest);
+        await fs28.unlink(dest);
         return copyFile(srcStat, src, dest, opts);
       }
       if (opts.errorOnExist) {
@@ -4725,29 +4725,29 @@ var require_copy = __commonJS({
       }
     }
     async function copyFile(srcStat, src, dest, opts) {
-      await fs25.copyFile(src, dest);
+      await fs28.copyFile(src, dest);
       if (opts.preserveTimestamps) {
         if (fileIsNotWritable(srcStat.mode)) {
           await makeFileWritable(dest, srcStat.mode);
         }
-        const updatedSrcStat = await fs25.stat(src);
+        const updatedSrcStat = await fs28.stat(src);
         await utimesMillis(dest, updatedSrcStat.atime, updatedSrcStat.mtime);
       }
-      return fs25.chmod(dest, srcStat.mode);
+      return fs28.chmod(dest, srcStat.mode);
     }
     function fileIsNotWritable(srcMode) {
       return (srcMode & 128) === 0;
     }
     function makeFileWritable(dest, srcMode) {
-      return fs25.chmod(dest, srcMode | 128);
+      return fs28.chmod(dest, srcMode | 128);
     }
     async function onDir(srcStat, destStat, src, dest, opts) {
       if (!destStat) {
-        await fs25.mkdir(dest);
+        await fs28.mkdir(dest);
       }
-      await asyncIteratorConcurrentProcess(await fs25.opendir(src), async (item) => {
-        const srcItem = path26.join(src, item.name);
-        const destItem = path26.join(dest, item.name);
+      await asyncIteratorConcurrentProcess(await fs28.opendir(src), async (item) => {
+        const srcItem = path29.join(src, item.name);
+        const destItem = path29.join(dest, item.name);
         const include = await runFilter(srcItem, destItem, opts);
         if (include) {
           const { destStat: destStat2 } = await stat.checkPaths(srcItem, destItem, "copy", opts);
@@ -4755,26 +4755,26 @@ var require_copy = __commonJS({
         }
       });
       if (!destStat) {
-        await fs25.chmod(dest, srcStat.mode);
+        await fs28.chmod(dest, srcStat.mode);
       }
     }
     async function onLink(destStat, src, dest, opts) {
-      let resolvedSrc = await fs25.readlink(src);
+      let resolvedSrc = await fs28.readlink(src);
       if (opts.dereference) {
-        resolvedSrc = path26.resolve(process.cwd(), resolvedSrc);
+        resolvedSrc = path29.resolve(process.cwd(), resolvedSrc);
       }
       if (!destStat) {
-        return fs25.symlink(resolvedSrc, dest);
+        return fs28.symlink(resolvedSrc, dest);
       }
       let resolvedDest = null;
       try {
-        resolvedDest = await fs25.readlink(dest);
+        resolvedDest = await fs28.readlink(dest);
       } catch (e) {
-        if (e.code === "EINVAL" || e.code === "UNKNOWN") return fs25.symlink(resolvedSrc, dest);
+        if (e.code === "EINVAL" || e.code === "UNKNOWN") return fs28.symlink(resolvedSrc, dest);
         throw e;
       }
       if (opts.dereference) {
-        resolvedDest = path26.resolve(process.cwd(), resolvedDest);
+        resolvedDest = path29.resolve(process.cwd(), resolvedDest);
       }
       if (resolvedSrc !== resolvedDest) {
         if (stat.isSrcSubdir(resolvedSrc, resolvedDest)) {
@@ -4784,8 +4784,8 @@ var require_copy = __commonJS({
           throw new Error(`Cannot overwrite '${resolvedDest}' with '${resolvedSrc}'.`);
         }
       }
-      await fs25.unlink(dest);
-      return fs25.symlink(resolvedSrc, dest);
+      await fs28.unlink(dest);
+      return fs28.symlink(resolvedSrc, dest);
     }
     module2.exports = copy;
   }
@@ -4795,8 +4795,8 @@ var require_copy = __commonJS({
 var require_copy_sync = __commonJS({
   "../node_modules/fs-extra/lib/copy/copy-sync.js"(exports2, module2) {
     "use strict";
-    var fs25 = require_graceful_fs();
-    var path26 = require("path");
+    var fs28 = require_graceful_fs();
+    var path29 = require("path");
     var mkdirsSync = require_mkdirs().mkdirsSync;
     var utimesMillisSync = require_utimes().utimesMillisSync;
     var stat = require_stat();
@@ -4817,12 +4817,12 @@ var require_copy_sync = __commonJS({
       const { srcStat, destStat } = stat.checkPathsSync(src, dest, "copy", opts);
       stat.checkParentPathsSync(src, srcStat, dest, "copy");
       if (opts.filter && !opts.filter(src, dest)) return;
-      const destParent = path26.dirname(dest);
-      if (!fs25.existsSync(destParent)) mkdirsSync(destParent);
+      const destParent = path29.dirname(dest);
+      if (!fs28.existsSync(destParent)) mkdirsSync(destParent);
       return getStats(destStat, src, dest, opts);
     }
     function getStats(destStat, src, dest, opts) {
-      const statSync2 = opts.dereference ? fs25.statSync : fs25.lstatSync;
+      const statSync2 = opts.dereference ? fs28.statSync : fs28.lstatSync;
       const srcStat = statSync2(src);
       if (srcStat.isDirectory()) return onDir(srcStat, destStat, src, dest, opts);
       else if (srcStat.isFile() || srcStat.isCharacterDevice() || srcStat.isBlockDevice()) return onFile(srcStat, destStat, src, dest, opts);
@@ -4837,14 +4837,14 @@ var require_copy_sync = __commonJS({
     }
     function mayCopyFile(srcStat, src, dest, opts) {
       if (opts.overwrite) {
-        fs25.unlinkSync(dest);
+        fs28.unlinkSync(dest);
         return copyFile(srcStat, src, dest, opts);
       } else if (opts.errorOnExist) {
         throw new Error(`'${dest}' already exists`);
       }
     }
     function copyFile(srcStat, src, dest, opts) {
-      fs25.copyFileSync(src, dest);
+      fs28.copyFileSync(src, dest);
       if (opts.preserveTimestamps) handleTimestamps(srcStat.mode, src, dest);
       return setDestMode(dest, srcStat.mode);
     }
@@ -4859,10 +4859,10 @@ var require_copy_sync = __commonJS({
       return setDestMode(dest, srcMode | 128);
     }
     function setDestMode(dest, srcMode) {
-      return fs25.chmodSync(dest, srcMode);
+      return fs28.chmodSync(dest, srcMode);
     }
     function setDestTimestamps(src, dest) {
-      const updatedSrcStat = fs25.statSync(src);
+      const updatedSrcStat = fs28.statSync(src);
       return utimesMillisSync(dest, updatedSrcStat.atime, updatedSrcStat.mtime);
     }
     function onDir(srcStat, destStat, src, dest, opts) {
@@ -4870,12 +4870,12 @@ var require_copy_sync = __commonJS({
       return copyDir(src, dest, opts);
     }
     function mkDirAndCopy(srcMode, src, dest, opts) {
-      fs25.mkdirSync(dest);
+      fs28.mkdirSync(dest);
       copyDir(src, dest, opts);
       return setDestMode(dest, srcMode);
     }
     function copyDir(src, dest, opts) {
-      const dir = fs25.opendirSync(src);
+      const dir = fs28.opendirSync(src);
       try {
         let dirent;
         while ((dirent = dir.readSync()) !== null) {
@@ -4886,29 +4886,29 @@ var require_copy_sync = __commonJS({
       }
     }
     function copyDirItem(item, src, dest, opts) {
-      const srcItem = path26.join(src, item);
-      const destItem = path26.join(dest, item);
+      const srcItem = path29.join(src, item);
+      const destItem = path29.join(dest, item);
       if (opts.filter && !opts.filter(srcItem, destItem)) return;
       const { destStat } = stat.checkPathsSync(srcItem, destItem, "copy", opts);
       return getStats(destStat, srcItem, destItem, opts);
     }
     function onLink(destStat, src, dest, opts) {
-      let resolvedSrc = fs25.readlinkSync(src);
+      let resolvedSrc = fs28.readlinkSync(src);
       if (opts.dereference) {
-        resolvedSrc = path26.resolve(process.cwd(), resolvedSrc);
+        resolvedSrc = path29.resolve(process.cwd(), resolvedSrc);
       }
       if (!destStat) {
-        return fs25.symlinkSync(resolvedSrc, dest);
+        return fs28.symlinkSync(resolvedSrc, dest);
       } else {
         let resolvedDest;
         try {
-          resolvedDest = fs25.readlinkSync(dest);
+          resolvedDest = fs28.readlinkSync(dest);
         } catch (err) {
-          if (err.code === "EINVAL" || err.code === "UNKNOWN") return fs25.symlinkSync(resolvedSrc, dest);
+          if (err.code === "EINVAL" || err.code === "UNKNOWN") return fs28.symlinkSync(resolvedSrc, dest);
           throw err;
         }
         if (opts.dereference) {
-          resolvedDest = path26.resolve(process.cwd(), resolvedDest);
+          resolvedDest = path29.resolve(process.cwd(), resolvedDest);
         }
         if (resolvedSrc !== resolvedDest) {
           if (stat.isSrcSubdir(resolvedSrc, resolvedDest)) {
@@ -4922,8 +4922,8 @@ var require_copy_sync = __commonJS({
       }
     }
     function copyLink(resolvedSrc, dest) {
-      fs25.unlinkSync(dest);
-      return fs25.symlinkSync(resolvedSrc, dest);
+      fs28.unlinkSync(dest);
+      return fs28.symlinkSync(resolvedSrc, dest);
     }
     module2.exports = copySync;
   }
@@ -4945,13 +4945,13 @@ var require_copy2 = __commonJS({
 var require_remove = __commonJS({
   "../node_modules/fs-extra/lib/remove/index.js"(exports2, module2) {
     "use strict";
-    var fs25 = require_graceful_fs();
+    var fs28 = require_graceful_fs();
     var u = require_universalify().fromCallback;
-    function remove(path26, callback) {
-      fs25.rm(path26, { recursive: true, force: true }, callback);
+    function remove(path29, callback) {
+      fs28.rm(path29, { recursive: true, force: true }, callback);
     }
-    function removeSync(path26) {
-      fs25.rmSync(path26, { recursive: true, force: true });
+    function removeSync(path29) {
+      fs28.rmSync(path29, { recursive: true, force: true });
     }
     module2.exports = {
       remove: u(remove),
@@ -4965,28 +4965,28 @@ var require_empty = __commonJS({
   "../node_modules/fs-extra/lib/empty/index.js"(exports2, module2) {
     "use strict";
     var u = require_universalify().fromPromise;
-    var fs25 = require_fs();
-    var path26 = require("path");
+    var fs28 = require_fs();
+    var path29 = require("path");
     var mkdir = require_mkdirs();
     var remove = require_remove();
     var emptyDir = u(async function emptyDir2(dir) {
       let items;
       try {
-        items = await fs25.readdir(dir);
+        items = await fs28.readdir(dir);
       } catch {
         return mkdir.mkdirs(dir);
       }
-      return Promise.all(items.map((item) => remove.remove(path26.join(dir, item))));
+      return Promise.all(items.map((item) => remove.remove(path29.join(dir, item))));
     });
     function emptyDirSync(dir) {
       let items;
       try {
-        items = fs25.readdirSync(dir);
+        items = fs28.readdirSync(dir);
       } catch {
         return mkdir.mkdirsSync(dir);
       }
       items.forEach((item) => {
-        item = path26.join(dir, item);
+        item = path29.join(dir, item);
         remove.removeSync(item);
       });
     }
@@ -5004,52 +5004,52 @@ var require_file = __commonJS({
   "../node_modules/fs-extra/lib/ensure/file.js"(exports2, module2) {
     "use strict";
     var u = require_universalify().fromPromise;
-    var path26 = require("path");
-    var fs25 = require_fs();
+    var path29 = require("path");
+    var fs28 = require_fs();
     var mkdir = require_mkdirs();
     async function createFile(file2) {
       let stats;
       try {
-        stats = await fs25.stat(file2);
+        stats = await fs28.stat(file2);
       } catch {
       }
       if (stats && stats.isFile()) return;
-      const dir = path26.dirname(file2);
+      const dir = path29.dirname(file2);
       let dirStats = null;
       try {
-        dirStats = await fs25.stat(dir);
+        dirStats = await fs28.stat(dir);
       } catch (err) {
         if (err.code === "ENOENT") {
           await mkdir.mkdirs(dir);
-          await fs25.writeFile(file2, "");
+          await fs28.writeFile(file2, "");
           return;
         } else {
           throw err;
         }
       }
       if (dirStats.isDirectory()) {
-        await fs25.writeFile(file2, "");
+        await fs28.writeFile(file2, "");
       } else {
-        await fs25.readdir(dir);
+        await fs28.readdir(dir);
       }
     }
     function createFileSync(file2) {
       let stats;
       try {
-        stats = fs25.statSync(file2);
+        stats = fs28.statSync(file2);
       } catch {
       }
       if (stats && stats.isFile()) return;
-      const dir = path26.dirname(file2);
+      const dir = path29.dirname(file2);
       try {
-        if (!fs25.statSync(dir).isDirectory()) {
-          fs25.readdirSync(dir);
+        if (!fs28.statSync(dir).isDirectory()) {
+          fs28.readdirSync(dir);
         }
       } catch (err) {
         if (err && err.code === "ENOENT") mkdir.mkdirsSync(dir);
         else throw err;
       }
-      fs25.writeFileSync(file2, "");
+      fs28.writeFileSync(file2, "");
     }
     module2.exports = {
       createFile: u(createFile),
@@ -5063,50 +5063,50 @@ var require_link = __commonJS({
   "../node_modules/fs-extra/lib/ensure/link.js"(exports2, module2) {
     "use strict";
     var u = require_universalify().fromPromise;
-    var path26 = require("path");
-    var fs25 = require_fs();
+    var path29 = require("path");
+    var fs28 = require_fs();
     var mkdir = require_mkdirs();
     var { pathExists } = require_path_exists();
     var { areIdentical } = require_stat();
     async function createLink(srcpath, dstpath) {
       let dstStat;
       try {
-        dstStat = await fs25.lstat(dstpath);
+        dstStat = await fs28.lstat(dstpath);
       } catch {
       }
       let srcStat;
       try {
-        srcStat = await fs25.lstat(srcpath);
+        srcStat = await fs28.lstat(srcpath);
       } catch (err) {
         err.message = err.message.replace("lstat", "ensureLink");
         throw err;
       }
       if (dstStat && areIdentical(srcStat, dstStat)) return;
-      const dir = path26.dirname(dstpath);
+      const dir = path29.dirname(dstpath);
       const dirExists = await pathExists(dir);
       if (!dirExists) {
         await mkdir.mkdirs(dir);
       }
-      await fs25.link(srcpath, dstpath);
+      await fs28.link(srcpath, dstpath);
     }
     function createLinkSync(srcpath, dstpath) {
       let dstStat;
       try {
-        dstStat = fs25.lstatSync(dstpath);
+        dstStat = fs28.lstatSync(dstpath);
       } catch {
       }
       try {
-        const srcStat = fs25.lstatSync(srcpath);
+        const srcStat = fs28.lstatSync(srcpath);
         if (dstStat && areIdentical(srcStat, dstStat)) return;
       } catch (err) {
         err.message = err.message.replace("lstat", "ensureLink");
         throw err;
       }
-      const dir = path26.dirname(dstpath);
-      const dirExists = fs25.existsSync(dir);
-      if (dirExists) return fs25.linkSync(srcpath, dstpath);
+      const dir = path29.dirname(dstpath);
+      const dirExists = fs28.existsSync(dir);
+      if (dirExists) return fs28.linkSync(srcpath, dstpath);
       mkdir.mkdirsSync(dir);
-      return fs25.linkSync(srcpath, dstpath);
+      return fs28.linkSync(srcpath, dstpath);
     }
     module2.exports = {
       createLink: u(createLink),
@@ -5119,14 +5119,14 @@ var require_link = __commonJS({
 var require_symlink_paths = __commonJS({
   "../node_modules/fs-extra/lib/ensure/symlink-paths.js"(exports2, module2) {
     "use strict";
-    var path26 = require("path");
-    var fs25 = require_fs();
+    var path29 = require("path");
+    var fs28 = require_fs();
     var { pathExists } = require_path_exists();
     var u = require_universalify().fromPromise;
     async function symlinkPaths(srcpath, dstpath) {
-      if (path26.isAbsolute(srcpath)) {
+      if (path29.isAbsolute(srcpath)) {
         try {
-          await fs25.lstat(srcpath);
+          await fs28.lstat(srcpath);
         } catch (err) {
           err.message = err.message.replace("lstat", "ensureSymlink");
           throw err;
@@ -5136,8 +5136,8 @@ var require_symlink_paths = __commonJS({
           toDst: srcpath
         };
       }
-      const dstdir = path26.dirname(dstpath);
-      const relativeToDst = path26.join(dstdir, srcpath);
+      const dstdir = path29.dirname(dstpath);
+      const relativeToDst = path29.join(dstdir, srcpath);
       const exists = await pathExists(relativeToDst);
       if (exists) {
         return {
@@ -5146,39 +5146,39 @@ var require_symlink_paths = __commonJS({
         };
       }
       try {
-        await fs25.lstat(srcpath);
+        await fs28.lstat(srcpath);
       } catch (err) {
         err.message = err.message.replace("lstat", "ensureSymlink");
         throw err;
       }
       return {
         toCwd: srcpath,
-        toDst: path26.relative(dstdir, srcpath)
+        toDst: path29.relative(dstdir, srcpath)
       };
     }
     function symlinkPathsSync(srcpath, dstpath) {
-      if (path26.isAbsolute(srcpath)) {
-        const exists2 = fs25.existsSync(srcpath);
+      if (path29.isAbsolute(srcpath)) {
+        const exists2 = fs28.existsSync(srcpath);
         if (!exists2) throw new Error("absolute srcpath does not exist");
         return {
           toCwd: srcpath,
           toDst: srcpath
         };
       }
-      const dstdir = path26.dirname(dstpath);
-      const relativeToDst = path26.join(dstdir, srcpath);
-      const exists = fs25.existsSync(relativeToDst);
+      const dstdir = path29.dirname(dstpath);
+      const relativeToDst = path29.join(dstdir, srcpath);
+      const exists = fs28.existsSync(relativeToDst);
       if (exists) {
         return {
           toCwd: relativeToDst,
           toDst: srcpath
         };
       }
-      const srcExists = fs25.existsSync(srcpath);
+      const srcExists = fs28.existsSync(srcpath);
       if (!srcExists) throw new Error("relative srcpath does not exist");
       return {
         toCwd: srcpath,
-        toDst: path26.relative(dstdir, srcpath)
+        toDst: path29.relative(dstdir, srcpath)
       };
     }
     module2.exports = {
@@ -5192,13 +5192,13 @@ var require_symlink_paths = __commonJS({
 var require_symlink_type = __commonJS({
   "../node_modules/fs-extra/lib/ensure/symlink-type.js"(exports2, module2) {
     "use strict";
-    var fs25 = require_fs();
+    var fs28 = require_fs();
     var u = require_universalify().fromPromise;
     async function symlinkType(srcpath, type) {
       if (type) return type;
       let stats;
       try {
-        stats = await fs25.lstat(srcpath);
+        stats = await fs28.lstat(srcpath);
       } catch {
         return "file";
       }
@@ -5208,7 +5208,7 @@ var require_symlink_type = __commonJS({
       if (type) return type;
       let stats;
       try {
-        stats = fs25.lstatSync(srcpath);
+        stats = fs28.lstatSync(srcpath);
       } catch {
         return "file";
       }
@@ -5226,8 +5226,8 @@ var require_symlink = __commonJS({
   "../node_modules/fs-extra/lib/ensure/symlink.js"(exports2, module2) {
     "use strict";
     var u = require_universalify().fromPromise;
-    var path26 = require("path");
-    var fs25 = require_fs();
+    var path29 = require("path");
+    var fs28 = require_fs();
     var { mkdirs, mkdirsSync } = require_mkdirs();
     var { symlinkPaths, symlinkPathsSync } = require_symlink_paths();
     var { symlinkType, symlinkTypeSync } = require_symlink_type();
@@ -5236,44 +5236,44 @@ var require_symlink = __commonJS({
     async function createSymlink(srcpath, dstpath, type) {
       let stats;
       try {
-        stats = await fs25.lstat(dstpath);
+        stats = await fs28.lstat(dstpath);
       } catch {
       }
       if (stats && stats.isSymbolicLink()) {
         const [srcStat, dstStat] = await Promise.all([
-          fs25.stat(srcpath),
-          fs25.stat(dstpath)
+          fs28.stat(srcpath),
+          fs28.stat(dstpath)
         ]);
         if (areIdentical(srcStat, dstStat)) return;
       }
       const relative = await symlinkPaths(srcpath, dstpath);
       srcpath = relative.toDst;
       const toType = await symlinkType(relative.toCwd, type);
-      const dir = path26.dirname(dstpath);
+      const dir = path29.dirname(dstpath);
       if (!await pathExists(dir)) {
         await mkdirs(dir);
       }
-      return fs25.symlink(srcpath, dstpath, toType);
+      return fs28.symlink(srcpath, dstpath, toType);
     }
     function createSymlinkSync(srcpath, dstpath, type) {
       let stats;
       try {
-        stats = fs25.lstatSync(dstpath);
+        stats = fs28.lstatSync(dstpath);
       } catch {
       }
       if (stats && stats.isSymbolicLink()) {
-        const srcStat = fs25.statSync(srcpath);
-        const dstStat = fs25.statSync(dstpath);
+        const srcStat = fs28.statSync(srcpath);
+        const dstStat = fs28.statSync(dstpath);
         if (areIdentical(srcStat, dstStat)) return;
       }
       const relative = symlinkPathsSync(srcpath, dstpath);
       srcpath = relative.toDst;
       type = symlinkTypeSync(relative.toCwd, type);
-      const dir = path26.dirname(dstpath);
-      const exists = fs25.existsSync(dir);
-      if (exists) return fs25.symlinkSync(srcpath, dstpath, type);
+      const dir = path29.dirname(dstpath);
+      const exists = fs28.existsSync(dir);
+      if (exists) return fs28.symlinkSync(srcpath, dstpath, type);
       mkdirsSync(dir);
-      return fs25.symlinkSync(srcpath, dstpath, type);
+      return fs28.symlinkSync(srcpath, dstpath, type);
     }
     module2.exports = {
       createSymlink: u(createSymlink),
@@ -5313,10 +5313,10 @@ var require_ensure = __commonJS({
 var require_utils2 = __commonJS({
   "../node_modules/jsonfile/utils.js"(exports2, module2) {
     "use strict";
-    function stringify2(obj, { EOL: EOL2 = "\n", finalEOL = true, replacer = null, spaces } = {}) {
-      const EOF = finalEOL ? EOL2 : "";
+    function stringify2(obj, { EOL = "\n", finalEOL = true, replacer = null, spaces } = {}) {
+      const EOF = finalEOL ? EOL : "";
       const str = JSON.stringify(obj, replacer, spaces);
-      return str.replace(/\n/g, EOL2) + EOF;
+      return str.replace(/\n/g, EOL) + EOF;
     }
     function stripBom(content) {
       if (Buffer.isBuffer(content)) content = content.toString("utf8");
@@ -5342,9 +5342,9 @@ var require_jsonfile = __commonJS({
       if (typeof options === "string") {
         options = { encoding: options };
       }
-      const fs25 = options.fs || _fs;
+      const fs28 = options.fs || _fs;
       const shouldThrow = "throws" in options ? options.throws : true;
-      let data = await universalify.fromCallback(fs25.readFile)(file2, options);
+      let data = await universalify.fromCallback(fs28.readFile)(file2, options);
       data = stripBom(data);
       let obj;
       try {
@@ -5364,10 +5364,10 @@ var require_jsonfile = __commonJS({
       if (typeof options === "string") {
         options = { encoding: options };
       }
-      const fs25 = options.fs || _fs;
+      const fs28 = options.fs || _fs;
       const shouldThrow = "throws" in options ? options.throws : true;
       try {
-        let content = fs25.readFileSync(file2, options);
+        let content = fs28.readFileSync(file2, options);
         content = stripBom(content);
         return JSON.parse(content, options.reviver);
       } catch (err) {
@@ -5380,15 +5380,15 @@ var require_jsonfile = __commonJS({
       }
     }
     async function _writeFile(file2, obj, options = {}) {
-      const fs25 = options.fs || _fs;
+      const fs28 = options.fs || _fs;
       const str = stringify2(obj, options);
-      await universalify.fromCallback(fs25.writeFile)(file2, str, options);
+      await universalify.fromCallback(fs28.writeFile)(file2, str, options);
     }
     var writeFile = universalify.fromPromise(_writeFile);
     function writeFileSync3(file2, obj, options = {}) {
-      const fs25 = options.fs || _fs;
+      const fs28 = options.fs || _fs;
       const str = stringify2(obj, options);
-      return fs25.writeFileSync(file2, str, options);
+      return fs28.writeFileSync(file2, str, options);
     }
     module2.exports = {
       readFile,
@@ -5419,23 +5419,23 @@ var require_output_file = __commonJS({
   "../node_modules/fs-extra/lib/output-file/index.js"(exports2, module2) {
     "use strict";
     var u = require_universalify().fromPromise;
-    var fs25 = require_fs();
-    var path26 = require("path");
+    var fs28 = require_fs();
+    var path29 = require("path");
     var mkdir = require_mkdirs();
     var pathExists = require_path_exists().pathExists;
     async function outputFile(file2, data, encoding = "utf-8") {
-      const dir = path26.dirname(file2);
+      const dir = path29.dirname(file2);
       if (!await pathExists(dir)) {
         await mkdir.mkdirs(dir);
       }
-      return fs25.writeFile(file2, data, encoding);
+      return fs28.writeFile(file2, data, encoding);
     }
     function outputFileSync(file2, ...args) {
-      const dir = path26.dirname(file2);
-      if (!fs25.existsSync(dir)) {
+      const dir = path29.dirname(file2);
+      if (!fs28.existsSync(dir)) {
         mkdir.mkdirsSync(dir);
       }
-      fs25.writeFileSync(file2, ...args);
+      fs28.writeFileSync(file2, ...args);
     }
     module2.exports = {
       outputFile: u(outputFile),
@@ -5494,8 +5494,8 @@ var require_json = __commonJS({
 var require_move = __commonJS({
   "../node_modules/fs-extra/lib/move/move.js"(exports2, module2) {
     "use strict";
-    var fs25 = require_fs();
-    var path26 = require("path");
+    var fs28 = require_fs();
+    var path29 = require("path");
     var { copy } = require_copy2();
     var { remove } = require_remove();
     var { mkdirp } = require_mkdirs();
@@ -5505,8 +5505,8 @@ var require_move = __commonJS({
       const overwrite = opts.overwrite || opts.clobber || false;
       const { srcStat, isChangingCase = false } = await stat.checkPaths(src, dest, "move", opts);
       await stat.checkParentPaths(src, srcStat, dest, "move");
-      const destParent = path26.dirname(dest);
-      const parsedParentPath = path26.parse(destParent);
+      const destParent = path29.dirname(dest);
+      const parsedParentPath = path29.parse(destParent);
       if (parsedParentPath.root !== destParent) {
         await mkdirp(destParent);
       }
@@ -5521,7 +5521,7 @@ var require_move = __commonJS({
         }
       }
       try {
-        await fs25.rename(src, dest);
+        await fs28.rename(src, dest);
       } catch (err) {
         if (err.code !== "EXDEV") {
           throw err;
@@ -5546,8 +5546,8 @@ var require_move = __commonJS({
 var require_move_sync = __commonJS({
   "../node_modules/fs-extra/lib/move/move-sync.js"(exports2, module2) {
     "use strict";
-    var fs25 = require_graceful_fs();
-    var path26 = require("path");
+    var fs28 = require_graceful_fs();
+    var path29 = require("path");
     var copySync = require_copy2().copySync;
     var removeSync = require_remove().removeSync;
     var mkdirpSync = require_mkdirs().mkdirpSync;
@@ -5557,12 +5557,12 @@ var require_move_sync = __commonJS({
       const overwrite = opts.overwrite || opts.clobber || false;
       const { srcStat, isChangingCase = false } = stat.checkPathsSync(src, dest, "move", opts);
       stat.checkParentPathsSync(src, srcStat, dest, "move");
-      if (!isParentRoot(dest)) mkdirpSync(path26.dirname(dest));
+      if (!isParentRoot(dest)) mkdirpSync(path29.dirname(dest));
       return doRename(src, dest, overwrite, isChangingCase);
     }
     function isParentRoot(dest) {
-      const parent = path26.dirname(dest);
-      const parsedPath = path26.parse(parent);
+      const parent = path29.dirname(dest);
+      const parsedPath = path29.parse(parent);
       return parsedPath.root === parent;
     }
     function doRename(src, dest, overwrite, isChangingCase) {
@@ -5571,12 +5571,12 @@ var require_move_sync = __commonJS({
         removeSync(dest);
         return rename(src, dest, overwrite);
       }
-      if (fs25.existsSync(dest)) throw new Error("dest already exists.");
+      if (fs28.existsSync(dest)) throw new Error("dest already exists.");
       return rename(src, dest, overwrite);
     }
     function rename(src, dest, overwrite) {
       try {
-        fs25.renameSync(src, dest);
+        fs28.renameSync(src, dest);
       } catch (err) {
         if (err.code !== "EXDEV") throw err;
         return moveAcrossDevice(src, dest, overwrite);
@@ -5778,9 +5778,9 @@ var require_strip = __commonJS({
 var require_src = __commonJS({
   "../node_modules/sisteransi/src/index.js"(exports2, module2) {
     "use strict";
-    var ESC2 = "\x1B";
-    var CSI = `${ESC2}[`;
-    var beep2 = "\x07";
+    var ESC = "\x1B";
+    var CSI = `${ESC}[`;
+    var beep = "\x07";
     var cursor = {
       to(x, y) {
         if (!y) return `${CSI}${x + 1}G`;
@@ -5803,8 +5803,8 @@ var require_src = __commonJS({
       left: `${CSI}G`,
       hide: `${CSI}?25l`,
       show: `${CSI}?25h`,
-      save: `${ESC2}7`,
-      restore: `${ESC2}8`
+      save: `${ESC}7`,
+      restore: `${ESC}8`
     };
     var scroll = {
       up: (count = 1) => `${CSI}S`.repeat(count),
@@ -5826,7 +5826,7 @@ var require_src = __commonJS({
         return clear;
       }
     };
-    module2.exports = { cursor, scroll, erase, beep: beep2 };
+    module2.exports = { cursor, scroll, erase, beep };
   }
 });
 
@@ -5939,8 +5939,8 @@ var require_figures = __commonJS({
       line: "\u2500",
       pointer: ">"
     };
-    var figures2 = process.platform === "win32" ? win : main;
-    module2.exports = figures2;
+    var figures = process.platform === "win32" ? win : main;
+    module2.exports = figures;
   }
 });
 
@@ -5949,7 +5949,7 @@ var require_style = __commonJS({
   "../node_modules/prompts/dist/util/style.js"(exports2, module2) {
     "use strict";
     var c = require_kleur();
-    var figures2 = require_figures();
+    var figures = require_figures();
     var styles4 = Object.freeze({
       password: {
         scale: 1,
@@ -5970,14 +5970,14 @@ var require_style = __commonJS({
     });
     var render = (type) => styles4[type] || styles4.default;
     var symbols = Object.freeze({
-      aborted: c.red(figures2.cross),
-      done: c.green(figures2.tick),
-      exited: c.yellow(figures2.cross),
+      aborted: c.red(figures.cross),
+      done: c.green(figures.tick),
+      exited: c.yellow(figures.cross),
       default: c.cyan("?")
     });
     var symbol2 = (done, aborted2, exited) => aborted2 ? symbols.aborted : exited ? symbols.exited : done ? symbols.done : symbols.default;
-    var delimiter = (completing) => c.gray(completing ? figures2.ellipsis : figures2.pointerSmall);
-    var item = (expandable, expanded) => c.gray(expandable ? expanded ? figures2.pointerSmall : "+" : figures2.line);
+    var delimiter = (completing) => c.gray(completing ? figures.ellipsis : figures.pointerSmall);
+    var item = (expandable, expanded) => c.gray(expandable ? expanded ? figures.pointerSmall : "+" : figures.line);
     module2.exports = {
       styles: styles4,
       render,
@@ -6059,12 +6059,12 @@ var require_prompt = __commonJS({
     var readline = require("readline");
     var _require = require_util();
     var action = _require.action;
-    var EventEmitter2 = require("events");
+    var EventEmitter = require("events");
     var _require2 = require_src();
-    var beep2 = _require2.beep;
+    var beep = _require2.beep;
     var cursor = _require2.cursor;
-    var color2 = require_kleur();
-    var Prompt = class extends EventEmitter2 {
+    var color = require_kleur();
+    var Prompt = class extends EventEmitter {
       constructor(opts = {}) {
         super();
         this.firstRender = true;
@@ -6106,10 +6106,10 @@ var require_prompt = __commonJS({
         });
       }
       bell() {
-        this.out.write(beep2);
+        this.out.write(beep);
       }
       render() {
-        this.onRender(color2);
+        this.onRender(color);
         if (this.firstRender) this.firstRender = false;
       }
     };
@@ -6150,7 +6150,7 @@ var require_text = __commonJS({
         });
       };
     }
-    var color2 = require_kleur();
+    var color = require_kleur();
     var Prompt = require_prompt();
     var _require = require_src();
     var erase = _require.erase;
@@ -6159,7 +6159,7 @@ var require_text = __commonJS({
     var style = _require2.style;
     var clear = _require2.clear;
     var lines = _require2.lines;
-    var figures2 = _require2.figures;
+    var figures = _require2.figures;
     var TextPrompt = class extends Prompt {
       constructor(opts = {}) {
         super(opts);
@@ -6178,7 +6178,7 @@ var require_text = __commonJS({
       set value(v) {
         if (!v && this.initial) {
           this.placeholder = true;
-          this.rendered = color2.gray(this.transform.render(this.initial));
+          this.rendered = color.gray(this.transform.render(this.initial));
         } else {
           this.placeholder = false;
           this.rendered = this.transform.render(v);
@@ -6320,11 +6320,11 @@ var require_text = __commonJS({
         }
         super.render();
         this.outputError = "";
-        this.outputText = [style.symbol(this.done, this.aborted), color2.bold(this.msg), style.delimiter(this.done), this.red ? color2.red(this.rendered) : this.rendered].join(` `);
+        this.outputText = [style.symbol(this.done, this.aborted), color.bold(this.msg), style.delimiter(this.done), this.red ? color.red(this.rendered) : this.rendered].join(` `);
         if (this.error) {
           this.outputError += this.errorMsg.split(`
 `).reduce((a, l, i) => a + `
-${i ? " " : figures2.pointerSmall} ${color2.red().italic(l)}`, ``);
+${i ? " " : figures.pointerSmall} ${color.red().italic(l)}`, ``);
         }
         this.out.write(erase.line + cursor.to(0) + this.outputText + cursor.save + this.outputError + cursor.restore + cursor.move(this.cursorOffset, 0));
       }
@@ -6337,12 +6337,12 @@ ${i ? " " : figures2.pointerSmall} ${color2.red().italic(l)}`, ``);
 var require_select = __commonJS({
   "../node_modules/prompts/dist/elements/select.js"(exports2, module2) {
     "use strict";
-    var color2 = require_kleur();
+    var color = require_kleur();
     var Prompt = require_prompt();
     var _require = require_util();
     var style = _require.style;
     var clear = _require.clear;
-    var figures2 = _require.figures;
+    var figures = _require.figures;
     var wrap = _require.wrap;
     var entriesToDisplay = _require.entriesToDisplay;
     var _require2 = require_src();
@@ -6442,24 +6442,24 @@ var require_select = __commonJS({
         else this.out.write(clear(this.outputText, this.out.columns));
         super.render();
         let _entriesToDisplay = entriesToDisplay(this.cursor, this.choices.length, this.optionsPerPage), startIndex = _entriesToDisplay.startIndex, endIndex = _entriesToDisplay.endIndex;
-        this.outputText = [style.symbol(this.done, this.aborted), color2.bold(this.msg), style.delimiter(false), this.done ? this.selection.title : this.selection.disabled ? color2.yellow(this.warn) : color2.gray(this.hint)].join(" ");
+        this.outputText = [style.symbol(this.done, this.aborted), color.bold(this.msg), style.delimiter(false), this.done ? this.selection.title : this.selection.disabled ? color.yellow(this.warn) : color.gray(this.hint)].join(" ");
         if (!this.done) {
           this.outputText += "\n";
           for (let i = startIndex; i < endIndex; i++) {
             let title, prefix, desc = "", v = this.choices[i];
             if (i === startIndex && startIndex > 0) {
-              prefix = figures2.arrowUp;
+              prefix = figures.arrowUp;
             } else if (i === endIndex - 1 && endIndex < this.choices.length) {
-              prefix = figures2.arrowDown;
+              prefix = figures.arrowDown;
             } else {
               prefix = " ";
             }
             if (v.disabled) {
-              title = this.cursor === i ? color2.gray().underline(v.title) : color2.strikethrough().gray(v.title);
-              prefix = (this.cursor === i ? color2.bold().gray(figures2.pointer) + " " : "  ") + prefix;
+              title = this.cursor === i ? color.gray().underline(v.title) : color.strikethrough().gray(v.title);
+              prefix = (this.cursor === i ? color.bold().gray(figures.pointer) + " " : "  ") + prefix;
             } else {
-              title = this.cursor === i ? color2.cyan().underline(v.title) : v.title;
-              prefix = (this.cursor === i ? color2.cyan(figures2.pointer) + " " : "  ") + prefix;
+              title = this.cursor === i ? color.cyan().underline(v.title) : v.title;
+              prefix = (this.cursor === i ? color.cyan(figures.pointer) + " " : "  ") + prefix;
               if (v.description && this.cursor === i) {
                 desc = ` - ${v.description}`;
                 if (prefix.length + title.length + desc.length >= this.out.columns || v.description.split(/\r?\n/).length > 1) {
@@ -6470,7 +6470,7 @@ var require_select = __commonJS({
                 }
               }
             }
-            this.outputText += `${prefix} ${title}${color2.gray(desc)}
+            this.outputText += `${prefix} ${title}${color.gray(desc)}
 `;
           }
         }
@@ -6485,7 +6485,7 @@ var require_select = __commonJS({
 var require_toggle = __commonJS({
   "../node_modules/prompts/dist/elements/toggle.js"(exports2, module2) {
     "use strict";
-    var color2 = require_kleur();
+    var color = require_kleur();
     var Prompt = require_prompt();
     var _require = require_util();
     var style = _require.style;
@@ -6571,7 +6571,7 @@ var require_toggle = __commonJS({
         if (this.firstRender) this.out.write(cursor.hide);
         else this.out.write(clear(this.outputText, this.out.columns));
         super.render();
-        this.outputText = [style.symbol(this.done, this.aborted), color2.bold(this.msg), style.delimiter(this.done), this.value ? this.inactive : color2.cyan().underline(this.inactive), color2.gray("/"), this.value ? color2.cyan().underline(this.active) : this.active].join(" ");
+        this.outputText = [style.symbol(this.done, this.aborted), color.bold(this.msg), style.delimiter(this.done), this.value ? this.inactive : color.cyan().underline(this.inactive), color.gray("/"), this.value ? color.cyan().underline(this.active) : this.active].join(" ");
         this.out.write(erase.line + cursor.to(0) + this.outputText);
       }
     };
@@ -6889,12 +6889,12 @@ var require_date = __commonJS({
         });
       };
     }
-    var color2 = require_kleur();
+    var color = require_kleur();
     var Prompt = require_prompt();
     var _require = require_util();
     var style = _require.style;
     var clear = _require.clear;
-    var figures2 = _require.figures;
+    var figures = _require.figures;
     var _require2 = require_src();
     var erase = _require2.erase;
     var cursor = _require2.cursor;
@@ -7070,10 +7070,10 @@ var require_date = __commonJS({
         if (this.firstRender) this.out.write(cursor.hide);
         else this.out.write(clear(this.outputText, this.out.columns));
         super.render();
-        this.outputText = [style.symbol(this.done, this.aborted), color2.bold(this.msg), style.delimiter(false), this.parts.reduce((arr, p, idx) => arr.concat(idx === this.cursor && !this.done ? color2.cyan().underline(p.toString()) : p), []).join("")].join(" ");
+        this.outputText = [style.symbol(this.done, this.aborted), color.bold(this.msg), style.delimiter(false), this.parts.reduce((arr, p, idx) => arr.concat(idx === this.cursor && !this.done ? color.cyan().underline(p.toString()) : p), []).join("")].join(" ");
         if (this.error) {
           this.outputText += this.errorMsg.split("\n").reduce((a, l, i) => a + `
-${i ? ` ` : figures2.pointerSmall} ${color2.red().italic(l)}`, ``);
+${i ? ` ` : figures.pointerSmall} ${color.red().italic(l)}`, ``);
         }
         this.out.write(erase.line + cursor.to(0) + this.outputText);
       }
@@ -7115,14 +7115,14 @@ var require_number = __commonJS({
         });
       };
     }
-    var color2 = require_kleur();
+    var color = require_kleur();
     var Prompt = require_prompt();
     var _require = require_src();
     var cursor = _require.cursor;
     var erase = _require.erase;
     var _require2 = require_util();
     var style = _require2.style;
-    var figures2 = _require2.figures;
+    var figures = _require2.figures;
     var clear = _require2.clear;
     var lines = _require2.lines;
     var isNumber = /[0-9]/;
@@ -7153,7 +7153,7 @@ var require_number = __commonJS({
       set value(v) {
         if (!v && v !== 0) {
           this.placeholder = true;
-          this.rendered = color2.gray(this.transform.render(`${this.initial}`));
+          this.rendered = color.gray(this.transform.render(`${this.initial}`));
           this._value = ``;
         } else {
           this.placeholder = false;
@@ -7284,11 +7284,11 @@ var require_number = __commonJS({
         }
         super.render();
         this.outputError = "";
-        this.outputText = [style.symbol(this.done, this.aborted), color2.bold(this.msg), style.delimiter(this.done), !this.done || !this.done && !this.placeholder ? color2[this.color]().underline(this.rendered) : this.rendered].join(` `);
+        this.outputText = [style.symbol(this.done, this.aborted), color.bold(this.msg), style.delimiter(this.done), !this.done || !this.done && !this.placeholder ? color[this.color]().underline(this.rendered) : this.rendered].join(` `);
         if (this.error) {
           this.outputError += this.errorMsg.split(`
 `).reduce((a, l, i) => a + `
-${i ? ` ` : figures2.pointerSmall} ${color2.red().italic(l)}`, ``);
+${i ? ` ` : figures.pointerSmall} ${color.red().italic(l)}`, ``);
         }
         this.out.write(erase.line + cursor.to(0) + this.outputText + cursor.save + this.outputError + cursor.restore);
       }
@@ -7301,13 +7301,13 @@ ${i ? ` ` : figures2.pointerSmall} ${color2.red().italic(l)}`, ``);
 var require_multiselect = __commonJS({
   "../node_modules/prompts/dist/elements/multiselect.js"(exports2, module2) {
     "use strict";
-    var color2 = require_kleur();
+    var color = require_kleur();
     var _require = require_src();
     var cursor = _require.cursor;
     var Prompt = require_prompt();
     var _require2 = require_util();
     var clear = _require2.clear;
-    var figures2 = _require2.figures;
+    var figures = _require2.figures;
     var style = _require2.style;
     var wrap = _require2.wrap;
     var entriesToDisplay = _require2.entriesToDisplay;
@@ -7448,20 +7448,20 @@ var require_multiselect = __commonJS({
           }
           return `
 Instructions:
-    ${figures2.arrowUp}/${figures2.arrowDown}: Highlight option
-    ${figures2.arrowLeft}/${figures2.arrowRight}/[space]: Toggle selection
+    ${figures.arrowUp}/${figures.arrowDown}: Highlight option
+    ${figures.arrowLeft}/${figures.arrowRight}/[space]: Toggle selection
 ` + (this.maxChoices === void 0 ? `    a: Toggle all
 ` : "") + `    enter/return: Complete answer`;
         }
         return "";
       }
       renderOption(cursor2, v, i, arrowIndicator) {
-        const prefix = (v.selected ? color2.green(figures2.radioOn) : figures2.radioOff) + " " + arrowIndicator + " ";
+        const prefix = (v.selected ? color.green(figures.radioOn) : figures.radioOff) + " " + arrowIndicator + " ";
         let title, desc;
         if (v.disabled) {
-          title = cursor2 === i ? color2.gray().underline(v.title) : color2.strikethrough().gray(v.title);
+          title = cursor2 === i ? color.gray().underline(v.title) : color.strikethrough().gray(v.title);
         } else {
-          title = cursor2 === i ? color2.cyan().underline(v.title) : v.title;
+          title = cursor2 === i ? color.cyan().underline(v.title) : v.title;
           if (cursor2 === i && v.description) {
             desc = ` - ${v.description}`;
             if (prefix.length + title.length + desc.length >= this.out.columns || v.description.split(/\r?\n/).length > 1) {
@@ -7472,20 +7472,20 @@ Instructions:
             }
           }
         }
-        return prefix + title + color2.gray(desc || "");
+        return prefix + title + color.gray(desc || "");
       }
       // shared with autocompleteMultiselect
       paginateOptions(options) {
         if (options.length === 0) {
-          return color2.red("No matches for this query.");
+          return color.red("No matches for this query.");
         }
         let _entriesToDisplay = entriesToDisplay(this.cursor, options.length, this.optionsPerPage), startIndex = _entriesToDisplay.startIndex, endIndex = _entriesToDisplay.endIndex;
         let prefix, styledOptions = [];
         for (let i = startIndex; i < endIndex; i++) {
           if (i === startIndex && startIndex > 0) {
-            prefix = figures2.arrowUp;
+            prefix = figures.arrowUp;
           } else if (i === endIndex - 1 && endIndex < options.length) {
-            prefix = figures2.arrowDown;
+            prefix = figures.arrowDown;
           } else {
             prefix = " ";
           }
@@ -7504,9 +7504,9 @@ Instructions:
         if (this.done) {
           return this.value.filter((e) => e.selected).map((v) => v.title).join(", ");
         }
-        const output = [color2.gray(this.hint), this.renderInstructions()];
+        const output = [color.gray(this.hint), this.renderInstructions()];
         if (this.value[this.cursor].disabled) {
-          output.push(color2.yellow(this.warn));
+          output.push(color.yellow(this.warn));
         }
         return output.join(" ");
       }
@@ -7514,9 +7514,9 @@ Instructions:
         if (this.closed) return;
         if (this.firstRender) this.out.write(cursor.hide);
         super.render();
-        let prompt = [style.symbol(this.done, this.aborted), color2.bold(this.msg), style.delimiter(false), this.renderDoneOrInstructions()].join(" ");
+        let prompt = [style.symbol(this.done, this.aborted), color.bold(this.msg), style.delimiter(false), this.renderDoneOrInstructions()].join(" ");
         if (this.showMinError) {
-          prompt += color2.red(`You must select a minimum of ${this.minSelected} choices.`);
+          prompt += color.red(`You must select a minimum of ${this.minSelected} choices.`);
           this.showMinError = false;
         }
         prompt += this.renderOptions(this.value);
@@ -7561,7 +7561,7 @@ var require_autocomplete = __commonJS({
         });
       };
     }
-    var color2 = require_kleur();
+    var color = require_kleur();
     var Prompt = require_prompt();
     var _require = require_src();
     var erase = _require.erase;
@@ -7569,7 +7569,7 @@ var require_autocomplete = __commonJS({
     var _require2 = require_util();
     var style = _require2.style;
     var clear = _require2.clear;
-    var figures2 = _require2.figures;
+    var figures = _require2.figures;
     var wrap = _require2.wrap;
     var entriesToDisplay = _require2.entriesToDisplay;
     var getVal = (arr, i) => arr[i] && (arr[i].value || arr[i].title || arr[i]);
@@ -7750,9 +7750,9 @@ var require_autocomplete = __commonJS({
       }
       renderOption(v, hovered, isStart, isEnd) {
         let desc;
-        let prefix = isStart ? figures2.arrowUp : isEnd ? figures2.arrowDown : " ";
-        let title = hovered ? color2.cyan().underline(v.title) : v.title;
-        prefix = (hovered ? color2.cyan(figures2.pointer) + " " : "  ") + prefix;
+        let prefix = isStart ? figures.arrowUp : isEnd ? figures.arrowDown : " ";
+        let title = hovered ? color.cyan().underline(v.title) : v.title;
+        prefix = (hovered ? color.cyan(figures.pointer) + " " : "  ") + prefix;
         if (v.description) {
           desc = ` - ${v.description}`;
           if (prefix.length + title.length + desc.length >= this.out.columns || v.description.split(/\r?\n/).length > 1) {
@@ -7762,7 +7762,7 @@ var require_autocomplete = __commonJS({
             });
           }
         }
-        return prefix + " " + title + color2.gray(desc || "");
+        return prefix + " " + title + color.gray(desc || "");
       }
       render() {
         if (this.closed) return;
@@ -7770,11 +7770,11 @@ var require_autocomplete = __commonJS({
         else this.out.write(clear(this.outputText, this.out.columns));
         super.render();
         let _entriesToDisplay = entriesToDisplay(this.select, this.choices.length, this.limit), startIndex = _entriesToDisplay.startIndex, endIndex = _entriesToDisplay.endIndex;
-        this.outputText = [style.symbol(this.done, this.aborted, this.exited), color2.bold(this.msg), style.delimiter(this.completing), this.done && this.suggestions[this.select] ? this.suggestions[this.select].title : this.rendered = this.transform.render(this.input)].join(" ");
+        this.outputText = [style.symbol(this.done, this.aborted, this.exited), color.bold(this.msg), style.delimiter(this.completing), this.done && this.suggestions[this.select] ? this.suggestions[this.select].title : this.rendered = this.transform.render(this.input)].join(" ");
         if (!this.done) {
           const suggestions = this.suggestions.slice(startIndex, endIndex).map((item, i) => this.renderOption(item, this.select === i + startIndex, i === 0 && startIndex > 0, i + startIndex === endIndex - 1 && endIndex < this.choices.length)).join("\n");
           this.outputText += `
-` + (suggestions || color2.gray(this.fallback.title));
+` + (suggestions || color.gray(this.fallback.title));
         }
         this.out.write(erase.line + cursor.to(0) + this.outputText);
       }
@@ -7787,14 +7787,14 @@ var require_autocomplete = __commonJS({
 var require_autocompleteMultiselect = __commonJS({
   "../node_modules/prompts/dist/elements/autocompleteMultiselect.js"(exports2, module2) {
     "use strict";
-    var color2 = require_kleur();
+    var color = require_kleur();
     var _require = require_src();
     var cursor = _require.cursor;
     var MultiselectPrompt = require_multiselect();
     var _require2 = require_util();
     var clear = _require2.clear;
     var style = _require2.style;
-    var figures2 = _require2.figures;
+    var figures = _require2.figures;
     var AutocompleteMultiselectPrompt = class extends MultiselectPrompt {
       constructor(opts = {}) {
         opts.overrideRender = true;
@@ -7895,8 +7895,8 @@ var require_autocompleteMultiselect = __commonJS({
           }
           return `
 Instructions:
-    ${figures2.arrowUp}/${figures2.arrowDown}: Highlight option
-    ${figures2.arrowLeft}/${figures2.arrowRight}/[space]: Toggle selection
+    ${figures.arrowUp}/${figures.arrowDown}: Highlight option
+    ${figures.arrowLeft}/${figures.arrowRight}/[space]: Toggle selection
     [a,b,c]/delete: Filter choices
     enter/return: Complete answer
 `;
@@ -7905,22 +7905,22 @@ Instructions:
       }
       renderCurrentInput() {
         return `
-Filtered results for: ${this.inputValue ? this.inputValue : color2.gray("Enter something to filter")}
+Filtered results for: ${this.inputValue ? this.inputValue : color.gray("Enter something to filter")}
 `;
       }
       renderOption(cursor2, v, i) {
         let title;
-        if (v.disabled) title = cursor2 === i ? color2.gray().underline(v.title) : color2.strikethrough().gray(v.title);
-        else title = cursor2 === i ? color2.cyan().underline(v.title) : v.title;
-        return (v.selected ? color2.green(figures2.radioOn) : figures2.radioOff) + "  " + title;
+        if (v.disabled) title = cursor2 === i ? color.gray().underline(v.title) : color.strikethrough().gray(v.title);
+        else title = cursor2 === i ? color.cyan().underline(v.title) : v.title;
+        return (v.selected ? color.green(figures.radioOn) : figures.radioOff) + "  " + title;
       }
       renderDoneOrInstructions() {
         if (this.done) {
           return this.value.filter((e) => e.selected).map((v) => v.title).join(", ");
         }
-        const output = [color2.gray(this.hint), this.renderInstructions(), this.renderCurrentInput()];
+        const output = [color.gray(this.hint), this.renderInstructions(), this.renderCurrentInput()];
         if (this.filteredOptions.length && this.filteredOptions[this.cursor].disabled) {
-          output.push(color2.yellow(this.warn));
+          output.push(color.yellow(this.warn));
         }
         return output.join(" ");
       }
@@ -7928,9 +7928,9 @@ Filtered results for: ${this.inputValue ? this.inputValue : color2.gray("Enter s
         if (this.closed) return;
         if (this.firstRender) this.out.write(cursor.hide);
         super.render();
-        let prompt = [style.symbol(this.done, this.aborted), color2.bold(this.msg), style.delimiter(false), this.renderDoneOrInstructions()].join(" ");
+        let prompt = [style.symbol(this.done, this.aborted), color.bold(this.msg), style.delimiter(false), this.renderDoneOrInstructions()].join(" ");
         if (this.showMinError) {
-          prompt += color2.red(`You must select a minimum of ${this.minSelected} choices.`);
+          prompt += color.red(`You must select a minimum of ${this.minSelected} choices.`);
           this.showMinError = false;
         }
         prompt += this.renderOptions(this.filteredOptions);
@@ -7946,7 +7946,7 @@ Filtered results for: ${this.inputValue ? this.inputValue : color2.gray("Enter s
 var require_confirm = __commonJS({
   "../node_modules/prompts/dist/elements/confirm.js"(exports2, module2) {
     "use strict";
-    var color2 = require_kleur();
+    var color = require_kleur();
     var Prompt = require_prompt();
     var _require = require_util();
     var style = _require.style;
@@ -8006,7 +8006,7 @@ var require_confirm = __commonJS({
         if (this.firstRender) this.out.write(cursor.hide);
         else this.out.write(clear(this.outputText, this.out.columns));
         super.render();
-        this.outputText = [style.symbol(this.done, this.aborted), color2.bold(this.msg), style.delimiter(this.done), this.done ? this.value ? this.yesMsg : this.noMsg : color2.gray(this.initialValue ? this.yesOption : this.noOption)].join(" ");
+        this.outputText = [style.symbol(this.done, this.aborted), color.bold(this.msg), style.delimiter(this.done), this.done ? this.value ? this.yesMsg : this.noMsg : color.gray(this.initialValue ? this.yesOption : this.noOption)].join(" ");
         this.out.write(erase.line + cursor.to(0) + this.outputText);
       }
     };
@@ -8044,10 +8044,10 @@ var require_prompts = __commonJS({
         const p = new el[type](args);
         const onAbort = opts.onAbort || noop;
         const onSubmit = opts.onSubmit || noop;
-        const onExit2 = opts.onExit || noop;
+        const onExit = opts.onExit || noop;
         p.on("state", args.onState || noop);
         p.on("submit", (x) => res(onSubmit(x)));
-        p.on("exit", (x) => res(onExit2(x)));
+        p.on("exit", (x) => res(onExit(x)));
         p.on("abort", (x) => rej(onAbort(x)));
       });
     }
@@ -8419,8 +8419,8 @@ var require_figures2 = __commonJS({
       line: "\u2500",
       pointer: ">"
     };
-    var figures2 = process.platform === "win32" ? win : main;
-    module2.exports = figures2;
+    var figures = process.platform === "win32" ? win : main;
+    module2.exports = figures;
   }
 });
 
@@ -8429,7 +8429,7 @@ var require_style2 = __commonJS({
   "../node_modules/prompts/lib/util/style.js"(exports2, module2) {
     "use strict";
     var c = require_kleur();
-    var figures2 = require_figures2();
+    var figures = require_figures2();
     var styles4 = Object.freeze({
       password: { scale: 1, render: (input) => "*".repeat(input.length) },
       emoji: { scale: 2, render: (input) => "\u{1F603}".repeat(input.length) },
@@ -8438,14 +8438,14 @@ var require_style2 = __commonJS({
     });
     var render = (type) => styles4[type] || styles4.default;
     var symbols = Object.freeze({
-      aborted: c.red(figures2.cross),
-      done: c.green(figures2.tick),
-      exited: c.yellow(figures2.cross),
+      aborted: c.red(figures.cross),
+      done: c.green(figures.tick),
+      exited: c.yellow(figures.cross),
       default: c.cyan("?")
     });
     var symbol2 = (done, aborted2, exited) => aborted2 ? symbols.aborted : exited ? symbols.exited : done ? symbols.done : symbols.default;
-    var delimiter = (completing) => c.gray(completing ? figures2.ellipsis : figures2.pointerSmall);
-    var item = (expandable, expanded) => c.gray(expandable ? expanded ? figures2.pointerSmall : "+" : figures2.line);
+    var delimiter = (completing) => c.gray(completing ? figures.ellipsis : figures.pointerSmall);
+    var item = (expandable, expanded) => c.gray(expandable ? expanded ? figures.pointerSmall : "+" : figures.line);
     module2.exports = {
       styles: styles4,
       render,
@@ -8524,10 +8524,10 @@ var require_prompt2 = __commonJS({
     "use strict";
     var readline = require("readline");
     var { action } = require_util2();
-    var EventEmitter2 = require("events");
-    var { beep: beep2, cursor } = require_src();
-    var color2 = require_kleur();
-    var Prompt = class extends EventEmitter2 {
+    var EventEmitter = require("events");
+    var { beep, cursor } = require_src();
+    var color = require_kleur();
+    var Prompt = class extends EventEmitter {
       constructor(opts = {}) {
         super();
         this.firstRender = true;
@@ -8566,10 +8566,10 @@ var require_prompt2 = __commonJS({
         });
       }
       bell() {
-        this.out.write(beep2);
+        this.out.write(beep);
       }
       render() {
-        this.onRender(color2);
+        this.onRender(color);
         if (this.firstRender) this.firstRender = false;
       }
     };
@@ -8581,10 +8581,10 @@ var require_prompt2 = __commonJS({
 var require_text2 = __commonJS({
   "../node_modules/prompts/lib/elements/text.js"(exports2, module2) {
     "use strict";
-    var color2 = require_kleur();
+    var color = require_kleur();
     var Prompt = require_prompt2();
     var { erase, cursor } = require_src();
-    var { style, clear, lines, figures: figures2 } = require_util2();
+    var { style, clear, lines, figures } = require_util2();
     var TextPrompt = class extends Prompt {
       constructor(opts = {}) {
         super(opts);
@@ -8603,7 +8603,7 @@ var require_text2 = __commonJS({
       set value(v) {
         if (!v && this.initial) {
           this.placeholder = true;
-          this.rendered = color2.gray(this.transform.render(this.initial));
+          this.rendered = color.gray(this.transform.render(this.initial));
         } else {
           this.placeholder = false;
           this.rendered = this.transform.render(v);
@@ -8742,14 +8742,14 @@ var require_text2 = __commonJS({
         this.outputError = "";
         this.outputText = [
           style.symbol(this.done, this.aborted),
-          color2.bold(this.msg),
+          color.bold(this.msg),
           style.delimiter(this.done),
-          this.red ? color2.red(this.rendered) : this.rendered
+          this.red ? color.red(this.rendered) : this.rendered
         ].join(` `);
         if (this.error) {
           this.outputError += this.errorMsg.split(`
 `).reduce((a, l, i) => a + `
-${i ? " " : figures2.pointerSmall} ${color2.red().italic(l)}`, ``);
+${i ? " " : figures.pointerSmall} ${color.red().italic(l)}`, ``);
         }
         this.out.write(erase.line + cursor.to(0) + this.outputText + cursor.save + this.outputError + cursor.restore + cursor.move(this.cursorOffset, 0));
       }
@@ -8762,9 +8762,9 @@ ${i ? " " : figures2.pointerSmall} ${color2.red().italic(l)}`, ``);
 var require_select2 = __commonJS({
   "../node_modules/prompts/lib/elements/select.js"(exports2, module2) {
     "use strict";
-    var color2 = require_kleur();
+    var color = require_kleur();
     var Prompt = require_prompt2();
-    var { style, clear, figures: figures2, wrap, entriesToDisplay } = require_util2();
+    var { style, clear, figures, wrap, entriesToDisplay } = require_util2();
     var { cursor } = require_src();
     var SelectPrompt = class extends Prompt {
       constructor(opts = {}) {
@@ -8862,27 +8862,27 @@ var require_select2 = __commonJS({
         let { startIndex, endIndex } = entriesToDisplay(this.cursor, this.choices.length, this.optionsPerPage);
         this.outputText = [
           style.symbol(this.done, this.aborted),
-          color2.bold(this.msg),
+          color.bold(this.msg),
           style.delimiter(false),
-          this.done ? this.selection.title : this.selection.disabled ? color2.yellow(this.warn) : color2.gray(this.hint)
+          this.done ? this.selection.title : this.selection.disabled ? color.yellow(this.warn) : color.gray(this.hint)
         ].join(" ");
         if (!this.done) {
           this.outputText += "\n";
           for (let i = startIndex; i < endIndex; i++) {
             let title, prefix, desc = "", v = this.choices[i];
             if (i === startIndex && startIndex > 0) {
-              prefix = figures2.arrowUp;
+              prefix = figures.arrowUp;
             } else if (i === endIndex - 1 && endIndex < this.choices.length) {
-              prefix = figures2.arrowDown;
+              prefix = figures.arrowDown;
             } else {
               prefix = " ";
             }
             if (v.disabled) {
-              title = this.cursor === i ? color2.gray().underline(v.title) : color2.strikethrough().gray(v.title);
-              prefix = (this.cursor === i ? color2.bold().gray(figures2.pointer) + " " : "  ") + prefix;
+              title = this.cursor === i ? color.gray().underline(v.title) : color.strikethrough().gray(v.title);
+              prefix = (this.cursor === i ? color.bold().gray(figures.pointer) + " " : "  ") + prefix;
             } else {
-              title = this.cursor === i ? color2.cyan().underline(v.title) : v.title;
-              prefix = (this.cursor === i ? color2.cyan(figures2.pointer) + " " : "  ") + prefix;
+              title = this.cursor === i ? color.cyan().underline(v.title) : v.title;
+              prefix = (this.cursor === i ? color.cyan(figures.pointer) + " " : "  ") + prefix;
               if (v.description && this.cursor === i) {
                 desc = ` - ${v.description}`;
                 if (prefix.length + title.length + desc.length >= this.out.columns || v.description.split(/\r?\n/).length > 1) {
@@ -8890,7 +8890,7 @@ var require_select2 = __commonJS({
                 }
               }
             }
-            this.outputText += `${prefix} ${title}${color2.gray(desc)}
+            this.outputText += `${prefix} ${title}${color.gray(desc)}
 `;
           }
         }
@@ -8905,7 +8905,7 @@ var require_select2 = __commonJS({
 var require_toggle2 = __commonJS({
   "../node_modules/prompts/lib/elements/toggle.js"(exports2, module2) {
     "use strict";
-    var color2 = require_kleur();
+    var color = require_kleur();
     var Prompt = require_prompt2();
     var { style, clear } = require_util2();
     var { cursor, erase } = require_src();
@@ -8989,11 +8989,11 @@ var require_toggle2 = __commonJS({
         super.render();
         this.outputText = [
           style.symbol(this.done, this.aborted),
-          color2.bold(this.msg),
+          color.bold(this.msg),
           style.delimiter(this.done),
-          this.value ? this.inactive : color2.cyan().underline(this.inactive),
-          color2.gray("/"),
-          this.value ? color2.cyan().underline(this.active) : this.active
+          this.value ? this.inactive : color.cyan().underline(this.inactive),
+          color.gray("/"),
+          this.value ? color.cyan().underline(this.active) : this.active
         ].join(" ");
         this.out.write(erase.line + cursor.to(0) + this.outputText);
       }
@@ -9279,9 +9279,9 @@ var require_dateparts2 = __commonJS({
 var require_date2 = __commonJS({
   "../node_modules/prompts/lib/elements/date.js"(exports2, module2) {
     "use strict";
-    var color2 = require_kleur();
+    var color = require_kleur();
     var Prompt = require_prompt2();
-    var { style, clear, figures: figures2 } = require_util2();
+    var { style, clear, figures } = require_util2();
     var { erase, cursor } = require_src();
     var { DatePart, Meridiem, Day, Hours, Milliseconds, Minutes, Month, Seconds, Year } = require_dateparts2();
     var regex2 = /\\(.)|"((?:\\["\\]|[^"])+)"|(D[Do]?|d{3,4}|d)|(M{1,4})|(YY(?:YY)?)|([aA])|([Hh]{1,2})|(m{1,2})|(s{1,2})|(S{1,4})|./g;
@@ -9436,14 +9436,14 @@ var require_date2 = __commonJS({
         super.render();
         this.outputText = [
           style.symbol(this.done, this.aborted),
-          color2.bold(this.msg),
+          color.bold(this.msg),
           style.delimiter(false),
-          this.parts.reduce((arr, p, idx) => arr.concat(idx === this.cursor && !this.done ? color2.cyan().underline(p.toString()) : p), []).join("")
+          this.parts.reduce((arr, p, idx) => arr.concat(idx === this.cursor && !this.done ? color.cyan().underline(p.toString()) : p), []).join("")
         ].join(" ");
         if (this.error) {
           this.outputText += this.errorMsg.split("\n").reduce(
             (a, l, i) => a + `
-${i ? ` ` : figures2.pointerSmall} ${color2.red().italic(l)}`,
+${i ? ` ` : figures.pointerSmall} ${color.red().italic(l)}`,
             ``
           );
         }
@@ -9458,10 +9458,10 @@ ${i ? ` ` : figures2.pointerSmall} ${color2.red().italic(l)}`,
 var require_number2 = __commonJS({
   "../node_modules/prompts/lib/elements/number.js"(exports2, module2) {
     "use strict";
-    var color2 = require_kleur();
+    var color = require_kleur();
     var Prompt = require_prompt2();
     var { cursor, erase } = require_src();
-    var { style, figures: figures2, clear, lines } = require_util2();
+    var { style, figures, clear, lines } = require_util2();
     var isNumber = /[0-9]/;
     var isDef = (any2) => any2 !== void 0;
     var round = (number4, precision) => {
@@ -9490,7 +9490,7 @@ var require_number2 = __commonJS({
       set value(v) {
         if (!v && v !== 0) {
           this.placeholder = true;
-          this.rendered = color2.gray(this.transform.render(`${this.initial}`));
+          this.rendered = color.gray(this.transform.render(`${this.initial}`));
           this._value = ``;
         } else {
           this.placeholder = false;
@@ -9618,14 +9618,14 @@ var require_number2 = __commonJS({
         this.outputError = "";
         this.outputText = [
           style.symbol(this.done, this.aborted),
-          color2.bold(this.msg),
+          color.bold(this.msg),
           style.delimiter(this.done),
-          !this.done || !this.done && !this.placeholder ? color2[this.color]().underline(this.rendered) : this.rendered
+          !this.done || !this.done && !this.placeholder ? color[this.color]().underline(this.rendered) : this.rendered
         ].join(` `);
         if (this.error) {
           this.outputError += this.errorMsg.split(`
 `).reduce((a, l, i) => a + `
-${i ? ` ` : figures2.pointerSmall} ${color2.red().italic(l)}`, ``);
+${i ? ` ` : figures.pointerSmall} ${color.red().italic(l)}`, ``);
         }
         this.out.write(erase.line + cursor.to(0) + this.outputText + cursor.save + this.outputError + cursor.restore);
       }
@@ -9638,10 +9638,10 @@ ${i ? ` ` : figures2.pointerSmall} ${color2.red().italic(l)}`, ``);
 var require_multiselect2 = __commonJS({
   "../node_modules/prompts/lib/elements/multiselect.js"(exports2, module2) {
     "use strict";
-    var color2 = require_kleur();
+    var color = require_kleur();
     var { cursor } = require_src();
     var Prompt = require_prompt2();
-    var { clear, figures: figures2, style, wrap, entriesToDisplay } = require_util2();
+    var { clear, figures, style, wrap, entriesToDisplay } = require_util2();
     var MultiselectPrompt = class extends Prompt {
       constructor(opts = {}) {
         super(opts);
@@ -9777,20 +9777,20 @@ var require_multiselect2 = __commonJS({
           }
           return `
 Instructions:
-    ${figures2.arrowUp}/${figures2.arrowDown}: Highlight option
-    ${figures2.arrowLeft}/${figures2.arrowRight}/[space]: Toggle selection
+    ${figures.arrowUp}/${figures.arrowDown}: Highlight option
+    ${figures.arrowLeft}/${figures.arrowRight}/[space]: Toggle selection
 ` + (this.maxChoices === void 0 ? `    a: Toggle all
 ` : "") + `    enter/return: Complete answer`;
         }
         return "";
       }
       renderOption(cursor2, v, i, arrowIndicator) {
-        const prefix = (v.selected ? color2.green(figures2.radioOn) : figures2.radioOff) + " " + arrowIndicator + " ";
+        const prefix = (v.selected ? color.green(figures.radioOn) : figures.radioOff) + " " + arrowIndicator + " ";
         let title, desc;
         if (v.disabled) {
-          title = cursor2 === i ? color2.gray().underline(v.title) : color2.strikethrough().gray(v.title);
+          title = cursor2 === i ? color.gray().underline(v.title) : color.strikethrough().gray(v.title);
         } else {
-          title = cursor2 === i ? color2.cyan().underline(v.title) : v.title;
+          title = cursor2 === i ? color.cyan().underline(v.title) : v.title;
           if (cursor2 === i && v.description) {
             desc = ` - ${v.description}`;
             if (prefix.length + title.length + desc.length >= this.out.columns || v.description.split(/\r?\n/).length > 1) {
@@ -9798,20 +9798,20 @@ Instructions:
             }
           }
         }
-        return prefix + title + color2.gray(desc || "");
+        return prefix + title + color.gray(desc || "");
       }
       // shared with autocompleteMultiselect
       paginateOptions(options) {
         if (options.length === 0) {
-          return color2.red("No matches for this query.");
+          return color.red("No matches for this query.");
         }
         let { startIndex, endIndex } = entriesToDisplay(this.cursor, options.length, this.optionsPerPage);
         let prefix, styledOptions = [];
         for (let i = startIndex; i < endIndex; i++) {
           if (i === startIndex && startIndex > 0) {
-            prefix = figures2.arrowUp;
+            prefix = figures.arrowUp;
           } else if (i === endIndex - 1 && endIndex < options.length) {
-            prefix = figures2.arrowDown;
+            prefix = figures.arrowDown;
           } else {
             prefix = " ";
           }
@@ -9830,9 +9830,9 @@ Instructions:
         if (this.done) {
           return this.value.filter((e) => e.selected).map((v) => v.title).join(", ");
         }
-        const output = [color2.gray(this.hint), this.renderInstructions()];
+        const output = [color.gray(this.hint), this.renderInstructions()];
         if (this.value[this.cursor].disabled) {
-          output.push(color2.yellow(this.warn));
+          output.push(color.yellow(this.warn));
         }
         return output.join(" ");
       }
@@ -9842,12 +9842,12 @@ Instructions:
         super.render();
         let prompt = [
           style.symbol(this.done, this.aborted),
-          color2.bold(this.msg),
+          color.bold(this.msg),
           style.delimiter(false),
           this.renderDoneOrInstructions()
         ].join(" ");
         if (this.showMinError) {
-          prompt += color2.red(`You must select a minimum of ${this.minSelected} choices.`);
+          prompt += color.red(`You must select a minimum of ${this.minSelected} choices.`);
           this.showMinError = false;
         }
         prompt += this.renderOptions(this.value);
@@ -9863,10 +9863,10 @@ Instructions:
 var require_autocomplete2 = __commonJS({
   "../node_modules/prompts/lib/elements/autocomplete.js"(exports2, module2) {
     "use strict";
-    var color2 = require_kleur();
+    var color = require_kleur();
     var Prompt = require_prompt2();
     var { erase, cursor } = require_src();
-    var { style, clear, figures: figures2, wrap, entriesToDisplay } = require_util2();
+    var { style, clear, figures, wrap, entriesToDisplay } = require_util2();
     var getVal = (arr, i) => arr[i] && (arr[i].value || arr[i].title || arr[i]);
     var getTitle = (arr, i) => arr[i] && (arr[i].title || arr[i].value || arr[i]);
     var getIndex = (arr, valOrTitle) => {
@@ -10035,16 +10035,16 @@ var require_autocomplete2 = __commonJS({
       }
       renderOption(v, hovered, isStart, isEnd) {
         let desc;
-        let prefix = isStart ? figures2.arrowUp : isEnd ? figures2.arrowDown : " ";
-        let title = hovered ? color2.cyan().underline(v.title) : v.title;
-        prefix = (hovered ? color2.cyan(figures2.pointer) + " " : "  ") + prefix;
+        let prefix = isStart ? figures.arrowUp : isEnd ? figures.arrowDown : " ";
+        let title = hovered ? color.cyan().underline(v.title) : v.title;
+        prefix = (hovered ? color.cyan(figures.pointer) + " " : "  ") + prefix;
         if (v.description) {
           desc = ` - ${v.description}`;
           if (prefix.length + title.length + desc.length >= this.out.columns || v.description.split(/\r?\n/).length > 1) {
             desc = "\n" + wrap(v.description, { margin: 3, width: this.out.columns });
           }
         }
-        return prefix + " " + title + color2.gray(desc || "");
+        return prefix + " " + title + color.gray(desc || "");
       }
       render() {
         if (this.closed) return;
@@ -10054,7 +10054,7 @@ var require_autocomplete2 = __commonJS({
         let { startIndex, endIndex } = entriesToDisplay(this.select, this.choices.length, this.limit);
         this.outputText = [
           style.symbol(this.done, this.aborted, this.exited),
-          color2.bold(this.msg),
+          color.bold(this.msg),
           style.delimiter(this.completing),
           this.done && this.suggestions[this.select] ? this.suggestions[this.select].title : this.rendered = this.transform.render(this.input)
         ].join(" ");
@@ -10066,7 +10066,7 @@ var require_autocomplete2 = __commonJS({
             i + startIndex === endIndex - 1 && endIndex < this.choices.length
           )).join("\n");
           this.outputText += `
-` + (suggestions || color2.gray(this.fallback.title));
+` + (suggestions || color.gray(this.fallback.title));
         }
         this.out.write(erase.line + cursor.to(0) + this.outputText);
       }
@@ -10079,10 +10079,10 @@ var require_autocomplete2 = __commonJS({
 var require_autocompleteMultiselect2 = __commonJS({
   "../node_modules/prompts/lib/elements/autocompleteMultiselect.js"(exports2, module2) {
     "use strict";
-    var color2 = require_kleur();
+    var color = require_kleur();
     var { cursor } = require_src();
     var MultiselectPrompt = require_multiselect2();
-    var { clear, style, figures: figures2 } = require_util2();
+    var { clear, style, figures } = require_util2();
     var AutocompleteMultiselectPrompt = class extends MultiselectPrompt {
       constructor(opts = {}) {
         opts.overrideRender = true;
@@ -10183,8 +10183,8 @@ var require_autocompleteMultiselect2 = __commonJS({
           }
           return `
 Instructions:
-    ${figures2.arrowUp}/${figures2.arrowDown}: Highlight option
-    ${figures2.arrowLeft}/${figures2.arrowRight}/[space]: Toggle selection
+    ${figures.arrowUp}/${figures.arrowDown}: Highlight option
+    ${figures.arrowLeft}/${figures.arrowRight}/[space]: Toggle selection
     [a,b,c]/delete: Filter choices
     enter/return: Complete answer
 `;
@@ -10193,22 +10193,22 @@ Instructions:
       }
       renderCurrentInput() {
         return `
-Filtered results for: ${this.inputValue ? this.inputValue : color2.gray("Enter something to filter")}
+Filtered results for: ${this.inputValue ? this.inputValue : color.gray("Enter something to filter")}
 `;
       }
       renderOption(cursor2, v, i) {
         let title;
-        if (v.disabled) title = cursor2 === i ? color2.gray().underline(v.title) : color2.strikethrough().gray(v.title);
-        else title = cursor2 === i ? color2.cyan().underline(v.title) : v.title;
-        return (v.selected ? color2.green(figures2.radioOn) : figures2.radioOff) + "  " + title;
+        if (v.disabled) title = cursor2 === i ? color.gray().underline(v.title) : color.strikethrough().gray(v.title);
+        else title = cursor2 === i ? color.cyan().underline(v.title) : v.title;
+        return (v.selected ? color.green(figures.radioOn) : figures.radioOff) + "  " + title;
       }
       renderDoneOrInstructions() {
         if (this.done) {
           return this.value.filter((e) => e.selected).map((v) => v.title).join(", ");
         }
-        const output = [color2.gray(this.hint), this.renderInstructions(), this.renderCurrentInput()];
+        const output = [color.gray(this.hint), this.renderInstructions(), this.renderCurrentInput()];
         if (this.filteredOptions.length && this.filteredOptions[this.cursor].disabled) {
-          output.push(color2.yellow(this.warn));
+          output.push(color.yellow(this.warn));
         }
         return output.join(" ");
       }
@@ -10218,12 +10218,12 @@ Filtered results for: ${this.inputValue ? this.inputValue : color2.gray("Enter s
         super.render();
         let prompt = [
           style.symbol(this.done, this.aborted),
-          color2.bold(this.msg),
+          color.bold(this.msg),
           style.delimiter(false),
           this.renderDoneOrInstructions()
         ].join(" ");
         if (this.showMinError) {
-          prompt += color2.red(`You must select a minimum of ${this.minSelected} choices.`);
+          prompt += color.red(`You must select a minimum of ${this.minSelected} choices.`);
           this.showMinError = false;
         }
         prompt += this.renderOptions(this.filteredOptions);
@@ -10239,7 +10239,7 @@ Filtered results for: ${this.inputValue ? this.inputValue : color2.gray("Enter s
 var require_confirm2 = __commonJS({
   "../node_modules/prompts/lib/elements/confirm.js"(exports2, module2) {
     "use strict";
-    var color2 = require_kleur();
+    var color = require_kleur();
     var Prompt = require_prompt2();
     var { style, clear } = require_util2();
     var { erase, cursor } = require_src();
@@ -10297,9 +10297,9 @@ var require_confirm2 = __commonJS({
         super.render();
         this.outputText = [
           style.symbol(this.done, this.aborted),
-          color2.bold(this.msg),
+          color.bold(this.msg),
           style.delimiter(this.done),
-          this.done ? this.value ? this.yesMsg : this.noMsg : color2.gray(this.initialValue ? this.yesOption : this.noOption)
+          this.done ? this.value ? this.yesMsg : this.noMsg : color.gray(this.initialValue ? this.yesOption : this.noOption)
         ].join(" ");
         this.out.write(erase.line + cursor.to(0) + this.outputText);
       }
@@ -10338,10 +10338,10 @@ var require_prompts2 = __commonJS({
         const p = new el[type](args);
         const onAbort = opts.onAbort || noop;
         const onSubmit = opts.onSubmit || noop;
-        const onExit2 = opts.onExit || noop;
+        const onExit = opts.onExit || noop;
         p.on("state", args.onState || noop);
         p.on("submit", (x) => res(onSubmit(x)));
-        p.on("exit", (x) => res(onExit2(x)));
+        p.on("exit", (x) => res(onExit(x)));
         p.on("abort", (x) => rej(onAbort(x)));
       });
     }
@@ -10480,3269 +10480,6 @@ var require_prompts3 = __commonJS({
       return false;
     }
     module2.exports = isNodeLT("8.6.0") ? require_dist() : require_lib2();
-  }
-});
-
-// ../node_modules/eventemitter3/index.js
-var require_eventemitter3 = __commonJS({
-  "../node_modules/eventemitter3/index.js"(exports2, module2) {
-    "use strict";
-    var has = Object.prototype.hasOwnProperty;
-    var prefix = "~";
-    function Events() {
-    }
-    if (Object.create) {
-      Events.prototype = /* @__PURE__ */ Object.create(null);
-      if (!new Events().__proto__) prefix = false;
-    }
-    function EE(fn, context, once2) {
-      this.fn = fn;
-      this.context = context;
-      this.once = once2 || false;
-    }
-    function addListener(emitter, event, fn, context, once2) {
-      if (typeof fn !== "function") {
-        throw new TypeError("The listener must be a function");
-      }
-      var listener = new EE(fn, context || emitter, once2), evt = prefix ? prefix + event : event;
-      if (!emitter._events[evt]) emitter._events[evt] = listener, emitter._eventsCount++;
-      else if (!emitter._events[evt].fn) emitter._events[evt].push(listener);
-      else emitter._events[evt] = [emitter._events[evt], listener];
-      return emitter;
-    }
-    function clearEvent(emitter, evt) {
-      if (--emitter._eventsCount === 0) emitter._events = new Events();
-      else delete emitter._events[evt];
-    }
-    function EventEmitter2() {
-      this._events = new Events();
-      this._eventsCount = 0;
-    }
-    EventEmitter2.prototype.eventNames = function eventNames() {
-      var names = [], events, name;
-      if (this._eventsCount === 0) return names;
-      for (name in events = this._events) {
-        if (has.call(events, name)) names.push(prefix ? name.slice(1) : name);
-      }
-      if (Object.getOwnPropertySymbols) {
-        return names.concat(Object.getOwnPropertySymbols(events));
-      }
-      return names;
-    };
-    EventEmitter2.prototype.listeners = function listeners(event) {
-      var evt = prefix ? prefix + event : event, handlers = this._events[evt];
-      if (!handlers) return [];
-      if (handlers.fn) return [handlers.fn];
-      for (var i = 0, l = handlers.length, ee = new Array(l); i < l; i++) {
-        ee[i] = handlers[i].fn;
-      }
-      return ee;
-    };
-    EventEmitter2.prototype.listenerCount = function listenerCount(event) {
-      var evt = prefix ? prefix + event : event, listeners = this._events[evt];
-      if (!listeners) return 0;
-      if (listeners.fn) return 1;
-      return listeners.length;
-    };
-    EventEmitter2.prototype.emit = function emit(event, a1, a2, a3, a4, a5) {
-      var evt = prefix ? prefix + event : event;
-      if (!this._events[evt]) return false;
-      var listeners = this._events[evt], len = arguments.length, args, i;
-      if (listeners.fn) {
-        if (listeners.once) this.removeListener(event, listeners.fn, void 0, true);
-        switch (len) {
-          case 1:
-            return listeners.fn.call(listeners.context), true;
-          case 2:
-            return listeners.fn.call(listeners.context, a1), true;
-          case 3:
-            return listeners.fn.call(listeners.context, a1, a2), true;
-          case 4:
-            return listeners.fn.call(listeners.context, a1, a2, a3), true;
-          case 5:
-            return listeners.fn.call(listeners.context, a1, a2, a3, a4), true;
-          case 6:
-            return listeners.fn.call(listeners.context, a1, a2, a3, a4, a5), true;
-        }
-        for (i = 1, args = new Array(len - 1); i < len; i++) {
-          args[i - 1] = arguments[i];
-        }
-        listeners.fn.apply(listeners.context, args);
-      } else {
-        var length = listeners.length, j;
-        for (i = 0; i < length; i++) {
-          if (listeners[i].once) this.removeListener(event, listeners[i].fn, void 0, true);
-          switch (len) {
-            case 1:
-              listeners[i].fn.call(listeners[i].context);
-              break;
-            case 2:
-              listeners[i].fn.call(listeners[i].context, a1);
-              break;
-            case 3:
-              listeners[i].fn.call(listeners[i].context, a1, a2);
-              break;
-            case 4:
-              listeners[i].fn.call(listeners[i].context, a1, a2, a3);
-              break;
-            default:
-              if (!args) for (j = 1, args = new Array(len - 1); j < len; j++) {
-                args[j - 1] = arguments[j];
-              }
-              listeners[i].fn.apply(listeners[i].context, args);
-          }
-        }
-      }
-      return true;
-    };
-    EventEmitter2.prototype.on = function on(event, fn, context) {
-      return addListener(this, event, fn, context, false);
-    };
-    EventEmitter2.prototype.once = function once2(event, fn, context) {
-      return addListener(this, event, fn, context, true);
-    };
-    EventEmitter2.prototype.removeListener = function removeListener(event, fn, context, once2) {
-      var evt = prefix ? prefix + event : event;
-      if (!this._events[evt]) return this;
-      if (!fn) {
-        clearEvent(this, evt);
-        return this;
-      }
-      var listeners = this._events[evt];
-      if (listeners.fn) {
-        if (listeners.fn === fn && (!once2 || listeners.once) && (!context || listeners.context === context)) {
-          clearEvent(this, evt);
-        }
-      } else {
-        for (var i = 0, events = [], length = listeners.length; i < length; i++) {
-          if (listeners[i].fn !== fn || once2 && !listeners[i].once || context && listeners[i].context !== context) {
-            events.push(listeners[i]);
-          }
-        }
-        if (events.length) this._events[evt] = events.length === 1 ? events[0] : events;
-        else clearEvent(this, evt);
-      }
-      return this;
-    };
-    EventEmitter2.prototype.removeAllListeners = function removeAllListeners(event) {
-      var evt;
-      if (event) {
-        evt = prefix ? prefix + event : event;
-        if (this._events[evt]) clearEvent(this, evt);
-      } else {
-        this._events = new Events();
-        this._eventsCount = 0;
-      }
-      return this;
-    };
-    EventEmitter2.prototype.off = EventEmitter2.prototype.removeListener;
-    EventEmitter2.prototype.addListener = EventEmitter2.prototype.on;
-    EventEmitter2.prefixed = prefix;
-    EventEmitter2.EventEmitter = EventEmitter2;
-    if ("undefined" !== typeof module2) {
-      module2.exports = EventEmitter2;
-    }
-  }
-});
-
-// ../node_modules/rfdc/index.js
-var require_rfdc = __commonJS({
-  "../node_modules/rfdc/index.js"(exports2, module2) {
-    "use strict";
-    module2.exports = rfdc2;
-    function copyBuffer(cur) {
-      if (cur instanceof Buffer) {
-        return Buffer.from(cur);
-      }
-      return new cur.constructor(cur.buffer.slice(), cur.byteOffset, cur.length);
-    }
-    function rfdc2(opts) {
-      opts = opts || {};
-      if (opts.circles) return rfdcCircles(opts);
-      const constructorHandlers = /* @__PURE__ */ new Map();
-      constructorHandlers.set(Date, (o) => new Date(o));
-      constructorHandlers.set(Map, (o, fn) => new Map(cloneArray(Array.from(o), fn)));
-      constructorHandlers.set(Set, (o, fn) => new Set(cloneArray(Array.from(o), fn)));
-      if (opts.constructorHandlers) {
-        for (const handler2 of opts.constructorHandlers) {
-          constructorHandlers.set(handler2[0], handler2[1]);
-        }
-      }
-      let handler = null;
-      return opts.proto ? cloneProto : clone3;
-      function cloneArray(a, fn) {
-        const keys = Object.keys(a);
-        const a2 = new Array(keys.length);
-        for (let i = 0; i < keys.length; i++) {
-          const k = keys[i];
-          const cur = a[k];
-          if (typeof cur !== "object" || cur === null) {
-            a2[k] = cur;
-          } else if (cur.constructor !== Object && (handler = constructorHandlers.get(cur.constructor))) {
-            a2[k] = handler(cur, fn);
-          } else if (ArrayBuffer.isView(cur)) {
-            a2[k] = copyBuffer(cur);
-          } else {
-            a2[k] = fn(cur);
-          }
-        }
-        return a2;
-      }
-      function clone3(o) {
-        if (typeof o !== "object" || o === null) return o;
-        if (Array.isArray(o)) return cloneArray(o, clone3);
-        if (o.constructor !== Object && (handler = constructorHandlers.get(o.constructor))) {
-          return handler(o, clone3);
-        }
-        const o2 = {};
-        for (const k in o) {
-          if (Object.hasOwnProperty.call(o, k) === false) continue;
-          const cur = o[k];
-          if (typeof cur !== "object" || cur === null) {
-            o2[k] = cur;
-          } else if (cur.constructor !== Object && (handler = constructorHandlers.get(cur.constructor))) {
-            o2[k] = handler(cur, clone3);
-          } else if (ArrayBuffer.isView(cur)) {
-            o2[k] = copyBuffer(cur);
-          } else {
-            o2[k] = clone3(cur);
-          }
-        }
-        return o2;
-      }
-      function cloneProto(o) {
-        if (typeof o !== "object" || o === null) return o;
-        if (Array.isArray(o)) return cloneArray(o, cloneProto);
-        if (o.constructor !== Object && (handler = constructorHandlers.get(o.constructor))) {
-          return handler(o, cloneProto);
-        }
-        const o2 = {};
-        for (const k in o) {
-          const cur = o[k];
-          if (typeof cur !== "object" || cur === null) {
-            o2[k] = cur;
-          } else if (cur.constructor !== Object && (handler = constructorHandlers.get(cur.constructor))) {
-            o2[k] = handler(cur, cloneProto);
-          } else if (ArrayBuffer.isView(cur)) {
-            o2[k] = copyBuffer(cur);
-          } else {
-            o2[k] = cloneProto(cur);
-          }
-        }
-        return o2;
-      }
-    }
-    function rfdcCircles(opts) {
-      const refs = [];
-      const refsNew = [];
-      const constructorHandlers = /* @__PURE__ */ new Map();
-      constructorHandlers.set(Date, (o) => new Date(o));
-      constructorHandlers.set(Map, (o, fn) => new Map(cloneArray(Array.from(o), fn)));
-      constructorHandlers.set(Set, (o, fn) => new Set(cloneArray(Array.from(o), fn)));
-      if (opts.constructorHandlers) {
-        for (const handler2 of opts.constructorHandlers) {
-          constructorHandlers.set(handler2[0], handler2[1]);
-        }
-      }
-      let handler = null;
-      return opts.proto ? cloneProto : clone3;
-      function cloneArray(a, fn) {
-        const keys = Object.keys(a);
-        const a2 = new Array(keys.length);
-        for (let i = 0; i < keys.length; i++) {
-          const k = keys[i];
-          const cur = a[k];
-          if (typeof cur !== "object" || cur === null) {
-            a2[k] = cur;
-          } else if (cur.constructor !== Object && (handler = constructorHandlers.get(cur.constructor))) {
-            a2[k] = handler(cur, fn);
-          } else if (ArrayBuffer.isView(cur)) {
-            a2[k] = copyBuffer(cur);
-          } else {
-            const index = refs.indexOf(cur);
-            if (index !== -1) {
-              a2[k] = refsNew[index];
-            } else {
-              a2[k] = fn(cur);
-            }
-          }
-        }
-        return a2;
-      }
-      function clone3(o) {
-        if (typeof o !== "object" || o === null) return o;
-        if (Array.isArray(o)) return cloneArray(o, clone3);
-        if (o.constructor !== Object && (handler = constructorHandlers.get(o.constructor))) {
-          return handler(o, clone3);
-        }
-        const o2 = {};
-        refs.push(o);
-        refsNew.push(o2);
-        for (const k in o) {
-          if (Object.hasOwnProperty.call(o, k) === false) continue;
-          const cur = o[k];
-          if (typeof cur !== "object" || cur === null) {
-            o2[k] = cur;
-          } else if (cur.constructor !== Object && (handler = constructorHandlers.get(cur.constructor))) {
-            o2[k] = handler(cur, clone3);
-          } else if (ArrayBuffer.isView(cur)) {
-            o2[k] = copyBuffer(cur);
-          } else {
-            const i = refs.indexOf(cur);
-            if (i !== -1) {
-              o2[k] = refsNew[i];
-            } else {
-              o2[k] = clone3(cur);
-            }
-          }
-        }
-        refs.pop();
-        refsNew.pop();
-        return o2;
-      }
-      function cloneProto(o) {
-        if (typeof o !== "object" || o === null) return o;
-        if (Array.isArray(o)) return cloneArray(o, cloneProto);
-        if (o.constructor !== Object && (handler = constructorHandlers.get(o.constructor))) {
-          return handler(o, cloneProto);
-        }
-        const o2 = {};
-        refs.push(o);
-        refsNew.push(o2);
-        for (const k in o) {
-          const cur = o[k];
-          if (typeof cur !== "object" || cur === null) {
-            o2[k] = cur;
-          } else if (cur.constructor !== Object && (handler = constructorHandlers.get(cur.constructor))) {
-            o2[k] = handler(cur, cloneProto);
-          } else if (ArrayBuffer.isView(cur)) {
-            o2[k] = copyBuffer(cur);
-          } else {
-            const i = refs.indexOf(cur);
-            if (i !== -1) {
-              o2[k] = refsNew[i];
-            } else {
-              o2[k] = cloneProto(cur);
-            }
-          }
-        }
-        refs.pop();
-        refsNew.pop();
-        return o2;
-      }
-    }
-  }
-});
-
-// ../node_modules/environment/index.js
-var isBrowser, isNode, isBun, isDeno, isElectron, isJsDom, isWebWorker, isDedicatedWorker, isSharedWorker, isServiceWorker, platform, isMacOs, isWindows, isLinux, isIos, isAndroid;
-var init_environment = __esm({
-  "../node_modules/environment/index.js"() {
-    "use strict";
-    isBrowser = globalThis.window?.document !== void 0;
-    isNode = globalThis.process?.versions?.node !== void 0;
-    isBun = globalThis.process?.versions?.bun !== void 0;
-    isDeno = globalThis.Deno?.version?.deno !== void 0;
-    isElectron = globalThis.process?.versions?.electron !== void 0;
-    isJsDom = globalThis.navigator?.userAgent?.includes("jsdom") === true;
-    isWebWorker = typeof WorkerGlobalScope !== "undefined" && globalThis instanceof WorkerGlobalScope;
-    isDedicatedWorker = typeof DedicatedWorkerGlobalScope !== "undefined" && globalThis instanceof DedicatedWorkerGlobalScope;
-    isSharedWorker = typeof SharedWorkerGlobalScope !== "undefined" && globalThis instanceof SharedWorkerGlobalScope;
-    isServiceWorker = typeof ServiceWorkerGlobalScope !== "undefined" && globalThis instanceof ServiceWorkerGlobalScope;
-    platform = globalThis.navigator?.userAgentData?.platform;
-    isMacOs = platform === "macOS" || globalThis.navigator?.platform === "MacIntel" || globalThis.navigator?.userAgent?.includes(" Mac ") === true || globalThis.process?.platform === "darwin";
-    isWindows = platform === "Windows" || globalThis.navigator?.platform === "Win32" || globalThis.process?.platform === "win32";
-    isLinux = platform === "Linux" || globalThis.navigator?.platform?.startsWith("Linux") === true || globalThis.navigator?.userAgent?.includes(" Linux ") === true || globalThis.process?.platform === "linux";
-    isIos = platform === "iOS" || globalThis.navigator?.platform === "MacIntel" && globalThis.navigator?.maxTouchPoints > 1 || /iPad|iPhone|iPod/.test(globalThis.navigator?.platform);
-    isAndroid = platform === "Android" || globalThis.navigator?.platform === "Android" || globalThis.navigator?.userAgent?.includes(" Android ") === true || globalThis.process?.platform === "android";
-  }
-});
-
-// ../node_modules/ansi-escapes/base.js
-var base_exports = {};
-__export(base_exports, {
-  ConEmu: () => ConEmu,
-  beep: () => beep,
-  beginSynchronizedOutput: () => beginSynchronizedOutput,
-  clearScreen: () => clearScreen,
-  clearTerminal: () => clearTerminal,
-  clearViewport: () => clearViewport,
-  cursorBackward: () => cursorBackward,
-  cursorDown: () => cursorDown,
-  cursorForward: () => cursorForward,
-  cursorGetPosition: () => cursorGetPosition,
-  cursorHide: () => cursorHide,
-  cursorLeft: () => cursorLeft,
-  cursorMove: () => cursorMove,
-  cursorNextLine: () => cursorNextLine,
-  cursorPrevLine: () => cursorPrevLine,
-  cursorRestorePosition: () => cursorRestorePosition,
-  cursorSavePosition: () => cursorSavePosition,
-  cursorShow: () => cursorShow,
-  cursorTo: () => cursorTo,
-  cursorUp: () => cursorUp,
-  endSynchronizedOutput: () => endSynchronizedOutput,
-  enterAlternativeScreen: () => enterAlternativeScreen,
-  eraseDown: () => eraseDown,
-  eraseEndLine: () => eraseEndLine,
-  eraseLine: () => eraseLine,
-  eraseLines: () => eraseLines,
-  eraseScreen: () => eraseScreen,
-  eraseStartLine: () => eraseStartLine,
-  eraseUp: () => eraseUp,
-  exitAlternativeScreen: () => exitAlternativeScreen,
-  iTerm: () => iTerm,
-  image: () => image,
-  link: () => link,
-  scrollDown: () => scrollDown,
-  scrollUp: () => scrollUp,
-  setCwd: () => setCwd,
-  synchronizedOutput: () => synchronizedOutput
-});
-var import_node_process, import_node_os6, ESC, OSC, BEL, SEP, isTerminalApp, isWindows2, isTmux, cwdFunction, wrapOsc, cursorTo, cursorMove, cursorUp, cursorDown, cursorForward, cursorBackward, cursorLeft, cursorSavePosition, cursorRestorePosition, cursorGetPosition, cursorNextLine, cursorPrevLine, cursorHide, cursorShow, eraseLines, eraseEndLine, eraseStartLine, eraseLine, eraseDown, eraseUp, eraseScreen, scrollUp, scrollDown, clearScreen, clearViewport, isOldWindows, clearTerminal, enterAlternativeScreen, exitAlternativeScreen, beginSynchronizedOutput, endSynchronizedOutput, synchronizedOutput, beep, link, image, iTerm, ConEmu, setCwd;
-var init_base = __esm({
-  "../node_modules/ansi-escapes/base.js"() {
-    "use strict";
-    import_node_process = __toESM(require("process"), 1);
-    import_node_os6 = __toESM(require("os"), 1);
-    init_environment();
-    ESC = "\x1B[";
-    OSC = "\x1B]";
-    BEL = "\x07";
-    SEP = ";";
-    isTerminalApp = !isBrowser && import_node_process.default.env.TERM_PROGRAM === "Apple_Terminal";
-    isWindows2 = !isBrowser && import_node_process.default.platform === "win32";
-    isTmux = !isBrowser && (import_node_process.default.env.TERM?.startsWith("screen") || import_node_process.default.env.TERM?.startsWith("tmux") || import_node_process.default.env.TMUX !== void 0);
-    cwdFunction = isBrowser ? () => {
-      throw new Error("`process.cwd()` only works in Node.js, not the browser.");
-    } : import_node_process.default.cwd;
-    wrapOsc = (sequence) => {
-      if (isTmux) {
-        return "\x1BPtmux;" + sequence.replaceAll("\x1B", "\x1B\x1B") + "\x1B\\";
-      }
-      return sequence;
-    };
-    cursorTo = (x, y) => {
-      if (typeof x !== "number") {
-        throw new TypeError("The `x` argument is required");
-      }
-      if (typeof y !== "number") {
-        return ESC + (x + 1) + "G";
-      }
-      return ESC + (y + 1) + SEP + (x + 1) + "H";
-    };
-    cursorMove = (x, y) => {
-      if (typeof x !== "number") {
-        throw new TypeError("The `x` argument is required");
-      }
-      let returnValue = "";
-      if (x < 0) {
-        returnValue += ESC + -x + "D";
-      } else if (x > 0) {
-        returnValue += ESC + x + "C";
-      }
-      if (y < 0) {
-        returnValue += ESC + -y + "A";
-      } else if (y > 0) {
-        returnValue += ESC + y + "B";
-      }
-      return returnValue;
-    };
-    cursorUp = (count = 1) => ESC + count + "A";
-    cursorDown = (count = 1) => ESC + count + "B";
-    cursorForward = (count = 1) => ESC + count + "C";
-    cursorBackward = (count = 1) => ESC + count + "D";
-    cursorLeft = ESC + "G";
-    cursorSavePosition = isTerminalApp ? "\x1B7" : ESC + "s";
-    cursorRestorePosition = isTerminalApp ? "\x1B8" : ESC + "u";
-    cursorGetPosition = ESC + "6n";
-    cursorNextLine = ESC + "E";
-    cursorPrevLine = ESC + "F";
-    cursorHide = ESC + "?25l";
-    cursorShow = ESC + "?25h";
-    eraseLines = (count) => {
-      let clear = "";
-      for (let i = 0; i < count; i++) {
-        clear += eraseLine + (i < count - 1 ? cursorUp() : "");
-      }
-      if (count) {
-        clear += cursorLeft;
-      }
-      return clear;
-    };
-    eraseEndLine = ESC + "K";
-    eraseStartLine = ESC + "1K";
-    eraseLine = ESC + "2K";
-    eraseDown = ESC + "J";
-    eraseUp = ESC + "1J";
-    eraseScreen = ESC + "2J";
-    scrollUp = ESC + "S";
-    scrollDown = ESC + "T";
-    clearScreen = "\x1Bc";
-    clearViewport = `${eraseScreen}${ESC}H`;
-    isOldWindows = () => {
-      if (isBrowser || !isWindows2) {
-        return false;
-      }
-      const parts = import_node_os6.default.release().split(".");
-      const major = Number(parts[0]);
-      const build = Number(parts[2] ?? 0);
-      if (major < 10) {
-        return true;
-      }
-      if (major === 10 && build < 10586) {
-        return true;
-      }
-      return false;
-    };
-    clearTerminal = isOldWindows() ? `${eraseScreen}${ESC}0f` : `${eraseScreen}${ESC}3J${ESC}H`;
-    enterAlternativeScreen = ESC + "?1049h";
-    exitAlternativeScreen = ESC + "?1049l";
-    beginSynchronizedOutput = ESC + "?2026h";
-    endSynchronizedOutput = ESC + "?2026l";
-    synchronizedOutput = (text) => beginSynchronizedOutput + text + endSynchronizedOutput;
-    beep = BEL;
-    link = (text, url2) => {
-      const openLink = wrapOsc(`${OSC}8${SEP}${SEP}${url2}${BEL}`);
-      const closeLink = wrapOsc(`${OSC}8${SEP}${SEP}${BEL}`);
-      return openLink + text + closeLink;
-    };
-    image = (data, options = {}) => {
-      let returnValue = `${OSC}1337;File=inline=1`;
-      if (options.width) {
-        returnValue += `;width=${options.width}`;
-      }
-      if (options.height) {
-        returnValue += `;height=${options.height}`;
-      }
-      if (options.preserveAspectRatio === false) {
-        returnValue += ";preserveAspectRatio=0";
-      }
-      const imageBuffer = Buffer.from(data);
-      return wrapOsc(returnValue + `;size=${imageBuffer.byteLength}:` + imageBuffer.toString("base64") + BEL);
-    };
-    iTerm = {
-      setCwd: (cwd = cwdFunction()) => wrapOsc(`${OSC}50;CurrentDir=${cwd}${BEL}`),
-      annotation(message, options = {}) {
-        let returnValue = `${OSC}1337;`;
-        const hasX = options.x !== void 0;
-        const hasY = options.y !== void 0;
-        if ((hasX || hasY) && !(hasX && hasY && options.length !== void 0)) {
-          throw new Error("`x`, `y` and `length` must be defined when `x` or `y` is defined");
-        }
-        message = message.replaceAll("|", "");
-        returnValue += options.isHidden ? "AddHiddenAnnotation=" : "AddAnnotation=";
-        if (options.length > 0) {
-          returnValue += (hasX ? [message, options.length, options.x, options.y] : [options.length, message]).join("|");
-        } else {
-          returnValue += message;
-        }
-        return wrapOsc(returnValue + BEL);
-      }
-    };
-    ConEmu = {
-      setCwd: (cwd = cwdFunction()) => wrapOsc(`${OSC}9;9;${cwd}${BEL}`)
-    };
-    setCwd = (cwd = cwdFunction()) => iTerm.setCwd(cwd) + ConEmu.setCwd(cwd);
-  }
-});
-
-// ../node_modules/ansi-escapes/index.js
-var init_ansi_escapes = __esm({
-  "../node_modules/ansi-escapes/index.js"() {
-    "use strict";
-    init_base();
-    init_base();
-  }
-});
-
-// ../node_modules/mimic-function/index.js
-function mimicFunction(to, from, { ignoreNonConfigurable = false } = {}) {
-  const { name } = to;
-  for (const property of Reflect.ownKeys(from)) {
-    copyProperty(to, from, property, ignoreNonConfigurable);
-  }
-  changePrototype(to, from);
-  changeToString(to, from, name);
-  return to;
-}
-var copyProperty, canCopyProperty, changePrototype, wrappedToString, toStringDescriptor, toStringName, changeToString;
-var init_mimic_function = __esm({
-  "../node_modules/mimic-function/index.js"() {
-    "use strict";
-    copyProperty = (to, from, property, ignoreNonConfigurable) => {
-      if (property === "length" || property === "prototype") {
-        return;
-      }
-      if (property === "arguments" || property === "caller") {
-        return;
-      }
-      const toDescriptor = Object.getOwnPropertyDescriptor(to, property);
-      const fromDescriptor = Object.getOwnPropertyDescriptor(from, property);
-      if (!canCopyProperty(toDescriptor, fromDescriptor) && ignoreNonConfigurable) {
-        return;
-      }
-      Object.defineProperty(to, property, fromDescriptor);
-    };
-    canCopyProperty = function(toDescriptor, fromDescriptor) {
-      return toDescriptor === void 0 || toDescriptor.configurable || toDescriptor.writable === fromDescriptor.writable && toDescriptor.enumerable === fromDescriptor.enumerable && toDescriptor.configurable === fromDescriptor.configurable && (toDescriptor.writable || toDescriptor.value === fromDescriptor.value);
-    };
-    changePrototype = (to, from) => {
-      const fromPrototype = Object.getPrototypeOf(from);
-      if (fromPrototype === Object.getPrototypeOf(to)) {
-        return;
-      }
-      Object.setPrototypeOf(to, fromPrototype);
-    };
-    wrappedToString = (withName, fromBody) => `/* Wrapped ${withName}*/
-${fromBody}`;
-    toStringDescriptor = Object.getOwnPropertyDescriptor(Function.prototype, "toString");
-    toStringName = Object.getOwnPropertyDescriptor(Function.prototype.toString, "name");
-    changeToString = (to, from, name) => {
-      const withName = name === "" ? "" : `with ${name.trim()}() `;
-      const newToString = wrappedToString.bind(null, withName, from.toString());
-      Object.defineProperty(newToString, "name", toStringName);
-      const { writable, enumerable, configurable } = toStringDescriptor;
-      Object.defineProperty(to, "toString", { value: newToString, writable, enumerable, configurable });
-    };
-  }
-});
-
-// ../node_modules/onetime/index.js
-var calledFunctions, onetime, onetime_default;
-var init_onetime = __esm({
-  "../node_modules/onetime/index.js"() {
-    "use strict";
-    init_mimic_function();
-    calledFunctions = /* @__PURE__ */ new WeakMap();
-    onetime = (function_, options = {}) => {
-      if (typeof function_ !== "function") {
-        throw new TypeError("Expected a function");
-      }
-      let returnValue;
-      let callCount = 0;
-      const functionName = function_.displayName || function_.name || "<anonymous>";
-      const onetime2 = function(...arguments_) {
-        calledFunctions.set(onetime2, ++callCount);
-        if (callCount === 1) {
-          returnValue = function_.apply(this, arguments_);
-          function_ = void 0;
-        } else if (options.throw === true) {
-          throw new Error(`Function \`${functionName}\` can only be called once`);
-        }
-        return returnValue;
-      };
-      mimicFunction(onetime2, function_);
-      calledFunctions.set(onetime2, callCount);
-      return onetime2;
-    };
-    onetime.callCount = (function_) => {
-      if (!calledFunctions.has(function_)) {
-        throw new Error(`The given function \`${function_.name}\` is not wrapped by the \`onetime\` package`);
-      }
-      return calledFunctions.get(function_);
-    };
-    onetime_default = onetime;
-  }
-});
-
-// ../node_modules/signal-exit/dist/mjs/signals.js
-var signals;
-var init_signals = __esm({
-  "../node_modules/signal-exit/dist/mjs/signals.js"() {
-    "use strict";
-    signals = [];
-    signals.push("SIGHUP", "SIGINT", "SIGTERM");
-    if (process.platform !== "win32") {
-      signals.push(
-        "SIGALRM",
-        "SIGABRT",
-        "SIGVTALRM",
-        "SIGXCPU",
-        "SIGXFSZ",
-        "SIGUSR2",
-        "SIGTRAP",
-        "SIGSYS",
-        "SIGQUIT",
-        "SIGIOT"
-        // should detect profiler and enable/disable accordingly.
-        // see #21
-        // 'SIGPROF'
-      );
-    }
-    if (process.platform === "linux") {
-      signals.push("SIGIO", "SIGPOLL", "SIGPWR", "SIGSTKFLT");
-    }
-  }
-});
-
-// ../node_modules/signal-exit/dist/mjs/index.js
-var processOk, kExitEmitter, global2, ObjectDefineProperty, Emitter, SignalExitBase, signalExitWrap, SignalExitFallback, SignalExit, process3, onExit, load, unload;
-var init_mjs = __esm({
-  "../node_modules/signal-exit/dist/mjs/index.js"() {
-    "use strict";
-    init_signals();
-    processOk = (process16) => !!process16 && typeof process16 === "object" && typeof process16.removeListener === "function" && typeof process16.emit === "function" && typeof process16.reallyExit === "function" && typeof process16.listeners === "function" && typeof process16.kill === "function" && typeof process16.pid === "number" && typeof process16.on === "function";
-    kExitEmitter = /* @__PURE__ */ Symbol.for("signal-exit emitter");
-    global2 = globalThis;
-    ObjectDefineProperty = Object.defineProperty.bind(Object);
-    Emitter = class {
-      emitted = {
-        afterExit: false,
-        exit: false
-      };
-      listeners = {
-        afterExit: [],
-        exit: []
-      };
-      count = 0;
-      id = Math.random();
-      constructor() {
-        if (global2[kExitEmitter]) {
-          return global2[kExitEmitter];
-        }
-        ObjectDefineProperty(global2, kExitEmitter, {
-          value: this,
-          writable: false,
-          enumerable: false,
-          configurable: false
-        });
-      }
-      on(ev, fn) {
-        this.listeners[ev].push(fn);
-      }
-      removeListener(ev, fn) {
-        const list = this.listeners[ev];
-        const i = list.indexOf(fn);
-        if (i === -1) {
-          return;
-        }
-        if (i === 0 && list.length === 1) {
-          list.length = 0;
-        } else {
-          list.splice(i, 1);
-        }
-      }
-      emit(ev, code, signal) {
-        if (this.emitted[ev]) {
-          return false;
-        }
-        this.emitted[ev] = true;
-        let ret = false;
-        for (const fn of this.listeners[ev]) {
-          ret = fn(code, signal) === true || ret;
-        }
-        if (ev === "exit") {
-          ret = this.emit("afterExit", code, signal) || ret;
-        }
-        return ret;
-      }
-    };
-    SignalExitBase = class {
-    };
-    signalExitWrap = (handler) => {
-      return {
-        onExit(cb, opts) {
-          return handler.onExit(cb, opts);
-        },
-        load() {
-          return handler.load();
-        },
-        unload() {
-          return handler.unload();
-        }
-      };
-    };
-    SignalExitFallback = class extends SignalExitBase {
-      onExit() {
-        return () => {
-        };
-      }
-      load() {
-      }
-      unload() {
-      }
-    };
-    SignalExit = class extends SignalExitBase {
-      // "SIGHUP" throws an `ENOSYS` error on Windows,
-      // so use a supported signal instead
-      /* c8 ignore start */
-      #hupSig = process3.platform === "win32" ? "SIGINT" : "SIGHUP";
-      /* c8 ignore stop */
-      #emitter = new Emitter();
-      #process;
-      #originalProcessEmit;
-      #originalProcessReallyExit;
-      #sigListeners = {};
-      #loaded = false;
-      constructor(process16) {
-        super();
-        this.#process = process16;
-        this.#sigListeners = {};
-        for (const sig of signals) {
-          this.#sigListeners[sig] = () => {
-            const listeners = this.#process.listeners(sig);
-            let { count } = this.#emitter;
-            const p = process16;
-            if (typeof p.__signal_exit_emitter__ === "object" && typeof p.__signal_exit_emitter__.count === "number") {
-              count += p.__signal_exit_emitter__.count;
-            }
-            if (listeners.length === count) {
-              this.unload();
-              const ret = this.#emitter.emit("exit", null, sig);
-              const s = sig === "SIGHUP" ? this.#hupSig : sig;
-              if (!ret)
-                process16.kill(process16.pid, s);
-            }
-          };
-        }
-        this.#originalProcessReallyExit = process16.reallyExit;
-        this.#originalProcessEmit = process16.emit;
-      }
-      onExit(cb, opts) {
-        if (!processOk(this.#process)) {
-          return () => {
-          };
-        }
-        if (this.#loaded === false) {
-          this.load();
-        }
-        const ev = opts?.alwaysLast ? "afterExit" : "exit";
-        this.#emitter.on(ev, cb);
-        return () => {
-          this.#emitter.removeListener(ev, cb);
-          if (this.#emitter.listeners["exit"].length === 0 && this.#emitter.listeners["afterExit"].length === 0) {
-            this.unload();
-          }
-        };
-      }
-      load() {
-        if (this.#loaded) {
-          return;
-        }
-        this.#loaded = true;
-        this.#emitter.count += 1;
-        for (const sig of signals) {
-          try {
-            const fn = this.#sigListeners[sig];
-            if (fn)
-              this.#process.on(sig, fn);
-          } catch (_) {
-          }
-        }
-        this.#process.emit = (ev, ...a) => {
-          return this.#processEmit(ev, ...a);
-        };
-        this.#process.reallyExit = (code) => {
-          return this.#processReallyExit(code);
-        };
-      }
-      unload() {
-        if (!this.#loaded) {
-          return;
-        }
-        this.#loaded = false;
-        signals.forEach((sig) => {
-          const listener = this.#sigListeners[sig];
-          if (!listener) {
-            throw new Error("Listener not defined for signal: " + sig);
-          }
-          try {
-            this.#process.removeListener(sig, listener);
-          } catch (_) {
-          }
-        });
-        this.#process.emit = this.#originalProcessEmit;
-        this.#process.reallyExit = this.#originalProcessReallyExit;
-        this.#emitter.count -= 1;
-      }
-      #processReallyExit(code) {
-        if (!processOk(this.#process)) {
-          return 0;
-        }
-        this.#process.exitCode = code || 0;
-        this.#emitter.emit("exit", this.#process.exitCode, null);
-        return this.#originalProcessReallyExit.call(this.#process, this.#process.exitCode);
-      }
-      #processEmit(ev, ...args) {
-        const og = this.#originalProcessEmit;
-        if (ev === "exit" && processOk(this.#process)) {
-          if (typeof args[0] === "number") {
-            this.#process.exitCode = args[0];
-          }
-          const ret = og.call(this.#process, ev, ...args);
-          this.#emitter.emit("exit", this.#process.exitCode, null);
-          return ret;
-        } else {
-          return og.call(this.#process, ev, ...args);
-        }
-      }
-    };
-    process3 = globalThis.process;
-    ({
-      onExit: (
-        /**
-         * Called when the process is exiting, whether via signal, explicit
-         * exit, or running out of stuff to do.
-         *
-         * If the global process object is not suitable for instrumentation,
-         * then this will be a no-op.
-         *
-         * Returns a function that may be used to unload signal-exit.
-         */
-        onExit
-      ),
-      load: (
-        /**
-         * Load the listeners.  Likely you never need to call this, unless
-         * doing a rather deep integration with signal-exit functionality.
-         * Mostly exposed for the benefit of testing.
-         *
-         * @internal
-         */
-        load
-      ),
-      unload: (
-        /**
-         * Unload the listeners.  Likely you never need to call this, unless
-         * doing a rather deep integration with signal-exit functionality.
-         * Mostly exposed for the benefit of testing.
-         *
-         * @internal
-         */
-        unload
-      )
-    } = signalExitWrap(processOk(process3) ? new SignalExit(process3) : new SignalExitFallback()));
-  }
-});
-
-// ../node_modules/restore-cursor/index.js
-var import_node_process2, terminal, restoreCursor, restore_cursor_default;
-var init_restore_cursor = __esm({
-  "../node_modules/restore-cursor/index.js"() {
-    "use strict";
-    import_node_process2 = __toESM(require("process"), 1);
-    init_onetime();
-    init_mjs();
-    terminal = import_node_process2.default.stderr.isTTY ? import_node_process2.default.stderr : import_node_process2.default.stdout.isTTY ? import_node_process2.default.stdout : void 0;
-    restoreCursor = terminal ? onetime_default(() => {
-      onExit(() => {
-        terminal.write("\x1B[?25h");
-      }, { alwaysLast: true });
-    }) : () => {
-    };
-    restore_cursor_default = restoreCursor;
-  }
-});
-
-// ../node_modules/cli-cursor/index.js
-var import_node_process3, isHidden, cliCursor, cli_cursor_default;
-var init_cli_cursor = __esm({
-  "../node_modules/cli-cursor/index.js"() {
-    "use strict";
-    import_node_process3 = __toESM(require("process"), 1);
-    init_restore_cursor();
-    isHidden = false;
-    cliCursor = {};
-    cliCursor.show = (writableStream = import_node_process3.default.stderr) => {
-      if (!writableStream.isTTY) {
-        return;
-      }
-      isHidden = false;
-      writableStream.write("\x1B[?25h");
-    };
-    cliCursor.hide = (writableStream = import_node_process3.default.stderr) => {
-      if (!writableStream.isTTY) {
-        return;
-      }
-      restore_cursor_default();
-      isHidden = true;
-      writableStream.write("\x1B[?25l");
-    };
-    cliCursor.toggle = (force, writableStream) => {
-      if (force !== void 0) {
-        isHidden = force;
-      }
-      if (isHidden) {
-        cliCursor.show(writableStream);
-      } else {
-        cliCursor.hide(writableStream);
-      }
-    };
-    cli_cursor_default = cliCursor;
-  }
-});
-
-// ../node_modules/ansi-regex/index.js
-function ansiRegex({ onlyFirst = false } = {}) {
-  const ST = "(?:\\u0007|\\u001B\\u005C|\\u009C)";
-  const osc = `(?:\\u001B\\][\\s\\S]*?${ST})`;
-  const csi = "[\\u001B\\u009B][[\\]()#;?]*(?:\\d{1,4}(?:[;:]\\d{0,4})*)?[\\dA-PR-TZcf-nq-uy=><~]";
-  const pattern = `${osc}|${csi}`;
-  return new RegExp(pattern, onlyFirst ? void 0 : "g");
-}
-var init_ansi_regex = __esm({
-  "../node_modules/ansi-regex/index.js"() {
-    "use strict";
-  }
-});
-
-// ../node_modules/strip-ansi/index.js
-function stripAnsi(string4) {
-  if (typeof string4 !== "string") {
-    throw new TypeError(`Expected a \`string\`, got \`${typeof string4}\``);
-  }
-  if (!string4.includes("\x1B") && !string4.includes("\x9B")) {
-    return string4;
-  }
-  return string4.replace(regex, "");
-}
-var regex;
-var init_strip_ansi = __esm({
-  "../node_modules/strip-ansi/index.js"() {
-    "use strict";
-    init_ansi_regex();
-    regex = ansiRegex();
-  }
-});
-
-// ../node_modules/get-east-asian-width/lookup-data.js
-var ambiguousRanges, fullwidthRanges, halfwidthRanges, narrowRanges, wideRanges;
-var init_lookup_data = __esm({
-  "../node_modules/get-east-asian-width/lookup-data.js"() {
-    "use strict";
-    ambiguousRanges = [161, 161, 164, 164, 167, 168, 170, 170, 173, 174, 176, 180, 182, 186, 188, 191, 198, 198, 208, 208, 215, 216, 222, 225, 230, 230, 232, 234, 236, 237, 240, 240, 242, 243, 247, 250, 252, 252, 254, 254, 257, 257, 273, 273, 275, 275, 283, 283, 294, 295, 299, 299, 305, 307, 312, 312, 319, 322, 324, 324, 328, 331, 333, 333, 338, 339, 358, 359, 363, 363, 462, 462, 464, 464, 466, 466, 468, 468, 470, 470, 472, 472, 474, 474, 476, 476, 593, 593, 609, 609, 708, 708, 711, 711, 713, 715, 717, 717, 720, 720, 728, 731, 733, 733, 735, 735, 768, 879, 913, 929, 931, 937, 945, 961, 963, 969, 1025, 1025, 1040, 1103, 1105, 1105, 8208, 8208, 8211, 8214, 8216, 8217, 8220, 8221, 8224, 8226, 8228, 8231, 8240, 8240, 8242, 8243, 8245, 8245, 8251, 8251, 8254, 8254, 8308, 8308, 8319, 8319, 8321, 8324, 8364, 8364, 8451, 8451, 8453, 8453, 8457, 8457, 8467, 8467, 8470, 8470, 8481, 8482, 8486, 8486, 8491, 8491, 8531, 8532, 8539, 8542, 8544, 8555, 8560, 8569, 8585, 8585, 8592, 8601, 8632, 8633, 8658, 8658, 8660, 8660, 8679, 8679, 8704, 8704, 8706, 8707, 8711, 8712, 8715, 8715, 8719, 8719, 8721, 8721, 8725, 8725, 8730, 8730, 8733, 8736, 8739, 8739, 8741, 8741, 8743, 8748, 8750, 8750, 8756, 8759, 8764, 8765, 8776, 8776, 8780, 8780, 8786, 8786, 8800, 8801, 8804, 8807, 8810, 8811, 8814, 8815, 8834, 8835, 8838, 8839, 8853, 8853, 8857, 8857, 8869, 8869, 8895, 8895, 8978, 8978, 9312, 9449, 9451, 9547, 9552, 9587, 9600, 9615, 9618, 9621, 9632, 9633, 9635, 9641, 9650, 9651, 9654, 9655, 9660, 9661, 9664, 9665, 9670, 9672, 9675, 9675, 9678, 9681, 9698, 9701, 9711, 9711, 9733, 9734, 9737, 9737, 9742, 9743, 9756, 9756, 9758, 9758, 9792, 9792, 9794, 9794, 9824, 9825, 9827, 9829, 9831, 9834, 9836, 9837, 9839, 9839, 9886, 9887, 9919, 9919, 9926, 9933, 9935, 9939, 9941, 9953, 9955, 9955, 9960, 9961, 9963, 9969, 9972, 9972, 9974, 9977, 9979, 9980, 9982, 9983, 10045, 10045, 10102, 10111, 11094, 11097, 12872, 12879, 57344, 63743, 65024, 65039, 65533, 65533, 127232, 127242, 127248, 127277, 127280, 127337, 127344, 127373, 127375, 127376, 127387, 127404, 917760, 917999, 983040, 1048573, 1048576, 1114109];
-    fullwidthRanges = [12288, 12288, 65281, 65376, 65504, 65510];
-    halfwidthRanges = [8361, 8361, 65377, 65470, 65474, 65479, 65482, 65487, 65490, 65495, 65498, 65500, 65512, 65518];
-    narrowRanges = [32, 126, 162, 163, 165, 166, 172, 172, 175, 175, 10214, 10221, 10629, 10630];
-    wideRanges = [4352, 4447, 8986, 8987, 9001, 9002, 9193, 9196, 9200, 9200, 9203, 9203, 9725, 9726, 9748, 9749, 9776, 9783, 9800, 9811, 9855, 9855, 9866, 9871, 9875, 9875, 9889, 9889, 9898, 9899, 9917, 9918, 9924, 9925, 9934, 9934, 9940, 9940, 9962, 9962, 9970, 9971, 9973, 9973, 9978, 9978, 9981, 9981, 9989, 9989, 9994, 9995, 10024, 10024, 10060, 10060, 10062, 10062, 10067, 10069, 10071, 10071, 10133, 10135, 10160, 10160, 10175, 10175, 11035, 11036, 11088, 11088, 11093, 11093, 11904, 11929, 11931, 12019, 12032, 12245, 12272, 12287, 12289, 12350, 12353, 12438, 12441, 12543, 12549, 12591, 12593, 12686, 12688, 12773, 12783, 12830, 12832, 12871, 12880, 42124, 42128, 42182, 43360, 43388, 44032, 55203, 63744, 64255, 65040, 65049, 65072, 65106, 65108, 65126, 65128, 65131, 94176, 94180, 94192, 94198, 94208, 101589, 101631, 101662, 101760, 101874, 110576, 110579, 110581, 110587, 110589, 110590, 110592, 110882, 110898, 110898, 110928, 110930, 110933, 110933, 110948, 110951, 110960, 111355, 119552, 119638, 119648, 119670, 126980, 126980, 127183, 127183, 127374, 127374, 127377, 127386, 127488, 127490, 127504, 127547, 127552, 127560, 127568, 127569, 127584, 127589, 127744, 127776, 127789, 127797, 127799, 127868, 127870, 127891, 127904, 127946, 127951, 127955, 127968, 127984, 127988, 127988, 127992, 128062, 128064, 128064, 128066, 128252, 128255, 128317, 128331, 128334, 128336, 128359, 128378, 128378, 128405, 128406, 128420, 128420, 128507, 128591, 128640, 128709, 128716, 128716, 128720, 128722, 128725, 128728, 128732, 128735, 128747, 128748, 128756, 128764, 128992, 129003, 129008, 129008, 129292, 129338, 129340, 129349, 129351, 129535, 129648, 129660, 129664, 129674, 129678, 129734, 129736, 129736, 129741, 129756, 129759, 129770, 129775, 129784, 131072, 196605, 196608, 262141];
-  }
-});
-
-// ../node_modules/get-east-asian-width/utilities.js
-var isInRange;
-var init_utilities = __esm({
-  "../node_modules/get-east-asian-width/utilities.js"() {
-    "use strict";
-    isInRange = (ranges, codePoint) => {
-      let low = 0;
-      let high = Math.floor(ranges.length / 2) - 1;
-      while (low <= high) {
-        const mid = Math.floor((low + high) / 2);
-        const i = mid * 2;
-        if (codePoint < ranges[i]) {
-          high = mid - 1;
-        } else if (codePoint > ranges[i + 1]) {
-          low = mid + 1;
-        } else {
-          return true;
-        }
-      }
-      return false;
-    };
-  }
-});
-
-// ../node_modules/get-east-asian-width/lookup.js
-function findWideFastPathRange(ranges) {
-  let fastPathStart = ranges[0];
-  let fastPathEnd = ranges[1];
-  for (let index = 0; index < ranges.length; index += 2) {
-    const start = ranges[index];
-    const end = ranges[index + 1];
-    if (commonCjkCodePoint >= start && commonCjkCodePoint <= end) {
-      return [start, end];
-    }
-    if (end - start > fastPathEnd - fastPathStart) {
-      fastPathStart = start;
-      fastPathEnd = end;
-    }
-  }
-  return [fastPathStart, fastPathEnd];
-}
-var minimumAmbiguousCodePoint, maximumAmbiguousCodePoint, minimumFullWidthCodePoint, maximumFullWidthCodePoint, minimumHalfWidthCodePoint, maximumHalfWidthCodePoint, minimumNarrowCodePoint, maximumNarrowCodePoint, minimumWideCodePoint, maximumWideCodePoint, commonCjkCodePoint, wideFastPathStart, wideFastPathEnd, isAmbiguous, isFullWidth, isWide;
-var init_lookup = __esm({
-  "../node_modules/get-east-asian-width/lookup.js"() {
-    "use strict";
-    init_lookup_data();
-    init_utilities();
-    minimumAmbiguousCodePoint = ambiguousRanges[0];
-    maximumAmbiguousCodePoint = ambiguousRanges.at(-1);
-    minimumFullWidthCodePoint = fullwidthRanges[0];
-    maximumFullWidthCodePoint = fullwidthRanges.at(-1);
-    minimumHalfWidthCodePoint = halfwidthRanges[0];
-    maximumHalfWidthCodePoint = halfwidthRanges.at(-1);
-    minimumNarrowCodePoint = narrowRanges[0];
-    maximumNarrowCodePoint = narrowRanges.at(-1);
-    minimumWideCodePoint = wideRanges[0];
-    maximumWideCodePoint = wideRanges.at(-1);
-    commonCjkCodePoint = 19968;
-    [wideFastPathStart, wideFastPathEnd] = findWideFastPathRange(wideRanges);
-    isAmbiguous = (codePoint) => {
-      if (codePoint < minimumAmbiguousCodePoint || codePoint > maximumAmbiguousCodePoint) {
-        return false;
-      }
-      return isInRange(ambiguousRanges, codePoint);
-    };
-    isFullWidth = (codePoint) => {
-      if (codePoint < minimumFullWidthCodePoint || codePoint > maximumFullWidthCodePoint) {
-        return false;
-      }
-      return isInRange(fullwidthRanges, codePoint);
-    };
-    isWide = (codePoint) => {
-      if (codePoint >= wideFastPathStart && codePoint <= wideFastPathEnd) {
-        return true;
-      }
-      if (codePoint < minimumWideCodePoint || codePoint > maximumWideCodePoint) {
-        return false;
-      }
-      return isInRange(wideRanges, codePoint);
-    };
-  }
-});
-
-// ../node_modules/get-east-asian-width/index.js
-function validate(codePoint) {
-  if (!Number.isSafeInteger(codePoint)) {
-    throw new TypeError(`Expected a code point, got \`${typeof codePoint}\`.`);
-  }
-}
-function eastAsianWidth(codePoint, { ambiguousAsWide = false } = {}) {
-  validate(codePoint);
-  if (isFullWidth(codePoint) || isWide(codePoint) || ambiguousAsWide && isAmbiguous(codePoint)) {
-    return 2;
-  }
-  return 1;
-}
-var init_get_east_asian_width = __esm({
-  "../node_modules/get-east-asian-width/index.js"() {
-    "use strict";
-    init_lookup();
-    init_lookup();
-  }
-});
-
-// ../node_modules/emoji-regex/index.mjs
-var emoji_regex_default;
-var init_emoji_regex = __esm({
-  "../node_modules/emoji-regex/index.mjs"() {
-    "use strict";
-    emoji_regex_default = () => {
-      return /[#*0-9]\uFE0F?\u20E3|[\xA9\xAE\u203C\u2049\u2122\u2139\u2194-\u2199\u21A9\u21AA\u231A\u231B\u2328\u23CF\u23ED-\u23EF\u23F1\u23F2\u23F8-\u23FA\u24C2\u25AA\u25AB\u25B6\u25C0\u25FB\u25FC\u25FE\u2600-\u2604\u260E\u2611\u2614\u2615\u2618\u2620\u2622\u2623\u2626\u262A\u262E\u262F\u2638-\u263A\u2640\u2642\u2648-\u2653\u265F\u2660\u2663\u2665\u2666\u2668\u267B\u267E\u267F\u2692\u2694-\u2697\u2699\u269B\u269C\u26A0\u26A7\u26AA\u26B0\u26B1\u26BD\u26BE\u26C4\u26C8\u26CF\u26D1\u26E9\u26F0-\u26F5\u26F7\u26F8\u26FA\u2702\u2708\u2709\u270F\u2712\u2714\u2716\u271D\u2721\u2733\u2734\u2744\u2747\u2757\u2763\u27A1\u2934\u2935\u2B05-\u2B07\u2B1B\u2B1C\u2B55\u3030\u303D\u3297\u3299]\uFE0F?|[\u261D\u270C\u270D](?:\uD83C[\uDFFB-\uDFFF]|\uFE0F)?|[\u270A\u270B](?:\uD83C[\uDFFB-\uDFFF])?|[\u23E9-\u23EC\u23F0\u23F3\u25FD\u2693\u26A1\u26AB\u26C5\u26CE\u26D4\u26EA\u26FD\u2705\u2728\u274C\u274E\u2753-\u2755\u2795-\u2797\u27B0\u27BF\u2B50]|\u26D3\uFE0F?(?:\u200D\uD83D\uDCA5)?|\u26F9(?:\uD83C[\uDFFB-\uDFFF]|\uFE0F)?(?:\u200D[\u2640\u2642]\uFE0F?)?|\u2764\uFE0F?(?:\u200D(?:\uD83D\uDD25|\uD83E\uDE79))?|\uD83C(?:[\uDC04\uDD70\uDD71\uDD7E\uDD7F\uDE02\uDE37\uDF21\uDF24-\uDF2C\uDF36\uDF7D\uDF96\uDF97\uDF99-\uDF9B\uDF9E\uDF9F\uDFCD\uDFCE\uDFD4-\uDFDF\uDFF5\uDFF7]\uFE0F?|[\uDF85\uDFC2\uDFC7](?:\uD83C[\uDFFB-\uDFFF])?|[\uDFC4\uDFCA](?:\uD83C[\uDFFB-\uDFFF])?(?:\u200D[\u2640\u2642]\uFE0F?)?|[\uDFCB\uDFCC](?:\uD83C[\uDFFB-\uDFFF]|\uFE0F)?(?:\u200D[\u2640\u2642]\uFE0F?)?|[\uDCCF\uDD8E\uDD91-\uDD9A\uDE01\uDE1A\uDE2F\uDE32-\uDE36\uDE38-\uDE3A\uDE50\uDE51\uDF00-\uDF20\uDF2D-\uDF35\uDF37-\uDF43\uDF45-\uDF4A\uDF4C-\uDF7C\uDF7E-\uDF84\uDF86-\uDF93\uDFA0-\uDFC1\uDFC5\uDFC6\uDFC8\uDFC9\uDFCF-\uDFD3\uDFE0-\uDFF0\uDFF8-\uDFFF]|\uDDE6\uD83C[\uDDE8-\uDDEC\uDDEE\uDDF1\uDDF2\uDDF4\uDDF6-\uDDFA\uDDFC\uDDFD\uDDFF]|\uDDE7\uD83C[\uDDE6\uDDE7\uDDE9-\uDDEF\uDDF1-\uDDF4\uDDF6-\uDDF9\uDDFB\uDDFC\uDDFE\uDDFF]|\uDDE8\uD83C[\uDDE6\uDDE8\uDDE9\uDDEB-\uDDEE\uDDF0-\uDDF7\uDDFA-\uDDFF]|\uDDE9\uD83C[\uDDEA\uDDEC\uDDEF\uDDF0\uDDF2\uDDF4\uDDFF]|\uDDEA\uD83C[\uDDE6\uDDE8\uDDEA\uDDEC\uDDED\uDDF7-\uDDFA]|\uDDEB\uD83C[\uDDEE-\uDDF0\uDDF2\uDDF4\uDDF7]|\uDDEC\uD83C[\uDDE6\uDDE7\uDDE9-\uDDEE\uDDF1-\uDDF3\uDDF5-\uDDFA\uDDFC\uDDFE]|\uDDED\uD83C[\uDDF0\uDDF2\uDDF3\uDDF7\uDDF9\uDDFA]|\uDDEE\uD83C[\uDDE8-\uDDEA\uDDF1-\uDDF4\uDDF6-\uDDF9]|\uDDEF\uD83C[\uDDEA\uDDF2\uDDF4\uDDF5]|\uDDF0\uD83C[\uDDEA\uDDEC-\uDDEE\uDDF2\uDDF3\uDDF5\uDDF7\uDDFC\uDDFE\uDDFF]|\uDDF1\uD83C[\uDDE6-\uDDE8\uDDEE\uDDF0\uDDF7-\uDDFB\uDDFE]|\uDDF2\uD83C[\uDDE6\uDDE8-\uDDED\uDDF0-\uDDFF]|\uDDF3\uD83C[\uDDE6\uDDE8\uDDEA-\uDDEC\uDDEE\uDDF1\uDDF4\uDDF5\uDDF7\uDDFA\uDDFF]|\uDDF4\uD83C\uDDF2|\uDDF5\uD83C[\uDDE6\uDDEA-\uDDED\uDDF0-\uDDF3\uDDF7-\uDDF9\uDDFC\uDDFE]|\uDDF6\uD83C\uDDE6|\uDDF7\uD83C[\uDDEA\uDDF4\uDDF8\uDDFA\uDDFC]|\uDDF8\uD83C[\uDDE6-\uDDEA\uDDEC-\uDDF4\uDDF7-\uDDF9\uDDFB\uDDFD-\uDDFF]|\uDDF9\uD83C[\uDDE6\uDDE8\uDDE9\uDDEB-\uDDED\uDDEF-\uDDF4\uDDF7\uDDF9\uDDFB\uDDFC\uDDFF]|\uDDFA\uD83C[\uDDE6\uDDEC\uDDF2\uDDF3\uDDF8\uDDFE\uDDFF]|\uDDFB\uD83C[\uDDE6\uDDE8\uDDEA\uDDEC\uDDEE\uDDF3\uDDFA]|\uDDFC\uD83C[\uDDEB\uDDF8]|\uDDFD\uD83C\uDDF0|\uDDFE\uD83C[\uDDEA\uDDF9]|\uDDFF\uD83C[\uDDE6\uDDF2\uDDFC]|\uDF44(?:\u200D\uD83D\uDFEB)?|\uDF4B(?:\u200D\uD83D\uDFE9)?|\uDFC3(?:\uD83C[\uDFFB-\uDFFF])?(?:\u200D(?:[\u2640\u2642]\uFE0F?(?:\u200D\u27A1\uFE0F?)?|\u27A1\uFE0F?))?|\uDFF3\uFE0F?(?:\u200D(?:\u26A7\uFE0F?|\uD83C\uDF08))?|\uDFF4(?:\u200D\u2620\uFE0F?|\uDB40\uDC67\uDB40\uDC62\uDB40(?:\uDC65\uDB40\uDC6E\uDB40\uDC67|\uDC73\uDB40\uDC63\uDB40\uDC74|\uDC77\uDB40\uDC6C\uDB40\uDC73)\uDB40\uDC7F)?)|\uD83D(?:[\uDC3F\uDCFD\uDD49\uDD4A\uDD6F\uDD70\uDD73\uDD76-\uDD79\uDD87\uDD8A-\uDD8D\uDDA5\uDDA8\uDDB1\uDDB2\uDDBC\uDDC2-\uDDC4\uDDD1-\uDDD3\uDDDC-\uDDDE\uDDE1\uDDE3\uDDE8\uDDEF\uDDF3\uDDFA\uDECB\uDECD-\uDECF\uDEE0-\uDEE5\uDEE9\uDEF0\uDEF3]\uFE0F?|[\uDC42\uDC43\uDC46-\uDC50\uDC66\uDC67\uDC6B-\uDC6D\uDC72\uDC74-\uDC76\uDC78\uDC7C\uDC83\uDC85\uDC8F\uDC91\uDCAA\uDD7A\uDD95\uDD96\uDE4C\uDE4F\uDEC0\uDECC](?:\uD83C[\uDFFB-\uDFFF])?|[\uDC6E-\uDC71\uDC73\uDC77\uDC81\uDC82\uDC86\uDC87\uDE45-\uDE47\uDE4B\uDE4D\uDE4E\uDEA3\uDEB4\uDEB5](?:\uD83C[\uDFFB-\uDFFF])?(?:\u200D[\u2640\u2642]\uFE0F?)?|[\uDD74\uDD90](?:\uD83C[\uDFFB-\uDFFF]|\uFE0F)?|[\uDC00-\uDC07\uDC09-\uDC14\uDC16-\uDC25\uDC27-\uDC3A\uDC3C-\uDC3E\uDC40\uDC44\uDC45\uDC51-\uDC65\uDC6A\uDC79-\uDC7B\uDC7D-\uDC80\uDC84\uDC88-\uDC8E\uDC90\uDC92-\uDCA9\uDCAB-\uDCFC\uDCFF-\uDD3D\uDD4B-\uDD4E\uDD50-\uDD67\uDDA4\uDDFB-\uDE2D\uDE2F-\uDE34\uDE37-\uDE41\uDE43\uDE44\uDE48-\uDE4A\uDE80-\uDEA2\uDEA4-\uDEB3\uDEB7-\uDEBF\uDEC1-\uDEC5\uDED0-\uDED2\uDED5-\uDED8\uDEDC-\uDEDF\uDEEB\uDEEC\uDEF4-\uDEFC\uDFE0-\uDFEB\uDFF0]|\uDC08(?:\u200D\u2B1B)?|\uDC15(?:\u200D\uD83E\uDDBA)?|\uDC26(?:\u200D(?:\u2B1B|\uD83D\uDD25))?|\uDC3B(?:\u200D\u2744\uFE0F?)?|\uDC41\uFE0F?(?:\u200D\uD83D\uDDE8\uFE0F?)?|\uDC68(?:\u200D(?:[\u2695\u2696\u2708]\uFE0F?|\u2764\uFE0F?\u200D\uD83D(?:\uDC8B\u200D\uD83D)?\uDC68|\uD83C[\uDF3E\uDF73\uDF7C\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D(?:[\uDC68\uDC69]\u200D\uD83D(?:\uDC66(?:\u200D\uD83D\uDC66)?|\uDC67(?:\u200D\uD83D[\uDC66\uDC67])?)|[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uDC66(?:\u200D\uD83D\uDC66)?|\uDC67(?:\u200D\uD83D[\uDC66\uDC67])?)|\uD83E(?:[\uDDAF\uDDBC\uDDBD](?:\u200D\u27A1\uFE0F?)?|[\uDDB0-\uDDB3]))|\uD83C(?:\uDFFB(?:\u200D(?:[\u2695\u2696\u2708]\uFE0F?|\u2764\uFE0F?\u200D\uD83D(?:\uDC8B\u200D\uD83D)?\uDC68\uD83C[\uDFFB-\uDFFF]|\uD83C[\uDF3E\uDF73\uDF7C\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D(?:[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uDC30\u200D\uD83D\uDC68\uD83C[\uDFFC-\uDFFF])|\uD83E(?:[\uDD1D\uDEEF]\u200D\uD83D\uDC68\uD83C[\uDFFC-\uDFFF]|[\uDDAF\uDDBC\uDDBD](?:\u200D\u27A1\uFE0F?)?|[\uDDB0-\uDDB3])))?|\uDFFC(?:\u200D(?:[\u2695\u2696\u2708]\uFE0F?|\u2764\uFE0F?\u200D\uD83D(?:\uDC8B\u200D\uD83D)?\uDC68\uD83C[\uDFFB-\uDFFF]|\uD83C[\uDF3E\uDF73\uDF7C\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D(?:[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uDC30\u200D\uD83D\uDC68\uD83C[\uDFFB\uDFFD-\uDFFF])|\uD83E(?:[\uDD1D\uDEEF]\u200D\uD83D\uDC68\uD83C[\uDFFB\uDFFD-\uDFFF]|[\uDDAF\uDDBC\uDDBD](?:\u200D\u27A1\uFE0F?)?|[\uDDB0-\uDDB3])))?|\uDFFD(?:\u200D(?:[\u2695\u2696\u2708]\uFE0F?|\u2764\uFE0F?\u200D\uD83D(?:\uDC8B\u200D\uD83D)?\uDC68\uD83C[\uDFFB-\uDFFF]|\uD83C[\uDF3E\uDF73\uDF7C\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D(?:[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uDC30\u200D\uD83D\uDC68\uD83C[\uDFFB\uDFFC\uDFFE\uDFFF])|\uD83E(?:[\uDD1D\uDEEF]\u200D\uD83D\uDC68\uD83C[\uDFFB\uDFFC\uDFFE\uDFFF]|[\uDDAF\uDDBC\uDDBD](?:\u200D\u27A1\uFE0F?)?|[\uDDB0-\uDDB3])))?|\uDFFE(?:\u200D(?:[\u2695\u2696\u2708]\uFE0F?|\u2764\uFE0F?\u200D\uD83D(?:\uDC8B\u200D\uD83D)?\uDC68\uD83C[\uDFFB-\uDFFF]|\uD83C[\uDF3E\uDF73\uDF7C\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D(?:[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uDC30\u200D\uD83D\uDC68\uD83C[\uDFFB-\uDFFD\uDFFF])|\uD83E(?:[\uDD1D\uDEEF]\u200D\uD83D\uDC68\uD83C[\uDFFB-\uDFFD\uDFFF]|[\uDDAF\uDDBC\uDDBD](?:\u200D\u27A1\uFE0F?)?|[\uDDB0-\uDDB3])))?|\uDFFF(?:\u200D(?:[\u2695\u2696\u2708]\uFE0F?|\u2764\uFE0F?\u200D\uD83D(?:\uDC8B\u200D\uD83D)?\uDC68\uD83C[\uDFFB-\uDFFF]|\uD83C[\uDF3E\uDF73\uDF7C\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D(?:[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uDC30\u200D\uD83D\uDC68\uD83C[\uDFFB-\uDFFE])|\uD83E(?:[\uDD1D\uDEEF]\u200D\uD83D\uDC68\uD83C[\uDFFB-\uDFFE]|[\uDDAF\uDDBC\uDDBD](?:\u200D\u27A1\uFE0F?)?|[\uDDB0-\uDDB3])))?))?|\uDC69(?:\u200D(?:[\u2695\u2696\u2708]\uFE0F?|\u2764\uFE0F?\u200D\uD83D(?:\uDC8B\u200D\uD83D)?[\uDC68\uDC69]|\uD83C[\uDF3E\uDF73\uDF7C\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D(?:[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uDC66(?:\u200D\uD83D\uDC66)?|\uDC67(?:\u200D\uD83D[\uDC66\uDC67])?|\uDC69\u200D\uD83D(?:\uDC66(?:\u200D\uD83D\uDC66)?|\uDC67(?:\u200D\uD83D[\uDC66\uDC67])?))|\uD83E(?:[\uDDAF\uDDBC\uDDBD](?:\u200D\u27A1\uFE0F?)?|[\uDDB0-\uDDB3]))|\uD83C(?:\uDFFB(?:\u200D(?:[\u2695\u2696\u2708]\uFE0F?|\u2764\uFE0F?\u200D\uD83D(?:[\uDC68\uDC69]|\uDC8B\u200D\uD83D[\uDC68\uDC69])\uD83C[\uDFFB-\uDFFF]|\uD83C[\uDF3E\uDF73\uDF7C\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D(?:[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uDC30\u200D\uD83D\uDC69\uD83C[\uDFFC-\uDFFF])|\uD83E(?:[\uDDAF\uDDBC\uDDBD](?:\u200D\u27A1\uFE0F?)?|[\uDDB0-\uDDB3]|\uDD1D\u200D\uD83D[\uDC68\uDC69]\uD83C[\uDFFC-\uDFFF]|\uDEEF\u200D\uD83D\uDC69\uD83C[\uDFFC-\uDFFF])))?|\uDFFC(?:\u200D(?:[\u2695\u2696\u2708]\uFE0F?|\u2764\uFE0F?\u200D\uD83D(?:[\uDC68\uDC69]|\uDC8B\u200D\uD83D[\uDC68\uDC69])\uD83C[\uDFFB-\uDFFF]|\uD83C[\uDF3E\uDF73\uDF7C\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D(?:[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uDC30\u200D\uD83D\uDC69\uD83C[\uDFFB\uDFFD-\uDFFF])|\uD83E(?:[\uDDAF\uDDBC\uDDBD](?:\u200D\u27A1\uFE0F?)?|[\uDDB0-\uDDB3]|\uDD1D\u200D\uD83D[\uDC68\uDC69]\uD83C[\uDFFB\uDFFD-\uDFFF]|\uDEEF\u200D\uD83D\uDC69\uD83C[\uDFFB\uDFFD-\uDFFF])))?|\uDFFD(?:\u200D(?:[\u2695\u2696\u2708]\uFE0F?|\u2764\uFE0F?\u200D\uD83D(?:[\uDC68\uDC69]|\uDC8B\u200D\uD83D[\uDC68\uDC69])\uD83C[\uDFFB-\uDFFF]|\uD83C[\uDF3E\uDF73\uDF7C\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D(?:[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uDC30\u200D\uD83D\uDC69\uD83C[\uDFFB\uDFFC\uDFFE\uDFFF])|\uD83E(?:[\uDDAF\uDDBC\uDDBD](?:\u200D\u27A1\uFE0F?)?|[\uDDB0-\uDDB3]|\uDD1D\u200D\uD83D[\uDC68\uDC69]\uD83C[\uDFFB\uDFFC\uDFFE\uDFFF]|\uDEEF\u200D\uD83D\uDC69\uD83C[\uDFFB\uDFFC\uDFFE\uDFFF])))?|\uDFFE(?:\u200D(?:[\u2695\u2696\u2708]\uFE0F?|\u2764\uFE0F?\u200D\uD83D(?:[\uDC68\uDC69]|\uDC8B\u200D\uD83D[\uDC68\uDC69])\uD83C[\uDFFB-\uDFFF]|\uD83C[\uDF3E\uDF73\uDF7C\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D(?:[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uDC30\u200D\uD83D\uDC69\uD83C[\uDFFB-\uDFFD\uDFFF])|\uD83E(?:[\uDDAF\uDDBC\uDDBD](?:\u200D\u27A1\uFE0F?)?|[\uDDB0-\uDDB3]|\uDD1D\u200D\uD83D[\uDC68\uDC69]\uD83C[\uDFFB-\uDFFD\uDFFF]|\uDEEF\u200D\uD83D\uDC69\uD83C[\uDFFB-\uDFFD\uDFFF])))?|\uDFFF(?:\u200D(?:[\u2695\u2696\u2708]\uFE0F?|\u2764\uFE0F?\u200D\uD83D(?:[\uDC68\uDC69]|\uDC8B\u200D\uD83D[\uDC68\uDC69])\uD83C[\uDFFB-\uDFFF]|\uD83C[\uDF3E\uDF73\uDF7C\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D(?:[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uDC30\u200D\uD83D\uDC69\uD83C[\uDFFB-\uDFFE])|\uD83E(?:[\uDDAF\uDDBC\uDDBD](?:\u200D\u27A1\uFE0F?)?|[\uDDB0-\uDDB3]|\uDD1D\u200D\uD83D[\uDC68\uDC69]\uD83C[\uDFFB-\uDFFE]|\uDEEF\u200D\uD83D\uDC69\uD83C[\uDFFB-\uDFFE])))?))?|\uDD75(?:\uD83C[\uDFFB-\uDFFF]|\uFE0F)?(?:\u200D[\u2640\u2642]\uFE0F?)?|\uDE2E(?:\u200D\uD83D\uDCA8)?|\uDE35(?:\u200D\uD83D\uDCAB)?|\uDE36(?:\u200D\uD83C\uDF2B\uFE0F?)?|\uDE42(?:\u200D[\u2194\u2195]\uFE0F?)?|\uDEB6(?:\uD83C[\uDFFB-\uDFFF])?(?:\u200D(?:[\u2640\u2642]\uFE0F?(?:\u200D\u27A1\uFE0F?)?|\u27A1\uFE0F?))?)|\uD83E(?:[\uDD0C\uDD0F\uDD18-\uDD1F\uDD30-\uDD34\uDD36\uDD77\uDDB5\uDDB6\uDDBB\uDDD2\uDDD3\uDDD5\uDEC3-\uDEC5\uDEF0\uDEF2-\uDEF8](?:\uD83C[\uDFFB-\uDFFF])?|[\uDD26\uDD35\uDD37-\uDD39\uDD3C-\uDD3E\uDDB8\uDDB9\uDDCD\uDDCF\uDDD4\uDDD6-\uDDDD](?:\uD83C[\uDFFB-\uDFFF])?(?:\u200D[\u2640\u2642]\uFE0F?)?|[\uDDDE\uDDDF](?:\u200D[\u2640\u2642]\uFE0F?)?|[\uDD0D\uDD0E\uDD10-\uDD17\uDD20-\uDD25\uDD27-\uDD2F\uDD3A\uDD3F-\uDD45\uDD47-\uDD76\uDD78-\uDDB4\uDDB7\uDDBA\uDDBC-\uDDCC\uDDD0\uDDE0-\uDDFF\uDE70-\uDE7C\uDE80-\uDE8A\uDE8E-\uDEC2\uDEC6\uDEC8\uDECD-\uDEDC\uDEDF-\uDEEA\uDEEF]|\uDDCE(?:\uD83C[\uDFFB-\uDFFF])?(?:\u200D(?:[\u2640\u2642]\uFE0F?(?:\u200D\u27A1\uFE0F?)?|\u27A1\uFE0F?))?|\uDDD1(?:\u200D(?:[\u2695\u2696\u2708]\uFE0F?|\uD83C[\uDF3E\uDF73\uDF7C\uDF84\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E(?:[\uDDAF\uDDBC\uDDBD](?:\u200D\u27A1\uFE0F?)?|[\uDDB0-\uDDB3\uDE70]|\uDD1D\u200D\uD83E\uDDD1|\uDDD1\u200D\uD83E\uDDD2(?:\u200D\uD83E\uDDD2)?|\uDDD2(?:\u200D\uD83E\uDDD2)?))|\uD83C(?:\uDFFB(?:\u200D(?:[\u2695\u2696\u2708]\uFE0F?|\u2764\uFE0F?\u200D(?:\uD83D\uDC8B\u200D)?\uD83E\uDDD1\uD83C[\uDFFC-\uDFFF]|\uD83C[\uDF3E\uDF73\uDF7C\uDF84\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D(?:[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uDC30\u200D\uD83E\uDDD1\uD83C[\uDFFC-\uDFFF])|\uD83E(?:[\uDDAF\uDDBC\uDDBD](?:\u200D\u27A1\uFE0F?)?|[\uDDB0-\uDDB3\uDE70]|\uDD1D\u200D\uD83E\uDDD1\uD83C[\uDFFB-\uDFFF]|\uDEEF\u200D\uD83E\uDDD1\uD83C[\uDFFC-\uDFFF])))?|\uDFFC(?:\u200D(?:[\u2695\u2696\u2708]\uFE0F?|\u2764\uFE0F?\u200D(?:\uD83D\uDC8B\u200D)?\uD83E\uDDD1\uD83C[\uDFFB\uDFFD-\uDFFF]|\uD83C[\uDF3E\uDF73\uDF7C\uDF84\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D(?:[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uDC30\u200D\uD83E\uDDD1\uD83C[\uDFFB\uDFFD-\uDFFF])|\uD83E(?:[\uDDAF\uDDBC\uDDBD](?:\u200D\u27A1\uFE0F?)?|[\uDDB0-\uDDB3\uDE70]|\uDD1D\u200D\uD83E\uDDD1\uD83C[\uDFFB-\uDFFF]|\uDEEF\u200D\uD83E\uDDD1\uD83C[\uDFFB\uDFFD-\uDFFF])))?|\uDFFD(?:\u200D(?:[\u2695\u2696\u2708]\uFE0F?|\u2764\uFE0F?\u200D(?:\uD83D\uDC8B\u200D)?\uD83E\uDDD1\uD83C[\uDFFB\uDFFC\uDFFE\uDFFF]|\uD83C[\uDF3E\uDF73\uDF7C\uDF84\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D(?:[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uDC30\u200D\uD83E\uDDD1\uD83C[\uDFFB\uDFFC\uDFFE\uDFFF])|\uD83E(?:[\uDDAF\uDDBC\uDDBD](?:\u200D\u27A1\uFE0F?)?|[\uDDB0-\uDDB3\uDE70]|\uDD1D\u200D\uD83E\uDDD1\uD83C[\uDFFB-\uDFFF]|\uDEEF\u200D\uD83E\uDDD1\uD83C[\uDFFB\uDFFC\uDFFE\uDFFF])))?|\uDFFE(?:\u200D(?:[\u2695\u2696\u2708]\uFE0F?|\u2764\uFE0F?\u200D(?:\uD83D\uDC8B\u200D)?\uD83E\uDDD1\uD83C[\uDFFB-\uDFFD\uDFFF]|\uD83C[\uDF3E\uDF73\uDF7C\uDF84\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D(?:[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uDC30\u200D\uD83E\uDDD1\uD83C[\uDFFB-\uDFFD\uDFFF])|\uD83E(?:[\uDDAF\uDDBC\uDDBD](?:\u200D\u27A1\uFE0F?)?|[\uDDB0-\uDDB3\uDE70]|\uDD1D\u200D\uD83E\uDDD1\uD83C[\uDFFB-\uDFFF]|\uDEEF\u200D\uD83E\uDDD1\uD83C[\uDFFB-\uDFFD\uDFFF])))?|\uDFFF(?:\u200D(?:[\u2695\u2696\u2708]\uFE0F?|\u2764\uFE0F?\u200D(?:\uD83D\uDC8B\u200D)?\uD83E\uDDD1\uD83C[\uDFFB-\uDFFE]|\uD83C[\uDF3E\uDF73\uDF7C\uDF84\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D(?:[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uDC30\u200D\uD83E\uDDD1\uD83C[\uDFFB-\uDFFE])|\uD83E(?:[\uDDAF\uDDBC\uDDBD](?:\u200D\u27A1\uFE0F?)?|[\uDDB0-\uDDB3\uDE70]|\uDD1D\u200D\uD83E\uDDD1\uD83C[\uDFFB-\uDFFF]|\uDEEF\u200D\uD83E\uDDD1\uD83C[\uDFFB-\uDFFE])))?))?|\uDEF1(?:\uD83C(?:\uDFFB(?:\u200D\uD83E\uDEF2\uD83C[\uDFFC-\uDFFF])?|\uDFFC(?:\u200D\uD83E\uDEF2\uD83C[\uDFFB\uDFFD-\uDFFF])?|\uDFFD(?:\u200D\uD83E\uDEF2\uD83C[\uDFFB\uDFFC\uDFFE\uDFFF])?|\uDFFE(?:\u200D\uD83E\uDEF2\uD83C[\uDFFB-\uDFFD\uDFFF])?|\uDFFF(?:\u200D\uD83E\uDEF2\uD83C[\uDFFB-\uDFFE])?))?)/g;
-    };
-  }
-});
-
-// ../node_modules/string-width/index.js
-function stringWidth(string4, options = {}) {
-  if (typeof string4 !== "string" || string4.length === 0) {
-    return 0;
-  }
-  const {
-    ambiguousIsNarrow = true,
-    countAnsiEscapeCodes = false
-  } = options;
-  if (!countAnsiEscapeCodes) {
-    string4 = stripAnsi(string4);
-  }
-  if (string4.length === 0) {
-    return 0;
-  }
-  let width = 0;
-  const eastAsianWidthOptions = { ambiguousAsWide: !ambiguousIsNarrow };
-  for (const { segment: character } of segmenter.segment(string4)) {
-    const codePoint = character.codePointAt(0);
-    if (codePoint <= 31 || codePoint >= 127 && codePoint <= 159) {
-      continue;
-    }
-    if (codePoint >= 8203 && codePoint <= 8207 || codePoint === 65279) {
-      continue;
-    }
-    if (codePoint >= 768 && codePoint <= 879 || codePoint >= 6832 && codePoint <= 6911 || codePoint >= 7616 && codePoint <= 7679 || codePoint >= 8400 && codePoint <= 8447 || codePoint >= 65056 && codePoint <= 65071) {
-      continue;
-    }
-    if (codePoint >= 55296 && codePoint <= 57343) {
-      continue;
-    }
-    if (codePoint >= 65024 && codePoint <= 65039) {
-      continue;
-    }
-    if (defaultIgnorableCodePointRegex.test(character)) {
-      continue;
-    }
-    if (emoji_regex_default().test(character)) {
-      width += 2;
-      continue;
-    }
-    width += eastAsianWidth(codePoint, eastAsianWidthOptions);
-  }
-  return width;
-}
-var segmenter, defaultIgnorableCodePointRegex;
-var init_string_width = __esm({
-  "../node_modules/string-width/index.js"() {
-    "use strict";
-    init_strip_ansi();
-    init_get_east_asian_width();
-    init_emoji_regex();
-    segmenter = new Intl.Segmenter();
-    defaultIgnorableCodePointRegex = new RegExp("^\\p{Default_Ignorable_Code_Point}$", "u");
-  }
-});
-
-// ../node_modules/ansi-styles/index.js
-function assembleStyles() {
-  const codes = /* @__PURE__ */ new Map();
-  for (const [groupName, group] of Object.entries(styles)) {
-    for (const [styleName, style] of Object.entries(group)) {
-      styles[styleName] = {
-        open: `\x1B[${style[0]}m`,
-        close: `\x1B[${style[1]}m`
-      };
-      group[styleName] = styles[styleName];
-      codes.set(style[0], style[1]);
-    }
-    Object.defineProperty(styles, groupName, {
-      value: group,
-      enumerable: false
-    });
-  }
-  Object.defineProperty(styles, "codes", {
-    value: codes,
-    enumerable: false
-  });
-  styles.color.close = "\x1B[39m";
-  styles.bgColor.close = "\x1B[49m";
-  styles.color.ansi = wrapAnsi16();
-  styles.color.ansi256 = wrapAnsi256();
-  styles.color.ansi16m = wrapAnsi16m();
-  styles.bgColor.ansi = wrapAnsi16(ANSI_BACKGROUND_OFFSET);
-  styles.bgColor.ansi256 = wrapAnsi256(ANSI_BACKGROUND_OFFSET);
-  styles.bgColor.ansi16m = wrapAnsi16m(ANSI_BACKGROUND_OFFSET);
-  Object.defineProperties(styles, {
-    rgbToAnsi256: {
-      value(red, green, blue) {
-        if (red === green && green === blue) {
-          if (red < 8) {
-            return 16;
-          }
-          if (red > 248) {
-            return 231;
-          }
-          return Math.round((red - 8) / 247 * 24) + 232;
-        }
-        return 16 + 36 * Math.round(red / 255 * 5) + 6 * Math.round(green / 255 * 5) + Math.round(blue / 255 * 5);
-      },
-      enumerable: false
-    },
-    hexToRgb: {
-      value(hex3) {
-        const matches = /[a-f\d]{6}|[a-f\d]{3}/i.exec(hex3.toString(16));
-        if (!matches) {
-          return [0, 0, 0];
-        }
-        let [colorString] = matches;
-        if (colorString.length === 3) {
-          colorString = [...colorString].map((character) => character + character).join("");
-        }
-        const integer2 = Number.parseInt(colorString, 16);
-        return [
-          /* eslint-disable no-bitwise */
-          integer2 >> 16 & 255,
-          integer2 >> 8 & 255,
-          integer2 & 255
-          /* eslint-enable no-bitwise */
-        ];
-      },
-      enumerable: false
-    },
-    hexToAnsi256: {
-      value: (hex3) => styles.rgbToAnsi256(...styles.hexToRgb(hex3)),
-      enumerable: false
-    },
-    ansi256ToAnsi: {
-      value(code) {
-        if (code < 8) {
-          return 30 + code;
-        }
-        if (code < 16) {
-          return 90 + (code - 8);
-        }
-        let red;
-        let green;
-        let blue;
-        if (code >= 232) {
-          red = ((code - 232) * 10 + 8) / 255;
-          green = red;
-          blue = red;
-        } else {
-          code -= 16;
-          const remainder = code % 36;
-          red = Math.floor(code / 36) / 5;
-          green = Math.floor(remainder / 6) / 5;
-          blue = remainder % 6 / 5;
-        }
-        const value = Math.max(red, green, blue) * 2;
-        if (value === 0) {
-          return 30;
-        }
-        let result = 30 + (Math.round(blue) << 2 | Math.round(green) << 1 | Math.round(red));
-        if (value === 2) {
-          result += 60;
-        }
-        return result;
-      },
-      enumerable: false
-    },
-    rgbToAnsi: {
-      value: (red, green, blue) => styles.ansi256ToAnsi(styles.rgbToAnsi256(red, green, blue)),
-      enumerable: false
-    },
-    hexToAnsi: {
-      value: (hex3) => styles.ansi256ToAnsi(styles.hexToAnsi256(hex3)),
-      enumerable: false
-    }
-  });
-  return styles;
-}
-var ANSI_BACKGROUND_OFFSET, wrapAnsi16, wrapAnsi256, wrapAnsi16m, styles, modifierNames, foregroundColorNames, backgroundColorNames, colorNames, ansiStyles, ansi_styles_default;
-var init_ansi_styles = __esm({
-  "../node_modules/ansi-styles/index.js"() {
-    "use strict";
-    ANSI_BACKGROUND_OFFSET = 10;
-    wrapAnsi16 = (offset = 0) => (code) => `\x1B[${code + offset}m`;
-    wrapAnsi256 = (offset = 0) => (code) => `\x1B[${38 + offset};5;${code}m`;
-    wrapAnsi16m = (offset = 0) => (red, green, blue) => `\x1B[${38 + offset};2;${red};${green};${blue}m`;
-    styles = {
-      modifier: {
-        reset: [0, 0],
-        // 21 isn't widely supported and 22 does the same thing
-        bold: [1, 22],
-        dim: [2, 22],
-        italic: [3, 23],
-        underline: [4, 24],
-        overline: [53, 55],
-        inverse: [7, 27],
-        hidden: [8, 28],
-        strikethrough: [9, 29]
-      },
-      color: {
-        black: [30, 39],
-        red: [31, 39],
-        green: [32, 39],
-        yellow: [33, 39],
-        blue: [34, 39],
-        magenta: [35, 39],
-        cyan: [36, 39],
-        white: [37, 39],
-        // Bright color
-        blackBright: [90, 39],
-        gray: [90, 39],
-        // Alias of `blackBright`
-        grey: [90, 39],
-        // Alias of `blackBright`
-        redBright: [91, 39],
-        greenBright: [92, 39],
-        yellowBright: [93, 39],
-        blueBright: [94, 39],
-        magentaBright: [95, 39],
-        cyanBright: [96, 39],
-        whiteBright: [97, 39]
-      },
-      bgColor: {
-        bgBlack: [40, 49],
-        bgRed: [41, 49],
-        bgGreen: [42, 49],
-        bgYellow: [43, 49],
-        bgBlue: [44, 49],
-        bgMagenta: [45, 49],
-        bgCyan: [46, 49],
-        bgWhite: [47, 49],
-        // Bright color
-        bgBlackBright: [100, 49],
-        bgGray: [100, 49],
-        // Alias of `bgBlackBright`
-        bgGrey: [100, 49],
-        // Alias of `bgBlackBright`
-        bgRedBright: [101, 49],
-        bgGreenBright: [102, 49],
-        bgYellowBright: [103, 49],
-        bgBlueBright: [104, 49],
-        bgMagentaBright: [105, 49],
-        bgCyanBright: [106, 49],
-        bgWhiteBright: [107, 49]
-      }
-    };
-    modifierNames = Object.keys(styles.modifier);
-    foregroundColorNames = Object.keys(styles.color);
-    backgroundColorNames = Object.keys(styles.bgColor);
-    colorNames = [...foregroundColorNames, ...backgroundColorNames];
-    ansiStyles = assembleStyles();
-    ansi_styles_default = ansiStyles;
-  }
-});
-
-// ../node_modules/wrap-ansi/index.js
-function wrapAnsi(string4, columns2, options) {
-  return String(string4).normalize().replaceAll("\r\n", "\n").split("\n").map((line) => exec(line, columns2, options)).join("\n");
-}
-var ESCAPES, END_CODE, ANSI_ESCAPE_BELL, ANSI_CSI, ANSI_OSC, ANSI_SGR_TERMINATOR, ANSI_ESCAPE_LINK, wrapAnsiCode, wrapAnsiHyperlink, wordLengths, wrapWord, stringVisibleTrimSpacesRight, exec;
-var init_wrap_ansi = __esm({
-  "../node_modules/wrap-ansi/index.js"() {
-    "use strict";
-    init_string_width();
-    init_strip_ansi();
-    init_ansi_styles();
-    ESCAPES = /* @__PURE__ */ new Set([
-      "\x1B",
-      "\x9B"
-    ]);
-    END_CODE = 39;
-    ANSI_ESCAPE_BELL = "\x07";
-    ANSI_CSI = "[";
-    ANSI_OSC = "]";
-    ANSI_SGR_TERMINATOR = "m";
-    ANSI_ESCAPE_LINK = `${ANSI_OSC}8;;`;
-    wrapAnsiCode = (code) => `${ESCAPES.values().next().value}${ANSI_CSI}${code}${ANSI_SGR_TERMINATOR}`;
-    wrapAnsiHyperlink = (url2) => `${ESCAPES.values().next().value}${ANSI_ESCAPE_LINK}${url2}${ANSI_ESCAPE_BELL}`;
-    wordLengths = (string4) => string4.split(" ").map((character) => stringWidth(character));
-    wrapWord = (rows, word, columns2) => {
-      const characters = [...word];
-      let isInsideEscape = false;
-      let isInsideLinkEscape = false;
-      let visible = stringWidth(stripAnsi(rows.at(-1)));
-      for (const [index, character] of characters.entries()) {
-        const characterLength = stringWidth(character);
-        if (visible + characterLength <= columns2) {
-          rows[rows.length - 1] += character;
-        } else {
-          rows.push(character);
-          visible = 0;
-        }
-        if (ESCAPES.has(character)) {
-          isInsideEscape = true;
-          const ansiEscapeLinkCandidate = characters.slice(index + 1, index + 1 + ANSI_ESCAPE_LINK.length).join("");
-          isInsideLinkEscape = ansiEscapeLinkCandidate === ANSI_ESCAPE_LINK;
-        }
-        if (isInsideEscape) {
-          if (isInsideLinkEscape) {
-            if (character === ANSI_ESCAPE_BELL) {
-              isInsideEscape = false;
-              isInsideLinkEscape = false;
-            }
-          } else if (character === ANSI_SGR_TERMINATOR) {
-            isInsideEscape = false;
-          }
-          continue;
-        }
-        visible += characterLength;
-        if (visible === columns2 && index < characters.length - 1) {
-          rows.push("");
-          visible = 0;
-        }
-      }
-      if (!visible && rows.at(-1).length > 0 && rows.length > 1) {
-        rows[rows.length - 2] += rows.pop();
-      }
-    };
-    stringVisibleTrimSpacesRight = (string4) => {
-      const words = string4.split(" ");
-      let last = words.length;
-      while (last > 0) {
-        if (stringWidth(words[last - 1]) > 0) {
-          break;
-        }
-        last--;
-      }
-      if (last === words.length) {
-        return string4;
-      }
-      return words.slice(0, last).join(" ") + words.slice(last).join("");
-    };
-    exec = (string4, columns2, options = {}) => {
-      if (options.trim !== false && string4.trim() === "") {
-        return "";
-      }
-      let returnValue = "";
-      let escapeCode;
-      let escapeUrl;
-      const lengths = wordLengths(string4);
-      let rows = [""];
-      for (const [index, word] of string4.split(" ").entries()) {
-        if (options.trim !== false) {
-          rows[rows.length - 1] = rows.at(-1).trimStart();
-        }
-        let rowLength = stringWidth(rows.at(-1));
-        if (index !== 0) {
-          if (rowLength >= columns2 && (options.wordWrap === false || options.trim === false)) {
-            rows.push("");
-            rowLength = 0;
-          }
-          if (rowLength > 0 || options.trim === false) {
-            rows[rows.length - 1] += " ";
-            rowLength++;
-          }
-        }
-        if (options.hard && lengths[index] > columns2) {
-          const remainingColumns = columns2 - rowLength;
-          const breaksStartingThisLine = 1 + Math.floor((lengths[index] - remainingColumns - 1) / columns2);
-          const breaksStartingNextLine = Math.floor((lengths[index] - 1) / columns2);
-          if (breaksStartingNextLine < breaksStartingThisLine) {
-            rows.push("");
-          }
-          wrapWord(rows, word, columns2);
-          continue;
-        }
-        if (rowLength + lengths[index] > columns2 && rowLength > 0 && lengths[index] > 0) {
-          if (options.wordWrap === false && rowLength < columns2) {
-            wrapWord(rows, word, columns2);
-            continue;
-          }
-          rows.push("");
-        }
-        if (rowLength + lengths[index] > columns2 && options.wordWrap === false) {
-          wrapWord(rows, word, columns2);
-          continue;
-        }
-        rows[rows.length - 1] += word;
-      }
-      if (options.trim !== false) {
-        rows = rows.map((row) => stringVisibleTrimSpacesRight(row));
-      }
-      const preString = rows.join("\n");
-      const pre = [...preString];
-      let preStringIndex = 0;
-      for (const [index, character] of pre.entries()) {
-        returnValue += character;
-        if (ESCAPES.has(character)) {
-          const { groups } = new RegExp(`(?:\\${ANSI_CSI}(?<code>\\d+)m|\\${ANSI_ESCAPE_LINK}(?<uri>.*)${ANSI_ESCAPE_BELL})`).exec(preString.slice(preStringIndex)) || { groups: {} };
-          if (groups.code !== void 0) {
-            const code2 = Number.parseFloat(groups.code);
-            escapeCode = code2 === END_CODE ? void 0 : code2;
-          } else if (groups.uri !== void 0) {
-            escapeUrl = groups.uri.length === 0 ? void 0 : groups.uri;
-          }
-        }
-        const code = ansi_styles_default.codes.get(Number(escapeCode));
-        if (pre[index + 1] === "\n") {
-          if (escapeUrl) {
-            returnValue += wrapAnsiHyperlink("");
-          }
-          if (escapeCode && code) {
-            returnValue += wrapAnsiCode(code);
-          }
-        } else if (character === "\n") {
-          if (escapeCode && code) {
-            returnValue += wrapAnsiCode(escapeCode);
-          }
-          if (escapeUrl) {
-            returnValue += wrapAnsiHyperlink(escapeUrl);
-          }
-        }
-        preStringIndex += character.length;
-      }
-      return returnValue;
-    };
-  }
-});
-
-// ../node_modules/is-fullwidth-code-point/index.js
-function isFullwidthCodePoint(codePoint) {
-  if (!Number.isInteger(codePoint)) {
-    return false;
-  }
-  return isFullWidth(codePoint) || isWide(codePoint);
-}
-var init_is_fullwidth_code_point = __esm({
-  "../node_modules/is-fullwidth-code-point/index.js"() {
-    "use strict";
-    init_get_east_asian_width();
-  }
-});
-
-// ../node_modules/log-update/node_modules/slice-ansi/index.js
-function getEndCode(code) {
-  if (endCodesSet.has(code)) {
-    return code;
-  }
-  if (endCodesMap.has(code)) {
-    return endCodesMap.get(code);
-  }
-  code = code.slice(2);
-  if (code.includes(";")) {
-    code = code[0] + "0";
-  }
-  const returnValue = ansi_styles_default.codes.get(Number.parseInt(code, 10));
-  if (returnValue) {
-    return ansi_styles_default.color.ansi(returnValue);
-  }
-  return ansi_styles_default.reset.open;
-}
-function findNumberIndex(string4) {
-  for (let index = 0; index < string4.length; index++) {
-    const codePoint = string4.codePointAt(index);
-    if (codePoint >= CODE_POINT_0 && codePoint <= CODE_POINT_9) {
-      return index;
-    }
-  }
-  return -1;
-}
-function parseAnsiCode(string4, offset) {
-  string4 = string4.slice(offset, offset + MAX_ANSI_SEQUENCE_LENGTH);
-  const startIndex = findNumberIndex(string4);
-  if (startIndex !== -1) {
-    let endIndex = string4.indexOf("m", startIndex);
-    if (endIndex === -1) {
-      endIndex = string4.length;
-    }
-    return string4.slice(0, endIndex + 1);
-  }
-}
-function tokenize(string4, endCharacter = Number.POSITIVE_INFINITY) {
-  const returnValue = [];
-  let index = 0;
-  let visibleCount = 0;
-  while (index < string4.length) {
-    const codePoint = string4.codePointAt(index);
-    if (ESCAPES2.has(codePoint)) {
-      const code = parseAnsiCode(string4, index);
-      if (code) {
-        returnValue.push({
-          type: "ansi",
-          code,
-          endCode: getEndCode(code)
-        });
-        index += code.length;
-        continue;
-      }
-    }
-    const isFullWidth2 = isFullwidthCodePoint(codePoint);
-    const character = String.fromCodePoint(codePoint);
-    returnValue.push({
-      type: "character",
-      value: character,
-      isFullWidth: isFullWidth2
-    });
-    index += character.length;
-    visibleCount += isFullWidth2 ? 2 : character.length;
-    if (visibleCount >= endCharacter) {
-      break;
-    }
-  }
-  return returnValue;
-}
-function reduceAnsiCodes(codes) {
-  let returnValue = [];
-  for (const code of codes) {
-    if (code.code === ansi_styles_default.reset.open) {
-      returnValue = [];
-    } else if (endCodesSet.has(code.code)) {
-      returnValue = returnValue.filter((returnValueCode) => returnValueCode.endCode !== code.code);
-    } else {
-      returnValue = returnValue.filter((returnValueCode) => returnValueCode.endCode !== code.endCode);
-      returnValue.push(code);
-    }
-  }
-  return returnValue;
-}
-function undoAnsiCodes(codes) {
-  const reduced = reduceAnsiCodes(codes);
-  const endCodes = reduced.map(({ endCode }) => endCode);
-  return endCodes.reverse().join("");
-}
-function sliceAnsi(string4, start, end) {
-  const tokens = tokenize(string4, end);
-  let activeCodes = [];
-  let position = 0;
-  let returnValue = "";
-  let include = false;
-  for (const token of tokens) {
-    if (end !== void 0 && position >= end) {
-      break;
-    }
-    if (token.type === "ansi") {
-      activeCodes.push(token);
-      if (include) {
-        returnValue += token.code;
-      }
-    } else {
-      if (!include && position >= start) {
-        include = true;
-        activeCodes = reduceAnsiCodes(activeCodes);
-        returnValue = activeCodes.map(({ code }) => code).join("");
-      }
-      if (include) {
-        returnValue += token.value;
-      }
-      position += token.isFullWidth ? 2 : token.value.length;
-    }
-  }
-  returnValue += undoAnsiCodes(activeCodes);
-  return returnValue;
-}
-var ESCAPES2, CODE_POINT_0, CODE_POINT_9, MAX_ANSI_SEQUENCE_LENGTH, endCodesSet, endCodesMap;
-var init_slice_ansi = __esm({
-  "../node_modules/log-update/node_modules/slice-ansi/index.js"() {
-    "use strict";
-    init_ansi_styles();
-    init_is_fullwidth_code_point();
-    ESCAPES2 = /* @__PURE__ */ new Set([27, 155]);
-    CODE_POINT_0 = "0".codePointAt(0);
-    CODE_POINT_9 = "9".codePointAt(0);
-    MAX_ANSI_SEQUENCE_LENGTH = 19;
-    endCodesSet = /* @__PURE__ */ new Set();
-    endCodesMap = /* @__PURE__ */ new Map();
-    for (const [start, end] of ansi_styles_default.codes) {
-      endCodesSet.add(ansi_styles_default.color.ansi(end));
-      endCodesMap.set(ansi_styles_default.color.ansi(start), ansi_styles_default.color.ansi(end));
-    }
-  }
-});
-
-// ../node_modules/log-update/index.js
-var log_update_exports = {};
-__export(log_update_exports, {
-  createLogUpdate: () => createLogUpdate,
-  default: () => log_update_default,
-  logUpdateStderr: () => logUpdateStderr
-});
-function createLogUpdate(stream, { showCursor = false } = {}) {
-  let previousLineCount = 0;
-  let previousWidth = getWidth(stream);
-  let previousOutput = "";
-  const reset = () => {
-    previousOutput = "";
-    previousWidth = getWidth(stream);
-    previousLineCount = 0;
-  };
-  const render = (...arguments_) => {
-    if (!showCursor) {
-      cli_cursor_default.hide();
-    }
-    let output = fitToTerminalHeight(stream, arguments_.join(" ") + "\n");
-    const width = getWidth(stream);
-    if (output === previousOutput && previousWidth === width) {
-      return;
-    }
-    previousOutput = output;
-    previousWidth = width;
-    output = wrapAnsi(output, width, { trim: false, hard: true, wordWrap: false });
-    stream.write(base_exports.eraseLines(previousLineCount) + output);
-    previousLineCount = output.split("\n").length;
-  };
-  render.clear = () => {
-    stream.write(base_exports.eraseLines(previousLineCount));
-    reset();
-  };
-  render.done = () => {
-    reset();
-    if (!showCursor) {
-      cli_cursor_default.show();
-    }
-  };
-  return render;
-}
-var import_node_process4, defaultTerminalHeight, getWidth, fitToTerminalHeight, logUpdate, log_update_default, logUpdateStderr;
-var init_log_update = __esm({
-  "../node_modules/log-update/index.js"() {
-    "use strict";
-    import_node_process4 = __toESM(require("process"), 1);
-    init_ansi_escapes();
-    init_cli_cursor();
-    init_wrap_ansi();
-    init_slice_ansi();
-    init_strip_ansi();
-    defaultTerminalHeight = 24;
-    getWidth = ({ columns: columns2 = 80 }) => columns2;
-    fitToTerminalHeight = (stream, text) => {
-      const terminalHeight = stream.rows ?? defaultTerminalHeight;
-      const lines = text.split("\n");
-      const toRemove = Math.max(0, lines.length - terminalHeight);
-      return toRemove ? sliceAnsi(text, stripAnsi(lines.slice(0, toRemove).join("\n")).length + 1) : text;
-    };
-    logUpdate = createLogUpdate(import_node_process4.default.stdout);
-    log_update_default = logUpdate;
-    logUpdateStderr = createLogUpdate(import_node_process4.default.stderr);
-  }
-});
-
-// ../node_modules/slice-ansi/tokenize-ansi.js
-function isSgrParameterCharacter(codePoint) {
-  return codePoint >= CODE_POINT_02 && codePoint <= CODE_POINT_92 || codePoint === CODE_POINT_SEMICOLON || codePoint === CODE_POINT_COLON;
-}
-function isCsiParameterCharacter(codePoint) {
-  return codePoint >= CODE_POINT_CSI_PARAMETER_START && codePoint <= CODE_POINT_CSI_PARAMETER_END;
-}
-function isCsiIntermediateCharacter(codePoint) {
-  return codePoint >= CODE_POINT_CSI_INTERMEDIATE_START && codePoint <= CODE_POINT_CSI_INTERMEDIATE_END;
-}
-function isCsiFinalCharacter(codePoint) {
-  return codePoint >= CODE_POINT_CSI_FINAL_START && codePoint <= CODE_POINT_CSI_FINAL_END;
-}
-function isRegionalIndicatorCodePoint(codePoint) {
-  return codePoint >= REGIONAL_INDICATOR_SYMBOL_LETTER_A && codePoint <= REGIONAL_INDICATOR_SYMBOL_LETTER_Z;
-}
-function createControlParseResult(code, endIndex) {
-  return {
-    token: {
-      type: "control",
-      code
-    },
-    endIndex
-  };
-}
-function isEmojiStyleGrapheme(grapheme) {
-  if (EMOJI_PRESENTATION_GRAPHEME_REGEX.test(grapheme)) {
-    return true;
-  }
-  for (const character of grapheme) {
-    const codePoint = character.codePointAt(0);
-    if (codePoint === VARIATION_SELECTOR_16_CODE_POINT || codePoint === COMBINING_ENCLOSING_KEYCAP_CODE_POINT) {
-      return true;
-    }
-  }
-  return false;
-}
-function getGraphemeWidth(grapheme) {
-  let regionalIndicatorCount = 0;
-  for (const character of grapheme) {
-    const codePoint = character.codePointAt(0);
-    if (isFullwidthCodePoint(codePoint)) {
-      return 2;
-    }
-    if (isRegionalIndicatorCodePoint(codePoint)) {
-      regionalIndicatorCount++;
-    }
-  }
-  if (regionalIndicatorCount >= 1) {
-    return 2;
-  }
-  if (isEmojiStyleGrapheme(grapheme)) {
-    return 2;
-  }
-  return 1;
-}
-function getSgrPrefix(code) {
-  if (code.startsWith("\x9B")) {
-    return "\x9B";
-  }
-  return `${ESCAPE}${ANSI_CSI2}`;
-}
-function createSgrCode(prefix, values) {
-  return `${prefix}${values.join(";")}${ANSI_SGR_TERMINATOR2}`;
-}
-function getSgrFragments(code) {
-  const fragments = [];
-  const sgrPrefix = getSgrPrefix(code);
-  let parameterString;
-  if (code.startsWith(`${ESCAPE}${ANSI_CSI2}`)) {
-    parameterString = code.slice(2, -1);
-  } else if (code.startsWith("\x9B")) {
-    parameterString = code.slice(1, -1);
-  } else {
-    return fragments;
-  }
-  const rawCodes = parameterString.length === 0 ? [String(SGR_RESET_CODE)] : parameterString.split(";");
-  let index = 0;
-  while (index < rawCodes.length) {
-    const codeNumber = Number.parseInt(rawCodes[index], 10);
-    if (Number.isNaN(codeNumber)) {
-      index++;
-      continue;
-    }
-    if (codeNumber === SGR_RESET_CODE) {
-      fragments.push({ type: "reset" });
-      index++;
-      continue;
-    }
-    if (codeNumber === SGR_EXTENDED_FOREGROUND_CODE || codeNumber === SGR_EXTENDED_BACKGROUND_CODE) {
-      const colorType = Number.parseInt(rawCodes[index + 1], 10);
-      if (colorType === SGR_COLOR_TYPE_ANSI_256 && index + SGR_ANSI_256_LAST_PARAMETER_OFFSET < rawCodes.length) {
-        const openCode3 = createSgrCode(sgrPrefix, rawCodes.slice(index, index + SGR_ANSI_256_FRAGMENT_LENGTH));
-        fragments.push({
-          type: "start",
-          code: openCode3,
-          endCode: ansi_styles_default.color.ansi(codeNumber === SGR_EXTENDED_FOREGROUND_CODE ? SGR_DEFAULT_FOREGROUND_CODE : SGR_DEFAULT_BACKGROUND_CODE)
-        });
-        index += SGR_ANSI_256_FRAGMENT_LENGTH;
-        continue;
-      }
-      if (colorType === SGR_COLOR_TYPE_TRUECOLOR && index + SGR_TRUECOLOR_LAST_PARAMETER_OFFSET < rawCodes.length) {
-        const openCode3 = createSgrCode(sgrPrefix, rawCodes.slice(index, index + SGR_TRUECOLOR_FRAGMENT_LENGTH));
-        fragments.push({
-          type: "start",
-          code: openCode3,
-          endCode: ansi_styles_default.color.ansi(codeNumber === SGR_EXTENDED_FOREGROUND_CODE ? SGR_DEFAULT_FOREGROUND_CODE : SGR_DEFAULT_BACKGROUND_CODE)
-        });
-        index += SGR_TRUECOLOR_FRAGMENT_LENGTH;
-        continue;
-      }
-      const openCode2 = createSgrCode(sgrPrefix, [rawCodes[index]]);
-      fragments.push({
-        type: "start",
-        code: openCode2,
-        endCode: ansi_styles_default.color.ansi(codeNumber === SGR_EXTENDED_FOREGROUND_CODE ? SGR_DEFAULT_FOREGROUND_CODE : SGR_DEFAULT_BACKGROUND_CODE)
-      });
-      index++;
-      continue;
-    }
-    if (endCodeNumbers.has(codeNumber)) {
-      fragments.push({
-        type: "end",
-        endCode: ansi_styles_default.color.ansi(codeNumber)
-      });
-      index++;
-      continue;
-    }
-    const mappedEndCode = ansi_styles_default.codes.get(codeNumber);
-    if (mappedEndCode !== void 0) {
-      const openCode2 = createSgrCode(sgrPrefix, [rawCodes[index]]);
-      fragments.push({
-        type: "start",
-        code: openCode2,
-        endCode: ansi_styles_default.color.ansi(mappedEndCode)
-      });
-      index++;
-      continue;
-    }
-    const openCode = createSgrCode(sgrPrefix, [rawCodes[index]]);
-    fragments.push({
-      type: "start",
-      code: openCode,
-      endCode: ansi_styles_default.reset.open
-    });
-    index++;
-  }
-  if (fragments.length === 0) {
-    fragments.push({ type: "reset" });
-  }
-  return fragments;
-}
-function parseCsiCode(string4, index) {
-  const escapeCodePoint = string4.codePointAt(index);
-  let sequenceStartIndex;
-  if (escapeCodePoint === ESCAPE_CODE_POINT) {
-    if (string4[index + 1] !== ANSI_CSI2) {
-      return;
-    }
-    sequenceStartIndex = index + 2;
-  } else if (escapeCodePoint === C1_CSI_CODE_POINT) {
-    sequenceStartIndex = index + 1;
-  } else {
-    return;
-  }
-  let hasCanonicalSgrParameters = true;
-  for (let sequenceIndex = sequenceStartIndex; sequenceIndex < string4.length; sequenceIndex++) {
-    const codePoint = string4.codePointAt(sequenceIndex);
-    if (isCsiFinalCharacter(codePoint)) {
-      const code = string4.slice(index, sequenceIndex + 1);
-      if (string4[sequenceIndex] !== ANSI_SGR_TERMINATOR2 || !hasCanonicalSgrParameters) {
-        return createControlParseResult(code, sequenceIndex + 1);
-      }
-      return {
-        token: {
-          type: "sgr",
-          code,
-          fragments: getSgrFragments(code)
-        },
-        endIndex: sequenceIndex + 1
-      };
-    }
-    if (isCsiParameterCharacter(codePoint)) {
-      if (!isSgrParameterCharacter(codePoint)) {
-        hasCanonicalSgrParameters = false;
-      }
-      continue;
-    }
-    if (isCsiIntermediateCharacter(codePoint)) {
-      hasCanonicalSgrParameters = false;
-      continue;
-    }
-    const endIndex = sequenceIndex;
-    return createControlParseResult(string4.slice(index, endIndex), endIndex);
-  }
-  return createControlParseResult(string4.slice(index), string4.length);
-}
-function parseHyperlinkCode(string4, index) {
-  let hyperlinkPrefix;
-  let hyperlinkClose;
-  const codePoint = string4.codePointAt(index);
-  if (codePoint === ESCAPE_CODE_POINT && string4.startsWith(ANSI_HYPERLINK_ESC_PREFIX, index)) {
-    hyperlinkPrefix = ANSI_HYPERLINK_ESC_PREFIX;
-    hyperlinkClose = ANSI_HYPERLINK_ESC_CLOSE;
-  } else if (codePoint === C1_OSC_CODE_POINT && string4.startsWith(ANSI_HYPERLINK_C1_PREFIX, index)) {
-    hyperlinkPrefix = ANSI_HYPERLINK_C1_PREFIX;
-    hyperlinkClose = ANSI_HYPERLINK_C1_CLOSE;
-  } else {
-    return;
-  }
-  const uriStart = string4.indexOf(";", index + hyperlinkPrefix.length);
-  if (uriStart === -1) {
-    return createControlParseResult(string4.slice(index), string4.length);
-  }
-  for (let sequenceIndex = uriStart + 1; sequenceIndex < string4.length; sequenceIndex++) {
-    const character = string4[sequenceIndex];
-    if (character === ANSI_BELL) {
-      const code = string4.slice(index, sequenceIndex + 1);
-      const action = sequenceIndex === uriStart + 1 ? "close" : "open";
-      return {
-        token: {
-          type: "hyperlink",
-          code,
-          action,
-          closePrefix: hyperlinkClose,
-          terminator: ANSI_BELL
-        },
-        endIndex: sequenceIndex + 1
-      };
-    }
-    if (character === ESCAPE && string4[sequenceIndex + 1] === ANSI_OSC_TERMINATOR) {
-      const code = string4.slice(index, sequenceIndex + 2);
-      const action = sequenceIndex === uriStart + 1 ? "close" : "open";
-      return {
-        token: {
-          type: "hyperlink",
-          code,
-          action,
-          closePrefix: hyperlinkClose,
-          terminator: ANSI_STRING_TERMINATOR
-        },
-        endIndex: sequenceIndex + 2
-      };
-    }
-    if (character === C1_STRING_TERMINATOR) {
-      const code = string4.slice(index, sequenceIndex + 1);
-      const action = sequenceIndex === uriStart + 1 ? "close" : "open";
-      return {
-        token: {
-          type: "hyperlink",
-          code,
-          action,
-          closePrefix: hyperlinkClose,
-          terminator: C1_STRING_TERMINATOR
-        },
-        endIndex: sequenceIndex + 1
-      };
-    }
-  }
-  return createControlParseResult(string4.slice(index), string4.length);
-}
-function parseControlStringCode(string4, index) {
-  const codePoint = string4.codePointAt(index);
-  let sequenceStartIndex;
-  let supportsBellTerminator = false;
-  switch (codePoint) {
-    case ESCAPE_CODE_POINT: {
-      const command = string4[index + 1];
-      switch (command) {
-        case ANSI_OSC2: {
-          sequenceStartIndex = index + 2;
-          supportsBellTerminator = true;
-          break;
-        }
-        case ANSI_DCS:
-        case ANSI_SOS:
-        case ANSI_PM:
-        case ANSI_APC: {
-          sequenceStartIndex = index + 2;
-          break;
-        }
-        case ANSI_OSC_TERMINATOR: {
-          return createControlParseResult(ANSI_STRING_TERMINATOR, index + 2);
-        }
-        default: {
-          return;
-        }
-      }
-      break;
-    }
-    case C1_OSC_CODE_POINT: {
-      sequenceStartIndex = index + 1;
-      supportsBellTerminator = true;
-      break;
-    }
-    case C1_DCS_CODE_POINT:
-    case C1_SOS_CODE_POINT:
-    case C1_PM_CODE_POINT:
-    case C1_APC_CODE_POINT: {
-      sequenceStartIndex = index + 1;
-      break;
-    }
-    case C1_ST_CODE_POINT: {
-      return createControlParseResult(C1_STRING_TERMINATOR, index + 1);
-    }
-    default: {
-      return;
-    }
-  }
-  for (let sequenceIndex = sequenceStartIndex; sequenceIndex < string4.length; sequenceIndex++) {
-    if (supportsBellTerminator && string4[sequenceIndex] === ANSI_BELL) {
-      return createControlParseResult(string4.slice(index, sequenceIndex + 1), sequenceIndex + 1);
-    }
-    if (string4[sequenceIndex] === ESCAPE && string4[sequenceIndex + 1] === ANSI_OSC_TERMINATOR) {
-      return createControlParseResult(string4.slice(index, sequenceIndex + 2), sequenceIndex + 2);
-    }
-    if (string4[sequenceIndex] === C1_STRING_TERMINATOR) {
-      return createControlParseResult(string4.slice(index, sequenceIndex + 1), sequenceIndex + 1);
-    }
-  }
-  return createControlParseResult(string4.slice(index), string4.length);
-}
-function parseAnsiCode2(string4, index) {
-  const codePoint = string4.codePointAt(index);
-  if (codePoint === ESCAPE_CODE_POINT || codePoint === C1_OSC_CODE_POINT) {
-    const hyperlinkCode = parseHyperlinkCode(string4, index);
-    if (hyperlinkCode) {
-      return hyperlinkCode;
-    }
-  }
-  const controlStringCode = parseControlStringCode(string4, index);
-  if (controlStringCode) {
-    return controlStringCode;
-  }
-  return parseCsiCode(string4, index);
-}
-function appendTrailingAnsiTokens(string4, index, tokens) {
-  while (index < string4.length) {
-    const nextCodePoint = string4.codePointAt(index);
-    if (!ESCAPES3.has(nextCodePoint)) {
-      break;
-    }
-    const escapeCode = parseAnsiCode2(string4, index);
-    if (!escapeCode) {
-      break;
-    }
-    tokens.push(escapeCode.token);
-    index = escapeCode.endIndex;
-  }
-  return index;
-}
-function parseCharacterTokenWithRawSegmentation(string4, index, graphemeSegments) {
-  const segment = graphemeSegments.containing(index);
-  if (!segment || segment.index !== index) {
-    return;
-  }
-  return {
-    token: {
-      type: "character",
-      // Intentionally preserve UAX29 behavior (GB3): CRLF is one grapheme cluster.
-      value: segment.segment,
-      visibleWidth: getGraphemeWidth(segment.segment),
-      isGraphemeContinuation: false
-    },
-    endIndex: index + segment.segment.length
-  };
-}
-function collectVisibleCharacters(string4) {
-  const visibleCharacters = [];
-  let index = 0;
-  while (index < string4.length) {
-    const codePoint = string4.codePointAt(index);
-    if (ESCAPES3.has(codePoint)) {
-      const code = parseAnsiCode2(string4, index);
-      if (code) {
-        index = code.endIndex;
-        continue;
-      }
-    }
-    const value = String.fromCodePoint(codePoint);
-    visibleCharacters.push({
-      value,
-      visibleWidth: 1,
-      isGraphemeContinuation: false
-    });
-    index += value.length;
-  }
-  return visibleCharacters;
-}
-function applyGraphemeMetadata(visibleCharacters) {
-  if (visibleCharacters.length === 0) {
-    return;
-  }
-  const visibleString = visibleCharacters.map(({ value }) => value).join("");
-  const scalarOffsets = [];
-  let scalarOffset = 0;
-  for (const visibleCharacter of visibleCharacters) {
-    scalarOffsets.push(scalarOffset);
-    scalarOffset += visibleCharacter.value.length;
-  }
-  let scalarIndex = 0;
-  for (const segment of GRAPHEME_SEGMENTER.segment(visibleString)) {
-    while (scalarIndex < visibleCharacters.length && scalarOffsets[scalarIndex] < segment.index) {
-      scalarIndex++;
-    }
-    let graphemeIndex = scalarIndex;
-    let isFirstInGrapheme = true;
-    while (graphemeIndex < visibleCharacters.length && scalarOffsets[graphemeIndex] < segment.index + segment.segment.length) {
-      visibleCharacters[graphemeIndex].visibleWidth = isFirstInGrapheme ? getGraphemeWidth(segment.segment) : 0;
-      visibleCharacters[graphemeIndex].isGraphemeContinuation = !isFirstInGrapheme;
-      isFirstInGrapheme = false;
-      graphemeIndex++;
-    }
-    scalarIndex = graphemeIndex;
-  }
-}
-function tokenizeAnsiWithVisibleSegmentation(string4, { endCharacter = Number.POSITIVE_INFINITY } = {}) {
-  const tokens = [];
-  const visibleCharacters = collectVisibleCharacters(string4);
-  applyGraphemeMetadata(visibleCharacters);
-  let index = 0;
-  let visibleCharacterIndex = 0;
-  let visibleCount = 0;
-  while (index < string4.length) {
-    const codePoint = string4.codePointAt(index);
-    if (ESCAPES3.has(codePoint)) {
-      const code = parseAnsiCode2(string4, index);
-      if (code) {
-        tokens.push(code.token);
-        index = code.endIndex;
-        continue;
-      }
-    }
-    const value = String.fromCodePoint(codePoint);
-    const visibleCharacter = visibleCharacters[visibleCharacterIndex];
-    let visibleWidth = isFullwidthCodePoint(codePoint) ? 2 : value.length;
-    if (visibleCharacter) {
-      visibleWidth = visibleCharacter.visibleWidth;
-    }
-    const token = {
-      type: "character",
-      value,
-      visibleWidth,
-      isGraphemeContinuation: visibleCharacter ? visibleCharacter.isGraphemeContinuation : false
-    };
-    tokens.push(token);
-    index += value.length;
-    visibleCharacterIndex++;
-    visibleCount += token.visibleWidth;
-    if (visibleCount >= endCharacter) {
-      const nextVisibleCharacter = visibleCharacters[visibleCharacterIndex];
-      if (!nextVisibleCharacter || !nextVisibleCharacter.isGraphemeContinuation) {
-        index = appendTrailingAnsiTokens(string4, index, tokens);
-        break;
-      }
-    }
-  }
-  return tokens;
-}
-function areValuesInSameGrapheme(leftValue, rightValue) {
-  const pair = `${leftValue}${rightValue}`;
-  const splitIndex = leftValue.length;
-  for (const segment of GRAPHEME_SEGMENTER.segment(pair)) {
-    if (segment.index === splitIndex) {
-      return false;
-    }
-    if (segment.index > splitIndex) {
-      return true;
-    }
-  }
-  return true;
-}
-function hasAnsiSplitContinuationAhead(string4, startIndex, previousVisibleValue, graphemeSegments) {
-  if (!previousVisibleValue) {
-    return false;
-  }
-  let index = startIndex;
-  let hasAnsiCode = false;
-  while (index < string4.length) {
-    const codePoint = string4.codePointAt(index);
-    if (ESCAPES3.has(codePoint)) {
-      const code = parseAnsiCode2(string4, index);
-      if (code) {
-        hasAnsiCode = true;
-        index = code.endIndex;
-        continue;
-      }
-    }
-    if (!hasAnsiCode) {
-      return false;
-    }
-    const characterToken = parseCharacterTokenWithRawSegmentation(string4, index, graphemeSegments);
-    if (!characterToken) {
-      return true;
-    }
-    return areValuesInSameGrapheme(previousVisibleValue, characterToken.token.value);
-  }
-  return false;
-}
-function tokenizeAnsi(string4, { endCharacter = Number.POSITIVE_INFINITY } = {}) {
-  const tokens = [];
-  const graphemeSegments = GRAPHEME_SEGMENTER.segment(string4);
-  let index = 0;
-  let visibleCount = 0;
-  let previousVisibleValue;
-  let hasAnsiSinceLastVisible = false;
-  while (index < string4.length) {
-    const codePoint = string4.codePointAt(index);
-    if (ESCAPES3.has(codePoint)) {
-      const code = parseAnsiCode2(string4, index);
-      if (code) {
-        tokens.push(code.token);
-        index = code.endIndex;
-        hasAnsiSinceLastVisible = true;
-        continue;
-      }
-    }
-    const characterToken = parseCharacterTokenWithRawSegmentation(string4, index, graphemeSegments);
-    if (!characterToken) {
-      return tokenizeAnsiWithVisibleSegmentation(string4, { endCharacter });
-    }
-    if (hasAnsiSinceLastVisible && previousVisibleValue && areValuesInSameGrapheme(previousVisibleValue, characterToken.token.value)) {
-      return tokenizeAnsiWithVisibleSegmentation(string4, { endCharacter });
-    }
-    tokens.push(characterToken.token);
-    index = characterToken.endIndex;
-    visibleCount += characterToken.token.visibleWidth;
-    hasAnsiSinceLastVisible = false;
-    previousVisibleValue = characterToken.token.value;
-    if (visibleCount >= endCharacter) {
-      if (hasAnsiSplitContinuationAhead(string4, index, previousVisibleValue, graphemeSegments)) {
-        return tokenizeAnsiWithVisibleSegmentation(string4, { endCharacter });
-      }
-      index = appendTrailingAnsiTokens(string4, index, tokens);
-      break;
-    }
-  }
-  return tokens;
-}
-var ESCAPE_CODE_POINT, C1_DCS_CODE_POINT, C1_SOS_CODE_POINT, C1_CSI_CODE_POINT, C1_ST_CODE_POINT, C1_OSC_CODE_POINT, C1_PM_CODE_POINT, C1_APC_CODE_POINT, ESCAPES3, ESCAPE, ANSI_BELL, ANSI_CSI2, ANSI_OSC2, ANSI_DCS, ANSI_SOS, ANSI_PM, ANSI_APC, ANSI_SGR_TERMINATOR2, ANSI_OSC_TERMINATOR, ANSI_STRING_TERMINATOR, C1_OSC, C1_STRING_TERMINATOR, ANSI_HYPERLINK_ESC_PREFIX, ANSI_HYPERLINK_C1_PREFIX, ANSI_HYPERLINK_ESC_CLOSE, ANSI_HYPERLINK_C1_CLOSE, CODE_POINT_02, CODE_POINT_92, CODE_POINT_SEMICOLON, CODE_POINT_COLON, CODE_POINT_CSI_PARAMETER_START, CODE_POINT_CSI_PARAMETER_END, CODE_POINT_CSI_INTERMEDIATE_START, CODE_POINT_CSI_INTERMEDIATE_END, CODE_POINT_CSI_FINAL_START, CODE_POINT_CSI_FINAL_END, REGIONAL_INDICATOR_SYMBOL_LETTER_A, REGIONAL_INDICATOR_SYMBOL_LETTER_Z, SGR_RESET_CODE, SGR_EXTENDED_FOREGROUND_CODE, SGR_DEFAULT_FOREGROUND_CODE, SGR_EXTENDED_BACKGROUND_CODE, SGR_DEFAULT_BACKGROUND_CODE, SGR_COLOR_TYPE_ANSI_256, SGR_COLOR_TYPE_TRUECOLOR, SGR_ANSI_256_FRAGMENT_LENGTH, SGR_TRUECOLOR_FRAGMENT_LENGTH, SGR_ANSI_256_LAST_PARAMETER_OFFSET, SGR_TRUECOLOR_LAST_PARAMETER_OFFSET, VARIATION_SELECTOR_16_CODE_POINT, COMBINING_ENCLOSING_KEYCAP_CODE_POINT, EMOJI_PRESENTATION_GRAPHEME_REGEX, GRAPHEME_SEGMENTER, endCodeNumbers;
-var init_tokenize_ansi = __esm({
-  "../node_modules/slice-ansi/tokenize-ansi.js"() {
-    "use strict";
-    init_ansi_styles();
-    init_is_fullwidth_code_point();
-    ESCAPE_CODE_POINT = 27;
-    C1_DCS_CODE_POINT = 144;
-    C1_SOS_CODE_POINT = 152;
-    C1_CSI_CODE_POINT = 155;
-    C1_ST_CODE_POINT = 156;
-    C1_OSC_CODE_POINT = 157;
-    C1_PM_CODE_POINT = 158;
-    C1_APC_CODE_POINT = 159;
-    ESCAPES3 = /* @__PURE__ */ new Set([
-      ESCAPE_CODE_POINT,
-      C1_DCS_CODE_POINT,
-      C1_SOS_CODE_POINT,
-      C1_CSI_CODE_POINT,
-      C1_ST_CODE_POINT,
-      C1_OSC_CODE_POINT,
-      C1_PM_CODE_POINT,
-      C1_APC_CODE_POINT
-    ]);
-    ESCAPE = "\x1B";
-    ANSI_BELL = "\x07";
-    ANSI_CSI2 = "[";
-    ANSI_OSC2 = "]";
-    ANSI_DCS = "P";
-    ANSI_SOS = "X";
-    ANSI_PM = "^";
-    ANSI_APC = "_";
-    ANSI_SGR_TERMINATOR2 = "m";
-    ANSI_OSC_TERMINATOR = "\\";
-    ANSI_STRING_TERMINATOR = `${ESCAPE}${ANSI_OSC_TERMINATOR}`;
-    C1_OSC = "\x9D";
-    C1_STRING_TERMINATOR = "\x9C";
-    ANSI_HYPERLINK_ESC_PREFIX = `${ESCAPE}${ANSI_OSC2}8;`;
-    ANSI_HYPERLINK_C1_PREFIX = `${C1_OSC}8;`;
-    ANSI_HYPERLINK_ESC_CLOSE = `${ANSI_HYPERLINK_ESC_PREFIX};`;
-    ANSI_HYPERLINK_C1_CLOSE = `${ANSI_HYPERLINK_C1_PREFIX};`;
-    CODE_POINT_02 = "0".codePointAt(0);
-    CODE_POINT_92 = "9".codePointAt(0);
-    CODE_POINT_SEMICOLON = ";".codePointAt(0);
-    CODE_POINT_COLON = ":".codePointAt(0);
-    CODE_POINT_CSI_PARAMETER_START = "0".codePointAt(0);
-    CODE_POINT_CSI_PARAMETER_END = "?".codePointAt(0);
-    CODE_POINT_CSI_INTERMEDIATE_START = " ".codePointAt(0);
-    CODE_POINT_CSI_INTERMEDIATE_END = "/".codePointAt(0);
-    CODE_POINT_CSI_FINAL_START = "@".codePointAt(0);
-    CODE_POINT_CSI_FINAL_END = "~".codePointAt(0);
-    REGIONAL_INDICATOR_SYMBOL_LETTER_A = 127462;
-    REGIONAL_INDICATOR_SYMBOL_LETTER_Z = 127487;
-    SGR_RESET_CODE = 0;
-    SGR_EXTENDED_FOREGROUND_CODE = 38;
-    SGR_DEFAULT_FOREGROUND_CODE = 39;
-    SGR_EXTENDED_BACKGROUND_CODE = 48;
-    SGR_DEFAULT_BACKGROUND_CODE = 49;
-    SGR_COLOR_TYPE_ANSI_256 = 5;
-    SGR_COLOR_TYPE_TRUECOLOR = 2;
-    SGR_ANSI_256_FRAGMENT_LENGTH = 3;
-    SGR_TRUECOLOR_FRAGMENT_LENGTH = 5;
-    SGR_ANSI_256_LAST_PARAMETER_OFFSET = 2;
-    SGR_TRUECOLOR_LAST_PARAMETER_OFFSET = 4;
-    VARIATION_SELECTOR_16_CODE_POINT = 65039;
-    COMBINING_ENCLOSING_KEYCAP_CODE_POINT = 8419;
-    EMOJI_PRESENTATION_GRAPHEME_REGEX = new RegExp("\\p{Emoji_Presentation}", "u");
-    GRAPHEME_SEGMENTER = new Intl.Segmenter(void 0, { granularity: "grapheme" });
-    endCodeNumbers = /* @__PURE__ */ new Set();
-    for (const [, end] of ansi_styles_default.codes) {
-      endCodeNumbers.add(end);
-    }
-  }
-});
-
-// ../node_modules/slice-ansi/index.js
-function applySgrFragments(activeStyles, fragments) {
-  for (const fragment of fragments) {
-    switch (fragment.type) {
-      case "reset": {
-        activeStyles.clear();
-        break;
-      }
-      case "end": {
-        activeStyles.delete(fragment.endCode);
-        break;
-      }
-      case "start": {
-        activeStyles.delete(fragment.endCode);
-        activeStyles.set(fragment.endCode, fragment.code);
-        break;
-      }
-      default: {
-        break;
-      }
-    }
-  }
-  return activeStyles;
-}
-function undoAnsiCodes2(activeStyles) {
-  return [...activeStyles.keys()].reverse().join("");
-}
-function closeHyperlink(hyperlinkToken) {
-  return `${hyperlinkToken.closePrefix}${hyperlinkToken.terminator}`;
-}
-function shouldIncludeSgrAfterEnd(token, activeStyles) {
-  let hasStartFragment = false;
-  let hasClosingEffect = false;
-  for (const fragment of token.fragments) {
-    if (fragment.type === "start") {
-      hasStartFragment = true;
-      continue;
-    }
-    if (fragment.type === "reset" && activeStyles.size > 0) {
-      hasClosingEffect = true;
-      continue;
-    }
-    if (fragment.type === "end" && activeStyles.has(fragment.endCode)) {
-      hasClosingEffect = true;
-    }
-  }
-  return hasClosingEffect && !hasStartFragment;
-}
-function applySgrToken({ token, isPastEnd, activeStyles, returnValue, include, activeHyperlink, position }) {
-  if (isPastEnd && !shouldIncludeSgrAfterEnd(token, activeStyles)) {
-    return {
-      activeStyles,
-      activeHyperlink,
-      position,
-      returnValue,
-      include
-    };
-  }
-  activeStyles = applySgrFragments(activeStyles, token.fragments);
-  if (include) {
-    returnValue += token.code;
-  }
-  return {
-    activeStyles,
-    activeHyperlink,
-    position,
-    returnValue,
-    include
-  };
-}
-function applyHyperlinkToken({ token, isPastEnd, activeStyles, activeHyperlink, position, returnValue, include }) {
-  if (isPastEnd && (token.action !== "close" || !activeHyperlink)) {
-    return {
-      activeStyles,
-      activeHyperlink,
-      position,
-      returnValue,
-      include
-    };
-  }
-  if (token.action === "open") {
-    activeHyperlink = token;
-  } else if (token.action === "close") {
-    activeHyperlink = void 0;
-  }
-  if (include) {
-    returnValue += token.code;
-  }
-  return {
-    activeStyles,
-    activeHyperlink,
-    position,
-    returnValue,
-    include
-  };
-}
-function applyControlToken({ token, isPastEnd, activeStyles, activeHyperlink, position, returnValue, include }) {
-  if (!isPastEnd && include) {
-    returnValue += token.code;
-  }
-  return {
-    activeStyles,
-    activeHyperlink,
-    position,
-    returnValue,
-    include
-  };
-}
-function applyCharacterToken({ token, start, activeStyles, activeHyperlink, position, returnValue, include }) {
-  if (!include && position >= start && !token.isGraphemeContinuation) {
-    include = true;
-    returnValue = [...activeStyles.values()].join("");
-    if (activeHyperlink) {
-      returnValue += activeHyperlink.code;
-    }
-  }
-  if (include) {
-    returnValue += token.value;
-  }
-  position += token.visibleWidth;
-  return {
-    activeStyles,
-    activeHyperlink,
-    position,
-    returnValue,
-    include
-  };
-}
-function applyToken(parameters) {
-  const tokenHandler = tokenHandlers[parameters.token.type];
-  if (!tokenHandler) {
-    const {
-      activeStyles,
-      activeHyperlink,
-      position,
-      returnValue,
-      include
-    } = parameters;
-    return {
-      activeStyles,
-      activeHyperlink,
-      position,
-      returnValue,
-      include
-    };
-  }
-  return tokenHandler(parameters);
-}
-function createHasContinuationAheadMap(tokens) {
-  const hasContinuationAhead = Array.from({ length: tokens.length }, () => false);
-  let nextCharacterIsContinuation = false;
-  for (let tokenIndex = tokens.length - 1; tokenIndex >= 0; tokenIndex--) {
-    const token = tokens[tokenIndex];
-    hasContinuationAhead[tokenIndex] = nextCharacterIsContinuation;
-    if (token.type === "character") {
-      nextCharacterIsContinuation = Boolean(token.isGraphemeContinuation);
-    }
-  }
-  return hasContinuationAhead;
-}
-function sliceAnsi2(string4, start, end) {
-  const tokens = tokenizeAnsi(string4, { endCharacter: end });
-  const hasContinuationAhead = createHasContinuationAheadMap(tokens);
-  let activeStyles = /* @__PURE__ */ new Map();
-  let activeHyperlink;
-  let position = 0;
-  let returnValue = "";
-  let include = false;
-  for (const [tokenIndex, token] of tokens.entries()) {
-    let isPastEnd = end !== void 0 && position >= end;
-    if (isPastEnd && token.type !== "character" && hasContinuationAhead[tokenIndex]) {
-      isPastEnd = false;
-    }
-    if (isPastEnd && token.type === "character" && !token.isGraphemeContinuation) {
-      break;
-    }
-    ({ activeStyles, activeHyperlink, position, returnValue, include } = applyToken({
-      token,
-      isPastEnd,
-      start,
-      activeStyles,
-      activeHyperlink,
-      position,
-      returnValue,
-      include
-    }));
-  }
-  if (!include) {
-    return "";
-  }
-  if (activeHyperlink) {
-    returnValue += closeHyperlink(activeHyperlink);
-  }
-  returnValue += undoAnsiCodes2(activeStyles);
-  return returnValue;
-}
-var tokenHandlers;
-var init_slice_ansi2 = __esm({
-  "../node_modules/slice-ansi/index.js"() {
-    "use strict";
-    init_tokenize_ansi();
-    tokenHandlers = {
-      sgr: applySgrToken,
-      hyperlink: applyHyperlinkToken,
-      control: applyControlToken,
-      character: applyCharacterToken
-    };
-  }
-});
-
-// ../node_modules/cli-truncate/node_modules/string-width/index.js
-function isDoubleWidthNonRgiEmojiSequence(segment) {
-  if (segment.length > 50) {
-    return false;
-  }
-  if (unqualifiedKeycapRegex.test(segment)) {
-    return true;
-  }
-  if (segment.includes("\u200D")) {
-    const pictographics = segment.match(extendedPictographicRegex);
-    return pictographics !== null && pictographics.length >= 2;
-  }
-  return false;
-}
-function baseVisible(segment) {
-  return segment.replace(leadingNonPrintingRegex, "");
-}
-function isZeroWidthCluster(segment) {
-  return zeroWidthClusterRegex.test(segment);
-}
-function trailingHalfwidthWidth(segment, eastAsianWidthOptions) {
-  let extra = 0;
-  if (segment.length > 1) {
-    for (const char of segment.slice(1)) {
-      if (char >= "\uFF00" && char <= "\uFFEF") {
-        extra += eastAsianWidth(char.codePointAt(0), eastAsianWidthOptions);
-      }
-    }
-  }
-  return extra;
-}
-function stringWidth2(input, options = {}) {
-  if (typeof input !== "string" || input.length === 0) {
-    return 0;
-  }
-  const {
-    ambiguousIsNarrow = true,
-    countAnsiEscapeCodes = false
-  } = options;
-  let string4 = input;
-  if (!countAnsiEscapeCodes && (string4.includes("\x1B") || string4.includes("\x9B"))) {
-    string4 = stripAnsi(string4);
-  }
-  if (string4.length === 0) {
-    return 0;
-  }
-  if (/^[\u0020-\u007E]*$/.test(string4)) {
-    return string4.length;
-  }
-  let width = 0;
-  const eastAsianWidthOptions = { ambiguousAsWide: !ambiguousIsNarrow };
-  for (const { segment } of segmenter2.segment(string4)) {
-    if (isZeroWidthCluster(segment)) {
-      continue;
-    }
-    if (rgiEmojiRegex.test(segment) || isDoubleWidthNonRgiEmojiSequence(segment)) {
-      width += 2;
-      continue;
-    }
-    const codePoint = baseVisible(segment).codePointAt(0);
-    width += eastAsianWidth(codePoint, eastAsianWidthOptions);
-    width += trailingHalfwidthWidth(segment, eastAsianWidthOptions);
-  }
-  return width;
-}
-var segmenter2, zeroWidthClusterRegex, leadingNonPrintingRegex, rgiEmojiRegex, unqualifiedKeycapRegex, extendedPictographicRegex;
-var init_string_width2 = __esm({
-  "../node_modules/cli-truncate/node_modules/string-width/index.js"() {
-    "use strict";
-    init_strip_ansi();
-    init_get_east_asian_width();
-    segmenter2 = new Intl.Segmenter();
-    zeroWidthClusterRegex = new RegExp("^(?:\\p{Default_Ignorable_Code_Point}|\\p{Control}|\\p{Format}|\\p{Mark}|\\p{Surrogate})+$", "v");
-    leadingNonPrintingRegex = new RegExp("^[\\p{Default_Ignorable_Code_Point}\\p{Control}\\p{Format}\\p{Mark}\\p{Surrogate}]+", "v");
-    rgiEmojiRegex = new RegExp("^\\p{RGI_Emoji}$", "v");
-    unqualifiedKeycapRegex = /^[\d#*]\u20E3$/;
-    extendedPictographicRegex = new RegExp("\\p{Extended_Pictographic}", "gu");
-  }
-});
-
-// ../node_modules/cli-truncate/index.js
-var cli_truncate_exports = {};
-__export(cli_truncate_exports, {
-  default: () => cliTruncate
-});
-function getIndexOfNearestSpace(string4, wantedIndex, shouldSearchRight) {
-  if (string4.charAt(wantedIndex) === " ") {
-    return wantedIndex;
-  }
-  const direction = shouldSearchRight ? 1 : -1;
-  for (let index = 0; index <= 3; index++) {
-    const finalIndex = wantedIndex + index * direction;
-    if (string4.charAt(finalIndex) === " ") {
-      return finalIndex;
-    }
-  }
-  return wantedIndex;
-}
-function cliTruncate(text, columns2, options = {}) {
-  const {
-    position = "end",
-    space = false,
-    preferTruncationOnSpace = false
-  } = options;
-  let { truncationCharacter = "\u2026" } = options;
-  if (typeof text !== "string") {
-    throw new TypeError(`Expected \`input\` to be a string, got ${typeof text}`);
-  }
-  if (typeof columns2 !== "number") {
-    throw new TypeError(`Expected \`columns\` to be a number, got ${typeof columns2}`);
-  }
-  if (columns2 < 1) {
-    return "";
-  }
-  const length = stringWidth2(text);
-  if (length <= columns2) {
-    return text;
-  }
-  if (columns2 === 1) {
-    return truncationCharacter;
-  }
-  const ANSI = {
-    ESC: 27,
-    LEFT_BRACKET: 91,
-    LETTER_M: 109
-  };
-  const isSgrParameter = (code) => code >= 48 && code <= 57 || code === 59;
-  function leadingSgrSpanEndIndex(string4) {
-    let index = 0;
-    while (index + 2 < string4.length && string4.codePointAt(index) === ANSI.ESC && string4.codePointAt(index + 1) === ANSI.LEFT_BRACKET) {
-      let j = index + 2;
-      while (j < string4.length && isSgrParameter(string4.codePointAt(j))) {
-        j++;
-      }
-      if (j < string4.length && string4.codePointAt(j) === ANSI.LETTER_M) {
-        index = j + 1;
-        continue;
-      }
-      break;
-    }
-    return index;
-  }
-  function trailingSgrSpanStartIndex(string4) {
-    let start = string4.length;
-    while (start > 1 && string4.codePointAt(start - 1) === ANSI.LETTER_M) {
-      let j = start - 2;
-      while (j >= 0 && isSgrParameter(string4.codePointAt(j))) {
-        j--;
-      }
-      if (j >= 1 && string4.codePointAt(j - 1) === ANSI.ESC && string4.codePointAt(j) === ANSI.LEFT_BRACKET) {
-        start = j - 1;
-        continue;
-      }
-      break;
-    }
-    return start;
-  }
-  function appendWithInheritedStyleFromEnd(visible, suffix) {
-    const start = trailingSgrSpanStartIndex(visible);
-    if (start === visible.length) {
-      return visible + suffix;
-    }
-    return visible.slice(0, start) + suffix + visible.slice(start);
-  }
-  function prependWithInheritedStyleFromStart(prefix, visible) {
-    const end = leadingSgrSpanEndIndex(visible);
-    if (end === 0) {
-      return prefix + visible;
-    }
-    return visible.slice(0, end) + prefix + visible.slice(end);
-  }
-  if (position === "start") {
-    if (preferTruncationOnSpace) {
-      const nearestSpace = getIndexOfNearestSpace(text, length - columns2 + 1, true);
-      const right2 = sliceAnsi2(text, nearestSpace, length).trim();
-      return prependWithInheritedStyleFromStart(truncationCharacter, right2);
-    }
-    if (space) {
-      truncationCharacter += " ";
-    }
-    const right = sliceAnsi2(text, length - columns2 + stringWidth2(truncationCharacter), length);
-    return prependWithInheritedStyleFromStart(truncationCharacter, right);
-  }
-  if (position === "middle") {
-    if (space) {
-      truncationCharacter = ` ${truncationCharacter} `;
-    }
-    const half = Math.floor(columns2 / 2);
-    if (preferTruncationOnSpace) {
-      const spaceNearFirstBreakPoint = getIndexOfNearestSpace(text, half);
-      const spaceNearSecondBreakPoint = getIndexOfNearestSpace(text, length - (columns2 - half) + 1, true);
-      return sliceAnsi2(text, 0, spaceNearFirstBreakPoint) + truncationCharacter + sliceAnsi2(text, spaceNearSecondBreakPoint, length).trim();
-    }
-    return sliceAnsi2(text, 0, half) + truncationCharacter + sliceAnsi2(text, length - (columns2 - half) + stringWidth2(truncationCharacter), length);
-  }
-  if (position === "end") {
-    if (preferTruncationOnSpace) {
-      const nearestSpace = getIndexOfNearestSpace(text, columns2 - 1);
-      const left2 = sliceAnsi2(text, 0, nearestSpace);
-      return appendWithInheritedStyleFromEnd(left2, truncationCharacter);
-    }
-    if (space) {
-      truncationCharacter = ` ${truncationCharacter}`;
-    }
-    const left = sliceAnsi2(text, 0, columns2 - stringWidth2(truncationCharacter));
-    return appendWithInheritedStyleFromEnd(left, truncationCharacter);
-  }
-  throw new Error(`Expected \`options.position\` to be either \`start\`, \`middle\` or \`end\`, got ${position}`);
-}
-var init_cli_truncate = __esm({
-  "../node_modules/cli-truncate/index.js"() {
-    "use strict";
-    init_slice_ansi2();
-    init_string_width2();
-  }
-});
-
-// ../node_modules/listr2/node_modules/string-width/index.js
-function isDoubleWidthNonRgiEmojiSequence2(segment) {
-  if (segment.length > 50) {
-    return false;
-  }
-  if (unqualifiedKeycapRegex2.test(segment)) {
-    return true;
-  }
-  if (segment.includes("\u200D")) {
-    const pictographics = segment.match(extendedPictographicRegex2);
-    return pictographics !== null && pictographics.length >= 2;
-  }
-  return false;
-}
-function baseVisible2(segment) {
-  return segment.replace(leadingNonPrintingRegex2, "");
-}
-function isZeroWidthCluster2(segment) {
-  return zeroWidthClusterRegex2.test(segment);
-}
-function trailingHalfwidthWidth2(segment, eastAsianWidthOptions) {
-  let extra = 0;
-  if (segment.length > 1) {
-    for (const char of segment.slice(1)) {
-      if (char >= "\uFF00" && char <= "\uFFEF") {
-        extra += eastAsianWidth(char.codePointAt(0), eastAsianWidthOptions);
-      }
-    }
-  }
-  return extra;
-}
-function stringWidth3(input, options = {}) {
-  if (typeof input !== "string" || input.length === 0) {
-    return 0;
-  }
-  const {
-    ambiguousIsNarrow = true,
-    countAnsiEscapeCodes = false
-  } = options;
-  let string4 = input;
-  if (!countAnsiEscapeCodes && (string4.includes("\x1B") || string4.includes("\x9B"))) {
-    string4 = stripAnsi(string4);
-  }
-  if (string4.length === 0) {
-    return 0;
-  }
-  if (/^[\u0020-\u007E]*$/.test(string4)) {
-    return string4.length;
-  }
-  let width = 0;
-  const eastAsianWidthOptions = { ambiguousAsWide: !ambiguousIsNarrow };
-  for (const { segment } of segmenter3.segment(string4)) {
-    if (isZeroWidthCluster2(segment)) {
-      continue;
-    }
-    if (rgiEmojiRegex2.test(segment) || isDoubleWidthNonRgiEmojiSequence2(segment)) {
-      width += 2;
-      continue;
-    }
-    const codePoint = baseVisible2(segment).codePointAt(0);
-    width += eastAsianWidth(codePoint, eastAsianWidthOptions);
-    width += trailingHalfwidthWidth2(segment, eastAsianWidthOptions);
-  }
-  return width;
-}
-var segmenter3, zeroWidthClusterRegex2, leadingNonPrintingRegex2, rgiEmojiRegex2, unqualifiedKeycapRegex2, extendedPictographicRegex2;
-var init_string_width3 = __esm({
-  "../node_modules/listr2/node_modules/string-width/index.js"() {
-    "use strict";
-    init_strip_ansi();
-    init_get_east_asian_width();
-    segmenter3 = new Intl.Segmenter();
-    zeroWidthClusterRegex2 = new RegExp("^(?:\\p{Default_Ignorable_Code_Point}|\\p{Control}|\\p{Format}|\\p{Mark}|\\p{Surrogate})+$", "v");
-    leadingNonPrintingRegex2 = new RegExp("^[\\p{Default_Ignorable_Code_Point}\\p{Control}\\p{Format}\\p{Mark}\\p{Surrogate}]+", "v");
-    rgiEmojiRegex2 = new RegExp("^\\p{RGI_Emoji}$", "v");
-    unqualifiedKeycapRegex2 = /^[\d#*]\u20E3$/;
-    extendedPictographicRegex2 = new RegExp("\\p{Extended_Pictographic}", "gu");
-  }
-});
-
-// ../node_modules/listr2/node_modules/wrap-ansi/index.js
-var wrap_ansi_exports = {};
-__export(wrap_ansi_exports, {
-  default: () => wrapAnsi2
-});
-function wrapAnsi2(string4, columns2, options) {
-  return String(string4).normalize().replaceAll("\r\n", "\n").split("\n").map((line) => exec2(expandTabs(line), columns2, options)).join("\n");
-}
-var ANSI_ESCAPE, ANSI_ESCAPE_CSI, ESCAPES4, ANSI_ESCAPE_BELL2, ANSI_CSI3, ANSI_OSC3, ANSI_SGR_TERMINATOR3, ANSI_SGR_RESET, ANSI_SGR_RESET_FOREGROUND, ANSI_SGR_RESET_BACKGROUND, ANSI_SGR_RESET_UNDERLINE_COLOR, ANSI_SGR_FOREGROUND_EXTENDED, ANSI_SGR_BACKGROUND_EXTENDED, ANSI_SGR_UNDERLINE_COLOR_EXTENDED, ANSI_SGR_COLOR_MODE_256, ANSI_SGR_COLOR_MODE_RGB, ANSI_ESCAPE_LINK2, ANSI_ESCAPE_REGEX, ANSI_ESCAPE_CSI_REGEX, ANSI_SGR_MODIFIER_CLOSE_CODES, segmenter4, getGraphemes, TAB_SIZE, wrapAnsiCode2, wrapAnsiHyperlink2, getSgrTokens, removeActiveStyle, upsertActiveStyle, removeModifierStylesByClose, getColorStyle, applySgrResetCode, applySgrToken2, applySgrParameters, applySgrResets, applyLeadingSgrResets, getClosingSgrSequence, getOpeningSgrSequence, wordLengths2, wrapWord2, stringVisibleTrimSpacesRight2, expandTabs, exec2;
-var init_wrap_ansi2 = __esm({
-  "../node_modules/listr2/node_modules/wrap-ansi/index.js"() {
-    "use strict";
-    init_string_width3();
-    init_strip_ansi();
-    init_ansi_styles();
-    ANSI_ESCAPE = "\x1B";
-    ANSI_ESCAPE_CSI = "\x9B";
-    ESCAPES4 = /* @__PURE__ */ new Set([
-      ANSI_ESCAPE,
-      ANSI_ESCAPE_CSI
-    ]);
-    ANSI_ESCAPE_BELL2 = "\x07";
-    ANSI_CSI3 = "[";
-    ANSI_OSC3 = "]";
-    ANSI_SGR_TERMINATOR3 = "m";
-    ANSI_SGR_RESET = 0;
-    ANSI_SGR_RESET_FOREGROUND = 39;
-    ANSI_SGR_RESET_BACKGROUND = 49;
-    ANSI_SGR_RESET_UNDERLINE_COLOR = 59;
-    ANSI_SGR_FOREGROUND_EXTENDED = 38;
-    ANSI_SGR_BACKGROUND_EXTENDED = 48;
-    ANSI_SGR_UNDERLINE_COLOR_EXTENDED = 58;
-    ANSI_SGR_COLOR_MODE_256 = 5;
-    ANSI_SGR_COLOR_MODE_RGB = 2;
-    ANSI_ESCAPE_LINK2 = `${ANSI_OSC3}8;;`;
-    ANSI_ESCAPE_REGEX = new RegExp(`^\\u001B(?:\\${ANSI_CSI3}(?<sgr>[0-9;]*)${ANSI_SGR_TERMINATOR3}|${ANSI_ESCAPE_LINK2}(?<uri>[^\\u0007\\u001B]*)(?:\\u0007|\\u001B\\\\))`);
-    ANSI_ESCAPE_CSI_REGEX = new RegExp(`^\\u009B(?<sgr>[0-9;]*)${ANSI_SGR_TERMINATOR3}`);
-    ANSI_SGR_MODIFIER_CLOSE_CODES = new Set(ansi_styles_default.codes.values());
-    ANSI_SGR_MODIFIER_CLOSE_CODES.delete(ANSI_SGR_RESET);
-    segmenter4 = new Intl.Segmenter();
-    getGraphemes = (string4) => Array.from(segmenter4.segment(string4), ({ segment }) => segment);
-    TAB_SIZE = 8;
-    wrapAnsiCode2 = (code) => `${ANSI_ESCAPE}${ANSI_CSI3}${code}${ANSI_SGR_TERMINATOR3}`;
-    wrapAnsiHyperlink2 = (url2) => `${ANSI_ESCAPE}${ANSI_ESCAPE_LINK2}${url2}${ANSI_ESCAPE_BELL2}`;
-    getSgrTokens = (sgrParameters) => {
-      const codes = sgrParameters.split(";").map((sgrParameter) => sgrParameter === "" ? ANSI_SGR_RESET : Number.parseInt(sgrParameter, 10));
-      const sgrTokens = [];
-      for (let index = 0; index < codes.length; index++) {
-        const code = codes[index];
-        if (!Number.isFinite(code)) {
-          continue;
-        }
-        if (code === ANSI_SGR_FOREGROUND_EXTENDED || code === ANSI_SGR_BACKGROUND_EXTENDED || code === ANSI_SGR_UNDERLINE_COLOR_EXTENDED) {
-          if (index + 1 >= codes.length) {
-            break;
-          }
-          const mode = codes[index + 1];
-          if (mode === ANSI_SGR_COLOR_MODE_256 && Number.isFinite(codes[index + 2])) {
-            sgrTokens.push([code, mode, codes[index + 2]]);
-            index += 2;
-            continue;
-          }
-          const red = codes[index + 2];
-          const green = codes[index + 3];
-          const blue = codes[index + 4];
-          if (mode === ANSI_SGR_COLOR_MODE_RGB && Number.isFinite(red) && Number.isFinite(green) && Number.isFinite(blue)) {
-            sgrTokens.push([code, mode, red, green, blue]);
-            index += 4;
-            continue;
-          }
-          break;
-        }
-        sgrTokens.push([code]);
-      }
-      return sgrTokens;
-    };
-    removeActiveStyle = (activeStyles, family) => {
-      const activeStyleIndex = activeStyles.findIndex((activeStyle) => activeStyle.family === family);
-      if (activeStyleIndex !== -1) {
-        activeStyles.splice(activeStyleIndex, 1);
-      }
-    };
-    upsertActiveStyle = (activeStyles, nextActiveStyle) => {
-      removeActiveStyle(activeStyles, nextActiveStyle.family);
-      activeStyles.push(nextActiveStyle);
-    };
-    removeModifierStylesByClose = (activeStyles, closeCode) => {
-      for (let index = activeStyles.length - 1; index >= 0; index--) {
-        const activeStyle = activeStyles[index];
-        if (activeStyle.family.startsWith("modifier-") && activeStyle.close === closeCode) {
-          activeStyles.splice(index, 1);
-        }
-      }
-    };
-    getColorStyle = (code, sgrToken) => {
-      if (code >= 30 && code <= 37 || code >= 90 && code <= 97 || code === ANSI_SGR_FOREGROUND_EXTENDED && sgrToken.length > 1) {
-        return {
-          family: "foreground",
-          open: sgrToken.join(";"),
-          close: ANSI_SGR_RESET_FOREGROUND
-        };
-      }
-      if (code >= 40 && code <= 47 || code >= 100 && code <= 107 || code === ANSI_SGR_BACKGROUND_EXTENDED && sgrToken.length > 1) {
-        return {
-          family: "background",
-          open: sgrToken.join(";"),
-          close: ANSI_SGR_RESET_BACKGROUND
-        };
-      }
-      if (code === ANSI_SGR_UNDERLINE_COLOR_EXTENDED && sgrToken.length > 1) {
-        return {
-          family: "underlineColor",
-          open: sgrToken.join(";"),
-          close: ANSI_SGR_RESET_UNDERLINE_COLOR
-        };
-      }
-    };
-    applySgrResetCode = (code, activeStyles) => {
-      if (code === ANSI_SGR_RESET) {
-        activeStyles.length = 0;
-        return true;
-      }
-      if (code === ANSI_SGR_RESET_FOREGROUND) {
-        removeActiveStyle(activeStyles, "foreground");
-        return true;
-      }
-      if (code === ANSI_SGR_RESET_BACKGROUND) {
-        removeActiveStyle(activeStyles, "background");
-        return true;
-      }
-      if (code === ANSI_SGR_RESET_UNDERLINE_COLOR) {
-        removeActiveStyle(activeStyles, "underlineColor");
-        return true;
-      }
-      if (ANSI_SGR_MODIFIER_CLOSE_CODES.has(code)) {
-        removeModifierStylesByClose(activeStyles, code);
-        return true;
-      }
-      return false;
-    };
-    applySgrToken2 = (sgrToken, activeStyles) => {
-      const [code] = sgrToken;
-      if (applySgrResetCode(code, activeStyles)) {
-        return;
-      }
-      const colorStyle = getColorStyle(code, sgrToken);
-      if (colorStyle) {
-        upsertActiveStyle(activeStyles, colorStyle);
-        return;
-      }
-      const close = ansi_styles_default.codes.get(code);
-      if (close !== void 0 && close !== ANSI_SGR_RESET) {
-        upsertActiveStyle(activeStyles, {
-          family: `modifier-${code}`,
-          open: sgrToken.join(";"),
-          close
-        });
-      }
-    };
-    applySgrParameters = (sgrParameters, activeStyles) => {
-      for (const sgrToken of getSgrTokens(sgrParameters)) {
-        applySgrToken2(sgrToken, activeStyles);
-      }
-    };
-    applySgrResets = (sgrParameters, activeStyles) => {
-      for (const sgrToken of getSgrTokens(sgrParameters)) {
-        const [code] = sgrToken;
-        applySgrResetCode(code, activeStyles);
-      }
-    };
-    applyLeadingSgrResets = (string4, activeStyles) => {
-      let remainder = string4;
-      while (remainder.length > 0) {
-        if (remainder.startsWith(ANSI_ESCAPE) && remainder[1] !== "\\") {
-          const match = ANSI_ESCAPE_REGEX.exec(remainder);
-          if (!match) {
-            break;
-          }
-          if (match.groups.sgr !== void 0) {
-            applySgrResets(match.groups.sgr, activeStyles);
-          }
-          remainder = remainder.slice(match[0].length);
-          continue;
-        }
-        if (remainder.startsWith(ANSI_ESCAPE_CSI)) {
-          const match = ANSI_ESCAPE_CSI_REGEX.exec(remainder);
-          if (!match || match.groups.sgr === void 0) {
-            break;
-          }
-          applySgrResets(match.groups.sgr, activeStyles);
-          remainder = remainder.slice(match[0].length);
-          continue;
-        }
-        break;
-      }
-    };
-    getClosingSgrSequence = (activeStyles) => [...activeStyles].reverse().map((activeStyle) => wrapAnsiCode2(activeStyle.close)).join("");
-    getOpeningSgrSequence = (activeStyles) => activeStyles.map((activeStyle) => wrapAnsiCode2(activeStyle.open)).join("");
-    wordLengths2 = (string4) => string4.split(" ").map((word) => stringWidth3(word));
-    wrapWord2 = (rows, word, columns2) => {
-      const characters = getGraphemes(word);
-      let isInsideEscape = false;
-      let isInsideLinkEscape = false;
-      let visible = stringWidth3(stripAnsi(rows.at(-1)));
-      for (const [index, character] of characters.entries()) {
-        const characterLength = stringWidth3(character);
-        if (visible + characterLength <= columns2) {
-          rows[rows.length - 1] += character;
-        } else {
-          rows.push(character);
-          visible = 0;
-        }
-        if (ESCAPES4.has(character) && !(isInsideLinkEscape && character === ANSI_ESCAPE && characters[index + 1] === "\\")) {
-          isInsideEscape = true;
-          const ansiEscapeLinkCandidate = characters.slice(index + 1, index + 1 + ANSI_ESCAPE_LINK2.length).join("");
-          isInsideLinkEscape = ansiEscapeLinkCandidate === ANSI_ESCAPE_LINK2;
-        }
-        if (isInsideEscape) {
-          if (isInsideLinkEscape) {
-            if (character === ANSI_ESCAPE_BELL2 || character === "\\" && index > 0 && characters[index - 1] === ANSI_ESCAPE) {
-              isInsideEscape = false;
-              isInsideLinkEscape = false;
-            }
-          } else if (character === ANSI_SGR_TERMINATOR3) {
-            isInsideEscape = false;
-          }
-          continue;
-        }
-        visible += characterLength;
-        if (visible === columns2 && index < characters.length - 1) {
-          rows.push("");
-          visible = 0;
-        }
-      }
-      if (!visible && rows.at(-1).length > 0 && rows.length > 1) {
-        rows[rows.length - 2] += rows.pop();
-      }
-    };
-    stringVisibleTrimSpacesRight2 = (string4) => {
-      const words = string4.split(" ");
-      let last = words.length;
-      while (last > 0) {
-        if (stringWidth3(words[last - 1]) > 0) {
-          break;
-        }
-        last--;
-      }
-      if (last === words.length) {
-        return string4;
-      }
-      return words.slice(0, last).join(" ") + words.slice(last).join("");
-    };
-    expandTabs = (line) => {
-      if (!line.includes("	")) {
-        return line;
-      }
-      const segments = line.split("	");
-      let visible = 0;
-      let expandedLine = "";
-      for (const [index, segment] of segments.entries()) {
-        expandedLine += segment;
-        visible += stringWidth3(segment);
-        if (index < segments.length - 1) {
-          const spaces = TAB_SIZE - visible % TAB_SIZE;
-          expandedLine += " ".repeat(spaces);
-          visible += spaces;
-        }
-      }
-      return expandedLine;
-    };
-    exec2 = (string4, columns2, options = {}) => {
-      if (options.trim !== false && string4.trim() === "") {
-        return "";
-      }
-      let returnValue = "";
-      let escapeUrl;
-      const activeStyles = [];
-      const lengths = wordLengths2(string4);
-      let rows = [""];
-      for (const [index, word] of string4.split(" ").entries()) {
-        if (options.trim !== false) {
-          rows[rows.length - 1] = rows.at(-1).trimStart();
-        }
-        let rowLength = stringWidth3(rows.at(-1));
-        if (index !== 0) {
-          if (rowLength >= columns2 && (options.wordWrap === false || options.trim === false)) {
-            rows.push("");
-            rowLength = 0;
-          }
-          if (rowLength > 0 || options.trim === false) {
-            rows[rows.length - 1] += " ";
-            rowLength++;
-          }
-        }
-        if (options.hard && options.wordWrap !== false && lengths[index] > columns2) {
-          const remainingColumns = columns2 - rowLength;
-          const breaksStartingThisLine = 1 + Math.floor((lengths[index] - remainingColumns - 1) / columns2);
-          const breaksStartingNextLine = Math.floor((lengths[index] - 1) / columns2);
-          if (breaksStartingNextLine < breaksStartingThisLine) {
-            rows.push("");
-          }
-          wrapWord2(rows, word, columns2);
-          continue;
-        }
-        if (rowLength + lengths[index] > columns2 && rowLength > 0 && lengths[index] > 0) {
-          if (options.wordWrap === false && rowLength < columns2) {
-            wrapWord2(rows, word, columns2);
-            continue;
-          }
-          rows.push("");
-        }
-        if (rowLength + lengths[index] > columns2 && options.wordWrap === false) {
-          wrapWord2(rows, word, columns2);
-          continue;
-        }
-        rows[rows.length - 1] += word;
-      }
-      if (options.trim !== false) {
-        rows = rows.map((row) => stringVisibleTrimSpacesRight2(row));
-      }
-      const preString = rows.join("\n");
-      const pre = getGraphemes(preString);
-      let preStringIndex = 0;
-      for (const [index, character] of pre.entries()) {
-        returnValue += character;
-        if (character === ANSI_ESCAPE && pre[index + 1] !== "\\") {
-          const { groups } = ANSI_ESCAPE_REGEX.exec(preString.slice(preStringIndex)) || { groups: {} };
-          if (groups.sgr !== void 0) {
-            applySgrParameters(groups.sgr, activeStyles);
-          } else if (groups.uri !== void 0) {
-            escapeUrl = groups.uri.length === 0 ? void 0 : groups.uri;
-          }
-        } else if (character === ANSI_ESCAPE_CSI) {
-          const { groups } = ANSI_ESCAPE_CSI_REGEX.exec(preString.slice(preStringIndex)) || { groups: {} };
-          if (groups.sgr !== void 0) {
-            applySgrParameters(groups.sgr, activeStyles);
-          }
-        }
-        if (pre[index + 1] === "\n") {
-          if (escapeUrl) {
-            returnValue += wrapAnsiHyperlink2("");
-          }
-          returnValue += getClosingSgrSequence(activeStyles);
-        } else if (character === "\n") {
-          const openingStyles = [...activeStyles];
-          applyLeadingSgrResets(preString.slice(preStringIndex + 1), openingStyles);
-          returnValue += getOpeningSgrSequence(openingStyles);
-          if (escapeUrl) {
-            returnValue += wrapAnsiHyperlink2(escapeUrl);
-          }
-        }
-        preStringIndex += character.length;
-      }
-      return returnValue;
-    };
   }
 });
 
@@ -16939,8 +13676,8 @@ var require_utils3 = __commonJS({
       }
       return ind;
     }
-    function removeDotSegments(path26) {
-      let input = path26;
+    function removeDotSegments(path29) {
+      let input = path29;
       const output = [];
       let nextSlash = -1;
       let len = 0;
@@ -17139,8 +13876,8 @@ var require_schemes = __commonJS({
         wsComponent.secure = void 0;
       }
       if (wsComponent.resourceName) {
-        const [path26, query] = wsComponent.resourceName.split("?");
-        wsComponent.path = path26 && path26 !== "/" ? path26 : void 0;
+        const [path29, query] = wsComponent.resourceName.split("?");
+        wsComponent.path = path29 && path29 !== "/" ? path29 : void 0;
         wsComponent.query = query;
         wsComponent.resourceName = void 0;
       }
@@ -17932,10 +14669,10 @@ var require_core = __commonJS({
         return this;
       }
       // Add format
-      addFormat(name, format2) {
-        if (typeof format2 == "string")
-          format2 = new RegExp(format2);
-        this.formats[name] = format2;
+      addFormat(name, format) {
+        if (typeof format == "string")
+          format = new RegExp(format);
+        this.formats[name] = format;
         return this;
       }
       errorsText(errors = this.errors, { separator = ", ", dataVar = "data" } = {}) {
@@ -18053,9 +14790,9 @@ var require_core = __commonJS({
     }
     function addInitialFormats() {
       for (const name in this.opts.formats) {
-        const format2 = this.opts.formats[name];
-        if (format2)
-          this.addFormat(name, format2);
+        const format = this.opts.formats[name];
+        if (format)
+          this.addFormat(name, format);
       }
     }
     function addInitialKeywords(defs) {
@@ -19738,18 +16475,18 @@ var require_format = __commonJS({
           });
           const fDef = gen.const("fDef", (0, codegen_1._)`${fmts}[${schemaCode}]`);
           const fType = gen.let("fType");
-          const format2 = gen.let("format");
-          gen.if((0, codegen_1._)`typeof ${fDef} == "object" && !(${fDef} instanceof RegExp)`, () => gen.assign(fType, (0, codegen_1._)`${fDef}.type || "string"`).assign(format2, (0, codegen_1._)`${fDef}.validate`), () => gen.assign(fType, (0, codegen_1._)`"string"`).assign(format2, fDef));
+          const format = gen.let("format");
+          gen.if((0, codegen_1._)`typeof ${fDef} == "object" && !(${fDef} instanceof RegExp)`, () => gen.assign(fType, (0, codegen_1._)`${fDef}.type || "string"`).assign(format, (0, codegen_1._)`${fDef}.validate`), () => gen.assign(fType, (0, codegen_1._)`"string"`).assign(format, fDef));
           cxt.fail$data((0, codegen_1.or)(unknownFmt(), invalidFmt()));
           function unknownFmt() {
             if (opts.strictSchema === false)
               return codegen_1.nil;
-            return (0, codegen_1._)`${schemaCode} && !${format2}`;
+            return (0, codegen_1._)`${schemaCode} && !${format}`;
           }
           function invalidFmt() {
-            const callFormat = schemaEnv.$async ? (0, codegen_1._)`(${fDef}.async ? await ${format2}(${data}) : ${format2}(${data}))` : (0, codegen_1._)`${format2}(${data})`;
-            const validData = (0, codegen_1._)`(typeof ${format2} == "function" ? ${callFormat} : ${format2}.test(${data}))`;
-            return (0, codegen_1._)`${format2} && ${format2} !== true && ${fType} === ${ruleType} && !${validData}`;
+            const callFormat = schemaEnv.$async ? (0, codegen_1._)`(${fDef}.async ? await ${format}(${data}) : ${format}(${data}))` : (0, codegen_1._)`${format}(${data})`;
+            const validData = (0, codegen_1._)`(typeof ${format} == "function" ? ${callFormat} : ${format}.test(${data}))`;
+            return (0, codegen_1._)`${format} && ${format} !== true && ${fType} === ${ruleType} && !${validData}`;
           }
         }
         function validateFormat() {
@@ -19760,7 +16497,7 @@ var require_format = __commonJS({
           }
           if (formatDef === true)
             return;
-          const [fmtType, format2, fmtRef] = getFormat(formatDef);
+          const [fmtType, format, fmtRef] = getFormat(formatDef);
           if (fmtType === ruleType)
             cxt.pass(validCondition());
           function unknownFormat() {
@@ -19787,7 +16524,7 @@ var require_format = __commonJS({
                 throw new Error("async format in sync schema");
               return (0, codegen_1._)`await ${fmtRef}(${data})`;
             }
-            return typeof format2 == "function" ? (0, codegen_1._)`${fmtRef}(${data})` : (0, codegen_1._)`${fmtRef}.test(${data})`;
+            return typeof format == "function" ? (0, codegen_1._)`${fmtRef}(${data})` : (0, codegen_1._)`${fmtRef}.test(${data})`;
           }
         }
       }
@@ -19802,8 +16539,8 @@ var require_format2 = __commonJS({
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var format_1 = require_format();
-    var format2 = [format_1.default];
-    exports2.default = format2;
+    var format = [format_1.default];
+    exports2.default = format;
   }
 });
 
@@ -20409,17 +17146,17 @@ var require_limit = __commonJS({
           cxt.fail$data(codegen_1.or(codegen_1._`typeof ${fmt} != "object"`, codegen_1._`${fmt} instanceof RegExp`, codegen_1._`typeof ${fmt}.compare != "function"`, compareCode(fmt)));
         }
         function validateFormat() {
-          const format2 = fCxt.schema;
-          const fmtDef = self.formats[format2];
+          const format = fCxt.schema;
+          const fmtDef = self.formats[format];
           if (!fmtDef || fmtDef === true)
             return;
           if (typeof fmtDef != "object" || fmtDef instanceof RegExp || typeof fmtDef.compare != "function") {
-            throw new Error(`"${keyword}": format "${format2}" does not define "compare" function`);
+            throw new Error(`"${keyword}": format "${format}" does not define "compare" function`);
           }
           const fmt = gen.scopeValue("formats", {
-            key: format2,
+            key: format,
             ref: fmtDef,
-            code: opts.code.formats ? codegen_1._`${opts.code.formats}${codegen_1.getProperty(format2)}` : void 0
+            code: opts.code.formats ? codegen_1._`${opts.code.formats}${codegen_1.getProperty(format)}` : void 0
           });
           cxt.fail$data(compareCode(fmt));
         }
@@ -20466,12 +17203,12 @@ var require_dist2 = __commonJS({
         throw new Error(`Unknown format "${name}"`);
       return f;
     };
-    function addFormats(ajv, list, fs25, exportName) {
+    function addFormats(ajv, list, fs28, exportName) {
       var _a2;
       var _b;
       (_a2 = (_b = ajv.opts.code).formats) !== null && _a2 !== void 0 ? _a2 : _b.formats = codegen_1._`require("ajv-formats/dist/formats").${exportName}`;
       for (const f of list)
-        ajv.addFormat(f, fs25[f]);
+        ajv.addFormat(f, fs28[f]);
     }
     module2.exports = exports2 = formatsPlugin;
     Object.defineProperty(exports2, "__esModule", { value: true });
@@ -22409,6 +19146,3565 @@ var require_semver2 = __commonJS({
   }
 });
 
+// ../node_modules/ansi-regex/index.js
+function ansiRegex({ onlyFirst = false } = {}) {
+  const ST = "(?:\\u0007|\\u001B\\u005C|\\u009C)";
+  const osc = `(?:\\u001B\\][\\s\\S]*?${ST})`;
+  const csi = "[\\u001B\\u009B][[\\]()#;?]*(?:\\d{1,4}(?:[;:]\\d{0,4})*)?[\\dA-PR-TZcf-nq-uy=><~]";
+  const pattern = `${osc}|${csi}`;
+  return new RegExp(pattern, onlyFirst ? void 0 : "g");
+}
+var init_ansi_regex = __esm({
+  "../node_modules/ansi-regex/index.js"() {
+    "use strict";
+  }
+});
+
+// ../node_modules/strip-ansi/index.js
+function stripAnsi(string4) {
+  if (typeof string4 !== "string") {
+    throw new TypeError(`Expected a \`string\`, got \`${typeof string4}\``);
+  }
+  if (!string4.includes("\x1B") && !string4.includes("\x9B")) {
+    return string4;
+  }
+  return string4.replace(regex, "");
+}
+var regex;
+var init_strip_ansi = __esm({
+  "../node_modules/strip-ansi/index.js"() {
+    "use strict";
+    init_ansi_regex();
+    regex = ansiRegex();
+  }
+});
+
+// ../node_modules/get-east-asian-width/lookup-data.js
+var ambiguousRanges, fullwidthRanges, halfwidthRanges, narrowRanges, wideRanges;
+var init_lookup_data = __esm({
+  "../node_modules/get-east-asian-width/lookup-data.js"() {
+    "use strict";
+    ambiguousRanges = [161, 161, 164, 164, 167, 168, 170, 170, 173, 174, 176, 180, 182, 186, 188, 191, 198, 198, 208, 208, 215, 216, 222, 225, 230, 230, 232, 234, 236, 237, 240, 240, 242, 243, 247, 250, 252, 252, 254, 254, 257, 257, 273, 273, 275, 275, 283, 283, 294, 295, 299, 299, 305, 307, 312, 312, 319, 322, 324, 324, 328, 331, 333, 333, 338, 339, 358, 359, 363, 363, 462, 462, 464, 464, 466, 466, 468, 468, 470, 470, 472, 472, 474, 474, 476, 476, 593, 593, 609, 609, 708, 708, 711, 711, 713, 715, 717, 717, 720, 720, 728, 731, 733, 733, 735, 735, 768, 879, 913, 929, 931, 937, 945, 961, 963, 969, 1025, 1025, 1040, 1103, 1105, 1105, 8208, 8208, 8211, 8214, 8216, 8217, 8220, 8221, 8224, 8226, 8228, 8231, 8240, 8240, 8242, 8243, 8245, 8245, 8251, 8251, 8254, 8254, 8308, 8308, 8319, 8319, 8321, 8324, 8364, 8364, 8451, 8451, 8453, 8453, 8457, 8457, 8467, 8467, 8470, 8470, 8481, 8482, 8486, 8486, 8491, 8491, 8531, 8532, 8539, 8542, 8544, 8555, 8560, 8569, 8585, 8585, 8592, 8601, 8632, 8633, 8658, 8658, 8660, 8660, 8679, 8679, 8704, 8704, 8706, 8707, 8711, 8712, 8715, 8715, 8719, 8719, 8721, 8721, 8725, 8725, 8730, 8730, 8733, 8736, 8739, 8739, 8741, 8741, 8743, 8748, 8750, 8750, 8756, 8759, 8764, 8765, 8776, 8776, 8780, 8780, 8786, 8786, 8800, 8801, 8804, 8807, 8810, 8811, 8814, 8815, 8834, 8835, 8838, 8839, 8853, 8853, 8857, 8857, 8869, 8869, 8895, 8895, 8978, 8978, 9312, 9449, 9451, 9547, 9552, 9587, 9600, 9615, 9618, 9621, 9632, 9633, 9635, 9641, 9650, 9651, 9654, 9655, 9660, 9661, 9664, 9665, 9670, 9672, 9675, 9675, 9678, 9681, 9698, 9701, 9711, 9711, 9733, 9734, 9737, 9737, 9742, 9743, 9756, 9756, 9758, 9758, 9792, 9792, 9794, 9794, 9824, 9825, 9827, 9829, 9831, 9834, 9836, 9837, 9839, 9839, 9886, 9887, 9919, 9919, 9926, 9933, 9935, 9939, 9941, 9953, 9955, 9955, 9960, 9961, 9963, 9969, 9972, 9972, 9974, 9977, 9979, 9980, 9982, 9983, 10045, 10045, 10102, 10111, 11094, 11097, 12872, 12879, 57344, 63743, 65024, 65039, 65533, 65533, 127232, 127242, 127248, 127277, 127280, 127337, 127344, 127373, 127375, 127376, 127387, 127404, 917760, 917999, 983040, 1048573, 1048576, 1114109];
+    fullwidthRanges = [12288, 12288, 65281, 65376, 65504, 65510];
+    halfwidthRanges = [8361, 8361, 65377, 65470, 65474, 65479, 65482, 65487, 65490, 65495, 65498, 65500, 65512, 65518];
+    narrowRanges = [32, 126, 162, 163, 165, 166, 172, 172, 175, 175, 10214, 10221, 10629, 10630];
+    wideRanges = [4352, 4447, 8986, 8987, 9001, 9002, 9193, 9196, 9200, 9200, 9203, 9203, 9725, 9726, 9748, 9749, 9776, 9783, 9800, 9811, 9855, 9855, 9866, 9871, 9875, 9875, 9889, 9889, 9898, 9899, 9917, 9918, 9924, 9925, 9934, 9934, 9940, 9940, 9962, 9962, 9970, 9971, 9973, 9973, 9978, 9978, 9981, 9981, 9989, 9989, 9994, 9995, 10024, 10024, 10060, 10060, 10062, 10062, 10067, 10069, 10071, 10071, 10133, 10135, 10160, 10160, 10175, 10175, 11035, 11036, 11088, 11088, 11093, 11093, 11904, 11929, 11931, 12019, 12032, 12245, 12272, 12287, 12289, 12350, 12353, 12438, 12441, 12543, 12549, 12591, 12593, 12686, 12688, 12773, 12783, 12830, 12832, 12871, 12880, 42124, 42128, 42182, 43360, 43388, 44032, 55203, 63744, 64255, 65040, 65049, 65072, 65106, 65108, 65126, 65128, 65131, 94176, 94180, 94192, 94198, 94208, 101589, 101631, 101662, 101760, 101874, 110576, 110579, 110581, 110587, 110589, 110590, 110592, 110882, 110898, 110898, 110928, 110930, 110933, 110933, 110948, 110951, 110960, 111355, 119552, 119638, 119648, 119670, 126980, 126980, 127183, 127183, 127374, 127374, 127377, 127386, 127488, 127490, 127504, 127547, 127552, 127560, 127568, 127569, 127584, 127589, 127744, 127776, 127789, 127797, 127799, 127868, 127870, 127891, 127904, 127946, 127951, 127955, 127968, 127984, 127988, 127988, 127992, 128062, 128064, 128064, 128066, 128252, 128255, 128317, 128331, 128334, 128336, 128359, 128378, 128378, 128405, 128406, 128420, 128420, 128507, 128591, 128640, 128709, 128716, 128716, 128720, 128722, 128725, 128728, 128732, 128735, 128747, 128748, 128756, 128764, 128992, 129003, 129008, 129008, 129292, 129338, 129340, 129349, 129351, 129535, 129648, 129660, 129664, 129674, 129678, 129734, 129736, 129736, 129741, 129756, 129759, 129770, 129775, 129784, 131072, 196605, 196608, 262141];
+  }
+});
+
+// ../node_modules/get-east-asian-width/utilities.js
+var isInRange;
+var init_utilities = __esm({
+  "../node_modules/get-east-asian-width/utilities.js"() {
+    "use strict";
+    isInRange = (ranges, codePoint) => {
+      let low = 0;
+      let high = Math.floor(ranges.length / 2) - 1;
+      while (low <= high) {
+        const mid = Math.floor((low + high) / 2);
+        const i = mid * 2;
+        if (codePoint < ranges[i]) {
+          high = mid - 1;
+        } else if (codePoint > ranges[i + 1]) {
+          low = mid + 1;
+        } else {
+          return true;
+        }
+      }
+      return false;
+    };
+  }
+});
+
+// ../node_modules/get-east-asian-width/lookup.js
+function findWideFastPathRange(ranges) {
+  let fastPathStart = ranges[0];
+  let fastPathEnd = ranges[1];
+  for (let index = 0; index < ranges.length; index += 2) {
+    const start = ranges[index];
+    const end = ranges[index + 1];
+    if (commonCjkCodePoint >= start && commonCjkCodePoint <= end) {
+      return [start, end];
+    }
+    if (end - start > fastPathEnd - fastPathStart) {
+      fastPathStart = start;
+      fastPathEnd = end;
+    }
+  }
+  return [fastPathStart, fastPathEnd];
+}
+var minimumAmbiguousCodePoint, maximumAmbiguousCodePoint, minimumFullWidthCodePoint, maximumFullWidthCodePoint, minimumHalfWidthCodePoint, maximumHalfWidthCodePoint, minimumNarrowCodePoint, maximumNarrowCodePoint, minimumWideCodePoint, maximumWideCodePoint, commonCjkCodePoint, wideFastPathStart, wideFastPathEnd, isAmbiguous, isFullWidth, isWide;
+var init_lookup = __esm({
+  "../node_modules/get-east-asian-width/lookup.js"() {
+    "use strict";
+    init_lookup_data();
+    init_utilities();
+    minimumAmbiguousCodePoint = ambiguousRanges[0];
+    maximumAmbiguousCodePoint = ambiguousRanges.at(-1);
+    minimumFullWidthCodePoint = fullwidthRanges[0];
+    maximumFullWidthCodePoint = fullwidthRanges.at(-1);
+    minimumHalfWidthCodePoint = halfwidthRanges[0];
+    maximumHalfWidthCodePoint = halfwidthRanges.at(-1);
+    minimumNarrowCodePoint = narrowRanges[0];
+    maximumNarrowCodePoint = narrowRanges.at(-1);
+    minimumWideCodePoint = wideRanges[0];
+    maximumWideCodePoint = wideRanges.at(-1);
+    commonCjkCodePoint = 19968;
+    [wideFastPathStart, wideFastPathEnd] = findWideFastPathRange(wideRanges);
+    isAmbiguous = (codePoint) => {
+      if (codePoint < minimumAmbiguousCodePoint || codePoint > maximumAmbiguousCodePoint) {
+        return false;
+      }
+      return isInRange(ambiguousRanges, codePoint);
+    };
+    isFullWidth = (codePoint) => {
+      if (codePoint < minimumFullWidthCodePoint || codePoint > maximumFullWidthCodePoint) {
+        return false;
+      }
+      return isInRange(fullwidthRanges, codePoint);
+    };
+    isWide = (codePoint) => {
+      if (codePoint >= wideFastPathStart && codePoint <= wideFastPathEnd) {
+        return true;
+      }
+      if (codePoint < minimumWideCodePoint || codePoint > maximumWideCodePoint) {
+        return false;
+      }
+      return isInRange(wideRanges, codePoint);
+    };
+  }
+});
+
+// ../node_modules/get-east-asian-width/index.js
+function validate(codePoint) {
+  if (!Number.isSafeInteger(codePoint)) {
+    throw new TypeError(`Expected a code point, got \`${typeof codePoint}\`.`);
+  }
+}
+function eastAsianWidth(codePoint, { ambiguousAsWide = false } = {}) {
+  validate(codePoint);
+  if (isFullWidth(codePoint) || isWide(codePoint) || ambiguousAsWide && isAmbiguous(codePoint)) {
+    return 2;
+  }
+  return 1;
+}
+var init_get_east_asian_width = __esm({
+  "../node_modules/get-east-asian-width/index.js"() {
+    "use strict";
+    init_lookup();
+  }
+});
+
+// ../node_modules/emoji-regex/index.mjs
+var emoji_regex_default;
+var init_emoji_regex = __esm({
+  "../node_modules/emoji-regex/index.mjs"() {
+    "use strict";
+    emoji_regex_default = () => {
+      return /[#*0-9]\uFE0F?\u20E3|[\xA9\xAE\u203C\u2049\u2122\u2139\u2194-\u2199\u21A9\u21AA\u231A\u231B\u2328\u23CF\u23ED-\u23EF\u23F1\u23F2\u23F8-\u23FA\u24C2\u25AA\u25AB\u25B6\u25C0\u25FB\u25FC\u25FE\u2600-\u2604\u260E\u2611\u2614\u2615\u2618\u2620\u2622\u2623\u2626\u262A\u262E\u262F\u2638-\u263A\u2640\u2642\u2648-\u2653\u265F\u2660\u2663\u2665\u2666\u2668\u267B\u267E\u267F\u2692\u2694-\u2697\u2699\u269B\u269C\u26A0\u26A7\u26AA\u26B0\u26B1\u26BD\u26BE\u26C4\u26C8\u26CF\u26D1\u26E9\u26F0-\u26F5\u26F7\u26F8\u26FA\u2702\u2708\u2709\u270F\u2712\u2714\u2716\u271D\u2721\u2733\u2734\u2744\u2747\u2757\u2763\u27A1\u2934\u2935\u2B05-\u2B07\u2B1B\u2B1C\u2B55\u3030\u303D\u3297\u3299]\uFE0F?|[\u261D\u270C\u270D](?:\uD83C[\uDFFB-\uDFFF]|\uFE0F)?|[\u270A\u270B](?:\uD83C[\uDFFB-\uDFFF])?|[\u23E9-\u23EC\u23F0\u23F3\u25FD\u2693\u26A1\u26AB\u26C5\u26CE\u26D4\u26EA\u26FD\u2705\u2728\u274C\u274E\u2753-\u2755\u2795-\u2797\u27B0\u27BF\u2B50]|\u26D3\uFE0F?(?:\u200D\uD83D\uDCA5)?|\u26F9(?:\uD83C[\uDFFB-\uDFFF]|\uFE0F)?(?:\u200D[\u2640\u2642]\uFE0F?)?|\u2764\uFE0F?(?:\u200D(?:\uD83D\uDD25|\uD83E\uDE79))?|\uD83C(?:[\uDC04\uDD70\uDD71\uDD7E\uDD7F\uDE02\uDE37\uDF21\uDF24-\uDF2C\uDF36\uDF7D\uDF96\uDF97\uDF99-\uDF9B\uDF9E\uDF9F\uDFCD\uDFCE\uDFD4-\uDFDF\uDFF5\uDFF7]\uFE0F?|[\uDF85\uDFC2\uDFC7](?:\uD83C[\uDFFB-\uDFFF])?|[\uDFC4\uDFCA](?:\uD83C[\uDFFB-\uDFFF])?(?:\u200D[\u2640\u2642]\uFE0F?)?|[\uDFCB\uDFCC](?:\uD83C[\uDFFB-\uDFFF]|\uFE0F)?(?:\u200D[\u2640\u2642]\uFE0F?)?|[\uDCCF\uDD8E\uDD91-\uDD9A\uDE01\uDE1A\uDE2F\uDE32-\uDE36\uDE38-\uDE3A\uDE50\uDE51\uDF00-\uDF20\uDF2D-\uDF35\uDF37-\uDF43\uDF45-\uDF4A\uDF4C-\uDF7C\uDF7E-\uDF84\uDF86-\uDF93\uDFA0-\uDFC1\uDFC5\uDFC6\uDFC8\uDFC9\uDFCF-\uDFD3\uDFE0-\uDFF0\uDFF8-\uDFFF]|\uDDE6\uD83C[\uDDE8-\uDDEC\uDDEE\uDDF1\uDDF2\uDDF4\uDDF6-\uDDFA\uDDFC\uDDFD\uDDFF]|\uDDE7\uD83C[\uDDE6\uDDE7\uDDE9-\uDDEF\uDDF1-\uDDF4\uDDF6-\uDDF9\uDDFB\uDDFC\uDDFE\uDDFF]|\uDDE8\uD83C[\uDDE6\uDDE8\uDDE9\uDDEB-\uDDEE\uDDF0-\uDDF7\uDDFA-\uDDFF]|\uDDE9\uD83C[\uDDEA\uDDEC\uDDEF\uDDF0\uDDF2\uDDF4\uDDFF]|\uDDEA\uD83C[\uDDE6\uDDE8\uDDEA\uDDEC\uDDED\uDDF7-\uDDFA]|\uDDEB\uD83C[\uDDEE-\uDDF0\uDDF2\uDDF4\uDDF7]|\uDDEC\uD83C[\uDDE6\uDDE7\uDDE9-\uDDEE\uDDF1-\uDDF3\uDDF5-\uDDFA\uDDFC\uDDFE]|\uDDED\uD83C[\uDDF0\uDDF2\uDDF3\uDDF7\uDDF9\uDDFA]|\uDDEE\uD83C[\uDDE8-\uDDEA\uDDF1-\uDDF4\uDDF6-\uDDF9]|\uDDEF\uD83C[\uDDEA\uDDF2\uDDF4\uDDF5]|\uDDF0\uD83C[\uDDEA\uDDEC-\uDDEE\uDDF2\uDDF3\uDDF5\uDDF7\uDDFC\uDDFE\uDDFF]|\uDDF1\uD83C[\uDDE6-\uDDE8\uDDEE\uDDF0\uDDF7-\uDDFB\uDDFE]|\uDDF2\uD83C[\uDDE6\uDDE8-\uDDED\uDDF0-\uDDFF]|\uDDF3\uD83C[\uDDE6\uDDE8\uDDEA-\uDDEC\uDDEE\uDDF1\uDDF4\uDDF5\uDDF7\uDDFA\uDDFF]|\uDDF4\uD83C\uDDF2|\uDDF5\uD83C[\uDDE6\uDDEA-\uDDED\uDDF0-\uDDF3\uDDF7-\uDDF9\uDDFC\uDDFE]|\uDDF6\uD83C\uDDE6|\uDDF7\uD83C[\uDDEA\uDDF4\uDDF8\uDDFA\uDDFC]|\uDDF8\uD83C[\uDDE6-\uDDEA\uDDEC-\uDDF4\uDDF7-\uDDF9\uDDFB\uDDFD-\uDDFF]|\uDDF9\uD83C[\uDDE6\uDDE8\uDDE9\uDDEB-\uDDED\uDDEF-\uDDF4\uDDF7\uDDF9\uDDFB\uDDFC\uDDFF]|\uDDFA\uD83C[\uDDE6\uDDEC\uDDF2\uDDF3\uDDF8\uDDFE\uDDFF]|\uDDFB\uD83C[\uDDE6\uDDE8\uDDEA\uDDEC\uDDEE\uDDF3\uDDFA]|\uDDFC\uD83C[\uDDEB\uDDF8]|\uDDFD\uD83C\uDDF0|\uDDFE\uD83C[\uDDEA\uDDF9]|\uDDFF\uD83C[\uDDE6\uDDF2\uDDFC]|\uDF44(?:\u200D\uD83D\uDFEB)?|\uDF4B(?:\u200D\uD83D\uDFE9)?|\uDFC3(?:\uD83C[\uDFFB-\uDFFF])?(?:\u200D(?:[\u2640\u2642]\uFE0F?(?:\u200D\u27A1\uFE0F?)?|\u27A1\uFE0F?))?|\uDFF3\uFE0F?(?:\u200D(?:\u26A7\uFE0F?|\uD83C\uDF08))?|\uDFF4(?:\u200D\u2620\uFE0F?|\uDB40\uDC67\uDB40\uDC62\uDB40(?:\uDC65\uDB40\uDC6E\uDB40\uDC67|\uDC73\uDB40\uDC63\uDB40\uDC74|\uDC77\uDB40\uDC6C\uDB40\uDC73)\uDB40\uDC7F)?)|\uD83D(?:[\uDC3F\uDCFD\uDD49\uDD4A\uDD6F\uDD70\uDD73\uDD76-\uDD79\uDD87\uDD8A-\uDD8D\uDDA5\uDDA8\uDDB1\uDDB2\uDDBC\uDDC2-\uDDC4\uDDD1-\uDDD3\uDDDC-\uDDDE\uDDE1\uDDE3\uDDE8\uDDEF\uDDF3\uDDFA\uDECB\uDECD-\uDECF\uDEE0-\uDEE5\uDEE9\uDEF0\uDEF3]\uFE0F?|[\uDC42\uDC43\uDC46-\uDC50\uDC66\uDC67\uDC6B-\uDC6D\uDC72\uDC74-\uDC76\uDC78\uDC7C\uDC83\uDC85\uDC8F\uDC91\uDCAA\uDD7A\uDD95\uDD96\uDE4C\uDE4F\uDEC0\uDECC](?:\uD83C[\uDFFB-\uDFFF])?|[\uDC6E-\uDC71\uDC73\uDC77\uDC81\uDC82\uDC86\uDC87\uDE45-\uDE47\uDE4B\uDE4D\uDE4E\uDEA3\uDEB4\uDEB5](?:\uD83C[\uDFFB-\uDFFF])?(?:\u200D[\u2640\u2642]\uFE0F?)?|[\uDD74\uDD90](?:\uD83C[\uDFFB-\uDFFF]|\uFE0F)?|[\uDC00-\uDC07\uDC09-\uDC14\uDC16-\uDC25\uDC27-\uDC3A\uDC3C-\uDC3E\uDC40\uDC44\uDC45\uDC51-\uDC65\uDC6A\uDC79-\uDC7B\uDC7D-\uDC80\uDC84\uDC88-\uDC8E\uDC90\uDC92-\uDCA9\uDCAB-\uDCFC\uDCFF-\uDD3D\uDD4B-\uDD4E\uDD50-\uDD67\uDDA4\uDDFB-\uDE2D\uDE2F-\uDE34\uDE37-\uDE41\uDE43\uDE44\uDE48-\uDE4A\uDE80-\uDEA2\uDEA4-\uDEB3\uDEB7-\uDEBF\uDEC1-\uDEC5\uDED0-\uDED2\uDED5-\uDED8\uDEDC-\uDEDF\uDEEB\uDEEC\uDEF4-\uDEFC\uDFE0-\uDFEB\uDFF0]|\uDC08(?:\u200D\u2B1B)?|\uDC15(?:\u200D\uD83E\uDDBA)?|\uDC26(?:\u200D(?:\u2B1B|\uD83D\uDD25))?|\uDC3B(?:\u200D\u2744\uFE0F?)?|\uDC41\uFE0F?(?:\u200D\uD83D\uDDE8\uFE0F?)?|\uDC68(?:\u200D(?:[\u2695\u2696\u2708]\uFE0F?|\u2764\uFE0F?\u200D\uD83D(?:\uDC8B\u200D\uD83D)?\uDC68|\uD83C[\uDF3E\uDF73\uDF7C\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D(?:[\uDC68\uDC69]\u200D\uD83D(?:\uDC66(?:\u200D\uD83D\uDC66)?|\uDC67(?:\u200D\uD83D[\uDC66\uDC67])?)|[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uDC66(?:\u200D\uD83D\uDC66)?|\uDC67(?:\u200D\uD83D[\uDC66\uDC67])?)|\uD83E(?:[\uDDAF\uDDBC\uDDBD](?:\u200D\u27A1\uFE0F?)?|[\uDDB0-\uDDB3]))|\uD83C(?:\uDFFB(?:\u200D(?:[\u2695\u2696\u2708]\uFE0F?|\u2764\uFE0F?\u200D\uD83D(?:\uDC8B\u200D\uD83D)?\uDC68\uD83C[\uDFFB-\uDFFF]|\uD83C[\uDF3E\uDF73\uDF7C\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D(?:[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uDC30\u200D\uD83D\uDC68\uD83C[\uDFFC-\uDFFF])|\uD83E(?:[\uDD1D\uDEEF]\u200D\uD83D\uDC68\uD83C[\uDFFC-\uDFFF]|[\uDDAF\uDDBC\uDDBD](?:\u200D\u27A1\uFE0F?)?|[\uDDB0-\uDDB3])))?|\uDFFC(?:\u200D(?:[\u2695\u2696\u2708]\uFE0F?|\u2764\uFE0F?\u200D\uD83D(?:\uDC8B\u200D\uD83D)?\uDC68\uD83C[\uDFFB-\uDFFF]|\uD83C[\uDF3E\uDF73\uDF7C\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D(?:[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uDC30\u200D\uD83D\uDC68\uD83C[\uDFFB\uDFFD-\uDFFF])|\uD83E(?:[\uDD1D\uDEEF]\u200D\uD83D\uDC68\uD83C[\uDFFB\uDFFD-\uDFFF]|[\uDDAF\uDDBC\uDDBD](?:\u200D\u27A1\uFE0F?)?|[\uDDB0-\uDDB3])))?|\uDFFD(?:\u200D(?:[\u2695\u2696\u2708]\uFE0F?|\u2764\uFE0F?\u200D\uD83D(?:\uDC8B\u200D\uD83D)?\uDC68\uD83C[\uDFFB-\uDFFF]|\uD83C[\uDF3E\uDF73\uDF7C\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D(?:[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uDC30\u200D\uD83D\uDC68\uD83C[\uDFFB\uDFFC\uDFFE\uDFFF])|\uD83E(?:[\uDD1D\uDEEF]\u200D\uD83D\uDC68\uD83C[\uDFFB\uDFFC\uDFFE\uDFFF]|[\uDDAF\uDDBC\uDDBD](?:\u200D\u27A1\uFE0F?)?|[\uDDB0-\uDDB3])))?|\uDFFE(?:\u200D(?:[\u2695\u2696\u2708]\uFE0F?|\u2764\uFE0F?\u200D\uD83D(?:\uDC8B\u200D\uD83D)?\uDC68\uD83C[\uDFFB-\uDFFF]|\uD83C[\uDF3E\uDF73\uDF7C\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D(?:[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uDC30\u200D\uD83D\uDC68\uD83C[\uDFFB-\uDFFD\uDFFF])|\uD83E(?:[\uDD1D\uDEEF]\u200D\uD83D\uDC68\uD83C[\uDFFB-\uDFFD\uDFFF]|[\uDDAF\uDDBC\uDDBD](?:\u200D\u27A1\uFE0F?)?|[\uDDB0-\uDDB3])))?|\uDFFF(?:\u200D(?:[\u2695\u2696\u2708]\uFE0F?|\u2764\uFE0F?\u200D\uD83D(?:\uDC8B\u200D\uD83D)?\uDC68\uD83C[\uDFFB-\uDFFF]|\uD83C[\uDF3E\uDF73\uDF7C\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D(?:[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uDC30\u200D\uD83D\uDC68\uD83C[\uDFFB-\uDFFE])|\uD83E(?:[\uDD1D\uDEEF]\u200D\uD83D\uDC68\uD83C[\uDFFB-\uDFFE]|[\uDDAF\uDDBC\uDDBD](?:\u200D\u27A1\uFE0F?)?|[\uDDB0-\uDDB3])))?))?|\uDC69(?:\u200D(?:[\u2695\u2696\u2708]\uFE0F?|\u2764\uFE0F?\u200D\uD83D(?:\uDC8B\u200D\uD83D)?[\uDC68\uDC69]|\uD83C[\uDF3E\uDF73\uDF7C\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D(?:[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uDC66(?:\u200D\uD83D\uDC66)?|\uDC67(?:\u200D\uD83D[\uDC66\uDC67])?|\uDC69\u200D\uD83D(?:\uDC66(?:\u200D\uD83D\uDC66)?|\uDC67(?:\u200D\uD83D[\uDC66\uDC67])?))|\uD83E(?:[\uDDAF\uDDBC\uDDBD](?:\u200D\u27A1\uFE0F?)?|[\uDDB0-\uDDB3]))|\uD83C(?:\uDFFB(?:\u200D(?:[\u2695\u2696\u2708]\uFE0F?|\u2764\uFE0F?\u200D\uD83D(?:[\uDC68\uDC69]|\uDC8B\u200D\uD83D[\uDC68\uDC69])\uD83C[\uDFFB-\uDFFF]|\uD83C[\uDF3E\uDF73\uDF7C\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D(?:[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uDC30\u200D\uD83D\uDC69\uD83C[\uDFFC-\uDFFF])|\uD83E(?:[\uDDAF\uDDBC\uDDBD](?:\u200D\u27A1\uFE0F?)?|[\uDDB0-\uDDB3]|\uDD1D\u200D\uD83D[\uDC68\uDC69]\uD83C[\uDFFC-\uDFFF]|\uDEEF\u200D\uD83D\uDC69\uD83C[\uDFFC-\uDFFF])))?|\uDFFC(?:\u200D(?:[\u2695\u2696\u2708]\uFE0F?|\u2764\uFE0F?\u200D\uD83D(?:[\uDC68\uDC69]|\uDC8B\u200D\uD83D[\uDC68\uDC69])\uD83C[\uDFFB-\uDFFF]|\uD83C[\uDF3E\uDF73\uDF7C\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D(?:[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uDC30\u200D\uD83D\uDC69\uD83C[\uDFFB\uDFFD-\uDFFF])|\uD83E(?:[\uDDAF\uDDBC\uDDBD](?:\u200D\u27A1\uFE0F?)?|[\uDDB0-\uDDB3]|\uDD1D\u200D\uD83D[\uDC68\uDC69]\uD83C[\uDFFB\uDFFD-\uDFFF]|\uDEEF\u200D\uD83D\uDC69\uD83C[\uDFFB\uDFFD-\uDFFF])))?|\uDFFD(?:\u200D(?:[\u2695\u2696\u2708]\uFE0F?|\u2764\uFE0F?\u200D\uD83D(?:[\uDC68\uDC69]|\uDC8B\u200D\uD83D[\uDC68\uDC69])\uD83C[\uDFFB-\uDFFF]|\uD83C[\uDF3E\uDF73\uDF7C\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D(?:[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uDC30\u200D\uD83D\uDC69\uD83C[\uDFFB\uDFFC\uDFFE\uDFFF])|\uD83E(?:[\uDDAF\uDDBC\uDDBD](?:\u200D\u27A1\uFE0F?)?|[\uDDB0-\uDDB3]|\uDD1D\u200D\uD83D[\uDC68\uDC69]\uD83C[\uDFFB\uDFFC\uDFFE\uDFFF]|\uDEEF\u200D\uD83D\uDC69\uD83C[\uDFFB\uDFFC\uDFFE\uDFFF])))?|\uDFFE(?:\u200D(?:[\u2695\u2696\u2708]\uFE0F?|\u2764\uFE0F?\u200D\uD83D(?:[\uDC68\uDC69]|\uDC8B\u200D\uD83D[\uDC68\uDC69])\uD83C[\uDFFB-\uDFFF]|\uD83C[\uDF3E\uDF73\uDF7C\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D(?:[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uDC30\u200D\uD83D\uDC69\uD83C[\uDFFB-\uDFFD\uDFFF])|\uD83E(?:[\uDDAF\uDDBC\uDDBD](?:\u200D\u27A1\uFE0F?)?|[\uDDB0-\uDDB3]|\uDD1D\u200D\uD83D[\uDC68\uDC69]\uD83C[\uDFFB-\uDFFD\uDFFF]|\uDEEF\u200D\uD83D\uDC69\uD83C[\uDFFB-\uDFFD\uDFFF])))?|\uDFFF(?:\u200D(?:[\u2695\u2696\u2708]\uFE0F?|\u2764\uFE0F?\u200D\uD83D(?:[\uDC68\uDC69]|\uDC8B\u200D\uD83D[\uDC68\uDC69])\uD83C[\uDFFB-\uDFFF]|\uD83C[\uDF3E\uDF73\uDF7C\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D(?:[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uDC30\u200D\uD83D\uDC69\uD83C[\uDFFB-\uDFFE])|\uD83E(?:[\uDDAF\uDDBC\uDDBD](?:\u200D\u27A1\uFE0F?)?|[\uDDB0-\uDDB3]|\uDD1D\u200D\uD83D[\uDC68\uDC69]\uD83C[\uDFFB-\uDFFE]|\uDEEF\u200D\uD83D\uDC69\uD83C[\uDFFB-\uDFFE])))?))?|\uDD75(?:\uD83C[\uDFFB-\uDFFF]|\uFE0F)?(?:\u200D[\u2640\u2642]\uFE0F?)?|\uDE2E(?:\u200D\uD83D\uDCA8)?|\uDE35(?:\u200D\uD83D\uDCAB)?|\uDE36(?:\u200D\uD83C\uDF2B\uFE0F?)?|\uDE42(?:\u200D[\u2194\u2195]\uFE0F?)?|\uDEB6(?:\uD83C[\uDFFB-\uDFFF])?(?:\u200D(?:[\u2640\u2642]\uFE0F?(?:\u200D\u27A1\uFE0F?)?|\u27A1\uFE0F?))?)|\uD83E(?:[\uDD0C\uDD0F\uDD18-\uDD1F\uDD30-\uDD34\uDD36\uDD77\uDDB5\uDDB6\uDDBB\uDDD2\uDDD3\uDDD5\uDEC3-\uDEC5\uDEF0\uDEF2-\uDEF8](?:\uD83C[\uDFFB-\uDFFF])?|[\uDD26\uDD35\uDD37-\uDD39\uDD3C-\uDD3E\uDDB8\uDDB9\uDDCD\uDDCF\uDDD4\uDDD6-\uDDDD](?:\uD83C[\uDFFB-\uDFFF])?(?:\u200D[\u2640\u2642]\uFE0F?)?|[\uDDDE\uDDDF](?:\u200D[\u2640\u2642]\uFE0F?)?|[\uDD0D\uDD0E\uDD10-\uDD17\uDD20-\uDD25\uDD27-\uDD2F\uDD3A\uDD3F-\uDD45\uDD47-\uDD76\uDD78-\uDDB4\uDDB7\uDDBA\uDDBC-\uDDCC\uDDD0\uDDE0-\uDDFF\uDE70-\uDE7C\uDE80-\uDE8A\uDE8E-\uDEC2\uDEC6\uDEC8\uDECD-\uDEDC\uDEDF-\uDEEA\uDEEF]|\uDDCE(?:\uD83C[\uDFFB-\uDFFF])?(?:\u200D(?:[\u2640\u2642]\uFE0F?(?:\u200D\u27A1\uFE0F?)?|\u27A1\uFE0F?))?|\uDDD1(?:\u200D(?:[\u2695\u2696\u2708]\uFE0F?|\uD83C[\uDF3E\uDF73\uDF7C\uDF84\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E(?:[\uDDAF\uDDBC\uDDBD](?:\u200D\u27A1\uFE0F?)?|[\uDDB0-\uDDB3\uDE70]|\uDD1D\u200D\uD83E\uDDD1|\uDDD1\u200D\uD83E\uDDD2(?:\u200D\uD83E\uDDD2)?|\uDDD2(?:\u200D\uD83E\uDDD2)?))|\uD83C(?:\uDFFB(?:\u200D(?:[\u2695\u2696\u2708]\uFE0F?|\u2764\uFE0F?\u200D(?:\uD83D\uDC8B\u200D)?\uD83E\uDDD1\uD83C[\uDFFC-\uDFFF]|\uD83C[\uDF3E\uDF73\uDF7C\uDF84\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D(?:[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uDC30\u200D\uD83E\uDDD1\uD83C[\uDFFC-\uDFFF])|\uD83E(?:[\uDDAF\uDDBC\uDDBD](?:\u200D\u27A1\uFE0F?)?|[\uDDB0-\uDDB3\uDE70]|\uDD1D\u200D\uD83E\uDDD1\uD83C[\uDFFB-\uDFFF]|\uDEEF\u200D\uD83E\uDDD1\uD83C[\uDFFC-\uDFFF])))?|\uDFFC(?:\u200D(?:[\u2695\u2696\u2708]\uFE0F?|\u2764\uFE0F?\u200D(?:\uD83D\uDC8B\u200D)?\uD83E\uDDD1\uD83C[\uDFFB\uDFFD-\uDFFF]|\uD83C[\uDF3E\uDF73\uDF7C\uDF84\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D(?:[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uDC30\u200D\uD83E\uDDD1\uD83C[\uDFFB\uDFFD-\uDFFF])|\uD83E(?:[\uDDAF\uDDBC\uDDBD](?:\u200D\u27A1\uFE0F?)?|[\uDDB0-\uDDB3\uDE70]|\uDD1D\u200D\uD83E\uDDD1\uD83C[\uDFFB-\uDFFF]|\uDEEF\u200D\uD83E\uDDD1\uD83C[\uDFFB\uDFFD-\uDFFF])))?|\uDFFD(?:\u200D(?:[\u2695\u2696\u2708]\uFE0F?|\u2764\uFE0F?\u200D(?:\uD83D\uDC8B\u200D)?\uD83E\uDDD1\uD83C[\uDFFB\uDFFC\uDFFE\uDFFF]|\uD83C[\uDF3E\uDF73\uDF7C\uDF84\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D(?:[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uDC30\u200D\uD83E\uDDD1\uD83C[\uDFFB\uDFFC\uDFFE\uDFFF])|\uD83E(?:[\uDDAF\uDDBC\uDDBD](?:\u200D\u27A1\uFE0F?)?|[\uDDB0-\uDDB3\uDE70]|\uDD1D\u200D\uD83E\uDDD1\uD83C[\uDFFB-\uDFFF]|\uDEEF\u200D\uD83E\uDDD1\uD83C[\uDFFB\uDFFC\uDFFE\uDFFF])))?|\uDFFE(?:\u200D(?:[\u2695\u2696\u2708]\uFE0F?|\u2764\uFE0F?\u200D(?:\uD83D\uDC8B\u200D)?\uD83E\uDDD1\uD83C[\uDFFB-\uDFFD\uDFFF]|\uD83C[\uDF3E\uDF73\uDF7C\uDF84\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D(?:[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uDC30\u200D\uD83E\uDDD1\uD83C[\uDFFB-\uDFFD\uDFFF])|\uD83E(?:[\uDDAF\uDDBC\uDDBD](?:\u200D\u27A1\uFE0F?)?|[\uDDB0-\uDDB3\uDE70]|\uDD1D\u200D\uD83E\uDDD1\uD83C[\uDFFB-\uDFFF]|\uDEEF\u200D\uD83E\uDDD1\uD83C[\uDFFB-\uDFFD\uDFFF])))?|\uDFFF(?:\u200D(?:[\u2695\u2696\u2708]\uFE0F?|\u2764\uFE0F?\u200D(?:\uD83D\uDC8B\u200D)?\uD83E\uDDD1\uD83C[\uDFFB-\uDFFE]|\uD83C[\uDF3E\uDF73\uDF7C\uDF84\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D(?:[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uDC30\u200D\uD83E\uDDD1\uD83C[\uDFFB-\uDFFE])|\uD83E(?:[\uDDAF\uDDBC\uDDBD](?:\u200D\u27A1\uFE0F?)?|[\uDDB0-\uDDB3\uDE70]|\uDD1D\u200D\uD83E\uDDD1\uD83C[\uDFFB-\uDFFF]|\uDEEF\u200D\uD83E\uDDD1\uD83C[\uDFFB-\uDFFE])))?))?|\uDEF1(?:\uD83C(?:\uDFFB(?:\u200D\uD83E\uDEF2\uD83C[\uDFFC-\uDFFF])?|\uDFFC(?:\u200D\uD83E\uDEF2\uD83C[\uDFFB\uDFFD-\uDFFF])?|\uDFFD(?:\u200D\uD83E\uDEF2\uD83C[\uDFFB\uDFFC\uDFFE\uDFFF])?|\uDFFE(?:\u200D\uD83E\uDEF2\uD83C[\uDFFB-\uDFFD\uDFFF])?|\uDFFF(?:\u200D\uD83E\uDEF2\uD83C[\uDFFB-\uDFFE])?))?)/g;
+    };
+  }
+});
+
+// ../node_modules/string-width/index.js
+function stringWidth(string4, options = {}) {
+  if (typeof string4 !== "string" || string4.length === 0) {
+    return 0;
+  }
+  const {
+    ambiguousIsNarrow = true,
+    countAnsiEscapeCodes = false
+  } = options;
+  if (!countAnsiEscapeCodes) {
+    string4 = stripAnsi(string4);
+  }
+  if (string4.length === 0) {
+    return 0;
+  }
+  let width = 0;
+  const eastAsianWidthOptions = { ambiguousAsWide: !ambiguousIsNarrow };
+  for (const { segment: character } of segmenter.segment(string4)) {
+    const codePoint = character.codePointAt(0);
+    if (codePoint <= 31 || codePoint >= 127 && codePoint <= 159) {
+      continue;
+    }
+    if (codePoint >= 8203 && codePoint <= 8207 || codePoint === 65279) {
+      continue;
+    }
+    if (codePoint >= 768 && codePoint <= 879 || codePoint >= 6832 && codePoint <= 6911 || codePoint >= 7616 && codePoint <= 7679 || codePoint >= 8400 && codePoint <= 8447 || codePoint >= 65056 && codePoint <= 65071) {
+      continue;
+    }
+    if (codePoint >= 55296 && codePoint <= 57343) {
+      continue;
+    }
+    if (codePoint >= 65024 && codePoint <= 65039) {
+      continue;
+    }
+    if (defaultIgnorableCodePointRegex.test(character)) {
+      continue;
+    }
+    if (emoji_regex_default().test(character)) {
+      width += 2;
+      continue;
+    }
+    width += eastAsianWidth(codePoint, eastAsianWidthOptions);
+  }
+  return width;
+}
+var segmenter, defaultIgnorableCodePointRegex;
+var init_string_width = __esm({
+  "../node_modules/string-width/index.js"() {
+    "use strict";
+    init_strip_ansi();
+    init_get_east_asian_width();
+    init_emoji_regex();
+    segmenter = new Intl.Segmenter();
+    defaultIgnorableCodePointRegex = new RegExp("^\\p{Default_Ignorable_Code_Point}$", "u");
+  }
+});
+
+// ../node_modules/chalk/source/vendor/ansi-styles/index.js
+function assembleStyles() {
+  const codes = /* @__PURE__ */ new Map();
+  for (const [groupName, group] of Object.entries(styles)) {
+    for (const [styleName, style] of Object.entries(group)) {
+      styles[styleName] = {
+        open: `\x1B[${style[0]}m`,
+        close: `\x1B[${style[1]}m`
+      };
+      group[styleName] = styles[styleName];
+      codes.set(style[0], style[1]);
+    }
+    Object.defineProperty(styles, groupName, {
+      value: group,
+      enumerable: false
+    });
+  }
+  Object.defineProperty(styles, "codes", {
+    value: codes,
+    enumerable: false
+  });
+  styles.color.close = "\x1B[39m";
+  styles.bgColor.close = "\x1B[49m";
+  styles.color.ansi = wrapAnsi16();
+  styles.color.ansi256 = wrapAnsi256();
+  styles.color.ansi16m = wrapAnsi16m();
+  styles.bgColor.ansi = wrapAnsi16(ANSI_BACKGROUND_OFFSET);
+  styles.bgColor.ansi256 = wrapAnsi256(ANSI_BACKGROUND_OFFSET);
+  styles.bgColor.ansi16m = wrapAnsi16m(ANSI_BACKGROUND_OFFSET);
+  Object.defineProperties(styles, {
+    rgbToAnsi256: {
+      value(red, green, blue) {
+        if (red === green && green === blue) {
+          if (red < 8) {
+            return 16;
+          }
+          if (red > 248) {
+            return 231;
+          }
+          return Math.round((red - 8) / 247 * 24) + 232;
+        }
+        return 16 + 36 * Math.round(red / 255 * 5) + 6 * Math.round(green / 255 * 5) + Math.round(blue / 255 * 5);
+      },
+      enumerable: false
+    },
+    hexToRgb: {
+      value(hex3) {
+        const matches = /[a-f\d]{6}|[a-f\d]{3}/i.exec(hex3.toString(16));
+        if (!matches) {
+          return [0, 0, 0];
+        }
+        let [colorString] = matches;
+        if (colorString.length === 3) {
+          colorString = [...colorString].map((character) => character + character).join("");
+        }
+        const integer2 = Number.parseInt(colorString, 16);
+        return [
+          /* eslint-disable no-bitwise */
+          integer2 >> 16 & 255,
+          integer2 >> 8 & 255,
+          integer2 & 255
+          /* eslint-enable no-bitwise */
+        ];
+      },
+      enumerable: false
+    },
+    hexToAnsi256: {
+      value: (hex3) => styles.rgbToAnsi256(...styles.hexToRgb(hex3)),
+      enumerable: false
+    },
+    ansi256ToAnsi: {
+      value(code) {
+        if (code < 8) {
+          return 30 + code;
+        }
+        if (code < 16) {
+          return 90 + (code - 8);
+        }
+        let red;
+        let green;
+        let blue;
+        if (code >= 232) {
+          red = ((code - 232) * 10 + 8) / 255;
+          green = red;
+          blue = red;
+        } else {
+          code -= 16;
+          const remainder = code % 36;
+          red = Math.floor(code / 36) / 5;
+          green = Math.floor(remainder / 6) / 5;
+          blue = remainder % 6 / 5;
+        }
+        const value = Math.max(red, green, blue) * 2;
+        if (value === 0) {
+          return 30;
+        }
+        let result = 30 + (Math.round(blue) << 2 | Math.round(green) << 1 | Math.round(red));
+        if (value === 2) {
+          result += 60;
+        }
+        return result;
+      },
+      enumerable: false
+    },
+    rgbToAnsi: {
+      value: (red, green, blue) => styles.ansi256ToAnsi(styles.rgbToAnsi256(red, green, blue)),
+      enumerable: false
+    },
+    hexToAnsi: {
+      value: (hex3) => styles.ansi256ToAnsi(styles.hexToAnsi256(hex3)),
+      enumerable: false
+    }
+  });
+  return styles;
+}
+var ANSI_BACKGROUND_OFFSET, wrapAnsi16, wrapAnsi256, wrapAnsi16m, styles, modifierNames, foregroundColorNames, backgroundColorNames, colorNames, ansiStyles, ansi_styles_default;
+var init_ansi_styles = __esm({
+  "../node_modules/chalk/source/vendor/ansi-styles/index.js"() {
+    "use strict";
+    ANSI_BACKGROUND_OFFSET = 10;
+    wrapAnsi16 = (offset = 0) => (code) => `\x1B[${code + offset}m`;
+    wrapAnsi256 = (offset = 0) => (code) => `\x1B[${38 + offset};5;${code}m`;
+    wrapAnsi16m = (offset = 0) => (red, green, blue) => `\x1B[${38 + offset};2;${red};${green};${blue}m`;
+    styles = {
+      modifier: {
+        reset: [0, 0],
+        // 21 isn't widely supported and 22 does the same thing
+        bold: [1, 22],
+        dim: [2, 22],
+        italic: [3, 23],
+        underline: [4, 24],
+        overline: [53, 55],
+        inverse: [7, 27],
+        hidden: [8, 28],
+        strikethrough: [9, 29]
+      },
+      color: {
+        black: [30, 39],
+        red: [31, 39],
+        green: [32, 39],
+        yellow: [33, 39],
+        blue: [34, 39],
+        magenta: [35, 39],
+        cyan: [36, 39],
+        white: [37, 39],
+        // Bright color
+        blackBright: [90, 39],
+        gray: [90, 39],
+        // Alias of `blackBright`
+        grey: [90, 39],
+        // Alias of `blackBright`
+        redBright: [91, 39],
+        greenBright: [92, 39],
+        yellowBright: [93, 39],
+        blueBright: [94, 39],
+        magentaBright: [95, 39],
+        cyanBright: [96, 39],
+        whiteBright: [97, 39]
+      },
+      bgColor: {
+        bgBlack: [40, 49],
+        bgRed: [41, 49],
+        bgGreen: [42, 49],
+        bgYellow: [43, 49],
+        bgBlue: [44, 49],
+        bgMagenta: [45, 49],
+        bgCyan: [46, 49],
+        bgWhite: [47, 49],
+        // Bright color
+        bgBlackBright: [100, 49],
+        bgGray: [100, 49],
+        // Alias of `bgBlackBright`
+        bgGrey: [100, 49],
+        // Alias of `bgBlackBright`
+        bgRedBright: [101, 49],
+        bgGreenBright: [102, 49],
+        bgYellowBright: [103, 49],
+        bgBlueBright: [104, 49],
+        bgMagentaBright: [105, 49],
+        bgCyanBright: [106, 49],
+        bgWhiteBright: [107, 49]
+      }
+    };
+    modifierNames = Object.keys(styles.modifier);
+    foregroundColorNames = Object.keys(styles.color);
+    backgroundColorNames = Object.keys(styles.bgColor);
+    colorNames = [...foregroundColorNames, ...backgroundColorNames];
+    ansiStyles = assembleStyles();
+    ansi_styles_default = ansiStyles;
+  }
+});
+
+// ../node_modules/chalk/source/vendor/supports-color/index.js
+function hasFlag(flag, argv = globalThis.Deno ? globalThis.Deno.args : import_node_process7.default.argv) {
+  const prefix = flag.startsWith("-") ? "" : flag.length === 1 ? "-" : "--";
+  const position = argv.indexOf(prefix + flag);
+  const terminatorPosition = argv.indexOf("--");
+  return position !== -1 && (terminatorPosition === -1 || position < terminatorPosition);
+}
+function envForceColor() {
+  if ("FORCE_COLOR" in env2) {
+    if (env2.FORCE_COLOR === "true") {
+      return 1;
+    }
+    if (env2.FORCE_COLOR === "false") {
+      return 0;
+    }
+    return env2.FORCE_COLOR.length === 0 ? 1 : Math.min(Number.parseInt(env2.FORCE_COLOR, 10), 3);
+  }
+}
+function translateLevel(level) {
+  if (level === 0) {
+    return false;
+  }
+  return {
+    level,
+    hasBasic: true,
+    has256: level >= 2,
+    has16m: level >= 3
+  };
+}
+function _supportsColor(haveStream, { streamIsTTY, sniffFlags = true } = {}) {
+  const noFlagForceColor = envForceColor();
+  if (noFlagForceColor !== void 0) {
+    flagForceColor = noFlagForceColor;
+  }
+  const forceColor = sniffFlags ? flagForceColor : noFlagForceColor;
+  if (forceColor === 0) {
+    return 0;
+  }
+  if (sniffFlags) {
+    if (hasFlag("color=16m") || hasFlag("color=full") || hasFlag("color=truecolor")) {
+      return 3;
+    }
+    if (hasFlag("color=256")) {
+      return 2;
+    }
+  }
+  if ("TF_BUILD" in env2 && "AGENT_NAME" in env2) {
+    return 1;
+  }
+  if (haveStream && !streamIsTTY && forceColor === void 0) {
+    return 0;
+  }
+  const min = forceColor || 0;
+  if (env2.TERM === "dumb") {
+    return min;
+  }
+  if (import_node_process7.default.platform === "win32") {
+    const osRelease = import_node_os6.default.release().split(".");
+    if (Number(osRelease[0]) >= 10 && Number(osRelease[2]) >= 10586) {
+      return Number(osRelease[2]) >= 14931 ? 3 : 2;
+    }
+    return 1;
+  }
+  if ("CI" in env2) {
+    if (["GITHUB_ACTIONS", "GITEA_ACTIONS", "CIRCLECI"].some((key) => key in env2)) {
+      return 3;
+    }
+    if (["TRAVIS", "APPVEYOR", "GITLAB_CI", "BUILDKITE", "DRONE"].some((sign) => sign in env2) || env2.CI_NAME === "codeship") {
+      return 1;
+    }
+    return min;
+  }
+  if ("TEAMCITY_VERSION" in env2) {
+    return /^(9\.(0*[1-9]\d*)\.|\d{2,}\.)/.test(env2.TEAMCITY_VERSION) ? 1 : 0;
+  }
+  if (env2.COLORTERM === "truecolor") {
+    return 3;
+  }
+  if (env2.TERM === "xterm-kitty") {
+    return 3;
+  }
+  if (env2.TERM === "xterm-ghostty") {
+    return 3;
+  }
+  if (env2.TERM === "wezterm") {
+    return 3;
+  }
+  if ("TERM_PROGRAM" in env2) {
+    const version3 = Number.parseInt((env2.TERM_PROGRAM_VERSION || "").split(".")[0], 10);
+    switch (env2.TERM_PROGRAM) {
+      case "iTerm.app": {
+        return version3 >= 3 ? 3 : 2;
+      }
+      case "Apple_Terminal": {
+        return 2;
+      }
+    }
+  }
+  if (/-256(color)?$/i.test(env2.TERM)) {
+    return 2;
+  }
+  if (/^screen|^xterm|^vt100|^vt220|^rxvt|color|ansi|cygwin|linux/i.test(env2.TERM)) {
+    return 1;
+  }
+  if ("COLORTERM" in env2) {
+    return 1;
+  }
+  return min;
+}
+function createSupportsColor(stream, options = {}) {
+  const level = _supportsColor(stream, {
+    streamIsTTY: stream && stream.isTTY,
+    ...options
+  });
+  return translateLevel(level);
+}
+var import_node_process7, import_node_os6, import_node_tty, env2, flagForceColor, supportsColor, supports_color_default;
+var init_supports_color = __esm({
+  "../node_modules/chalk/source/vendor/supports-color/index.js"() {
+    "use strict";
+    import_node_process7 = __toESM(require("process"), 1);
+    import_node_os6 = __toESM(require("os"), 1);
+    import_node_tty = __toESM(require("tty"), 1);
+    ({ env: env2 } = import_node_process7.default);
+    if (hasFlag("no-color") || hasFlag("no-colors") || hasFlag("color=false") || hasFlag("color=never")) {
+      flagForceColor = 0;
+    } else if (hasFlag("color") || hasFlag("colors") || hasFlag("color=true") || hasFlag("color=always")) {
+      flagForceColor = 1;
+    }
+    supportsColor = {
+      stdout: createSupportsColor({ isTTY: import_node_tty.default.isatty(1) }),
+      stderr: createSupportsColor({ isTTY: import_node_tty.default.isatty(2) })
+    };
+    supports_color_default = supportsColor;
+  }
+});
+
+// ../node_modules/chalk/source/utilities.js
+function stringReplaceAll(string4, substring, replacer) {
+  let index = string4.indexOf(substring);
+  if (index === -1) {
+    return string4;
+  }
+  const substringLength = substring.length;
+  let endIndex = 0;
+  let returnValue = "";
+  do {
+    returnValue += string4.slice(endIndex, index) + substring + replacer;
+    endIndex = index + substringLength;
+    index = string4.indexOf(substring, endIndex);
+  } while (index !== -1);
+  returnValue += string4.slice(endIndex);
+  return returnValue;
+}
+function stringEncaseCRLFWithFirstIndex(string4, prefix, postfix, index) {
+  let endIndex = 0;
+  let returnValue = "";
+  do {
+    const gotCR = string4[index - 1] === "\r";
+    returnValue += string4.slice(endIndex, gotCR ? index - 1 : index) + prefix + (gotCR ? "\r\n" : "\n") + postfix;
+    endIndex = index + 1;
+    index = string4.indexOf("\n", endIndex);
+  } while (index !== -1);
+  returnValue += string4.slice(endIndex);
+  return returnValue;
+}
+var init_utilities2 = __esm({
+  "../node_modules/chalk/source/utilities.js"() {
+    "use strict";
+  }
+});
+
+// ../node_modules/chalk/source/index.js
+function createChalk(options) {
+  return chalkFactory(options);
+}
+var stdoutColor, stderrColor, GENERATOR, STYLER, IS_EMPTY, levelMapping, styles2, applyOptions, chalkFactory, getModelAnsi, usedModels, proto, createStyler, createBuilder, applyStyle, chalk, chalkStderr, source_default;
+var init_source = __esm({
+  "../node_modules/chalk/source/index.js"() {
+    "use strict";
+    init_ansi_styles();
+    init_supports_color();
+    init_utilities2();
+    ({ stdout: stdoutColor, stderr: stderrColor } = supports_color_default);
+    GENERATOR = /* @__PURE__ */ Symbol("GENERATOR");
+    STYLER = /* @__PURE__ */ Symbol("STYLER");
+    IS_EMPTY = /* @__PURE__ */ Symbol("IS_EMPTY");
+    levelMapping = [
+      "ansi",
+      "ansi",
+      "ansi256",
+      "ansi16m"
+    ];
+    styles2 = /* @__PURE__ */ Object.create(null);
+    applyOptions = (object2, options = {}) => {
+      if (options.level && !(Number.isInteger(options.level) && options.level >= 0 && options.level <= 3)) {
+        throw new Error("The `level` option should be an integer from 0 to 3");
+      }
+      const colorLevel = stdoutColor ? stdoutColor.level : 0;
+      object2.level = options.level === void 0 ? colorLevel : options.level;
+    };
+    chalkFactory = (options) => {
+      const chalk2 = (...strings) => strings.join(" ");
+      applyOptions(chalk2, options);
+      Object.setPrototypeOf(chalk2, createChalk.prototype);
+      return chalk2;
+    };
+    Object.setPrototypeOf(createChalk.prototype, Function.prototype);
+    for (const [styleName, style] of Object.entries(ansi_styles_default)) {
+      styles2[styleName] = {
+        get() {
+          const builder = createBuilder(this, createStyler(style.open, style.close, this[STYLER]), this[IS_EMPTY]);
+          Object.defineProperty(this, styleName, { value: builder });
+          return builder;
+        }
+      };
+    }
+    styles2.visible = {
+      get() {
+        const builder = createBuilder(this, this[STYLER], true);
+        Object.defineProperty(this, "visible", { value: builder });
+        return builder;
+      }
+    };
+    getModelAnsi = (model, level, type, ...arguments_) => {
+      if (model === "rgb") {
+        if (level === "ansi16m") {
+          return ansi_styles_default[type].ansi16m(...arguments_);
+        }
+        if (level === "ansi256") {
+          return ansi_styles_default[type].ansi256(ansi_styles_default.rgbToAnsi256(...arguments_));
+        }
+        return ansi_styles_default[type].ansi(ansi_styles_default.rgbToAnsi(...arguments_));
+      }
+      if (model === "hex") {
+        return getModelAnsi("rgb", level, type, ...ansi_styles_default.hexToRgb(...arguments_));
+      }
+      return ansi_styles_default[type][model](...arguments_);
+    };
+    usedModels = ["rgb", "hex", "ansi256"];
+    for (const model of usedModels) {
+      styles2[model] = {
+        get() {
+          const { level } = this;
+          return function(...arguments_) {
+            const styler = createStyler(getModelAnsi(model, levelMapping[level], "color", ...arguments_), ansi_styles_default.color.close, this[STYLER]);
+            return createBuilder(this, styler, this[IS_EMPTY]);
+          };
+        }
+      };
+      const bgModel = "bg" + model[0].toUpperCase() + model.slice(1);
+      styles2[bgModel] = {
+        get() {
+          const { level } = this;
+          return function(...arguments_) {
+            const styler = createStyler(getModelAnsi(model, levelMapping[level], "bgColor", ...arguments_), ansi_styles_default.bgColor.close, this[STYLER]);
+            return createBuilder(this, styler, this[IS_EMPTY]);
+          };
+        }
+      };
+    }
+    proto = Object.defineProperties(() => {
+    }, {
+      ...styles2,
+      level: {
+        enumerable: true,
+        get() {
+          return this[GENERATOR].level;
+        },
+        set(level) {
+          this[GENERATOR].level = level;
+        }
+      }
+    });
+    createStyler = (open, close, parent) => {
+      let openAll;
+      let closeAll;
+      if (parent === void 0) {
+        openAll = open;
+        closeAll = close;
+      } else {
+        openAll = parent.openAll + open;
+        closeAll = close + parent.closeAll;
+      }
+      return {
+        open,
+        close,
+        openAll,
+        closeAll,
+        parent
+      };
+    };
+    createBuilder = (self, _styler, _isEmpty) => {
+      const builder = (...arguments_) => applyStyle(builder, arguments_.length === 1 ? "" + arguments_[0] : arguments_.join(" "));
+      Object.setPrototypeOf(builder, proto);
+      builder[GENERATOR] = self;
+      builder[STYLER] = _styler;
+      builder[IS_EMPTY] = _isEmpty;
+      return builder;
+    };
+    applyStyle = (self, string4) => {
+      if (self.level <= 0 || !string4) {
+        return self[IS_EMPTY] ? "" : string4;
+      }
+      let styler = self[STYLER];
+      if (styler === void 0) {
+        return string4;
+      }
+      const { openAll, closeAll } = styler;
+      if (string4.includes("\x1B")) {
+        while (styler !== void 0) {
+          string4 = stringReplaceAll(string4, styler.close, styler.open);
+          styler = styler.parent;
+        }
+      }
+      const lfIndex = string4.indexOf("\n");
+      if (lfIndex !== -1) {
+        string4 = stringEncaseCRLFWithFirstIndex(string4, closeAll, openAll, lfIndex);
+      }
+      return openAll + string4 + closeAll;
+    };
+    Object.defineProperties(createChalk.prototype, styles2);
+    chalk = createChalk();
+    chalkStderr = createChalk({ level: stderrColor ? stderrColor.level : 0 });
+    source_default = chalk;
+  }
+});
+
+// ../node_modules/widest-line/index.js
+function widestLine(string4) {
+  let lineWidth = 0;
+  for (const line of string4.split("\n")) {
+    lineWidth = Math.max(lineWidth, stringWidth(line));
+  }
+  return lineWidth;
+}
+var init_widest_line = __esm({
+  "../node_modules/widest-line/index.js"() {
+    "use strict";
+    init_string_width();
+  }
+});
+
+// ../node_modules/cli-boxes/boxes.json
+var require_boxes = __commonJS({
+  "../node_modules/cli-boxes/boxes.json"(exports2, module2) {
+    module2.exports = {
+      single: {
+        topLeft: "\u250C",
+        top: "\u2500",
+        topRight: "\u2510",
+        right: "\u2502",
+        bottomRight: "\u2518",
+        bottom: "\u2500",
+        bottomLeft: "\u2514",
+        left: "\u2502"
+      },
+      double: {
+        topLeft: "\u2554",
+        top: "\u2550",
+        topRight: "\u2557",
+        right: "\u2551",
+        bottomRight: "\u255D",
+        bottom: "\u2550",
+        bottomLeft: "\u255A",
+        left: "\u2551"
+      },
+      round: {
+        topLeft: "\u256D",
+        top: "\u2500",
+        topRight: "\u256E",
+        right: "\u2502",
+        bottomRight: "\u256F",
+        bottom: "\u2500",
+        bottomLeft: "\u2570",
+        left: "\u2502"
+      },
+      bold: {
+        topLeft: "\u250F",
+        top: "\u2501",
+        topRight: "\u2513",
+        right: "\u2503",
+        bottomRight: "\u251B",
+        bottom: "\u2501",
+        bottomLeft: "\u2517",
+        left: "\u2503"
+      },
+      singleDouble: {
+        topLeft: "\u2553",
+        top: "\u2500",
+        topRight: "\u2556",
+        right: "\u2551",
+        bottomRight: "\u255C",
+        bottom: "\u2500",
+        bottomLeft: "\u2559",
+        left: "\u2551"
+      },
+      doubleSingle: {
+        topLeft: "\u2552",
+        top: "\u2550",
+        topRight: "\u2555",
+        right: "\u2502",
+        bottomRight: "\u255B",
+        bottom: "\u2550",
+        bottomLeft: "\u2558",
+        left: "\u2502"
+      },
+      classic: {
+        topLeft: "+",
+        top: "-",
+        topRight: "+",
+        right: "|",
+        bottomRight: "+",
+        bottom: "-",
+        bottomLeft: "+",
+        left: "|"
+      },
+      arrow: {
+        topLeft: "\u2198",
+        top: "\u2193",
+        topRight: "\u2199",
+        right: "\u2190",
+        bottomRight: "\u2196",
+        bottom: "\u2191",
+        bottomLeft: "\u2197",
+        left: "\u2192"
+      }
+    };
+  }
+});
+
+// ../node_modules/cli-boxes/index.js
+var require_cli_boxes = __commonJS({
+  "../node_modules/cli-boxes/index.js"(exports2, module2) {
+    "use strict";
+    var cliBoxes2 = require_boxes();
+    module2.exports = cliBoxes2;
+    module2.exports.default = cliBoxes2;
+  }
+});
+
+// ../node_modules/camelcase/index.js
+function camelCase(input, options) {
+  if (!(typeof input === "string" || Array.isArray(input))) {
+    throw new TypeError("Expected the input to be `string | string[]`");
+  }
+  options = {
+    pascalCase: false,
+    preserveConsecutiveUppercase: false,
+    ...options
+  };
+  if (Array.isArray(input)) {
+    input = input.map((x) => x.trim()).filter((x) => x.length).join("-");
+  } else {
+    input = input.trim();
+  }
+  if (input.length === 0) {
+    return "";
+  }
+  const toLowerCase = options.locale === false ? (string4) => string4.toLowerCase() : (string4) => string4.toLocaleLowerCase(options.locale);
+  const toUpperCase = options.locale === false ? (string4) => string4.toUpperCase() : (string4) => string4.toLocaleUpperCase(options.locale);
+  if (input.length === 1) {
+    if (SEPARATORS.test(input)) {
+      return "";
+    }
+    return options.pascalCase ? toUpperCase(input) : toLowerCase(input);
+  }
+  const hasUpperCase = input !== toLowerCase(input);
+  if (hasUpperCase) {
+    input = preserveCamelCase(input, toLowerCase, toUpperCase, options.preserveConsecutiveUppercase);
+  }
+  input = input.replace(LEADING_SEPARATORS, "");
+  input = options.preserveConsecutiveUppercase ? preserveConsecutiveUppercase(input, toLowerCase) : toLowerCase(input);
+  if (options.pascalCase) {
+    input = toUpperCase(input.charAt(0)) + input.slice(1);
+  }
+  return postProcess(input, toUpperCase);
+}
+var UPPERCASE, LOWERCASE, LEADING_CAPITAL, IDENTIFIER, SEPARATORS, LEADING_SEPARATORS, SEPARATORS_AND_IDENTIFIER, NUMBERS_AND_IDENTIFIER, preserveCamelCase, preserveConsecutiveUppercase, postProcess;
+var init_camelcase = __esm({
+  "../node_modules/camelcase/index.js"() {
+    "use strict";
+    UPPERCASE = /[\p{Lu}]/u;
+    LOWERCASE = /[\p{Ll}]/u;
+    LEADING_CAPITAL = /^[\p{Lu}](?![\p{Lu}])/gu;
+    IDENTIFIER = /([\p{Alpha}\p{N}_]|$)/u;
+    SEPARATORS = /[_.\- ]+/;
+    LEADING_SEPARATORS = new RegExp("^" + SEPARATORS.source);
+    SEPARATORS_AND_IDENTIFIER = new RegExp(SEPARATORS.source + IDENTIFIER.source, "gu");
+    NUMBERS_AND_IDENTIFIER = new RegExp("\\d+" + IDENTIFIER.source, "gu");
+    preserveCamelCase = (string4, toLowerCase, toUpperCase, preserveConsecutiveUppercase2) => {
+      let isLastCharLower = false;
+      let isLastCharUpper = false;
+      let isLastLastCharUpper = false;
+      let isLastLastCharPreserved = false;
+      for (let index = 0; index < string4.length; index++) {
+        const character = string4[index];
+        isLastLastCharPreserved = index > 2 ? string4[index - 3] === "-" : true;
+        if (isLastCharLower && UPPERCASE.test(character)) {
+          string4 = string4.slice(0, index) + "-" + string4.slice(index);
+          isLastCharLower = false;
+          isLastLastCharUpper = isLastCharUpper;
+          isLastCharUpper = true;
+          index++;
+        } else if (isLastCharUpper && isLastLastCharUpper && LOWERCASE.test(character) && (!isLastLastCharPreserved || preserveConsecutiveUppercase2)) {
+          string4 = string4.slice(0, index - 1) + "-" + string4.slice(index - 1);
+          isLastLastCharUpper = isLastCharUpper;
+          isLastCharUpper = false;
+          isLastCharLower = true;
+        } else {
+          isLastCharLower = toLowerCase(character) === character && toUpperCase(character) !== character;
+          isLastLastCharUpper = isLastCharUpper;
+          isLastCharUpper = toUpperCase(character) === character && toLowerCase(character) !== character;
+        }
+      }
+      return string4;
+    };
+    preserveConsecutiveUppercase = (input, toLowerCase) => {
+      LEADING_CAPITAL.lastIndex = 0;
+      return input.replaceAll(LEADING_CAPITAL, (match) => toLowerCase(match));
+    };
+    postProcess = (input, toUpperCase) => {
+      SEPARATORS_AND_IDENTIFIER.lastIndex = 0;
+      NUMBERS_AND_IDENTIFIER.lastIndex = 0;
+      return input.replaceAll(NUMBERS_AND_IDENTIFIER, (match, pattern, offset) => ["_", "-"].includes(input.charAt(offset + match.length)) ? match : toUpperCase(match)).replaceAll(SEPARATORS_AND_IDENTIFIER, (_, identifier) => toUpperCase(identifier));
+    };
+  }
+});
+
+// ../node_modules/ansi-align/node_modules/ansi-regex/index.js
+var require_ansi_regex = __commonJS({
+  "../node_modules/ansi-align/node_modules/ansi-regex/index.js"(exports2, module2) {
+    "use strict";
+    module2.exports = ({ onlyFirst = false } = {}) => {
+      const pattern = [
+        "[\\u001B\\u009B][[\\]()#;?]*(?:(?:(?:(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]+)*|[a-zA-Z\\d]+(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]*)*)?\\u0007)",
+        "(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PR-TZcf-ntqry=><~]))"
+      ].join("|");
+      return new RegExp(pattern, onlyFirst ? void 0 : "g");
+    };
+  }
+});
+
+// ../node_modules/ansi-align/node_modules/strip-ansi/index.js
+var require_strip_ansi = __commonJS({
+  "../node_modules/ansi-align/node_modules/strip-ansi/index.js"(exports2, module2) {
+    "use strict";
+    var ansiRegex2 = require_ansi_regex();
+    module2.exports = (string4) => typeof string4 === "string" ? string4.replace(ansiRegex2(), "") : string4;
+  }
+});
+
+// ../node_modules/ansi-align/node_modules/is-fullwidth-code-point/index.js
+var require_is_fullwidth_code_point = __commonJS({
+  "../node_modules/ansi-align/node_modules/is-fullwidth-code-point/index.js"(exports2, module2) {
+    "use strict";
+    var isFullwidthCodePoint = (codePoint) => {
+      if (Number.isNaN(codePoint)) {
+        return false;
+      }
+      if (codePoint >= 4352 && (codePoint <= 4447 || // Hangul Jamo
+      codePoint === 9001 || // LEFT-POINTING ANGLE BRACKET
+      codePoint === 9002 || // RIGHT-POINTING ANGLE BRACKET
+      // CJK Radicals Supplement .. Enclosed CJK Letters and Months
+      11904 <= codePoint && codePoint <= 12871 && codePoint !== 12351 || // Enclosed CJK Letters and Months .. CJK Unified Ideographs Extension A
+      12880 <= codePoint && codePoint <= 19903 || // CJK Unified Ideographs .. Yi Radicals
+      19968 <= codePoint && codePoint <= 42182 || // Hangul Jamo Extended-A
+      43360 <= codePoint && codePoint <= 43388 || // Hangul Syllables
+      44032 <= codePoint && codePoint <= 55203 || // CJK Compatibility Ideographs
+      63744 <= codePoint && codePoint <= 64255 || // Vertical Forms
+      65040 <= codePoint && codePoint <= 65049 || // CJK Compatibility Forms .. Small Form Variants
+      65072 <= codePoint && codePoint <= 65131 || // Halfwidth and Fullwidth Forms
+      65281 <= codePoint && codePoint <= 65376 || 65504 <= codePoint && codePoint <= 65510 || // Kana Supplement
+      110592 <= codePoint && codePoint <= 110593 || // Enclosed Ideographic Supplement
+      127488 <= codePoint && codePoint <= 127569 || // CJK Unified Ideographs Extension B .. Tertiary Ideographic Plane
+      131072 <= codePoint && codePoint <= 262141)) {
+        return true;
+      }
+      return false;
+    };
+    module2.exports = isFullwidthCodePoint;
+    module2.exports.default = isFullwidthCodePoint;
+  }
+});
+
+// ../node_modules/ansi-align/node_modules/emoji-regex/index.js
+var require_emoji_regex = __commonJS({
+  "../node_modules/ansi-align/node_modules/emoji-regex/index.js"(exports2, module2) {
+    "use strict";
+    module2.exports = function() {
+      return /\uD83C\uDFF4\uDB40\uDC67\uDB40\uDC62(?:\uDB40\uDC65\uDB40\uDC6E\uDB40\uDC67|\uDB40\uDC73\uDB40\uDC63\uDB40\uDC74|\uDB40\uDC77\uDB40\uDC6C\uDB40\uDC73)\uDB40\uDC7F|\uD83D\uDC68(?:\uD83C\uDFFC\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68\uD83C\uDFFB|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFF\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB-\uDFFE])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFE\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB-\uDFFD])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFD\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB\uDFFC])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\u200D(?:\u2764\uFE0F\u200D(?:\uD83D\uDC8B\u200D)?\uD83D\uDC68|(?:\uD83D[\uDC68\uDC69])\u200D(?:\uD83D\uDC66\u200D\uD83D\uDC66|\uD83D\uDC67\u200D(?:\uD83D[\uDC66\uDC67]))|\uD83D\uDC66\u200D\uD83D\uDC66|\uD83D\uDC67\u200D(?:\uD83D[\uDC66\uDC67])|(?:\uD83D[\uDC68\uDC69])\u200D(?:\uD83D[\uDC66\uDC67])|[\u2695\u2696\u2708]\uFE0F|\uD83D[\uDC66\uDC67]|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|(?:\uD83C\uDFFB\u200D[\u2695\u2696\u2708]|\uD83C\uDFFF\u200D[\u2695\u2696\u2708]|\uD83C\uDFFE\u200D[\u2695\u2696\u2708]|\uD83C\uDFFD\u200D[\u2695\u2696\u2708]|\uD83C\uDFFC\u200D[\u2695\u2696\u2708])\uFE0F|\uD83C\uDFFB\u200D(?:\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C[\uDFFB-\uDFFF])|(?:\uD83E\uDDD1\uD83C\uDFFB\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1|\uD83D\uDC69\uD83C\uDFFC\u200D\uD83E\uDD1D\u200D\uD83D\uDC69)\uD83C\uDFFB|\uD83E\uDDD1(?:\uD83C\uDFFF\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1(?:\uD83C[\uDFFB-\uDFFF])|\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1)|(?:\uD83E\uDDD1\uD83C\uDFFE\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1|\uD83D\uDC69\uD83C\uDFFF\u200D\uD83E\uDD1D\u200D(?:\uD83D[\uDC68\uDC69]))(?:\uD83C[\uDFFB-\uDFFE])|(?:\uD83E\uDDD1\uD83C\uDFFC\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1|\uD83D\uDC69\uD83C\uDFFD\u200D\uD83E\uDD1D\u200D\uD83D\uDC69)(?:\uD83C[\uDFFB\uDFFC])|\uD83D\uDC69(?:\uD83C\uDFFE\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB-\uDFFD\uDFFF])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFC\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB\uDFFD-\uDFFF])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFB\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFC-\uDFFF])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFD\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB\uDFFC\uDFFE\uDFFF])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\u200D(?:\u2764\uFE0F\u200D(?:\uD83D\uDC8B\u200D(?:\uD83D[\uDC68\uDC69])|\uD83D[\uDC68\uDC69])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFF\u200D(?:\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD]))|\uD83D\uDC69\u200D\uD83D\uDC69\u200D(?:\uD83D\uDC66\u200D\uD83D\uDC66|\uD83D\uDC67\u200D(?:\uD83D[\uDC66\uDC67]))|(?:\uD83E\uDDD1\uD83C\uDFFD\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1|\uD83D\uDC69\uD83C\uDFFE\u200D\uD83E\uDD1D\u200D\uD83D\uDC69)(?:\uD83C[\uDFFB-\uDFFD])|\uD83D\uDC69\u200D\uD83D\uDC66\u200D\uD83D\uDC66|\uD83D\uDC69\u200D\uD83D\uDC69\u200D(?:\uD83D[\uDC66\uDC67])|(?:\uD83D\uDC41\uFE0F\u200D\uD83D\uDDE8|\uD83D\uDC69(?:\uD83C\uDFFF\u200D[\u2695\u2696\u2708]|\uD83C\uDFFE\u200D[\u2695\u2696\u2708]|\uD83C\uDFFC\u200D[\u2695\u2696\u2708]|\uD83C\uDFFB\u200D[\u2695\u2696\u2708]|\uD83C\uDFFD\u200D[\u2695\u2696\u2708]|\u200D[\u2695\u2696\u2708])|(?:(?:\u26F9|\uD83C[\uDFCB\uDFCC]|\uD83D\uDD75)\uFE0F|\uD83D\uDC6F|\uD83E[\uDD3C\uDDDE\uDDDF])\u200D[\u2640\u2642]|(?:\u26F9|\uD83C[\uDFCB\uDFCC]|\uD83D\uDD75)(?:\uD83C[\uDFFB-\uDFFF])\u200D[\u2640\u2642]|(?:\uD83C[\uDFC3\uDFC4\uDFCA]|\uD83D[\uDC6E\uDC71\uDC73\uDC77\uDC81\uDC82\uDC86\uDC87\uDE45-\uDE47\uDE4B\uDE4D\uDE4E\uDEA3\uDEB4-\uDEB6]|\uD83E[\uDD26\uDD37-\uDD39\uDD3D\uDD3E\uDDB8\uDDB9\uDDCD-\uDDCF\uDDD6-\uDDDD])(?:(?:\uD83C[\uDFFB-\uDFFF])\u200D[\u2640\u2642]|\u200D[\u2640\u2642])|\uD83C\uDFF4\u200D\u2620)\uFE0F|\uD83D\uDC69\u200D\uD83D\uDC67\u200D(?:\uD83D[\uDC66\uDC67])|\uD83C\uDFF3\uFE0F\u200D\uD83C\uDF08|\uD83D\uDC15\u200D\uD83E\uDDBA|\uD83D\uDC69\u200D\uD83D\uDC66|\uD83D\uDC69\u200D\uD83D\uDC67|\uD83C\uDDFD\uD83C\uDDF0|\uD83C\uDDF4\uD83C\uDDF2|\uD83C\uDDF6\uD83C\uDDE6|[#\*0-9]\uFE0F\u20E3|\uD83C\uDDE7(?:\uD83C[\uDDE6\uDDE7\uDDE9-\uDDEF\uDDF1-\uDDF4\uDDF6-\uDDF9\uDDFB\uDDFC\uDDFE\uDDFF])|\uD83C\uDDF9(?:\uD83C[\uDDE6\uDDE8\uDDE9\uDDEB-\uDDED\uDDEF-\uDDF4\uDDF7\uDDF9\uDDFB\uDDFC\uDDFF])|\uD83C\uDDEA(?:\uD83C[\uDDE6\uDDE8\uDDEA\uDDEC\uDDED\uDDF7-\uDDFA])|\uD83E\uDDD1(?:\uD83C[\uDFFB-\uDFFF])|\uD83C\uDDF7(?:\uD83C[\uDDEA\uDDF4\uDDF8\uDDFA\uDDFC])|\uD83D\uDC69(?:\uD83C[\uDFFB-\uDFFF])|\uD83C\uDDF2(?:\uD83C[\uDDE6\uDDE8-\uDDED\uDDF0-\uDDFF])|\uD83C\uDDE6(?:\uD83C[\uDDE8-\uDDEC\uDDEE\uDDF1\uDDF2\uDDF4\uDDF6-\uDDFA\uDDFC\uDDFD\uDDFF])|\uD83C\uDDF0(?:\uD83C[\uDDEA\uDDEC-\uDDEE\uDDF2\uDDF3\uDDF5\uDDF7\uDDFC\uDDFE\uDDFF])|\uD83C\uDDED(?:\uD83C[\uDDF0\uDDF2\uDDF3\uDDF7\uDDF9\uDDFA])|\uD83C\uDDE9(?:\uD83C[\uDDEA\uDDEC\uDDEF\uDDF0\uDDF2\uDDF4\uDDFF])|\uD83C\uDDFE(?:\uD83C[\uDDEA\uDDF9])|\uD83C\uDDEC(?:\uD83C[\uDDE6\uDDE7\uDDE9-\uDDEE\uDDF1-\uDDF3\uDDF5-\uDDFA\uDDFC\uDDFE])|\uD83C\uDDF8(?:\uD83C[\uDDE6-\uDDEA\uDDEC-\uDDF4\uDDF7-\uDDF9\uDDFB\uDDFD-\uDDFF])|\uD83C\uDDEB(?:\uD83C[\uDDEE-\uDDF0\uDDF2\uDDF4\uDDF7])|\uD83C\uDDF5(?:\uD83C[\uDDE6\uDDEA-\uDDED\uDDF0-\uDDF3\uDDF7-\uDDF9\uDDFC\uDDFE])|\uD83C\uDDFB(?:\uD83C[\uDDE6\uDDE8\uDDEA\uDDEC\uDDEE\uDDF3\uDDFA])|\uD83C\uDDF3(?:\uD83C[\uDDE6\uDDE8\uDDEA-\uDDEC\uDDEE\uDDF1\uDDF4\uDDF5\uDDF7\uDDFA\uDDFF])|\uD83C\uDDE8(?:\uD83C[\uDDE6\uDDE8\uDDE9\uDDEB-\uDDEE\uDDF0-\uDDF5\uDDF7\uDDFA-\uDDFF])|\uD83C\uDDF1(?:\uD83C[\uDDE6-\uDDE8\uDDEE\uDDF0\uDDF7-\uDDFB\uDDFE])|\uD83C\uDDFF(?:\uD83C[\uDDE6\uDDF2\uDDFC])|\uD83C\uDDFC(?:\uD83C[\uDDEB\uDDF8])|\uD83C\uDDFA(?:\uD83C[\uDDE6\uDDEC\uDDF2\uDDF3\uDDF8\uDDFE\uDDFF])|\uD83C\uDDEE(?:\uD83C[\uDDE8-\uDDEA\uDDF1-\uDDF4\uDDF6-\uDDF9])|\uD83C\uDDEF(?:\uD83C[\uDDEA\uDDF2\uDDF4\uDDF5])|(?:\uD83C[\uDFC3\uDFC4\uDFCA]|\uD83D[\uDC6E\uDC71\uDC73\uDC77\uDC81\uDC82\uDC86\uDC87\uDE45-\uDE47\uDE4B\uDE4D\uDE4E\uDEA3\uDEB4-\uDEB6]|\uD83E[\uDD26\uDD37-\uDD39\uDD3D\uDD3E\uDDB8\uDDB9\uDDCD-\uDDCF\uDDD6-\uDDDD])(?:\uD83C[\uDFFB-\uDFFF])|(?:\u26F9|\uD83C[\uDFCB\uDFCC]|\uD83D\uDD75)(?:\uD83C[\uDFFB-\uDFFF])|(?:[\u261D\u270A-\u270D]|\uD83C[\uDF85\uDFC2\uDFC7]|\uD83D[\uDC42\uDC43\uDC46-\uDC50\uDC66\uDC67\uDC6B-\uDC6D\uDC70\uDC72\uDC74-\uDC76\uDC78\uDC7C\uDC83\uDC85\uDCAA\uDD74\uDD7A\uDD90\uDD95\uDD96\uDE4C\uDE4F\uDEC0\uDECC]|\uD83E[\uDD0F\uDD18-\uDD1C\uDD1E\uDD1F\uDD30-\uDD36\uDDB5\uDDB6\uDDBB\uDDD2-\uDDD5])(?:\uD83C[\uDFFB-\uDFFF])|(?:[\u231A\u231B\u23E9-\u23EC\u23F0\u23F3\u25FD\u25FE\u2614\u2615\u2648-\u2653\u267F\u2693\u26A1\u26AA\u26AB\u26BD\u26BE\u26C4\u26C5\u26CE\u26D4\u26EA\u26F2\u26F3\u26F5\u26FA\u26FD\u2705\u270A\u270B\u2728\u274C\u274E\u2753-\u2755\u2757\u2795-\u2797\u27B0\u27BF\u2B1B\u2B1C\u2B50\u2B55]|\uD83C[\uDC04\uDCCF\uDD8E\uDD91-\uDD9A\uDDE6-\uDDFF\uDE01\uDE1A\uDE2F\uDE32-\uDE36\uDE38-\uDE3A\uDE50\uDE51\uDF00-\uDF20\uDF2D-\uDF35\uDF37-\uDF7C\uDF7E-\uDF93\uDFA0-\uDFCA\uDFCF-\uDFD3\uDFE0-\uDFF0\uDFF4\uDFF8-\uDFFF]|\uD83D[\uDC00-\uDC3E\uDC40\uDC42-\uDCFC\uDCFF-\uDD3D\uDD4B-\uDD4E\uDD50-\uDD67\uDD7A\uDD95\uDD96\uDDA4\uDDFB-\uDE4F\uDE80-\uDEC5\uDECC\uDED0-\uDED2\uDED5\uDEEB\uDEEC\uDEF4-\uDEFA\uDFE0-\uDFEB]|\uD83E[\uDD0D-\uDD3A\uDD3C-\uDD45\uDD47-\uDD71\uDD73-\uDD76\uDD7A-\uDDA2\uDDA5-\uDDAA\uDDAE-\uDDCA\uDDCD-\uDDFF\uDE70-\uDE73\uDE78-\uDE7A\uDE80-\uDE82\uDE90-\uDE95])|(?:[#\*0-9\xA9\xAE\u203C\u2049\u2122\u2139\u2194-\u2199\u21A9\u21AA\u231A\u231B\u2328\u23CF\u23E9-\u23F3\u23F8-\u23FA\u24C2\u25AA\u25AB\u25B6\u25C0\u25FB-\u25FE\u2600-\u2604\u260E\u2611\u2614\u2615\u2618\u261D\u2620\u2622\u2623\u2626\u262A\u262E\u262F\u2638-\u263A\u2640\u2642\u2648-\u2653\u265F\u2660\u2663\u2665\u2666\u2668\u267B\u267E\u267F\u2692-\u2697\u2699\u269B\u269C\u26A0\u26A1\u26AA\u26AB\u26B0\u26B1\u26BD\u26BE\u26C4\u26C5\u26C8\u26CE\u26CF\u26D1\u26D3\u26D4\u26E9\u26EA\u26F0-\u26F5\u26F7-\u26FA\u26FD\u2702\u2705\u2708-\u270D\u270F\u2712\u2714\u2716\u271D\u2721\u2728\u2733\u2734\u2744\u2747\u274C\u274E\u2753-\u2755\u2757\u2763\u2764\u2795-\u2797\u27A1\u27B0\u27BF\u2934\u2935\u2B05-\u2B07\u2B1B\u2B1C\u2B50\u2B55\u3030\u303D\u3297\u3299]|\uD83C[\uDC04\uDCCF\uDD70\uDD71\uDD7E\uDD7F\uDD8E\uDD91-\uDD9A\uDDE6-\uDDFF\uDE01\uDE02\uDE1A\uDE2F\uDE32-\uDE3A\uDE50\uDE51\uDF00-\uDF21\uDF24-\uDF93\uDF96\uDF97\uDF99-\uDF9B\uDF9E-\uDFF0\uDFF3-\uDFF5\uDFF7-\uDFFF]|\uD83D[\uDC00-\uDCFD\uDCFF-\uDD3D\uDD49-\uDD4E\uDD50-\uDD67\uDD6F\uDD70\uDD73-\uDD7A\uDD87\uDD8A-\uDD8D\uDD90\uDD95\uDD96\uDDA4\uDDA5\uDDA8\uDDB1\uDDB2\uDDBC\uDDC2-\uDDC4\uDDD1-\uDDD3\uDDDC-\uDDDE\uDDE1\uDDE3\uDDE8\uDDEF\uDDF3\uDDFA-\uDE4F\uDE80-\uDEC5\uDECB-\uDED2\uDED5\uDEE0-\uDEE5\uDEE9\uDEEB\uDEEC\uDEF0\uDEF3-\uDEFA\uDFE0-\uDFEB]|\uD83E[\uDD0D-\uDD3A\uDD3C-\uDD45\uDD47-\uDD71\uDD73-\uDD76\uDD7A-\uDDA2\uDDA5-\uDDAA\uDDAE-\uDDCA\uDDCD-\uDDFF\uDE70-\uDE73\uDE78-\uDE7A\uDE80-\uDE82\uDE90-\uDE95])\uFE0F|(?:[\u261D\u26F9\u270A-\u270D]|\uD83C[\uDF85\uDFC2-\uDFC4\uDFC7\uDFCA-\uDFCC]|\uD83D[\uDC42\uDC43\uDC46-\uDC50\uDC66-\uDC78\uDC7C\uDC81-\uDC83\uDC85-\uDC87\uDC8F\uDC91\uDCAA\uDD74\uDD75\uDD7A\uDD90\uDD95\uDD96\uDE45-\uDE47\uDE4B-\uDE4F\uDEA3\uDEB4-\uDEB6\uDEC0\uDECC]|\uD83E[\uDD0F\uDD18-\uDD1F\uDD26\uDD30-\uDD39\uDD3C-\uDD3E\uDDB5\uDDB6\uDDB8\uDDB9\uDDBB\uDDCD-\uDDCF\uDDD1-\uDDDD])/g;
+    };
+  }
+});
+
+// ../node_modules/ansi-align/node_modules/string-width/index.js
+var require_string_width = __commonJS({
+  "../node_modules/ansi-align/node_modules/string-width/index.js"(exports2, module2) {
+    "use strict";
+    var stripAnsi2 = require_strip_ansi();
+    var isFullwidthCodePoint = require_is_fullwidth_code_point();
+    var emojiRegex = require_emoji_regex();
+    var stringWidth2 = (string4) => {
+      if (typeof string4 !== "string" || string4.length === 0) {
+        return 0;
+      }
+      string4 = stripAnsi2(string4);
+      if (string4.length === 0) {
+        return 0;
+      }
+      string4 = string4.replace(emojiRegex(), "  ");
+      let width = 0;
+      for (let i = 0; i < string4.length; i++) {
+        const code = string4.codePointAt(i);
+        if (code <= 31 || code >= 127 && code <= 159) {
+          continue;
+        }
+        if (code >= 768 && code <= 879) {
+          continue;
+        }
+        if (code > 65535) {
+          i++;
+        }
+        width += isFullwidthCodePoint(code) ? 2 : 1;
+      }
+      return width;
+    };
+    module2.exports = stringWidth2;
+    module2.exports.default = stringWidth2;
+  }
+});
+
+// ../node_modules/ansi-align/index.js
+var require_ansi_align = __commonJS({
+  "../node_modules/ansi-align/index.js"(exports2, module2) {
+    "use strict";
+    var stringWidth2 = require_string_width();
+    function ansiAlign2(text, opts) {
+      if (!text) return text;
+      opts = opts || {};
+      const align = opts.align || "center";
+      if (align === "left") return text;
+      const split = opts.split || "\n";
+      const pad = opts.pad || " ";
+      const widthDiffFn = align !== "right" ? halfDiff : fullDiff;
+      let returnString = false;
+      if (!Array.isArray(text)) {
+        returnString = true;
+        text = String(text).split(split);
+      }
+      let width;
+      let maxWidth = 0;
+      text = text.map(function(str) {
+        str = String(str);
+        width = stringWidth2(str);
+        maxWidth = Math.max(width, maxWidth);
+        return {
+          str,
+          width
+        };
+      }).map(function(obj) {
+        return new Array(widthDiffFn(maxWidth, obj.width) + 1).join(pad) + obj.str;
+      });
+      return returnString ? text.join(split) : text;
+    }
+    ansiAlign2.left = function left(text) {
+      return ansiAlign2(text, { align: "left" });
+    };
+    ansiAlign2.center = function center(text) {
+      return ansiAlign2(text, { align: "center" });
+    };
+    ansiAlign2.right = function right(text) {
+      return ansiAlign2(text, { align: "right" });
+    };
+    module2.exports = ansiAlign2;
+    function halfDiff(maxWidth, curWidth) {
+      return Math.floor((maxWidth - curWidth) / 2);
+    }
+    function fullDiff(maxWidth, curWidth) {
+      return maxWidth - curWidth;
+    }
+  }
+});
+
+// ../node_modules/ansi-styles/index.js
+function assembleStyles2() {
+  const codes = /* @__PURE__ */ new Map();
+  for (const [groupName, group] of Object.entries(styles3)) {
+    for (const [styleName, style] of Object.entries(group)) {
+      styles3[styleName] = {
+        open: `\x1B[${style[0]}m`,
+        close: `\x1B[${style[1]}m`
+      };
+      group[styleName] = styles3[styleName];
+      codes.set(style[0], style[1]);
+    }
+    Object.defineProperty(styles3, groupName, {
+      value: group,
+      enumerable: false
+    });
+  }
+  Object.defineProperty(styles3, "codes", {
+    value: codes,
+    enumerable: false
+  });
+  styles3.color.close = "\x1B[39m";
+  styles3.bgColor.close = "\x1B[49m";
+  styles3.color.ansi = wrapAnsi162();
+  styles3.color.ansi256 = wrapAnsi2562();
+  styles3.color.ansi16m = wrapAnsi16m2();
+  styles3.bgColor.ansi = wrapAnsi162(ANSI_BACKGROUND_OFFSET2);
+  styles3.bgColor.ansi256 = wrapAnsi2562(ANSI_BACKGROUND_OFFSET2);
+  styles3.bgColor.ansi16m = wrapAnsi16m2(ANSI_BACKGROUND_OFFSET2);
+  Object.defineProperties(styles3, {
+    rgbToAnsi256: {
+      value(red, green, blue) {
+        if (red === green && green === blue) {
+          if (red < 8) {
+            return 16;
+          }
+          if (red > 248) {
+            return 231;
+          }
+          return Math.round((red - 8) / 247 * 24) + 232;
+        }
+        return 16 + 36 * Math.round(red / 255 * 5) + 6 * Math.round(green / 255 * 5) + Math.round(blue / 255 * 5);
+      },
+      enumerable: false
+    },
+    hexToRgb: {
+      value(hex3) {
+        const matches = /[a-f\d]{6}|[a-f\d]{3}/i.exec(hex3.toString(16));
+        if (!matches) {
+          return [0, 0, 0];
+        }
+        let [colorString] = matches;
+        if (colorString.length === 3) {
+          colorString = [...colorString].map((character) => character + character).join("");
+        }
+        const integer2 = Number.parseInt(colorString, 16);
+        return [
+          /* eslint-disable no-bitwise */
+          integer2 >> 16 & 255,
+          integer2 >> 8 & 255,
+          integer2 & 255
+          /* eslint-enable no-bitwise */
+        ];
+      },
+      enumerable: false
+    },
+    hexToAnsi256: {
+      value: (hex3) => styles3.rgbToAnsi256(...styles3.hexToRgb(hex3)),
+      enumerable: false
+    },
+    ansi256ToAnsi: {
+      value(code) {
+        if (code < 8) {
+          return 30 + code;
+        }
+        if (code < 16) {
+          return 90 + (code - 8);
+        }
+        let red;
+        let green;
+        let blue;
+        if (code >= 232) {
+          red = ((code - 232) * 10 + 8) / 255;
+          green = red;
+          blue = red;
+        } else {
+          code -= 16;
+          const remainder = code % 36;
+          red = Math.floor(code / 36) / 5;
+          green = Math.floor(remainder / 6) / 5;
+          blue = remainder % 6 / 5;
+        }
+        const value = Math.max(red, green, blue) * 2;
+        if (value === 0) {
+          return 30;
+        }
+        let result = 30 + (Math.round(blue) << 2 | Math.round(green) << 1 | Math.round(red));
+        if (value === 2) {
+          result += 60;
+        }
+        return result;
+      },
+      enumerable: false
+    },
+    rgbToAnsi: {
+      value: (red, green, blue) => styles3.ansi256ToAnsi(styles3.rgbToAnsi256(red, green, blue)),
+      enumerable: false
+    },
+    hexToAnsi: {
+      value: (hex3) => styles3.ansi256ToAnsi(styles3.hexToAnsi256(hex3)),
+      enumerable: false
+    }
+  });
+  return styles3;
+}
+var ANSI_BACKGROUND_OFFSET2, wrapAnsi162, wrapAnsi2562, wrapAnsi16m2, styles3, modifierNames2, foregroundColorNames2, backgroundColorNames2, colorNames2, ansiStyles2, ansi_styles_default2;
+var init_ansi_styles2 = __esm({
+  "../node_modules/ansi-styles/index.js"() {
+    "use strict";
+    ANSI_BACKGROUND_OFFSET2 = 10;
+    wrapAnsi162 = (offset = 0) => (code) => `\x1B[${code + offset}m`;
+    wrapAnsi2562 = (offset = 0) => (code) => `\x1B[${38 + offset};5;${code}m`;
+    wrapAnsi16m2 = (offset = 0) => (red, green, blue) => `\x1B[${38 + offset};2;${red};${green};${blue}m`;
+    styles3 = {
+      modifier: {
+        reset: [0, 0],
+        // 21 isn't widely supported and 22 does the same thing
+        bold: [1, 22],
+        dim: [2, 22],
+        italic: [3, 23],
+        underline: [4, 24],
+        overline: [53, 55],
+        inverse: [7, 27],
+        hidden: [8, 28],
+        strikethrough: [9, 29]
+      },
+      color: {
+        black: [30, 39],
+        red: [31, 39],
+        green: [32, 39],
+        yellow: [33, 39],
+        blue: [34, 39],
+        magenta: [35, 39],
+        cyan: [36, 39],
+        white: [37, 39],
+        // Bright color
+        blackBright: [90, 39],
+        gray: [90, 39],
+        // Alias of `blackBright`
+        grey: [90, 39],
+        // Alias of `blackBright`
+        redBright: [91, 39],
+        greenBright: [92, 39],
+        yellowBright: [93, 39],
+        blueBright: [94, 39],
+        magentaBright: [95, 39],
+        cyanBright: [96, 39],
+        whiteBright: [97, 39]
+      },
+      bgColor: {
+        bgBlack: [40, 49],
+        bgRed: [41, 49],
+        bgGreen: [42, 49],
+        bgYellow: [43, 49],
+        bgBlue: [44, 49],
+        bgMagenta: [45, 49],
+        bgCyan: [46, 49],
+        bgWhite: [47, 49],
+        // Bright color
+        bgBlackBright: [100, 49],
+        bgGray: [100, 49],
+        // Alias of `bgBlackBright`
+        bgGrey: [100, 49],
+        // Alias of `bgBlackBright`
+        bgRedBright: [101, 49],
+        bgGreenBright: [102, 49],
+        bgYellowBright: [103, 49],
+        bgBlueBright: [104, 49],
+        bgMagentaBright: [105, 49],
+        bgCyanBright: [106, 49],
+        bgWhiteBright: [107, 49]
+      }
+    };
+    modifierNames2 = Object.keys(styles3.modifier);
+    foregroundColorNames2 = Object.keys(styles3.color);
+    backgroundColorNames2 = Object.keys(styles3.bgColor);
+    colorNames2 = [...foregroundColorNames2, ...backgroundColorNames2];
+    ansiStyles2 = assembleStyles2();
+    ansi_styles_default2 = ansiStyles2;
+  }
+});
+
+// ../node_modules/wrap-ansi/index.js
+function wrapAnsi(string4, columns2, options) {
+  return String(string4).normalize().replaceAll("\r\n", "\n").split("\n").map((line) => exec(line, columns2, options)).join("\n");
+}
+var ESCAPES, END_CODE, ANSI_ESCAPE_BELL, ANSI_CSI, ANSI_OSC, ANSI_SGR_TERMINATOR, ANSI_ESCAPE_LINK, wrapAnsiCode, wrapAnsiHyperlink, wordLengths, wrapWord, stringVisibleTrimSpacesRight, exec;
+var init_wrap_ansi = __esm({
+  "../node_modules/wrap-ansi/index.js"() {
+    "use strict";
+    init_string_width();
+    init_strip_ansi();
+    init_ansi_styles2();
+    ESCAPES = /* @__PURE__ */ new Set([
+      "\x1B",
+      "\x9B"
+    ]);
+    END_CODE = 39;
+    ANSI_ESCAPE_BELL = "\x07";
+    ANSI_CSI = "[";
+    ANSI_OSC = "]";
+    ANSI_SGR_TERMINATOR = "m";
+    ANSI_ESCAPE_LINK = `${ANSI_OSC}8;;`;
+    wrapAnsiCode = (code) => `${ESCAPES.values().next().value}${ANSI_CSI}${code}${ANSI_SGR_TERMINATOR}`;
+    wrapAnsiHyperlink = (url2) => `${ESCAPES.values().next().value}${ANSI_ESCAPE_LINK}${url2}${ANSI_ESCAPE_BELL}`;
+    wordLengths = (string4) => string4.split(" ").map((character) => stringWidth(character));
+    wrapWord = (rows, word, columns2) => {
+      const characters = [...word];
+      let isInsideEscape = false;
+      let isInsideLinkEscape = false;
+      let visible = stringWidth(stripAnsi(rows.at(-1)));
+      for (const [index, character] of characters.entries()) {
+        const characterLength = stringWidth(character);
+        if (visible + characterLength <= columns2) {
+          rows[rows.length - 1] += character;
+        } else {
+          rows.push(character);
+          visible = 0;
+        }
+        if (ESCAPES.has(character)) {
+          isInsideEscape = true;
+          const ansiEscapeLinkCandidate = characters.slice(index + 1, index + 1 + ANSI_ESCAPE_LINK.length).join("");
+          isInsideLinkEscape = ansiEscapeLinkCandidate === ANSI_ESCAPE_LINK;
+        }
+        if (isInsideEscape) {
+          if (isInsideLinkEscape) {
+            if (character === ANSI_ESCAPE_BELL) {
+              isInsideEscape = false;
+              isInsideLinkEscape = false;
+            }
+          } else if (character === ANSI_SGR_TERMINATOR) {
+            isInsideEscape = false;
+          }
+          continue;
+        }
+        visible += characterLength;
+        if (visible === columns2 && index < characters.length - 1) {
+          rows.push("");
+          visible = 0;
+        }
+      }
+      if (!visible && rows.at(-1).length > 0 && rows.length > 1) {
+        rows[rows.length - 2] += rows.pop();
+      }
+    };
+    stringVisibleTrimSpacesRight = (string4) => {
+      const words = string4.split(" ");
+      let last = words.length;
+      while (last > 0) {
+        if (stringWidth(words[last - 1]) > 0) {
+          break;
+        }
+        last--;
+      }
+      if (last === words.length) {
+        return string4;
+      }
+      return words.slice(0, last).join(" ") + words.slice(last).join("");
+    };
+    exec = (string4, columns2, options = {}) => {
+      if (options.trim !== false && string4.trim() === "") {
+        return "";
+      }
+      let returnValue = "";
+      let escapeCode;
+      let escapeUrl;
+      const lengths = wordLengths(string4);
+      let rows = [""];
+      for (const [index, word] of string4.split(" ").entries()) {
+        if (options.trim !== false) {
+          rows[rows.length - 1] = rows.at(-1).trimStart();
+        }
+        let rowLength = stringWidth(rows.at(-1));
+        if (index !== 0) {
+          if (rowLength >= columns2 && (options.wordWrap === false || options.trim === false)) {
+            rows.push("");
+            rowLength = 0;
+          }
+          if (rowLength > 0 || options.trim === false) {
+            rows[rows.length - 1] += " ";
+            rowLength++;
+          }
+        }
+        if (options.hard && lengths[index] > columns2) {
+          const remainingColumns = columns2 - rowLength;
+          const breaksStartingThisLine = 1 + Math.floor((lengths[index] - remainingColumns - 1) / columns2);
+          const breaksStartingNextLine = Math.floor((lengths[index] - 1) / columns2);
+          if (breaksStartingNextLine < breaksStartingThisLine) {
+            rows.push("");
+          }
+          wrapWord(rows, word, columns2);
+          continue;
+        }
+        if (rowLength + lengths[index] > columns2 && rowLength > 0 && lengths[index] > 0) {
+          if (options.wordWrap === false && rowLength < columns2) {
+            wrapWord(rows, word, columns2);
+            continue;
+          }
+          rows.push("");
+        }
+        if (rowLength + lengths[index] > columns2 && options.wordWrap === false) {
+          wrapWord(rows, word, columns2);
+          continue;
+        }
+        rows[rows.length - 1] += word;
+      }
+      if (options.trim !== false) {
+        rows = rows.map((row) => stringVisibleTrimSpacesRight(row));
+      }
+      const preString = rows.join("\n");
+      const pre = [...preString];
+      let preStringIndex = 0;
+      for (const [index, character] of pre.entries()) {
+        returnValue += character;
+        if (ESCAPES.has(character)) {
+          const { groups } = new RegExp(`(?:\\${ANSI_CSI}(?<code>\\d+)m|\\${ANSI_ESCAPE_LINK}(?<uri>.*)${ANSI_ESCAPE_BELL})`).exec(preString.slice(preStringIndex)) || { groups: {} };
+          if (groups.code !== void 0) {
+            const code2 = Number.parseFloat(groups.code);
+            escapeCode = code2 === END_CODE ? void 0 : code2;
+          } else if (groups.uri !== void 0) {
+            escapeUrl = groups.uri.length === 0 ? void 0 : groups.uri;
+          }
+        }
+        const code = ansi_styles_default2.codes.get(Number(escapeCode));
+        if (pre[index + 1] === "\n") {
+          if (escapeUrl) {
+            returnValue += wrapAnsiHyperlink("");
+          }
+          if (escapeCode && code) {
+            returnValue += wrapAnsiCode(code);
+          }
+        } else if (character === "\n") {
+          if (escapeCode && code) {
+            returnValue += wrapAnsiCode(escapeCode);
+          }
+          if (escapeUrl) {
+            returnValue += wrapAnsiHyperlink(escapeUrl);
+          }
+        }
+        preStringIndex += character.length;
+      }
+      return returnValue;
+    };
+  }
+});
+
+// ../node_modules/boxen/index.js
+var boxen_exports = {};
+__export(boxen_exports, {
+  _borderStyles: () => import_cli_boxes2.default,
+  default: () => boxen
+});
+function boxen(text, options) {
+  options = {
+    padding: 0,
+    borderStyle: "single",
+    dimBorder: false,
+    textAlignment: "left",
+    float: "left",
+    titleAlignment: "left",
+    ...options
+  };
+  if (options.align) {
+    options.textAlignment = options.align;
+  }
+  if (options.borderColor && !isColorValid(options.borderColor)) {
+    throw new Error(`${options.borderColor} is not a valid borderColor`);
+  }
+  if (options.backgroundColor && !isColorValid(options.backgroundColor)) {
+    throw new Error(`${options.backgroundColor} is not a valid backgroundColor`);
+  }
+  options.padding = getObject(options.padding);
+  options.margin = getObject(options.margin);
+  options = determineDimensions(text, options);
+  text = makeContentText(text, options);
+  return boxContent(text, options.width, options);
+}
+var import_node_process8, import_cli_boxes, import_ansi_align, import_cli_boxes2, NEWLINE, PAD, NONE, terminalColumns, getObject, getBorderWidth, getBorderChars, makeTitle, makeContentText, boxContent, sanitizeOptions, formatTitle, determineDimensions, isHex, isColorValid, getColorFunction, getBGColorFunction;
+var init_boxen = __esm({
+  "../node_modules/boxen/index.js"() {
+    "use strict";
+    import_node_process8 = __toESM(require("process"), 1);
+    init_string_width();
+    init_source();
+    init_widest_line();
+    import_cli_boxes = __toESM(require_cli_boxes(), 1);
+    init_camelcase();
+    import_ansi_align = __toESM(require_ansi_align(), 1);
+    init_wrap_ansi();
+    import_cli_boxes2 = __toESM(require_cli_boxes(), 1);
+    NEWLINE = "\n";
+    PAD = " ";
+    NONE = "none";
+    terminalColumns = () => {
+      const { env: env3, stdout, stderr } = import_node_process8.default;
+      if (stdout?.columns) {
+        return stdout.columns;
+      }
+      if (stderr?.columns) {
+        return stderr.columns;
+      }
+      if (env3.COLUMNS) {
+        return Number.parseInt(env3.COLUMNS, 10);
+      }
+      return 80;
+    };
+    getObject = (detail) => typeof detail === "number" ? {
+      top: detail,
+      right: detail * 3,
+      bottom: detail,
+      left: detail * 3
+    } : {
+      top: 0,
+      right: 0,
+      bottom: 0,
+      left: 0,
+      ...detail
+    };
+    getBorderWidth = (borderStyle) => borderStyle === NONE ? 0 : 2;
+    getBorderChars = (borderStyle) => {
+      const sides = [
+        "topLeft",
+        "topRight",
+        "bottomRight",
+        "bottomLeft",
+        "left",
+        "right",
+        "top",
+        "bottom"
+      ];
+      let characters;
+      if (borderStyle === NONE) {
+        borderStyle = {};
+        for (const side of sides) {
+          borderStyle[side] = "";
+        }
+      }
+      if (typeof borderStyle === "string") {
+        characters = import_cli_boxes.default[borderStyle];
+        if (!characters) {
+          throw new TypeError(`Invalid border style: ${borderStyle}`);
+        }
+      } else {
+        if (typeof borderStyle?.vertical === "string") {
+          borderStyle.left = borderStyle.vertical;
+          borderStyle.right = borderStyle.vertical;
+        }
+        if (typeof borderStyle?.horizontal === "string") {
+          borderStyle.top = borderStyle.horizontal;
+          borderStyle.bottom = borderStyle.horizontal;
+        }
+        for (const side of sides) {
+          if (borderStyle[side] === null || typeof borderStyle[side] !== "string") {
+            throw new TypeError(`Invalid border style: ${side}`);
+          }
+        }
+        characters = borderStyle;
+      }
+      return characters;
+    };
+    makeTitle = (text, horizontal, alignment) => {
+      let title = "";
+      const textWidth = stringWidth(text);
+      switch (alignment) {
+        case "left": {
+          title = text + horizontal.slice(textWidth);
+          break;
+        }
+        case "right": {
+          title = horizontal.slice(textWidth) + text;
+          break;
+        }
+        default: {
+          horizontal = horizontal.slice(textWidth);
+          if (horizontal.length % 2 === 1) {
+            horizontal = horizontal.slice(Math.floor(horizontal.length / 2));
+            title = horizontal.slice(1) + text + horizontal;
+          } else {
+            horizontal = horizontal.slice(horizontal.length / 2);
+            title = horizontal + text + horizontal;
+          }
+          break;
+        }
+      }
+      return title;
+    };
+    makeContentText = (text, { padding, width, textAlignment, height }) => {
+      text = (0, import_ansi_align.default)(text, { align: textAlignment });
+      let lines = text.split(NEWLINE);
+      const textWidth = widestLine(text);
+      const max = width - padding.left - padding.right;
+      if (textWidth > max) {
+        const newLines = [];
+        for (const line of lines) {
+          const createdLines = wrapAnsi(line, max, { hard: true });
+          const alignedLines = (0, import_ansi_align.default)(createdLines, { align: textAlignment });
+          const alignedLinesArray = alignedLines.split("\n");
+          const longestLength = Math.max(...alignedLinesArray.map((s) => stringWidth(s)));
+          for (const alignedLine of alignedLinesArray) {
+            let paddedLine;
+            switch (textAlignment) {
+              case "center": {
+                paddedLine = PAD.repeat((max - longestLength) / 2) + alignedLine;
+                break;
+              }
+              case "right": {
+                paddedLine = PAD.repeat(max - longestLength) + alignedLine;
+                break;
+              }
+              default: {
+                paddedLine = alignedLine;
+                break;
+              }
+            }
+            newLines.push(paddedLine);
+          }
+        }
+        lines = newLines;
+      }
+      if (textAlignment === "center" && textWidth < max) {
+        lines = lines.map((line) => PAD.repeat((max - textWidth) / 2) + line);
+      } else if (textAlignment === "right" && textWidth < max) {
+        lines = lines.map((line) => PAD.repeat(max - textWidth) + line);
+      }
+      const paddingLeft = PAD.repeat(padding.left);
+      const paddingRight = PAD.repeat(padding.right);
+      lines = lines.map((line) => {
+        const newLine = paddingLeft + line + paddingRight;
+        return newLine + PAD.repeat(width - stringWidth(newLine));
+      });
+      if (padding.top > 0) {
+        lines = [...Array.from({ length: padding.top }).fill(PAD.repeat(width)), ...lines];
+      }
+      if (padding.bottom > 0) {
+        lines = [...lines, ...Array.from({ length: padding.bottom }).fill(PAD.repeat(width))];
+      }
+      if (height && lines.length > height) {
+        lines = lines.slice(0, height);
+      } else if (height && lines.length < height) {
+        lines = [...lines, ...Array.from({ length: height - lines.length }).fill(PAD.repeat(width))];
+      }
+      return lines.join(NEWLINE);
+    };
+    boxContent = (content, contentWidth, options) => {
+      const colorizeBorder = (border) => {
+        const newBorder = options.borderColor ? getColorFunction(options.borderColor)(border) : border;
+        return options.dimBorder ? source_default.dim(newBorder) : newBorder;
+      };
+      const colorizeContent = (content2) => options.backgroundColor ? getBGColorFunction(options.backgroundColor)(content2) : content2;
+      const chars = getBorderChars(options.borderStyle);
+      const columns2 = terminalColumns();
+      let marginLeft = PAD.repeat(options.margin.left);
+      if (options.float === "center") {
+        const marginWidth = Math.max((columns2 - contentWidth - getBorderWidth(options.borderStyle)) / 2, 0);
+        marginLeft = PAD.repeat(marginWidth);
+      } else if (options.float === "right") {
+        const marginWidth = Math.max(columns2 - contentWidth - options.margin.right - getBorderWidth(options.borderStyle), 0);
+        marginLeft = PAD.repeat(marginWidth);
+      }
+      let result = "";
+      if (options.margin.top) {
+        result += NEWLINE.repeat(options.margin.top);
+      }
+      if (options.borderStyle !== NONE || options.title) {
+        result += colorizeBorder(marginLeft + chars.topLeft + (options.title ? makeTitle(options.title, chars.top.repeat(contentWidth), options.titleAlignment) : chars.top.repeat(contentWidth)) + chars.topRight) + NEWLINE;
+      }
+      const lines = content.split(NEWLINE);
+      result += lines.map((line) => marginLeft + colorizeBorder(chars.left) + colorizeContent(line) + colorizeBorder(chars.right)).join(NEWLINE);
+      if (options.borderStyle !== NONE) {
+        result += NEWLINE + colorizeBorder(marginLeft + chars.bottomLeft + chars.bottom.repeat(contentWidth) + chars.bottomRight);
+      }
+      if (options.margin.bottom) {
+        result += NEWLINE.repeat(options.margin.bottom);
+      }
+      return result;
+    };
+    sanitizeOptions = (options) => {
+      if (options.fullscreen && import_node_process8.default?.stdout) {
+        let newDimensions = [import_node_process8.default.stdout.columns, import_node_process8.default.stdout.rows];
+        if (typeof options.fullscreen === "function") {
+          newDimensions = options.fullscreen(...newDimensions);
+        }
+        options.width ||= newDimensions[0];
+        options.height ||= newDimensions[1];
+      }
+      options.width &&= Math.max(1, options.width - getBorderWidth(options.borderStyle));
+      options.height &&= Math.max(1, options.height - getBorderWidth(options.borderStyle));
+      return options;
+    };
+    formatTitle = (title, borderStyle) => borderStyle === NONE ? title : ` ${title} `;
+    determineDimensions = (text, options) => {
+      options = sanitizeOptions(options);
+      const widthOverride = options.width !== void 0;
+      const columns2 = terminalColumns();
+      const borderWidth = getBorderWidth(options.borderStyle);
+      const maxWidth = columns2 - options.margin.left - options.margin.right - borderWidth;
+      const widest = widestLine(wrapAnsi(text, columns2 - borderWidth, { hard: true, trim: false })) + options.padding.left + options.padding.right;
+      if (options.title && widthOverride) {
+        options.title = options.title.slice(0, Math.max(0, options.width - 2));
+        options.title &&= formatTitle(options.title, options.borderStyle);
+      } else if (options.title) {
+        options.title = options.title.slice(0, Math.max(0, maxWidth - 2));
+        if (options.title) {
+          options.title = formatTitle(options.title, options.borderStyle);
+          if (stringWidth(options.title) > widest) {
+            options.width = stringWidth(options.title);
+          }
+        }
+      }
+      options.width ||= widest;
+      if (!widthOverride) {
+        if (options.margin.left && options.margin.right && options.width > maxWidth) {
+          const spaceForMargins = columns2 - options.width - borderWidth;
+          const multiplier = spaceForMargins / (options.margin.left + options.margin.right);
+          options.margin.left = Math.max(0, Math.floor(options.margin.left * multiplier));
+          options.margin.right = Math.max(0, Math.floor(options.margin.right * multiplier));
+        }
+        options.width = Math.min(options.width, columns2 - borderWidth - options.margin.left - options.margin.right);
+      }
+      if (options.width - (options.padding.left + options.padding.right) <= 0) {
+        options.padding.left = 0;
+        options.padding.right = 0;
+      }
+      if (options.height && options.height - (options.padding.top + options.padding.bottom) <= 0) {
+        options.padding.top = 0;
+        options.padding.bottom = 0;
+      }
+      return options;
+    };
+    isHex = (color) => color.match(/^#(?:[0-f]{3}){1,2}$/i);
+    isColorValid = (color) => typeof color === "string" && (source_default[color] ?? isHex(color));
+    getColorFunction = (color) => isHex(color) ? source_default.hex(color) : source_default[color];
+    getBGColorFunction = (color) => isHex(color) ? source_default.bgHex(color) : source_default[camelCase(["bg", color])];
+  }
+});
+
+// ../node_modules/cli-table3/src/debug.js
+var require_debug2 = __commonJS({
+  "../node_modules/cli-table3/src/debug.js"(exports2, module2) {
+    "use strict";
+    var messages = [];
+    var level = 0;
+    var debug = (msg, min) => {
+      if (level >= min) {
+        messages.push(msg);
+      }
+    };
+    debug.WARN = 1;
+    debug.INFO = 2;
+    debug.DEBUG = 3;
+    debug.reset = () => {
+      messages = [];
+    };
+    debug.setDebugLevel = (v) => {
+      level = v;
+    };
+    debug.warn = (msg) => debug(msg, debug.WARN);
+    debug.info = (msg) => debug(msg, debug.INFO);
+    debug.debug = (msg) => debug(msg, debug.DEBUG);
+    debug.debugMessages = () => messages;
+    module2.exports = debug;
+  }
+});
+
+// ../node_modules/cli-table3/node_modules/ansi-regex/index.js
+var require_ansi_regex2 = __commonJS({
+  "../node_modules/cli-table3/node_modules/ansi-regex/index.js"(exports2, module2) {
+    "use strict";
+    module2.exports = ({ onlyFirst = false } = {}) => {
+      const pattern = [
+        "[\\u001B\\u009B][[\\]()#;?]*(?:(?:(?:(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]+)*|[a-zA-Z\\d]+(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]*)*)?\\u0007)",
+        "(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PR-TZcf-ntqry=><~]))"
+      ].join("|");
+      return new RegExp(pattern, onlyFirst ? void 0 : "g");
+    };
+  }
+});
+
+// ../node_modules/cli-table3/node_modules/strip-ansi/index.js
+var require_strip_ansi2 = __commonJS({
+  "../node_modules/cli-table3/node_modules/strip-ansi/index.js"(exports2, module2) {
+    "use strict";
+    var ansiRegex2 = require_ansi_regex2();
+    module2.exports = (string4) => typeof string4 === "string" ? string4.replace(ansiRegex2(), "") : string4;
+  }
+});
+
+// ../node_modules/cli-table3/node_modules/is-fullwidth-code-point/index.js
+var require_is_fullwidth_code_point2 = __commonJS({
+  "../node_modules/cli-table3/node_modules/is-fullwidth-code-point/index.js"(exports2, module2) {
+    "use strict";
+    var isFullwidthCodePoint = (codePoint) => {
+      if (Number.isNaN(codePoint)) {
+        return false;
+      }
+      if (codePoint >= 4352 && (codePoint <= 4447 || // Hangul Jamo
+      codePoint === 9001 || // LEFT-POINTING ANGLE BRACKET
+      codePoint === 9002 || // RIGHT-POINTING ANGLE BRACKET
+      // CJK Radicals Supplement .. Enclosed CJK Letters and Months
+      11904 <= codePoint && codePoint <= 12871 && codePoint !== 12351 || // Enclosed CJK Letters and Months .. CJK Unified Ideographs Extension A
+      12880 <= codePoint && codePoint <= 19903 || // CJK Unified Ideographs .. Yi Radicals
+      19968 <= codePoint && codePoint <= 42182 || // Hangul Jamo Extended-A
+      43360 <= codePoint && codePoint <= 43388 || // Hangul Syllables
+      44032 <= codePoint && codePoint <= 55203 || // CJK Compatibility Ideographs
+      63744 <= codePoint && codePoint <= 64255 || // Vertical Forms
+      65040 <= codePoint && codePoint <= 65049 || // CJK Compatibility Forms .. Small Form Variants
+      65072 <= codePoint && codePoint <= 65131 || // Halfwidth and Fullwidth Forms
+      65281 <= codePoint && codePoint <= 65376 || 65504 <= codePoint && codePoint <= 65510 || // Kana Supplement
+      110592 <= codePoint && codePoint <= 110593 || // Enclosed Ideographic Supplement
+      127488 <= codePoint && codePoint <= 127569 || // CJK Unified Ideographs Extension B .. Tertiary Ideographic Plane
+      131072 <= codePoint && codePoint <= 262141)) {
+        return true;
+      }
+      return false;
+    };
+    module2.exports = isFullwidthCodePoint;
+    module2.exports.default = isFullwidthCodePoint;
+  }
+});
+
+// ../node_modules/cli-table3/node_modules/emoji-regex/index.js
+var require_emoji_regex2 = __commonJS({
+  "../node_modules/cli-table3/node_modules/emoji-regex/index.js"(exports2, module2) {
+    "use strict";
+    module2.exports = function() {
+      return /\uD83C\uDFF4\uDB40\uDC67\uDB40\uDC62(?:\uDB40\uDC65\uDB40\uDC6E\uDB40\uDC67|\uDB40\uDC73\uDB40\uDC63\uDB40\uDC74|\uDB40\uDC77\uDB40\uDC6C\uDB40\uDC73)\uDB40\uDC7F|\uD83D\uDC68(?:\uD83C\uDFFC\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68\uD83C\uDFFB|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFF\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB-\uDFFE])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFE\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB-\uDFFD])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFD\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB\uDFFC])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\u200D(?:\u2764\uFE0F\u200D(?:\uD83D\uDC8B\u200D)?\uD83D\uDC68|(?:\uD83D[\uDC68\uDC69])\u200D(?:\uD83D\uDC66\u200D\uD83D\uDC66|\uD83D\uDC67\u200D(?:\uD83D[\uDC66\uDC67]))|\uD83D\uDC66\u200D\uD83D\uDC66|\uD83D\uDC67\u200D(?:\uD83D[\uDC66\uDC67])|(?:\uD83D[\uDC68\uDC69])\u200D(?:\uD83D[\uDC66\uDC67])|[\u2695\u2696\u2708]\uFE0F|\uD83D[\uDC66\uDC67]|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|(?:\uD83C\uDFFB\u200D[\u2695\u2696\u2708]|\uD83C\uDFFF\u200D[\u2695\u2696\u2708]|\uD83C\uDFFE\u200D[\u2695\u2696\u2708]|\uD83C\uDFFD\u200D[\u2695\u2696\u2708]|\uD83C\uDFFC\u200D[\u2695\u2696\u2708])\uFE0F|\uD83C\uDFFB\u200D(?:\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C[\uDFFB-\uDFFF])|(?:\uD83E\uDDD1\uD83C\uDFFB\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1|\uD83D\uDC69\uD83C\uDFFC\u200D\uD83E\uDD1D\u200D\uD83D\uDC69)\uD83C\uDFFB|\uD83E\uDDD1(?:\uD83C\uDFFF\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1(?:\uD83C[\uDFFB-\uDFFF])|\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1)|(?:\uD83E\uDDD1\uD83C\uDFFE\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1|\uD83D\uDC69\uD83C\uDFFF\u200D\uD83E\uDD1D\u200D(?:\uD83D[\uDC68\uDC69]))(?:\uD83C[\uDFFB-\uDFFE])|(?:\uD83E\uDDD1\uD83C\uDFFC\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1|\uD83D\uDC69\uD83C\uDFFD\u200D\uD83E\uDD1D\u200D\uD83D\uDC69)(?:\uD83C[\uDFFB\uDFFC])|\uD83D\uDC69(?:\uD83C\uDFFE\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB-\uDFFD\uDFFF])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFC\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB\uDFFD-\uDFFF])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFB\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFC-\uDFFF])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFD\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB\uDFFC\uDFFE\uDFFF])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\u200D(?:\u2764\uFE0F\u200D(?:\uD83D\uDC8B\u200D(?:\uD83D[\uDC68\uDC69])|\uD83D[\uDC68\uDC69])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFF\u200D(?:\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD]))|\uD83D\uDC69\u200D\uD83D\uDC69\u200D(?:\uD83D\uDC66\u200D\uD83D\uDC66|\uD83D\uDC67\u200D(?:\uD83D[\uDC66\uDC67]))|(?:\uD83E\uDDD1\uD83C\uDFFD\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1|\uD83D\uDC69\uD83C\uDFFE\u200D\uD83E\uDD1D\u200D\uD83D\uDC69)(?:\uD83C[\uDFFB-\uDFFD])|\uD83D\uDC69\u200D\uD83D\uDC66\u200D\uD83D\uDC66|\uD83D\uDC69\u200D\uD83D\uDC69\u200D(?:\uD83D[\uDC66\uDC67])|(?:\uD83D\uDC41\uFE0F\u200D\uD83D\uDDE8|\uD83D\uDC69(?:\uD83C\uDFFF\u200D[\u2695\u2696\u2708]|\uD83C\uDFFE\u200D[\u2695\u2696\u2708]|\uD83C\uDFFC\u200D[\u2695\u2696\u2708]|\uD83C\uDFFB\u200D[\u2695\u2696\u2708]|\uD83C\uDFFD\u200D[\u2695\u2696\u2708]|\u200D[\u2695\u2696\u2708])|(?:(?:\u26F9|\uD83C[\uDFCB\uDFCC]|\uD83D\uDD75)\uFE0F|\uD83D\uDC6F|\uD83E[\uDD3C\uDDDE\uDDDF])\u200D[\u2640\u2642]|(?:\u26F9|\uD83C[\uDFCB\uDFCC]|\uD83D\uDD75)(?:\uD83C[\uDFFB-\uDFFF])\u200D[\u2640\u2642]|(?:\uD83C[\uDFC3\uDFC4\uDFCA]|\uD83D[\uDC6E\uDC71\uDC73\uDC77\uDC81\uDC82\uDC86\uDC87\uDE45-\uDE47\uDE4B\uDE4D\uDE4E\uDEA3\uDEB4-\uDEB6]|\uD83E[\uDD26\uDD37-\uDD39\uDD3D\uDD3E\uDDB8\uDDB9\uDDCD-\uDDCF\uDDD6-\uDDDD])(?:(?:\uD83C[\uDFFB-\uDFFF])\u200D[\u2640\u2642]|\u200D[\u2640\u2642])|\uD83C\uDFF4\u200D\u2620)\uFE0F|\uD83D\uDC69\u200D\uD83D\uDC67\u200D(?:\uD83D[\uDC66\uDC67])|\uD83C\uDFF3\uFE0F\u200D\uD83C\uDF08|\uD83D\uDC15\u200D\uD83E\uDDBA|\uD83D\uDC69\u200D\uD83D\uDC66|\uD83D\uDC69\u200D\uD83D\uDC67|\uD83C\uDDFD\uD83C\uDDF0|\uD83C\uDDF4\uD83C\uDDF2|\uD83C\uDDF6\uD83C\uDDE6|[#\*0-9]\uFE0F\u20E3|\uD83C\uDDE7(?:\uD83C[\uDDE6\uDDE7\uDDE9-\uDDEF\uDDF1-\uDDF4\uDDF6-\uDDF9\uDDFB\uDDFC\uDDFE\uDDFF])|\uD83C\uDDF9(?:\uD83C[\uDDE6\uDDE8\uDDE9\uDDEB-\uDDED\uDDEF-\uDDF4\uDDF7\uDDF9\uDDFB\uDDFC\uDDFF])|\uD83C\uDDEA(?:\uD83C[\uDDE6\uDDE8\uDDEA\uDDEC\uDDED\uDDF7-\uDDFA])|\uD83E\uDDD1(?:\uD83C[\uDFFB-\uDFFF])|\uD83C\uDDF7(?:\uD83C[\uDDEA\uDDF4\uDDF8\uDDFA\uDDFC])|\uD83D\uDC69(?:\uD83C[\uDFFB-\uDFFF])|\uD83C\uDDF2(?:\uD83C[\uDDE6\uDDE8-\uDDED\uDDF0-\uDDFF])|\uD83C\uDDE6(?:\uD83C[\uDDE8-\uDDEC\uDDEE\uDDF1\uDDF2\uDDF4\uDDF6-\uDDFA\uDDFC\uDDFD\uDDFF])|\uD83C\uDDF0(?:\uD83C[\uDDEA\uDDEC-\uDDEE\uDDF2\uDDF3\uDDF5\uDDF7\uDDFC\uDDFE\uDDFF])|\uD83C\uDDED(?:\uD83C[\uDDF0\uDDF2\uDDF3\uDDF7\uDDF9\uDDFA])|\uD83C\uDDE9(?:\uD83C[\uDDEA\uDDEC\uDDEF\uDDF0\uDDF2\uDDF4\uDDFF])|\uD83C\uDDFE(?:\uD83C[\uDDEA\uDDF9])|\uD83C\uDDEC(?:\uD83C[\uDDE6\uDDE7\uDDE9-\uDDEE\uDDF1-\uDDF3\uDDF5-\uDDFA\uDDFC\uDDFE])|\uD83C\uDDF8(?:\uD83C[\uDDE6-\uDDEA\uDDEC-\uDDF4\uDDF7-\uDDF9\uDDFB\uDDFD-\uDDFF])|\uD83C\uDDEB(?:\uD83C[\uDDEE-\uDDF0\uDDF2\uDDF4\uDDF7])|\uD83C\uDDF5(?:\uD83C[\uDDE6\uDDEA-\uDDED\uDDF0-\uDDF3\uDDF7-\uDDF9\uDDFC\uDDFE])|\uD83C\uDDFB(?:\uD83C[\uDDE6\uDDE8\uDDEA\uDDEC\uDDEE\uDDF3\uDDFA])|\uD83C\uDDF3(?:\uD83C[\uDDE6\uDDE8\uDDEA-\uDDEC\uDDEE\uDDF1\uDDF4\uDDF5\uDDF7\uDDFA\uDDFF])|\uD83C\uDDE8(?:\uD83C[\uDDE6\uDDE8\uDDE9\uDDEB-\uDDEE\uDDF0-\uDDF5\uDDF7\uDDFA-\uDDFF])|\uD83C\uDDF1(?:\uD83C[\uDDE6-\uDDE8\uDDEE\uDDF0\uDDF7-\uDDFB\uDDFE])|\uD83C\uDDFF(?:\uD83C[\uDDE6\uDDF2\uDDFC])|\uD83C\uDDFC(?:\uD83C[\uDDEB\uDDF8])|\uD83C\uDDFA(?:\uD83C[\uDDE6\uDDEC\uDDF2\uDDF3\uDDF8\uDDFE\uDDFF])|\uD83C\uDDEE(?:\uD83C[\uDDE8-\uDDEA\uDDF1-\uDDF4\uDDF6-\uDDF9])|\uD83C\uDDEF(?:\uD83C[\uDDEA\uDDF2\uDDF4\uDDF5])|(?:\uD83C[\uDFC3\uDFC4\uDFCA]|\uD83D[\uDC6E\uDC71\uDC73\uDC77\uDC81\uDC82\uDC86\uDC87\uDE45-\uDE47\uDE4B\uDE4D\uDE4E\uDEA3\uDEB4-\uDEB6]|\uD83E[\uDD26\uDD37-\uDD39\uDD3D\uDD3E\uDDB8\uDDB9\uDDCD-\uDDCF\uDDD6-\uDDDD])(?:\uD83C[\uDFFB-\uDFFF])|(?:\u26F9|\uD83C[\uDFCB\uDFCC]|\uD83D\uDD75)(?:\uD83C[\uDFFB-\uDFFF])|(?:[\u261D\u270A-\u270D]|\uD83C[\uDF85\uDFC2\uDFC7]|\uD83D[\uDC42\uDC43\uDC46-\uDC50\uDC66\uDC67\uDC6B-\uDC6D\uDC70\uDC72\uDC74-\uDC76\uDC78\uDC7C\uDC83\uDC85\uDCAA\uDD74\uDD7A\uDD90\uDD95\uDD96\uDE4C\uDE4F\uDEC0\uDECC]|\uD83E[\uDD0F\uDD18-\uDD1C\uDD1E\uDD1F\uDD30-\uDD36\uDDB5\uDDB6\uDDBB\uDDD2-\uDDD5])(?:\uD83C[\uDFFB-\uDFFF])|(?:[\u231A\u231B\u23E9-\u23EC\u23F0\u23F3\u25FD\u25FE\u2614\u2615\u2648-\u2653\u267F\u2693\u26A1\u26AA\u26AB\u26BD\u26BE\u26C4\u26C5\u26CE\u26D4\u26EA\u26F2\u26F3\u26F5\u26FA\u26FD\u2705\u270A\u270B\u2728\u274C\u274E\u2753-\u2755\u2757\u2795-\u2797\u27B0\u27BF\u2B1B\u2B1C\u2B50\u2B55]|\uD83C[\uDC04\uDCCF\uDD8E\uDD91-\uDD9A\uDDE6-\uDDFF\uDE01\uDE1A\uDE2F\uDE32-\uDE36\uDE38-\uDE3A\uDE50\uDE51\uDF00-\uDF20\uDF2D-\uDF35\uDF37-\uDF7C\uDF7E-\uDF93\uDFA0-\uDFCA\uDFCF-\uDFD3\uDFE0-\uDFF0\uDFF4\uDFF8-\uDFFF]|\uD83D[\uDC00-\uDC3E\uDC40\uDC42-\uDCFC\uDCFF-\uDD3D\uDD4B-\uDD4E\uDD50-\uDD67\uDD7A\uDD95\uDD96\uDDA4\uDDFB-\uDE4F\uDE80-\uDEC5\uDECC\uDED0-\uDED2\uDED5\uDEEB\uDEEC\uDEF4-\uDEFA\uDFE0-\uDFEB]|\uD83E[\uDD0D-\uDD3A\uDD3C-\uDD45\uDD47-\uDD71\uDD73-\uDD76\uDD7A-\uDDA2\uDDA5-\uDDAA\uDDAE-\uDDCA\uDDCD-\uDDFF\uDE70-\uDE73\uDE78-\uDE7A\uDE80-\uDE82\uDE90-\uDE95])|(?:[#\*0-9\xA9\xAE\u203C\u2049\u2122\u2139\u2194-\u2199\u21A9\u21AA\u231A\u231B\u2328\u23CF\u23E9-\u23F3\u23F8-\u23FA\u24C2\u25AA\u25AB\u25B6\u25C0\u25FB-\u25FE\u2600-\u2604\u260E\u2611\u2614\u2615\u2618\u261D\u2620\u2622\u2623\u2626\u262A\u262E\u262F\u2638-\u263A\u2640\u2642\u2648-\u2653\u265F\u2660\u2663\u2665\u2666\u2668\u267B\u267E\u267F\u2692-\u2697\u2699\u269B\u269C\u26A0\u26A1\u26AA\u26AB\u26B0\u26B1\u26BD\u26BE\u26C4\u26C5\u26C8\u26CE\u26CF\u26D1\u26D3\u26D4\u26E9\u26EA\u26F0-\u26F5\u26F7-\u26FA\u26FD\u2702\u2705\u2708-\u270D\u270F\u2712\u2714\u2716\u271D\u2721\u2728\u2733\u2734\u2744\u2747\u274C\u274E\u2753-\u2755\u2757\u2763\u2764\u2795-\u2797\u27A1\u27B0\u27BF\u2934\u2935\u2B05-\u2B07\u2B1B\u2B1C\u2B50\u2B55\u3030\u303D\u3297\u3299]|\uD83C[\uDC04\uDCCF\uDD70\uDD71\uDD7E\uDD7F\uDD8E\uDD91-\uDD9A\uDDE6-\uDDFF\uDE01\uDE02\uDE1A\uDE2F\uDE32-\uDE3A\uDE50\uDE51\uDF00-\uDF21\uDF24-\uDF93\uDF96\uDF97\uDF99-\uDF9B\uDF9E-\uDFF0\uDFF3-\uDFF5\uDFF7-\uDFFF]|\uD83D[\uDC00-\uDCFD\uDCFF-\uDD3D\uDD49-\uDD4E\uDD50-\uDD67\uDD6F\uDD70\uDD73-\uDD7A\uDD87\uDD8A-\uDD8D\uDD90\uDD95\uDD96\uDDA4\uDDA5\uDDA8\uDDB1\uDDB2\uDDBC\uDDC2-\uDDC4\uDDD1-\uDDD3\uDDDC-\uDDDE\uDDE1\uDDE3\uDDE8\uDDEF\uDDF3\uDDFA-\uDE4F\uDE80-\uDEC5\uDECB-\uDED2\uDED5\uDEE0-\uDEE5\uDEE9\uDEEB\uDEEC\uDEF0\uDEF3-\uDEFA\uDFE0-\uDFEB]|\uD83E[\uDD0D-\uDD3A\uDD3C-\uDD45\uDD47-\uDD71\uDD73-\uDD76\uDD7A-\uDDA2\uDDA5-\uDDAA\uDDAE-\uDDCA\uDDCD-\uDDFF\uDE70-\uDE73\uDE78-\uDE7A\uDE80-\uDE82\uDE90-\uDE95])\uFE0F|(?:[\u261D\u26F9\u270A-\u270D]|\uD83C[\uDF85\uDFC2-\uDFC4\uDFC7\uDFCA-\uDFCC]|\uD83D[\uDC42\uDC43\uDC46-\uDC50\uDC66-\uDC78\uDC7C\uDC81-\uDC83\uDC85-\uDC87\uDC8F\uDC91\uDCAA\uDD74\uDD75\uDD7A\uDD90\uDD95\uDD96\uDE45-\uDE47\uDE4B-\uDE4F\uDEA3\uDEB4-\uDEB6\uDEC0\uDECC]|\uD83E[\uDD0F\uDD18-\uDD1F\uDD26\uDD30-\uDD39\uDD3C-\uDD3E\uDDB5\uDDB6\uDDB8\uDDB9\uDDBB\uDDCD-\uDDCF\uDDD1-\uDDDD])/g;
+    };
+  }
+});
+
+// ../node_modules/cli-table3/node_modules/string-width/index.js
+var require_string_width2 = __commonJS({
+  "../node_modules/cli-table3/node_modules/string-width/index.js"(exports2, module2) {
+    "use strict";
+    var stripAnsi2 = require_strip_ansi2();
+    var isFullwidthCodePoint = require_is_fullwidth_code_point2();
+    var emojiRegex = require_emoji_regex2();
+    var stringWidth2 = (string4) => {
+      if (typeof string4 !== "string" || string4.length === 0) {
+        return 0;
+      }
+      string4 = stripAnsi2(string4);
+      if (string4.length === 0) {
+        return 0;
+      }
+      string4 = string4.replace(emojiRegex(), "  ");
+      let width = 0;
+      for (let i = 0; i < string4.length; i++) {
+        const code = string4.codePointAt(i);
+        if (code <= 31 || code >= 127 && code <= 159) {
+          continue;
+        }
+        if (code >= 768 && code <= 879) {
+          continue;
+        }
+        if (code > 65535) {
+          i++;
+        }
+        width += isFullwidthCodePoint(code) ? 2 : 1;
+      }
+      return width;
+    };
+    module2.exports = stringWidth2;
+    module2.exports.default = stringWidth2;
+  }
+});
+
+// ../node_modules/cli-table3/src/utils.js
+var require_utils4 = __commonJS({
+  "../node_modules/cli-table3/src/utils.js"(exports2, module2) {
+    "use strict";
+    var stringWidth2 = require_string_width2();
+    function codeRegex(capture) {
+      return capture ? /\u001b\[((?:\d*;){0,5}\d*)m/g : /\u001b\[(?:\d*;){0,5}\d*m/g;
+    }
+    function strlen(str) {
+      let code = codeRegex();
+      let stripped = ("" + str).replace(code, "");
+      let split = stripped.split("\n");
+      return split.reduce(function(memo, s) {
+        return stringWidth2(s) > memo ? stringWidth2(s) : memo;
+      }, 0);
+    }
+    function repeat(str, times) {
+      return Array(times + 1).join(str);
+    }
+    function pad(str, len, pad2, dir) {
+      let length = strlen(str);
+      if (len + 1 >= length) {
+        let padlen = len - length;
+        switch (dir) {
+          case "right": {
+            str = repeat(pad2, padlen) + str;
+            break;
+          }
+          case "center": {
+            let right = Math.ceil(padlen / 2);
+            let left = padlen - right;
+            str = repeat(pad2, left) + str + repeat(pad2, right);
+            break;
+          }
+          default: {
+            str = str + repeat(pad2, padlen);
+            break;
+          }
+        }
+      }
+      return str;
+    }
+    var codeCache = {};
+    function addToCodeCache(name, on, off) {
+      on = "\x1B[" + on + "m";
+      off = "\x1B[" + off + "m";
+      codeCache[on] = { set: name, to: true };
+      codeCache[off] = { set: name, to: false };
+      codeCache[name] = { on, off };
+    }
+    addToCodeCache("bold", 1, 22);
+    addToCodeCache("italics", 3, 23);
+    addToCodeCache("underline", 4, 24);
+    addToCodeCache("inverse", 7, 27);
+    addToCodeCache("strikethrough", 9, 29);
+    function updateState(state, controlChars) {
+      let controlCode = controlChars[1] ? parseInt(controlChars[1].split(";")[0]) : 0;
+      if (controlCode >= 30 && controlCode <= 39 || controlCode >= 90 && controlCode <= 97) {
+        state.lastForegroundAdded = controlChars[0];
+        return;
+      }
+      if (controlCode >= 40 && controlCode <= 49 || controlCode >= 100 && controlCode <= 107) {
+        state.lastBackgroundAdded = controlChars[0];
+        return;
+      }
+      if (controlCode === 0) {
+        for (let i in state) {
+          if (Object.prototype.hasOwnProperty.call(state, i)) {
+            delete state[i];
+          }
+        }
+        return;
+      }
+      let info = codeCache[controlChars[0]];
+      if (info) {
+        state[info.set] = info.to;
+      }
+    }
+    function readState(line) {
+      let code = codeRegex(true);
+      let controlChars = code.exec(line);
+      let state = {};
+      while (controlChars !== null) {
+        updateState(state, controlChars);
+        controlChars = code.exec(line);
+      }
+      return state;
+    }
+    function unwindState(state, ret) {
+      let lastBackgroundAdded = state.lastBackgroundAdded;
+      let lastForegroundAdded = state.lastForegroundAdded;
+      delete state.lastBackgroundAdded;
+      delete state.lastForegroundAdded;
+      Object.keys(state).forEach(function(key) {
+        if (state[key]) {
+          ret += codeCache[key].off;
+        }
+      });
+      if (lastBackgroundAdded && lastBackgroundAdded != "\x1B[49m") {
+        ret += "\x1B[49m";
+      }
+      if (lastForegroundAdded && lastForegroundAdded != "\x1B[39m") {
+        ret += "\x1B[39m";
+      }
+      return ret;
+    }
+    function rewindState(state, ret) {
+      let lastBackgroundAdded = state.lastBackgroundAdded;
+      let lastForegroundAdded = state.lastForegroundAdded;
+      delete state.lastBackgroundAdded;
+      delete state.lastForegroundAdded;
+      Object.keys(state).forEach(function(key) {
+        if (state[key]) {
+          ret = codeCache[key].on + ret;
+        }
+      });
+      if (lastBackgroundAdded && lastBackgroundAdded != "\x1B[49m") {
+        ret = lastBackgroundAdded + ret;
+      }
+      if (lastForegroundAdded && lastForegroundAdded != "\x1B[39m") {
+        ret = lastForegroundAdded + ret;
+      }
+      return ret;
+    }
+    function truncateWidth(str, desiredLength) {
+      if (str.length === strlen(str)) {
+        return str.substr(0, desiredLength);
+      }
+      while (strlen(str) > desiredLength) {
+        str = str.slice(0, -1);
+      }
+      return str;
+    }
+    function truncateWidthWithAnsi(str, desiredLength) {
+      let code = codeRegex(true);
+      let split = str.split(codeRegex());
+      let splitIndex = 0;
+      let retLen = 0;
+      let ret = "";
+      let myArray;
+      let state = {};
+      while (retLen < desiredLength) {
+        myArray = code.exec(str);
+        let toAdd = split[splitIndex];
+        splitIndex++;
+        if (retLen + strlen(toAdd) > desiredLength) {
+          toAdd = truncateWidth(toAdd, desiredLength - retLen);
+        }
+        ret += toAdd;
+        retLen += strlen(toAdd);
+        if (retLen < desiredLength) {
+          if (!myArray) {
+            break;
+          }
+          ret += myArray[0];
+          updateState(state, myArray);
+        }
+      }
+      return unwindState(state, ret);
+    }
+    function truncate(str, desiredLength, truncateChar) {
+      truncateChar = truncateChar || "\u2026";
+      let lengthOfStr = strlen(str);
+      if (lengthOfStr <= desiredLength) {
+        return str;
+      }
+      desiredLength -= strlen(truncateChar);
+      let ret = truncateWidthWithAnsi(str, desiredLength);
+      ret += truncateChar;
+      const hrefTag = "\x1B]8;;\x07";
+      if (str.includes(hrefTag) && !ret.includes(hrefTag)) {
+        ret += hrefTag;
+      }
+      return ret;
+    }
+    function defaultOptions() {
+      return {
+        chars: {
+          top: "\u2500",
+          "top-mid": "\u252C",
+          "top-left": "\u250C",
+          "top-right": "\u2510",
+          bottom: "\u2500",
+          "bottom-mid": "\u2534",
+          "bottom-left": "\u2514",
+          "bottom-right": "\u2518",
+          left: "\u2502",
+          "left-mid": "\u251C",
+          mid: "\u2500",
+          "mid-mid": "\u253C",
+          right: "\u2502",
+          "right-mid": "\u2524",
+          middle: "\u2502"
+        },
+        truncate: "\u2026",
+        colWidths: [],
+        rowHeights: [],
+        colAligns: [],
+        rowAligns: [],
+        style: {
+          "padding-left": 1,
+          "padding-right": 1,
+          head: ["red"],
+          border: ["grey"],
+          compact: false
+        },
+        head: []
+      };
+    }
+    function mergeOptions(options, defaults) {
+      options = options || {};
+      defaults = defaults || defaultOptions();
+      let ret = Object.assign({}, defaults, options);
+      ret.chars = Object.assign({}, defaults.chars, options.chars);
+      ret.style = Object.assign({}, defaults.style, options.style);
+      return ret;
+    }
+    function wordWrap(maxLength, input) {
+      let lines = [];
+      let split = input.split(/(\s+)/g);
+      let line = [];
+      let lineLength = 0;
+      let whitespace;
+      for (let i = 0; i < split.length; i += 2) {
+        let word = split[i];
+        let newLength = lineLength + strlen(word);
+        if (lineLength > 0 && whitespace) {
+          newLength += whitespace.length;
+        }
+        if (newLength > maxLength) {
+          if (lineLength !== 0) {
+            lines.push(line.join(""));
+          }
+          line = [word];
+          lineLength = strlen(word);
+        } else {
+          line.push(whitespace || "", word);
+          lineLength = newLength;
+        }
+        whitespace = split[i + 1];
+      }
+      if (lineLength) {
+        lines.push(line.join(""));
+      }
+      return lines;
+    }
+    function textWrap(maxLength, input) {
+      let lines = [];
+      let line = "";
+      function pushLine(str, ws) {
+        if (line.length && ws) line += ws;
+        line += str;
+        while (line.length > maxLength) {
+          lines.push(line.slice(0, maxLength));
+          line = line.slice(maxLength);
+        }
+      }
+      let split = input.split(/(\s+)/g);
+      for (let i = 0; i < split.length; i += 2) {
+        pushLine(split[i], i && split[i - 1]);
+      }
+      if (line.length) lines.push(line);
+      return lines;
+    }
+    function multiLineWordWrap(maxLength, input, wrapOnWordBoundary = true) {
+      let output = [];
+      input = input.split("\n");
+      const handler = wrapOnWordBoundary ? wordWrap : textWrap;
+      for (let i = 0; i < input.length; i++) {
+        output.push.apply(output, handler(maxLength, input[i]));
+      }
+      return output;
+    }
+    function colorizeLines(input) {
+      let state = {};
+      let output = [];
+      for (let i = 0; i < input.length; i++) {
+        let line = rewindState(state, input[i]);
+        state = readState(line);
+        let temp = Object.assign({}, state);
+        output.push(unwindState(temp, line));
+      }
+      return output;
+    }
+    function hyperlink(url2, text) {
+      const OSC = "\x1B]";
+      const BEL = "\x07";
+      const SEP = ";";
+      return [OSC, "8", SEP, SEP, url2 || text, BEL, text, OSC, "8", SEP, SEP, BEL].join("");
+    }
+    module2.exports = {
+      strlen,
+      repeat,
+      pad,
+      truncate,
+      mergeOptions,
+      wordWrap: multiLineWordWrap,
+      colorizeLines,
+      hyperlink
+    };
+  }
+});
+
+// ../node_modules/@colors/colors/lib/styles.js
+var require_styles = __commonJS({
+  "../node_modules/@colors/colors/lib/styles.js"(exports2, module2) {
+    "use strict";
+    var styles4 = {};
+    module2["exports"] = styles4;
+    var codes = {
+      reset: [0, 0],
+      bold: [1, 22],
+      dim: [2, 22],
+      italic: [3, 23],
+      underline: [4, 24],
+      inverse: [7, 27],
+      hidden: [8, 28],
+      strikethrough: [9, 29],
+      black: [30, 39],
+      red: [31, 39],
+      green: [32, 39],
+      yellow: [33, 39],
+      blue: [34, 39],
+      magenta: [35, 39],
+      cyan: [36, 39],
+      white: [37, 39],
+      gray: [90, 39],
+      grey: [90, 39],
+      brightRed: [91, 39],
+      brightGreen: [92, 39],
+      brightYellow: [93, 39],
+      brightBlue: [94, 39],
+      brightMagenta: [95, 39],
+      brightCyan: [96, 39],
+      brightWhite: [97, 39],
+      bgBlack: [40, 49],
+      bgRed: [41, 49],
+      bgGreen: [42, 49],
+      bgYellow: [43, 49],
+      bgBlue: [44, 49],
+      bgMagenta: [45, 49],
+      bgCyan: [46, 49],
+      bgWhite: [47, 49],
+      bgGray: [100, 49],
+      bgGrey: [100, 49],
+      bgBrightRed: [101, 49],
+      bgBrightGreen: [102, 49],
+      bgBrightYellow: [103, 49],
+      bgBrightBlue: [104, 49],
+      bgBrightMagenta: [105, 49],
+      bgBrightCyan: [106, 49],
+      bgBrightWhite: [107, 49],
+      // legacy styles for colors pre v1.0.0
+      blackBG: [40, 49],
+      redBG: [41, 49],
+      greenBG: [42, 49],
+      yellowBG: [43, 49],
+      blueBG: [44, 49],
+      magentaBG: [45, 49],
+      cyanBG: [46, 49],
+      whiteBG: [47, 49]
+    };
+    Object.keys(codes).forEach(function(key) {
+      var val = codes[key];
+      var style = styles4[key] = [];
+      style.open = "\x1B[" + val[0] + "m";
+      style.close = "\x1B[" + val[1] + "m";
+    });
+  }
+});
+
+// ../node_modules/@colors/colors/lib/system/has-flag.js
+var require_has_flag = __commonJS({
+  "../node_modules/@colors/colors/lib/system/has-flag.js"(exports2, module2) {
+    "use strict";
+    module2.exports = function(flag, argv) {
+      argv = argv || process.argv;
+      var terminatorPos = argv.indexOf("--");
+      var prefix = /^-{1,2}/.test(flag) ? "" : "--";
+      var pos = argv.indexOf(prefix + flag);
+      return pos !== -1 && (terminatorPos === -1 ? true : pos < terminatorPos);
+    };
+  }
+});
+
+// ../node_modules/@colors/colors/lib/system/supports-colors.js
+var require_supports_colors = __commonJS({
+  "../node_modules/@colors/colors/lib/system/supports-colors.js"(exports2, module2) {
+    "use strict";
+    var os9 = require("os");
+    var hasFlag2 = require_has_flag();
+    var env3 = process.env;
+    var forceColor = void 0;
+    if (hasFlag2("no-color") || hasFlag2("no-colors") || hasFlag2("color=false")) {
+      forceColor = false;
+    } else if (hasFlag2("color") || hasFlag2("colors") || hasFlag2("color=true") || hasFlag2("color=always")) {
+      forceColor = true;
+    }
+    if ("FORCE_COLOR" in env3) {
+      forceColor = env3.FORCE_COLOR.length === 0 || parseInt(env3.FORCE_COLOR, 10) !== 0;
+    }
+    function translateLevel2(level) {
+      if (level === 0) {
+        return false;
+      }
+      return {
+        level,
+        hasBasic: true,
+        has256: level >= 2,
+        has16m: level >= 3
+      };
+    }
+    function supportsColor2(stream) {
+      if (forceColor === false) {
+        return 0;
+      }
+      if (hasFlag2("color=16m") || hasFlag2("color=full") || hasFlag2("color=truecolor")) {
+        return 3;
+      }
+      if (hasFlag2("color=256")) {
+        return 2;
+      }
+      if (stream && !stream.isTTY && forceColor !== true) {
+        return 0;
+      }
+      var min = forceColor ? 1 : 0;
+      if (process.platform === "win32") {
+        var osRelease = os9.release().split(".");
+        if (Number(process.versions.node.split(".")[0]) >= 8 && Number(osRelease[0]) >= 10 && Number(osRelease[2]) >= 10586) {
+          return Number(osRelease[2]) >= 14931 ? 3 : 2;
+        }
+        return 1;
+      }
+      if ("CI" in env3) {
+        if (["TRAVIS", "CIRCLECI", "APPVEYOR", "GITLAB_CI"].some(function(sign) {
+          return sign in env3;
+        }) || env3.CI_NAME === "codeship") {
+          return 1;
+        }
+        return min;
+      }
+      if ("TEAMCITY_VERSION" in env3) {
+        return /^(9\.(0*[1-9]\d*)\.|\d{2,}\.)/.test(env3.TEAMCITY_VERSION) ? 1 : 0;
+      }
+      if ("TERM_PROGRAM" in env3) {
+        var version3 = parseInt((env3.TERM_PROGRAM_VERSION || "").split(".")[0], 10);
+        switch (env3.TERM_PROGRAM) {
+          case "iTerm.app":
+            return version3 >= 3 ? 3 : 2;
+          case "Hyper":
+            return 3;
+          case "Apple_Terminal":
+            return 2;
+        }
+      }
+      if (/-256(color)?$/i.test(env3.TERM)) {
+        return 2;
+      }
+      if (/^screen|^xterm|^vt100|^rxvt|color|ansi|cygwin|linux/i.test(env3.TERM)) {
+        return 1;
+      }
+      if ("COLORTERM" in env3) {
+        return 1;
+      }
+      if (env3.TERM === "dumb") {
+        return min;
+      }
+      return min;
+    }
+    function getSupportLevel(stream) {
+      var level = supportsColor2(stream);
+      return translateLevel2(level);
+    }
+    module2.exports = {
+      supportsColor: getSupportLevel,
+      stdout: getSupportLevel(process.stdout),
+      stderr: getSupportLevel(process.stderr)
+    };
+  }
+});
+
+// ../node_modules/@colors/colors/lib/custom/trap.js
+var require_trap = __commonJS({
+  "../node_modules/@colors/colors/lib/custom/trap.js"(exports2, module2) {
+    "use strict";
+    module2["exports"] = function runTheTrap(text, options) {
+      var result = "";
+      text = text || "Run the trap, drop the bass";
+      text = text.split("");
+      var trap = {
+        a: ["@", "\u0104", "\u023A", "\u0245", "\u0394", "\u039B", "\u0414"],
+        b: ["\xDF", "\u0181", "\u0243", "\u026E", "\u03B2", "\u0E3F"],
+        c: ["\xA9", "\u023B", "\u03FE"],
+        d: ["\xD0", "\u018A", "\u0500", "\u0501", "\u0502", "\u0503"],
+        e: [
+          "\xCB",
+          "\u0115",
+          "\u018E",
+          "\u0258",
+          "\u03A3",
+          "\u03BE",
+          "\u04BC",
+          "\u0A6C"
+        ],
+        f: ["\u04FA"],
+        g: ["\u0262"],
+        h: ["\u0126", "\u0195", "\u04A2", "\u04BA", "\u04C7", "\u050A"],
+        i: ["\u0F0F"],
+        j: ["\u0134"],
+        k: ["\u0138", "\u04A0", "\u04C3", "\u051E"],
+        l: ["\u0139"],
+        m: ["\u028D", "\u04CD", "\u04CE", "\u0520", "\u0521", "\u0D69"],
+        n: ["\xD1", "\u014B", "\u019D", "\u0376", "\u03A0", "\u048A"],
+        o: [
+          "\xD8",
+          "\xF5",
+          "\xF8",
+          "\u01FE",
+          "\u0298",
+          "\u047A",
+          "\u05DD",
+          "\u06DD",
+          "\u0E4F"
+        ],
+        p: ["\u01F7", "\u048E"],
+        q: ["\u09CD"],
+        r: ["\xAE", "\u01A6", "\u0210", "\u024C", "\u0280", "\u042F"],
+        s: ["\xA7", "\u03DE", "\u03DF", "\u03E8"],
+        t: ["\u0141", "\u0166", "\u0373"],
+        u: ["\u01B1", "\u054D"],
+        v: ["\u05D8"],
+        w: ["\u0428", "\u0460", "\u047C", "\u0D70"],
+        x: ["\u04B2", "\u04FE", "\u04FC", "\u04FD"],
+        y: ["\xA5", "\u04B0", "\u04CB"],
+        z: ["\u01B5", "\u0240"]
+      };
+      text.forEach(function(c) {
+        c = c.toLowerCase();
+        var chars = trap[c] || [" "];
+        var rand = Math.floor(Math.random() * chars.length);
+        if (typeof trap[c] !== "undefined") {
+          result += trap[c][rand];
+        } else {
+          result += c;
+        }
+      });
+      return result;
+    };
+  }
+});
+
+// ../node_modules/@colors/colors/lib/custom/zalgo.js
+var require_zalgo = __commonJS({
+  "../node_modules/@colors/colors/lib/custom/zalgo.js"(exports2, module2) {
+    "use strict";
+    module2["exports"] = function zalgo(text, options) {
+      text = text || "   he is here   ";
+      var soul = {
+        "up": [
+          "\u030D",
+          "\u030E",
+          "\u0304",
+          "\u0305",
+          "\u033F",
+          "\u0311",
+          "\u0306",
+          "\u0310",
+          "\u0352",
+          "\u0357",
+          "\u0351",
+          "\u0307",
+          "\u0308",
+          "\u030A",
+          "\u0342",
+          "\u0313",
+          "\u0308",
+          "\u034A",
+          "\u034B",
+          "\u034C",
+          "\u0303",
+          "\u0302",
+          "\u030C",
+          "\u0350",
+          "\u0300",
+          "\u0301",
+          "\u030B",
+          "\u030F",
+          "\u0312",
+          "\u0313",
+          "\u0314",
+          "\u033D",
+          "\u0309",
+          "\u0363",
+          "\u0364",
+          "\u0365",
+          "\u0366",
+          "\u0367",
+          "\u0368",
+          "\u0369",
+          "\u036A",
+          "\u036B",
+          "\u036C",
+          "\u036D",
+          "\u036E",
+          "\u036F",
+          "\u033E",
+          "\u035B",
+          "\u0346",
+          "\u031A"
+        ],
+        "down": [
+          "\u0316",
+          "\u0317",
+          "\u0318",
+          "\u0319",
+          "\u031C",
+          "\u031D",
+          "\u031E",
+          "\u031F",
+          "\u0320",
+          "\u0324",
+          "\u0325",
+          "\u0326",
+          "\u0329",
+          "\u032A",
+          "\u032B",
+          "\u032C",
+          "\u032D",
+          "\u032E",
+          "\u032F",
+          "\u0330",
+          "\u0331",
+          "\u0332",
+          "\u0333",
+          "\u0339",
+          "\u033A",
+          "\u033B",
+          "\u033C",
+          "\u0345",
+          "\u0347",
+          "\u0348",
+          "\u0349",
+          "\u034D",
+          "\u034E",
+          "\u0353",
+          "\u0354",
+          "\u0355",
+          "\u0356",
+          "\u0359",
+          "\u035A",
+          "\u0323"
+        ],
+        "mid": [
+          "\u0315",
+          "\u031B",
+          "\u0300",
+          "\u0301",
+          "\u0358",
+          "\u0321",
+          "\u0322",
+          "\u0327",
+          "\u0328",
+          "\u0334",
+          "\u0335",
+          "\u0336",
+          "\u035C",
+          "\u035D",
+          "\u035E",
+          "\u035F",
+          "\u0360",
+          "\u0362",
+          "\u0338",
+          "\u0337",
+          "\u0361",
+          " \u0489"
+        ]
+      };
+      var all = [].concat(soul.up, soul.down, soul.mid);
+      function randomNumber(range) {
+        var r = Math.floor(Math.random() * range);
+        return r;
+      }
+      function isChar(character) {
+        var bool = false;
+        all.filter(function(i) {
+          bool = i === character;
+        });
+        return bool;
+      }
+      function heComes(text2, options2) {
+        var result = "";
+        var counts;
+        var l;
+        options2 = options2 || {};
+        options2["up"] = typeof options2["up"] !== "undefined" ? options2["up"] : true;
+        options2["mid"] = typeof options2["mid"] !== "undefined" ? options2["mid"] : true;
+        options2["down"] = typeof options2["down"] !== "undefined" ? options2["down"] : true;
+        options2["size"] = typeof options2["size"] !== "undefined" ? options2["size"] : "maxi";
+        text2 = text2.split("");
+        for (l in text2) {
+          if (isChar(l)) {
+            continue;
+          }
+          result = result + text2[l];
+          counts = { "up": 0, "down": 0, "mid": 0 };
+          switch (options2.size) {
+            case "mini":
+              counts.up = randomNumber(8);
+              counts.mid = randomNumber(2);
+              counts.down = randomNumber(8);
+              break;
+            case "maxi":
+              counts.up = randomNumber(16) + 3;
+              counts.mid = randomNumber(4) + 1;
+              counts.down = randomNumber(64) + 3;
+              break;
+            default:
+              counts.up = randomNumber(8) + 1;
+              counts.mid = randomNumber(6) / 2;
+              counts.down = randomNumber(8) + 1;
+              break;
+          }
+          var arr = ["up", "mid", "down"];
+          for (var d in arr) {
+            var index = arr[d];
+            for (var i = 0; i <= counts[index]; i++) {
+              if (options2[index]) {
+                result = result + soul[index][randomNumber(soul[index].length)];
+              }
+            }
+          }
+        }
+        return result;
+      }
+      return heComes(text, options);
+    };
+  }
+});
+
+// ../node_modules/@colors/colors/lib/maps/america.js
+var require_america = __commonJS({
+  "../node_modules/@colors/colors/lib/maps/america.js"(exports2, module2) {
+    "use strict";
+    module2["exports"] = function(colors) {
+      return function(letter, i, exploded) {
+        if (letter === " ") return letter;
+        switch (i % 3) {
+          case 0:
+            return colors.red(letter);
+          case 1:
+            return colors.white(letter);
+          case 2:
+            return colors.blue(letter);
+        }
+      };
+    };
+  }
+});
+
+// ../node_modules/@colors/colors/lib/maps/zebra.js
+var require_zebra = __commonJS({
+  "../node_modules/@colors/colors/lib/maps/zebra.js"(exports2, module2) {
+    "use strict";
+    module2["exports"] = function(colors) {
+      return function(letter, i, exploded) {
+        return i % 2 === 0 ? letter : colors.inverse(letter);
+      };
+    };
+  }
+});
+
+// ../node_modules/@colors/colors/lib/maps/rainbow.js
+var require_rainbow = __commonJS({
+  "../node_modules/@colors/colors/lib/maps/rainbow.js"(exports2, module2) {
+    "use strict";
+    module2["exports"] = function(colors) {
+      var rainbowColors = ["red", "yellow", "green", "blue", "magenta"];
+      return function(letter, i, exploded) {
+        if (letter === " ") {
+          return letter;
+        } else {
+          return colors[rainbowColors[i++ % rainbowColors.length]](letter);
+        }
+      };
+    };
+  }
+});
+
+// ../node_modules/@colors/colors/lib/maps/random.js
+var require_random = __commonJS({
+  "../node_modules/@colors/colors/lib/maps/random.js"(exports2, module2) {
+    "use strict";
+    module2["exports"] = function(colors) {
+      var available = [
+        "underline",
+        "inverse",
+        "grey",
+        "yellow",
+        "red",
+        "green",
+        "blue",
+        "white",
+        "cyan",
+        "magenta",
+        "brightYellow",
+        "brightRed",
+        "brightGreen",
+        "brightBlue",
+        "brightWhite",
+        "brightCyan",
+        "brightMagenta"
+      ];
+      return function(letter, i, exploded) {
+        return letter === " " ? letter : colors[available[Math.round(Math.random() * (available.length - 2))]](letter);
+      };
+    };
+  }
+});
+
+// ../node_modules/@colors/colors/lib/colors.js
+var require_colors = __commonJS({
+  "../node_modules/@colors/colors/lib/colors.js"(exports2, module2) {
+    "use strict";
+    var colors = {};
+    module2["exports"] = colors;
+    colors.themes = {};
+    var util = require("util");
+    var ansiStyles3 = colors.styles = require_styles();
+    var defineProps = Object.defineProperties;
+    var newLineRegex = new RegExp(/[\r\n]+/g);
+    colors.supportsColor = require_supports_colors().supportsColor;
+    if (typeof colors.enabled === "undefined") {
+      colors.enabled = colors.supportsColor() !== false;
+    }
+    colors.enable = function() {
+      colors.enabled = true;
+    };
+    colors.disable = function() {
+      colors.enabled = false;
+    };
+    colors.stripColors = colors.strip = function(str) {
+      return ("" + str).replace(/\x1B\[\d+m/g, "");
+    };
+    var stylize = colors.stylize = function stylize2(str, style) {
+      if (!colors.enabled) {
+        return str + "";
+      }
+      var styleMap = ansiStyles3[style];
+      if (!styleMap && style in colors) {
+        return colors[style](str);
+      }
+      return styleMap.open + str + styleMap.close;
+    };
+    var matchOperatorsRe = /[|\\{}()[\]^$+*?.]/g;
+    var escapeStringRegexp = function(str) {
+      if (typeof str !== "string") {
+        throw new TypeError("Expected a string");
+      }
+      return str.replace(matchOperatorsRe, "\\$&");
+    };
+    function build(_styles) {
+      var builder = function builder2() {
+        return applyStyle2.apply(builder2, arguments);
+      };
+      builder._styles = _styles;
+      builder.__proto__ = proto2;
+      return builder;
+    }
+    var styles4 = (function() {
+      var ret = {};
+      ansiStyles3.grey = ansiStyles3.gray;
+      Object.keys(ansiStyles3).forEach(function(key) {
+        ansiStyles3[key].closeRe = new RegExp(escapeStringRegexp(ansiStyles3[key].close), "g");
+        ret[key] = {
+          get: function() {
+            return build(this._styles.concat(key));
+          }
+        };
+      });
+      return ret;
+    })();
+    var proto2 = defineProps(function colors2() {
+    }, styles4);
+    function applyStyle2() {
+      var args = Array.prototype.slice.call(arguments);
+      var str = args.map(function(arg) {
+        if (arg != null && arg.constructor === String) {
+          return arg;
+        } else {
+          return util.inspect(arg);
+        }
+      }).join(" ");
+      if (!colors.enabled || !str) {
+        return str;
+      }
+      var newLinesPresent = str.indexOf("\n") != -1;
+      var nestedStyles = this._styles;
+      var i = nestedStyles.length;
+      while (i--) {
+        var code = ansiStyles3[nestedStyles[i]];
+        str = code.open + str.replace(code.closeRe, code.open) + code.close;
+        if (newLinesPresent) {
+          str = str.replace(newLineRegex, function(match) {
+            return code.close + match + code.open;
+          });
+        }
+      }
+      return str;
+    }
+    colors.setTheme = function(theme) {
+      if (typeof theme === "string") {
+        console.log("colors.setTheme now only accepts an object, not a string.  If you are trying to set a theme from a file, it is now your (the caller's) responsibility to require the file.  The old syntax looked like colors.setTheme(__dirname + '/../themes/generic-logging.js'); The new syntax looks like colors.setTheme(require(__dirname + '/../themes/generic-logging.js'));");
+        return;
+      }
+      for (var style in theme) {
+        (function(style2) {
+          colors[style2] = function(str) {
+            if (typeof theme[style2] === "object") {
+              var out = str;
+              for (var i in theme[style2]) {
+                out = colors[theme[style2][i]](out);
+              }
+              return out;
+            }
+            return colors[theme[style2]](str);
+          };
+        })(style);
+      }
+    };
+    function init2() {
+      var ret = {};
+      Object.keys(styles4).forEach(function(name) {
+        ret[name] = {
+          get: function() {
+            return build([name]);
+          }
+        };
+      });
+      return ret;
+    }
+    var sequencer = function sequencer2(map3, str) {
+      var exploded = str.split("");
+      exploded = exploded.map(map3);
+      return exploded.join("");
+    };
+    colors.trap = require_trap();
+    colors.zalgo = require_zalgo();
+    colors.maps = {};
+    colors.maps.america = require_america()(colors);
+    colors.maps.zebra = require_zebra()(colors);
+    colors.maps.rainbow = require_rainbow()(colors);
+    colors.maps.random = require_random()(colors);
+    for (map2 in colors.maps) {
+      (function(map3) {
+        colors[map3] = function(str) {
+          return sequencer(colors.maps[map3], str);
+        };
+      })(map2);
+    }
+    var map2;
+    defineProps(colors, init2());
+  }
+});
+
+// ../node_modules/@colors/colors/safe.js
+var require_safe = __commonJS({
+  "../node_modules/@colors/colors/safe.js"(exports2, module2) {
+    "use strict";
+    var colors = require_colors();
+    module2["exports"] = colors;
+  }
+});
+
+// ../node_modules/cli-table3/src/cell.js
+var require_cell = __commonJS({
+  "../node_modules/cli-table3/src/cell.js"(exports2, module2) {
+    "use strict";
+    var { info, debug } = require_debug2();
+    var utils = require_utils4();
+    var Cell = class _Cell {
+      /**
+       * A representation of a cell within the table.
+       * Implementations must have `init` and `draw` methods,
+       * as well as `colSpan`, `rowSpan`, `desiredHeight` and `desiredWidth` properties.
+       * @param options
+       * @constructor
+       */
+      constructor(options) {
+        this.setOptions(options);
+        this.x = null;
+        this.y = null;
+      }
+      setOptions(options) {
+        if (["boolean", "number", "bigint", "string"].indexOf(typeof options) !== -1) {
+          options = { content: "" + options };
+        }
+        options = options || {};
+        this.options = options;
+        let content = options.content;
+        if (["boolean", "number", "bigint", "string"].indexOf(typeof content) !== -1) {
+          this.content = String(content);
+        } else if (!content) {
+          this.content = this.options.href || "";
+        } else {
+          throw new Error("Content needs to be a primitive, got: " + typeof content);
+        }
+        this.colSpan = options.colSpan || 1;
+        this.rowSpan = options.rowSpan || 1;
+        if (this.options.href) {
+          Object.defineProperty(this, "href", {
+            get() {
+              return this.options.href;
+            }
+          });
+        }
+      }
+      mergeTableOptions(tableOptions, cells) {
+        this.cells = cells;
+        let optionsChars = this.options.chars || {};
+        let tableChars = tableOptions.chars;
+        let chars = this.chars = {};
+        CHAR_NAMES.forEach(function(name) {
+          setOption(optionsChars, tableChars, name, chars);
+        });
+        this.truncate = this.options.truncate || tableOptions.truncate;
+        let style = this.options.style = this.options.style || {};
+        let tableStyle = tableOptions.style;
+        setOption(style, tableStyle, "padding-left", this);
+        setOption(style, tableStyle, "padding-right", this);
+        this.head = style.head || tableStyle.head;
+        this.border = style.border || tableStyle.border;
+        this.fixedWidth = tableOptions.colWidths[this.x];
+        this.lines = this.computeLines(tableOptions);
+        this.desiredWidth = utils.strlen(this.content) + this.paddingLeft + this.paddingRight;
+        this.desiredHeight = this.lines.length;
+      }
+      computeLines(tableOptions) {
+        const tableWordWrap = tableOptions.wordWrap || tableOptions.textWrap;
+        const { wordWrap = tableWordWrap } = this.options;
+        if (this.fixedWidth && wordWrap) {
+          this.fixedWidth -= this.paddingLeft + this.paddingRight;
+          if (this.colSpan) {
+            let i = 1;
+            while (i < this.colSpan) {
+              this.fixedWidth += tableOptions.colWidths[this.x + i];
+              i++;
+            }
+          }
+          const { wrapOnWordBoundary: tableWrapOnWordBoundary = true } = tableOptions;
+          const { wrapOnWordBoundary = tableWrapOnWordBoundary } = this.options;
+          return this.wrapLines(utils.wordWrap(this.fixedWidth, this.content, wrapOnWordBoundary));
+        }
+        return this.wrapLines(this.content.split("\n"));
+      }
+      wrapLines(computedLines) {
+        const lines = utils.colorizeLines(computedLines);
+        if (this.href) {
+          return lines.map((line) => utils.hyperlink(this.href, line));
+        }
+        return lines;
+      }
+      /**
+       * Initializes the Cells data structure.
+       *
+       * @param tableOptions - A fully populated set of tableOptions.
+       * In addition to the standard default values, tableOptions must have fully populated the
+       * `colWidths` and `rowWidths` arrays. Those arrays must have lengths equal to the number
+       * of columns or rows (respectively) in this table, and each array item must be a Number.
+       *
+       */
+      init(tableOptions) {
+        let x = this.x;
+        let y = this.y;
+        this.widths = tableOptions.colWidths.slice(x, x + this.colSpan);
+        this.heights = tableOptions.rowHeights.slice(y, y + this.rowSpan);
+        this.width = this.widths.reduce(sumPlusOne, -1);
+        this.height = this.heights.reduce(sumPlusOne, -1);
+        this.hAlign = this.options.hAlign || tableOptions.colAligns[x];
+        this.vAlign = this.options.vAlign || tableOptions.rowAligns[y];
+        this.drawRight = x + this.colSpan == tableOptions.colWidths.length;
+      }
+      /**
+       * Draws the given line of the cell.
+       * This default implementation defers to methods `drawTop`, `drawBottom`, `drawLine` and `drawEmpty`.
+       * @param lineNum - can be `top`, `bottom` or a numerical line number.
+       * @param spanningCell - will be a number if being called from a RowSpanCell, and will represent how
+       * many rows below it's being called from. Otherwise it's undefined.
+       * @returns {String} The representation of this line.
+       */
+      draw(lineNum, spanningCell) {
+        if (lineNum == "top") return this.drawTop(this.drawRight);
+        if (lineNum == "bottom") return this.drawBottom(this.drawRight);
+        let content = utils.truncate(this.content, 10, this.truncate);
+        if (!lineNum) {
+          info(`${this.y}-${this.x}: ${this.rowSpan - lineNum}x${this.colSpan} Cell ${content}`);
+        } else {
+        }
+        let padLen = Math.max(this.height - this.lines.length, 0);
+        let padTop;
+        switch (this.vAlign) {
+          case "center":
+            padTop = Math.ceil(padLen / 2);
+            break;
+          case "bottom":
+            padTop = padLen;
+            break;
+          default:
+            padTop = 0;
+        }
+        if (lineNum < padTop || lineNum >= padTop + this.lines.length) {
+          return this.drawEmpty(this.drawRight, spanningCell);
+        }
+        let forceTruncation = this.lines.length > this.height && lineNum + 1 >= this.height;
+        return this.drawLine(lineNum - padTop, this.drawRight, forceTruncation, spanningCell);
+      }
+      /**
+       * Renders the top line of the cell.
+       * @param drawRight - true if this method should render the right edge of the cell.
+       * @returns {String}
+       */
+      drawTop(drawRight) {
+        let content = [];
+        if (this.cells) {
+          this.widths.forEach(function(width, index) {
+            content.push(this._topLeftChar(index));
+            content.push(utils.repeat(this.chars[this.y == 0 ? "top" : "mid"], width));
+          }, this);
+        } else {
+          content.push(this._topLeftChar(0));
+          content.push(utils.repeat(this.chars[this.y == 0 ? "top" : "mid"], this.width));
+        }
+        if (drawRight) {
+          content.push(this.chars[this.y == 0 ? "topRight" : "rightMid"]);
+        }
+        return this.wrapWithStyleColors("border", content.join(""));
+      }
+      _topLeftChar(offset) {
+        let x = this.x + offset;
+        let leftChar;
+        if (this.y == 0) {
+          leftChar = x == 0 ? "topLeft" : offset == 0 ? "topMid" : "top";
+        } else {
+          if (x == 0) {
+            leftChar = "leftMid";
+          } else {
+            leftChar = offset == 0 ? "midMid" : "bottomMid";
+            if (this.cells) {
+              let spanAbove = this.cells[this.y - 1][x] instanceof _Cell.ColSpanCell;
+              if (spanAbove) {
+                leftChar = offset == 0 ? "topMid" : "mid";
+              }
+              if (offset == 0) {
+                let i = 1;
+                while (this.cells[this.y][x - i] instanceof _Cell.ColSpanCell) {
+                  i++;
+                }
+                if (this.cells[this.y][x - i] instanceof _Cell.RowSpanCell) {
+                  leftChar = "leftMid";
+                }
+              }
+            }
+          }
+        }
+        return this.chars[leftChar];
+      }
+      wrapWithStyleColors(styleProperty, content) {
+        if (this[styleProperty] && this[styleProperty].length) {
+          try {
+            let colors = require_safe();
+            for (let i = this[styleProperty].length - 1; i >= 0; i--) {
+              colors = colors[this[styleProperty][i]];
+            }
+            return colors(content);
+          } catch (e) {
+            return content;
+          }
+        } else {
+          return content;
+        }
+      }
+      /**
+       * Renders a line of text.
+       * @param lineNum - Which line of text to render. This is not necessarily the line within the cell.
+       * There may be top-padding above the first line of text.
+       * @param drawRight - true if this method should render the right edge of the cell.
+       * @param forceTruncationSymbol - `true` if the rendered text should end with the truncation symbol even
+       * if the text fits. This is used when the cell is vertically truncated. If `false` the text should
+       * only include the truncation symbol if the text will not fit horizontally within the cell width.
+       * @param spanningCell - a number of if being called from a RowSpanCell. (how many rows below). otherwise undefined.
+       * @returns {String}
+       */
+      drawLine(lineNum, drawRight, forceTruncationSymbol, spanningCell) {
+        let left = this.chars[this.x == 0 ? "left" : "middle"];
+        if (this.x && spanningCell && this.cells) {
+          let cellLeft = this.cells[this.y + spanningCell][this.x - 1];
+          while (cellLeft instanceof ColSpanCell) {
+            cellLeft = this.cells[cellLeft.y][cellLeft.x - 1];
+          }
+          if (!(cellLeft instanceof RowSpanCell)) {
+            left = this.chars["rightMid"];
+          }
+        }
+        let leftPadding = utils.repeat(" ", this.paddingLeft);
+        let right = drawRight ? this.chars["right"] : "";
+        let rightPadding = utils.repeat(" ", this.paddingRight);
+        let line = this.lines[lineNum];
+        let len = this.width - (this.paddingLeft + this.paddingRight);
+        if (forceTruncationSymbol) line += this.truncate || "\u2026";
+        let content = utils.truncate(line, len, this.truncate);
+        content = utils.pad(content, len, " ", this.hAlign);
+        content = leftPadding + content + rightPadding;
+        return this.stylizeLine(left, content, right);
+      }
+      stylizeLine(left, content, right) {
+        left = this.wrapWithStyleColors("border", left);
+        right = this.wrapWithStyleColors("border", right);
+        if (this.y === 0) {
+          content = this.wrapWithStyleColors("head", content);
+        }
+        return left + content + right;
+      }
+      /**
+       * Renders the bottom line of the cell.
+       * @param drawRight - true if this method should render the right edge of the cell.
+       * @returns {String}
+       */
+      drawBottom(drawRight) {
+        let left = this.chars[this.x == 0 ? "bottomLeft" : "bottomMid"];
+        let content = utils.repeat(this.chars.bottom, this.width);
+        let right = drawRight ? this.chars["bottomRight"] : "";
+        return this.wrapWithStyleColors("border", left + content + right);
+      }
+      /**
+       * Renders a blank line of text within the cell. Used for top and/or bottom padding.
+       * @param drawRight - true if this method should render the right edge of the cell.
+       * @param spanningCell - a number of if being called from a RowSpanCell. (how many rows below). otherwise undefined.
+       * @returns {String}
+       */
+      drawEmpty(drawRight, spanningCell) {
+        let left = this.chars[this.x == 0 ? "left" : "middle"];
+        if (this.x && spanningCell && this.cells) {
+          let cellLeft = this.cells[this.y + spanningCell][this.x - 1];
+          while (cellLeft instanceof ColSpanCell) {
+            cellLeft = this.cells[cellLeft.y][cellLeft.x - 1];
+          }
+          if (!(cellLeft instanceof RowSpanCell)) {
+            left = this.chars["rightMid"];
+          }
+        }
+        let right = drawRight ? this.chars["right"] : "";
+        let content = utils.repeat(" ", this.width);
+        return this.stylizeLine(left, content, right);
+      }
+    };
+    var ColSpanCell = class {
+      /**
+       * A Cell that doesn't do anything. It just draws empty lines.
+       * Used as a placeholder in column spanning.
+       * @constructor
+       */
+      constructor() {
+      }
+      draw(lineNum) {
+        if (typeof lineNum === "number") {
+          debug(`${this.y}-${this.x}: 1x1 ColSpanCell`);
+        }
+        return "";
+      }
+      init() {
+      }
+      mergeTableOptions() {
+      }
+    };
+    var RowSpanCell = class {
+      /**
+       * A placeholder Cell for a Cell that spans multiple rows.
+       * It delegates rendering to the original cell, but adds the appropriate offset.
+       * @param originalCell
+       * @constructor
+       */
+      constructor(originalCell) {
+        this.originalCell = originalCell;
+      }
+      init(tableOptions) {
+        let y = this.y;
+        let originalY = this.originalCell.y;
+        this.cellOffset = y - originalY;
+        this.offset = findDimension(tableOptions.rowHeights, originalY, this.cellOffset);
+      }
+      draw(lineNum) {
+        if (lineNum == "top") {
+          return this.originalCell.draw(this.offset, this.cellOffset);
+        }
+        if (lineNum == "bottom") {
+          return this.originalCell.draw("bottom");
+        }
+        debug(`${this.y}-${this.x}: 1x${this.colSpan} RowSpanCell for ${this.originalCell.content}`);
+        return this.originalCell.draw(this.offset + 1 + lineNum);
+      }
+      mergeTableOptions() {
+      }
+    };
+    function firstDefined(...args) {
+      return args.filter((v) => v !== void 0 && v !== null).shift();
+    }
+    function setOption(objA, objB, nameB, targetObj) {
+      let nameA = nameB.split("-");
+      if (nameA.length > 1) {
+        nameA[1] = nameA[1].charAt(0).toUpperCase() + nameA[1].substr(1);
+        nameA = nameA.join("");
+        targetObj[nameA] = firstDefined(objA[nameA], objA[nameB], objB[nameA], objB[nameB]);
+      } else {
+        targetObj[nameB] = firstDefined(objA[nameB], objB[nameB]);
+      }
+    }
+    function findDimension(dimensionTable, startingIndex, span) {
+      let ret = dimensionTable[startingIndex];
+      for (let i = 1; i < span; i++) {
+        ret += 1 + dimensionTable[startingIndex + i];
+      }
+      return ret;
+    }
+    function sumPlusOne(a, b) {
+      return a + b + 1;
+    }
+    var CHAR_NAMES = [
+      "top",
+      "top-mid",
+      "top-left",
+      "top-right",
+      "bottom",
+      "bottom-mid",
+      "bottom-left",
+      "bottom-right",
+      "left",
+      "left-mid",
+      "mid",
+      "mid-mid",
+      "right",
+      "right-mid",
+      "middle"
+    ];
+    module2.exports = Cell;
+    module2.exports.ColSpanCell = ColSpanCell;
+    module2.exports.RowSpanCell = RowSpanCell;
+  }
+});
+
+// ../node_modules/cli-table3/src/layout-manager.js
+var require_layout_manager = __commonJS({
+  "../node_modules/cli-table3/src/layout-manager.js"(exports2, module2) {
+    "use strict";
+    var { warn, debug } = require_debug2();
+    var Cell = require_cell();
+    var { ColSpanCell, RowSpanCell } = Cell;
+    (function() {
+      function next(alloc, col) {
+        if (alloc[col] > 0) {
+          return next(alloc, col + 1);
+        }
+        return col;
+      }
+      function layoutTable(table) {
+        let alloc = {};
+        table.forEach(function(row, rowIndex) {
+          let col = 0;
+          row.forEach(function(cell) {
+            cell.y = rowIndex;
+            cell.x = rowIndex ? next(alloc, col) : col;
+            const rowSpan = cell.rowSpan || 1;
+            const colSpan = cell.colSpan || 1;
+            if (rowSpan > 1) {
+              for (let cs = 0; cs < colSpan; cs++) {
+                alloc[cell.x + cs] = rowSpan;
+              }
+            }
+            col = cell.x + colSpan;
+          });
+          Object.keys(alloc).forEach((idx) => {
+            alloc[idx]--;
+            if (alloc[idx] < 1) delete alloc[idx];
+          });
+        });
+      }
+      function maxWidth(table) {
+        let mw = 0;
+        table.forEach(function(row) {
+          row.forEach(function(cell) {
+            mw = Math.max(mw, cell.x + (cell.colSpan || 1));
+          });
+        });
+        return mw;
+      }
+      function maxHeight(table) {
+        return table.length;
+      }
+      function cellsConflict(cell1, cell2) {
+        let yMin1 = cell1.y;
+        let yMax1 = cell1.y - 1 + (cell1.rowSpan || 1);
+        let yMin2 = cell2.y;
+        let yMax2 = cell2.y - 1 + (cell2.rowSpan || 1);
+        let yConflict = !(yMin1 > yMax2 || yMin2 > yMax1);
+        let xMin1 = cell1.x;
+        let xMax1 = cell1.x - 1 + (cell1.colSpan || 1);
+        let xMin2 = cell2.x;
+        let xMax2 = cell2.x - 1 + (cell2.colSpan || 1);
+        let xConflict = !(xMin1 > xMax2 || xMin2 > xMax1);
+        return yConflict && xConflict;
+      }
+      function conflictExists(rows, x, y) {
+        let i_max = Math.min(rows.length - 1, y);
+        let cell = { x, y };
+        for (let i = 0; i <= i_max; i++) {
+          let row = rows[i];
+          for (let j = 0; j < row.length; j++) {
+            if (cellsConflict(cell, row[j])) {
+              return true;
+            }
+          }
+        }
+        return false;
+      }
+      function allBlank(rows, y, xMin, xMax) {
+        for (let x = xMin; x < xMax; x++) {
+          if (conflictExists(rows, x, y)) {
+            return false;
+          }
+        }
+        return true;
+      }
+      function addRowSpanCells(table) {
+        table.forEach(function(row, rowIndex) {
+          row.forEach(function(cell) {
+            for (let i = 1; i < cell.rowSpan; i++) {
+              let rowSpanCell = new RowSpanCell(cell);
+              rowSpanCell.x = cell.x;
+              rowSpanCell.y = cell.y + i;
+              rowSpanCell.colSpan = cell.colSpan;
+              insertCell(rowSpanCell, table[rowIndex + i]);
+            }
+          });
+        });
+      }
+      function addColSpanCells(cellRows) {
+        for (let rowIndex = cellRows.length - 1; rowIndex >= 0; rowIndex--) {
+          let cellColumns = cellRows[rowIndex];
+          for (let columnIndex = 0; columnIndex < cellColumns.length; columnIndex++) {
+            let cell = cellColumns[columnIndex];
+            for (let k = 1; k < cell.colSpan; k++) {
+              let colSpanCell = new ColSpanCell();
+              colSpanCell.x = cell.x + k;
+              colSpanCell.y = cell.y;
+              cellColumns.splice(columnIndex + 1, 0, colSpanCell);
+            }
+          }
+        }
+      }
+      function insertCell(cell, row) {
+        let x = 0;
+        while (x < row.length && row[x].x < cell.x) {
+          x++;
+        }
+        row.splice(x, 0, cell);
+      }
+      function fillInTable(table) {
+        let h_max = maxHeight(table);
+        let w_max = maxWidth(table);
+        debug(`Max rows: ${h_max}; Max cols: ${w_max}`);
+        for (let y = 0; y < h_max; y++) {
+          for (let x = 0; x < w_max; x++) {
+            if (!conflictExists(table, x, y)) {
+              let opts = { x, y, colSpan: 1, rowSpan: 1 };
+              x++;
+              while (x < w_max && !conflictExists(table, x, y)) {
+                opts.colSpan++;
+                x++;
+              }
+              let y2 = y + 1;
+              while (y2 < h_max && allBlank(table, y2, opts.x, opts.x + opts.colSpan)) {
+                opts.rowSpan++;
+                y2++;
+              }
+              let cell = new Cell(opts);
+              cell.x = opts.x;
+              cell.y = opts.y;
+              warn(`Missing cell at ${cell.y}-${cell.x}.`);
+              insertCell(cell, table[y]);
+            }
+          }
+        }
+      }
+      function generateCells(rows) {
+        return rows.map(function(row) {
+          if (!Array.isArray(row)) {
+            let key = Object.keys(row)[0];
+            row = row[key];
+            if (Array.isArray(row)) {
+              row = row.slice();
+              row.unshift(key);
+            } else {
+              row = [key, row];
+            }
+          }
+          return row.map(function(cell) {
+            return new Cell(cell);
+          });
+        });
+      }
+      function makeTableLayout(rows) {
+        let cellRows = generateCells(rows);
+        layoutTable(cellRows);
+        fillInTable(cellRows);
+        addRowSpanCells(cellRows);
+        addColSpanCells(cellRows);
+        return cellRows;
+      }
+      module2.exports = {
+        makeTableLayout,
+        layoutTable,
+        addRowSpanCells,
+        maxWidth,
+        fillInTable,
+        computeWidths: makeComputeWidths("colSpan", "desiredWidth", "x", 1),
+        computeHeights: makeComputeWidths("rowSpan", "desiredHeight", "y", 1)
+      };
+    })();
+    function makeComputeWidths(colSpan, desiredWidth, x, forcedMin) {
+      return function(vals, table) {
+        let result = [];
+        let spanners = [];
+        let auto = {};
+        table.forEach(function(row) {
+          row.forEach(function(cell) {
+            if ((cell[colSpan] || 1) > 1) {
+              spanners.push(cell);
+            } else {
+              result[cell[x]] = Math.max(result[cell[x]] || 0, cell[desiredWidth] || 0, forcedMin);
+            }
+          });
+        });
+        vals.forEach(function(val, index) {
+          if (typeof val === "number") {
+            result[index] = val;
+          }
+        });
+        for (let k = spanners.length - 1; k >= 0; k--) {
+          let cell = spanners[k];
+          let span = cell[colSpan];
+          let col = cell[x];
+          let existingWidth = result[col];
+          let editableCols = typeof vals[col] === "number" ? 0 : 1;
+          if (typeof existingWidth === "number") {
+            for (let i = 1; i < span; i++) {
+              existingWidth += 1 + result[col + i];
+              if (typeof vals[col + i] !== "number") {
+                editableCols++;
+              }
+            }
+          } else {
+            existingWidth = desiredWidth === "desiredWidth" ? cell.desiredWidth - 1 : 1;
+            if (!auto[col] || auto[col] < existingWidth) {
+              auto[col] = existingWidth;
+            }
+          }
+          if (cell[desiredWidth] > existingWidth) {
+            let i = 0;
+            while (editableCols > 0 && cell[desiredWidth] > existingWidth) {
+              if (typeof vals[col + i] !== "number") {
+                let dif = Math.round((cell[desiredWidth] - existingWidth) / editableCols);
+                existingWidth += dif;
+                result[col + i] += dif;
+                editableCols--;
+              }
+              i++;
+            }
+          }
+        }
+        Object.assign(vals, result, auto);
+        for (let j = 0; j < vals.length; j++) {
+          vals[j] = Math.max(forcedMin, vals[j] || 0);
+        }
+      };
+    }
+  }
+});
+
+// ../node_modules/cli-table3/src/table.js
+var require_table = __commonJS({
+  "../node_modules/cli-table3/src/table.js"(exports2, module2) {
+    "use strict";
+    var debug = require_debug2();
+    var utils = require_utils4();
+    var tableLayout = require_layout_manager();
+    var Table = class extends Array {
+      constructor(opts) {
+        super();
+        const options = utils.mergeOptions(opts);
+        Object.defineProperty(this, "options", {
+          value: options,
+          enumerable: options.debug
+        });
+        if (options.debug) {
+          switch (typeof options.debug) {
+            case "boolean":
+              debug.setDebugLevel(debug.WARN);
+              break;
+            case "number":
+              debug.setDebugLevel(options.debug);
+              break;
+            case "string":
+              debug.setDebugLevel(parseInt(options.debug, 10));
+              break;
+            default:
+              debug.setDebugLevel(debug.WARN);
+              debug.warn(`Debug option is expected to be boolean, number, or string. Received a ${typeof options.debug}`);
+          }
+          Object.defineProperty(this, "messages", {
+            get() {
+              return debug.debugMessages();
+            }
+          });
+        }
+      }
+      toString() {
+        let array2 = this;
+        let headersPresent = this.options.head && this.options.head.length;
+        if (headersPresent) {
+          array2 = [this.options.head];
+          if (this.length) {
+            array2.push.apply(array2, this);
+          }
+        } else {
+          this.options.style.head = [];
+        }
+        let cells = tableLayout.makeTableLayout(array2);
+        cells.forEach(function(row) {
+          row.forEach(function(cell) {
+            cell.mergeTableOptions(this.options, cells);
+          }, this);
+        }, this);
+        tableLayout.computeWidths(this.options.colWidths, cells);
+        tableLayout.computeHeights(this.options.rowHeights, cells);
+        cells.forEach(function(row) {
+          row.forEach(function(cell) {
+            cell.init(this.options);
+          }, this);
+        }, this);
+        let result = [];
+        for (let rowIndex = 0; rowIndex < cells.length; rowIndex++) {
+          let row = cells[rowIndex];
+          let heightOfRow = this.options.rowHeights[rowIndex];
+          if (rowIndex === 0 || !this.options.style.compact || rowIndex == 1 && headersPresent) {
+            doDraw(row, "top", result);
+          }
+          for (let lineNum = 0; lineNum < heightOfRow; lineNum++) {
+            doDraw(row, lineNum, result);
+          }
+          if (rowIndex + 1 == cells.length) {
+            doDraw(row, "bottom", result);
+          }
+        }
+        return result.join("\n");
+      }
+      get width() {
+        let str = this.toString().split("\n");
+        return str[0].length;
+      }
+    };
+    Table.reset = () => debug.reset();
+    function doDraw(row, lineNum, result) {
+      let line = [];
+      row.forEach(function(cell) {
+        line.push(cell.draw(lineNum));
+      });
+      let str = line.join("");
+      if (str.length) result.push(str);
+    }
+    module2.exports = Table;
+  }
+});
+
+// ../node_modules/cli-table3/index.js
+var require_cli_table3 = __commonJS({
+  "../node_modules/cli-table3/index.js"(exports2, module2) {
+    "use strict";
+    module2.exports = require_table();
+  }
+});
+
 // ../node_modules/esprima/dist/esprima.js
 var require_esprima = __commonJS({
   "../node_modules/esprima/dist/esprima.js"(exports2, module2) {
@@ -22515,7 +22811,7 @@ var require_esprima = __commonJS({
               return parse4(code, parsingOptions, delegate);
             }
             exports3.parseScript = parseScript;
-            function tokenize2(code, options, delegate) {
+            function tokenize(code, options, delegate) {
               var tokenizer = new tokenizer_1.Tokenizer(code, options);
               var tokens;
               tokens = [];
@@ -22538,7 +22834,7 @@ var require_esprima = __commonJS({
               }
               return tokens;
             }
-            exports3.tokenize = tokenize2;
+            exports3.tokenize = tokenize;
             var syntax_1 = __webpack_require__(2);
             exports3.Syntax = syntax_1.Syntax;
             exports3.version = "4.0.1";
@@ -29946,7 +30242,7 @@ var require_parse2 = __commonJS({
       define: define2,
       assign_non_prop_comments
     } = require_common();
-    var tokenize2 = (code) => esprima.tokenize(code, {
+    var tokenize = (code) => esprima.tokenize(code, {
       comment: true,
       loc: true
     });
@@ -30204,7 +30500,7 @@ var require_parse2 = __commonJS({
     var parse4 = (code, rev, no_comments) => {
       clean();
       current_code = code;
-      tokens = tokenize2(code);
+      tokens = tokenize(code);
       reviver = rev;
       remove_comments = no_comments;
       if (!tokens.length) {
@@ -30232,7 +30528,7 @@ var require_parse2 = __commonJS({
     };
     module2.exports = {
       parse: parse4,
-      tokenize: tokenize2
+      tokenize
     };
   }
 });
@@ -30314,18 +30610,18 @@ var require_stringify = __commonJS({
       return display_block || is_line_comment ? str + LF + deeper_gap : str;
     };
     var replacer = null;
-    var indent2 = EMPTY;
+    var indent = EMPTY;
     var clean = () => {
       replacer = null;
-      indent2 = EMPTY;
+      indent = EMPTY;
     };
     var join10 = (one, two, gap) => one ? two ? one + two.trim() + LF + gap : one.trimRight() + LF + gap : two ? two.trimRight() + LF + gap : EMPTY;
     var join_content = (inside, value, gap) => {
-      const comment = process_comments(value, PREFIX_BEFORE, gap + indent2, true);
+      const comment = process_comments(value, PREFIX_BEFORE, gap + indent, true);
       return join10(comment, inside, gap);
     };
     var array_stringify = (value, gap) => {
-      const deeper_gap = gap + indent2;
+      const deeper_gap = gap + indent;
       const { length } = value;
       let inside = EMPTY;
       let after_comma = EMPTY;
@@ -30354,7 +30650,7 @@ var require_stringify = __commonJS({
       if (!value) {
         return "null";
       }
-      const deeper_gap = gap + indent2;
+      const deeper_gap = gap + indent;
       let inside = EMPTY;
       let after_comma = EMPTY;
       let first = true;
@@ -30435,7 +30731,7 @@ var require_stringify = __commonJS({
         replacer_ = null;
       }
       replacer = replacer_;
-      indent2 = indent_;
+      indent = indent_;
       const str = is_primitive_object(value) ? JSON.stringify(value) : stringify2("", { "": value }, EMPTY);
       clean();
       return isObject3(value) ? process_comments(value, PREFIX_BEFORE_ALL, EMPTY, true).trimLeft() + str + process_comments(value, PREFIX_AFTER_ALL, EMPTY).trimRight() : str;
@@ -30447,7 +30743,7 @@ var require_stringify = __commonJS({
 var require_src3 = __commonJS({
   "../node_modules/comment-json/src/index.js"(exports2, module2) {
     "use strict";
-    var { parse: parse4, tokenize: tokenize2 } = require_parse2();
+    var { parse: parse4, tokenize } = require_parse2();
     var stringify2 = require_stringify();
     var { CommentArray } = require_array();
     var {
@@ -30472,532 +30768,12 @@ var require_src3 = __commonJS({
       PREFIX_AFTER_ALL,
       parse: parse4,
       stringify: stringify2,
-      tokenize: tokenize2,
+      tokenize,
       CommentArray,
       assign,
       moveComments,
       removeComments
     };
-  }
-});
-
-// ../node_modules/chalk/source/vendor/ansi-styles/index.js
-function assembleStyles2() {
-  const codes = /* @__PURE__ */ new Map();
-  for (const [groupName, group] of Object.entries(styles2)) {
-    for (const [styleName, style] of Object.entries(group)) {
-      styles2[styleName] = {
-        open: `\x1B[${style[0]}m`,
-        close: `\x1B[${style[1]}m`
-      };
-      group[styleName] = styles2[styleName];
-      codes.set(style[0], style[1]);
-    }
-    Object.defineProperty(styles2, groupName, {
-      value: group,
-      enumerable: false
-    });
-  }
-  Object.defineProperty(styles2, "codes", {
-    value: codes,
-    enumerable: false
-  });
-  styles2.color.close = "\x1B[39m";
-  styles2.bgColor.close = "\x1B[49m";
-  styles2.color.ansi = wrapAnsi162();
-  styles2.color.ansi256 = wrapAnsi2562();
-  styles2.color.ansi16m = wrapAnsi16m2();
-  styles2.bgColor.ansi = wrapAnsi162(ANSI_BACKGROUND_OFFSET2);
-  styles2.bgColor.ansi256 = wrapAnsi2562(ANSI_BACKGROUND_OFFSET2);
-  styles2.bgColor.ansi16m = wrapAnsi16m2(ANSI_BACKGROUND_OFFSET2);
-  Object.defineProperties(styles2, {
-    rgbToAnsi256: {
-      value(red, green, blue) {
-        if (red === green && green === blue) {
-          if (red < 8) {
-            return 16;
-          }
-          if (red > 248) {
-            return 231;
-          }
-          return Math.round((red - 8) / 247 * 24) + 232;
-        }
-        return 16 + 36 * Math.round(red / 255 * 5) + 6 * Math.round(green / 255 * 5) + Math.round(blue / 255 * 5);
-      },
-      enumerable: false
-    },
-    hexToRgb: {
-      value(hex3) {
-        const matches = /[a-f\d]{6}|[a-f\d]{3}/i.exec(hex3.toString(16));
-        if (!matches) {
-          return [0, 0, 0];
-        }
-        let [colorString] = matches;
-        if (colorString.length === 3) {
-          colorString = [...colorString].map((character) => character + character).join("");
-        }
-        const integer2 = Number.parseInt(colorString, 16);
-        return [
-          /* eslint-disable no-bitwise */
-          integer2 >> 16 & 255,
-          integer2 >> 8 & 255,
-          integer2 & 255
-          /* eslint-enable no-bitwise */
-        ];
-      },
-      enumerable: false
-    },
-    hexToAnsi256: {
-      value: (hex3) => styles2.rgbToAnsi256(...styles2.hexToRgb(hex3)),
-      enumerable: false
-    },
-    ansi256ToAnsi: {
-      value(code) {
-        if (code < 8) {
-          return 30 + code;
-        }
-        if (code < 16) {
-          return 90 + (code - 8);
-        }
-        let red;
-        let green;
-        let blue;
-        if (code >= 232) {
-          red = ((code - 232) * 10 + 8) / 255;
-          green = red;
-          blue = red;
-        } else {
-          code -= 16;
-          const remainder = code % 36;
-          red = Math.floor(code / 36) / 5;
-          green = Math.floor(remainder / 6) / 5;
-          blue = remainder % 6 / 5;
-        }
-        const value = Math.max(red, green, blue) * 2;
-        if (value === 0) {
-          return 30;
-        }
-        let result = 30 + (Math.round(blue) << 2 | Math.round(green) << 1 | Math.round(red));
-        if (value === 2) {
-          result += 60;
-        }
-        return result;
-      },
-      enumerable: false
-    },
-    rgbToAnsi: {
-      value: (red, green, blue) => styles2.ansi256ToAnsi(styles2.rgbToAnsi256(red, green, blue)),
-      enumerable: false
-    },
-    hexToAnsi: {
-      value: (hex3) => styles2.ansi256ToAnsi(styles2.hexToAnsi256(hex3)),
-      enumerable: false
-    }
-  });
-  return styles2;
-}
-var ANSI_BACKGROUND_OFFSET2, wrapAnsi162, wrapAnsi2562, wrapAnsi16m2, styles2, modifierNames2, foregroundColorNames2, backgroundColorNames2, colorNames2, ansiStyles2, ansi_styles_default2;
-var init_ansi_styles2 = __esm({
-  "../node_modules/chalk/source/vendor/ansi-styles/index.js"() {
-    "use strict";
-    ANSI_BACKGROUND_OFFSET2 = 10;
-    wrapAnsi162 = (offset = 0) => (code) => `\x1B[${code + offset}m`;
-    wrapAnsi2562 = (offset = 0) => (code) => `\x1B[${38 + offset};5;${code}m`;
-    wrapAnsi16m2 = (offset = 0) => (red, green, blue) => `\x1B[${38 + offset};2;${red};${green};${blue}m`;
-    styles2 = {
-      modifier: {
-        reset: [0, 0],
-        // 21 isn't widely supported and 22 does the same thing
-        bold: [1, 22],
-        dim: [2, 22],
-        italic: [3, 23],
-        underline: [4, 24],
-        overline: [53, 55],
-        inverse: [7, 27],
-        hidden: [8, 28],
-        strikethrough: [9, 29]
-      },
-      color: {
-        black: [30, 39],
-        red: [31, 39],
-        green: [32, 39],
-        yellow: [33, 39],
-        blue: [34, 39],
-        magenta: [35, 39],
-        cyan: [36, 39],
-        white: [37, 39],
-        // Bright color
-        blackBright: [90, 39],
-        gray: [90, 39],
-        // Alias of `blackBright`
-        grey: [90, 39],
-        // Alias of `blackBright`
-        redBright: [91, 39],
-        greenBright: [92, 39],
-        yellowBright: [93, 39],
-        blueBright: [94, 39],
-        magentaBright: [95, 39],
-        cyanBright: [96, 39],
-        whiteBright: [97, 39]
-      },
-      bgColor: {
-        bgBlack: [40, 49],
-        bgRed: [41, 49],
-        bgGreen: [42, 49],
-        bgYellow: [43, 49],
-        bgBlue: [44, 49],
-        bgMagenta: [45, 49],
-        bgCyan: [46, 49],
-        bgWhite: [47, 49],
-        // Bright color
-        bgBlackBright: [100, 49],
-        bgGray: [100, 49],
-        // Alias of `bgBlackBright`
-        bgGrey: [100, 49],
-        // Alias of `bgBlackBright`
-        bgRedBright: [101, 49],
-        bgGreenBright: [102, 49],
-        bgYellowBright: [103, 49],
-        bgBlueBright: [104, 49],
-        bgMagentaBright: [105, 49],
-        bgCyanBright: [106, 49],
-        bgWhiteBright: [107, 49]
-      }
-    };
-    modifierNames2 = Object.keys(styles2.modifier);
-    foregroundColorNames2 = Object.keys(styles2.color);
-    backgroundColorNames2 = Object.keys(styles2.bgColor);
-    colorNames2 = [...foregroundColorNames2, ...backgroundColorNames2];
-    ansiStyles2 = assembleStyles2();
-    ansi_styles_default2 = ansiStyles2;
-  }
-});
-
-// ../node_modules/chalk/source/vendor/supports-color/index.js
-function hasFlag(flag, argv = globalThis.Deno ? globalThis.Deno.args : import_node_process11.default.argv) {
-  const prefix = flag.startsWith("-") ? "" : flag.length === 1 ? "-" : "--";
-  const position = argv.indexOf(prefix + flag);
-  const terminatorPosition = argv.indexOf("--");
-  return position !== -1 && (terminatorPosition === -1 || position < terminatorPosition);
-}
-function envForceColor() {
-  if ("FORCE_COLOR" in env2) {
-    if (env2.FORCE_COLOR === "true") {
-      return 1;
-    }
-    if (env2.FORCE_COLOR === "false") {
-      return 0;
-    }
-    return env2.FORCE_COLOR.length === 0 ? 1 : Math.min(Number.parseInt(env2.FORCE_COLOR, 10), 3);
-  }
-}
-function translateLevel(level) {
-  if (level === 0) {
-    return false;
-  }
-  return {
-    level,
-    hasBasic: true,
-    has256: level >= 2,
-    has16m: level >= 3
-  };
-}
-function _supportsColor(haveStream, { streamIsTTY, sniffFlags = true } = {}) {
-  const noFlagForceColor = envForceColor();
-  if (noFlagForceColor !== void 0) {
-    flagForceColor = noFlagForceColor;
-  }
-  const forceColor = sniffFlags ? flagForceColor : noFlagForceColor;
-  if (forceColor === 0) {
-    return 0;
-  }
-  if (sniffFlags) {
-    if (hasFlag("color=16m") || hasFlag("color=full") || hasFlag("color=truecolor")) {
-      return 3;
-    }
-    if (hasFlag("color=256")) {
-      return 2;
-    }
-  }
-  if ("TF_BUILD" in env2 && "AGENT_NAME" in env2) {
-    return 1;
-  }
-  if (haveStream && !streamIsTTY && forceColor === void 0) {
-    return 0;
-  }
-  const min = forceColor || 0;
-  if (env2.TERM === "dumb") {
-    return min;
-  }
-  if (import_node_process11.default.platform === "win32") {
-    const osRelease = import_node_os8.default.release().split(".");
-    if (Number(osRelease[0]) >= 10 && Number(osRelease[2]) >= 10586) {
-      return Number(osRelease[2]) >= 14931 ? 3 : 2;
-    }
-    return 1;
-  }
-  if ("CI" in env2) {
-    if (["GITHUB_ACTIONS", "GITEA_ACTIONS", "CIRCLECI"].some((key) => key in env2)) {
-      return 3;
-    }
-    if (["TRAVIS", "APPVEYOR", "GITLAB_CI", "BUILDKITE", "DRONE"].some((sign) => sign in env2) || env2.CI_NAME === "codeship") {
-      return 1;
-    }
-    return min;
-  }
-  if ("TEAMCITY_VERSION" in env2) {
-    return /^(9\.(0*[1-9]\d*)\.|\d{2,}\.)/.test(env2.TEAMCITY_VERSION) ? 1 : 0;
-  }
-  if (env2.COLORTERM === "truecolor") {
-    return 3;
-  }
-  if (env2.TERM === "xterm-kitty") {
-    return 3;
-  }
-  if (env2.TERM === "xterm-ghostty") {
-    return 3;
-  }
-  if (env2.TERM === "wezterm") {
-    return 3;
-  }
-  if ("TERM_PROGRAM" in env2) {
-    const version3 = Number.parseInt((env2.TERM_PROGRAM_VERSION || "").split(".")[0], 10);
-    switch (env2.TERM_PROGRAM) {
-      case "iTerm.app": {
-        return version3 >= 3 ? 3 : 2;
-      }
-      case "Apple_Terminal": {
-        return 2;
-      }
-    }
-  }
-  if (/-256(color)?$/i.test(env2.TERM)) {
-    return 2;
-  }
-  if (/^screen|^xterm|^vt100|^vt220|^rxvt|color|ansi|cygwin|linux/i.test(env2.TERM)) {
-    return 1;
-  }
-  if ("COLORTERM" in env2) {
-    return 1;
-  }
-  return min;
-}
-function createSupportsColor(stream, options = {}) {
-  const level = _supportsColor(stream, {
-    streamIsTTY: stream && stream.isTTY,
-    ...options
-  });
-  return translateLevel(level);
-}
-var import_node_process11, import_node_os8, import_node_tty, env2, flagForceColor, supportsColor, supports_color_default;
-var init_supports_color = __esm({
-  "../node_modules/chalk/source/vendor/supports-color/index.js"() {
-    "use strict";
-    import_node_process11 = __toESM(require("process"), 1);
-    import_node_os8 = __toESM(require("os"), 1);
-    import_node_tty = __toESM(require("tty"), 1);
-    ({ env: env2 } = import_node_process11.default);
-    if (hasFlag("no-color") || hasFlag("no-colors") || hasFlag("color=false") || hasFlag("color=never")) {
-      flagForceColor = 0;
-    } else if (hasFlag("color") || hasFlag("colors") || hasFlag("color=true") || hasFlag("color=always")) {
-      flagForceColor = 1;
-    }
-    supportsColor = {
-      stdout: createSupportsColor({ isTTY: import_node_tty.default.isatty(1) }),
-      stderr: createSupportsColor({ isTTY: import_node_tty.default.isatty(2) })
-    };
-    supports_color_default = supportsColor;
-  }
-});
-
-// ../node_modules/chalk/source/utilities.js
-function stringReplaceAll(string4, substring, replacer) {
-  let index = string4.indexOf(substring);
-  if (index === -1) {
-    return string4;
-  }
-  const substringLength = substring.length;
-  let endIndex = 0;
-  let returnValue = "";
-  do {
-    returnValue += string4.slice(endIndex, index) + substring + replacer;
-    endIndex = index + substringLength;
-    index = string4.indexOf(substring, endIndex);
-  } while (index !== -1);
-  returnValue += string4.slice(endIndex);
-  return returnValue;
-}
-function stringEncaseCRLFWithFirstIndex(string4, prefix, postfix, index) {
-  let endIndex = 0;
-  let returnValue = "";
-  do {
-    const gotCR = string4[index - 1] === "\r";
-    returnValue += string4.slice(endIndex, gotCR ? index - 1 : index) + prefix + (gotCR ? "\r\n" : "\n") + postfix;
-    endIndex = index + 1;
-    index = string4.indexOf("\n", endIndex);
-  } while (index !== -1);
-  returnValue += string4.slice(endIndex);
-  return returnValue;
-}
-var init_utilities2 = __esm({
-  "../node_modules/chalk/source/utilities.js"() {
-    "use strict";
-  }
-});
-
-// ../node_modules/chalk/source/index.js
-function createChalk(options) {
-  return chalkFactory(options);
-}
-var stdoutColor, stderrColor, GENERATOR, STYLER, IS_EMPTY, levelMapping, styles3, applyOptions, chalkFactory, getModelAnsi, usedModels, proto, createStyler, createBuilder, applyStyle, chalk, chalkStderr, source_default;
-var init_source = __esm({
-  "../node_modules/chalk/source/index.js"() {
-    "use strict";
-    init_ansi_styles2();
-    init_supports_color();
-    init_utilities2();
-    ({ stdout: stdoutColor, stderr: stderrColor } = supports_color_default);
-    GENERATOR = /* @__PURE__ */ Symbol("GENERATOR");
-    STYLER = /* @__PURE__ */ Symbol("STYLER");
-    IS_EMPTY = /* @__PURE__ */ Symbol("IS_EMPTY");
-    levelMapping = [
-      "ansi",
-      "ansi",
-      "ansi256",
-      "ansi16m"
-    ];
-    styles3 = /* @__PURE__ */ Object.create(null);
-    applyOptions = (object2, options = {}) => {
-      if (options.level && !(Number.isInteger(options.level) && options.level >= 0 && options.level <= 3)) {
-        throw new Error("The `level` option should be an integer from 0 to 3");
-      }
-      const colorLevel = stdoutColor ? stdoutColor.level : 0;
-      object2.level = options.level === void 0 ? colorLevel : options.level;
-    };
-    chalkFactory = (options) => {
-      const chalk2 = (...strings) => strings.join(" ");
-      applyOptions(chalk2, options);
-      Object.setPrototypeOf(chalk2, createChalk.prototype);
-      return chalk2;
-    };
-    Object.setPrototypeOf(createChalk.prototype, Function.prototype);
-    for (const [styleName, style] of Object.entries(ansi_styles_default2)) {
-      styles3[styleName] = {
-        get() {
-          const builder = createBuilder(this, createStyler(style.open, style.close, this[STYLER]), this[IS_EMPTY]);
-          Object.defineProperty(this, styleName, { value: builder });
-          return builder;
-        }
-      };
-    }
-    styles3.visible = {
-      get() {
-        const builder = createBuilder(this, this[STYLER], true);
-        Object.defineProperty(this, "visible", { value: builder });
-        return builder;
-      }
-    };
-    getModelAnsi = (model, level, type, ...arguments_) => {
-      if (model === "rgb") {
-        if (level === "ansi16m") {
-          return ansi_styles_default2[type].ansi16m(...arguments_);
-        }
-        if (level === "ansi256") {
-          return ansi_styles_default2[type].ansi256(ansi_styles_default2.rgbToAnsi256(...arguments_));
-        }
-        return ansi_styles_default2[type].ansi(ansi_styles_default2.rgbToAnsi(...arguments_));
-      }
-      if (model === "hex") {
-        return getModelAnsi("rgb", level, type, ...ansi_styles_default2.hexToRgb(...arguments_));
-      }
-      return ansi_styles_default2[type][model](...arguments_);
-    };
-    usedModels = ["rgb", "hex", "ansi256"];
-    for (const model of usedModels) {
-      styles3[model] = {
-        get() {
-          const { level } = this;
-          return function(...arguments_) {
-            const styler = createStyler(getModelAnsi(model, levelMapping[level], "color", ...arguments_), ansi_styles_default2.color.close, this[STYLER]);
-            return createBuilder(this, styler, this[IS_EMPTY]);
-          };
-        }
-      };
-      const bgModel = "bg" + model[0].toUpperCase() + model.slice(1);
-      styles3[bgModel] = {
-        get() {
-          const { level } = this;
-          return function(...arguments_) {
-            const styler = createStyler(getModelAnsi(model, levelMapping[level], "bgColor", ...arguments_), ansi_styles_default2.bgColor.close, this[STYLER]);
-            return createBuilder(this, styler, this[IS_EMPTY]);
-          };
-        }
-      };
-    }
-    proto = Object.defineProperties(() => {
-    }, {
-      ...styles3,
-      level: {
-        enumerable: true,
-        get() {
-          return this[GENERATOR].level;
-        },
-        set(level) {
-          this[GENERATOR].level = level;
-        }
-      }
-    });
-    createStyler = (open, close, parent) => {
-      let openAll;
-      let closeAll;
-      if (parent === void 0) {
-        openAll = open;
-        closeAll = close;
-      } else {
-        openAll = parent.openAll + open;
-        closeAll = close + parent.closeAll;
-      }
-      return {
-        open,
-        close,
-        openAll,
-        closeAll,
-        parent
-      };
-    };
-    createBuilder = (self, _styler, _isEmpty) => {
-      const builder = (...arguments_) => applyStyle(builder, arguments_.length === 1 ? "" + arguments_[0] : arguments_.join(" "));
-      Object.setPrototypeOf(builder, proto);
-      builder[GENERATOR] = self;
-      builder[STYLER] = _styler;
-      builder[IS_EMPTY] = _isEmpty;
-      return builder;
-    };
-    applyStyle = (self, string4) => {
-      if (self.level <= 0 || !string4) {
-        return self[IS_EMPTY] ? "" : string4;
-      }
-      let styler = self[STYLER];
-      if (styler === void 0) {
-        return string4;
-      }
-      const { openAll, closeAll } = styler;
-      if (string4.includes("\x1B")) {
-        while (styler !== void 0) {
-          string4 = stringReplaceAll(string4, styler.close, styler.open);
-          styler = styler.parent;
-        }
-      }
-      const lfIndex = string4.indexOf("\n");
-      if (lfIndex !== -1) {
-        string4 = stringEncaseCRLFWithFirstIndex(string4, closeAll, openAll, lfIndex);
-      }
-      return openAll + string4 + closeAll;
-    };
-    Object.defineProperties(createChalk.prototype, styles3);
-    chalk = createChalk();
-    chalkStderr = createChalk({ level: stderrColor ? stderrColor.level : 0 });
-    source_default = chalk;
   }
 });
 
@@ -31073,10 +30849,10 @@ var require_package = __commonJS({
 var require_main = __commonJS({
   "node_modules/dotenv/lib/main.js"(exports2, module2) {
     "use strict";
-    var fs25 = require("fs");
-    var path26 = require("path");
+    var fs28 = require("fs");
+    var path29 = require("path");
     var os9 = require("os");
-    var crypto2 = require("crypto");
+    var crypto4 = require("crypto");
     var packageJson = require_package();
     var version3 = packageJson.version;
     var LINE = /(?:^|^)\s*(?:export\s+)?([\w.-]+)(?:\s*=\s*?|:\s+?)(\s*'(?:\\'|[^'])*'|\s*"(?:\\"|[^"])*"|\s*`(?:\\`|[^`])*`|[^#\r\n]+)?\s*(?:#.*)?(?:$|$)/mg;
@@ -31182,7 +30958,7 @@ var require_main = __commonJS({
       if (options && options.path && options.path.length > 0) {
         if (Array.isArray(options.path)) {
           for (const filepath of options.path) {
-            if (fs25.existsSync(filepath)) {
+            if (fs28.existsSync(filepath)) {
               possibleVaultPath = filepath.endsWith(".vault") ? filepath : `${filepath}.vault`;
             }
           }
@@ -31190,15 +30966,15 @@ var require_main = __commonJS({
           possibleVaultPath = options.path.endsWith(".vault") ? options.path : `${options.path}.vault`;
         }
       } else {
-        possibleVaultPath = path26.resolve(process.cwd(), ".env.vault");
+        possibleVaultPath = path29.resolve(process.cwd(), ".env.vault");
       }
-      if (fs25.existsSync(possibleVaultPath)) {
+      if (fs28.existsSync(possibleVaultPath)) {
         return possibleVaultPath;
       }
       return null;
     }
     function _resolveHome(envPath) {
-      return envPath[0] === "~" ? path26.join(os9.homedir(), envPath.slice(1)) : envPath;
+      return envPath[0] === "~" ? path29.join(os9.homedir(), envPath.slice(1)) : envPath;
     }
     function _configVault(options) {
       const debug = Boolean(options && options.debug);
@@ -31215,7 +30991,7 @@ var require_main = __commonJS({
       return { parsed };
     }
     function configDotenv(options) {
-      const dotenvPath = path26.resolve(process.cwd(), ".env");
+      const dotenvPath = path29.resolve(process.cwd(), ".env");
       let encoding = "utf8";
       const debug = Boolean(options && options.debug);
       const quiet = options && "quiet" in options ? options.quiet : true;
@@ -31239,13 +31015,13 @@ var require_main = __commonJS({
       }
       let lastError;
       const parsedAll = {};
-      for (const path27 of optionPaths) {
+      for (const path30 of optionPaths) {
         try {
-          const parsed = DotenvModule.parse(fs25.readFileSync(path27, { encoding }));
+          const parsed = DotenvModule.parse(fs28.readFileSync(path30, { encoding }));
           DotenvModule.populate(parsedAll, parsed, options);
         } catch (e) {
           if (debug) {
-            _debug(`Failed to load ${path27} ${e.message}`);
+            _debug(`Failed to load ${path30} ${e.message}`);
           }
           lastError = e;
         }
@@ -31260,7 +31036,7 @@ var require_main = __commonJS({
         const shortPaths = [];
         for (const filePath of optionPaths) {
           try {
-            const relative = path26.relative(process.cwd(), filePath);
+            const relative = path29.relative(process.cwd(), filePath);
             shortPaths.push(relative);
           } catch (e) {
             if (debug) {
@@ -31295,7 +31071,7 @@ var require_main = __commonJS({
       const authTag = ciphertext.subarray(-16);
       ciphertext = ciphertext.subarray(12, -16);
       try {
-        const aesgcm = crypto2.createDecipheriv("aes-256-gcm", key, nonce);
+        const aesgcm = crypto4.createDecipheriv("aes-256-gcm", key, nonce);
         aesgcm.setAuthTag(authTag);
         return `${aesgcm.update(ciphertext)}${aesgcm.final()}`;
       } catch (error48) {
@@ -31360,2475 +31136,9 @@ var require_main = __commonJS({
   }
 });
 
-// ../node_modules/cli-table3/src/debug.js
-var require_debug2 = __commonJS({
-  "../node_modules/cli-table3/src/debug.js"(exports2, module2) {
-    "use strict";
-    var messages = [];
-    var level = 0;
-    var debug = (msg, min) => {
-      if (level >= min) {
-        messages.push(msg);
-      }
-    };
-    debug.WARN = 1;
-    debug.INFO = 2;
-    debug.DEBUG = 3;
-    debug.reset = () => {
-      messages = [];
-    };
-    debug.setDebugLevel = (v) => {
-      level = v;
-    };
-    debug.warn = (msg) => debug(msg, debug.WARN);
-    debug.info = (msg) => debug(msg, debug.INFO);
-    debug.debug = (msg) => debug(msg, debug.DEBUG);
-    debug.debugMessages = () => messages;
-    module2.exports = debug;
-  }
-});
-
-// ../node_modules/cli-table3/node_modules/ansi-regex/index.js
-var require_ansi_regex = __commonJS({
-  "../node_modules/cli-table3/node_modules/ansi-regex/index.js"(exports2, module2) {
-    "use strict";
-    module2.exports = ({ onlyFirst = false } = {}) => {
-      const pattern = [
-        "[\\u001B\\u009B][[\\]()#;?]*(?:(?:(?:(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]+)*|[a-zA-Z\\d]+(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]*)*)?\\u0007)",
-        "(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PR-TZcf-ntqry=><~]))"
-      ].join("|");
-      return new RegExp(pattern, onlyFirst ? void 0 : "g");
-    };
-  }
-});
-
-// ../node_modules/cli-table3/node_modules/strip-ansi/index.js
-var require_strip_ansi = __commonJS({
-  "../node_modules/cli-table3/node_modules/strip-ansi/index.js"(exports2, module2) {
-    "use strict";
-    var ansiRegex2 = require_ansi_regex();
-    module2.exports = (string4) => typeof string4 === "string" ? string4.replace(ansiRegex2(), "") : string4;
-  }
-});
-
-// ../node_modules/cli-table3/node_modules/is-fullwidth-code-point/index.js
-var require_is_fullwidth_code_point = __commonJS({
-  "../node_modules/cli-table3/node_modules/is-fullwidth-code-point/index.js"(exports2, module2) {
-    "use strict";
-    var isFullwidthCodePoint2 = (codePoint) => {
-      if (Number.isNaN(codePoint)) {
-        return false;
-      }
-      if (codePoint >= 4352 && (codePoint <= 4447 || // Hangul Jamo
-      codePoint === 9001 || // LEFT-POINTING ANGLE BRACKET
-      codePoint === 9002 || // RIGHT-POINTING ANGLE BRACKET
-      // CJK Radicals Supplement .. Enclosed CJK Letters and Months
-      11904 <= codePoint && codePoint <= 12871 && codePoint !== 12351 || // Enclosed CJK Letters and Months .. CJK Unified Ideographs Extension A
-      12880 <= codePoint && codePoint <= 19903 || // CJK Unified Ideographs .. Yi Radicals
-      19968 <= codePoint && codePoint <= 42182 || // Hangul Jamo Extended-A
-      43360 <= codePoint && codePoint <= 43388 || // Hangul Syllables
-      44032 <= codePoint && codePoint <= 55203 || // CJK Compatibility Ideographs
-      63744 <= codePoint && codePoint <= 64255 || // Vertical Forms
-      65040 <= codePoint && codePoint <= 65049 || // CJK Compatibility Forms .. Small Form Variants
-      65072 <= codePoint && codePoint <= 65131 || // Halfwidth and Fullwidth Forms
-      65281 <= codePoint && codePoint <= 65376 || 65504 <= codePoint && codePoint <= 65510 || // Kana Supplement
-      110592 <= codePoint && codePoint <= 110593 || // Enclosed Ideographic Supplement
-      127488 <= codePoint && codePoint <= 127569 || // CJK Unified Ideographs Extension B .. Tertiary Ideographic Plane
-      131072 <= codePoint && codePoint <= 262141)) {
-        return true;
-      }
-      return false;
-    };
-    module2.exports = isFullwidthCodePoint2;
-    module2.exports.default = isFullwidthCodePoint2;
-  }
-});
-
-// ../node_modules/cli-table3/node_modules/emoji-regex/index.js
-var require_emoji_regex = __commonJS({
-  "../node_modules/cli-table3/node_modules/emoji-regex/index.js"(exports2, module2) {
-    "use strict";
-    module2.exports = function() {
-      return /\uD83C\uDFF4\uDB40\uDC67\uDB40\uDC62(?:\uDB40\uDC65\uDB40\uDC6E\uDB40\uDC67|\uDB40\uDC73\uDB40\uDC63\uDB40\uDC74|\uDB40\uDC77\uDB40\uDC6C\uDB40\uDC73)\uDB40\uDC7F|\uD83D\uDC68(?:\uD83C\uDFFC\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68\uD83C\uDFFB|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFF\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB-\uDFFE])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFE\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB-\uDFFD])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFD\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB\uDFFC])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\u200D(?:\u2764\uFE0F\u200D(?:\uD83D\uDC8B\u200D)?\uD83D\uDC68|(?:\uD83D[\uDC68\uDC69])\u200D(?:\uD83D\uDC66\u200D\uD83D\uDC66|\uD83D\uDC67\u200D(?:\uD83D[\uDC66\uDC67]))|\uD83D\uDC66\u200D\uD83D\uDC66|\uD83D\uDC67\u200D(?:\uD83D[\uDC66\uDC67])|(?:\uD83D[\uDC68\uDC69])\u200D(?:\uD83D[\uDC66\uDC67])|[\u2695\u2696\u2708]\uFE0F|\uD83D[\uDC66\uDC67]|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|(?:\uD83C\uDFFB\u200D[\u2695\u2696\u2708]|\uD83C\uDFFF\u200D[\u2695\u2696\u2708]|\uD83C\uDFFE\u200D[\u2695\u2696\u2708]|\uD83C\uDFFD\u200D[\u2695\u2696\u2708]|\uD83C\uDFFC\u200D[\u2695\u2696\u2708])\uFE0F|\uD83C\uDFFB\u200D(?:\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C[\uDFFB-\uDFFF])|(?:\uD83E\uDDD1\uD83C\uDFFB\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1|\uD83D\uDC69\uD83C\uDFFC\u200D\uD83E\uDD1D\u200D\uD83D\uDC69)\uD83C\uDFFB|\uD83E\uDDD1(?:\uD83C\uDFFF\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1(?:\uD83C[\uDFFB-\uDFFF])|\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1)|(?:\uD83E\uDDD1\uD83C\uDFFE\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1|\uD83D\uDC69\uD83C\uDFFF\u200D\uD83E\uDD1D\u200D(?:\uD83D[\uDC68\uDC69]))(?:\uD83C[\uDFFB-\uDFFE])|(?:\uD83E\uDDD1\uD83C\uDFFC\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1|\uD83D\uDC69\uD83C\uDFFD\u200D\uD83E\uDD1D\u200D\uD83D\uDC69)(?:\uD83C[\uDFFB\uDFFC])|\uD83D\uDC69(?:\uD83C\uDFFE\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB-\uDFFD\uDFFF])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFC\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB\uDFFD-\uDFFF])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFB\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFC-\uDFFF])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFD\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB\uDFFC\uDFFE\uDFFF])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\u200D(?:\u2764\uFE0F\u200D(?:\uD83D\uDC8B\u200D(?:\uD83D[\uDC68\uDC69])|\uD83D[\uDC68\uDC69])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFF\u200D(?:\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD]))|\uD83D\uDC69\u200D\uD83D\uDC69\u200D(?:\uD83D\uDC66\u200D\uD83D\uDC66|\uD83D\uDC67\u200D(?:\uD83D[\uDC66\uDC67]))|(?:\uD83E\uDDD1\uD83C\uDFFD\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1|\uD83D\uDC69\uD83C\uDFFE\u200D\uD83E\uDD1D\u200D\uD83D\uDC69)(?:\uD83C[\uDFFB-\uDFFD])|\uD83D\uDC69\u200D\uD83D\uDC66\u200D\uD83D\uDC66|\uD83D\uDC69\u200D\uD83D\uDC69\u200D(?:\uD83D[\uDC66\uDC67])|(?:\uD83D\uDC41\uFE0F\u200D\uD83D\uDDE8|\uD83D\uDC69(?:\uD83C\uDFFF\u200D[\u2695\u2696\u2708]|\uD83C\uDFFE\u200D[\u2695\u2696\u2708]|\uD83C\uDFFC\u200D[\u2695\u2696\u2708]|\uD83C\uDFFB\u200D[\u2695\u2696\u2708]|\uD83C\uDFFD\u200D[\u2695\u2696\u2708]|\u200D[\u2695\u2696\u2708])|(?:(?:\u26F9|\uD83C[\uDFCB\uDFCC]|\uD83D\uDD75)\uFE0F|\uD83D\uDC6F|\uD83E[\uDD3C\uDDDE\uDDDF])\u200D[\u2640\u2642]|(?:\u26F9|\uD83C[\uDFCB\uDFCC]|\uD83D\uDD75)(?:\uD83C[\uDFFB-\uDFFF])\u200D[\u2640\u2642]|(?:\uD83C[\uDFC3\uDFC4\uDFCA]|\uD83D[\uDC6E\uDC71\uDC73\uDC77\uDC81\uDC82\uDC86\uDC87\uDE45-\uDE47\uDE4B\uDE4D\uDE4E\uDEA3\uDEB4-\uDEB6]|\uD83E[\uDD26\uDD37-\uDD39\uDD3D\uDD3E\uDDB8\uDDB9\uDDCD-\uDDCF\uDDD6-\uDDDD])(?:(?:\uD83C[\uDFFB-\uDFFF])\u200D[\u2640\u2642]|\u200D[\u2640\u2642])|\uD83C\uDFF4\u200D\u2620)\uFE0F|\uD83D\uDC69\u200D\uD83D\uDC67\u200D(?:\uD83D[\uDC66\uDC67])|\uD83C\uDFF3\uFE0F\u200D\uD83C\uDF08|\uD83D\uDC15\u200D\uD83E\uDDBA|\uD83D\uDC69\u200D\uD83D\uDC66|\uD83D\uDC69\u200D\uD83D\uDC67|\uD83C\uDDFD\uD83C\uDDF0|\uD83C\uDDF4\uD83C\uDDF2|\uD83C\uDDF6\uD83C\uDDE6|[#\*0-9]\uFE0F\u20E3|\uD83C\uDDE7(?:\uD83C[\uDDE6\uDDE7\uDDE9-\uDDEF\uDDF1-\uDDF4\uDDF6-\uDDF9\uDDFB\uDDFC\uDDFE\uDDFF])|\uD83C\uDDF9(?:\uD83C[\uDDE6\uDDE8\uDDE9\uDDEB-\uDDED\uDDEF-\uDDF4\uDDF7\uDDF9\uDDFB\uDDFC\uDDFF])|\uD83C\uDDEA(?:\uD83C[\uDDE6\uDDE8\uDDEA\uDDEC\uDDED\uDDF7-\uDDFA])|\uD83E\uDDD1(?:\uD83C[\uDFFB-\uDFFF])|\uD83C\uDDF7(?:\uD83C[\uDDEA\uDDF4\uDDF8\uDDFA\uDDFC])|\uD83D\uDC69(?:\uD83C[\uDFFB-\uDFFF])|\uD83C\uDDF2(?:\uD83C[\uDDE6\uDDE8-\uDDED\uDDF0-\uDDFF])|\uD83C\uDDE6(?:\uD83C[\uDDE8-\uDDEC\uDDEE\uDDF1\uDDF2\uDDF4\uDDF6-\uDDFA\uDDFC\uDDFD\uDDFF])|\uD83C\uDDF0(?:\uD83C[\uDDEA\uDDEC-\uDDEE\uDDF2\uDDF3\uDDF5\uDDF7\uDDFC\uDDFE\uDDFF])|\uD83C\uDDED(?:\uD83C[\uDDF0\uDDF2\uDDF3\uDDF7\uDDF9\uDDFA])|\uD83C\uDDE9(?:\uD83C[\uDDEA\uDDEC\uDDEF\uDDF0\uDDF2\uDDF4\uDDFF])|\uD83C\uDDFE(?:\uD83C[\uDDEA\uDDF9])|\uD83C\uDDEC(?:\uD83C[\uDDE6\uDDE7\uDDE9-\uDDEE\uDDF1-\uDDF3\uDDF5-\uDDFA\uDDFC\uDDFE])|\uD83C\uDDF8(?:\uD83C[\uDDE6-\uDDEA\uDDEC-\uDDF4\uDDF7-\uDDF9\uDDFB\uDDFD-\uDDFF])|\uD83C\uDDEB(?:\uD83C[\uDDEE-\uDDF0\uDDF2\uDDF4\uDDF7])|\uD83C\uDDF5(?:\uD83C[\uDDE6\uDDEA-\uDDED\uDDF0-\uDDF3\uDDF7-\uDDF9\uDDFC\uDDFE])|\uD83C\uDDFB(?:\uD83C[\uDDE6\uDDE8\uDDEA\uDDEC\uDDEE\uDDF3\uDDFA])|\uD83C\uDDF3(?:\uD83C[\uDDE6\uDDE8\uDDEA-\uDDEC\uDDEE\uDDF1\uDDF4\uDDF5\uDDF7\uDDFA\uDDFF])|\uD83C\uDDE8(?:\uD83C[\uDDE6\uDDE8\uDDE9\uDDEB-\uDDEE\uDDF0-\uDDF5\uDDF7\uDDFA-\uDDFF])|\uD83C\uDDF1(?:\uD83C[\uDDE6-\uDDE8\uDDEE\uDDF0\uDDF7-\uDDFB\uDDFE])|\uD83C\uDDFF(?:\uD83C[\uDDE6\uDDF2\uDDFC])|\uD83C\uDDFC(?:\uD83C[\uDDEB\uDDF8])|\uD83C\uDDFA(?:\uD83C[\uDDE6\uDDEC\uDDF2\uDDF3\uDDF8\uDDFE\uDDFF])|\uD83C\uDDEE(?:\uD83C[\uDDE8-\uDDEA\uDDF1-\uDDF4\uDDF6-\uDDF9])|\uD83C\uDDEF(?:\uD83C[\uDDEA\uDDF2\uDDF4\uDDF5])|(?:\uD83C[\uDFC3\uDFC4\uDFCA]|\uD83D[\uDC6E\uDC71\uDC73\uDC77\uDC81\uDC82\uDC86\uDC87\uDE45-\uDE47\uDE4B\uDE4D\uDE4E\uDEA3\uDEB4-\uDEB6]|\uD83E[\uDD26\uDD37-\uDD39\uDD3D\uDD3E\uDDB8\uDDB9\uDDCD-\uDDCF\uDDD6-\uDDDD])(?:\uD83C[\uDFFB-\uDFFF])|(?:\u26F9|\uD83C[\uDFCB\uDFCC]|\uD83D\uDD75)(?:\uD83C[\uDFFB-\uDFFF])|(?:[\u261D\u270A-\u270D]|\uD83C[\uDF85\uDFC2\uDFC7]|\uD83D[\uDC42\uDC43\uDC46-\uDC50\uDC66\uDC67\uDC6B-\uDC6D\uDC70\uDC72\uDC74-\uDC76\uDC78\uDC7C\uDC83\uDC85\uDCAA\uDD74\uDD7A\uDD90\uDD95\uDD96\uDE4C\uDE4F\uDEC0\uDECC]|\uD83E[\uDD0F\uDD18-\uDD1C\uDD1E\uDD1F\uDD30-\uDD36\uDDB5\uDDB6\uDDBB\uDDD2-\uDDD5])(?:\uD83C[\uDFFB-\uDFFF])|(?:[\u231A\u231B\u23E9-\u23EC\u23F0\u23F3\u25FD\u25FE\u2614\u2615\u2648-\u2653\u267F\u2693\u26A1\u26AA\u26AB\u26BD\u26BE\u26C4\u26C5\u26CE\u26D4\u26EA\u26F2\u26F3\u26F5\u26FA\u26FD\u2705\u270A\u270B\u2728\u274C\u274E\u2753-\u2755\u2757\u2795-\u2797\u27B0\u27BF\u2B1B\u2B1C\u2B50\u2B55]|\uD83C[\uDC04\uDCCF\uDD8E\uDD91-\uDD9A\uDDE6-\uDDFF\uDE01\uDE1A\uDE2F\uDE32-\uDE36\uDE38-\uDE3A\uDE50\uDE51\uDF00-\uDF20\uDF2D-\uDF35\uDF37-\uDF7C\uDF7E-\uDF93\uDFA0-\uDFCA\uDFCF-\uDFD3\uDFE0-\uDFF0\uDFF4\uDFF8-\uDFFF]|\uD83D[\uDC00-\uDC3E\uDC40\uDC42-\uDCFC\uDCFF-\uDD3D\uDD4B-\uDD4E\uDD50-\uDD67\uDD7A\uDD95\uDD96\uDDA4\uDDFB-\uDE4F\uDE80-\uDEC5\uDECC\uDED0-\uDED2\uDED5\uDEEB\uDEEC\uDEF4-\uDEFA\uDFE0-\uDFEB]|\uD83E[\uDD0D-\uDD3A\uDD3C-\uDD45\uDD47-\uDD71\uDD73-\uDD76\uDD7A-\uDDA2\uDDA5-\uDDAA\uDDAE-\uDDCA\uDDCD-\uDDFF\uDE70-\uDE73\uDE78-\uDE7A\uDE80-\uDE82\uDE90-\uDE95])|(?:[#\*0-9\xA9\xAE\u203C\u2049\u2122\u2139\u2194-\u2199\u21A9\u21AA\u231A\u231B\u2328\u23CF\u23E9-\u23F3\u23F8-\u23FA\u24C2\u25AA\u25AB\u25B6\u25C0\u25FB-\u25FE\u2600-\u2604\u260E\u2611\u2614\u2615\u2618\u261D\u2620\u2622\u2623\u2626\u262A\u262E\u262F\u2638-\u263A\u2640\u2642\u2648-\u2653\u265F\u2660\u2663\u2665\u2666\u2668\u267B\u267E\u267F\u2692-\u2697\u2699\u269B\u269C\u26A0\u26A1\u26AA\u26AB\u26B0\u26B1\u26BD\u26BE\u26C4\u26C5\u26C8\u26CE\u26CF\u26D1\u26D3\u26D4\u26E9\u26EA\u26F0-\u26F5\u26F7-\u26FA\u26FD\u2702\u2705\u2708-\u270D\u270F\u2712\u2714\u2716\u271D\u2721\u2728\u2733\u2734\u2744\u2747\u274C\u274E\u2753-\u2755\u2757\u2763\u2764\u2795-\u2797\u27A1\u27B0\u27BF\u2934\u2935\u2B05-\u2B07\u2B1B\u2B1C\u2B50\u2B55\u3030\u303D\u3297\u3299]|\uD83C[\uDC04\uDCCF\uDD70\uDD71\uDD7E\uDD7F\uDD8E\uDD91-\uDD9A\uDDE6-\uDDFF\uDE01\uDE02\uDE1A\uDE2F\uDE32-\uDE3A\uDE50\uDE51\uDF00-\uDF21\uDF24-\uDF93\uDF96\uDF97\uDF99-\uDF9B\uDF9E-\uDFF0\uDFF3-\uDFF5\uDFF7-\uDFFF]|\uD83D[\uDC00-\uDCFD\uDCFF-\uDD3D\uDD49-\uDD4E\uDD50-\uDD67\uDD6F\uDD70\uDD73-\uDD7A\uDD87\uDD8A-\uDD8D\uDD90\uDD95\uDD96\uDDA4\uDDA5\uDDA8\uDDB1\uDDB2\uDDBC\uDDC2-\uDDC4\uDDD1-\uDDD3\uDDDC-\uDDDE\uDDE1\uDDE3\uDDE8\uDDEF\uDDF3\uDDFA-\uDE4F\uDE80-\uDEC5\uDECB-\uDED2\uDED5\uDEE0-\uDEE5\uDEE9\uDEEB\uDEEC\uDEF0\uDEF3-\uDEFA\uDFE0-\uDFEB]|\uD83E[\uDD0D-\uDD3A\uDD3C-\uDD45\uDD47-\uDD71\uDD73-\uDD76\uDD7A-\uDDA2\uDDA5-\uDDAA\uDDAE-\uDDCA\uDDCD-\uDDFF\uDE70-\uDE73\uDE78-\uDE7A\uDE80-\uDE82\uDE90-\uDE95])\uFE0F|(?:[\u261D\u26F9\u270A-\u270D]|\uD83C[\uDF85\uDFC2-\uDFC4\uDFC7\uDFCA-\uDFCC]|\uD83D[\uDC42\uDC43\uDC46-\uDC50\uDC66-\uDC78\uDC7C\uDC81-\uDC83\uDC85-\uDC87\uDC8F\uDC91\uDCAA\uDD74\uDD75\uDD7A\uDD90\uDD95\uDD96\uDE45-\uDE47\uDE4B-\uDE4F\uDEA3\uDEB4-\uDEB6\uDEC0\uDECC]|\uD83E[\uDD0F\uDD18-\uDD1F\uDD26\uDD30-\uDD39\uDD3C-\uDD3E\uDDB5\uDDB6\uDDB8\uDDB9\uDDBB\uDDCD-\uDDCF\uDDD1-\uDDDD])/g;
-    };
-  }
-});
-
-// ../node_modules/cli-table3/node_modules/string-width/index.js
-var require_string_width = __commonJS({
-  "../node_modules/cli-table3/node_modules/string-width/index.js"(exports2, module2) {
-    "use strict";
-    var stripAnsi2 = require_strip_ansi();
-    var isFullwidthCodePoint2 = require_is_fullwidth_code_point();
-    var emojiRegex = require_emoji_regex();
-    var stringWidth4 = (string4) => {
-      if (typeof string4 !== "string" || string4.length === 0) {
-        return 0;
-      }
-      string4 = stripAnsi2(string4);
-      if (string4.length === 0) {
-        return 0;
-      }
-      string4 = string4.replace(emojiRegex(), "  ");
-      let width = 0;
-      for (let i = 0; i < string4.length; i++) {
-        const code = string4.codePointAt(i);
-        if (code <= 31 || code >= 127 && code <= 159) {
-          continue;
-        }
-        if (code >= 768 && code <= 879) {
-          continue;
-        }
-        if (code > 65535) {
-          i++;
-        }
-        width += isFullwidthCodePoint2(code) ? 2 : 1;
-      }
-      return width;
-    };
-    module2.exports = stringWidth4;
-    module2.exports.default = stringWidth4;
-  }
-});
-
-// ../node_modules/cli-table3/src/utils.js
-var require_utils4 = __commonJS({
-  "../node_modules/cli-table3/src/utils.js"(exports2, module2) {
-    "use strict";
-    var stringWidth4 = require_string_width();
-    function codeRegex(capture) {
-      return capture ? /\u001b\[((?:\d*;){0,5}\d*)m/g : /\u001b\[(?:\d*;){0,5}\d*m/g;
-    }
-    function strlen(str) {
-      let code = codeRegex();
-      let stripped = ("" + str).replace(code, "");
-      let split = stripped.split("\n");
-      return split.reduce(function(memo, s) {
-        return stringWidth4(s) > memo ? stringWidth4(s) : memo;
-      }, 0);
-    }
-    function repeat(str, times) {
-      return Array(times + 1).join(str);
-    }
-    function pad(str, len, pad2, dir) {
-      let length = strlen(str);
-      if (len + 1 >= length) {
-        let padlen = len - length;
-        switch (dir) {
-          case "right": {
-            str = repeat(pad2, padlen) + str;
-            break;
-          }
-          case "center": {
-            let right = Math.ceil(padlen / 2);
-            let left = padlen - right;
-            str = repeat(pad2, left) + str + repeat(pad2, right);
-            break;
-          }
-          default: {
-            str = str + repeat(pad2, padlen);
-            break;
-          }
-        }
-      }
-      return str;
-    }
-    var codeCache = {};
-    function addToCodeCache(name, on, off) {
-      on = "\x1B[" + on + "m";
-      off = "\x1B[" + off + "m";
-      codeCache[on] = { set: name, to: true };
-      codeCache[off] = { set: name, to: false };
-      codeCache[name] = { on, off };
-    }
-    addToCodeCache("bold", 1, 22);
-    addToCodeCache("italics", 3, 23);
-    addToCodeCache("underline", 4, 24);
-    addToCodeCache("inverse", 7, 27);
-    addToCodeCache("strikethrough", 9, 29);
-    function updateState(state, controlChars) {
-      let controlCode = controlChars[1] ? parseInt(controlChars[1].split(";")[0]) : 0;
-      if (controlCode >= 30 && controlCode <= 39 || controlCode >= 90 && controlCode <= 97) {
-        state.lastForegroundAdded = controlChars[0];
-        return;
-      }
-      if (controlCode >= 40 && controlCode <= 49 || controlCode >= 100 && controlCode <= 107) {
-        state.lastBackgroundAdded = controlChars[0];
-        return;
-      }
-      if (controlCode === 0) {
-        for (let i in state) {
-          if (Object.prototype.hasOwnProperty.call(state, i)) {
-            delete state[i];
-          }
-        }
-        return;
-      }
-      let info = codeCache[controlChars[0]];
-      if (info) {
-        state[info.set] = info.to;
-      }
-    }
-    function readState(line) {
-      let code = codeRegex(true);
-      let controlChars = code.exec(line);
-      let state = {};
-      while (controlChars !== null) {
-        updateState(state, controlChars);
-        controlChars = code.exec(line);
-      }
-      return state;
-    }
-    function unwindState(state, ret) {
-      let lastBackgroundAdded = state.lastBackgroundAdded;
-      let lastForegroundAdded = state.lastForegroundAdded;
-      delete state.lastBackgroundAdded;
-      delete state.lastForegroundAdded;
-      Object.keys(state).forEach(function(key) {
-        if (state[key]) {
-          ret += codeCache[key].off;
-        }
-      });
-      if (lastBackgroundAdded && lastBackgroundAdded != "\x1B[49m") {
-        ret += "\x1B[49m";
-      }
-      if (lastForegroundAdded && lastForegroundAdded != "\x1B[39m") {
-        ret += "\x1B[39m";
-      }
-      return ret;
-    }
-    function rewindState(state, ret) {
-      let lastBackgroundAdded = state.lastBackgroundAdded;
-      let lastForegroundAdded = state.lastForegroundAdded;
-      delete state.lastBackgroundAdded;
-      delete state.lastForegroundAdded;
-      Object.keys(state).forEach(function(key) {
-        if (state[key]) {
-          ret = codeCache[key].on + ret;
-        }
-      });
-      if (lastBackgroundAdded && lastBackgroundAdded != "\x1B[49m") {
-        ret = lastBackgroundAdded + ret;
-      }
-      if (lastForegroundAdded && lastForegroundAdded != "\x1B[39m") {
-        ret = lastForegroundAdded + ret;
-      }
-      return ret;
-    }
-    function truncateWidth(str, desiredLength) {
-      if (str.length === strlen(str)) {
-        return str.substr(0, desiredLength);
-      }
-      while (strlen(str) > desiredLength) {
-        str = str.slice(0, -1);
-      }
-      return str;
-    }
-    function truncateWidthWithAnsi(str, desiredLength) {
-      let code = codeRegex(true);
-      let split = str.split(codeRegex());
-      let splitIndex = 0;
-      let retLen = 0;
-      let ret = "";
-      let myArray;
-      let state = {};
-      while (retLen < desiredLength) {
-        myArray = code.exec(str);
-        let toAdd = split[splitIndex];
-        splitIndex++;
-        if (retLen + strlen(toAdd) > desiredLength) {
-          toAdd = truncateWidth(toAdd, desiredLength - retLen);
-        }
-        ret += toAdd;
-        retLen += strlen(toAdd);
-        if (retLen < desiredLength) {
-          if (!myArray) {
-            break;
-          }
-          ret += myArray[0];
-          updateState(state, myArray);
-        }
-      }
-      return unwindState(state, ret);
-    }
-    function truncate(str, desiredLength, truncateChar) {
-      truncateChar = truncateChar || "\u2026";
-      let lengthOfStr = strlen(str);
-      if (lengthOfStr <= desiredLength) {
-        return str;
-      }
-      desiredLength -= strlen(truncateChar);
-      let ret = truncateWidthWithAnsi(str, desiredLength);
-      ret += truncateChar;
-      const hrefTag = "\x1B]8;;\x07";
-      if (str.includes(hrefTag) && !ret.includes(hrefTag)) {
-        ret += hrefTag;
-      }
-      return ret;
-    }
-    function defaultOptions() {
-      return {
-        chars: {
-          top: "\u2500",
-          "top-mid": "\u252C",
-          "top-left": "\u250C",
-          "top-right": "\u2510",
-          bottom: "\u2500",
-          "bottom-mid": "\u2534",
-          "bottom-left": "\u2514",
-          "bottom-right": "\u2518",
-          left: "\u2502",
-          "left-mid": "\u251C",
-          mid: "\u2500",
-          "mid-mid": "\u253C",
-          right: "\u2502",
-          "right-mid": "\u2524",
-          middle: "\u2502"
-        },
-        truncate: "\u2026",
-        colWidths: [],
-        rowHeights: [],
-        colAligns: [],
-        rowAligns: [],
-        style: {
-          "padding-left": 1,
-          "padding-right": 1,
-          head: ["red"],
-          border: ["grey"],
-          compact: false
-        },
-        head: []
-      };
-    }
-    function mergeOptions(options, defaults) {
-      options = options || {};
-      defaults = defaults || defaultOptions();
-      let ret = Object.assign({}, defaults, options);
-      ret.chars = Object.assign({}, defaults.chars, options.chars);
-      ret.style = Object.assign({}, defaults.style, options.style);
-      return ret;
-    }
-    function wordWrap(maxLength, input) {
-      let lines = [];
-      let split = input.split(/(\s+)/g);
-      let line = [];
-      let lineLength = 0;
-      let whitespace;
-      for (let i = 0; i < split.length; i += 2) {
-        let word = split[i];
-        let newLength = lineLength + strlen(word);
-        if (lineLength > 0 && whitespace) {
-          newLength += whitespace.length;
-        }
-        if (newLength > maxLength) {
-          if (lineLength !== 0) {
-            lines.push(line.join(""));
-          }
-          line = [word];
-          lineLength = strlen(word);
-        } else {
-          line.push(whitespace || "", word);
-          lineLength = newLength;
-        }
-        whitespace = split[i + 1];
-      }
-      if (lineLength) {
-        lines.push(line.join(""));
-      }
-      return lines;
-    }
-    function textWrap(maxLength, input) {
-      let lines = [];
-      let line = "";
-      function pushLine(str, ws) {
-        if (line.length && ws) line += ws;
-        line += str;
-        while (line.length > maxLength) {
-          lines.push(line.slice(0, maxLength));
-          line = line.slice(maxLength);
-        }
-      }
-      let split = input.split(/(\s+)/g);
-      for (let i = 0; i < split.length; i += 2) {
-        pushLine(split[i], i && split[i - 1]);
-      }
-      if (line.length) lines.push(line);
-      return lines;
-    }
-    function multiLineWordWrap(maxLength, input, wrapOnWordBoundary = true) {
-      let output = [];
-      input = input.split("\n");
-      const handler = wrapOnWordBoundary ? wordWrap : textWrap;
-      for (let i = 0; i < input.length; i++) {
-        output.push.apply(output, handler(maxLength, input[i]));
-      }
-      return output;
-    }
-    function colorizeLines(input) {
-      let state = {};
-      let output = [];
-      for (let i = 0; i < input.length; i++) {
-        let line = rewindState(state, input[i]);
-        state = readState(line);
-        let temp = Object.assign({}, state);
-        output.push(unwindState(temp, line));
-      }
-      return output;
-    }
-    function hyperlink(url2, text) {
-      const OSC2 = "\x1B]";
-      const BEL2 = "\x07";
-      const SEP2 = ";";
-      return [OSC2, "8", SEP2, SEP2, url2 || text, BEL2, text, OSC2, "8", SEP2, SEP2, BEL2].join("");
-    }
-    module2.exports = {
-      strlen,
-      repeat,
-      pad,
-      truncate,
-      mergeOptions,
-      wordWrap: multiLineWordWrap,
-      colorizeLines,
-      hyperlink
-    };
-  }
-});
-
-// ../node_modules/@colors/colors/lib/styles.js
-var require_styles = __commonJS({
-  "../node_modules/@colors/colors/lib/styles.js"(exports2, module2) {
-    "use strict";
-    var styles4 = {};
-    module2["exports"] = styles4;
-    var codes = {
-      reset: [0, 0],
-      bold: [1, 22],
-      dim: [2, 22],
-      italic: [3, 23],
-      underline: [4, 24],
-      inverse: [7, 27],
-      hidden: [8, 28],
-      strikethrough: [9, 29],
-      black: [30, 39],
-      red: [31, 39],
-      green: [32, 39],
-      yellow: [33, 39],
-      blue: [34, 39],
-      magenta: [35, 39],
-      cyan: [36, 39],
-      white: [37, 39],
-      gray: [90, 39],
-      grey: [90, 39],
-      brightRed: [91, 39],
-      brightGreen: [92, 39],
-      brightYellow: [93, 39],
-      brightBlue: [94, 39],
-      brightMagenta: [95, 39],
-      brightCyan: [96, 39],
-      brightWhite: [97, 39],
-      bgBlack: [40, 49],
-      bgRed: [41, 49],
-      bgGreen: [42, 49],
-      bgYellow: [43, 49],
-      bgBlue: [44, 49],
-      bgMagenta: [45, 49],
-      bgCyan: [46, 49],
-      bgWhite: [47, 49],
-      bgGray: [100, 49],
-      bgGrey: [100, 49],
-      bgBrightRed: [101, 49],
-      bgBrightGreen: [102, 49],
-      bgBrightYellow: [103, 49],
-      bgBrightBlue: [104, 49],
-      bgBrightMagenta: [105, 49],
-      bgBrightCyan: [106, 49],
-      bgBrightWhite: [107, 49],
-      // legacy styles for colors pre v1.0.0
-      blackBG: [40, 49],
-      redBG: [41, 49],
-      greenBG: [42, 49],
-      yellowBG: [43, 49],
-      blueBG: [44, 49],
-      magentaBG: [45, 49],
-      cyanBG: [46, 49],
-      whiteBG: [47, 49]
-    };
-    Object.keys(codes).forEach(function(key) {
-      var val = codes[key];
-      var style = styles4[key] = [];
-      style.open = "\x1B[" + val[0] + "m";
-      style.close = "\x1B[" + val[1] + "m";
-    });
-  }
-});
-
-// ../node_modules/@colors/colors/lib/system/has-flag.js
-var require_has_flag = __commonJS({
-  "../node_modules/@colors/colors/lib/system/has-flag.js"(exports2, module2) {
-    "use strict";
-    module2.exports = function(flag, argv) {
-      argv = argv || process.argv;
-      var terminatorPos = argv.indexOf("--");
-      var prefix = /^-{1,2}/.test(flag) ? "" : "--";
-      var pos = argv.indexOf(prefix + flag);
-      return pos !== -1 && (terminatorPos === -1 ? true : pos < terminatorPos);
-    };
-  }
-});
-
-// ../node_modules/@colors/colors/lib/system/supports-colors.js
-var require_supports_colors = __commonJS({
-  "../node_modules/@colors/colors/lib/system/supports-colors.js"(exports2, module2) {
-    "use strict";
-    var os9 = require("os");
-    var hasFlag2 = require_has_flag();
-    var env3 = process.env;
-    var forceColor = void 0;
-    if (hasFlag2("no-color") || hasFlag2("no-colors") || hasFlag2("color=false")) {
-      forceColor = false;
-    } else if (hasFlag2("color") || hasFlag2("colors") || hasFlag2("color=true") || hasFlag2("color=always")) {
-      forceColor = true;
-    }
-    if ("FORCE_COLOR" in env3) {
-      forceColor = env3.FORCE_COLOR.length === 0 || parseInt(env3.FORCE_COLOR, 10) !== 0;
-    }
-    function translateLevel2(level) {
-      if (level === 0) {
-        return false;
-      }
-      return {
-        level,
-        hasBasic: true,
-        has256: level >= 2,
-        has16m: level >= 3
-      };
-    }
-    function supportsColor2(stream) {
-      if (forceColor === false) {
-        return 0;
-      }
-      if (hasFlag2("color=16m") || hasFlag2("color=full") || hasFlag2("color=truecolor")) {
-        return 3;
-      }
-      if (hasFlag2("color=256")) {
-        return 2;
-      }
-      if (stream && !stream.isTTY && forceColor !== true) {
-        return 0;
-      }
-      var min = forceColor ? 1 : 0;
-      if (process.platform === "win32") {
-        var osRelease = os9.release().split(".");
-        if (Number(process.versions.node.split(".")[0]) >= 8 && Number(osRelease[0]) >= 10 && Number(osRelease[2]) >= 10586) {
-          return Number(osRelease[2]) >= 14931 ? 3 : 2;
-        }
-        return 1;
-      }
-      if ("CI" in env3) {
-        if (["TRAVIS", "CIRCLECI", "APPVEYOR", "GITLAB_CI"].some(function(sign) {
-          return sign in env3;
-        }) || env3.CI_NAME === "codeship") {
-          return 1;
-        }
-        return min;
-      }
-      if ("TEAMCITY_VERSION" in env3) {
-        return /^(9\.(0*[1-9]\d*)\.|\d{2,}\.)/.test(env3.TEAMCITY_VERSION) ? 1 : 0;
-      }
-      if ("TERM_PROGRAM" in env3) {
-        var version3 = parseInt((env3.TERM_PROGRAM_VERSION || "").split(".")[0], 10);
-        switch (env3.TERM_PROGRAM) {
-          case "iTerm.app":
-            return version3 >= 3 ? 3 : 2;
-          case "Hyper":
-            return 3;
-          case "Apple_Terminal":
-            return 2;
-        }
-      }
-      if (/-256(color)?$/i.test(env3.TERM)) {
-        return 2;
-      }
-      if (/^screen|^xterm|^vt100|^rxvt|color|ansi|cygwin|linux/i.test(env3.TERM)) {
-        return 1;
-      }
-      if ("COLORTERM" in env3) {
-        return 1;
-      }
-      if (env3.TERM === "dumb") {
-        return min;
-      }
-      return min;
-    }
-    function getSupportLevel(stream) {
-      var level = supportsColor2(stream);
-      return translateLevel2(level);
-    }
-    module2.exports = {
-      supportsColor: getSupportLevel,
-      stdout: getSupportLevel(process.stdout),
-      stderr: getSupportLevel(process.stderr)
-    };
-  }
-});
-
-// ../node_modules/@colors/colors/lib/custom/trap.js
-var require_trap = __commonJS({
-  "../node_modules/@colors/colors/lib/custom/trap.js"(exports2, module2) {
-    "use strict";
-    module2["exports"] = function runTheTrap(text, options) {
-      var result = "";
-      text = text || "Run the trap, drop the bass";
-      text = text.split("");
-      var trap = {
-        a: ["@", "\u0104", "\u023A", "\u0245", "\u0394", "\u039B", "\u0414"],
-        b: ["\xDF", "\u0181", "\u0243", "\u026E", "\u03B2", "\u0E3F"],
-        c: ["\xA9", "\u023B", "\u03FE"],
-        d: ["\xD0", "\u018A", "\u0500", "\u0501", "\u0502", "\u0503"],
-        e: [
-          "\xCB",
-          "\u0115",
-          "\u018E",
-          "\u0258",
-          "\u03A3",
-          "\u03BE",
-          "\u04BC",
-          "\u0A6C"
-        ],
-        f: ["\u04FA"],
-        g: ["\u0262"],
-        h: ["\u0126", "\u0195", "\u04A2", "\u04BA", "\u04C7", "\u050A"],
-        i: ["\u0F0F"],
-        j: ["\u0134"],
-        k: ["\u0138", "\u04A0", "\u04C3", "\u051E"],
-        l: ["\u0139"],
-        m: ["\u028D", "\u04CD", "\u04CE", "\u0520", "\u0521", "\u0D69"],
-        n: ["\xD1", "\u014B", "\u019D", "\u0376", "\u03A0", "\u048A"],
-        o: [
-          "\xD8",
-          "\xF5",
-          "\xF8",
-          "\u01FE",
-          "\u0298",
-          "\u047A",
-          "\u05DD",
-          "\u06DD",
-          "\u0E4F"
-        ],
-        p: ["\u01F7", "\u048E"],
-        q: ["\u09CD"],
-        r: ["\xAE", "\u01A6", "\u0210", "\u024C", "\u0280", "\u042F"],
-        s: ["\xA7", "\u03DE", "\u03DF", "\u03E8"],
-        t: ["\u0141", "\u0166", "\u0373"],
-        u: ["\u01B1", "\u054D"],
-        v: ["\u05D8"],
-        w: ["\u0428", "\u0460", "\u047C", "\u0D70"],
-        x: ["\u04B2", "\u04FE", "\u04FC", "\u04FD"],
-        y: ["\xA5", "\u04B0", "\u04CB"],
-        z: ["\u01B5", "\u0240"]
-      };
-      text.forEach(function(c) {
-        c = c.toLowerCase();
-        var chars = trap[c] || [" "];
-        var rand = Math.floor(Math.random() * chars.length);
-        if (typeof trap[c] !== "undefined") {
-          result += trap[c][rand];
-        } else {
-          result += c;
-        }
-      });
-      return result;
-    };
-  }
-});
-
-// ../node_modules/@colors/colors/lib/custom/zalgo.js
-var require_zalgo = __commonJS({
-  "../node_modules/@colors/colors/lib/custom/zalgo.js"(exports2, module2) {
-    "use strict";
-    module2["exports"] = function zalgo(text, options) {
-      text = text || "   he is here   ";
-      var soul = {
-        "up": [
-          "\u030D",
-          "\u030E",
-          "\u0304",
-          "\u0305",
-          "\u033F",
-          "\u0311",
-          "\u0306",
-          "\u0310",
-          "\u0352",
-          "\u0357",
-          "\u0351",
-          "\u0307",
-          "\u0308",
-          "\u030A",
-          "\u0342",
-          "\u0313",
-          "\u0308",
-          "\u034A",
-          "\u034B",
-          "\u034C",
-          "\u0303",
-          "\u0302",
-          "\u030C",
-          "\u0350",
-          "\u0300",
-          "\u0301",
-          "\u030B",
-          "\u030F",
-          "\u0312",
-          "\u0313",
-          "\u0314",
-          "\u033D",
-          "\u0309",
-          "\u0363",
-          "\u0364",
-          "\u0365",
-          "\u0366",
-          "\u0367",
-          "\u0368",
-          "\u0369",
-          "\u036A",
-          "\u036B",
-          "\u036C",
-          "\u036D",
-          "\u036E",
-          "\u036F",
-          "\u033E",
-          "\u035B",
-          "\u0346",
-          "\u031A"
-        ],
-        "down": [
-          "\u0316",
-          "\u0317",
-          "\u0318",
-          "\u0319",
-          "\u031C",
-          "\u031D",
-          "\u031E",
-          "\u031F",
-          "\u0320",
-          "\u0324",
-          "\u0325",
-          "\u0326",
-          "\u0329",
-          "\u032A",
-          "\u032B",
-          "\u032C",
-          "\u032D",
-          "\u032E",
-          "\u032F",
-          "\u0330",
-          "\u0331",
-          "\u0332",
-          "\u0333",
-          "\u0339",
-          "\u033A",
-          "\u033B",
-          "\u033C",
-          "\u0345",
-          "\u0347",
-          "\u0348",
-          "\u0349",
-          "\u034D",
-          "\u034E",
-          "\u0353",
-          "\u0354",
-          "\u0355",
-          "\u0356",
-          "\u0359",
-          "\u035A",
-          "\u0323"
-        ],
-        "mid": [
-          "\u0315",
-          "\u031B",
-          "\u0300",
-          "\u0301",
-          "\u0358",
-          "\u0321",
-          "\u0322",
-          "\u0327",
-          "\u0328",
-          "\u0334",
-          "\u0335",
-          "\u0336",
-          "\u035C",
-          "\u035D",
-          "\u035E",
-          "\u035F",
-          "\u0360",
-          "\u0362",
-          "\u0338",
-          "\u0337",
-          "\u0361",
-          " \u0489"
-        ]
-      };
-      var all = [].concat(soul.up, soul.down, soul.mid);
-      function randomNumber(range) {
-        var r = Math.floor(Math.random() * range);
-        return r;
-      }
-      function isChar(character) {
-        var bool = false;
-        all.filter(function(i) {
-          bool = i === character;
-        });
-        return bool;
-      }
-      function heComes(text2, options2) {
-        var result = "";
-        var counts;
-        var l;
-        options2 = options2 || {};
-        options2["up"] = typeof options2["up"] !== "undefined" ? options2["up"] : true;
-        options2["mid"] = typeof options2["mid"] !== "undefined" ? options2["mid"] : true;
-        options2["down"] = typeof options2["down"] !== "undefined" ? options2["down"] : true;
-        options2["size"] = typeof options2["size"] !== "undefined" ? options2["size"] : "maxi";
-        text2 = text2.split("");
-        for (l in text2) {
-          if (isChar(l)) {
-            continue;
-          }
-          result = result + text2[l];
-          counts = { "up": 0, "down": 0, "mid": 0 };
-          switch (options2.size) {
-            case "mini":
-              counts.up = randomNumber(8);
-              counts.mid = randomNumber(2);
-              counts.down = randomNumber(8);
-              break;
-            case "maxi":
-              counts.up = randomNumber(16) + 3;
-              counts.mid = randomNumber(4) + 1;
-              counts.down = randomNumber(64) + 3;
-              break;
-            default:
-              counts.up = randomNumber(8) + 1;
-              counts.mid = randomNumber(6) / 2;
-              counts.down = randomNumber(8) + 1;
-              break;
-          }
-          var arr = ["up", "mid", "down"];
-          for (var d in arr) {
-            var index = arr[d];
-            for (var i = 0; i <= counts[index]; i++) {
-              if (options2[index]) {
-                result = result + soul[index][randomNumber(soul[index].length)];
-              }
-            }
-          }
-        }
-        return result;
-      }
-      return heComes(text, options);
-    };
-  }
-});
-
-// ../node_modules/@colors/colors/lib/maps/america.js
-var require_america = __commonJS({
-  "../node_modules/@colors/colors/lib/maps/america.js"(exports2, module2) {
-    "use strict";
-    module2["exports"] = function(colors) {
-      return function(letter, i, exploded) {
-        if (letter === " ") return letter;
-        switch (i % 3) {
-          case 0:
-            return colors.red(letter);
-          case 1:
-            return colors.white(letter);
-          case 2:
-            return colors.blue(letter);
-        }
-      };
-    };
-  }
-});
-
-// ../node_modules/@colors/colors/lib/maps/zebra.js
-var require_zebra = __commonJS({
-  "../node_modules/@colors/colors/lib/maps/zebra.js"(exports2, module2) {
-    "use strict";
-    module2["exports"] = function(colors) {
-      return function(letter, i, exploded) {
-        return i % 2 === 0 ? letter : colors.inverse(letter);
-      };
-    };
-  }
-});
-
-// ../node_modules/@colors/colors/lib/maps/rainbow.js
-var require_rainbow = __commonJS({
-  "../node_modules/@colors/colors/lib/maps/rainbow.js"(exports2, module2) {
-    "use strict";
-    module2["exports"] = function(colors) {
-      var rainbowColors = ["red", "yellow", "green", "blue", "magenta"];
-      return function(letter, i, exploded) {
-        if (letter === " ") {
-          return letter;
-        } else {
-          return colors[rainbowColors[i++ % rainbowColors.length]](letter);
-        }
-      };
-    };
-  }
-});
-
-// ../node_modules/@colors/colors/lib/maps/random.js
-var require_random = __commonJS({
-  "../node_modules/@colors/colors/lib/maps/random.js"(exports2, module2) {
-    "use strict";
-    module2["exports"] = function(colors) {
-      var available = [
-        "underline",
-        "inverse",
-        "grey",
-        "yellow",
-        "red",
-        "green",
-        "blue",
-        "white",
-        "cyan",
-        "magenta",
-        "brightYellow",
-        "brightRed",
-        "brightGreen",
-        "brightBlue",
-        "brightWhite",
-        "brightCyan",
-        "brightMagenta"
-      ];
-      return function(letter, i, exploded) {
-        return letter === " " ? letter : colors[available[Math.round(Math.random() * (available.length - 2))]](letter);
-      };
-    };
-  }
-});
-
-// ../node_modules/@colors/colors/lib/colors.js
-var require_colors = __commonJS({
-  "../node_modules/@colors/colors/lib/colors.js"(exports2, module2) {
-    "use strict";
-    var colors = {};
-    module2["exports"] = colors;
-    colors.themes = {};
-    var util = require("util");
-    var ansiStyles3 = colors.styles = require_styles();
-    var defineProps = Object.defineProperties;
-    var newLineRegex = new RegExp(/[\r\n]+/g);
-    colors.supportsColor = require_supports_colors().supportsColor;
-    if (typeof colors.enabled === "undefined") {
-      colors.enabled = colors.supportsColor() !== false;
-    }
-    colors.enable = function() {
-      colors.enabled = true;
-    };
-    colors.disable = function() {
-      colors.enabled = false;
-    };
-    colors.stripColors = colors.strip = function(str) {
-      return ("" + str).replace(/\x1B\[\d+m/g, "");
-    };
-    var stylize = colors.stylize = function stylize2(str, style) {
-      if (!colors.enabled) {
-        return str + "";
-      }
-      var styleMap = ansiStyles3[style];
-      if (!styleMap && style in colors) {
-        return colors[style](str);
-      }
-      return styleMap.open + str + styleMap.close;
-    };
-    var matchOperatorsRe = /[|\\{}()[\]^$+*?.]/g;
-    var escapeStringRegexp = function(str) {
-      if (typeof str !== "string") {
-        throw new TypeError("Expected a string");
-      }
-      return str.replace(matchOperatorsRe, "\\$&");
-    };
-    function build(_styles) {
-      var builder = function builder2() {
-        return applyStyle2.apply(builder2, arguments);
-      };
-      builder._styles = _styles;
-      builder.__proto__ = proto2;
-      return builder;
-    }
-    var styles4 = (function() {
-      var ret = {};
-      ansiStyles3.grey = ansiStyles3.gray;
-      Object.keys(ansiStyles3).forEach(function(key) {
-        ansiStyles3[key].closeRe = new RegExp(escapeStringRegexp(ansiStyles3[key].close), "g");
-        ret[key] = {
-          get: function() {
-            return build(this._styles.concat(key));
-          }
-        };
-      });
-      return ret;
-    })();
-    var proto2 = defineProps(function colors2() {
-    }, styles4);
-    function applyStyle2() {
-      var args = Array.prototype.slice.call(arguments);
-      var str = args.map(function(arg) {
-        if (arg != null && arg.constructor === String) {
-          return arg;
-        } else {
-          return util.inspect(arg);
-        }
-      }).join(" ");
-      if (!colors.enabled || !str) {
-        return str;
-      }
-      var newLinesPresent = str.indexOf("\n") != -1;
-      var nestedStyles = this._styles;
-      var i = nestedStyles.length;
-      while (i--) {
-        var code = ansiStyles3[nestedStyles[i]];
-        str = code.open + str.replace(code.closeRe, code.open) + code.close;
-        if (newLinesPresent) {
-          str = str.replace(newLineRegex, function(match) {
-            return code.close + match + code.open;
-          });
-        }
-      }
-      return str;
-    }
-    colors.setTheme = function(theme) {
-      if (typeof theme === "string") {
-        console.log("colors.setTheme now only accepts an object, not a string.  If you are trying to set a theme from a file, it is now your (the caller's) responsibility to require the file.  The old syntax looked like colors.setTheme(__dirname + '/../themes/generic-logging.js'); The new syntax looks like colors.setTheme(require(__dirname + '/../themes/generic-logging.js'));");
-        return;
-      }
-      for (var style in theme) {
-        (function(style2) {
-          colors[style2] = function(str) {
-            if (typeof theme[style2] === "object") {
-              var out = str;
-              for (var i in theme[style2]) {
-                out = colors[theme[style2][i]](out);
-              }
-              return out;
-            }
-            return colors[theme[style2]](str);
-          };
-        })(style);
-      }
-    };
-    function init2() {
-      var ret = {};
-      Object.keys(styles4).forEach(function(name) {
-        ret[name] = {
-          get: function() {
-            return build([name]);
-          }
-        };
-      });
-      return ret;
-    }
-    var sequencer = function sequencer2(map3, str) {
-      var exploded = str.split("");
-      exploded = exploded.map(map3);
-      return exploded.join("");
-    };
-    colors.trap = require_trap();
-    colors.zalgo = require_zalgo();
-    colors.maps = {};
-    colors.maps.america = require_america()(colors);
-    colors.maps.zebra = require_zebra()(colors);
-    colors.maps.rainbow = require_rainbow()(colors);
-    colors.maps.random = require_random()(colors);
-    for (map2 in colors.maps) {
-      (function(map3) {
-        colors[map3] = function(str) {
-          return sequencer(colors.maps[map3], str);
-        };
-      })(map2);
-    }
-    var map2;
-    defineProps(colors, init2());
-  }
-});
-
-// ../node_modules/@colors/colors/safe.js
-var require_safe = __commonJS({
-  "../node_modules/@colors/colors/safe.js"(exports2, module2) {
-    "use strict";
-    var colors = require_colors();
-    module2["exports"] = colors;
-  }
-});
-
-// ../node_modules/cli-table3/src/cell.js
-var require_cell = __commonJS({
-  "../node_modules/cli-table3/src/cell.js"(exports2, module2) {
-    "use strict";
-    var { info, debug } = require_debug2();
-    var utils = require_utils4();
-    var Cell = class _Cell {
-      /**
-       * A representation of a cell within the table.
-       * Implementations must have `init` and `draw` methods,
-       * as well as `colSpan`, `rowSpan`, `desiredHeight` and `desiredWidth` properties.
-       * @param options
-       * @constructor
-       */
-      constructor(options) {
-        this.setOptions(options);
-        this.x = null;
-        this.y = null;
-      }
-      setOptions(options) {
-        if (["boolean", "number", "bigint", "string"].indexOf(typeof options) !== -1) {
-          options = { content: "" + options };
-        }
-        options = options || {};
-        this.options = options;
-        let content = options.content;
-        if (["boolean", "number", "bigint", "string"].indexOf(typeof content) !== -1) {
-          this.content = String(content);
-        } else if (!content) {
-          this.content = this.options.href || "";
-        } else {
-          throw new Error("Content needs to be a primitive, got: " + typeof content);
-        }
-        this.colSpan = options.colSpan || 1;
-        this.rowSpan = options.rowSpan || 1;
-        if (this.options.href) {
-          Object.defineProperty(this, "href", {
-            get() {
-              return this.options.href;
-            }
-          });
-        }
-      }
-      mergeTableOptions(tableOptions, cells) {
-        this.cells = cells;
-        let optionsChars = this.options.chars || {};
-        let tableChars = tableOptions.chars;
-        let chars = this.chars = {};
-        CHAR_NAMES.forEach(function(name) {
-          setOption(optionsChars, tableChars, name, chars);
-        });
-        this.truncate = this.options.truncate || tableOptions.truncate;
-        let style = this.options.style = this.options.style || {};
-        let tableStyle = tableOptions.style;
-        setOption(style, tableStyle, "padding-left", this);
-        setOption(style, tableStyle, "padding-right", this);
-        this.head = style.head || tableStyle.head;
-        this.border = style.border || tableStyle.border;
-        this.fixedWidth = tableOptions.colWidths[this.x];
-        this.lines = this.computeLines(tableOptions);
-        this.desiredWidth = utils.strlen(this.content) + this.paddingLeft + this.paddingRight;
-        this.desiredHeight = this.lines.length;
-      }
-      computeLines(tableOptions) {
-        const tableWordWrap = tableOptions.wordWrap || tableOptions.textWrap;
-        const { wordWrap = tableWordWrap } = this.options;
-        if (this.fixedWidth && wordWrap) {
-          this.fixedWidth -= this.paddingLeft + this.paddingRight;
-          if (this.colSpan) {
-            let i = 1;
-            while (i < this.colSpan) {
-              this.fixedWidth += tableOptions.colWidths[this.x + i];
-              i++;
-            }
-          }
-          const { wrapOnWordBoundary: tableWrapOnWordBoundary = true } = tableOptions;
-          const { wrapOnWordBoundary = tableWrapOnWordBoundary } = this.options;
-          return this.wrapLines(utils.wordWrap(this.fixedWidth, this.content, wrapOnWordBoundary));
-        }
-        return this.wrapLines(this.content.split("\n"));
-      }
-      wrapLines(computedLines) {
-        const lines = utils.colorizeLines(computedLines);
-        if (this.href) {
-          return lines.map((line) => utils.hyperlink(this.href, line));
-        }
-        return lines;
-      }
-      /**
-       * Initializes the Cells data structure.
-       *
-       * @param tableOptions - A fully populated set of tableOptions.
-       * In addition to the standard default values, tableOptions must have fully populated the
-       * `colWidths` and `rowWidths` arrays. Those arrays must have lengths equal to the number
-       * of columns or rows (respectively) in this table, and each array item must be a Number.
-       *
-       */
-      init(tableOptions) {
-        let x = this.x;
-        let y = this.y;
-        this.widths = tableOptions.colWidths.slice(x, x + this.colSpan);
-        this.heights = tableOptions.rowHeights.slice(y, y + this.rowSpan);
-        this.width = this.widths.reduce(sumPlusOne, -1);
-        this.height = this.heights.reduce(sumPlusOne, -1);
-        this.hAlign = this.options.hAlign || tableOptions.colAligns[x];
-        this.vAlign = this.options.vAlign || tableOptions.rowAligns[y];
-        this.drawRight = x + this.colSpan == tableOptions.colWidths.length;
-      }
-      /**
-       * Draws the given line of the cell.
-       * This default implementation defers to methods `drawTop`, `drawBottom`, `drawLine` and `drawEmpty`.
-       * @param lineNum - can be `top`, `bottom` or a numerical line number.
-       * @param spanningCell - will be a number if being called from a RowSpanCell, and will represent how
-       * many rows below it's being called from. Otherwise it's undefined.
-       * @returns {String} The representation of this line.
-       */
-      draw(lineNum, spanningCell) {
-        if (lineNum == "top") return this.drawTop(this.drawRight);
-        if (lineNum == "bottom") return this.drawBottom(this.drawRight);
-        let content = utils.truncate(this.content, 10, this.truncate);
-        if (!lineNum) {
-          info(`${this.y}-${this.x}: ${this.rowSpan - lineNum}x${this.colSpan} Cell ${content}`);
-        } else {
-        }
-        let padLen = Math.max(this.height - this.lines.length, 0);
-        let padTop;
-        switch (this.vAlign) {
-          case "center":
-            padTop = Math.ceil(padLen / 2);
-            break;
-          case "bottom":
-            padTop = padLen;
-            break;
-          default:
-            padTop = 0;
-        }
-        if (lineNum < padTop || lineNum >= padTop + this.lines.length) {
-          return this.drawEmpty(this.drawRight, spanningCell);
-        }
-        let forceTruncation = this.lines.length > this.height && lineNum + 1 >= this.height;
-        return this.drawLine(lineNum - padTop, this.drawRight, forceTruncation, spanningCell);
-      }
-      /**
-       * Renders the top line of the cell.
-       * @param drawRight - true if this method should render the right edge of the cell.
-       * @returns {String}
-       */
-      drawTop(drawRight) {
-        let content = [];
-        if (this.cells) {
-          this.widths.forEach(function(width, index) {
-            content.push(this._topLeftChar(index));
-            content.push(utils.repeat(this.chars[this.y == 0 ? "top" : "mid"], width));
-          }, this);
-        } else {
-          content.push(this._topLeftChar(0));
-          content.push(utils.repeat(this.chars[this.y == 0 ? "top" : "mid"], this.width));
-        }
-        if (drawRight) {
-          content.push(this.chars[this.y == 0 ? "topRight" : "rightMid"]);
-        }
-        return this.wrapWithStyleColors("border", content.join(""));
-      }
-      _topLeftChar(offset) {
-        let x = this.x + offset;
-        let leftChar;
-        if (this.y == 0) {
-          leftChar = x == 0 ? "topLeft" : offset == 0 ? "topMid" : "top";
-        } else {
-          if (x == 0) {
-            leftChar = "leftMid";
-          } else {
-            leftChar = offset == 0 ? "midMid" : "bottomMid";
-            if (this.cells) {
-              let spanAbove = this.cells[this.y - 1][x] instanceof _Cell.ColSpanCell;
-              if (spanAbove) {
-                leftChar = offset == 0 ? "topMid" : "mid";
-              }
-              if (offset == 0) {
-                let i = 1;
-                while (this.cells[this.y][x - i] instanceof _Cell.ColSpanCell) {
-                  i++;
-                }
-                if (this.cells[this.y][x - i] instanceof _Cell.RowSpanCell) {
-                  leftChar = "leftMid";
-                }
-              }
-            }
-          }
-        }
-        return this.chars[leftChar];
-      }
-      wrapWithStyleColors(styleProperty, content) {
-        if (this[styleProperty] && this[styleProperty].length) {
-          try {
-            let colors = require_safe();
-            for (let i = this[styleProperty].length - 1; i >= 0; i--) {
-              colors = colors[this[styleProperty][i]];
-            }
-            return colors(content);
-          } catch (e) {
-            return content;
-          }
-        } else {
-          return content;
-        }
-      }
-      /**
-       * Renders a line of text.
-       * @param lineNum - Which line of text to render. This is not necessarily the line within the cell.
-       * There may be top-padding above the first line of text.
-       * @param drawRight - true if this method should render the right edge of the cell.
-       * @param forceTruncationSymbol - `true` if the rendered text should end with the truncation symbol even
-       * if the text fits. This is used when the cell is vertically truncated. If `false` the text should
-       * only include the truncation symbol if the text will not fit horizontally within the cell width.
-       * @param spanningCell - a number of if being called from a RowSpanCell. (how many rows below). otherwise undefined.
-       * @returns {String}
-       */
-      drawLine(lineNum, drawRight, forceTruncationSymbol, spanningCell) {
-        let left = this.chars[this.x == 0 ? "left" : "middle"];
-        if (this.x && spanningCell && this.cells) {
-          let cellLeft = this.cells[this.y + spanningCell][this.x - 1];
-          while (cellLeft instanceof ColSpanCell) {
-            cellLeft = this.cells[cellLeft.y][cellLeft.x - 1];
-          }
-          if (!(cellLeft instanceof RowSpanCell)) {
-            left = this.chars["rightMid"];
-          }
-        }
-        let leftPadding = utils.repeat(" ", this.paddingLeft);
-        let right = drawRight ? this.chars["right"] : "";
-        let rightPadding = utils.repeat(" ", this.paddingRight);
-        let line = this.lines[lineNum];
-        let len = this.width - (this.paddingLeft + this.paddingRight);
-        if (forceTruncationSymbol) line += this.truncate || "\u2026";
-        let content = utils.truncate(line, len, this.truncate);
-        content = utils.pad(content, len, " ", this.hAlign);
-        content = leftPadding + content + rightPadding;
-        return this.stylizeLine(left, content, right);
-      }
-      stylizeLine(left, content, right) {
-        left = this.wrapWithStyleColors("border", left);
-        right = this.wrapWithStyleColors("border", right);
-        if (this.y === 0) {
-          content = this.wrapWithStyleColors("head", content);
-        }
-        return left + content + right;
-      }
-      /**
-       * Renders the bottom line of the cell.
-       * @param drawRight - true if this method should render the right edge of the cell.
-       * @returns {String}
-       */
-      drawBottom(drawRight) {
-        let left = this.chars[this.x == 0 ? "bottomLeft" : "bottomMid"];
-        let content = utils.repeat(this.chars.bottom, this.width);
-        let right = drawRight ? this.chars["bottomRight"] : "";
-        return this.wrapWithStyleColors("border", left + content + right);
-      }
-      /**
-       * Renders a blank line of text within the cell. Used for top and/or bottom padding.
-       * @param drawRight - true if this method should render the right edge of the cell.
-       * @param spanningCell - a number of if being called from a RowSpanCell. (how many rows below). otherwise undefined.
-       * @returns {String}
-       */
-      drawEmpty(drawRight, spanningCell) {
-        let left = this.chars[this.x == 0 ? "left" : "middle"];
-        if (this.x && spanningCell && this.cells) {
-          let cellLeft = this.cells[this.y + spanningCell][this.x - 1];
-          while (cellLeft instanceof ColSpanCell) {
-            cellLeft = this.cells[cellLeft.y][cellLeft.x - 1];
-          }
-          if (!(cellLeft instanceof RowSpanCell)) {
-            left = this.chars["rightMid"];
-          }
-        }
-        let right = drawRight ? this.chars["right"] : "";
-        let content = utils.repeat(" ", this.width);
-        return this.stylizeLine(left, content, right);
-      }
-    };
-    var ColSpanCell = class {
-      /**
-       * A Cell that doesn't do anything. It just draws empty lines.
-       * Used as a placeholder in column spanning.
-       * @constructor
-       */
-      constructor() {
-      }
-      draw(lineNum) {
-        if (typeof lineNum === "number") {
-          debug(`${this.y}-${this.x}: 1x1 ColSpanCell`);
-        }
-        return "";
-      }
-      init() {
-      }
-      mergeTableOptions() {
-      }
-    };
-    var RowSpanCell = class {
-      /**
-       * A placeholder Cell for a Cell that spans multiple rows.
-       * It delegates rendering to the original cell, but adds the appropriate offset.
-       * @param originalCell
-       * @constructor
-       */
-      constructor(originalCell) {
-        this.originalCell = originalCell;
-      }
-      init(tableOptions) {
-        let y = this.y;
-        let originalY = this.originalCell.y;
-        this.cellOffset = y - originalY;
-        this.offset = findDimension(tableOptions.rowHeights, originalY, this.cellOffset);
-      }
-      draw(lineNum) {
-        if (lineNum == "top") {
-          return this.originalCell.draw(this.offset, this.cellOffset);
-        }
-        if (lineNum == "bottom") {
-          return this.originalCell.draw("bottom");
-        }
-        debug(`${this.y}-${this.x}: 1x${this.colSpan} RowSpanCell for ${this.originalCell.content}`);
-        return this.originalCell.draw(this.offset + 1 + lineNum);
-      }
-      mergeTableOptions() {
-      }
-    };
-    function firstDefined(...args) {
-      return args.filter((v) => v !== void 0 && v !== null).shift();
-    }
-    function setOption(objA, objB, nameB, targetObj) {
-      let nameA = nameB.split("-");
-      if (nameA.length > 1) {
-        nameA[1] = nameA[1].charAt(0).toUpperCase() + nameA[1].substr(1);
-        nameA = nameA.join("");
-        targetObj[nameA] = firstDefined(objA[nameA], objA[nameB], objB[nameA], objB[nameB]);
-      } else {
-        targetObj[nameB] = firstDefined(objA[nameB], objB[nameB]);
-      }
-    }
-    function findDimension(dimensionTable, startingIndex, span) {
-      let ret = dimensionTable[startingIndex];
-      for (let i = 1; i < span; i++) {
-        ret += 1 + dimensionTable[startingIndex + i];
-      }
-      return ret;
-    }
-    function sumPlusOne(a, b) {
-      return a + b + 1;
-    }
-    var CHAR_NAMES = [
-      "top",
-      "top-mid",
-      "top-left",
-      "top-right",
-      "bottom",
-      "bottom-mid",
-      "bottom-left",
-      "bottom-right",
-      "left",
-      "left-mid",
-      "mid",
-      "mid-mid",
-      "right",
-      "right-mid",
-      "middle"
-    ];
-    module2.exports = Cell;
-    module2.exports.ColSpanCell = ColSpanCell;
-    module2.exports.RowSpanCell = RowSpanCell;
-  }
-});
-
-// ../node_modules/cli-table3/src/layout-manager.js
-var require_layout_manager = __commonJS({
-  "../node_modules/cli-table3/src/layout-manager.js"(exports2, module2) {
-    "use strict";
-    var { warn, debug } = require_debug2();
-    var Cell = require_cell();
-    var { ColSpanCell, RowSpanCell } = Cell;
-    (function() {
-      function next(alloc, col) {
-        if (alloc[col] > 0) {
-          return next(alloc, col + 1);
-        }
-        return col;
-      }
-      function layoutTable(table) {
-        let alloc = {};
-        table.forEach(function(row, rowIndex) {
-          let col = 0;
-          row.forEach(function(cell) {
-            cell.y = rowIndex;
-            cell.x = rowIndex ? next(alloc, col) : col;
-            const rowSpan = cell.rowSpan || 1;
-            const colSpan = cell.colSpan || 1;
-            if (rowSpan > 1) {
-              for (let cs = 0; cs < colSpan; cs++) {
-                alloc[cell.x + cs] = rowSpan;
-              }
-            }
-            col = cell.x + colSpan;
-          });
-          Object.keys(alloc).forEach((idx) => {
-            alloc[idx]--;
-            if (alloc[idx] < 1) delete alloc[idx];
-          });
-        });
-      }
-      function maxWidth(table) {
-        let mw = 0;
-        table.forEach(function(row) {
-          row.forEach(function(cell) {
-            mw = Math.max(mw, cell.x + (cell.colSpan || 1));
-          });
-        });
-        return mw;
-      }
-      function maxHeight(table) {
-        return table.length;
-      }
-      function cellsConflict(cell1, cell2) {
-        let yMin1 = cell1.y;
-        let yMax1 = cell1.y - 1 + (cell1.rowSpan || 1);
-        let yMin2 = cell2.y;
-        let yMax2 = cell2.y - 1 + (cell2.rowSpan || 1);
-        let yConflict = !(yMin1 > yMax2 || yMin2 > yMax1);
-        let xMin1 = cell1.x;
-        let xMax1 = cell1.x - 1 + (cell1.colSpan || 1);
-        let xMin2 = cell2.x;
-        let xMax2 = cell2.x - 1 + (cell2.colSpan || 1);
-        let xConflict = !(xMin1 > xMax2 || xMin2 > xMax1);
-        return yConflict && xConflict;
-      }
-      function conflictExists(rows, x, y) {
-        let i_max = Math.min(rows.length - 1, y);
-        let cell = { x, y };
-        for (let i = 0; i <= i_max; i++) {
-          let row = rows[i];
-          for (let j = 0; j < row.length; j++) {
-            if (cellsConflict(cell, row[j])) {
-              return true;
-            }
-          }
-        }
-        return false;
-      }
-      function allBlank(rows, y, xMin, xMax) {
-        for (let x = xMin; x < xMax; x++) {
-          if (conflictExists(rows, x, y)) {
-            return false;
-          }
-        }
-        return true;
-      }
-      function addRowSpanCells(table) {
-        table.forEach(function(row, rowIndex) {
-          row.forEach(function(cell) {
-            for (let i = 1; i < cell.rowSpan; i++) {
-              let rowSpanCell = new RowSpanCell(cell);
-              rowSpanCell.x = cell.x;
-              rowSpanCell.y = cell.y + i;
-              rowSpanCell.colSpan = cell.colSpan;
-              insertCell(rowSpanCell, table[rowIndex + i]);
-            }
-          });
-        });
-      }
-      function addColSpanCells(cellRows) {
-        for (let rowIndex = cellRows.length - 1; rowIndex >= 0; rowIndex--) {
-          let cellColumns = cellRows[rowIndex];
-          for (let columnIndex = 0; columnIndex < cellColumns.length; columnIndex++) {
-            let cell = cellColumns[columnIndex];
-            for (let k = 1; k < cell.colSpan; k++) {
-              let colSpanCell = new ColSpanCell();
-              colSpanCell.x = cell.x + k;
-              colSpanCell.y = cell.y;
-              cellColumns.splice(columnIndex + 1, 0, colSpanCell);
-            }
-          }
-        }
-      }
-      function insertCell(cell, row) {
-        let x = 0;
-        while (x < row.length && row[x].x < cell.x) {
-          x++;
-        }
-        row.splice(x, 0, cell);
-      }
-      function fillInTable(table) {
-        let h_max = maxHeight(table);
-        let w_max = maxWidth(table);
-        debug(`Max rows: ${h_max}; Max cols: ${w_max}`);
-        for (let y = 0; y < h_max; y++) {
-          for (let x = 0; x < w_max; x++) {
-            if (!conflictExists(table, x, y)) {
-              let opts = { x, y, colSpan: 1, rowSpan: 1 };
-              x++;
-              while (x < w_max && !conflictExists(table, x, y)) {
-                opts.colSpan++;
-                x++;
-              }
-              let y2 = y + 1;
-              while (y2 < h_max && allBlank(table, y2, opts.x, opts.x + opts.colSpan)) {
-                opts.rowSpan++;
-                y2++;
-              }
-              let cell = new Cell(opts);
-              cell.x = opts.x;
-              cell.y = opts.y;
-              warn(`Missing cell at ${cell.y}-${cell.x}.`);
-              insertCell(cell, table[y]);
-            }
-          }
-        }
-      }
-      function generateCells(rows) {
-        return rows.map(function(row) {
-          if (!Array.isArray(row)) {
-            let key = Object.keys(row)[0];
-            row = row[key];
-            if (Array.isArray(row)) {
-              row = row.slice();
-              row.unshift(key);
-            } else {
-              row = [key, row];
-            }
-          }
-          return row.map(function(cell) {
-            return new Cell(cell);
-          });
-        });
-      }
-      function makeTableLayout(rows) {
-        let cellRows = generateCells(rows);
-        layoutTable(cellRows);
-        fillInTable(cellRows);
-        addRowSpanCells(cellRows);
-        addColSpanCells(cellRows);
-        return cellRows;
-      }
-      module2.exports = {
-        makeTableLayout,
-        layoutTable,
-        addRowSpanCells,
-        maxWidth,
-        fillInTable,
-        computeWidths: makeComputeWidths("colSpan", "desiredWidth", "x", 1),
-        computeHeights: makeComputeWidths("rowSpan", "desiredHeight", "y", 1)
-      };
-    })();
-    function makeComputeWidths(colSpan, desiredWidth, x, forcedMin) {
-      return function(vals, table) {
-        let result = [];
-        let spanners = [];
-        let auto = {};
-        table.forEach(function(row) {
-          row.forEach(function(cell) {
-            if ((cell[colSpan] || 1) > 1) {
-              spanners.push(cell);
-            } else {
-              result[cell[x]] = Math.max(result[cell[x]] || 0, cell[desiredWidth] || 0, forcedMin);
-            }
-          });
-        });
-        vals.forEach(function(val, index) {
-          if (typeof val === "number") {
-            result[index] = val;
-          }
-        });
-        for (let k = spanners.length - 1; k >= 0; k--) {
-          let cell = spanners[k];
-          let span = cell[colSpan];
-          let col = cell[x];
-          let existingWidth = result[col];
-          let editableCols = typeof vals[col] === "number" ? 0 : 1;
-          if (typeof existingWidth === "number") {
-            for (let i = 1; i < span; i++) {
-              existingWidth += 1 + result[col + i];
-              if (typeof vals[col + i] !== "number") {
-                editableCols++;
-              }
-            }
-          } else {
-            existingWidth = desiredWidth === "desiredWidth" ? cell.desiredWidth - 1 : 1;
-            if (!auto[col] || auto[col] < existingWidth) {
-              auto[col] = existingWidth;
-            }
-          }
-          if (cell[desiredWidth] > existingWidth) {
-            let i = 0;
-            while (editableCols > 0 && cell[desiredWidth] > existingWidth) {
-              if (typeof vals[col + i] !== "number") {
-                let dif = Math.round((cell[desiredWidth] - existingWidth) / editableCols);
-                existingWidth += dif;
-                result[col + i] += dif;
-                editableCols--;
-              }
-              i++;
-            }
-          }
-        }
-        Object.assign(vals, result, auto);
-        for (let j = 0; j < vals.length; j++) {
-          vals[j] = Math.max(forcedMin, vals[j] || 0);
-        }
-      };
-    }
-  }
-});
-
-// ../node_modules/cli-table3/src/table.js
-var require_table = __commonJS({
-  "../node_modules/cli-table3/src/table.js"(exports2, module2) {
-    "use strict";
-    var debug = require_debug2();
-    var utils = require_utils4();
-    var tableLayout = require_layout_manager();
-    var Table = class extends Array {
-      constructor(opts) {
-        super();
-        const options = utils.mergeOptions(opts);
-        Object.defineProperty(this, "options", {
-          value: options,
-          enumerable: options.debug
-        });
-        if (options.debug) {
-          switch (typeof options.debug) {
-            case "boolean":
-              debug.setDebugLevel(debug.WARN);
-              break;
-            case "number":
-              debug.setDebugLevel(options.debug);
-              break;
-            case "string":
-              debug.setDebugLevel(parseInt(options.debug, 10));
-              break;
-            default:
-              debug.setDebugLevel(debug.WARN);
-              debug.warn(`Debug option is expected to be boolean, number, or string. Received a ${typeof options.debug}`);
-          }
-          Object.defineProperty(this, "messages", {
-            get() {
-              return debug.debugMessages();
-            }
-          });
-        }
-      }
-      toString() {
-        let array2 = this;
-        let headersPresent = this.options.head && this.options.head.length;
-        if (headersPresent) {
-          array2 = [this.options.head];
-          if (this.length) {
-            array2.push.apply(array2, this);
-          }
-        } else {
-          this.options.style.head = [];
-        }
-        let cells = tableLayout.makeTableLayout(array2);
-        cells.forEach(function(row) {
-          row.forEach(function(cell) {
-            cell.mergeTableOptions(this.options, cells);
-          }, this);
-        }, this);
-        tableLayout.computeWidths(this.options.colWidths, cells);
-        tableLayout.computeHeights(this.options.rowHeights, cells);
-        cells.forEach(function(row) {
-          row.forEach(function(cell) {
-            cell.init(this.options);
-          }, this);
-        }, this);
-        let result = [];
-        for (let rowIndex = 0; rowIndex < cells.length; rowIndex++) {
-          let row = cells[rowIndex];
-          let heightOfRow = this.options.rowHeights[rowIndex];
-          if (rowIndex === 0 || !this.options.style.compact || rowIndex == 1 && headersPresent) {
-            doDraw(row, "top", result);
-          }
-          for (let lineNum = 0; lineNum < heightOfRow; lineNum++) {
-            doDraw(row, lineNum, result);
-          }
-          if (rowIndex + 1 == cells.length) {
-            doDraw(row, "bottom", result);
-          }
-        }
-        return result.join("\n");
-      }
-      get width() {
-        let str = this.toString().split("\n");
-        return str[0].length;
-      }
-    };
-    Table.reset = () => debug.reset();
-    function doDraw(row, lineNum, result) {
-      let line = [];
-      row.forEach(function(cell) {
-        line.push(cell.draw(lineNum));
-      });
-      let str = line.join("");
-      if (str.length) result.push(str);
-    }
-    module2.exports = Table;
-  }
-});
-
-// ../node_modules/cli-table3/index.js
-var require_cli_table3 = __commonJS({
-  "../node_modules/cli-table3/index.js"(exports2, module2) {
-    "use strict";
-    module2.exports = require_table();
-  }
-});
-
-// ../node_modules/widest-line/index.js
-function widestLine(string4) {
-  let lineWidth = 0;
-  for (const line of string4.split("\n")) {
-    lineWidth = Math.max(lineWidth, stringWidth(line));
-  }
-  return lineWidth;
-}
-var init_widest_line = __esm({
-  "../node_modules/widest-line/index.js"() {
-    "use strict";
-    init_string_width();
-  }
-});
-
-// ../node_modules/cli-boxes/boxes.json
-var require_boxes = __commonJS({
-  "../node_modules/cli-boxes/boxes.json"(exports2, module2) {
-    module2.exports = {
-      single: {
-        topLeft: "\u250C",
-        top: "\u2500",
-        topRight: "\u2510",
-        right: "\u2502",
-        bottomRight: "\u2518",
-        bottom: "\u2500",
-        bottomLeft: "\u2514",
-        left: "\u2502"
-      },
-      double: {
-        topLeft: "\u2554",
-        top: "\u2550",
-        topRight: "\u2557",
-        right: "\u2551",
-        bottomRight: "\u255D",
-        bottom: "\u2550",
-        bottomLeft: "\u255A",
-        left: "\u2551"
-      },
-      round: {
-        topLeft: "\u256D",
-        top: "\u2500",
-        topRight: "\u256E",
-        right: "\u2502",
-        bottomRight: "\u256F",
-        bottom: "\u2500",
-        bottomLeft: "\u2570",
-        left: "\u2502"
-      },
-      bold: {
-        topLeft: "\u250F",
-        top: "\u2501",
-        topRight: "\u2513",
-        right: "\u2503",
-        bottomRight: "\u251B",
-        bottom: "\u2501",
-        bottomLeft: "\u2517",
-        left: "\u2503"
-      },
-      singleDouble: {
-        topLeft: "\u2553",
-        top: "\u2500",
-        topRight: "\u2556",
-        right: "\u2551",
-        bottomRight: "\u255C",
-        bottom: "\u2500",
-        bottomLeft: "\u2559",
-        left: "\u2551"
-      },
-      doubleSingle: {
-        topLeft: "\u2552",
-        top: "\u2550",
-        topRight: "\u2555",
-        right: "\u2502",
-        bottomRight: "\u255B",
-        bottom: "\u2550",
-        bottomLeft: "\u2558",
-        left: "\u2502"
-      },
-      classic: {
-        topLeft: "+",
-        top: "-",
-        topRight: "+",
-        right: "|",
-        bottomRight: "+",
-        bottom: "-",
-        bottomLeft: "+",
-        left: "|"
-      },
-      arrow: {
-        topLeft: "\u2198",
-        top: "\u2193",
-        topRight: "\u2199",
-        right: "\u2190",
-        bottomRight: "\u2196",
-        bottom: "\u2191",
-        bottomLeft: "\u2197",
-        left: "\u2192"
-      }
-    };
-  }
-});
-
-// ../node_modules/cli-boxes/index.js
-var require_cli_boxes = __commonJS({
-  "../node_modules/cli-boxes/index.js"(exports2, module2) {
-    "use strict";
-    var cliBoxes2 = require_boxes();
-    module2.exports = cliBoxes2;
-    module2.exports.default = cliBoxes2;
-  }
-});
-
-// ../node_modules/camelcase/index.js
-function camelCase(input, options) {
-  if (!(typeof input === "string" || Array.isArray(input))) {
-    throw new TypeError("Expected the input to be `string | string[]`");
-  }
-  options = {
-    pascalCase: false,
-    preserveConsecutiveUppercase: false,
-    ...options
-  };
-  if (Array.isArray(input)) {
-    input = input.map((x) => x.trim()).filter((x) => x.length).join("-");
-  } else {
-    input = input.trim();
-  }
-  if (input.length === 0) {
-    return "";
-  }
-  const toLowerCase = options.locale === false ? (string4) => string4.toLowerCase() : (string4) => string4.toLocaleLowerCase(options.locale);
-  const toUpperCase = options.locale === false ? (string4) => string4.toUpperCase() : (string4) => string4.toLocaleUpperCase(options.locale);
-  if (input.length === 1) {
-    if (SEPARATORS.test(input)) {
-      return "";
-    }
-    return options.pascalCase ? toUpperCase(input) : toLowerCase(input);
-  }
-  const hasUpperCase = input !== toLowerCase(input);
-  if (hasUpperCase) {
-    input = preserveCamelCase(input, toLowerCase, toUpperCase, options.preserveConsecutiveUppercase);
-  }
-  input = input.replace(LEADING_SEPARATORS, "");
-  input = options.preserveConsecutiveUppercase ? preserveConsecutiveUppercase(input, toLowerCase) : toLowerCase(input);
-  if (options.pascalCase) {
-    input = toUpperCase(input.charAt(0)) + input.slice(1);
-  }
-  return postProcess(input, toUpperCase);
-}
-var UPPERCASE, LOWERCASE, LEADING_CAPITAL, IDENTIFIER, SEPARATORS, LEADING_SEPARATORS, SEPARATORS_AND_IDENTIFIER, NUMBERS_AND_IDENTIFIER, preserveCamelCase, preserveConsecutiveUppercase, postProcess;
-var init_camelcase = __esm({
-  "../node_modules/camelcase/index.js"() {
-    "use strict";
-    UPPERCASE = /[\p{Lu}]/u;
-    LOWERCASE = /[\p{Ll}]/u;
-    LEADING_CAPITAL = /^[\p{Lu}](?![\p{Lu}])/gu;
-    IDENTIFIER = /([\p{Alpha}\p{N}_]|$)/u;
-    SEPARATORS = /[_.\- ]+/;
-    LEADING_SEPARATORS = new RegExp("^" + SEPARATORS.source);
-    SEPARATORS_AND_IDENTIFIER = new RegExp(SEPARATORS.source + IDENTIFIER.source, "gu");
-    NUMBERS_AND_IDENTIFIER = new RegExp("\\d+" + IDENTIFIER.source, "gu");
-    preserveCamelCase = (string4, toLowerCase, toUpperCase, preserveConsecutiveUppercase2) => {
-      let isLastCharLower = false;
-      let isLastCharUpper = false;
-      let isLastLastCharUpper = false;
-      let isLastLastCharPreserved = false;
-      for (let index = 0; index < string4.length; index++) {
-        const character = string4[index];
-        isLastLastCharPreserved = index > 2 ? string4[index - 3] === "-" : true;
-        if (isLastCharLower && UPPERCASE.test(character)) {
-          string4 = string4.slice(0, index) + "-" + string4.slice(index);
-          isLastCharLower = false;
-          isLastLastCharUpper = isLastCharUpper;
-          isLastCharUpper = true;
-          index++;
-        } else if (isLastCharUpper && isLastLastCharUpper && LOWERCASE.test(character) && (!isLastLastCharPreserved || preserveConsecutiveUppercase2)) {
-          string4 = string4.slice(0, index - 1) + "-" + string4.slice(index - 1);
-          isLastLastCharUpper = isLastCharUpper;
-          isLastCharUpper = false;
-          isLastCharLower = true;
-        } else {
-          isLastCharLower = toLowerCase(character) === character && toUpperCase(character) !== character;
-          isLastLastCharUpper = isLastCharUpper;
-          isLastCharUpper = toUpperCase(character) === character && toLowerCase(character) !== character;
-        }
-      }
-      return string4;
-    };
-    preserveConsecutiveUppercase = (input, toLowerCase) => {
-      LEADING_CAPITAL.lastIndex = 0;
-      return input.replaceAll(LEADING_CAPITAL, (match) => toLowerCase(match));
-    };
-    postProcess = (input, toUpperCase) => {
-      SEPARATORS_AND_IDENTIFIER.lastIndex = 0;
-      NUMBERS_AND_IDENTIFIER.lastIndex = 0;
-      return input.replaceAll(NUMBERS_AND_IDENTIFIER, (match, pattern, offset) => ["_", "-"].includes(input.charAt(offset + match.length)) ? match : toUpperCase(match)).replaceAll(SEPARATORS_AND_IDENTIFIER, (_, identifier) => toUpperCase(identifier));
-    };
-  }
-});
-
-// ../node_modules/ansi-align/node_modules/ansi-regex/index.js
-var require_ansi_regex2 = __commonJS({
-  "../node_modules/ansi-align/node_modules/ansi-regex/index.js"(exports2, module2) {
-    "use strict";
-    module2.exports = ({ onlyFirst = false } = {}) => {
-      const pattern = [
-        "[\\u001B\\u009B][[\\]()#;?]*(?:(?:(?:(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]+)*|[a-zA-Z\\d]+(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]*)*)?\\u0007)",
-        "(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PR-TZcf-ntqry=><~]))"
-      ].join("|");
-      return new RegExp(pattern, onlyFirst ? void 0 : "g");
-    };
-  }
-});
-
-// ../node_modules/ansi-align/node_modules/strip-ansi/index.js
-var require_strip_ansi2 = __commonJS({
-  "../node_modules/ansi-align/node_modules/strip-ansi/index.js"(exports2, module2) {
-    "use strict";
-    var ansiRegex2 = require_ansi_regex2();
-    module2.exports = (string4) => typeof string4 === "string" ? string4.replace(ansiRegex2(), "") : string4;
-  }
-});
-
-// ../node_modules/ansi-align/node_modules/is-fullwidth-code-point/index.js
-var require_is_fullwidth_code_point2 = __commonJS({
-  "../node_modules/ansi-align/node_modules/is-fullwidth-code-point/index.js"(exports2, module2) {
-    "use strict";
-    var isFullwidthCodePoint2 = (codePoint) => {
-      if (Number.isNaN(codePoint)) {
-        return false;
-      }
-      if (codePoint >= 4352 && (codePoint <= 4447 || // Hangul Jamo
-      codePoint === 9001 || // LEFT-POINTING ANGLE BRACKET
-      codePoint === 9002 || // RIGHT-POINTING ANGLE BRACKET
-      // CJK Radicals Supplement .. Enclosed CJK Letters and Months
-      11904 <= codePoint && codePoint <= 12871 && codePoint !== 12351 || // Enclosed CJK Letters and Months .. CJK Unified Ideographs Extension A
-      12880 <= codePoint && codePoint <= 19903 || // CJK Unified Ideographs .. Yi Radicals
-      19968 <= codePoint && codePoint <= 42182 || // Hangul Jamo Extended-A
-      43360 <= codePoint && codePoint <= 43388 || // Hangul Syllables
-      44032 <= codePoint && codePoint <= 55203 || // CJK Compatibility Ideographs
-      63744 <= codePoint && codePoint <= 64255 || // Vertical Forms
-      65040 <= codePoint && codePoint <= 65049 || // CJK Compatibility Forms .. Small Form Variants
-      65072 <= codePoint && codePoint <= 65131 || // Halfwidth and Fullwidth Forms
-      65281 <= codePoint && codePoint <= 65376 || 65504 <= codePoint && codePoint <= 65510 || // Kana Supplement
-      110592 <= codePoint && codePoint <= 110593 || // Enclosed Ideographic Supplement
-      127488 <= codePoint && codePoint <= 127569 || // CJK Unified Ideographs Extension B .. Tertiary Ideographic Plane
-      131072 <= codePoint && codePoint <= 262141)) {
-        return true;
-      }
-      return false;
-    };
-    module2.exports = isFullwidthCodePoint2;
-    module2.exports.default = isFullwidthCodePoint2;
-  }
-});
-
-// ../node_modules/ansi-align/node_modules/emoji-regex/index.js
-var require_emoji_regex2 = __commonJS({
-  "../node_modules/ansi-align/node_modules/emoji-regex/index.js"(exports2, module2) {
-    "use strict";
-    module2.exports = function() {
-      return /\uD83C\uDFF4\uDB40\uDC67\uDB40\uDC62(?:\uDB40\uDC65\uDB40\uDC6E\uDB40\uDC67|\uDB40\uDC73\uDB40\uDC63\uDB40\uDC74|\uDB40\uDC77\uDB40\uDC6C\uDB40\uDC73)\uDB40\uDC7F|\uD83D\uDC68(?:\uD83C\uDFFC\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68\uD83C\uDFFB|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFF\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB-\uDFFE])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFE\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB-\uDFFD])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFD\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB\uDFFC])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\u200D(?:\u2764\uFE0F\u200D(?:\uD83D\uDC8B\u200D)?\uD83D\uDC68|(?:\uD83D[\uDC68\uDC69])\u200D(?:\uD83D\uDC66\u200D\uD83D\uDC66|\uD83D\uDC67\u200D(?:\uD83D[\uDC66\uDC67]))|\uD83D\uDC66\u200D\uD83D\uDC66|\uD83D\uDC67\u200D(?:\uD83D[\uDC66\uDC67])|(?:\uD83D[\uDC68\uDC69])\u200D(?:\uD83D[\uDC66\uDC67])|[\u2695\u2696\u2708]\uFE0F|\uD83D[\uDC66\uDC67]|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|(?:\uD83C\uDFFB\u200D[\u2695\u2696\u2708]|\uD83C\uDFFF\u200D[\u2695\u2696\u2708]|\uD83C\uDFFE\u200D[\u2695\u2696\u2708]|\uD83C\uDFFD\u200D[\u2695\u2696\u2708]|\uD83C\uDFFC\u200D[\u2695\u2696\u2708])\uFE0F|\uD83C\uDFFB\u200D(?:\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C[\uDFFB-\uDFFF])|(?:\uD83E\uDDD1\uD83C\uDFFB\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1|\uD83D\uDC69\uD83C\uDFFC\u200D\uD83E\uDD1D\u200D\uD83D\uDC69)\uD83C\uDFFB|\uD83E\uDDD1(?:\uD83C\uDFFF\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1(?:\uD83C[\uDFFB-\uDFFF])|\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1)|(?:\uD83E\uDDD1\uD83C\uDFFE\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1|\uD83D\uDC69\uD83C\uDFFF\u200D\uD83E\uDD1D\u200D(?:\uD83D[\uDC68\uDC69]))(?:\uD83C[\uDFFB-\uDFFE])|(?:\uD83E\uDDD1\uD83C\uDFFC\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1|\uD83D\uDC69\uD83C\uDFFD\u200D\uD83E\uDD1D\u200D\uD83D\uDC69)(?:\uD83C[\uDFFB\uDFFC])|\uD83D\uDC69(?:\uD83C\uDFFE\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB-\uDFFD\uDFFF])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFC\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB\uDFFD-\uDFFF])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFB\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFC-\uDFFF])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFD\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB\uDFFC\uDFFE\uDFFF])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\u200D(?:\u2764\uFE0F\u200D(?:\uD83D\uDC8B\u200D(?:\uD83D[\uDC68\uDC69])|\uD83D[\uDC68\uDC69])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFF\u200D(?:\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD]))|\uD83D\uDC69\u200D\uD83D\uDC69\u200D(?:\uD83D\uDC66\u200D\uD83D\uDC66|\uD83D\uDC67\u200D(?:\uD83D[\uDC66\uDC67]))|(?:\uD83E\uDDD1\uD83C\uDFFD\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1|\uD83D\uDC69\uD83C\uDFFE\u200D\uD83E\uDD1D\u200D\uD83D\uDC69)(?:\uD83C[\uDFFB-\uDFFD])|\uD83D\uDC69\u200D\uD83D\uDC66\u200D\uD83D\uDC66|\uD83D\uDC69\u200D\uD83D\uDC69\u200D(?:\uD83D[\uDC66\uDC67])|(?:\uD83D\uDC41\uFE0F\u200D\uD83D\uDDE8|\uD83D\uDC69(?:\uD83C\uDFFF\u200D[\u2695\u2696\u2708]|\uD83C\uDFFE\u200D[\u2695\u2696\u2708]|\uD83C\uDFFC\u200D[\u2695\u2696\u2708]|\uD83C\uDFFB\u200D[\u2695\u2696\u2708]|\uD83C\uDFFD\u200D[\u2695\u2696\u2708]|\u200D[\u2695\u2696\u2708])|(?:(?:\u26F9|\uD83C[\uDFCB\uDFCC]|\uD83D\uDD75)\uFE0F|\uD83D\uDC6F|\uD83E[\uDD3C\uDDDE\uDDDF])\u200D[\u2640\u2642]|(?:\u26F9|\uD83C[\uDFCB\uDFCC]|\uD83D\uDD75)(?:\uD83C[\uDFFB-\uDFFF])\u200D[\u2640\u2642]|(?:\uD83C[\uDFC3\uDFC4\uDFCA]|\uD83D[\uDC6E\uDC71\uDC73\uDC77\uDC81\uDC82\uDC86\uDC87\uDE45-\uDE47\uDE4B\uDE4D\uDE4E\uDEA3\uDEB4-\uDEB6]|\uD83E[\uDD26\uDD37-\uDD39\uDD3D\uDD3E\uDDB8\uDDB9\uDDCD-\uDDCF\uDDD6-\uDDDD])(?:(?:\uD83C[\uDFFB-\uDFFF])\u200D[\u2640\u2642]|\u200D[\u2640\u2642])|\uD83C\uDFF4\u200D\u2620)\uFE0F|\uD83D\uDC69\u200D\uD83D\uDC67\u200D(?:\uD83D[\uDC66\uDC67])|\uD83C\uDFF3\uFE0F\u200D\uD83C\uDF08|\uD83D\uDC15\u200D\uD83E\uDDBA|\uD83D\uDC69\u200D\uD83D\uDC66|\uD83D\uDC69\u200D\uD83D\uDC67|\uD83C\uDDFD\uD83C\uDDF0|\uD83C\uDDF4\uD83C\uDDF2|\uD83C\uDDF6\uD83C\uDDE6|[#\*0-9]\uFE0F\u20E3|\uD83C\uDDE7(?:\uD83C[\uDDE6\uDDE7\uDDE9-\uDDEF\uDDF1-\uDDF4\uDDF6-\uDDF9\uDDFB\uDDFC\uDDFE\uDDFF])|\uD83C\uDDF9(?:\uD83C[\uDDE6\uDDE8\uDDE9\uDDEB-\uDDED\uDDEF-\uDDF4\uDDF7\uDDF9\uDDFB\uDDFC\uDDFF])|\uD83C\uDDEA(?:\uD83C[\uDDE6\uDDE8\uDDEA\uDDEC\uDDED\uDDF7-\uDDFA])|\uD83E\uDDD1(?:\uD83C[\uDFFB-\uDFFF])|\uD83C\uDDF7(?:\uD83C[\uDDEA\uDDF4\uDDF8\uDDFA\uDDFC])|\uD83D\uDC69(?:\uD83C[\uDFFB-\uDFFF])|\uD83C\uDDF2(?:\uD83C[\uDDE6\uDDE8-\uDDED\uDDF0-\uDDFF])|\uD83C\uDDE6(?:\uD83C[\uDDE8-\uDDEC\uDDEE\uDDF1\uDDF2\uDDF4\uDDF6-\uDDFA\uDDFC\uDDFD\uDDFF])|\uD83C\uDDF0(?:\uD83C[\uDDEA\uDDEC-\uDDEE\uDDF2\uDDF3\uDDF5\uDDF7\uDDFC\uDDFE\uDDFF])|\uD83C\uDDED(?:\uD83C[\uDDF0\uDDF2\uDDF3\uDDF7\uDDF9\uDDFA])|\uD83C\uDDE9(?:\uD83C[\uDDEA\uDDEC\uDDEF\uDDF0\uDDF2\uDDF4\uDDFF])|\uD83C\uDDFE(?:\uD83C[\uDDEA\uDDF9])|\uD83C\uDDEC(?:\uD83C[\uDDE6\uDDE7\uDDE9-\uDDEE\uDDF1-\uDDF3\uDDF5-\uDDFA\uDDFC\uDDFE])|\uD83C\uDDF8(?:\uD83C[\uDDE6-\uDDEA\uDDEC-\uDDF4\uDDF7-\uDDF9\uDDFB\uDDFD-\uDDFF])|\uD83C\uDDEB(?:\uD83C[\uDDEE-\uDDF0\uDDF2\uDDF4\uDDF7])|\uD83C\uDDF5(?:\uD83C[\uDDE6\uDDEA-\uDDED\uDDF0-\uDDF3\uDDF7-\uDDF9\uDDFC\uDDFE])|\uD83C\uDDFB(?:\uD83C[\uDDE6\uDDE8\uDDEA\uDDEC\uDDEE\uDDF3\uDDFA])|\uD83C\uDDF3(?:\uD83C[\uDDE6\uDDE8\uDDEA-\uDDEC\uDDEE\uDDF1\uDDF4\uDDF5\uDDF7\uDDFA\uDDFF])|\uD83C\uDDE8(?:\uD83C[\uDDE6\uDDE8\uDDE9\uDDEB-\uDDEE\uDDF0-\uDDF5\uDDF7\uDDFA-\uDDFF])|\uD83C\uDDF1(?:\uD83C[\uDDE6-\uDDE8\uDDEE\uDDF0\uDDF7-\uDDFB\uDDFE])|\uD83C\uDDFF(?:\uD83C[\uDDE6\uDDF2\uDDFC])|\uD83C\uDDFC(?:\uD83C[\uDDEB\uDDF8])|\uD83C\uDDFA(?:\uD83C[\uDDE6\uDDEC\uDDF2\uDDF3\uDDF8\uDDFE\uDDFF])|\uD83C\uDDEE(?:\uD83C[\uDDE8-\uDDEA\uDDF1-\uDDF4\uDDF6-\uDDF9])|\uD83C\uDDEF(?:\uD83C[\uDDEA\uDDF2\uDDF4\uDDF5])|(?:\uD83C[\uDFC3\uDFC4\uDFCA]|\uD83D[\uDC6E\uDC71\uDC73\uDC77\uDC81\uDC82\uDC86\uDC87\uDE45-\uDE47\uDE4B\uDE4D\uDE4E\uDEA3\uDEB4-\uDEB6]|\uD83E[\uDD26\uDD37-\uDD39\uDD3D\uDD3E\uDDB8\uDDB9\uDDCD-\uDDCF\uDDD6-\uDDDD])(?:\uD83C[\uDFFB-\uDFFF])|(?:\u26F9|\uD83C[\uDFCB\uDFCC]|\uD83D\uDD75)(?:\uD83C[\uDFFB-\uDFFF])|(?:[\u261D\u270A-\u270D]|\uD83C[\uDF85\uDFC2\uDFC7]|\uD83D[\uDC42\uDC43\uDC46-\uDC50\uDC66\uDC67\uDC6B-\uDC6D\uDC70\uDC72\uDC74-\uDC76\uDC78\uDC7C\uDC83\uDC85\uDCAA\uDD74\uDD7A\uDD90\uDD95\uDD96\uDE4C\uDE4F\uDEC0\uDECC]|\uD83E[\uDD0F\uDD18-\uDD1C\uDD1E\uDD1F\uDD30-\uDD36\uDDB5\uDDB6\uDDBB\uDDD2-\uDDD5])(?:\uD83C[\uDFFB-\uDFFF])|(?:[\u231A\u231B\u23E9-\u23EC\u23F0\u23F3\u25FD\u25FE\u2614\u2615\u2648-\u2653\u267F\u2693\u26A1\u26AA\u26AB\u26BD\u26BE\u26C4\u26C5\u26CE\u26D4\u26EA\u26F2\u26F3\u26F5\u26FA\u26FD\u2705\u270A\u270B\u2728\u274C\u274E\u2753-\u2755\u2757\u2795-\u2797\u27B0\u27BF\u2B1B\u2B1C\u2B50\u2B55]|\uD83C[\uDC04\uDCCF\uDD8E\uDD91-\uDD9A\uDDE6-\uDDFF\uDE01\uDE1A\uDE2F\uDE32-\uDE36\uDE38-\uDE3A\uDE50\uDE51\uDF00-\uDF20\uDF2D-\uDF35\uDF37-\uDF7C\uDF7E-\uDF93\uDFA0-\uDFCA\uDFCF-\uDFD3\uDFE0-\uDFF0\uDFF4\uDFF8-\uDFFF]|\uD83D[\uDC00-\uDC3E\uDC40\uDC42-\uDCFC\uDCFF-\uDD3D\uDD4B-\uDD4E\uDD50-\uDD67\uDD7A\uDD95\uDD96\uDDA4\uDDFB-\uDE4F\uDE80-\uDEC5\uDECC\uDED0-\uDED2\uDED5\uDEEB\uDEEC\uDEF4-\uDEFA\uDFE0-\uDFEB]|\uD83E[\uDD0D-\uDD3A\uDD3C-\uDD45\uDD47-\uDD71\uDD73-\uDD76\uDD7A-\uDDA2\uDDA5-\uDDAA\uDDAE-\uDDCA\uDDCD-\uDDFF\uDE70-\uDE73\uDE78-\uDE7A\uDE80-\uDE82\uDE90-\uDE95])|(?:[#\*0-9\xA9\xAE\u203C\u2049\u2122\u2139\u2194-\u2199\u21A9\u21AA\u231A\u231B\u2328\u23CF\u23E9-\u23F3\u23F8-\u23FA\u24C2\u25AA\u25AB\u25B6\u25C0\u25FB-\u25FE\u2600-\u2604\u260E\u2611\u2614\u2615\u2618\u261D\u2620\u2622\u2623\u2626\u262A\u262E\u262F\u2638-\u263A\u2640\u2642\u2648-\u2653\u265F\u2660\u2663\u2665\u2666\u2668\u267B\u267E\u267F\u2692-\u2697\u2699\u269B\u269C\u26A0\u26A1\u26AA\u26AB\u26B0\u26B1\u26BD\u26BE\u26C4\u26C5\u26C8\u26CE\u26CF\u26D1\u26D3\u26D4\u26E9\u26EA\u26F0-\u26F5\u26F7-\u26FA\u26FD\u2702\u2705\u2708-\u270D\u270F\u2712\u2714\u2716\u271D\u2721\u2728\u2733\u2734\u2744\u2747\u274C\u274E\u2753-\u2755\u2757\u2763\u2764\u2795-\u2797\u27A1\u27B0\u27BF\u2934\u2935\u2B05-\u2B07\u2B1B\u2B1C\u2B50\u2B55\u3030\u303D\u3297\u3299]|\uD83C[\uDC04\uDCCF\uDD70\uDD71\uDD7E\uDD7F\uDD8E\uDD91-\uDD9A\uDDE6-\uDDFF\uDE01\uDE02\uDE1A\uDE2F\uDE32-\uDE3A\uDE50\uDE51\uDF00-\uDF21\uDF24-\uDF93\uDF96\uDF97\uDF99-\uDF9B\uDF9E-\uDFF0\uDFF3-\uDFF5\uDFF7-\uDFFF]|\uD83D[\uDC00-\uDCFD\uDCFF-\uDD3D\uDD49-\uDD4E\uDD50-\uDD67\uDD6F\uDD70\uDD73-\uDD7A\uDD87\uDD8A-\uDD8D\uDD90\uDD95\uDD96\uDDA4\uDDA5\uDDA8\uDDB1\uDDB2\uDDBC\uDDC2-\uDDC4\uDDD1-\uDDD3\uDDDC-\uDDDE\uDDE1\uDDE3\uDDE8\uDDEF\uDDF3\uDDFA-\uDE4F\uDE80-\uDEC5\uDECB-\uDED2\uDED5\uDEE0-\uDEE5\uDEE9\uDEEB\uDEEC\uDEF0\uDEF3-\uDEFA\uDFE0-\uDFEB]|\uD83E[\uDD0D-\uDD3A\uDD3C-\uDD45\uDD47-\uDD71\uDD73-\uDD76\uDD7A-\uDDA2\uDDA5-\uDDAA\uDDAE-\uDDCA\uDDCD-\uDDFF\uDE70-\uDE73\uDE78-\uDE7A\uDE80-\uDE82\uDE90-\uDE95])\uFE0F|(?:[\u261D\u26F9\u270A-\u270D]|\uD83C[\uDF85\uDFC2-\uDFC4\uDFC7\uDFCA-\uDFCC]|\uD83D[\uDC42\uDC43\uDC46-\uDC50\uDC66-\uDC78\uDC7C\uDC81-\uDC83\uDC85-\uDC87\uDC8F\uDC91\uDCAA\uDD74\uDD75\uDD7A\uDD90\uDD95\uDD96\uDE45-\uDE47\uDE4B-\uDE4F\uDEA3\uDEB4-\uDEB6\uDEC0\uDECC]|\uD83E[\uDD0F\uDD18-\uDD1F\uDD26\uDD30-\uDD39\uDD3C-\uDD3E\uDDB5\uDDB6\uDDB8\uDDB9\uDDBB\uDDCD-\uDDCF\uDDD1-\uDDDD])/g;
-    };
-  }
-});
-
-// ../node_modules/ansi-align/node_modules/string-width/index.js
-var require_string_width2 = __commonJS({
-  "../node_modules/ansi-align/node_modules/string-width/index.js"(exports2, module2) {
-    "use strict";
-    var stripAnsi2 = require_strip_ansi2();
-    var isFullwidthCodePoint2 = require_is_fullwidth_code_point2();
-    var emojiRegex = require_emoji_regex2();
-    var stringWidth4 = (string4) => {
-      if (typeof string4 !== "string" || string4.length === 0) {
-        return 0;
-      }
-      string4 = stripAnsi2(string4);
-      if (string4.length === 0) {
-        return 0;
-      }
-      string4 = string4.replace(emojiRegex(), "  ");
-      let width = 0;
-      for (let i = 0; i < string4.length; i++) {
-        const code = string4.codePointAt(i);
-        if (code <= 31 || code >= 127 && code <= 159) {
-          continue;
-        }
-        if (code >= 768 && code <= 879) {
-          continue;
-        }
-        if (code > 65535) {
-          i++;
-        }
-        width += isFullwidthCodePoint2(code) ? 2 : 1;
-      }
-      return width;
-    };
-    module2.exports = stringWidth4;
-    module2.exports.default = stringWidth4;
-  }
-});
-
-// ../node_modules/ansi-align/index.js
-var require_ansi_align = __commonJS({
-  "../node_modules/ansi-align/index.js"(exports2, module2) {
-    "use strict";
-    var stringWidth4 = require_string_width2();
-    function ansiAlign2(text, opts) {
-      if (!text) return text;
-      opts = opts || {};
-      const align = opts.align || "center";
-      if (align === "left") return text;
-      const split = opts.split || "\n";
-      const pad = opts.pad || " ";
-      const widthDiffFn = align !== "right" ? halfDiff : fullDiff;
-      let returnString = false;
-      if (!Array.isArray(text)) {
-        returnString = true;
-        text = String(text).split(split);
-      }
-      let width;
-      let maxWidth = 0;
-      text = text.map(function(str) {
-        str = String(str);
-        width = stringWidth4(str);
-        maxWidth = Math.max(width, maxWidth);
-        return {
-          str,
-          width
-        };
-      }).map(function(obj) {
-        return new Array(widthDiffFn(maxWidth, obj.width) + 1).join(pad) + obj.str;
-      });
-      return returnString ? text.join(split) : text;
-    }
-    ansiAlign2.left = function left(text) {
-      return ansiAlign2(text, { align: "left" });
-    };
-    ansiAlign2.center = function center(text) {
-      return ansiAlign2(text, { align: "center" });
-    };
-    ansiAlign2.right = function right(text) {
-      return ansiAlign2(text, { align: "right" });
-    };
-    module2.exports = ansiAlign2;
-    function halfDiff(maxWidth, curWidth) {
-      return Math.floor((maxWidth - curWidth) / 2);
-    }
-    function fullDiff(maxWidth, curWidth) {
-      return maxWidth - curWidth;
-    }
-  }
-});
-
-// ../node_modules/boxen/index.js
-var boxen_exports = {};
-__export(boxen_exports, {
-  _borderStyles: () => import_cli_boxes2.default,
-  default: () => boxen
-});
-function boxen(text, options) {
-  options = {
-    padding: 0,
-    borderStyle: "single",
-    dimBorder: false,
-    textAlignment: "left",
-    float: "left",
-    titleAlignment: "left",
-    ...options
-  };
-  if (options.align) {
-    options.textAlignment = options.align;
-  }
-  if (options.borderColor && !isColorValid(options.borderColor)) {
-    throw new Error(`${options.borderColor} is not a valid borderColor`);
-  }
-  if (options.backgroundColor && !isColorValid(options.backgroundColor)) {
-    throw new Error(`${options.backgroundColor} is not a valid backgroundColor`);
-  }
-  options.padding = getObject(options.padding);
-  options.margin = getObject(options.margin);
-  options = determineDimensions(text, options);
-  text = makeContentText(text, options);
-  return boxContent(text, options.width, options);
-}
-var import_node_process12, import_cli_boxes, import_ansi_align, import_cli_boxes2, NEWLINE, PAD, NONE, terminalColumns, getObject, getBorderWidth, getBorderChars, makeTitle, makeContentText, boxContent, sanitizeOptions, formatTitle, determineDimensions, isHex, isColorValid, getColorFunction, getBGColorFunction;
-var init_boxen = __esm({
-  "../node_modules/boxen/index.js"() {
-    "use strict";
-    import_node_process12 = __toESM(require("process"), 1);
-    init_string_width();
-    init_source();
-    init_widest_line();
-    import_cli_boxes = __toESM(require_cli_boxes(), 1);
-    init_camelcase();
-    import_ansi_align = __toESM(require_ansi_align(), 1);
-    init_wrap_ansi();
-    import_cli_boxes2 = __toESM(require_cli_boxes(), 1);
-    NEWLINE = "\n";
-    PAD = " ";
-    NONE = "none";
-    terminalColumns = () => {
-      const { env: env3, stdout, stderr } = import_node_process12.default;
-      if (stdout?.columns) {
-        return stdout.columns;
-      }
-      if (stderr?.columns) {
-        return stderr.columns;
-      }
-      if (env3.COLUMNS) {
-        return Number.parseInt(env3.COLUMNS, 10);
-      }
-      return 80;
-    };
-    getObject = (detail) => typeof detail === "number" ? {
-      top: detail,
-      right: detail * 3,
-      bottom: detail,
-      left: detail * 3
-    } : {
-      top: 0,
-      right: 0,
-      bottom: 0,
-      left: 0,
-      ...detail
-    };
-    getBorderWidth = (borderStyle) => borderStyle === NONE ? 0 : 2;
-    getBorderChars = (borderStyle) => {
-      const sides = [
-        "topLeft",
-        "topRight",
-        "bottomRight",
-        "bottomLeft",
-        "left",
-        "right",
-        "top",
-        "bottom"
-      ];
-      let characters;
-      if (borderStyle === NONE) {
-        borderStyle = {};
-        for (const side of sides) {
-          borderStyle[side] = "";
-        }
-      }
-      if (typeof borderStyle === "string") {
-        characters = import_cli_boxes.default[borderStyle];
-        if (!characters) {
-          throw new TypeError(`Invalid border style: ${borderStyle}`);
-        }
-      } else {
-        if (typeof borderStyle?.vertical === "string") {
-          borderStyle.left = borderStyle.vertical;
-          borderStyle.right = borderStyle.vertical;
-        }
-        if (typeof borderStyle?.horizontal === "string") {
-          borderStyle.top = borderStyle.horizontal;
-          borderStyle.bottom = borderStyle.horizontal;
-        }
-        for (const side of sides) {
-          if (borderStyle[side] === null || typeof borderStyle[side] !== "string") {
-            throw new TypeError(`Invalid border style: ${side}`);
-          }
-        }
-        characters = borderStyle;
-      }
-      return characters;
-    };
-    makeTitle = (text, horizontal, alignment) => {
-      let title = "";
-      const textWidth = stringWidth(text);
-      switch (alignment) {
-        case "left": {
-          title = text + horizontal.slice(textWidth);
-          break;
-        }
-        case "right": {
-          title = horizontal.slice(textWidth) + text;
-          break;
-        }
-        default: {
-          horizontal = horizontal.slice(textWidth);
-          if (horizontal.length % 2 === 1) {
-            horizontal = horizontal.slice(Math.floor(horizontal.length / 2));
-            title = horizontal.slice(1) + text + horizontal;
-          } else {
-            horizontal = horizontal.slice(horizontal.length / 2);
-            title = horizontal + text + horizontal;
-          }
-          break;
-        }
-      }
-      return title;
-    };
-    makeContentText = (text, { padding, width, textAlignment, height }) => {
-      text = (0, import_ansi_align.default)(text, { align: textAlignment });
-      let lines = text.split(NEWLINE);
-      const textWidth = widestLine(text);
-      const max = width - padding.left - padding.right;
-      if (textWidth > max) {
-        const newLines = [];
-        for (const line of lines) {
-          const createdLines = wrapAnsi(line, max, { hard: true });
-          const alignedLines = (0, import_ansi_align.default)(createdLines, { align: textAlignment });
-          const alignedLinesArray = alignedLines.split("\n");
-          const longestLength = Math.max(...alignedLinesArray.map((s) => stringWidth(s)));
-          for (const alignedLine of alignedLinesArray) {
-            let paddedLine;
-            switch (textAlignment) {
-              case "center": {
-                paddedLine = PAD.repeat((max - longestLength) / 2) + alignedLine;
-                break;
-              }
-              case "right": {
-                paddedLine = PAD.repeat(max - longestLength) + alignedLine;
-                break;
-              }
-              default: {
-                paddedLine = alignedLine;
-                break;
-              }
-            }
-            newLines.push(paddedLine);
-          }
-        }
-        lines = newLines;
-      }
-      if (textAlignment === "center" && textWidth < max) {
-        lines = lines.map((line) => PAD.repeat((max - textWidth) / 2) + line);
-      } else if (textAlignment === "right" && textWidth < max) {
-        lines = lines.map((line) => PAD.repeat(max - textWidth) + line);
-      }
-      const paddingLeft = PAD.repeat(padding.left);
-      const paddingRight = PAD.repeat(padding.right);
-      lines = lines.map((line) => {
-        const newLine = paddingLeft + line + paddingRight;
-        return newLine + PAD.repeat(width - stringWidth(newLine));
-      });
-      if (padding.top > 0) {
-        lines = [...Array.from({ length: padding.top }).fill(PAD.repeat(width)), ...lines];
-      }
-      if (padding.bottom > 0) {
-        lines = [...lines, ...Array.from({ length: padding.bottom }).fill(PAD.repeat(width))];
-      }
-      if (height && lines.length > height) {
-        lines = lines.slice(0, height);
-      } else if (height && lines.length < height) {
-        lines = [...lines, ...Array.from({ length: height - lines.length }).fill(PAD.repeat(width))];
-      }
-      return lines.join(NEWLINE);
-    };
-    boxContent = (content, contentWidth, options) => {
-      const colorizeBorder = (border) => {
-        const newBorder = options.borderColor ? getColorFunction(options.borderColor)(border) : border;
-        return options.dimBorder ? source_default.dim(newBorder) : newBorder;
-      };
-      const colorizeContent = (content2) => options.backgroundColor ? getBGColorFunction(options.backgroundColor)(content2) : content2;
-      const chars = getBorderChars(options.borderStyle);
-      const columns2 = terminalColumns();
-      let marginLeft = PAD.repeat(options.margin.left);
-      if (options.float === "center") {
-        const marginWidth = Math.max((columns2 - contentWidth - getBorderWidth(options.borderStyle)) / 2, 0);
-        marginLeft = PAD.repeat(marginWidth);
-      } else if (options.float === "right") {
-        const marginWidth = Math.max(columns2 - contentWidth - options.margin.right - getBorderWidth(options.borderStyle), 0);
-        marginLeft = PAD.repeat(marginWidth);
-      }
-      let result = "";
-      if (options.margin.top) {
-        result += NEWLINE.repeat(options.margin.top);
-      }
-      if (options.borderStyle !== NONE || options.title) {
-        result += colorizeBorder(marginLeft + chars.topLeft + (options.title ? makeTitle(options.title, chars.top.repeat(contentWidth), options.titleAlignment) : chars.top.repeat(contentWidth)) + chars.topRight) + NEWLINE;
-      }
-      const lines = content.split(NEWLINE);
-      result += lines.map((line) => marginLeft + colorizeBorder(chars.left) + colorizeContent(line) + colorizeBorder(chars.right)).join(NEWLINE);
-      if (options.borderStyle !== NONE) {
-        result += NEWLINE + colorizeBorder(marginLeft + chars.bottomLeft + chars.bottom.repeat(contentWidth) + chars.bottomRight);
-      }
-      if (options.margin.bottom) {
-        result += NEWLINE.repeat(options.margin.bottom);
-      }
-      return result;
-    };
-    sanitizeOptions = (options) => {
-      if (options.fullscreen && import_node_process12.default?.stdout) {
-        let newDimensions = [import_node_process12.default.stdout.columns, import_node_process12.default.stdout.rows];
-        if (typeof options.fullscreen === "function") {
-          newDimensions = options.fullscreen(...newDimensions);
-        }
-        options.width ||= newDimensions[0];
-        options.height ||= newDimensions[1];
-      }
-      options.width &&= Math.max(1, options.width - getBorderWidth(options.borderStyle));
-      options.height &&= Math.max(1, options.height - getBorderWidth(options.borderStyle));
-      return options;
-    };
-    formatTitle = (title, borderStyle) => borderStyle === NONE ? title : ` ${title} `;
-    determineDimensions = (text, options) => {
-      options = sanitizeOptions(options);
-      const widthOverride = options.width !== void 0;
-      const columns2 = terminalColumns();
-      const borderWidth = getBorderWidth(options.borderStyle);
-      const maxWidth = columns2 - options.margin.left - options.margin.right - borderWidth;
-      const widest = widestLine(wrapAnsi(text, columns2 - borderWidth, { hard: true, trim: false })) + options.padding.left + options.padding.right;
-      if (options.title && widthOverride) {
-        options.title = options.title.slice(0, Math.max(0, options.width - 2));
-        options.title &&= formatTitle(options.title, options.borderStyle);
-      } else if (options.title) {
-        options.title = options.title.slice(0, Math.max(0, maxWidth - 2));
-        if (options.title) {
-          options.title = formatTitle(options.title, options.borderStyle);
-          if (stringWidth(options.title) > widest) {
-            options.width = stringWidth(options.title);
-          }
-        }
-      }
-      options.width ||= widest;
-      if (!widthOverride) {
-        if (options.margin.left && options.margin.right && options.width > maxWidth) {
-          const spaceForMargins = columns2 - options.width - borderWidth;
-          const multiplier = spaceForMargins / (options.margin.left + options.margin.right);
-          options.margin.left = Math.max(0, Math.floor(options.margin.left * multiplier));
-          options.margin.right = Math.max(0, Math.floor(options.margin.right * multiplier));
-        }
-        options.width = Math.min(options.width, columns2 - borderWidth - options.margin.left - options.margin.right);
-      }
-      if (options.width - (options.padding.left + options.padding.right) <= 0) {
-        options.padding.left = 0;
-        options.padding.right = 0;
-      }
-      if (options.height && options.height - (options.padding.top + options.padding.bottom) <= 0) {
-        options.padding.top = 0;
-        options.padding.bottom = 0;
-      }
-      return options;
-    };
-    isHex = (color2) => color2.match(/^#(?:[0-f]{3}){1,2}$/i);
-    isColorValid = (color2) => typeof color2 === "string" && (source_default[color2] ?? isHex(color2));
-    getColorFunction = (color2) => isHex(color2) ? source_default.hex(color2) : source_default[color2];
-    getBGColorFunction = (color2) => isHex(color2) ? source_default.bgHex(color2) : source_default[camelCase(["bg", color2])];
-  }
-});
-
 // src/index.ts
 var import_node_fs10 = require("fs");
-var import_node_path11 = require("path");
+var import_node_path14 = require("path");
 
 // ../node_modules/commander/esm.mjs
 var import_index = __toESM(require_commander(), 1);
@@ -33949,6 +31259,8 @@ var kleur_default = $;
 
 // src/commands/claude.ts
 var import_node_child_process2 = require("child_process");
+var import_fs_extra4 = __toESM(require_lib(), 1);
+var import_node_path2 = __toESM(require("path"), 1);
 
 // src/utils/repo-root.ts
 var import_fs_extra = __toESM(require_lib(), 1);
@@ -34015,201 +31327,147 @@ var import_fs_extra2 = __toESM(require_lib(), 1);
 var import_os = __toESM(require("os"), 1);
 var import_path2 = __toESM(require("path"), 1);
 var import_child_process = require("child_process");
-var OFFICIAL_CLAUDE_MARKETPLACE = "https://github.com/anthropics/claude-plugins-official";
-var OFFICIAL_CLAUDE_PLUGINS = [
-  "serena@claude-plugins-official",
-  "context7@claude-plugins-official",
-  "github@claude-plugins-official",
-  "ralph-loop@claude-plugins-official"
-];
 function renderClaudeRuntimePlanSummary() {
   console.log(kleur_default.bold("\n  Claude Runtime Sync"));
-  console.log(`${kleur_default.cyan("  \u2022")}  xtrm-tools plugin install/update`);
-  console.log(`${kleur_default.cyan("  \u2022")}  register official marketplace: claude-plugins-official`);
-  console.log(`${kleur_default.cyan("  \u2022")}  official plugins: ${OFFICIAL_CLAUDE_PLUGINS.join(", ")}`);
-  console.log(`${kleur_default.cyan("  \u2022")}  cleanup stale pre-plugin files`);
-  console.log(`${kleur_default.cyan("  \u2022")}  verify plugin state`);
+  console.log(`${kleur_default.cyan("  \u2022")}  read canonical hooks: .xtrm/config/hooks.json`);
+  console.log(`${kleur_default.cyan("  \u2022")}  resolve project hooks dir: <project>/.xtrm/hooks`);
+  console.log(`${kleur_default.cyan("  \u2022")}  write generated hooks into Claude settings.json`);
+  console.log(`${kleur_default.cyan("  \u2022")}  preserve existing settings (permissions/model/skillSuggestions)`);
 }
 async function runClaudeRuntimeSyncPhase(opts) {
   const { repoRoot, dryRun = false, isGlobal = false } = opts;
-  console.log(t.bold("\n  \u2699  xtrm-tools  (Claude Code plugin)"));
+  console.log(t.bold("\n  \u2699  xtrm-tools  (Claude hooks wiring)"));
   warnIfOutdated();
-  const scope = isGlobal ? "user" : "project";
-  if (dryRun) {
-    console.log(kleur_default.dim(`  [DRY RUN] Would register xtrm-tools marketplace and install plugin (--scope ${scope})`));
-    await cleanStalePrePluginFiles(repoRoot, true);
-    const dryRunResult = {
-      installedOfficial: 0,
-      alreadyInstalledOfficial: OFFICIAL_CLAUDE_PLUGINS.length,
-      failedOfficial: [],
-      verificationPassed: true
-    };
-    console.log(t.bold("\n  \u2699  official Claude plugins  (serena/context7/github/ralph-loop)"));
-    console.log(kleur_default.dim(`  [DRY RUN] Would register claude-plugins-official marketplace and install official plugins (--scope ${scope})`));
-    console.log(kleur_default.dim("  [DRY RUN] Would verify xtrm-tools + official plugin presence\n"));
-    return dryRunResult;
-  }
-  const xtrmPkgRoot = import_path2.default.resolve(__dirname, "..", "..");
-  (0, import_child_process.spawnSync)("claude", ["plugin", "marketplace", "add", xtrmPkgRoot, "--scope", scope], { stdio: "pipe" });
-  const installedPluginsPath = import_path2.default.join(import_os.default.homedir(), ".claude", "plugins", "installed_plugins.json");
-  const pluginSourceDir = import_path2.default.join(xtrmPkgRoot, "plugins", "xtrm-tools");
-  let cachePath;
-  if (import_fs_extra2.default.existsSync(installedPluginsPath)) {
-    try {
-      const installed = JSON.parse(import_fs_extra2.default.readFileSync(installedPluginsPath, "utf8"));
-      const entries = installed?.plugins?.["xtrm-tools@xtrm-tools"] ?? [];
-      cachePath = entries.find((e) => e.installPath && import_fs_extra2.default.existsSync(e.installPath))?.installPath;
-    } catch {
-      cachePath = void 0;
+  const packageRoot = await resolvePackageRoot();
+  const hooksConfigPath = import_path2.default.join(packageRoot, ".xtrm", "config", "hooks.json");
+  const settingsTemplatePath = import_path2.default.join(packageRoot, ".xtrm", "config", "settings.json");
+  const hooksDir = import_path2.default.resolve(repoRoot, ".xtrm", "hooks");
+  const hooksConfig = await import_fs_extra2.default.readJson(hooksConfigPath);
+  const generatedHooks = generateHooks(hooksConfig, hooksDir);
+  const settingsPath = isGlobal ? import_path2.default.join(import_os.default.homedir(), ".claude", "settings.json") : import_path2.default.join(repoRoot, ".claude", "settings.json");
+  const hasExistingSettings = await import_fs_extra2.default.pathExists(settingsPath);
+  const baseSettings = await readBaseSettings(settingsTemplatePath);
+  const existingSettings = hasExistingSettings ? await readSettings(settingsPath) : {};
+  const mergedSettings = hasExistingSettings ? { ...existingSettings, hooks: generatedHooks } : { ...baseSettings, hooks: generatedHooks };
+  const hooksEventsWritten = Object.keys(generatedHooks).length;
+  const hooksEntriesWritten = countHookEntries(generatedHooks);
+  console.log(t.label(`  \u2022 hooks source: ${hooksConfigPath}`));
+  console.log(t.label(`  \u2022 hooks dir: ${hooksDir}`));
+  console.log(t.label(`  \u2022 target settings: ${settingsPath}`));
+  if (hasExistingSettings) {
+    console.log(t.muted("  \u21BB Existing settings found; merging and replacing only hooks section"));
+    if (Array.isArray(existingSettings.permissions?.allow)) {
+      console.log(t.muted(`  \u21BB Preserved permissions.allow (${existingSettings.permissions.allow.length} entries)`));
     }
-  }
-  if (cachePath) {
-    try {
-      const srcMcp = import_path2.default.join(pluginSourceDir, ".mcp.json");
-      const dstMcp = import_path2.default.join(cachePath, ".mcp.json");
-      if (import_fs_extra2.default.existsSync(srcMcp)) import_fs_extra2.default.copyFileSync(srcMcp, dstMcp);
-      const srcPlugin = import_path2.default.join(pluginSourceDir, ".claude-plugin", "plugin.json");
-      const dstPlugin = import_path2.default.join(cachePath, ".claude-plugin", "plugin.json");
-      if (import_fs_extra2.default.existsSync(srcPlugin)) {
-        import_fs_extra2.default.ensureDirSync(import_path2.default.dirname(dstPlugin));
-        import_fs_extra2.default.copyFileSync(srcPlugin, dstPlugin);
-      }
-    } catch {
+    if (typeof existingSettings.model === "string") {
+      console.log(t.muted(`  \u21BB Preserved model (${existingSettings.model})`));
     }
-    console.log(t.success("  \u2713 xtrm-tools plugin up to date"));
+    if (typeof existingSettings.skillSuggestions?.enabled === "boolean") {
+      console.log(t.muted(`  \u21BB Preserved skillSuggestions.enabled (${existingSettings.skillSuggestions.enabled})`));
+    }
   } else {
-    (0, import_child_process.spawnSync)("claude", ["plugin", "install", "xtrm-tools@xtrm-tools", "--scope", scope], { stdio: "inherit" });
-    console.log(t.success("  \u2713 xtrm-tools plugin installed"));
-    console.log(t.warning("  \u21BB Restart Claude Code for the new plugin hooks to take effect"));
+    console.log(t.muted("  \u21BB No existing settings found; creating with template defaults + generated hooks"));
   }
-  await cleanStalePrePluginFiles(repoRoot, false);
-  const officialPluginResult = installOfficialClaudePlugins(isGlobal);
-  installUserStatusLine(false);
-  const verificationPassed = verifyClaudeRuntimeSync();
+  if (dryRun) {
+    console.log(kleur_default.dim(`  [DRY RUN] Would write ${hooksEntriesWritten} hook commands across ${hooksEventsWritten} events`));
+    console.log(kleur_default.dim("  [DRY RUN] Hooks section would be replaced entirely\n"));
+    return {
+      settingsPath,
+      hooksEventsWritten,
+      hooksEntriesWritten,
+      wroteSettings: false
+    };
+  }
+  await import_fs_extra2.default.ensureDir(import_path2.default.dirname(settingsPath));
+  await import_fs_extra2.default.writeJson(settingsPath, mergedSettings, { spaces: 2 });
+  console.log(t.success(`  \u2713 Wrote ${hooksEntriesWritten} hook commands across ${hooksEventsWritten} events`));
+  console.log(t.success("  \u2713 Claude settings hooks synced\n"));
   return {
-    ...officialPluginResult,
-    verificationPassed
+    settingsPath,
+    hooksEventsWritten,
+    hooksEntriesWritten,
+    wroteSettings: true
   };
 }
-function installOfficialClaudePlugins(isGlobal) {
-  console.log(t.bold("\n  \u2699  official Claude plugins  (serena/context7/github/ralph-loop)"));
-  const scope = isGlobal ? "user" : "project";
-  (0, import_child_process.spawnSync)("claude", ["plugin", "marketplace", "add", OFFICIAL_CLAUDE_MARKETPLACE, "--scope", scope], { stdio: "pipe" });
-  const listResult = (0, import_child_process.spawnSync)("claude", ["plugin", "list"], { encoding: "utf8", stdio: "pipe" });
-  const installedOutput = listResult.stdout ?? "";
-  let installedCount = 0;
-  let alreadyInstalledCount = 0;
-  const failedOfficial = [];
-  for (const pluginId of OFFICIAL_CLAUDE_PLUGINS) {
-    if (installedOutput.includes(pluginId)) {
-      alreadyInstalledCount += 1;
-      continue;
-    }
-    const result = (0, import_child_process.spawnSync)("claude", ["plugin", "install", pluginId, "--scope", scope], { stdio: "inherit" });
-    if (result.status === 0) {
-      installedCount += 1;
-    } else {
-      failedOfficial.push(pluginId);
-      console.log(t.warning(`  ! Failed to install ${pluginId}. Install manually: claude plugin install ${pluginId} --scope ${scope}`));
-    }
+function generateHooks(hooksConfig, hooksDir) {
+  const generated = {};
+  for (const [event, hookDefinitions] of Object.entries(hooksConfig.hooks ?? {})) {
+    generated[event] = hookDefinitions.map((definition) => {
+      const scriptPath = normalizePath(import_path2.default.resolve(hooksDir, definition.script));
+      const commandHook = {
+        type: "command",
+        command: buildScriptCommand(definition.script, scriptPath)
+      };
+      if (typeof definition.timeout === "number") {
+        commandHook.timeout = definition.timeout;
+      }
+      const wrapper = { hooks: [commandHook] };
+      if (definition.matcher) {
+        wrapper.matcher = definition.matcher;
+      }
+      return wrapper;
+    });
   }
-  console.log(t.success(`  \u2713 Official plugins ready (${installedCount} installed, ${alreadyInstalledCount} already present)
-`));
-  return {
-    installedOfficial: installedCount,
-    alreadyInstalledOfficial: alreadyInstalledCount,
-    failedOfficial
-  };
+  return generated;
 }
-async function cleanStalePrePluginFiles(repoRoot, dryRun) {
-  const home = import_os.default.homedir();
-  const staleHooksDir = import_path2.default.join(home, ".claude", "hooks");
-  const staleSkillsDir = import_path2.default.join(home, ".claude", "skills");
-  const settingsPath = import_path2.default.join(home, ".claude", "settings.json");
-  const removed = [];
-  const repoHooksDir = import_path2.default.join(repoRoot, "hooks");
-  if (await import_fs_extra2.default.pathExists(repoHooksDir) && await import_fs_extra2.default.pathExists(staleHooksDir)) {
-    const repoHookNames = (await import_fs_extra2.default.readdir(repoHooksDir)).filter((n) => n !== "README.md" && n !== "hooks.json");
-    for (const name of repoHookNames) {
-      const staleFile = import_path2.default.join(staleHooksDir, name);
-      if (await import_fs_extra2.default.pathExists(staleFile)) {
-        if (dryRun) {
-          console.log(kleur_default.dim(`  [DRY RUN] Would remove stale hook: ~/.claude/hooks/${name}`));
-        } else {
-          await import_fs_extra2.default.remove(staleFile);
-          console.log(t.muted(`  \u2717 Removed stale hook: ~/.claude/hooks/${name}`));
-        }
-        removed.push(`hooks/${name}`);
+function buildScriptCommand(scriptName, absoluteScriptPath) {
+  const extension = import_path2.default.extname(scriptName).toLowerCase();
+  if (extension === ".mjs" || extension === ".cjs" || extension === ".js") {
+    return `node "${absoluteScriptPath}"`;
+  }
+  if (extension === ".sh") {
+    return `bash "${absoluteScriptPath}"`;
+  }
+  const pythonBin = process.platform === "win32" ? "python" : "python3";
+  return `${pythonBin} "${absoluteScriptPath}"`;
+}
+function countHookEntries(hooks) {
+  let count = 0;
+  for (const wrappers of Object.values(hooks)) {
+    count += wrappers.length;
+  }
+  return count;
+}
+function normalizePath(inputPath) {
+  if (process.platform !== "win32") {
+    return inputPath;
+  }
+  return inputPath.replace(/\\/g, "/");
+}
+async function readSettings(settingsPath) {
+  try {
+    return await import_fs_extra2.default.readJson(settingsPath);
+  } catch {
+    return {};
+  }
+}
+async function readBaseSettings(settingsTemplatePath) {
+  try {
+    return await import_fs_extra2.default.readJson(settingsTemplatePath);
+  } catch {
+    return {
+      permissions: {
+        allow: [],
+        defaultMode: "default"
+      },
+      skillSuggestions: {
+        enabled: true
       }
+    };
+  }
+}
+async function resolvePackageRoot() {
+  const candidates = [
+    import_path2.default.resolve(__dirname, "../.."),
+    import_path2.default.resolve(__dirname, "../../..")
+  ];
+  for (const candidate of candidates) {
+    const hooksConfigPath = import_path2.default.join(candidate, ".xtrm", "config", "hooks.json");
+    if (await import_fs_extra2.default.pathExists(hooksConfigPath)) {
+      return candidate;
     }
   }
-  const repoSkillsDir = import_path2.default.join(repoRoot, "skills");
-  if (await import_fs_extra2.default.pathExists(repoSkillsDir) && await import_fs_extra2.default.pathExists(staleSkillsDir)) {
-    const repoSkillNames = (await import_fs_extra2.default.readdir(repoSkillsDir)).filter((n) => !n.startsWith("."));
-    for (const name of repoSkillNames) {
-      const staleDir = import_path2.default.join(staleSkillsDir, name);
-      if (await import_fs_extra2.default.pathExists(staleDir)) {
-        if (dryRun) {
-          console.log(kleur_default.dim(`  [DRY RUN] Would remove stale skill: ~/.claude/skills/${name}`));
-        } else {
-          await import_fs_extra2.default.remove(staleDir);
-          console.log(t.muted(`  \u2717 Removed stale skill: ~/.claude/skills/${name}`));
-        }
-        removed.push(`skills/${name}`);
-      }
-    }
-  }
-  if (await import_fs_extra2.default.pathExists(settingsPath)) {
-    let settings;
-    try {
-      settings = await import_fs_extra2.default.readJson(settingsPath);
-    } catch {
-      settings = null;
-    }
-    if (settings && settings.hooks && typeof settings.hooks === "object") {
-      let settingsModified = false;
-      for (const [event, matchers] of Object.entries(settings.hooks)) {
-        if (!Array.isArray(matchers)) continue;
-        const cleanedMatchers = matchers.filter((matcher) => {
-          const hooks = Array.isArray(matcher?.hooks) ? matcher.hooks : [];
-          const staleHooks = hooks.filter((h) => {
-            const cmd = typeof h?.command === "string" ? h.command : "";
-            return cmd.includes("/.claude/hooks/") && !cmd.includes("${CLAUDE_PLUGIN_ROOT}");
-          });
-          if (staleHooks.length > 0) {
-            for (const h of staleHooks) {
-              const msg = `settings.json [${event}] hook: ${h.command}`;
-              if (dryRun) {
-                console.log(kleur_default.dim(`  [DRY RUN] Would remove stale ${msg}`));
-              } else {
-                console.log(t.muted(`  \u2717 Removed stale ${msg}`));
-              }
-              removed.push(msg);
-            }
-            const remainingHooks = hooks.filter((h) => {
-              const cmd = typeof h?.command === "string" ? h.command : "";
-              return !(cmd.includes("/.claude/hooks/") && !cmd.includes("${CLAUDE_PLUGIN_ROOT}"));
-            });
-            if (remainingHooks.length === 0) return false;
-            matcher.hooks = remainingHooks;
-            settingsModified = true;
-            return true;
-          }
-          return true;
-        });
-        if (cleanedMatchers.length !== matchers.length) {
-          settings.hooks[event] = cleanedMatchers;
-          settingsModified = true;
-        }
-      }
-      if (settingsModified && !dryRun) {
-        await import_fs_extra2.default.writeJson(settingsPath, settings, { spaces: 2 });
-      }
-    }
-  }
-  if (removed.length === 0) {
-    console.log(t.success("  \u2713 No stale pre-plugin files found"));
-  }
+  throw new Error("Failed to locate xtrm-tools package root (.xtrm/config/hooks.json not found).");
 }
 function warnIfOutdated() {
   try {
@@ -34232,47 +31490,11 @@ function warnIfOutdated() {
   } catch {
   }
 }
-function installUserStatusLine(dryRun) {
-  try {
-    const scriptPath = import_path2.default.resolve(__dirname, "..", "..", "hooks", "statusline.mjs");
-    if (!import_fs_extra2.default.existsSync(scriptPath)) return;
-    const settingsPath = import_path2.default.join(import_os.default.homedir(), ".claude", "settings.json");
-    const settings = import_fs_extra2.default.existsSync(settingsPath) ? JSON.parse(import_fs_extra2.default.readFileSync(settingsPath, "utf8")) : {};
-    if (dryRun) {
-      console.log(kleur_default.dim("  [DRY RUN] Would write statusLine \u2192 ~/.claude/settings.json"));
-      return;
-    }
-    settings.statusLine = { type: "command", command: `node ${scriptPath}`, padding: 1 };
-    import_fs_extra2.default.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + "\n");
-    console.log(t.success("  \u2713 statusLine registered in ~/.claude/settings.json"));
-  } catch {
-  }
-}
-function verifyClaudeRuntimeSync() {
-  const listResult = (0, import_child_process.spawnSync)("claude", ["plugin", "list"], { encoding: "utf8", stdio: "pipe" });
-  const pluginOutput = listResult.stdout ?? "";
-  const missing = [];
-  if (!pluginOutput.includes("xtrm-tools@xtrm-tools") && !pluginOutput.includes("xtrm-tools")) {
-    missing.push("xtrm-tools@xtrm-tools");
-  }
-  for (const pluginId of OFFICIAL_CLAUDE_PLUGINS) {
-    if (!pluginOutput.includes(pluginId)) {
-      missing.push(pluginId);
-    }
-  }
-  if (missing.length === 0) {
-    console.log(t.success("  \u2713 Claude runtime verification passed"));
-    return true;
-  }
-  console.log(t.warning(`  ! Claude runtime verification incomplete (${missing.length} missing): ${missing.join(", ")}`));
-  return false;
-}
 
 // src/utils/worktree-session.ts
 var import_node_path = __toESM(require("path"), 1);
 var import_node_child_process = require("child_process");
 var import_node_fs = require("fs");
-var import_node_os2 = require("os");
 
 // src/core/pi-runtime.ts
 var import_child_process2 = require("child_process");
@@ -34317,9 +31539,9 @@ var MANAGED_PACKAGES = [
 ];
 async function extensionHash(extDir) {
   if (!await import_fs_extra3.default.pathExists(extDir)) return "";
-  const crypto2 = await import("crypto");
+  const crypto4 = await import("crypto");
   const files = await listFilesRecursive(extDir);
-  const hash2 = crypto2.createHash("sha256");
+  const hash2 = crypto4.createHash("sha256");
   for (const relativeFile of files) {
     const absoluteFile = import_path3.default.join(extDir, relativeFile);
     hash2.update(relativeFile);
@@ -34653,19 +31875,12 @@ function gitMainRepoRoot(cwd) {
   const commonDir = import_node_path.default.isAbsolute(raw) ? raw : import_node_path.default.resolve(cwd, raw);
   return commonDir.endsWith("/.git") || commonDir.endsWith("\\.git") ? import_node_path.default.dirname(commonDir) : commonDir;
 }
-function resolveStatuslineScript() {
-  const pluginsFile = import_node_path.default.join((0, import_node_os2.homedir)(), ".claude", "plugins", "installed_plugins.json");
-  try {
-    const plugins = JSON.parse((0, import_node_fs.readFileSync)(pluginsFile, "utf8"));
-    for (const [key, entries] of Object.entries(plugins?.plugins ?? {})) {
-      if (!key.startsWith("xtrm-tools@") || !entries?.length) continue;
-      const p = import_node_path.default.join(entries[0].installPath, "hooks", "statusline.mjs");
-      if ((0, import_node_fs.existsSync)(p)) return p;
-    }
-  } catch {
-  }
-  const fallback = import_node_path.default.join((0, import_node_os2.homedir)(), ".claude", "hooks", "statusline.mjs");
-  return (0, import_node_fs.existsSync)(fallback) ? fallback : null;
+function resolveStatuslineScript(worktreePath) {
+  const localStatusline = import_node_path.default.join(worktreePath, ".xtrm", "hooks", "statusline.mjs");
+  if ((0, import_node_fs.existsSync)(localStatusline)) return localStatusline;
+  const repoStatusline = import_node_path.default.join(worktreePath, "hooks", "statusline.mjs");
+  if ((0, import_node_fs.existsSync)(repoStatusline)) return repoStatusline;
+  return null;
 }
 function sessionMetaPath(worktreePath) {
   return import_node_path.default.join(worktreePath, ".xtrm", "session-meta.json");
@@ -34679,43 +31894,12 @@ function writeSessionMeta(worktreePath, runtime) {
   } catch {
   }
 }
-function registerPluginsForWorktree(repoRoot, worktreePath) {
-  const pluginsFile = import_node_path.default.join((0, import_node_os2.homedir)(), ".claude", "plugins", "installed_plugins.json");
-  try {
-    const data = JSON.parse((0, import_node_fs.readFileSync)(pluginsFile, "utf8"));
-    const plugins = data?.plugins;
-    if (!plugins || typeof plugins !== "object") return;
-    let changed = false;
-    for (const [, entries] of Object.entries(plugins)) {
-      if (!Array.isArray(entries)) continue;
-      const hasWorktreeEntry = entries.some((e) => e.projectPath === worktreePath);
-      if (hasWorktreeEntry) continue;
-      const repoEntries = entries.filter(
-        (e) => e.scope === "project" && e.projectPath === repoRoot
-      );
-      for (const entry of repoEntries) {
-        entries.push({ ...entry, projectPath: worktreePath });
-        changed = true;
-      }
-    }
-    if (changed) (0, import_node_fs.writeFileSync)(pluginsFile, JSON.stringify(data, null, 2));
-  } catch {
-  }
-}
 function unregisterPluginsForWorktree(worktreePath) {
-  const pluginsFile = import_node_path.default.join((0, import_node_os2.homedir)(), ".claude", "plugins", "installed_plugins.json");
+  const localSettingsPath = import_node_path.default.join(worktreePath, ".claude", "settings.local.json");
   try {
-    const data = JSON.parse((0, import_node_fs.readFileSync)(pluginsFile, "utf8"));
-    const plugins = data?.plugins;
-    if (!plugins || typeof plugins !== "object") return;
-    let changed = false;
-    for (const [key, entries] of Object.entries(plugins)) {
-      if (!Array.isArray(entries)) continue;
-      const before = entries.length;
-      plugins[key] = entries.filter((e) => e.projectPath !== worktreePath);
-      if (plugins[key].length < before) changed = true;
+    if ((0, import_node_fs.existsSync)(localSettingsPath)) {
+      (0, import_node_fs.unlinkSync)(localSettingsPath);
     }
-    if (changed) (0, import_node_fs.writeFileSync)(pluginsFile, JSON.stringify(data, null, 2));
   } catch {
   }
 }
@@ -34807,7 +31991,6 @@ async function launchWorktreeSession(opts) {
     }
   }
   if (runtime === "claude") {
-    registerPluginsForWorktree(mainRepoRoot, worktreePath);
     const claudeDir = import_node_path.default.join(worktreePath, ".claude");
     const mainSkillsDir = import_node_path.default.join(mainRepoRoot, ".claude", "skills");
     const wtSkillsDir = import_node_path.default.join(claudeDir, "skills");
@@ -34818,18 +32001,22 @@ async function launchWorktreeSession(opts) {
       } catch {
       }
     }
-    const localSettings = {
-      enabledPlugins: { "xtrm-tools@xtrm-tools": true }
-    };
-    const statuslinePath = resolveStatuslineScript();
+    const localSettings = {};
+    const statuslinePath = resolveStatuslineScript(worktreePath);
     if (statuslinePath) {
-      localSettings.statusLine = { type: "command", command: `node ${statuslinePath}`, padding: 1 };
+      localSettings.statusLine = {
+        type: "command",
+        command: `node ${JSON.stringify(statuslinePath)}`,
+        padding: 1
+      };
     }
     const localSettingsPath = import_node_path.default.join(claudeDir, "settings.local.json");
-    try {
-      (0, import_node_fs.mkdirSync)(claudeDir, { recursive: true });
-      (0, import_node_fs.writeFileSync)(localSettingsPath, JSON.stringify(localSettings, null, 2));
-    } catch {
+    if (Object.keys(localSettings).length > 0) {
+      try {
+        (0, import_node_fs.mkdirSync)(claudeDir, { recursive: true });
+        (0, import_node_fs.writeFileSync)(localSettingsPath, JSON.stringify(localSettings, null, 2));
+      } catch {
+      }
     }
   }
   const runtimeCmd = runtime === "claude" ? "claude" : "pi";
@@ -35109,15 +32296,37 @@ function isPnpmInstalled() {
 }
 
 // src/commands/claude.ts
+function getProjectSettingsPath(repoRoot) {
+  return import_node_path2.default.join(repoRoot, ".claude", "settings.json");
+}
+function hasXtrmHookWiring(settingsPath) {
+  if (!import_fs_extra4.default.existsSync(settingsPath)) return false;
+  try {
+    const data = import_fs_extra4.default.readJsonSync(settingsPath);
+    const groups = Object.values(data.hooks ?? {});
+    for (const wrappers of groups) {
+      for (const wrapper of wrappers) {
+        for (const hook of wrapper.hooks ?? []) {
+          if (typeof hook.command === "string" && hook.command.includes(".xtrm/hooks/")) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
 function createClaudeCommand() {
-  const cmd = new Command("claude").description("Launch a Claude session in a sandboxed worktree, or manage the Claude runtime").argument("[name]", "Optional session name \u2014 used as xt/<name> branch (random if omitted)").action(async (name) => {
+  const cmd = new Command("claude").description("Launch a Claude session in a sandboxed worktree, or manage Claude hook wiring").argument("[name]", "Optional session name \u2014 used as xt/<name> branch (random if omitted)").action(async (name) => {
     await launchWorktreeSession({ runtime: "claude", name });
   });
-  cmd.command("install").description("Install/refresh the xtrm-tools Claude plugin and official plugins").option("--dry-run", "Preview without making changes", false).option("-y, --yes", "Skip confirmation prompt", false).action(async (opts) => {
+  cmd.command("install").description("Install/refresh Claude settings hook wiring from .xtrm/config/hooks.json").option("--dry-run", "Preview without making changes", false).option("-y, --yes", "Skip confirmation prompt", false).action(async (opts) => {
     if (!opts.dryRun) {
       const confirmed = await confirmDestructiveAction({
         yes: opts.yes,
-        message: "Sync Claude runtime and remove stale pre-plugin files?",
+        message: "Sync Claude hooks into settings.json?",
         initial: true
       });
       if (!confirmed) {
@@ -35128,10 +32337,10 @@ function createClaudeCommand() {
     const repoRoot = await findRepoRoot();
     await runClaudeRuntimeSyncPhase({ repoRoot, dryRun: opts.dryRun, isGlobal: false });
   });
-  cmd.command("reload").alias("reinstall").description("Reinstall Claude plugin from live repo (refreshes cached copy)").option("-y, --yes", "Skip confirmation prompt", false).action(async (opts) => {
+  cmd.command("reload").alias("reinstall").description("Re-sync Claude settings hook wiring from the current repo").option("-y, --yes", "Skip confirmation prompt", false).action(async (opts) => {
     const confirmed = await confirmDestructiveAction({
       yes: opts.yes,
-      message: "Re-sync Claude runtime and remove stale pre-plugin files?",
+      message: "Re-sync Claude hooks into settings.json?",
       initial: true
     });
     if (!confirmed) {
@@ -35141,7 +32350,7 @@ function createClaudeCommand() {
     const repoRoot = await findRepoRoot();
     await runClaudeRuntimeSyncPhase({ repoRoot, dryRun: false, isGlobal: false });
   });
-  cmd.command("status").description("Show Claude CLI version, plugin status, and hook wiring").action(async () => {
+  cmd.command("status").description("Show Claude CLI version and .xtrm hook wiring status").action(async () => {
     console.log(t.bold("\n  Claude Code Status\n"));
     try {
       const version3 = (0, import_node_child_process2.execSync)("claude --version", { encoding: "utf8", stdio: "pipe" }).trim();
@@ -35151,12 +32360,12 @@ function createClaudeCommand() {
       console.log("");
       return;
     }
-    const listResult = (0, import_node_child_process2.spawnSync)("claude", ["plugin", "list"], { encoding: "utf8", stdio: "pipe" });
-    const pluginOutput = listResult.stdout ?? "";
-    if (pluginOutput.includes("xtrm-tools")) {
-      console.log(t.success("  \u2713 xtrm-tools plugin installed"));
+    const repoRoot = await findRepoRoot();
+    const settingsPath = getProjectSettingsPath(repoRoot);
+    if (hasXtrmHookWiring(settingsPath)) {
+      console.log(t.success(`  \u2713 Claude hooks wired (${settingsPath})`));
     } else {
-      console.log(kleur_default.yellow("  \u26A0 xtrm-tools plugin not installed \u2014 run: xt claude install"));
+      console.log(kleur_default.yellow("  \u26A0 .xtrm hook wiring missing \u2014 run: xt claude install"));
     }
     try {
       (0, import_node_child_process2.execSync)("bd --version", { stdio: "ignore" });
@@ -35176,11 +32385,12 @@ function createClaudeCommand() {
       console.log(kleur_default.red("  \u2717 claude CLI not found \u2014 install Claude Code"));
       allOk = false;
     }
-    const listResult = (0, import_node_child_process2.spawnSync)("claude", ["plugin", "list"], { encoding: "utf8", stdio: "pipe" });
-    if (listResult.stdout?.includes("xtrm-tools")) {
-      console.log(t.success("  \u2713 xtrm-tools plugin installed"));
+    const repoRoot = await findRepoRoot();
+    const settingsPath = getProjectSettingsPath(repoRoot);
+    if (hasXtrmHookWiring(settingsPath)) {
+      console.log(t.success("  \u2713 .xtrm hooks are wired in .claude/settings.json"));
     } else {
-      console.log(kleur_default.yellow("  \u26A0 xtrm-tools plugin missing \u2014 run: xt claude install"));
+      console.log(kleur_default.yellow("  \u26A0 .xtrm hooks not wired \u2014 run: xt claude install"));
       allOk = false;
     }
     const plan = inventoryDeps();
@@ -35199,27 +32409,27 @@ function createClaudeCommand() {
 // src/commands/pi.ts
 var import_path6 = __toESM(require("path"), 1);
 var import_node_child_process5 = require("child_process");
-var import_node_os5 = require("os");
-var import_fs_extra6 = __toESM(require_lib(), 1);
+var import_node_os4 = require("os");
+var import_fs_extra7 = __toESM(require_lib(), 1);
 
 // src/commands/pi-install.ts
-var import_fs_extra4 = __toESM(require_lib(), 1);
+var import_fs_extra5 = __toESM(require_lib(), 1);
 var import_path4 = __toESM(require("path"), 1);
 var import_node_child_process3 = require("child_process");
-var import_node_os3 = require("os");
-var PI_AGENT_DIR2 = process.env.PI_AGENT_DIR || import_path4.default.join((0, import_node_os3.homedir)(), ".pi", "agent");
+var import_node_os2 = require("os");
+var PI_AGENT_DIR2 = process.env.PI_AGENT_DIR || import_path4.default.join((0, import_node_os2.homedir)(), ".pi", "agent");
 async function ensureCorePackageSymlink2(extensionsDst, projectRoot, dryRun) {
   const coreDir = import_path4.default.join(extensionsDst, "core");
-  if (!await import_fs_extra4.default.pathExists(coreDir)) return;
+  if (!await import_fs_extra5.default.pathExists(coreDir)) return;
   const nodeModulesDir = import_path4.default.join(projectRoot, ".pi", "node_modules", "@xtrm");
   const symlinkPath = import_path4.default.join(nodeModulesDir, "pi-core");
-  if (await import_fs_extra4.default.pathExists(symlinkPath)) return;
+  if (await import_fs_extra5.default.pathExists(symlinkPath)) return;
   if (dryRun) {
     console.log(kleur_default.dim(`    [DRY RUN] would create @xtrm/pi-core symlink`));
     return;
   }
-  await import_fs_extra4.default.ensureDir(nodeModulesDir);
-  await import_fs_extra4.default.symlink("../../extensions/core", symlinkPath);
+  await import_fs_extra5.default.ensureDir(nodeModulesDir);
+  await import_fs_extra5.default.symlink("../../extensions/core", symlinkPath);
   console.log(kleur_default.dim(`    Created @xtrm/pi-core symlink for module resolution`));
 }
 function resolvePkgRoot2() {
@@ -35285,7 +32495,7 @@ async function runPiInstall(dryRun = false, isGlobal = false, projectRoot) {
   ensurePnpm(dryRun);
   await runPiRuntimeSync({ dryRun, isGlobal, projectRoot });
   const piConfigDir = import_path4.default.join(resolvePkgRoot2(), "config", "pi");
-  const hasManagedExtensions = await import_fs_extra4.default.pathExists(piConfigDir);
+  const hasManagedExtensions = await import_fs_extra5.default.pathExists(piConfigDir);
   if (hasManagedExtensions && !isGlobal && projectRoot) {
     const extensionsDst = piExtensionsDir(isGlobal, projectRoot);
     await ensureCorePackageSymlink2(extensionsDst, projectRoot, dryRun);
@@ -35304,11 +32514,11 @@ async function runPiInstall(dryRun = false, isGlobal = false, projectRoot) {
 
 // src/commands/install-pi.ts
 var import_prompts2 = __toESM(require_prompts3(), 1);
-var import_fs_extra5 = __toESM(require_lib(), 1);
+var import_fs_extra6 = __toESM(require_lib(), 1);
 var import_path5 = __toESM(require("path"), 1);
 var import_node_child_process4 = require("child_process");
-var import_node_os4 = require("os");
-var PI_AGENT_DIR3 = process.env.PI_AGENT_DIR || import_path5.default.join((0, import_node_os4.homedir)(), ".pi", "agent");
+var import_node_os3 = require("os");
+var PI_AGENT_DIR3 = process.env.PI_AGENT_DIR || import_path5.default.join((0, import_node_os3.homedir)(), ".pi", "agent");
 function fillTemplate(template, values) {
   return template.replace(/\{\{(\w+)\}\}/g, (_, key) => values[key] ?? "");
 }
@@ -35360,7 +32570,7 @@ function createInstallPiCommand() {
       }
       return;
     }
-    if (setup || !import_fs_extra5.default.pathExists(import_path5.default.join(PI_AGENT_DIR3, "auth.json"))) {
+    if (setup || !import_fs_extra6.default.pathExists(import_path5.default.join(PI_AGENT_DIR3, "auth.json"))) {
       console.log(t.bold("\n  Pi Coding Agent Setup\n"));
       if (!isPiInstalled()) {
         console.log(kleur_default.yellow("  pi not found \u2014 installing oh-pi globally...\n"));
@@ -35377,7 +32587,7 @@ function createInstallPiCommand() {
       }
       console.log(t.bold("  pnpm\n"));
       ensurePnpm2();
-      const schema2 = await import_fs_extra5.default.readJson(import_path5.default.join(piConfigDir, "install-schema.json"));
+      const schema2 = await import_fs_extra6.default.readJson(import_path5.default.join(piConfigDir, "install-schema.json"));
       const existing = readExistingPiValues(PI_AGENT_DIR3);
       const values = { ...existing };
       console.log(t.bold("\n  API Keys\n"));
@@ -35404,12 +32614,12 @@ function createInstallPiCommand() {
         });
         if (value) values[field.key] = value;
       }
-      await import_fs_extra5.default.ensureDir(PI_AGENT_DIR3);
+      await import_fs_extra6.default.ensureDir(PI_AGENT_DIR3);
       console.log(t.muted(`
   Writing config to ${PI_AGENT_DIR3}`));
       for (const name of ["models.json", "auth.json", "settings.json"]) {
         const destPath = import_path5.default.join(PI_AGENT_DIR3, name);
-        if (name === "auth.json" && await import_fs_extra5.default.pathExists(destPath) && !yes) {
+        if (name === "auth.json" && await import_fs_extra6.default.pathExists(destPath) && !yes) {
           const { overwrite } = await (0, import_prompts2.default)({
             type: "confirm",
             name: "overwrite",
@@ -35421,8 +32631,8 @@ function createInstallPiCommand() {
             continue;
           }
         }
-        const raw = await import_fs_extra5.default.readFile(import_path5.default.join(piConfigDir, `${name}.template`), "utf8");
-        await import_fs_extra5.default.writeFile(destPath, fillTemplate(raw, values), "utf8");
+        const raw = await import_fs_extra6.default.readFile(import_path5.default.join(piConfigDir, `${name}.template`), "utf8");
+        await import_fs_extra6.default.writeFile(destPath, fillTemplate(raw, values), "utf8");
         console.log(t.success(`    ${sym.ok} ${name}`));
       }
     }
@@ -35444,7 +32654,7 @@ function createInstallPiCommand() {
       }
     }
     console.log(t.bold("\n  OAuth (manual steps)\n"));
-    const schema = await import_fs_extra5.default.readJson(import_path5.default.join(piConfigDir, "install-schema.json"));
+    const schema = await import_fs_extra6.default.readJson(import_path5.default.join(piConfigDir, "install-schema.json"));
     for (const provider of schema.oauth_providers) {
       console.log(t.muted(`    ${provider.key}: ${provider.instruction}`));
     }
@@ -35454,7 +32664,7 @@ function createInstallPiCommand() {
 }
 
 // src/commands/pi.ts
-var PI_AGENT_DIR4 = process.env.PI_AGENT_DIR || import_path6.default.join((0, import_node_os5.homedir)(), ".pi", "agent");
+var PI_AGENT_DIR4 = process.env.PI_AGENT_DIR || import_path6.default.join((0, import_node_os4.homedir)(), ".pi", "agent");
 function createPiCommand() {
   const cmd = new Command("pi").description("Launch a Pi session in a sandboxed worktree, or manage the Pi runtime").argument("[name]", "Optional session name \u2014 used as xt/<name> branch (random if omitted)").action(async (name) => {
     await launchWorktreeSession({ runtime: "pi", name });
@@ -35482,9 +32692,9 @@ function createPiCommand() {
     const bundleRoot = await findRepoRoot();
     const sourceDir = import_path6.default.join(bundleRoot, "config", "pi", "extensions");
     const projectScopedDir = import_path6.default.join(projectRoot, ".pi", "extensions");
-    const targetDir = await import_fs_extra6.default.pathExists(projectScopedDir) ? projectScopedDir : import_path6.default.join(PI_AGENT_DIR4, "extensions");
+    const targetDir = await import_fs_extra7.default.pathExists(projectScopedDir) ? projectScopedDir : import_path6.default.join(PI_AGENT_DIR4, "extensions");
     const scopeLabel = targetDir === projectScopedDir ? "project" : "global";
-    if (!await import_fs_extra6.default.pathExists(sourceDir)) {
+    if (!await import_fs_extra7.default.pathExists(sourceDir)) {
       console.log(kleur_default.dim(`  \u25CB managed extensions not bundled in this install
 `));
       return;
@@ -35536,7 +32746,7 @@ function createPiCommand() {
       allOk = false;
     }
     const configFiles = ["models.json", "auth.json", "settings.json"];
-    const missingConfig = configFiles.filter((f) => !import_fs_extra6.default.existsSync(import_path6.default.join(PI_AGENT_DIR4, f)));
+    const missingConfig = configFiles.filter((f) => !import_fs_extra7.default.existsSync(import_path6.default.join(PI_AGENT_DIR4, f)));
     if (missingConfig.length === 0) {
       console.log(t.success(`  \u2713 config files present`));
     } else {
@@ -35552,8 +32762,8 @@ function createPiCommand() {
     const bundleRoot = await findRepoRoot();
     const sourceDir = import_path6.default.join(bundleRoot, "config", "pi", "extensions");
     const projectScopedDir = import_path6.default.join(projectRoot, ".pi", "extensions");
-    const targetDir = await import_fs_extra6.default.pathExists(projectScopedDir) ? projectScopedDir : import_path6.default.join(PI_AGENT_DIR4, "extensions");
-    if (await import_fs_extra6.default.pathExists(sourceDir)) {
+    const targetDir = await import_fs_extra7.default.pathExists(projectScopedDir) ? projectScopedDir : import_path6.default.join(PI_AGENT_DIR4, "extensions");
+    if (await import_fs_extra7.default.pathExists(sourceDir)) {
       const plan = await inventoryPiRuntime(sourceDir, targetDir);
       if (plan.allPresent) {
         console.log(t.success(`  \u2713 extensions deployed (${plan.extensions.length})`));
@@ -35604,20 +32814,20 @@ function createPiCommand() {
 }
 
 // src/commands/init.ts
-var import_path17 = __toESM(require("path"), 1);
-var import_fs_extra16 = __toESM(require_lib(), 1);
-var import_child_process7 = require("child_process");
+var import_path14 = __toESM(require("path"), 1);
+var import_fs_extra15 = __toESM(require_lib(), 1);
+var import_child_process6 = require("child_process");
 
 // src/commands/install-service-skills.ts
 var import_path7 = __toESM(require("path"), 1);
-var import_fs_extra7 = __toESM(require_lib(), 1);
+var import_fs_extra8 = __toESM(require_lib(), 1);
 var import_child_process4 = require("child_process");
 function resolvePkgRoot3() {
   const candidates = [
     import_path7.default.resolve(__dirname, "../.."),
     import_path7.default.resolve(__dirname, "../../..")
   ];
-  const match = candidates.find((candidate) => import_fs_extra7.default.existsSync(import_path7.default.join(candidate, "project-skills")));
+  const match = candidates.find((candidate) => import_fs_extra8.default.existsSync(import_path7.default.join(candidate, "project-skills")));
   if (!match) {
     throw new Error("Unable to locate project-skills directory from CLI runtime.");
   }
@@ -35631,15 +32841,15 @@ var MARKER_CHAIN = "# [jaggers] chain-githooks";
 async function installGitHooks(projectRoot, skillsSrc = SKILLS_SRC) {
   const gitHooksSrc = import_path7.default.join(skillsSrc, "git-hooks");
   const gitHooksDest = import_path7.default.join(projectRoot, ".claude", "git-hooks");
-  await import_fs_extra7.default.copy(gitHooksSrc, gitHooksDest, { overwrite: true });
+  await import_fs_extra8.default.copy(gitHooksSrc, gitHooksDest, { overwrite: true });
   const docScript = import_path7.default.join(projectRoot, ".claude", "git-hooks", "doc_reminder.py");
   const stalenessScript = import_path7.default.join(projectRoot, ".claude", "git-hooks", "skill_staleness.py");
   const preCommit = import_path7.default.join(projectRoot, ".githooks", "pre-commit");
   const prePush = import_path7.default.join(projectRoot, ".githooks", "pre-push");
   for (const hookPath of [preCommit, prePush]) {
-    if (!await import_fs_extra7.default.pathExists(hookPath)) {
-      await import_fs_extra7.default.mkdirp(import_path7.default.dirname(hookPath));
-      await import_fs_extra7.default.writeFile(hookPath, "#!/usr/bin/env bash\n", { mode: 493 });
+    if (!await import_fs_extra8.default.pathExists(hookPath)) {
+      await import_fs_extra8.default.mkdirp(import_path7.default.dirname(hookPath));
+      await import_fs_extra8.default.writeFile(hookPath, "#!/usr/bin/env bash\n", { mode: 493 });
     }
   }
   const snippets = [
@@ -35666,10 +32876,10 @@ fi
   ];
   const hookFiles = [];
   for (const [hookPath, marker, snippet] of snippets) {
-    const content = await import_fs_extra7.default.readFile(hookPath, "utf8");
+    const content = await import_fs_extra8.default.readFile(hookPath, "utf8");
     const name = import_path7.default.basename(hookPath);
     if (!content.includes(marker)) {
-      await import_fs_extra7.default.writeFile(hookPath, content + snippet);
+      await import_fs_extra8.default.writeFile(hookPath, content + snippet);
       hookFiles.push({ name, status: "added" });
     } else {
       hookFiles.push({ name, status: "already-present" });
@@ -35684,13 +32894,13 @@ fi
   const activeHooksDir = configuredHooksPath ? import_path7.default.isAbsolute(configuredHooksPath) ? configuredHooksPath : import_path7.default.join(projectRoot, configuredHooksPath) : import_path7.default.join(projectRoot, ".git", "hooks");
   const activationTargets = /* @__PURE__ */ new Set([import_path7.default.join(projectRoot, ".git", "hooks"), activeHooksDir]);
   for (const hooksDir of activationTargets) {
-    await import_fs_extra7.default.mkdirp(hooksDir);
+    await import_fs_extra8.default.mkdirp(hooksDir);
     for (const [name, sourceHook] of [["pre-commit", preCommit], ["pre-push", prePush]]) {
       const targetHook = import_path7.default.join(hooksDir, name);
-      if (!await import_fs_extra7.default.pathExists(targetHook)) {
-        await import_fs_extra7.default.writeFile(targetHook, "#!/usr/bin/env bash\n", { mode: 493 });
+      if (!await import_fs_extra8.default.pathExists(targetHook)) {
+        await import_fs_extra8.default.writeFile(targetHook, "#!/usr/bin/env bash\n", { mode: 493 });
       } else {
-        await import_fs_extra7.default.chmod(targetHook, 493);
+        await import_fs_extra8.default.chmod(targetHook, 493);
       }
       if (import_path7.default.resolve(targetHook) === import_path7.default.resolve(sourceHook)) {
         continue;
@@ -35701,1825 +32911,31 @@ if [ -x "${sourceHook}" ]; then
     "${sourceHook}" "$@"
 fi
 `;
-      const targetContent = await import_fs_extra7.default.readFile(targetHook, "utf8");
+      const targetContent = await import_fs_extra8.default.readFile(targetHook, "utf8");
       if (!targetContent.includes(MARKER_CHAIN)) {
-        await import_fs_extra7.default.writeFile(targetHook, targetContent + chainSnippet);
+        await import_fs_extra8.default.writeFile(targetHook, targetContent + chainSnippet);
       }
     }
   }
   return { hookFiles };
 }
 
-// ../node_modules/eventemitter3/index.mjs
-var import_index2 = __toESM(require_eventemitter3(), 1);
-var eventemitter3_default = import_index2.default;
-
-// ../node_modules/listr2/dist/index.mjs
-var import_node_util = require("util");
-var import_util = require("util");
-var import_os2 = require("os");
-var import_string_decoder = require("string_decoder");
-var import_stream = require("stream");
-var import_rfdc = __toESM(require_rfdc(), 1);
-var import_crypto = require("crypto");
-var ANSI_ESCAPE2 = "\x1B[";
-var ANSI_ESCAPE_CODES = {
-  CURSOR_HIDE: ANSI_ESCAPE2 + "?25l",
-  CURSOR_SHOW: ANSI_ESCAPE2 + "?25h"
-};
-var ListrEnvironmentVariables = /* @__PURE__ */ (function(ListrEnvironmentVariables2) {
-  ListrEnvironmentVariables2["FORCE_UNICODE"] = "LISTR_FORCE_UNICODE";
-  ListrEnvironmentVariables2["FORCE_TTY"] = "LISTR_FORCE_TTY";
-  ListrEnvironmentVariables2["DISABLE_COLOR"] = "NO_COLOR";
-  ListrEnvironmentVariables2["FORCE_COLOR"] = "FORCE_COLOR";
-  return ListrEnvironmentVariables2;
-})({});
-var ListrErrorTypes = /* @__PURE__ */ (function(ListrErrorTypes2) {
-  ListrErrorTypes2["WILL_RETRY"] = "WILL_RETRY";
-  ListrErrorTypes2["WILL_ROLLBACK"] = "WILL_ROLLBACK";
-  ListrErrorTypes2["HAS_FAILED_TO_ROLLBACK"] = "HAS_FAILED_TO_ROLLBACK";
-  ListrErrorTypes2["HAS_FAILED"] = "HAS_FAILED";
-  ListrErrorTypes2["HAS_FAILED_WITHOUT_ERROR"] = "HAS_FAILED_WITHOUT_ERROR";
-  return ListrErrorTypes2;
-})({});
-var ListrEventType = /* @__PURE__ */ (function(ListrEventType2) {
-  ListrEventType2["SHOULD_REFRESH_RENDER"] = "SHOUD_REFRESH_RENDER";
-  return ListrEventType2;
-})({});
-var ListrRendererSelection = /* @__PURE__ */ (function(ListrRendererSelection2) {
-  ListrRendererSelection2["PRIMARY"] = "PRIMARY";
-  ListrRendererSelection2["SECONDARY"] = "SECONDARY";
-  ListrRendererSelection2["SILENT"] = "SILENT";
-  return ListrRendererSelection2;
-})({});
-var ListrTaskEventType = /* @__PURE__ */ (function(ListrTaskEventType2) {
-  ListrTaskEventType2["TITLE"] = "TITLE";
-  ListrTaskEventType2["STATE"] = "STATE";
-  ListrTaskEventType2["ENABLED"] = "ENABLED";
-  ListrTaskEventType2["SUBTASK"] = "SUBTASK";
-  ListrTaskEventType2["PROMPT"] = "PROMPT";
-  ListrTaskEventType2["OUTPUT"] = "OUTPUT";
-  ListrTaskEventType2["MESSAGE"] = "MESSAGE";
-  ListrTaskEventType2["CLOSED"] = "CLOSED";
-  return ListrTaskEventType2;
-})({});
-var ListrTaskState = /* @__PURE__ */ (function(ListrTaskState2) {
-  ListrTaskState2["WAITING"] = "WAITING";
-  ListrTaskState2["STARTED"] = "STARTED";
-  ListrTaskState2["COMPLETED"] = "COMPLETED";
-  ListrTaskState2["FAILED"] = "FAILED";
-  ListrTaskState2["SKIPPED"] = "SKIPPED";
-  ListrTaskState2["ROLLING_BACK"] = "ROLLING_BACK";
-  ListrTaskState2["ROLLED_BACK"] = "ROLLED_BACK";
-  ListrTaskState2["RETRY"] = "RETRY";
-  ListrTaskState2["PAUSED"] = "PAUSED";
-  ListrTaskState2["PROMPT"] = "PROMPT";
-  ListrTaskState2["PROMPT_COMPLETED"] = "PROMPT_COMPLETED";
-  ListrTaskState2["PROMPT_FAILED"] = "PROMPT_FAILED";
-  return ListrTaskState2;
-})({});
-var EventManager = class {
-  emitter = new eventemitter3_default();
-  emit(dispatch, args) {
-    this.emitter.emit(dispatch, args);
-  }
-  on(dispatch, handler) {
-    this.emitter.addListener(dispatch, handler);
-  }
-  once(dispatch, handler) {
-    this.emitter.once(dispatch, handler);
-  }
-  off(dispatch, handler) {
-    this.emitter.off(dispatch, handler);
-  }
-  complete() {
-    this.emitter.removeAllListeners();
-  }
-};
-function isObservable(obj) {
-  return !!obj && typeof obj === "object" && typeof obj.subscribe === "function";
-}
-function isReadable(obj) {
-  return !!obj && typeof obj === "object" && obj.readable === true && typeof obj.read === "function" && typeof obj.on === "function";
-}
-function isUnicodeSupported() {
-  return !!process.env[ListrEnvironmentVariables.FORCE_UNICODE] || process.platform !== "win32" || !!process.env.CI || !!process.env.WT_SESSION || process.env.TERM_PROGRAM === "vscode" || process.env.TERM === "xterm-256color" || process.env.TERM === "alacritty";
-}
-var CLEAR_LINE_REGEX = "(?:\\u001b|\\u009b)\\[[\\=><~/#&.:=?%@~_-]*[0-9]*[\\a-ln-tqyz=><~/#&.:=?%@~_-]+";
-var BELL_REGEX = /\u0007/;
-function cleanseAnsi(chunk) {
-  return String(chunk).replace(new RegExp(CLEAR_LINE_REGEX, "gmi"), "").replace(new RegExp(BELL_REGEX, "gmi"), "").trim();
-}
-var color = Object.fromEntries(Object.keys(import_node_util.inspect.colors).map((color2) => [color2, (text) => (0, import_node_util.styleText)(color2, String(text))]));
-function indent(string4, count) {
-  return string4.replace(/^(?!\s*$)/gm, " ".repeat(count));
-}
-var FIGURES_MAIN = {
-  warning: "\u26A0",
-  cross: "\u2716",
-  arrowDown: "\u2193",
-  tick: "\u2714",
-  arrowRight: "\u2192",
-  pointer: "\u276F",
-  checkboxOn: "\u2612",
-  arrowLeft: "\u2190",
-  squareSmallFilled: "\u25FC",
-  pointerSmall: "\u203A"
-};
-var FIGURES_FALLBACK = {
-  ...FIGURES_MAIN,
-  warning: "\u203C",
-  cross: "\xD7",
-  tick: "\u221A",
-  pointer: ">",
-  checkboxOn: "[\xD7]",
-  squareSmallFilled: "\u25A0"
-};
-var figures = isUnicodeSupported() ? FIGURES_MAIN : FIGURES_FALLBACK;
-function splat(message, ...splat2) {
-  return (0, import_util.format)(String(message), ...splat2);
-}
-var ListrLogLevels = /* @__PURE__ */ (function(ListrLogLevels2) {
-  ListrLogLevels2["STARTED"] = "STARTED";
-  ListrLogLevels2["COMPLETED"] = "COMPLETED";
-  ListrLogLevels2["FAILED"] = "FAILED";
-  ListrLogLevels2["SKIPPED"] = "SKIPPED";
-  ListrLogLevels2["OUTPUT"] = "OUTPUT";
-  ListrLogLevels2["TITLE"] = "TITLE";
-  ListrLogLevels2["ROLLBACK"] = "ROLLBACK";
-  ListrLogLevels2["RETRY"] = "RETRY";
-  ListrLogLevels2["PROMPT"] = "PROMPT";
-  ListrLogLevels2["PAUSED"] = "PAUSED";
-  return ListrLogLevels2;
-})({});
-var LISTR_LOGGER_STYLE = {
-  icon: {
-    [ListrLogLevels.STARTED]: figures.pointer,
-    [ListrLogLevels.FAILED]: figures.cross,
-    [ListrLogLevels.SKIPPED]: figures.arrowDown,
-    [ListrLogLevels.COMPLETED]: figures.tick,
-    [ListrLogLevels.OUTPUT]: figures.pointerSmall,
-    [ListrLogLevels.TITLE]: figures.arrowRight,
-    [ListrLogLevels.RETRY]: figures.warning,
-    [ListrLogLevels.ROLLBACK]: figures.arrowLeft,
-    [ListrLogLevels.PAUSED]: figures.squareSmallFilled
-  },
-  color: {
-    [ListrLogLevels.STARTED]: color.yellow,
-    [ListrLogLevels.FAILED]: color.red,
-    [ListrLogLevels.SKIPPED]: color.yellow,
-    [ListrLogLevels.COMPLETED]: color.green,
-    [ListrLogLevels.RETRY]: color.yellowBright,
-    [ListrLogLevels.ROLLBACK]: color.redBright,
-    [ListrLogLevels.PAUSED]: color.yellowBright
-  }
-};
-var LISTR_LOGGER_STDERR_LEVELS = [
-  ListrLogLevels.RETRY,
-  ListrLogLevels.ROLLBACK,
-  ListrLogLevels.FAILED
-];
-var ListrLogger = class {
-  process;
-  constructor(options) {
-    this.options = options;
-    this.options = {
-      useIcons: true,
-      toStderr: [],
-      ...options ?? {}
-    };
-    this.options.fields ??= {};
-    this.options.fields.prefix ??= [];
-    this.options.fields.suffix ??= [];
-    this.process = this.options.processOutput ?? new ProcessOutput();
-  }
-  log(level, message, options) {
-    const output = this.format(level, message, options);
-    if (this.options.toStderr.includes(level)) {
-      this.process.toStderr(output);
-      return;
-    }
-    this.process.toStdout(output);
-  }
-  toStdout(message, options, eol = true) {
-    this.process.toStdout(this.format(null, message, options), eol);
-  }
-  toStderr(message, options, eol = true) {
-    this.process.toStderr(this.format(null, message, options), eol);
-  }
-  wrap(message, options) {
-    if (!message) return message;
-    return this.applyFormat(`[${message}]`, options);
-  }
-  splat(...args) {
-    const message = args.shift() ?? "";
-    return args.length === 0 ? message : splat(message, args);
-  }
-  suffix(message, ...suffixes) {
-    suffixes.filter(Boolean).forEach((suffix) => {
-      message += this.spacing(message);
-      if (typeof suffix === "string") message += this.wrap(suffix);
-      else if (typeof suffix === "object") {
-        suffix.args ??= [];
-        if (typeof suffix.condition === "function" ? !suffix.condition(...suffix.args) : !(suffix.condition ?? true)) return message;
-        message += this.wrap(typeof suffix.field === "function" ? suffix.field(...suffix.args) : suffix.field, { format: suffix?.format(...suffix.args) });
-      }
-    });
-    return message;
-  }
-  prefix(message, ...prefixes) {
-    prefixes.filter(Boolean).forEach((prefix) => {
-      message = this.spacing(message) + message;
-      if (typeof prefix === "string") message = this.wrap(prefix) + message;
-      else if (typeof prefix === "object") {
-        prefix.args ??= [];
-        if (typeof prefix.condition === "function" ? !prefix.condition(...prefix.args) : !(prefix.condition ?? true)) return message;
-        message = this.wrap(typeof prefix.field === "function" ? prefix.field(...prefix.args) : prefix.field, { format: prefix?.format() }) + message;
-      }
-    });
-    return message;
-  }
-  fields(message, options) {
-    if (this.options?.fields?.prefix) message = this.prefix(message, ...this.options.fields.prefix);
-    if (options?.prefix) message = this.prefix(message, ...options.prefix);
-    if (options?.suffix) message = this.suffix(message, ...options.suffix);
-    if (this.options?.fields?.suffix) message = this.suffix(message, ...this.options.fields.suffix);
-    return message;
-  }
-  icon(level, icon) {
-    if (!level) return null;
-    if (!icon) {
-      const i = this.options.icon?.[level];
-      icon = typeof i === "function" ? i() : i;
-    }
-    const coloring = this.options.color?.[level];
-    if (icon && coloring) icon = coloring(icon);
-    return icon;
-  }
-  format(level, message, options) {
-    if (!Array.isArray(message)) message = [message];
-    message = this.splat(message.shift(), ...message).toString().split(import_os2.EOL).filter((m) => !m || m.trim() !== "").map((m) => {
-      return this.style(level, this.fields(m, {
-        prefix: Array.isArray(options?.prefix) ? options.prefix : [options?.prefix],
-        suffix: Array.isArray(options?.suffix) ? options.suffix : [options?.suffix]
-      }));
-    }).join(import_os2.EOL);
-    return message;
-  }
-  style(level, message) {
-    if (!level || !message) return message;
-    const icon = this.icon(level, !this.options.useIcons && this.wrap(level));
-    if (icon) message = icon + " " + message;
-    return message;
-  }
-  applyFormat(message, options) {
-    if (options?.format) return options.format(message);
-    return message;
-  }
-  spacing(message) {
-    return typeof message === "undefined" || message.trim() === "" ? "" : " ";
-  }
-};
-var ProcessOutputBuffer = class {
-  buffer = [];
-  decoder = new import_string_decoder.StringDecoder();
-  constructor(options) {
-    this.options = options;
-  }
-  get all() {
-    return this.buffer;
-  }
-  get last() {
-    return this.buffer.at(-1);
-  }
-  get length() {
-    return this.buffer.length;
-  }
-  write(data, ...args) {
-    const callback = args[args.length - 1];
-    this.buffer.push({
-      time: Date.now(),
-      stream: this.options?.stream,
-      entry: this.decoder.write(typeof data === "string" ? Buffer.from(data, typeof args[0] === "string" ? args[0] : void 0) : Buffer.from(data))
-    });
-    if (this.options?.limit) this.buffer = this.buffer.slice(-this.options.limit);
-    if (typeof callback === "function") callback();
-    return true;
-  }
-  reset() {
-    this.buffer = [];
-  }
-};
-var ProcessOutputStream = class {
-  method;
-  buffer;
-  constructor(stream) {
-    this.stream = stream;
-    this.method = stream.write;
-    this.buffer = new ProcessOutputBuffer({ stream });
-  }
-  get out() {
-    const self = this;
-    return new Proxy(this.stream, { get(target, prop, receiver) {
-      if (prop === "write") return self.write.bind(self);
-      return Reflect.get(target, prop, receiver);
-    } });
-  }
-  hijack() {
-    this.stream.write = this.buffer.write.bind(this.buffer);
-  }
-  release() {
-    this.stream.write = this.method;
-    const buffer = [...this.buffer.all];
-    this.buffer.reset();
-    return buffer;
-  }
-  write(...args) {
-    return this.method.apply(this.stream, args);
-  }
-};
-var ProcessOutput = class {
-  stream;
-  active;
-  constructor(stdout, stderr, options) {
-    this.options = options;
-    this.stream = {
-      stdout: new ProcessOutputStream(stdout ?? process.stdout),
-      stderr: new ProcessOutputStream(stderr ?? process.stderr)
-    };
-    this.options = {
-      dump: ["stdout", "stderr"],
-      leaveEmptyLine: true,
-      ...options
-    };
-  }
-  get stdout() {
-    return this.stream.stdout.out;
-  }
-  get stderr() {
-    return this.stream.stderr.out;
-  }
-  hijack() {
-    if (this.active) throw new Error("ProcessOutput has been already hijacked!");
-    this.stream.stdout.write(ANSI_ESCAPE_CODES.CURSOR_HIDE);
-    Object.values(this.stream).forEach((stream) => stream.hijack());
-    this.active = true;
-  }
-  release() {
-    const output = Object.entries(this.stream).map(([name, stream]) => ({
-      name,
-      buffer: stream.release()
-    })).filter((output2) => this.options.dump.includes(output2.name)).flatMap((output2) => output2.buffer).sort((a, b) => a.time - b.time).map((message) => {
-      return {
-        ...message,
-        entry: cleanseAnsi(message.entry)
-      };
-    }).filter((message) => message.entry);
-    if (output.length > 0) {
-      if (this.options.leaveEmptyLine) this.stdout.write(import_os2.EOL);
-      output.forEach((message) => {
-        (message.stream ?? this.stdout).write(message.entry + import_os2.EOL);
-      });
-    }
-    this.stream.stdout.write(ANSI_ESCAPE_CODES.CURSOR_SHOW);
-    this.active = false;
-  }
-  toStdout(buffer, eol = true) {
-    if (eol) buffer = buffer + import_os2.EOL;
-    return this.stream.stdout.write(buffer);
-  }
-  toStderr(buffer, eol = true) {
-    if (eol) buffer = buffer + import_os2.EOL;
-    return this.stream.stderr.write(buffer);
-  }
-};
-function createWritable(cb) {
-  const writable = new import_stream.Writable();
-  writable.rows = Infinity;
-  writable.columns = Infinity;
-  writable.write = (chunk) => {
-    cb(chunk.toString());
-    return true;
-  };
-  return writable;
-}
-var Spinner = class {
-  spinner = !isUnicodeSupported() ? [
-    "-",
-    "\\",
-    "|",
-    "/"
-  ] : [
-    "\u280B",
-    "\u2819",
-    "\u2839",
-    "\u2838",
-    "\u283C",
-    "\u2834",
-    "\u2826",
-    "\u2827",
-    "\u2807",
-    "\u280F"
-  ];
-  id;
-  spinnerPosition = 0;
-  spin() {
-    this.spinnerPosition = ++this.spinnerPosition % this.spinner.length;
-  }
-  fetch() {
-    return this.spinner[this.spinnerPosition];
-  }
-  isRunning() {
-    return !!this.id;
-  }
-  start(cb, interval = 100) {
-    this.id = setInterval(() => {
-      this.spin();
-      if (cb) cb();
-    }, interval);
-  }
-  stop() {
-    clearInterval(this.id);
-    this.id = void 0;
-  }
-};
-var ListrDefaultRendererLogLevels = /* @__PURE__ */ (function(ListrDefaultRendererLogLevels2) {
-  ListrDefaultRendererLogLevels2["SKIPPED_WITH_COLLAPSE"] = "SKIPPED_WITH_COLLAPSE";
-  ListrDefaultRendererLogLevels2["SKIPPED_WITHOUT_COLLAPSE"] = "SKIPPED_WITHOUT_COLLAPSE";
-  ListrDefaultRendererLogLevels2["OUTPUT"] = "OUTPUT";
-  ListrDefaultRendererLogLevels2["OUTPUT_WITH_BOTTOMBAR"] = "OUTPUT_WITH_BOTTOMBAR";
-  ListrDefaultRendererLogLevels2["PENDING"] = "PENDING";
-  ListrDefaultRendererLogLevels2["COMPLETED"] = "COMPLETED";
-  ListrDefaultRendererLogLevels2["COMPLETED_WITH_FAILED_SUBTASKS"] = "COMPLETED_WITH_FAILED_SUBTASKS";
-  ListrDefaultRendererLogLevels2["COMPLETED_WITH_FAILED_SISTER_TASKS"] = "COMPLETED_WITH_SISTER_TASKS_FAILED";
-  ListrDefaultRendererLogLevels2["RETRY"] = "RETRY";
-  ListrDefaultRendererLogLevels2["ROLLING_BACK"] = "ROLLING_BACK";
-  ListrDefaultRendererLogLevels2["ROLLED_BACK"] = "ROLLED_BACK";
-  ListrDefaultRendererLogLevels2["FAILED"] = "FAILED";
-  ListrDefaultRendererLogLevels2["FAILED_WITH_FAILED_SUBTASKS"] = "FAILED_WITH_SUBTASKS";
-  ListrDefaultRendererLogLevels2["WAITING"] = "WAITING";
-  ListrDefaultRendererLogLevels2["PAUSED"] = "PAUSED";
-  return ListrDefaultRendererLogLevels2;
-})({});
-var LISTR_DEFAULT_RENDERER_STYLE = {
-  icon: {
-    [ListrDefaultRendererLogLevels.SKIPPED_WITH_COLLAPSE]: figures.arrowDown,
-    [ListrDefaultRendererLogLevels.SKIPPED_WITHOUT_COLLAPSE]: figures.warning,
-    [ListrDefaultRendererLogLevels.OUTPUT]: figures.pointerSmall,
-    [ListrDefaultRendererLogLevels.OUTPUT_WITH_BOTTOMBAR]: figures.pointerSmall,
-    [ListrDefaultRendererLogLevels.PENDING]: figures.pointer,
-    [ListrDefaultRendererLogLevels.COMPLETED]: figures.tick,
-    [ListrDefaultRendererLogLevels.COMPLETED_WITH_FAILED_SUBTASKS]: figures.warning,
-    [ListrDefaultRendererLogLevels.COMPLETED_WITH_FAILED_SISTER_TASKS]: figures.squareSmallFilled,
-    [ListrDefaultRendererLogLevels.RETRY]: figures.warning,
-    [ListrDefaultRendererLogLevels.ROLLING_BACK]: figures.warning,
-    [ListrDefaultRendererLogLevels.ROLLED_BACK]: figures.arrowLeft,
-    [ListrDefaultRendererLogLevels.FAILED]: figures.cross,
-    [ListrDefaultRendererLogLevels.FAILED_WITH_FAILED_SUBTASKS]: figures.pointer,
-    [ListrDefaultRendererLogLevels.WAITING]: figures.squareSmallFilled,
-    [ListrDefaultRendererLogLevels.PAUSED]: figures.squareSmallFilled
-  },
-  color: {
-    [ListrDefaultRendererLogLevels.SKIPPED_WITH_COLLAPSE]: color.yellow,
-    [ListrDefaultRendererLogLevels.SKIPPED_WITHOUT_COLLAPSE]: color.yellow,
-    [ListrDefaultRendererLogLevels.PENDING]: color.yellow,
-    [ListrDefaultRendererLogLevels.COMPLETED]: color.green,
-    [ListrDefaultRendererLogLevels.COMPLETED_WITH_FAILED_SUBTASKS]: color.yellow,
-    [ListrDefaultRendererLogLevels.COMPLETED_WITH_FAILED_SISTER_TASKS]: color.red,
-    [ListrDefaultRendererLogLevels.RETRY]: color.yellowBright,
-    [ListrDefaultRendererLogLevels.ROLLING_BACK]: color.redBright,
-    [ListrDefaultRendererLogLevels.ROLLED_BACK]: color.redBright,
-    [ListrDefaultRendererLogLevels.FAILED]: color.red,
-    [ListrDefaultRendererLogLevels.FAILED_WITH_FAILED_SUBTASKS]: color.red,
-    [ListrDefaultRendererLogLevels.WAITING]: color.dim,
-    [ListrDefaultRendererLogLevels.PAUSED]: color.yellowBright
-  }
-};
-function parseTimer(duration3) {
-  const seconds = Math.floor(duration3 / 1e3);
-  const minutes = Math.floor(seconds / 60);
-  let parsedTime;
-  if (seconds === 0 && minutes === 0) parsedTime = `0.${Math.floor(duration3 / 100)}s`;
-  if (seconds > 0) parsedTime = `${seconds % 60}s`;
-  if (minutes > 0) parsedTime = `${minutes}m${parsedTime}`;
-  return parsedTime;
-}
-var PRESET_TIMER = {
-  condition: true,
-  field: parseTimer,
-  format: () => color.dim
-};
-var DefaultRenderer = class DefaultRenderer2 {
-  static nonTTY = false;
-  static rendererOptions = {
-    indentation: 2,
-    clearOutput: false,
-    showSubtasks: true,
-    collapseSubtasks: true,
-    collapseSkips: true,
-    showSkipMessage: true,
-    suffixSkips: false,
-    collapseErrors: true,
-    showErrorMessage: true,
-    suffixRetries: true,
-    lazy: false,
-    removeEmptyLines: true,
-    formatOutput: "wrap",
-    pausedTimer: {
-      ...PRESET_TIMER,
-      format: () => color.yellowBright
-    }
-  };
-  static rendererTaskOptions = { outputBar: true };
-  prompt;
-  activePrompt;
-  spinner;
-  logger;
-  updater;
-  truncate;
-  wrap;
-  buffer = {
-    output: /* @__PURE__ */ new Map(),
-    bottom: /* @__PURE__ */ new Map()
-  };
-  cache = {
-    render: /* @__PURE__ */ new Map(),
-    rendererOptions: /* @__PURE__ */ new Map(),
-    rendererTaskOptions: /* @__PURE__ */ new Map()
-  };
-  constructor(tasks, options, events) {
-    this.tasks = tasks;
-    this.options = options;
-    this.events = events;
-    this.options = {
-      ...DefaultRenderer2.rendererOptions,
-      ...this.options,
-      icon: {
-        ...LISTR_DEFAULT_RENDERER_STYLE.icon,
-        ...options?.icon ?? {}
-      },
-      color: {
-        ...LISTR_DEFAULT_RENDERER_STYLE.color,
-        ...options?.color ?? {}
-      }
-    };
-    this.spinner = this.options.spinner ?? new Spinner();
-    this.logger = this.options.logger ?? new ListrLogger({
-      useIcons: true,
-      toStderr: []
-    });
-    this.logger.options.icon = this.options.icon;
-    this.logger.options.color = this.options.color;
-  }
-  async render() {
-    const { createLogUpdate: createLogUpdate2 } = await Promise.resolve().then(() => (init_log_update(), log_update_exports));
-    const { default: truncate } = await Promise.resolve().then(() => (init_cli_truncate(), cli_truncate_exports));
-    const { default: wrap } = await Promise.resolve().then(() => (init_wrap_ansi2(), wrap_ansi_exports));
-    this.updater = createLogUpdate2(this.logger.process.stdout);
-    this.truncate = truncate;
-    this.wrap = wrap;
-    this.logger.process.hijack();
-    if (!this.options?.lazy) this.spinner.start(() => {
-      this.update();
-    });
-    this.events.on(ListrEventType.SHOULD_REFRESH_RENDER, () => {
-      this.update();
-    });
-  }
-  update() {
-    this.updater(this.create());
-  }
-  end() {
-    this.spinner.stop();
-    this.updater.clear();
-    this.updater.done();
-    if (!this.options.clearOutput) this.logger.process.toStdout(this.create({ prompt: false }));
-    this.logger.process.release();
-  }
-  create(options) {
-    options = {
-      tasks: true,
-      bottomBar: true,
-      prompt: true,
-      ...options
-    };
-    const render = [];
-    const renderTasks = this.renderer(this.tasks);
-    const renderBottomBar = this.renderBottomBar();
-    const renderPrompt = this.renderPrompt();
-    if (options.tasks && renderTasks.length > 0) render.push(...renderTasks);
-    if (options.bottomBar && renderBottomBar.length > 0) {
-      if (render.length > 0) render.push("");
-      render.push(...renderBottomBar);
-    }
-    if (options.prompt && renderPrompt.length > 0) {
-      if (render.length > 0) render.push("");
-      render.push(...renderPrompt);
-    }
-    return render.join(import_os2.EOL);
-  }
-  style(task, output = false) {
-    const rendererOptions = this.cache.rendererOptions.get(task.id);
-    if (task.isSkipped()) {
-      if (output || rendererOptions.collapseSkips) return this.logger.icon(ListrDefaultRendererLogLevels.SKIPPED_WITH_COLLAPSE);
-      else if (rendererOptions.collapseSkips === false) return this.logger.icon(ListrDefaultRendererLogLevels.SKIPPED_WITHOUT_COLLAPSE);
-    }
-    if (output) {
-      if (this.shouldOutputToBottomBar(task)) return this.logger.icon(ListrDefaultRendererLogLevels.OUTPUT_WITH_BOTTOMBAR);
-      return this.logger.icon(ListrDefaultRendererLogLevels.OUTPUT);
-    }
-    if (task.hasSubtasks()) {
-      if (task.isStarted() || task.isPrompt() && rendererOptions.showSubtasks !== false && !task.subtasks.every((subtask) => !subtask.hasTitle())) return this.logger.icon(ListrDefaultRendererLogLevels.PENDING);
-      else if (task.isCompleted() && task.subtasks.some((subtask) => subtask.hasFailed())) return this.logger.icon(ListrDefaultRendererLogLevels.COMPLETED_WITH_FAILED_SUBTASKS);
-      else if (task.hasFailed()) return this.logger.icon(ListrDefaultRendererLogLevels.FAILED_WITH_FAILED_SUBTASKS);
-    }
-    if (task.isStarted() || task.isPrompt()) return this.logger.icon(ListrDefaultRendererLogLevels.PENDING, !this.options?.lazy && this.spinner.fetch());
-    else if (task.isCompleted()) return this.logger.icon(ListrDefaultRendererLogLevels.COMPLETED);
-    else if (task.isRetrying()) return this.logger.icon(ListrDefaultRendererLogLevels.RETRY, !this.options?.lazy && this.spinner.fetch());
-    else if (task.isRollingBack()) return this.logger.icon(ListrDefaultRendererLogLevels.ROLLING_BACK, !this.options?.lazy && this.spinner.fetch());
-    else if (task.hasRolledBack()) return this.logger.icon(ListrDefaultRendererLogLevels.ROLLED_BACK);
-    else if (task.hasFailed()) return this.logger.icon(ListrDefaultRendererLogLevels.FAILED);
-    else if (task.isPaused()) return this.logger.icon(ListrDefaultRendererLogLevels.PAUSED);
-    return this.logger.icon(ListrDefaultRendererLogLevels.WAITING);
-  }
-  format(message, icon, level) {
-    if (message.trim() === "") return [];
-    if (icon) message = icon + " " + message;
-    let parsed;
-    const columns2 = (process.stdout.columns ?? 80) - level * this.options.indentation - 2;
-    switch (this.options.formatOutput) {
-      case "truncate":
-        parsed = message.split(import_os2.EOL).map((s, i) => {
-          return this.truncate(this.indent(s, i), columns2);
-        });
-        break;
-      case "wrap":
-        parsed = this.wrap(message, columns2, {
-          hard: true,
-          trim: false
-        }).split(import_os2.EOL).map((s, i) => this.indent(s, i));
-        break;
-      default:
-        throw new ListrRendererError("Format option for the renderer is wrong.");
-    }
-    if (this.options.removeEmptyLines) parsed = parsed.filter(Boolean);
-    return parsed.map((str) => indent(str, level * this.options.indentation));
-  }
-  shouldOutputToOutputBar(task) {
-    const outputBar = this.cache.rendererTaskOptions.get(task.id).outputBar;
-    return typeof outputBar === "number" && outputBar !== 0 || typeof outputBar === "boolean" && outputBar !== false;
-  }
-  shouldOutputToBottomBar(task) {
-    const bottomBar = this.cache.rendererTaskOptions.get(task.id).bottomBar;
-    return typeof bottomBar === "number" && bottomBar !== 0 || typeof bottomBar === "boolean" && bottomBar !== false || !task.hasTitle();
-  }
-  renderer(tasks, level = 0) {
-    return tasks.flatMap((task) => {
-      if (!task.isEnabled()) return [];
-      if (this.cache.render.has(task.id)) return this.cache.render.get(task.id);
-      this.calculate(task);
-      this.setupBuffer(task);
-      const rendererOptions = this.cache.rendererOptions.get(task.id);
-      const rendererTaskOptions = this.cache.rendererTaskOptions.get(task.id);
-      const output = [];
-      if (task.isPrompt()) {
-        if (this.activePrompt && this.activePrompt !== task.id) throw new ListrRendererError("Only one prompt can be active at the given time, please re-evaluate your task design.");
-        else if (!this.activePrompt) {
-          task.on(ListrTaskEventType.PROMPT, (prompt) => {
-            const cleansed = cleanseAnsi(prompt);
-            if (cleansed) this.prompt = cleansed;
-          });
-          task.on(ListrTaskEventType.STATE, (state) => {
-            if (state === ListrTaskState.PROMPT_COMPLETED || task.hasFinalized() || task.hasReset()) {
-              this.prompt = null;
-              this.activePrompt = null;
-              task.off(ListrTaskEventType.PROMPT);
-            }
-          });
-          this.activePrompt = task.id;
-        }
-      }
-      if (task.hasTitle()) if (!(tasks.some((task2) => task2.hasFailed()) && !task.hasFailed() && task.options.exitOnError !== false && !(task.isCompleted() || task.isSkipped()))) if (task.hasFailed() && rendererOptions.collapseErrors) output.push(...this.format(!task.hasSubtasks() && task.message.error && rendererOptions.showErrorMessage ? task.message.error : task.title, this.style(task), level));
-      else if (task.isSkipped() && rendererOptions.collapseSkips) output.push(...this.format(this.logger.suffix(task.message.skip && rendererOptions.showSkipMessage ? task.message.skip : task.title, {
-        field: ListrLogLevels.SKIPPED,
-        condition: rendererOptions.suffixSkips,
-        format: () => color.dim
-      }), this.style(task), level));
-      else if (task.isRetrying()) output.push(...this.format(this.logger.suffix(task.title, {
-        field: `${ListrLogLevels.RETRY}:${task.message.retry.count}`,
-        format: () => color.yellow,
-        condition: rendererOptions.suffixRetries
-      }), this.style(task), level));
-      else if (task.isCompleted() && task.hasTitle() && assertFunctionOrSelf(rendererTaskOptions.timer?.condition, task.message.duration)) output.push(...this.format(this.logger.suffix(task?.title, {
-        ...rendererTaskOptions.timer,
-        args: [task.message.duration]
-      }), this.style(task), level));
-      else if (task.isPaused()) output.push(...this.format(this.logger.suffix(task.title, {
-        ...rendererOptions.pausedTimer,
-        args: [task.message.paused - Date.now()]
-      }), this.style(task), level));
-      else output.push(...this.format(task.title, this.style(task), level));
-      else output.push(...this.format(task.title, this.logger.icon(ListrDefaultRendererLogLevels.COMPLETED_WITH_FAILED_SISTER_TASKS), level));
-      if (!task.hasSubtasks() || !rendererOptions.showSubtasks) {
-        if (task.hasFailed() && rendererOptions.collapseErrors === false && (rendererOptions.showErrorMessage || !rendererOptions.showSubtasks)) output.push(...this.dump(task, level, ListrLogLevels.FAILED));
-        else if (task.isSkipped() && rendererOptions.collapseSkips === false && (rendererOptions.showSkipMessage || !rendererOptions.showSubtasks)) output.push(...this.dump(task, level, ListrLogLevels.SKIPPED));
-      }
-      if (task.isPending() || rendererTaskOptions.persistentOutput) output.push(...this.renderOutputBar(task, level));
-      if (rendererOptions.showSubtasks !== false && task.hasSubtasks() && (task.isPending() || task.hasFinalized() && !task.hasTitle() || task.isCompleted() && rendererOptions.collapseSubtasks === false && !task.subtasks.some((subtask) => this.cache.rendererOptions.get(subtask.id)?.collapseSubtasks === true) || task.subtasks.some((subtask) => this.cache.rendererOptions.get(subtask.id)?.collapseSubtasks === false) || task.subtasks.some((subtask) => subtask.hasFailed()) || task.subtasks.some((subtask) => subtask.hasRolledBack()))) {
-        const subtaskLevel = !task.hasTitle() ? level : level + 1;
-        const subtaskRender = this.renderer(task.subtasks, subtaskLevel);
-        output.push(...subtaskRender);
-      }
-      if (task.hasFinalized()) {
-        if (!rendererTaskOptions.persistentOutput) {
-          this.buffer.bottom.delete(task.id);
-          this.buffer.output.delete(task.id);
-        }
-      }
-      if (task.isClosed()) {
-        this.cache.render.set(task.id, output);
-        this.reset(task);
-      }
-      return output;
-    });
-  }
-  renderOutputBar(task, level) {
-    const output = this.buffer.output.get(task.id);
-    if (!output) return [];
-    return output.all.flatMap((o) => this.dump(task, level, ListrLogLevels.OUTPUT, o.entry));
-  }
-  renderBottomBar() {
-    if (this.buffer.bottom.size === 0) return [];
-    return Array.from(this.buffer.bottom.values()).flatMap((output) => output.all).sort((a, b) => a.time - b.time).map((output) => output.entry);
-  }
-  renderPrompt() {
-    if (!this.prompt) return [];
-    return [this.prompt];
-  }
-  calculate(task) {
-    if (this.cache.rendererOptions.has(task.id) && this.cache.rendererTaskOptions.has(task.id)) return;
-    const rendererOptions = {
-      ...this.options,
-      ...task.rendererOptions
-    };
-    this.cache.rendererOptions.set(task.id, rendererOptions);
-    this.cache.rendererTaskOptions.set(task.id, {
-      ...DefaultRenderer2.rendererTaskOptions,
-      timer: rendererOptions.timer,
-      ...task.rendererTaskOptions
-    });
-  }
-  setupBuffer(task) {
-    if (this.buffer.bottom.has(task.id) || this.buffer.output.has(task.id)) return;
-    const rendererTaskOptions = this.cache.rendererTaskOptions.get(task.id);
-    if (this.shouldOutputToBottomBar(task) && !this.buffer.bottom.has(task.id)) {
-      this.buffer.bottom.set(task.id, new ProcessOutputBuffer({ limit: typeof rendererTaskOptions.bottomBar === "number" ? rendererTaskOptions.bottomBar : 1 }));
-      task.on(ListrTaskEventType.OUTPUT, (output) => {
-        const data = this.dump(task, -1, ListrLogLevels.OUTPUT, output);
-        this.buffer.bottom.get(task.id).write(data.join(import_os2.EOL));
-      });
-      task.on(ListrTaskEventType.STATE, (state) => {
-        switch (state) {
-          case (ListrTaskState.RETRY || ListrTaskState.ROLLING_BACK):
-            this.buffer.bottom.delete(task.id);
-            break;
-        }
-      });
-    } else if (this.shouldOutputToOutputBar(task) && !this.buffer.output.has(task.id)) {
-      this.buffer.output.set(task.id, new ProcessOutputBuffer({ limit: typeof rendererTaskOptions.outputBar === "number" ? rendererTaskOptions.outputBar : 1 }));
-      task.on(ListrTaskEventType.OUTPUT, (output) => {
-        this.buffer.output.get(task.id).write(output);
-      });
-      task.on(ListrTaskEventType.STATE, (state) => {
-        switch (state) {
-          case (ListrTaskState.RETRY || ListrTaskState.ROLLING_BACK):
-            this.buffer.output.delete(task.id);
-            break;
-        }
-      });
-    }
-  }
-  reset(task) {
-    this.cache.rendererOptions.delete(task.id);
-    this.cache.rendererTaskOptions.delete(task.id);
-    this.buffer.output.delete(task.id);
-  }
-  dump(task, level, source = ListrLogLevels.OUTPUT, data) {
-    if (!data) switch (source) {
-      case ListrLogLevels.OUTPUT:
-        data = task.output;
-        break;
-      case ListrLogLevels.SKIPPED:
-        data = task.message.skip;
-        break;
-      case ListrLogLevels.FAILED:
-        data = task.message.error;
-        break;
-    }
-    if (task.hasTitle() && source === ListrLogLevels.FAILED && data === task.title || typeof data !== "string") return [];
-    if (source === ListrLogLevels.OUTPUT) data = cleanseAnsi(data);
-    return this.format(data, this.style(task, true), level + 1);
-  }
-  indent(str, i) {
-    return i > 0 ? indent(str.trimEnd(), this.options.indentation) : str.trimEnd();
-  }
-};
-var SilentRenderer = class {
-  static nonTTY = true;
-  static rendererOptions;
-  static rendererTaskOptions;
-  constructor(tasks, options) {
-    this.tasks = tasks;
-    this.options = options;
-  }
-  render() {
-  }
-  end() {
-  }
-};
-var SimpleRenderer = class SimpleRenderer2 {
-  static nonTTY = true;
-  static rendererOptions = { pausedTimer: {
-    ...PRESET_TIMER,
-    field: (time3) => `${ListrLogLevels.PAUSED}:${time3}`,
-    format: () => color.yellowBright
-  } };
-  static rendererTaskOptions = {};
-  logger;
-  cache = {
-    rendererOptions: /* @__PURE__ */ new Map(),
-    rendererTaskOptions: /* @__PURE__ */ new Map()
-  };
-  constructor(tasks, options) {
-    this.tasks = tasks;
-    this.options = options;
-    this.options = {
-      ...SimpleRenderer2.rendererOptions,
-      ...options,
-      icon: {
-        ...LISTR_LOGGER_STYLE.icon,
-        ...options?.icon ?? {}
-      },
-      color: {
-        ...LISTR_LOGGER_STYLE.color,
-        ...options?.color ?? {}
-      }
-    };
-    this.logger = this.options.logger ?? new ListrLogger({
-      useIcons: true,
-      toStderr: LISTR_LOGGER_STDERR_LEVELS
-    });
-    this.logger.options.icon = this.options.icon;
-    this.logger.options.color = this.options.color;
-    if (this.options.timestamp) this.logger.options.fields.prefix.unshift(this.options.timestamp);
-  }
-  end() {
-  }
-  render() {
-    this.renderer(this.tasks);
-  }
-  renderer(tasks) {
-    tasks.forEach((task) => {
-      this.calculate(task);
-      task.once(ListrTaskEventType.CLOSED, () => {
-        this.reset(task);
-      });
-      const rendererOptions = this.cache.rendererOptions.get(task.id);
-      const rendererTaskOptions = this.cache.rendererTaskOptions.get(task.id);
-      task.on(ListrTaskEventType.SUBTASK, (subtasks) => {
-        this.renderer(subtasks);
-      });
-      task.on(ListrTaskEventType.STATE, (state) => {
-        if (!task.hasTitle()) return;
-        if (state === ListrTaskState.STARTED) this.logger.log(ListrLogLevels.STARTED, task.title);
-        else if (state === ListrTaskState.COMPLETED) {
-          const timer = rendererTaskOptions?.timer;
-          this.logger.log(ListrLogLevels.COMPLETED, task.title, timer && { suffix: {
-            ...timer,
-            condition: !!task.message?.duration && timer.condition,
-            args: [task.message.duration]
-          } });
-        } else if (state === ListrTaskState.PROMPT) {
-          this.logger.process.hijack();
-          task.on(ListrTaskEventType.PROMPT, (prompt) => {
-            this.logger.process.toStderr(prompt, false);
-          });
-        } else if (state === ListrTaskState.PROMPT_COMPLETED) {
-          task.off(ListrTaskEventType.PROMPT);
-          this.logger.process.release();
-        }
-      });
-      task.on(ListrTaskEventType.OUTPUT, (output) => {
-        this.logger.log(ListrLogLevels.OUTPUT, output);
-      });
-      task.on(ListrTaskEventType.MESSAGE, (message) => {
-        if (message.error) this.logger.log(ListrLogLevels.FAILED, task.title, { suffix: {
-          field: `${ListrLogLevels.FAILED}: ${message.error}`,
-          format: () => color.red
-        } });
-        else if (message.skip) this.logger.log(ListrLogLevels.SKIPPED, task.title, { suffix: {
-          field: `${ListrLogLevels.SKIPPED}: ${message.skip}`,
-          format: () => color.yellow
-        } });
-        else if (message.rollback) this.logger.log(ListrLogLevels.ROLLBACK, task.title, { suffix: {
-          field: `${ListrLogLevels.ROLLBACK}: ${message.rollback}`,
-          format: () => color.red
-        } });
-        else if (message.retry) this.logger.log(ListrLogLevels.RETRY, task.title, { suffix: {
-          field: `${ListrLogLevels.RETRY}:${message.retry.count}`,
-          format: () => color.red
-        } });
-        else if (message.paused) {
-          const timer = rendererOptions?.pausedTimer;
-          this.logger.log(ListrLogLevels.PAUSED, task.title, timer && { suffix: {
-            ...timer,
-            condition: !!message?.paused && timer.condition,
-            args: [message.paused - Date.now()]
-          } });
-        }
-      });
-    });
-  }
-  calculate(task) {
-    if (this.cache.rendererOptions.has(task.id) && this.cache.rendererTaskOptions.has(task.id)) return;
-    const rendererOptions = {
-      ...this.options,
-      ...task.rendererOptions
-    };
-    this.cache.rendererOptions.set(task.id, rendererOptions);
-    this.cache.rendererTaskOptions.set(task.id, {
-      ...SimpleRenderer2.rendererTaskOptions,
-      timer: rendererOptions.timer,
-      ...task.rendererTaskOptions
-    });
-  }
-  reset(task) {
-    this.cache.rendererOptions.delete(task.id);
-    this.cache.rendererTaskOptions.delete(task.id);
-  }
-};
-var TestRendererSerializer = class {
-  constructor(options) {
-    this.options = options;
-  }
-  serialize(event, data, task) {
-    return JSON.stringify(this.generate(event, data, task));
-  }
-  generate(event, data, task) {
-    const output = {
-      event,
-      data
-    };
-    if (typeof this.options?.task !== "boolean") {
-      const t2 = Object.fromEntries(this.options.task.map((entity) => {
-        const property = task[entity];
-        if (typeof property === "function") return [entity, property.call(task)];
-        return [entity, property];
-      }));
-      if (Object.keys(task).length > 0) output.task = t2;
-    }
-    return output;
-  }
-};
-var TestRenderer = class TestRenderer2 {
-  static nonTTY = true;
-  static rendererOptions = {
-    subtasks: true,
-    state: Object.values(ListrTaskState),
-    output: true,
-    prompt: true,
-    title: true,
-    messages: [
-      "skip",
-      "error",
-      "retry",
-      "rollback",
-      "paused"
-    ],
-    messagesToStderr: [
-      "error",
-      "rollback",
-      "retry"
-    ],
-    task: [
-      "hasRolledBack",
-      "isRollingBack",
-      "isCompleted",
-      "isSkipped",
-      "hasFinalized",
-      "hasSubtasks",
-      "title",
-      "hasReset",
-      "hasTitle",
-      "isPrompt",
-      "isPaused",
-      "isPending",
-      "isSkipped",
-      "isStarted",
-      "hasFailed",
-      "isEnabled",
-      "isRetrying",
-      "path"
-    ]
-  };
-  static rendererTaskOptions;
-  logger;
-  serializer;
-  constructor(tasks, options) {
-    this.tasks = tasks;
-    this.options = options;
-    this.options = {
-      ...TestRenderer2.rendererOptions,
-      ...this.options
-    };
-    this.logger = this.options.logger ?? new ListrLogger({ useIcons: false });
-    this.serializer = new TestRendererSerializer(this.options);
-  }
-  render() {
-    this.renderer(this.tasks);
-  }
-  end() {
-  }
-  renderer(tasks) {
-    tasks.forEach((task) => {
-      if (this.options.subtasks) task.on(ListrTaskEventType.SUBTASK, (subtasks) => {
-        this.renderer(subtasks);
-      });
-      if (this.options.state) task.on(ListrTaskEventType.STATE, (state) => {
-        this.logger.toStdout(this.serializer.serialize(ListrTaskEventType.STATE, state, task));
-      });
-      if (this.options.output) task.on(ListrTaskEventType.OUTPUT, (data) => {
-        this.logger.toStdout(this.serializer.serialize(ListrTaskEventType.OUTPUT, data, task));
-      });
-      if (this.options.prompt) task.on(ListrTaskEventType.PROMPT, (prompt) => {
-        this.logger.toStdout(this.serializer.serialize(ListrTaskEventType.PROMPT, prompt, task));
-      });
-      if (this.options.title) task.on(ListrTaskEventType.TITLE, (title) => {
-        this.logger.toStdout(this.serializer.serialize(ListrTaskEventType.TITLE, title, task));
-      });
-      task.on(ListrTaskEventType.MESSAGE, (message) => {
-        const parsed = Object.fromEntries(Object.entries(message).map(([key, value]) => {
-          if (this.options.messages.includes(key)) return [key, value];
-        }).filter(Boolean));
-        if (Object.keys(parsed).length > 0) {
-          const output = this.serializer.serialize(ListrTaskEventType.MESSAGE, parsed, task);
-          if (this.options.messagesToStderr.some((state) => Object.keys(parsed).includes(state))) this.logger.toStderr(output);
-          else this.logger.toStdout(output);
-        }
-      });
-    });
-  }
-};
-var VerboseRenderer = class VerboseRenderer2 {
-  static nonTTY = true;
-  static rendererOptions = {
-    logTitleChange: false,
-    pausedTimer: {
-      ...PRESET_TIMER,
-      format: () => color.yellowBright
-    }
-  };
-  static rendererTaskOptions;
-  logger;
-  cache = {
-    rendererOptions: /* @__PURE__ */ new Map(),
-    rendererTaskOptions: /* @__PURE__ */ new Map()
-  };
-  constructor(tasks, options) {
-    this.tasks = tasks;
-    this.options = options;
-    this.options = {
-      ...VerboseRenderer2.rendererOptions,
-      ...this.options,
-      icon: {
-        ...LISTR_LOGGER_STYLE.icon,
-        ...options?.icon ?? {}
-      },
-      color: {
-        ...LISTR_LOGGER_STYLE.color,
-        ...options?.color ?? {}
-      }
-    };
-    this.logger = this.options.logger ?? new ListrLogger({
-      useIcons: false,
-      toStderr: LISTR_LOGGER_STDERR_LEVELS
-    });
-    this.logger.options.icon = this.options.icon;
-    this.logger.options.color = this.options.color;
-    if (this.options.timestamp) this.logger.options.fields.prefix.unshift(this.options.timestamp);
-  }
-  render() {
-    this.renderer(this.tasks);
-  }
-  end() {
-  }
-  renderer(tasks) {
-    tasks.forEach((task) => {
-      this.calculate(task);
-      task.once(ListrTaskEventType.CLOSED, () => {
-        this.reset(task);
-      });
-      const rendererOptions = this.cache.rendererOptions.get(task.id);
-      const rendererTaskOptions = this.cache.rendererTaskOptions.get(task.id);
-      task.on(ListrTaskEventType.SUBTASK, (subtasks) => {
-        this.renderer(subtasks);
-      });
-      task.on(ListrTaskEventType.STATE, (state) => {
-        if (!task.hasTitle()) return;
-        if (state === ListrTaskState.STARTED) this.logger.log(ListrLogLevels.STARTED, task.title);
-        else if (state === ListrTaskState.COMPLETED) {
-          const timer = rendererTaskOptions.timer;
-          this.logger.log(ListrLogLevels.COMPLETED, task.title, timer && { suffix: {
-            ...timer,
-            condition: !!task.message?.duration && timer.condition,
-            args: [task.message.duration]
-          } });
-        }
-      });
-      task.on(ListrTaskEventType.OUTPUT, (data) => {
-        this.logger.log(ListrLogLevels.OUTPUT, data);
-      });
-      task.on(ListrTaskEventType.PROMPT, (prompt) => {
-        const cleansed = cleanseAnsi(prompt);
-        if (cleansed) this.logger.log(ListrLogLevels.PROMPT, cleansed);
-      });
-      if (this.options?.logTitleChange !== false) task.on(ListrTaskEventType.TITLE, (title) => {
-        this.logger.log(ListrLogLevels.TITLE, title);
-      });
-      task.on(ListrTaskEventType.MESSAGE, (message) => {
-        if (message?.error) this.logger.log(ListrLogLevels.FAILED, message.error);
-        else if (message?.skip) this.logger.log(ListrLogLevels.SKIPPED, message.skip);
-        else if (message?.rollback) this.logger.log(ListrLogLevels.ROLLBACK, message.rollback);
-        else if (message?.retry) this.logger.log(ListrLogLevels.RETRY, task.title, { suffix: message.retry.count.toString() });
-        else if (message?.paused) {
-          const timer = rendererOptions?.pausedTimer;
-          this.logger.log(ListrLogLevels.PAUSED, task.title, timer && { suffix: {
-            ...timer,
-            condition: !!message?.paused && timer.condition,
-            args: [message.paused - Date.now()]
-          } });
-        }
-      });
-    });
-  }
-  calculate(task) {
-    if (this.cache.rendererOptions.has(task.id) && this.cache.rendererTaskOptions.has(task.id)) return;
-    const rendererOptions = {
-      ...this.options,
-      ...task.rendererOptions
-    };
-    this.cache.rendererOptions.set(task.id, rendererOptions);
-    this.cache.rendererTaskOptions.set(task.id, {
-      ...VerboseRenderer2.rendererTaskOptions,
-      timer: rendererOptions.timer,
-      ...task.rendererTaskOptions
-    });
-  }
-  reset(task) {
-    this.cache.rendererOptions.delete(task.id);
-    this.cache.rendererTaskOptions.delete(task.id);
-  }
-};
-var RENDERERS = {
-  default: DefaultRenderer,
-  simple: SimpleRenderer,
-  verbose: VerboseRenderer,
-  test: TestRenderer,
-  silent: SilentRenderer
-};
-function isRendererSupported(renderer) {
-  return process.stdout.isTTY === true || renderer.nonTTY === true;
-}
-function getRendererClass(renderer) {
-  if (typeof renderer === "string") return RENDERERS[renderer] ?? RENDERERS.default;
-  return typeof renderer === "function" ? renderer : RENDERERS.default;
-}
-function getRenderer(options) {
-  if (assertFunctionOrSelf(options?.silentRendererCondition)) return {
-    renderer: getRendererClass("silent"),
-    selection: ListrRendererSelection.SILENT
-  };
-  const r = {
-    renderer: getRendererClass(options.renderer),
-    options: options.rendererOptions,
-    selection: ListrRendererSelection.PRIMARY
-  };
-  if (!isRendererSupported(r.renderer) || assertFunctionOrSelf(options?.fallbackRendererCondition)) return {
-    renderer: getRendererClass(options.fallbackRenderer),
-    options: options.fallbackRendererOptions,
-    selection: ListrRendererSelection.SECONDARY
-  };
-  return r;
-}
-function assertFunctionOrSelf(functionOrSelf, ...args) {
-  if (typeof functionOrSelf === "function") return functionOrSelf(...args);
-  else return functionOrSelf;
-}
-var clone = (0, import_rfdc.default)({ circles: true });
-function cloneObject(obj) {
-  return clone(obj);
-}
-var Concurrency = class {
-  concurrency;
-  count;
-  queue;
-  constructor(options) {
-    this.concurrency = options.concurrency;
-    this.count = 0;
-    this.queue = /* @__PURE__ */ new Set();
-  }
-  add(fn) {
-    if (this.count < this.concurrency) return this.run(fn);
-    return new Promise((resolve4) => {
-      const callback = () => resolve4(this.run(fn));
-      this.queue.add(callback);
-    });
-  }
-  flush() {
-    for (const callback of this.queue) {
-      if (this.count >= this.concurrency) break;
-      this.queue.delete(callback);
-      callback();
-    }
-  }
-  run(fn) {
-    this.count++;
-    const promise2 = fn();
-    const cleanup = () => {
-      this.count--;
-      this.flush();
-    };
-    promise2.then(cleanup, () => {
-      this.queue.clear();
-    });
-    return promise2;
-  }
-};
-function delay(time3) {
-  return new Promise((resolve4) => {
-    setTimeout(resolve4, time3);
-  });
-}
-var ListrError = class extends Error {
-  path;
-  ctx;
-  constructor(error48, type, task) {
-    super(error48.message);
-    this.error = error48;
-    this.type = type;
-    this.task = task;
-    this.name = "ListrError";
-    this.path = task.path;
-    if (task?.options.collectErrors === "full") {
-      this.task = cloneObject(task);
-      this.ctx = cloneObject(task.listr.ctx);
-    }
-    this.stack = error48?.stack;
-  }
-};
-var ListrRendererError = class extends Error {
-};
-var PromptError = class extends Error {
-};
-var TaskWrapper = class {
-  constructor(task) {
-    this.task = task;
-  }
-  /* istanbul ignore next */
-  get title() {
-    return this.task.title;
-  }
-  /**
-  * Title of the current task.
-  *
-  * @see {@link https://listr2.kilic.dev/task/title.html}
-  */
-  set title(title) {
-    title = Array.isArray(title) ? title : [title];
-    this.task.title$ = splat(title.shift(), ...title);
-  }
-  /* istanbul ignore next */
-  get output() {
-    return this.task.output;
-  }
-  /* istanbul ignore next */
-  /**
-  * Send output from the current task to the renderer.
-  *
-  * @see {@link https://listr2.kilic.dev/task/output.html}
-  */
-  set output(output) {
-    output = Array.isArray(output) ? output : [output];
-    this.task.output$ = splat(output.shift(), ...output);
-  }
-  /* istanbul ignore next */
-  /** Send an output to the output channel as prompt. */
-  set promptOutput(output) {
-    this.task.promptOutput$ = output;
-  }
-  /**
-  * Creates a new set of Listr subtasks.
-  *
-  * @see {@link https://listr2.kilic.dev/task/subtasks.html}
-  */
-  newListr(task, options) {
-    let tasks;
-    if (typeof task === "function") tasks = task(this);
-    else tasks = task;
-    return new Listr(tasks, options, this.task);
-  }
-  /**
-  * Report an error that has to be collected and handled.
-  *
-  * @see {@link https://listr2.kilic.dev/task/error-handling.html}
-  */
-  report(error48, type) {
-    if (this.task.options.collectErrors !== false) this.task.listr.errors.push(new ListrError(error48, type, this.task));
-    this.task.message$ = { error: error48.message ?? this.task?.title };
-  }
-  /**
-  * Skip the current task.
-  *
-  * @see {@link https://listr2.kilic.dev/task/skip.html}
-  */
-  skip(message, ...metadata) {
-    this.task.state$ = ListrTaskState.SKIPPED;
-    if (message) this.task.message$ = { skip: message ? splat(message, ...metadata) : this.task?.title };
-  }
-  /**
-  * Check whether this task is currently in a retry state.
-  *
-  * @see {@link https://listr2.kilic.dev/task/retry.html}
-  */
-  isRetrying() {
-    return this.task.isRetrying() ? this.task.retry : { count: 0 };
-  }
-  /* istanbul ignore next */
-  /**
-  * Create a new prompt for getting user input through the prompt adapter.
-  * This will create a new prompt through the adapter if the task is not currently rendering a prompt or will return the active instance.
-  *
-  * This part of the application requires optional peer dependencies, please refer to documentation.
-  *
-  * @see {@link https://listr2.kilic.dev/task/prompt.html}
-  */
-  prompt(adapter) {
-    if (this.task.prompt) return this.task.prompt;
-    return new adapter(this.task, this);
-  }
-  /* istanbul ignore next */
-  /**
-  * Generates a fake stdout for your use case, where it will be tunnelled through Listr to handle the rendering process.
-  *
-  * @see {@link https://listr2.kilic.dev/renderer/process-output.html}
-  */
-  stdout(type) {
-    return createWritable((chunk) => {
-      switch (type) {
-        case ListrTaskEventType.PROMPT:
-          this.promptOutput = chunk;
-          break;
-        default:
-          this.output = chunk;
-      }
-    });
-  }
-  /** Run this task. */
-  run(ctx) {
-    return this.task.run(ctx, this);
-  }
-};
-var ListrTaskEventManager = class extends EventManager {
-};
-var Task = class extends ListrTaskEventManager {
-  /** Unique id per task, can be used for identifying a Task. */
-  id = (0, import_crypto.randomUUID)();
-  /** The current state of the task. */
-  state = ListrTaskState.WAITING;
-  /** Subtasks of the current task. */
-  subtasks;
-  /** Title of the task. */
-  title;
-  /** Initial/Untouched version of the title for using whenever task has a reset. */
-  initialTitle;
-  /** Output channel for the task. */
-  output;
-  /** Current state of the retry process whenever the task is retrying. */
-  retry;
-  /**
-  * A channel for messages.
-  *
-  * This requires a separate channel for messages like error, skip or runtime messages to further utilize in the renderers.
-  */
-  message = {};
-  /** Current prompt instance or prompt error whenever the task is prompting. */
-  prompt;
-  /** Parent task of the current task. */
-  parent;
-  /** Enable flag of this task. */
-  enabled;
-  /** User provided Task callback function to run. */
-  taskFn;
-  /** Marks the task as closed. This is different from finalized since this is not really related to task itself. */
-  closed;
-  constructor(listr, task, options, rendererOptions, rendererTaskOptions) {
-    super();
-    this.listr = listr;
-    this.task = task;
-    this.options = options;
-    this.rendererOptions = rendererOptions;
-    this.rendererTaskOptions = rendererTaskOptions;
-    if (task.title) {
-      const title = Array.isArray(task?.title) ? task.title : [task.title];
-      this.title = splat(title.shift(), ...title);
-      this.initialTitle = this.title;
-    }
-    this.taskFn = task.task;
-    this.parent = listr.parentTask;
-  }
-  /**
-  * Update the current state of the Task and emit the neccassary events.
-  */
-  set state$(state) {
-    this.state = state;
-    this.emit(ListrTaskEventType.STATE, state);
-    if (this.hasSubtasks() && this.hasFailed()) {
-      for (const subtask of this.subtasks) if (subtask.state === ListrTaskState.STARTED) subtask.state$ = ListrTaskState.FAILED;
-    }
-    this.listr.events.emit(ListrEventType.SHOULD_REFRESH_RENDER);
-  }
-  /**
-  * Update the current output of the Task and emit the neccassary events.
-  */
-  set output$(data) {
-    this.output = data;
-    this.emit(ListrTaskEventType.OUTPUT, data);
-    this.listr.events.emit(ListrEventType.SHOULD_REFRESH_RENDER);
-  }
-  /**
-  * Update the current prompt output of the Task and emit the neccassary events.
-  */
-  set promptOutput$(data) {
-    this.emit(ListrTaskEventType.PROMPT, data);
-    if (cleanseAnsi(data)) this.listr.events.emit(ListrEventType.SHOULD_REFRESH_RENDER);
-  }
-  /**
-  * Update or extend the current message of the Task and emit the neccassary events.
-  */
-  set message$(data) {
-    this.message = {
-      ...this.message,
-      ...data
-    };
-    this.emit(ListrTaskEventType.MESSAGE, data);
-    this.listr.events.emit(ListrEventType.SHOULD_REFRESH_RENDER);
-  }
-  /**
-  * Update the current title of the Task and emit the neccassary events.
-  */
-  set title$(title) {
-    this.title = title;
-    this.emit(ListrTaskEventType.TITLE, title);
-    this.listr.events.emit(ListrEventType.SHOULD_REFRESH_RENDER);
-  }
-  /**
-  * Current task path in the hierarchy.
-  */
-  get path() {
-    return [...this.listr.path, this.initialTitle];
-  }
-  /**
-  * Checks whether the current task with the given context should be set as enabled.
-  */
-  async check(ctx) {
-    if (this.state === ListrTaskState.WAITING) {
-      this.enabled = await assertFunctionOrSelf(this.task?.enabled ?? true, ctx);
-      this.emit(ListrTaskEventType.ENABLED, this.enabled);
-      this.listr.events.emit(ListrEventType.SHOULD_REFRESH_RENDER);
-    }
-    return this.enabled;
-  }
-  /** Returns whether this task has subtasks. */
-  hasSubtasks() {
-    return this.subtasks?.length > 0;
-  }
-  /** Returns whether this task is finalized in someform. */
-  hasFinalized() {
-    return this.isCompleted() || this.hasFailed() || this.isSkipped() || this.hasRolledBack();
-  }
-  /** Returns whether this task is in progress. */
-  isPending() {
-    return this.isStarted() || this.isPrompt() || this.hasReset();
-  }
-  /** Returns whether this task has started. */
-  isStarted() {
-    return this.state === ListrTaskState.STARTED;
-  }
-  /** Returns whether this task is skipped. */
-  isSkipped() {
-    return this.state === ListrTaskState.SKIPPED;
-  }
-  /** Returns whether this task has been completed. */
-  isCompleted() {
-    return this.state === ListrTaskState.COMPLETED;
-  }
-  /** Returns whether this task has been failed. */
-  hasFailed() {
-    return this.state === ListrTaskState.FAILED;
-  }
-  /** Returns whether this task has an active rollback task going on. */
-  isRollingBack() {
-    return this.state === ListrTaskState.ROLLING_BACK;
-  }
-  /** Returns whether the rollback action was successful. */
-  hasRolledBack() {
-    return this.state === ListrTaskState.ROLLED_BACK;
-  }
-  /** Returns whether this task has an actively retrying task going on. */
-  isRetrying() {
-    return this.state === ListrTaskState.RETRY;
-  }
-  /** Returns whether this task has some kind of reset like retry and rollback going on. */
-  hasReset() {
-    return this.state === ListrTaskState.RETRY || this.state === ListrTaskState.ROLLING_BACK;
-  }
-  /** Returns whether enabled function resolves to true. */
-  isEnabled() {
-    return this.enabled;
-  }
-  /** Returns whether this task actually has a title. */
-  hasTitle() {
-    return typeof this?.title === "string";
-  }
-  /** Returns whether this task has a prompt inside. */
-  isPrompt() {
-    return this.state === ListrTaskState.PROMPT;
-  }
-  /** Returns whether this task is currently paused. */
-  isPaused() {
-    return this.state === ListrTaskState.PAUSED;
-  }
-  /** Returns whether this task is closed. */
-  isClosed() {
-    return this.closed;
-  }
-  /** Pause the given task for certain time. */
-  async pause(time3) {
-    const state = this.state;
-    this.state$ = ListrTaskState.PAUSED;
-    this.message$ = { paused: Date.now() + time3 };
-    await delay(time3);
-    this.state$ = state;
-    this.message$ = { paused: null };
-  }
-  /** Run the current task. */
-  async run(context, wrapper) {
-    const handleResult = (result) => {
-      if (result instanceof Listr) {
-        result.options = {
-          ...this.options,
-          ...result.options
-        };
-        result.rendererClass = getRendererClass("silent");
-        this.subtasks = result.tasks;
-        result.errors = this.listr.errors;
-        this.emit(ListrTaskEventType.SUBTASK, this.subtasks);
-        result = result.run(context);
-      } else if (result instanceof Promise) result = result.then(handleResult);
-      else if (isReadable(result)) result = new Promise((resolve4, reject) => {
-        result.on("data", (data) => {
-          this.output$ = data.toString();
-        });
-        result.on("error", (error48) => reject(error48));
-        result.on("end", () => resolve4(null));
-      });
-      else if (isObservable(result)) result = new Promise((resolve4, reject) => {
-        result.subscribe({
-          next: (data) => {
-            this.output$ = data;
-          },
-          error: reject,
-          complete: resolve4
-        });
-      });
-      return result;
-    };
-    const startTime = Date.now();
-    this.state$ = ListrTaskState.STARTED;
-    const skipped = await assertFunctionOrSelf(this.task?.skip ?? false, context);
-    if (skipped) {
-      if (typeof skipped === "string") this.message$ = { skip: skipped };
-      else if (this.hasTitle()) this.message$ = { skip: this.title };
-      else this.message$ = { skip: "Skipped task without a title." };
-      this.state$ = ListrTaskState.SKIPPED;
-      return;
-    }
-    try {
-      const retryCount = typeof this.task?.retry === "number" && this.task.retry > 0 ? this.task.retry + 1 : typeof this.task?.retry === "object" && this.task.retry.tries > 0 ? this.task.retry.tries + 1 : 1;
-      const retryDelay = typeof this.task.retry === "object" && this.task.retry.delay;
-      for (let retries = 1; retries <= retryCount; retries++) try {
-        await handleResult(this.taskFn(context, wrapper));
-        break;
-      } catch (err) {
-        if (retries !== retryCount) {
-          this.retry = {
-            count: retries,
-            error: err
-          };
-          this.message$ = { retry: this.retry };
-          this.title$ = this.initialTitle;
-          this.output = void 0;
-          wrapper.report(err, ListrErrorTypes.WILL_RETRY);
-          this.state$ = ListrTaskState.RETRY;
-          if (retryDelay) await this.pause(retryDelay);
-        } else throw err;
-      }
-      if (this.isStarted() || this.isRetrying()) {
-        this.message$ = { duration: Date.now() - startTime };
-        this.state$ = ListrTaskState.COMPLETED;
-      }
-    } catch (error48) {
-      if (this.prompt instanceof PromptError) error48 = this.prompt;
-      if (this.task?.rollback) {
-        wrapper.report(error48, ListrErrorTypes.WILL_ROLLBACK);
-        try {
-          this.state$ = ListrTaskState.ROLLING_BACK;
-          await this.task.rollback(context, wrapper);
-          this.message$ = { rollback: this.title };
-          this.state$ = ListrTaskState.ROLLED_BACK;
-        } catch (err) {
-          this.state$ = ListrTaskState.FAILED;
-          wrapper.report(err, ListrErrorTypes.HAS_FAILED_TO_ROLLBACK);
-          this.close();
-          throw err;
-        }
-        if (this.listr.options?.exitAfterRollback !== false) {
-          this.close();
-          throw error48;
-        }
-      } else {
-        this.state$ = ListrTaskState.FAILED;
-        if (this.listr.options.exitOnError !== false && await assertFunctionOrSelf(this.task?.exitOnError, context) !== false) {
-          wrapper.report(error48, ListrErrorTypes.HAS_FAILED);
-          this.close();
-          throw error48;
-        } else if (!this.hasSubtasks()) wrapper.report(error48, ListrErrorTypes.HAS_FAILED_WITHOUT_ERROR);
-      }
-    } finally {
-      this.close();
-    }
-  }
-  close() {
-    this.emit(ListrTaskEventType.CLOSED);
-    this.listr.events.emit(ListrEventType.SHOULD_REFRESH_RENDER);
-    this.complete();
-  }
-};
-var ListrEventManager = class extends EventManager {
-};
-var Listr = class {
-  tasks = [];
-  errors = [];
-  ctx;
-  events;
-  path = [];
-  rendererClass;
-  rendererClassOptions;
-  rendererSelection;
-  boundSignalHandler;
-  concurrency;
-  renderer;
-  constructor(task, options, parentTask) {
-    this.task = task;
-    this.options = options;
-    this.parentTask = parentTask;
-    this.options = {
-      concurrent: false,
-      renderer: "default",
-      fallbackRenderer: "simple",
-      exitOnError: true,
-      exitAfterRollback: true,
-      collectErrors: false,
-      registerSignalListeners: true,
-      ...this.parentTask?.options ?? {},
-      ...options
-    };
-    if (this.options.concurrent === true) this.options.concurrent = Infinity;
-    else if (typeof this.options.concurrent !== "number") this.options.concurrent = 1;
-    this.concurrency = new Concurrency({ concurrency: this.options.concurrent });
-    if (parentTask) {
-      this.path = [...parentTask.listr.path, parentTask.title];
-      this.errors = parentTask.listr.errors;
-    }
-    if (this.parentTask?.listr.events instanceof ListrEventManager) this.events = this.parentTask.listr.events;
-    else this.events = new ListrEventManager();
-    if (this.options?.forceTTY || process.env[ListrEnvironmentVariables.FORCE_TTY]) {
-      process.stdout.isTTY = true;
-      process.stderr.isTTY = true;
-    }
-    if (this.options?.forceUnicode) process.env[ListrEnvironmentVariables.FORCE_UNICODE] = "1";
-    const renderer = getRenderer({
-      renderer: this.options.renderer,
-      rendererOptions: this.options.rendererOptions,
-      fallbackRenderer: this.options.fallbackRenderer,
-      fallbackRendererOptions: this.options.fallbackRendererOptions,
-      fallbackRendererCondition: this.options?.fallbackRendererCondition,
-      silentRendererCondition: this.options?.silentRendererCondition
-    });
-    this.rendererClass = renderer.renderer;
-    this.rendererClassOptions = renderer.options;
-    this.rendererSelection = renderer.selection;
-    this.add(task ?? []);
-    if (this.options.registerSignalListeners) {
-      this.boundSignalHandler = this.signalHandler.bind(this);
-      process.once("SIGINT", this.boundSignalHandler).setMaxListeners(0);
-    }
-  }
-  /**
-  * Whether this is the root task.
-  */
-  isRoot() {
-    return !this.parentTask;
-  }
-  /**
-  * Whether this is a subtask of another task list.
-  */
-  isSubtask() {
-    return !!this.parentTask;
-  }
-  /**
-  * Add tasks to current task list.
-  *
-  * @see {@link https://listr2.kilic.dev/task/task.html}
-  */
-  add(tasks) {
-    this.tasks.push(...this.generate(tasks));
-  }
-  /**
-  * Run the task list.
-  *
-  * @see {@link https://listr2.kilic.dev/listr/listr.html#run-the-generated-task-list}
-  */
-  async run(context) {
-    if (!this.renderer) this.renderer = new this.rendererClass(this.tasks, this.rendererClassOptions, this.events);
-    await this.renderer.render();
-    this.ctx = this.options?.ctx ?? context ?? {};
-    try {
-      await Promise.all(this.tasks.map((task) => task.check(this.ctx)));
-      await Promise.all(this.tasks.map((task) => this.concurrency.add(() => this.runTask(task))));
-      this.renderer.end();
-      this.removeSignalHandler();
-    } catch (err) {
-      if (this.options.exitOnError !== false) {
-        this.renderer.end(err);
-        this.removeSignalHandler();
-        throw err;
-      }
-    }
-    return this.ctx;
-  }
-  generate(tasks) {
-    tasks = Array.isArray(tasks) ? tasks : [tasks];
-    return tasks.map((task) => {
-      let rendererTaskOptions;
-      if (this.rendererSelection === ListrRendererSelection.PRIMARY) rendererTaskOptions = task.rendererOptions;
-      else if (this.rendererSelection === ListrRendererSelection.SECONDARY) rendererTaskOptions = task.fallbackRendererOptions;
-      return new Task(this, task, this.options, this.rendererClassOptions, rendererTaskOptions);
-    });
-  }
-  async runTask(task) {
-    if (!await task.check(this.ctx)) return;
-    return new TaskWrapper(task).run(this.ctx);
-  }
-  signalHandler() {
-    this.tasks?.forEach(async (task) => {
-      if (task.isPending()) task.state$ = ListrTaskState.FAILED;
-    });
-    if (this.isRoot()) {
-      this.renderer?.end(/* @__PURE__ */ new Error("Interrupted."));
-      process.exit(127);
-    }
-  }
-  removeSignalHandler() {
-    if (this.boundSignalHandler) process.removeListener("SIGINT", this.boundSignalHandler);
-  }
-};
-
 // src/commands/install.ts
-var import_os6 = __toESM(require("os"), 1);
-var import_fs_extra14 = __toESM(require_lib(), 1);
+var import_fs_extra11 = __toESM(require_lib(), 1);
+var import_path9 = __toESM(require("path"), 1);
 var import_node_child_process6 = require("child_process");
+var import_node_crypto3 = __toESM(require("crypto"), 1);
 
 // src/core/context.ts
-var import_os3 = __toESM(require("os"), 1);
+var import_os2 = __toESM(require("os"), 1);
 var import_path8 = __toESM(require("path"), 1);
-var import_fs_extra8 = __toESM(require_lib(), 1);
+var import_fs_extra9 = __toESM(require_lib(), 1);
 
 // node_modules/conf/dist/source/index.js
-var import_node_util3 = require("util");
-var import_node_process10 = __toESM(require("process"), 1);
+var import_node_util2 = require("util");
+var import_node_process6 = __toESM(require("process"), 1);
 var import_node_fs4 = __toESM(require("fs"), 1);
-var import_node_path5 = __toESM(require("path"), 1);
+var import_node_path6 = __toESM(require("path"), 1);
 var import_node_crypto = __toESM(require("crypto"), 1);
 var import_node_assert = __toESM(require("assert"), 1);
 
@@ -37534,12 +32950,12 @@ var disallowedKeys = /* @__PURE__ */ new Set([
   "constructor"
 ]);
 var digits = new Set("0123456789");
-function getPathSegments(path26) {
+function getPathSegments(path29) {
   const parts = [];
   let currentSegment = "";
   let currentPart = "start";
   let isIgnoring = false;
-  for (const character of path26) {
+  for (const character of path29) {
     switch (character) {
       case "\\": {
         if (currentPart === "index") {
@@ -37661,11 +33077,11 @@ function assertNotStringIndex(object2, key) {
     throw new Error("Cannot use string index");
   }
 }
-function getProperty(object2, path26, value) {
-  if (!isObject(object2) || typeof path26 !== "string") {
+function getProperty(object2, path29, value) {
+  if (!isObject(object2) || typeof path29 !== "string") {
     return value === void 0 ? object2 : value;
   }
-  const pathArray = getPathSegments(path26);
+  const pathArray = getPathSegments(path29);
   if (pathArray.length === 0) {
     return value;
   }
@@ -37685,12 +33101,12 @@ function getProperty(object2, path26, value) {
   }
   return object2 === void 0 ? value : object2;
 }
-function setProperty(object2, path26, value) {
-  if (!isObject(object2) || typeof path26 !== "string") {
+function setProperty(object2, path29, value) {
+  if (!isObject(object2) || typeof path29 !== "string") {
     return object2;
   }
   const root = object2;
-  const pathArray = getPathSegments(path26);
+  const pathArray = getPathSegments(path29);
   for (let index = 0; index < pathArray.length; index++) {
     const key = pathArray[index];
     assertNotStringIndex(object2, key);
@@ -37703,11 +33119,11 @@ function setProperty(object2, path26, value) {
   }
   return root;
 }
-function deleteProperty(object2, path26) {
-  if (!isObject(object2) || typeof path26 !== "string") {
+function deleteProperty(object2, path29) {
+  if (!isObject(object2) || typeof path29 !== "string") {
     return false;
   }
-  const pathArray = getPathSegments(path26);
+  const pathArray = getPathSegments(path29);
   for (let index = 0; index < pathArray.length; index++) {
     const key = pathArray[index];
     assertNotStringIndex(object2, key);
@@ -37721,11 +33137,11 @@ function deleteProperty(object2, path26) {
     }
   }
 }
-function hasProperty(object2, path26) {
-  if (!isObject(object2) || typeof path26 !== "string") {
+function hasProperty(object2, path29) {
+  if (!isObject(object2) || typeof path29 !== "string") {
     return false;
   }
-  const pathArray = getPathSegments(path26);
+  const pathArray = getPathSegments(path29);
   if (pathArray.length === 0) {
     return false;
   }
@@ -37739,43 +33155,43 @@ function hasProperty(object2, path26) {
 }
 
 // ../node_modules/env-paths/index.js
-var import_node_path2 = __toESM(require("path"), 1);
-var import_node_os7 = __toESM(require("os"), 1);
-var import_node_process5 = __toESM(require("process"), 1);
-var homedir6 = import_node_os7.default.homedir();
-var tmpdir = import_node_os7.default.tmpdir();
-var { env } = import_node_process5.default;
+var import_node_path3 = __toESM(require("path"), 1);
+var import_node_os5 = __toESM(require("os"), 1);
+var import_node_process = __toESM(require("process"), 1);
+var homedir5 = import_node_os5.default.homedir();
+var tmpdir = import_node_os5.default.tmpdir();
+var { env } = import_node_process.default;
 var macos = (name) => {
-  const library = import_node_path2.default.join(homedir6, "Library");
+  const library = import_node_path3.default.join(homedir5, "Library");
   return {
-    data: import_node_path2.default.join(library, "Application Support", name),
-    config: import_node_path2.default.join(library, "Preferences", name),
-    cache: import_node_path2.default.join(library, "Caches", name),
-    log: import_node_path2.default.join(library, "Logs", name),
-    temp: import_node_path2.default.join(tmpdir, name)
+    data: import_node_path3.default.join(library, "Application Support", name),
+    config: import_node_path3.default.join(library, "Preferences", name),
+    cache: import_node_path3.default.join(library, "Caches", name),
+    log: import_node_path3.default.join(library, "Logs", name),
+    temp: import_node_path3.default.join(tmpdir, name)
   };
 };
 var windows = (name) => {
-  const appData = env.APPDATA || import_node_path2.default.join(homedir6, "AppData", "Roaming");
-  const localAppData = env.LOCALAPPDATA || import_node_path2.default.join(homedir6, "AppData", "Local");
+  const appData = env.APPDATA || import_node_path3.default.join(homedir5, "AppData", "Roaming");
+  const localAppData = env.LOCALAPPDATA || import_node_path3.default.join(homedir5, "AppData", "Local");
   return {
     // Data/config/cache/log are invented by me as Windows isn't opinionated about this
-    data: import_node_path2.default.join(localAppData, name, "Data"),
-    config: import_node_path2.default.join(appData, name, "Config"),
-    cache: import_node_path2.default.join(localAppData, name, "Cache"),
-    log: import_node_path2.default.join(localAppData, name, "Log"),
-    temp: import_node_path2.default.join(tmpdir, name)
+    data: import_node_path3.default.join(localAppData, name, "Data"),
+    config: import_node_path3.default.join(appData, name, "Config"),
+    cache: import_node_path3.default.join(localAppData, name, "Cache"),
+    log: import_node_path3.default.join(localAppData, name, "Log"),
+    temp: import_node_path3.default.join(tmpdir, name)
   };
 };
 var linux = (name) => {
-  const username = import_node_path2.default.basename(homedir6);
+  const username = import_node_path3.default.basename(homedir5);
   return {
-    data: import_node_path2.default.join(env.XDG_DATA_HOME || import_node_path2.default.join(homedir6, ".local", "share"), name),
-    config: import_node_path2.default.join(env.XDG_CONFIG_HOME || import_node_path2.default.join(homedir6, ".config"), name),
-    cache: import_node_path2.default.join(env.XDG_CACHE_HOME || import_node_path2.default.join(homedir6, ".cache"), name),
+    data: import_node_path3.default.join(env.XDG_DATA_HOME || import_node_path3.default.join(homedir5, ".local", "share"), name),
+    config: import_node_path3.default.join(env.XDG_CONFIG_HOME || import_node_path3.default.join(homedir5, ".config"), name),
+    cache: import_node_path3.default.join(env.XDG_CACHE_HOME || import_node_path3.default.join(homedir5, ".cache"), name),
     // https://wiki.debian.org/XDGBaseDirectorySpecification#state
-    log: import_node_path2.default.join(env.XDG_STATE_HOME || import_node_path2.default.join(homedir6, ".local", "state"), name),
-    temp: import_node_path2.default.join(tmpdir, username, name)
+    log: import_node_path3.default.join(env.XDG_STATE_HOME || import_node_path3.default.join(homedir5, ".local", "state"), name),
+    temp: import_node_path3.default.join(tmpdir, username, name)
   };
 };
 function envPaths(name, { suffix = "nodejs" } = {}) {
@@ -37785,10 +33201,10 @@ function envPaths(name, { suffix = "nodejs" } = {}) {
   if (suffix) {
     name += `-${suffix}`;
   }
-  if (import_node_process5.default.platform === "darwin") {
+  if (import_node_process.default.platform === "darwin") {
     return macos(name);
   }
-  if (import_node_process5.default.platform === "win32") {
+  if (import_node_process.default.platform === "win32") {
     return windows(name);
   }
   return linux(name);
@@ -37797,12 +33213,12 @@ function envPaths(name, { suffix = "nodejs" } = {}) {
 // ../node_modules/atomically/dist/index.js
 var import_node_events = require("events");
 var import_node_fs3 = require("fs");
-var import_node_path4 = __toESM(require("path"), 1);
+var import_node_path5 = __toESM(require("path"), 1);
 var import_node_stream = require("stream");
 
 // ../node_modules/stubborn-fs/dist/index.js
 var import_node_fs2 = __toESM(require("fs"), 1);
-var import_node_util2 = require("util");
+var import_node_util = require("util");
 
 // ../node_modules/stubborn-utils/dist/attemptify_async.js
 var attemptifyAsync = (fn, options) => {
@@ -37842,9 +33258,9 @@ var retryifyAsync = (fn, options) => {
           throw error48;
         if (Date.now() >= timestamp)
           throw error48;
-        const delay3 = Math.round(interval * Math.random());
-        if (delay3 > 0) {
-          const delayPromise = new Promise((resolve4) => setTimeout(resolve4, delay3));
+        const delay2 = Math.round(interval * Math.random());
+        if (delay2 > 0) {
+          const delayPromise = new Promise((resolve4) => setTimeout(resolve4, delay2));
           return delayPromise.then(() => attempt.apply(void 0, args));
         } else {
           return attempt.apply(void 0, args);
@@ -37879,7 +33295,7 @@ var retryifySync = (fn, options) => {
 var retryify_sync_default = retryifySync;
 
 // ../node_modules/stubborn-fs/dist/constants.js
-var import_node_process6 = __toESM(require("process"), 1);
+var import_node_process2 = __toESM(require("process"), 1);
 
 // ../node_modules/stubborn-fs/dist/handlers.js
 var Handlers = {
@@ -37922,7 +33338,7 @@ var ATTEMPTIFY_CHANGE_ERROR_OPTIONS = {
 var ATTEMPTIFY_NOOP_OPTIONS = {
   onError: () => void 0
 };
-var IS_USER_ROOT = import_node_process6.default.getuid ? !import_node_process6.default.getuid() : false;
+var IS_USER_ROOT = import_node_process2.default.getuid ? !import_node_process2.default.getuid() : false;
 var RETRYIFY_OPTIONS = {
   isRetriable: handlers_default.isRetriableError
 };
@@ -37931,14 +33347,14 @@ var RETRYIFY_OPTIONS = {
 var FS = {
   attempt: {
     /* ASYNC */
-    chmod: attemptify_async_default((0, import_node_util2.promisify)(import_node_fs2.default.chmod), ATTEMPTIFY_CHANGE_ERROR_OPTIONS),
-    chown: attemptify_async_default((0, import_node_util2.promisify)(import_node_fs2.default.chown), ATTEMPTIFY_CHANGE_ERROR_OPTIONS),
-    close: attemptify_async_default((0, import_node_util2.promisify)(import_node_fs2.default.close), ATTEMPTIFY_NOOP_OPTIONS),
-    fsync: attemptify_async_default((0, import_node_util2.promisify)(import_node_fs2.default.fsync), ATTEMPTIFY_NOOP_OPTIONS),
-    mkdir: attemptify_async_default((0, import_node_util2.promisify)(import_node_fs2.default.mkdir), ATTEMPTIFY_NOOP_OPTIONS),
-    realpath: attemptify_async_default((0, import_node_util2.promisify)(import_node_fs2.default.realpath), ATTEMPTIFY_NOOP_OPTIONS),
-    stat: attemptify_async_default((0, import_node_util2.promisify)(import_node_fs2.default.stat), ATTEMPTIFY_NOOP_OPTIONS),
-    unlink: attemptify_async_default((0, import_node_util2.promisify)(import_node_fs2.default.unlink), ATTEMPTIFY_NOOP_OPTIONS),
+    chmod: attemptify_async_default((0, import_node_util.promisify)(import_node_fs2.default.chmod), ATTEMPTIFY_CHANGE_ERROR_OPTIONS),
+    chown: attemptify_async_default((0, import_node_util.promisify)(import_node_fs2.default.chown), ATTEMPTIFY_CHANGE_ERROR_OPTIONS),
+    close: attemptify_async_default((0, import_node_util.promisify)(import_node_fs2.default.close), ATTEMPTIFY_NOOP_OPTIONS),
+    fsync: attemptify_async_default((0, import_node_util.promisify)(import_node_fs2.default.fsync), ATTEMPTIFY_NOOP_OPTIONS),
+    mkdir: attemptify_async_default((0, import_node_util.promisify)(import_node_fs2.default.mkdir), ATTEMPTIFY_NOOP_OPTIONS),
+    realpath: attemptify_async_default((0, import_node_util.promisify)(import_node_fs2.default.realpath), ATTEMPTIFY_NOOP_OPTIONS),
+    stat: attemptify_async_default((0, import_node_util.promisify)(import_node_fs2.default.stat), ATTEMPTIFY_NOOP_OPTIONS),
+    unlink: attemptify_async_default((0, import_node_util.promisify)(import_node_fs2.default.unlink), ATTEMPTIFY_NOOP_OPTIONS),
     /* SYNC */
     chmodSync: attemptify_sync_default(import_node_fs2.default.chmodSync, ATTEMPTIFY_CHANGE_ERROR_OPTIONS),
     chownSync: attemptify_sync_default(import_node_fs2.default.chownSync, ATTEMPTIFY_CHANGE_ERROR_OPTIONS),
@@ -37952,14 +33368,14 @@ var FS = {
   },
   retry: {
     /* ASYNC */
-    close: retryify_async_default((0, import_node_util2.promisify)(import_node_fs2.default.close), RETRYIFY_OPTIONS),
-    fsync: retryify_async_default((0, import_node_util2.promisify)(import_node_fs2.default.fsync), RETRYIFY_OPTIONS),
-    open: retryify_async_default((0, import_node_util2.promisify)(import_node_fs2.default.open), RETRYIFY_OPTIONS),
-    readFile: retryify_async_default((0, import_node_util2.promisify)(import_node_fs2.default.readFile), RETRYIFY_OPTIONS),
-    rename: retryify_async_default((0, import_node_util2.promisify)(import_node_fs2.default.rename), RETRYIFY_OPTIONS),
-    stat: retryify_async_default((0, import_node_util2.promisify)(import_node_fs2.default.stat), RETRYIFY_OPTIONS),
-    write: retryify_async_default((0, import_node_util2.promisify)(import_node_fs2.default.write), RETRYIFY_OPTIONS),
-    writeFile: retryify_async_default((0, import_node_util2.promisify)(import_node_fs2.default.writeFile), RETRYIFY_OPTIONS),
+    close: retryify_async_default((0, import_node_util.promisify)(import_node_fs2.default.close), RETRYIFY_OPTIONS),
+    fsync: retryify_async_default((0, import_node_util.promisify)(import_node_fs2.default.fsync), RETRYIFY_OPTIONS),
+    open: retryify_async_default((0, import_node_util.promisify)(import_node_fs2.default.open), RETRYIFY_OPTIONS),
+    readFile: retryify_async_default((0, import_node_util.promisify)(import_node_fs2.default.readFile), RETRYIFY_OPTIONS),
+    rename: retryify_async_default((0, import_node_util.promisify)(import_node_fs2.default.rename), RETRYIFY_OPTIONS),
+    stat: retryify_async_default((0, import_node_util.promisify)(import_node_fs2.default.stat), RETRYIFY_OPTIONS),
+    write: retryify_async_default((0, import_node_util.promisify)(import_node_fs2.default.write), RETRYIFY_OPTIONS),
+    writeFile: retryify_async_default((0, import_node_util.promisify)(import_node_fs2.default.writeFile), RETRYIFY_OPTIONS),
     /* SYNC */
     closeSync: retryify_sync_default(import_node_fs2.default.closeSync, RETRYIFY_OPTIONS),
     fsyncSync: retryify_sync_default(import_node_fs2.default.fsyncSync, RETRYIFY_OPTIONS),
@@ -37974,16 +33390,16 @@ var FS = {
 var dist_default = FS;
 
 // ../node_modules/atomically/dist/constants.js
-var import_node_process7 = __toESM(require("process"), 1);
+var import_node_process3 = __toESM(require("process"), 1);
 var DEFAULT_ENCODING = "utf8";
 var DEFAULT_FILE_MODE = 438;
 var DEFAULT_FOLDER_MODE = 511;
 var DEFAULT_WRITE_OPTIONS = {};
-var DEFAULT_USER_UID = import_node_process7.default.geteuid ? import_node_process7.default.geteuid() : -1;
-var DEFAULT_USER_GID = import_node_process7.default.getegid ? import_node_process7.default.getegid() : -1;
+var DEFAULT_USER_UID = import_node_process3.default.geteuid ? import_node_process3.default.geteuid() : -1;
+var DEFAULT_USER_GID = import_node_process3.default.getegid ? import_node_process3.default.getegid() : -1;
 var DEFAULT_TIMEOUT_SYNC = 1e3;
-var IS_POSIX = !!import_node_process7.default.getuid;
-var IS_USER_ROOT2 = import_node_process7.default.getuid ? !import_node_process7.default.getuid() : false;
+var IS_POSIX = !!import_node_process3.default.getuid;
+var IS_USER_ROOT2 = import_node_process3.default.getuid ? !import_node_process3.default.getuid() : false;
 var LIMIT_BASENAME_LENGTH = 128;
 
 // ../node_modules/atomically/dist/utils/lang.js
@@ -37998,15 +33414,15 @@ var isUndefined = (value) => {
 };
 
 // ../node_modules/atomically/dist/utils/temp.js
-var import_node_path3 = __toESM(require("path"), 1);
+var import_node_path4 = __toESM(require("path"), 1);
 
 // ../node_modules/when-exit/dist/node/interceptor.js
-var import_node_process9 = __toESM(require("process"), 1);
+var import_node_process5 = __toESM(require("process"), 1);
 
 // ../node_modules/when-exit/dist/node/constants.js
-var import_node_process8 = __toESM(require("process"), 1);
-var IS_LINUX = import_node_process8.default.platform === "linux";
-var IS_WINDOWS = import_node_process8.default.platform === "win32";
+var import_node_process4 = __toESM(require("process"), 1);
+var IS_LINUX = import_node_process4.default.platform === "linux";
+var IS_WINDOWS = import_node_process4.default.platform === "win32";
 
 // ../node_modules/when-exit/dist/node/signals.js
 var Signals = ["SIGHUP", "SIGINT", "SIGTERM"];
@@ -38033,17 +33449,17 @@ var Interceptor = class {
       }
       if (signal) {
         if (IS_WINDOWS && (signal !== "SIGINT" && signal !== "SIGTERM" && signal !== "SIGKILL")) {
-          import_node_process9.default.kill(import_node_process9.default.pid, "SIGTERM");
+          import_node_process5.default.kill(import_node_process5.default.pid, "SIGTERM");
         } else {
-          import_node_process9.default.kill(import_node_process9.default.pid, signal);
+          import_node_process5.default.kill(import_node_process5.default.pid, signal);
         }
       }
     };
     this.hook = () => {
-      import_node_process9.default.once("exit", () => this.exit());
+      import_node_process5.default.once("exit", () => this.exit());
       for (const signal of signals_default) {
         try {
-          import_node_process9.default.once(signal, () => this.exit(signal));
+          import_node_process5.default.once(signal, () => this.exit(signal));
         } catch {
         }
       }
@@ -38103,7 +33519,7 @@ var Temp = {
     }
   },
   truncate: (filePath) => {
-    const basename2 = import_node_path3.default.basename(filePath);
+    const basename2 = import_node_path4.default.basename(filePath);
     if (basename2.length <= LIMIT_BASENAME_LENGTH)
       return filePath;
     const truncable = /^(\.?)(.*?)((?:\.[^.]+)?(?:\.tmp-\d{10}[a-f0-9]{6})?)$/.exec(basename2);
@@ -38145,7 +33561,7 @@ function writeFileSync2(filePath, data, options = DEFAULT_WRITE_OPTIONS) {
       }
     }
     if (!filePathExists) {
-      const parentPath = import_node_path4.default.dirname(filePath);
+      const parentPath = import_node_path5.default.dirname(filePath);
       dist_default.attempt.mkdirSync(parentPath, {
         mode: DEFAULT_FOLDER_MODE,
         recursive: true
@@ -38199,7 +33615,7 @@ var import_ajv = __toESM(require_ajv(), 1);
 var import_ajv_formats = __toESM(require_dist2(), 1);
 
 // ../node_modules/mimic-fn/index.js
-var copyProperty2 = (to, from, property, ignoreNonConfigurable) => {
+var copyProperty = (to, from, property, ignoreNonConfigurable) => {
   if (property === "length" || property === "prototype") {
     return;
   }
@@ -38208,38 +33624,38 @@ var copyProperty2 = (to, from, property, ignoreNonConfigurable) => {
   }
   const toDescriptor = Object.getOwnPropertyDescriptor(to, property);
   const fromDescriptor = Object.getOwnPropertyDescriptor(from, property);
-  if (!canCopyProperty2(toDescriptor, fromDescriptor) && ignoreNonConfigurable) {
+  if (!canCopyProperty(toDescriptor, fromDescriptor) && ignoreNonConfigurable) {
     return;
   }
   Object.defineProperty(to, property, fromDescriptor);
 };
-var canCopyProperty2 = function(toDescriptor, fromDescriptor) {
+var canCopyProperty = function(toDescriptor, fromDescriptor) {
   return toDescriptor === void 0 || toDescriptor.configurable || toDescriptor.writable === fromDescriptor.writable && toDescriptor.enumerable === fromDescriptor.enumerable && toDescriptor.configurable === fromDescriptor.configurable && (toDescriptor.writable || toDescriptor.value === fromDescriptor.value);
 };
-var changePrototype2 = (to, from) => {
+var changePrototype = (to, from) => {
   const fromPrototype = Object.getPrototypeOf(from);
   if (fromPrototype === Object.getPrototypeOf(to)) {
     return;
   }
   Object.setPrototypeOf(to, fromPrototype);
 };
-var wrappedToString2 = (withName, fromBody) => `/* Wrapped ${withName}*/
+var wrappedToString = (withName, fromBody) => `/* Wrapped ${withName}*/
 ${fromBody}`;
-var toStringDescriptor2 = Object.getOwnPropertyDescriptor(Function.prototype, "toString");
-var toStringName2 = Object.getOwnPropertyDescriptor(Function.prototype.toString, "name");
-var changeToString2 = (to, from, name) => {
+var toStringDescriptor = Object.getOwnPropertyDescriptor(Function.prototype, "toString");
+var toStringName = Object.getOwnPropertyDescriptor(Function.prototype.toString, "name");
+var changeToString = (to, from, name) => {
   const withName = name === "" ? "" : `with ${name.trim()}() `;
-  const newToString = wrappedToString2.bind(null, withName, from.toString());
-  Object.defineProperty(newToString, "name", toStringName2);
-  Object.defineProperty(to, "toString", { ...toStringDescriptor2, value: newToString });
+  const newToString = wrappedToString.bind(null, withName, from.toString());
+  Object.defineProperty(newToString, "name", toStringName);
+  Object.defineProperty(to, "toString", { ...toStringDescriptor, value: newToString });
 };
-function mimicFunction2(to, from, { ignoreNonConfigurable = false } = {}) {
+function mimicFunction(to, from, { ignoreNonConfigurable = false } = {}) {
   const { name } = to;
   for (const property of Reflect.ownKeys(from)) {
-    copyProperty2(to, from, property, ignoreNonConfigurable);
+    copyProperty(to, from, property, ignoreNonConfigurable);
   }
-  changePrototype2(to, from);
-  changeToString2(to, from, name);
+  changePrototype(to, from);
+  changeToString(to, from, name);
   return to;
 }
 
@@ -38293,7 +33709,7 @@ var debounceFn = (inputFunction, options = {}) => {
     }
     return result;
   };
-  mimicFunction2(debouncedFunction, inputFunction);
+  mimicFunction(debouncedFunction, inputFunction);
   debouncedFunction.cancel = () => {
     if (timeout) {
       clearTimeout(timeout);
@@ -38428,7 +33844,7 @@ var Conf = class {
     this.events = new EventTarget();
     this.#encryptionKey = options.encryptionKey;
     const fileExtension = options.fileExtension ? `.${options.fileExtension}` : "";
-    this.path = import_node_path5.default.resolve(options.cwd, `${options.configName ?? "config"}${fileExtension}`);
+    this.path = import_node_path6.default.resolve(options.cwd, `${options.configName ?? "config"}${fileExtension}`);
     const fileStore = this.store;
     const store = Object.assign(createPlainObject(), options.defaults, fileStore);
     this._validate(store);
@@ -38608,7 +34024,7 @@ var Conf = class {
     const onChange = () => {
       const oldValue = currentValue;
       const newValue = getter();
-      if ((0, import_node_util3.isDeepStrictEqual)(newValue, oldValue)) {
+      if ((0, import_node_util2.isDeepStrictEqual)(newValue, oldValue)) {
         return;
       }
       currentValue = newValue;
@@ -38633,7 +34049,7 @@ var Conf = class {
     throw new Error("Config schema violation: " + errors.join("; "));
   }
   _ensureDirectory() {
-    import_node_fs4.default.mkdirSync(import_node_path5.default.dirname(this.path), { recursive: true });
+    import_node_fs4.default.mkdirSync(import_node_path6.default.dirname(this.path), { recursive: true });
   }
   _write(value) {
     let data = this._serialize(value);
@@ -38643,7 +34059,7 @@ var Conf = class {
       const cipher = import_node_crypto.default.createCipheriv(encryptionAlgorithm, password, initializationVector);
       data = concatUint8Arrays([initializationVector, stringToUint8Array(":"), cipher.update(stringToUint8Array(data)), cipher.final()]);
     }
-    if (import_node_process10.default.env.SNAP) {
+    if (import_node_process6.default.env.SNAP) {
       import_node_fs4.default.writeFileSync(this.path, data, { mode: this.#options.configFileMode });
     } else {
       try {
@@ -38662,7 +34078,7 @@ var Conf = class {
     if (!import_node_fs4.default.existsSync(this.path)) {
       this._write(createPlainObject());
     }
-    if (import_node_process10.default.platform === "win32") {
+    if (import_node_process6.default.platform === "win32") {
       import_node_fs4.default.watch(this.path, { persistent: false }, debounce_fn_default(() => {
         this.events.dispatchEvent(new Event("change"));
       }, { wait: 100 }));
@@ -38760,10 +34176,10 @@ function getConfig() {
   return config;
 }
 function getCandidatePaths(isGlobal = false, projectRoot) {
-  const home = import_os3.default.homedir();
-  const skillsPath = isGlobal || !projectRoot ? import_path8.default.join(home, ".agents", "skills") : import_path8.default.join(projectRoot, ".agents", "skills");
-  const skillsLabel = isGlobal ? "~/.agents/skills" : ".agents/skills";
-  return [{ label: skillsLabel, path: skillsPath }];
+  const home = import_os2.default.homedir();
+  const xtrmPath = isGlobal || !projectRoot ? import_path8.default.join(home, ".xtrm") : import_path8.default.join(projectRoot, ".xtrm");
+  const xtrmLabel = isGlobal ? "~/.xtrm" : ".xtrm";
+  return [{ label: xtrmLabel, path: xtrmPath }];
 }
 async function getContext(options = {}) {
   const { createMissingDirs = true, isGlobal = false, projectRoot } = options;
@@ -38772,7 +34188,7 @@ async function getContext(options = {}) {
   const selectedPaths = candidates.map((c) => c.path);
   if (createMissingDirs) {
     for (const target of selectedPaths) {
-      await import_fs_extra8.default.ensureDir(target);
+      await import_fs_extra9.default.ensureDir(target);
     }
   }
   return {
@@ -38786,41 +34202,526 @@ function resetContext() {
   console.log(kleur_default.yellow("Configuration cleared."));
 }
 
-// src/core/diff.ts
-var import_path11 = require("path");
+// src/core/drift.ts
+var import_node_crypto2 = __toESM(require("crypto"), 1);
+var import_node_path7 = __toESM(require("path"), 1);
 var import_fs_extra10 = __toESM(require_lib(), 1);
+function toPosix(value) {
+  return value.split(import_node_path7.default.sep).join("/");
+}
+function stripXtrmPrefix(sourceDir) {
+  return sourceDir.replace(/^\.xtrm\/?/, "");
+}
+function buildUserRelativePath(sourceDir, filePath) {
+  return toPosix(import_node_path7.default.posix.join(stripXtrmPrefix(sourceDir), filePath));
+}
+async function hashFile(filePath) {
+  const content = await import_fs_extra10.default.readFile(filePath);
+  return import_node_crypto2.default.createHash("sha256").update(content).digest("hex");
+}
+async function checkDrift(registryPath, userXtrmDir) {
+  const registry2 = await import_fs_extra10.default.readJson(registryPath);
+  const missing = [];
+  const upToDate = [];
+  const drifted = [];
+  for (const asset of Object.values(registry2.assets)) {
+    for (const [filePath, entry] of Object.entries(asset.files)) {
+      const relativePath = buildUserRelativePath(asset.source_dir, filePath);
+      const userFilePath = import_node_path7.default.join(userXtrmDir, relativePath);
+      if (!await import_fs_extra10.default.pathExists(userFilePath)) {
+        missing.push(relativePath);
+        continue;
+      }
+      const userHash = await hashFile(userFilePath);
+      if (userHash === entry.hash) {
+        upToDate.push(relativePath);
+      } else {
+        drifted.push(relativePath);
+      }
+    }
+  }
+  return {
+    missing: missing.sort(),
+    upToDate: upToDate.sort(),
+    drifted: drifted.sort()
+  };
+}
+
+// src/commands/install.ts
+function printNextSteps() {
+  const d = (s) => kleur_default.dim(s);
+  const b = (s) => kleur_default.bold(s);
+  console.log(b("  Next steps\n"));
+  console.log(d("  In your project:"));
+  console.log(`  xtrm init                     ${d("initialize beads + gitnexus for this repo")}`);
+  console.log(`  bd prime                      ${d("load session context and available work")}`);
+  console.log(`  bv --robot-triage             ${d("graph-aware triage \u2014 find highest-impact work")}`);
+  console.log(`  bd update <id> --claim        ${d("claim an issue before editing any file")}`);
+  console.log(`  bd close <id>                 ${d("close when done")}`);
+  console.log("");
+  console.log(d("  Worktree workflow:"));
+  console.log(`  xt claude                     ${d("launch Claude Code in a sandboxed worktree")}`);
+  console.log(`  xt end --dry-run              ${d("preview PR title, body, and linked issues")}`);
+  console.log(`  xt end                        ${d("push branch, open PR, clean up worktree")}`);
+  console.log("");
+  console.log(d("  Reference:"));
+  console.log(`  xtrm status                   ${d("check installed vs repo")}`);
+  console.log(`  xtrm docs show                ${d("browse all documentation")}`);
+  console.log("");
+}
+async function renderSummaryCard(stats, isDryRun) {
+  const boxen2 = (await Promise.resolve().then(() => (init_boxen(), boxen_exports))).default;
+  const lines = [
+    kleur_default.bold("  \u2713 Install complete"),
+    "",
+    `  ${t.label("Installed")} ${stats.installed}`,
+    `  ${t.label("Up-to-date")} ${stats.upToDate}`,
+    `  ${t.label("Drift skipped")} ${stats.driftedSkipped}`,
+    `  ${t.label("Forced")} ${stats.forced}`,
+    ...isDryRun ? ["", kleur_default.dim("  Dry run \u2014 no changes written")] : []
+  ];
+  console.log("\n" + boxen2(lines.join("\n"), {
+    padding: { top: 1, bottom: 1, left: 1, right: 3 },
+    borderStyle: "round",
+    borderColor: "gray"
+  }) + "\n");
+}
+async function runMachineBootstrap(opts = {}) {
+  await runMachineBootstrapPhase({ dryRun: false });
+}
+function resolvePackageRoot2() {
+  const candidates = [
+    import_path9.default.resolve(__dirname, "../.."),
+    import_path9.default.resolve(__dirname, "../../..")
+  ];
+  for (const candidate of candidates) {
+    if (import_fs_extra11.default.existsSync(import_path9.default.join(candidate, ".xtrm", "registry.json"))) {
+      return candidate;
+    }
+  }
+  throw new Error("Failed to locate package root: .xtrm/registry.json not found.");
+}
+function toPosix2(value) {
+  return value.split(import_path9.default.sep).join("/");
+}
+function stripXtrmPrefix2(sourceDir) {
+  return sourceDir.replace(/^\.xtrm\/?/, "");
+}
+function toUserRelativePath(sourceDir, filePath) {
+  return toPosix2(import_path9.default.posix.join(stripXtrmPrefix2(sourceDir), filePath));
+}
+function isSkillsDefaultPath(relativePath) {
+  return relativePath.startsWith("skills/default/");
+}
+async function hashFile2(filePath) {
+  const content = await import_fs_extra11.default.readFile(filePath);
+  return import_node_crypto3.default.createHash("sha256").update(content).digest("hex");
+}
+async function scaffoldSkillsDefaultFromPackage(params) {
+  const { packageRoot, userXtrmDir, dryRun } = params;
+  const sourceDir = import_path9.default.join(packageRoot, ".xtrm", "skills", "default");
+  const targetDir = import_path9.default.join(userXtrmDir, "skills", "default");
+  if (await import_fs_extra11.default.pathExists(targetDir)) {
+    return "noop";
+  }
+  if (dryRun) {
+    return "noop";
+  }
+  await import_fs_extra11.default.ensureDir(import_path9.default.dirname(targetDir));
+  try {
+    await import_fs_extra11.default.ensureSymlink(sourceDir, targetDir);
+    return "symlink";
+  } catch {
+    await import_fs_extra11.default.copy(sourceDir, targetDir);
+    return "copy";
+  }
+}
+function getProjectRoot() {
+  const gitResult = (0, import_node_child_process6.spawnSync)("git", ["rev-parse", "--show-toplevel"], {
+    cwd: process.cwd(),
+    encoding: "utf8",
+    stdio: "pipe"
+  });
+  return gitResult.status === 0 ? (gitResult.stdout ?? "").trim() : process.cwd();
+}
+function buildExpectedHashes(registry2) {
+  const expected = /* @__PURE__ */ new Map();
+  for (const asset of Object.values(registry2.assets)) {
+    for (const [filePath, fileEntry] of Object.entries(asset.files)) {
+      expected.set(toUserRelativePath(asset.source_dir, filePath), fileEntry.hash);
+    }
+  }
+  return expected;
+}
+async function installFromRegistry(params) {
+  const { packageRoot, registry: registry2, userXtrmDir, dryRun, force, yes } = params;
+  const registryPath = import_path9.default.join(packageRoot, ".xtrm", "registry.json");
+  const drift = await checkDrift(registryPath, userXtrmDir);
+  const expectedHashes = buildExpectedHashes(registry2);
+  const missingSet = new Set(drift.missing);
+  const upToDateSet = new Set(drift.upToDate);
+  const driftedSet = new Set(drift.drifted);
+  if (!force) {
+    const driftedSkills = drift.drifted.filter(isSkillsDefaultPath);
+    if (driftedSkills.length > 0) {
+      console.log(kleur_default.yellow("\n  \u26A0 Drift detected in .xtrm files (local modifications preserved by default):"));
+      for (const relativePath of driftedSkills.slice(0, 10)) {
+        const absolutePath = import_path9.default.join(userXtrmDir, relativePath);
+        const actualHash = await hashFile2(absolutePath);
+        const expectedHash = expectedHashes.get(relativePath) ?? "unknown";
+        console.log(kleur_default.yellow(`    \u2022 ${relativePath}`));
+        console.log(kleur_default.dim(`      expected ${expectedHash.slice(0, 12)}\u2026  actual ${actualHash.slice(0, 12)}\u2026`));
+      }
+    }
+    const nonSkillDrifted = drift.drifted.filter((relativePath) => !isSkillsDefaultPath(relativePath));
+    if (nonSkillDrifted.length > 0) {
+      if (driftedSkills.length === 0) {
+        console.log(kleur_default.yellow("\n  \u26A0 Drift detected in .xtrm files (local modifications preserved by default):"));
+      }
+      for (const relativePath of nonSkillDrifted.slice(0, 20)) {
+        const absolutePath = import_path9.default.join(userXtrmDir, relativePath);
+        const actualHash = await hashFile2(absolutePath);
+        const expectedHash = expectedHashes.get(relativePath) ?? "unknown";
+        console.log(kleur_default.yellow(`    \u2022 ${relativePath}`));
+        console.log(kleur_default.dim(`      expected ${expectedHash.slice(0, 12)}\u2026  actual ${actualHash.slice(0, 12)}\u2026`));
+      }
+    }
+    if (drift.drifted.length > 20) {
+      console.log(kleur_default.dim(`    \u2026 and ${drift.drifted.length - 20} more`));
+    }
+  }
+  if (force && drift.drifted.length > 0 && !yes) {
+    const confirmed = await confirmDestructiveAction({
+      yes,
+      message: `Overwrite ${drift.drifted.length} drifted .xtrm file(s)?`,
+      initial: true
+    });
+    if (!confirmed) {
+      console.log(t.muted("  Install cancelled.\n"));
+      return {
+        installed: 0,
+        upToDate: drift.upToDate.length,
+        driftedSkipped: drift.drifted.length,
+        forced: 0
+      };
+    }
+  }
+  const mode = await scaffoldSkillsDefaultFromPackage({
+    packageRoot,
+    userXtrmDir,
+    dryRun
+  });
+  if (mode === "symlink") {
+    console.log(kleur_default.dim("  \u2713 .xtrm/skills/default created as symlink"));
+    for (const relativePath of [...missingSet]) {
+      if (!isSkillsDefaultPath(relativePath)) continue;
+      missingSet.delete(relativePath);
+      upToDateSet.add(relativePath);
+    }
+  } else if (mode === "copy") {
+    console.log(kleur_default.yellow("  \u26A0 Could not create .xtrm/skills/default symlink; used copy fallback"));
+    for (const relativePath of [...missingSet]) {
+      if (!isSkillsDefaultPath(relativePath)) continue;
+      missingSet.delete(relativePath);
+      upToDateSet.add(relativePath);
+    }
+  }
+  let installed = 0;
+  let forced = 0;
+  for (const asset of Object.values(registry2.assets)) {
+    for (const [filePath] of Object.entries(asset.files)) {
+      const relativePath = toUserRelativePath(asset.source_dir, filePath);
+      const sourcePath = import_path9.default.join(packageRoot, asset.source_dir, filePath);
+      const targetPath = import_path9.default.join(userXtrmDir, relativePath);
+      if (upToDateSet.has(relativePath)) {
+        continue;
+      }
+      const isMissing = missingSet.has(relativePath);
+      const isDrifted = driftedSet.has(relativePath);
+      if (!isMissing && !isDrifted) {
+        continue;
+      }
+      if (isDrifted && !force) {
+        continue;
+      }
+      if (isDrifted && force) {
+        forced += 1;
+      }
+      if (dryRun) {
+        const action = isDrifted ? "overwrite" : "install";
+        console.log(kleur_default.dim(`  [DRY RUN] would ${action} ${relativePath}`));
+        installed += 1;
+        continue;
+      }
+      await import_fs_extra11.default.ensureDir(import_path9.default.dirname(targetPath));
+      await import_fs_extra11.default.copy(sourcePath, targetPath, { overwrite: true });
+      installed += 1;
+    }
+  }
+  return {
+    installed,
+    upToDate: upToDateSet.size,
+    driftedSkipped: force ? 0 : driftedSet.size,
+    forced
+  };
+}
+async function runInstall(opts = {}) {
+  const {
+    dryRun = false,
+    yes = false,
+    force = false,
+    backport = false,
+    global: isGlobal = false,
+    skipMachineBootstrap = false,
+    skipClaudeRuntimeSync = false
+  } = opts;
+  if (backport) {
+    console.log(kleur_default.yellow("  \u26A0 xtrm install --backport is no longer supported in registry mode."));
+    return;
+  }
+  const effectiveYes = yes || process.argv.includes("--yes") || process.argv.includes("-y");
+  const packageRoot = resolvePackageRoot2();
+  const projectRoot = getProjectRoot();
+  if (!skipMachineBootstrap) {
+    await runMachineBootstrap({ yes: effectiveYes });
+  }
+  const ctx = await getContext({
+    createMissingDirs: !dryRun,
+    isGlobal,
+    projectRoot
+  });
+  const userXtrmDir = ctx.targets[0];
+  const registryPath = import_path9.default.join(packageRoot, ".xtrm", "registry.json");
+  const registry2 = await import_fs_extra11.default.readJson(registryPath);
+  console.log(kleur_default.bold("\n  \u2699  xtrm install (.xtrm registry scaffold)"));
+  console.log(kleur_default.dim(`  \u2022 registry: ${registryPath}`));
+  console.log(kleur_default.dim(`  \u2022 target: ${userXtrmDir}`));
+  const stats = await installFromRegistry({
+    packageRoot,
+    registry: registry2,
+    userXtrmDir,
+    dryRun,
+    force,
+    yes: effectiveYes
+  });
+  if (!skipClaudeRuntimeSync) {
+    await runClaudeRuntimeSyncPhase({ repoRoot: projectRoot, dryRun, isGlobal });
+  }
+  await runPiInstall(dryRun, isGlobal, projectRoot);
+  await renderSummaryCard(stats, dryRun);
+  if (!dryRun) {
+    printNextSteps();
+  }
+}
+
+// src/core/init-verification.ts
+var import_child_process5 = require("child_process");
+var import_fs_extra12 = __toESM(require_lib(), 1);
+var import_os3 = __toESM(require("os"), 1);
+var import_path10 = __toESM(require("path"), 1);
+function verifyMachineBootstrap() {
+  return inventoryDeps();
+}
+function countHookCommands(hooks) {
+  let count = 0;
+  for (const wrappers of Object.values(hooks)) {
+    for (const wrapper of wrappers) {
+      count += wrapper.hooks?.length ?? 0;
+    }
+  }
+  return count;
+}
+function hasXtrmHookCommand(hooks) {
+  for (const wrappers of Object.values(hooks)) {
+    for (const wrapper of wrappers) {
+      for (const hook of wrapper.hooks ?? []) {
+        if (hook.type !== "command") continue;
+        if (typeof hook.command !== "string") continue;
+        if (hook.command.includes(".xtrm/hooks/")) return true;
+      }
+    }
+  }
+  return false;
+}
+function verifyClaudeRuntime(projectRoot) {
+  const settingsPath = import_path10.default.join(projectRoot, ".claude", "settings.json");
+  const fallbackSettingsPath = import_path10.default.join(import_os3.default.homedir(), ".claude", "settings.json");
+  const resolvedSettingsPath = import_fs_extra12.default.pathExistsSync(settingsPath) ? settingsPath : fallbackSettingsPath;
+  if (!import_fs_extra12.default.pathExistsSync(resolvedSettingsPath)) {
+    return {
+      hooksWired: false,
+      hooksEvents: 0,
+      hookCommands: 0,
+      settingsPath: resolvedSettingsPath
+    };
+  }
+  try {
+    const settings = import_fs_extra12.default.readJsonSync(resolvedSettingsPath);
+    const hooks = settings.hooks ?? {};
+    const hooksEvents = Object.keys(hooks).length;
+    const hookCommands = countHookCommands(hooks);
+    const hooksWired = hooksEvents > 0 && hookCommands > 0 && hasXtrmHookCommand(hooks);
+    return {
+      hooksWired,
+      hooksEvents,
+      hookCommands,
+      settingsPath: resolvedSettingsPath
+    };
+  } catch {
+    return {
+      hooksWired: false,
+      hooksEvents: 0,
+      hookCommands: 0,
+      settingsPath: resolvedSettingsPath
+    };
+  }
+}
+async function verifyPiRuntime(projectRoot) {
+  const pkgRoot = resolvePkgRoot4();
+  const sourceDir = import_path10.default.join(pkgRoot, ".xtrm", "config", "pi", "extensions");
+  const targetDir = import_path10.default.join(projectRoot, ".pi", "extensions");
+  if (!await import_fs_extra12.default.pathExists(sourceDir)) {
+    return {
+      extensions: [],
+      packages: [],
+      missingExtensions: [],
+      staleExtensions: [],
+      orphanedExtensions: [],
+      missingPackages: [],
+      allRequiredPresent: true,
+      allPresent: true
+    };
+  }
+  return await inventoryPiRuntime(sourceDir, targetDir);
+}
+function verifyProjectBootstrap(projectRoot) {
+  const beadsInitialized = import_fs_extra12.default.pathExistsSync(import_path10.default.join(projectRoot, ".beads"));
+  const gnStatus = (0, import_child_process5.spawnSync)("gitnexus", ["status"], { cwd: projectRoot, encoding: "utf8", timeout: 5e3 });
+  const gnText = `${gnStatus.stdout ?? ""}
+${gnStatus.stderr ?? ""}`.toLowerCase();
+  const gitnexusIndexed = gnStatus.status === 0 && !gnText.includes("stale") && !gnText.includes("not indexed") && !gnText.includes("missing");
+  const agentsMd = import_fs_extra12.default.pathExistsSync(import_path10.default.join(projectRoot, "AGENTS.md"));
+  const claudeMd = import_fs_extra12.default.pathExistsSync(import_path10.default.join(projectRoot, "CLAUDE.md"));
+  const instructionHeaders = agentsMd || claudeMd;
+  return { beadsInitialized, gitnexusIndexed, instructionHeaders };
+}
+function resolvePkgRoot4() {
+  const candidates = [
+    import_path10.default.resolve(__dirname, "../.."),
+    import_path10.default.resolve(__dirname, "../../..")
+  ];
+  for (const c of candidates) {
+    if (import_fs_extra12.default.existsSync(import_path10.default.join(c, ".xtrm", "config", "pi", "extensions"))) return c;
+  }
+  return candidates[0];
+}
+async function runInitVerification(projectRoot) {
+  const machinePlan = verifyMachineBootstrap();
+  const claudeResult = verifyClaudeRuntime(projectRoot);
+  const piPlan = await verifyPiRuntime(projectRoot);
+  const projectResult = verifyProjectBootstrap(projectRoot);
+  const allPassed = machinePlan.allRequiredPresent && claudeResult.hooksWired && piPlan.allRequiredPresent && projectResult.beadsInitialized;
+  return {
+    machineBootstrap: {
+      allRequiredPresent: machinePlan.allRequiredPresent,
+      missingRequired: machinePlan.missingRequired.map((d) => d.dep.displayName)
+    },
+    claudeRuntime: claudeResult,
+    piRuntime: {
+      allRequiredPresent: piPlan.allRequiredPresent,
+      missingExtensions: piPlan.missingExtensions.filter((s) => s.ext.required).map((s) => s.ext.displayName),
+      missingPackages: piPlan.missingPackages.filter((s) => s.pkg.required).map((s) => s.pkg.displayName)
+    },
+    projectBootstrap: projectResult,
+    allPassed
+  };
+}
+function renderVerificationSummary(result) {
+  console.log(kleur_default.bold("\n  Verification Summary"));
+  console.log(kleur_default.dim("  " + "\u2500".repeat(50)));
+  const mbIcon = result.machineBootstrap.allRequiredPresent ? sym.ok : sym.warn;
+  const mbLabel = "Machine Bootstrap";
+  if (result.machineBootstrap.allRequiredPresent) {
+    console.log(`  ${mbIcon} ${mbLabel}`);
+  } else {
+    const missing = result.machineBootstrap.missingRequired.join(", ");
+    console.log(`  ${mbIcon} ${mbLabel} \u2014 missing: ${missing}`);
+  }
+  const crIcon = result.claudeRuntime.hooksWired ? sym.ok : sym.warn;
+  const crLabel = "Claude Runtime";
+  if (result.claudeRuntime.hooksWired) {
+    console.log(`  ${crIcon} ${crLabel}`);
+  } else {
+    console.log(`  ${crIcon} ${crLabel} \u2014 missing .xtrm/hooks wiring in ${result.claudeRuntime.settingsPath}`);
+  }
+  const prIcon = result.piRuntime.allRequiredPresent ? sym.ok : sym.warn;
+  const prLabel = "Pi Runtime";
+  if (result.piRuntime.allRequiredPresent) {
+    console.log(`  ${prIcon} ${prLabel}`);
+  } else {
+    const parts = [];
+    if (result.piRuntime.missingExtensions.length > 0) {
+      parts.push(`extensions: ${result.piRuntime.missingExtensions.join(", ")}`);
+    }
+    if (result.piRuntime.missingPackages.length > 0) {
+      parts.push(`packages: ${result.piRuntime.missingPackages.join(", ")}`);
+    }
+    console.log(`  ${prIcon} ${prLabel} \u2014 ${parts.join("; ")}`);
+  }
+  const pbParts = [];
+  if (!result.projectBootstrap.beadsInitialized) pbParts.push("beads");
+  if (!result.projectBootstrap.gitnexusIndexed) pbParts.push("gitnexus");
+  if (!result.projectBootstrap.instructionHeaders) pbParts.push("headers");
+  const pbIcon = pbParts.length === 0 ? sym.ok : sym.warn;
+  const pbLabel = "Project Bootstrap";
+  if (pbParts.length === 0) {
+    console.log(`  ${pbIcon} ${pbLabel}`);
+  } else {
+    console.log(`  ${pbIcon} ${pbLabel} \u2014 incomplete: ${pbParts.join(", ")}`);
+  }
+  console.log(kleur_default.dim("  " + "\u2500".repeat(50)));
+  if (result.allPassed) {
+    console.log(t.success("\n  \u2713 All phases verified successfully.\n"));
+  } else {
+    console.log(t.warning("\n  \u26A0 Some phases incomplete. Re-run `xtrm init` to fix.\n"));
+  }
+}
+
+// src/core/diff.ts
+var import_path13 = require("path");
+var import_fs_extra14 = __toESM(require_lib(), 1);
 
 // src/utils/hash.ts
-var import_crypto2 = require("crypto");
-var import_fs_extra9 = __toESM(require_lib(), 1);
-var import_path9 = require("path");
-async function hashFile(filePath) {
-  const content = await import_fs_extra9.default.readFile(filePath);
-  return (0, import_crypto2.createHash)("md5").update(content).digest("hex");
+var import_crypto = require("crypto");
+var import_fs_extra13 = __toESM(require_lib(), 1);
+var import_path11 = require("path");
+async function hashFile3(filePath) {
+  const content = await import_fs_extra13.default.readFile(filePath);
+  return (0, import_crypto.createHash)("md5").update(content).digest("hex");
 }
 async function hashDirectory(dirPath) {
-  if (!await import_fs_extra9.default.pathExists(dirPath)) return "";
-  const stats = await import_fs_extra9.default.stat(dirPath);
+  if (!await import_fs_extra13.default.pathExists(dirPath)) return "";
+  const stats = await import_fs_extra13.default.stat(dirPath);
   if (!stats.isDirectory()) {
-    return hashFile(dirPath);
+    return hashFile3(dirPath);
   }
-  const children = await import_fs_extra9.default.readdir(dirPath);
+  const children = await import_fs_extra13.default.readdir(dirPath);
   const childHashes = await Promise.all(
     children.sort().map(async (child) => {
-      const h = await hashDirectory((0, import_path9.join)(dirPath, child));
+      const h = await hashDirectory((0, import_path11.join)(dirPath, child));
       return `${child}:${h}`;
     })
   );
-  return (0, import_crypto2.createHash)("md5").update(childHashes.join("|")).digest("hex");
+  return (0, import_crypto.createHash)("md5").update(childHashes.join("|")).digest("hex");
 }
 async function getNewestMtime(targetPath) {
-  if (!await import_fs_extra9.default.pathExists(targetPath)) return 0;
-  const stats = await import_fs_extra9.default.stat(targetPath);
+  if (!await import_fs_extra13.default.pathExists(targetPath)) return 0;
+  const stats = await import_fs_extra13.default.stat(targetPath);
   let maxTime = 0;
   if (stats.isDirectory()) {
-    const children = await import_fs_extra9.default.readdir(targetPath);
+    const children = await import_fs_extra13.default.readdir(targetPath);
     for (const child of children) {
-      const childTime = await getNewestMtime((0, import_path9.join)(targetPath, child));
+      const childTime = await getNewestMtime((0, import_path11.join)(targetPath, child));
       if (childTime > maxTime) maxTime = childTime;
     }
   }
@@ -38828,7 +34729,7 @@ async function getNewestMtime(targetPath) {
 }
 
 // src/adapters/claude.ts
-var import_path10 = require("path");
+var import_path12 = require("path");
 
 // src/adapters/base.ts
 var ToolAdapter = class {
@@ -38847,13 +34748,13 @@ var ClaudeAdapter = class extends ToolAdapter {
     return this.config.baseDir;
   }
   getSkillsDir() {
-    return (0, import_path10.join)(this.config.baseDir, "skills");
+    return (0, import_path12.join)(this.config.baseDir, "skills");
   }
   getHooksDir() {
-    return (0, import_path10.join)(this.config.baseDir, "hooks");
+    return (0, import_path12.join)(this.config.baseDir, "hooks");
   }
   getCommandsDir() {
-    return (0, import_path10.join)(this.config.baseDir, "commands");
+    return (0, import_path12.join)(this.config.baseDir, "commands");
   }
   getCapabilities() {
     return {
@@ -38878,15 +34779,15 @@ function detectAdapter(systemRoot) {
 // src/core/diff.ts
 var IGNORED_ITEMS = /* @__PURE__ */ new Set(["__pycache__", ".DS_Store", "Thumbs.db", ".gitkeep", "node_modules"]);
 var PruneModeReadError = class extends Error {
-  constructor(path26) {
-    super(`Cannot read ${path26} in prune mode \u2014 aborting to prevent accidental deletion`);
+  constructor(path29) {
+    super(`Cannot read ${path29} in prune mode \u2014 aborting to prevent accidental deletion`);
     this.name = "PruneModeReadError";
   }
 };
 async function calculateDiff(repoRoot, systemRoot, pruneMode = false) {
   const adapter = detectAdapter(systemRoot);
   const isClaude = adapter?.toolName === "claude-code";
-  const normalizedRoot = (0, import_path11.normalize)(systemRoot).replace(/\\/g, "/");
+  const normalizedRoot = (0, import_path13.normalize)(systemRoot).replace(/\\/g, "/");
   const isAgentsSkills = normalizedRoot.includes(".agents/skills");
   const changeSet = {
     skills: { missing: [], outdated: [], drifted: [], total: 0 },
@@ -38894,11 +34795,11 @@ async function calculateDiff(repoRoot, systemRoot, pruneMode = false) {
     config: { missing: [], outdated: [], drifted: [], total: 0 },
     commands: { missing: [], outdated: [], drifted: [], total: 0 }
   };
-  const manifestPath = (0, import_path11.join)(systemRoot, ".jaggers-sync-manifest.json");
+  const manifestPath = (0, import_path13.join)(systemRoot, ".jaggers-sync-manifest.json");
   let installedHashes = null;
   try {
-    if (await import_fs_extra10.default.pathExists(manifestPath)) {
-      const manifest = await import_fs_extra10.default.readJson(manifestPath);
+    if (await import_fs_extra14.default.pathExists(manifestPath)) {
+      const manifest = await import_fs_extra14.default.readJson(manifestPath);
       if (manifest.fileHashes && typeof manifest.fileHashes === "object") {
         installedHashes = manifest.fileHashes;
       }
@@ -38906,29 +34807,29 @@ async function calculateDiff(repoRoot, systemRoot, pruneMode = false) {
   } catch {
   }
   if (isAgentsSkills) {
-    const repoPath = (0, import_path11.join)(repoRoot, "skills");
-    if (!await import_fs_extra10.default.pathExists(repoPath)) return changeSet;
-    const items = (await import_fs_extra10.default.readdir(repoPath)).filter((i) => !IGNORED_ITEMS.has(i));
+    const repoPath = (0, import_path13.join)(repoRoot, "skills");
+    if (!await import_fs_extra14.default.pathExists(repoPath)) return changeSet;
+    const items = (await import_fs_extra14.default.readdir(repoPath)).filter((i) => !IGNORED_ITEMS.has(i));
     changeSet.skills.total = items.length;
     for (const item of items) {
-      await compareItem("skills", item, (0, import_path11.join)(repoPath, item), (0, import_path11.join)(systemRoot, item), changeSet, pruneMode, installedHashes);
+      await compareItem("skills", item, (0, import_path13.join)(repoPath, item), (0, import_path13.join)(systemRoot, item), changeSet, pruneMode, installedHashes);
     }
     return changeSet;
   }
   const folders = ["skills", "hooks"];
   if (!isClaude) folders.push("commands");
   for (const category of folders) {
-    const repoPath = (0, import_path11.join)(repoRoot, category);
-    const systemPath = (0, import_path11.join)(systemRoot, category);
-    if (!await import_fs_extra10.default.pathExists(repoPath)) continue;
-    const items = (await import_fs_extra10.default.readdir(repoPath)).filter((i) => !IGNORED_ITEMS.has(i));
+    const repoPath = (0, import_path13.join)(repoRoot, category);
+    const systemPath = (0, import_path13.join)(systemRoot, category);
+    if (!await import_fs_extra14.default.pathExists(repoPath)) continue;
+    const items = (await import_fs_extra14.default.readdir(repoPath)).filter((i) => !IGNORED_ITEMS.has(i));
     changeSet[category].total = items.length;
     for (const item of items) {
       await compareItem(
         category,
         item,
-        (0, import_path11.join)(repoPath, item),
-        (0, import_path11.join)(systemPath, item),
+        (0, import_path13.join)(repoPath, item),
+        (0, import_path13.join)(systemPath, item),
         changeSet,
         pruneMode,
         installedHashes
@@ -38940,9 +34841,9 @@ async function calculateDiff(repoRoot, systemRoot, pruneMode = false) {
   };
   for (const [name, paths] of Object.entries(configMapping)) {
     if (name === "settings.json" && adapter !== null) continue;
-    const itemRepoPath = (0, import_path11.join)(repoRoot, paths.repo);
-    const itemSystemPath = (0, import_path11.join)(systemRoot, paths.sys);
-    if (await import_fs_extra10.default.pathExists(itemRepoPath)) {
+    const itemRepoPath = (0, import_path13.join)(repoRoot, paths.repo);
+    const itemSystemPath = (0, import_path13.join)(systemRoot, paths.sys);
+    if (await import_fs_extra14.default.pathExists(itemRepoPath)) {
       await compareItem("config", name, itemRepoPath, itemSystemPath, changeSet, false, installedHashes);
     }
   }
@@ -38950,7 +34851,7 @@ async function calculateDiff(repoRoot, systemRoot, pruneMode = false) {
 }
 async function compareItem(category, item, repoPath, systemPath, changeSet, pruneMode = false, installedHashes = null) {
   const cat = changeSet[category];
-  if (!await import_fs_extra10.default.pathExists(systemPath)) {
+  if (!await import_fs_extra14.default.pathExists(systemPath)) {
     cat.missing.push(item);
     return;
   }
@@ -38986,13 +34887,688 @@ async function compareItem(category, item, repoPath, systemPath, changeSet, prun
   }
 }
 
+// src/commands/init.ts
+function resolvePkgRoot5() {
+  const candidates = [
+    import_path14.default.resolve(__dirname, "../.."),
+    import_path14.default.resolve(__dirname, "../../..")
+  ];
+  const match = candidates.find((candidate) => import_fs_extra15.default.existsSync(import_path14.default.join(candidate, "project-skills")));
+  if (!match) {
+    throw new Error("Unable to locate project-skills directory from CLI runtime.");
+  }
+  return match;
+}
+var PKG_ROOT2 = resolvePkgRoot5();
+var PROJECT_SKILLS_DIR = import_path14.default.join(PKG_ROOT2, "project-skills");
+var MCP_CORE_CONFIG_PATH = import_path14.default.join(PKG_ROOT2, "config", "mcp_servers.json");
+var INSTRUCTIONS_DIR = import_path14.default.join(PKG_ROOT2, "config", "instructions");
+var XTRM_BLOCK_START = "<!-- xtrm:start -->";
+var XTRM_BLOCK_END = "<!-- xtrm:end -->";
+function parseComposeServices(content) {
+  const lines = content.split("\n");
+  const services = /* @__PURE__ */ new Set();
+  let inServices = false;
+  for (const line of lines) {
+    const raw = line.replace(/\t/g, "    ");
+    if (!inServices) {
+      if (/^services:\s*$/.test(raw)) {
+        inServices = true;
+      }
+      continue;
+    }
+    if (/^[^\s#].*:\s*$/.test(raw) && !/^services:\s*$/.test(raw)) {
+      break;
+    }
+    const serviceMatch = raw.match(/^\s{2}([A-Za-z0-9._-]+):\s*(?:#.*)?$/);
+    if (serviceMatch) {
+      services.add(serviceMatch[1]);
+    }
+  }
+  return [...services];
+}
+async function detectProjectFeatures(projectRoot) {
+  const hasTypeScript = await import_fs_extra15.default.pathExists(import_path14.default.join(projectRoot, "tsconfig.json"));
+  const hasPython = await import_fs_extra15.default.pathExists(import_path14.default.join(projectRoot, "pyproject.toml")) || await import_fs_extra15.default.pathExists(import_path14.default.join(projectRoot, "setup.py")) || await import_fs_extra15.default.pathExists(import_path14.default.join(projectRoot, "requirements.txt"));
+  const composeCandidates = [
+    "docker-compose.yml",
+    "docker-compose.yaml",
+    "compose.yml",
+    "compose.yaml"
+  ];
+  const dockerServices = /* @__PURE__ */ new Set();
+  for (const composeFile of composeCandidates) {
+    const composePath = import_path14.default.join(projectRoot, composeFile);
+    if (!await import_fs_extra15.default.pathExists(composePath)) continue;
+    try {
+      const content = await import_fs_extra15.default.readFile(composePath, "utf8");
+      for (const service of parseComposeServices(content)) {
+        dockerServices.add(service);
+      }
+    } catch {
+    }
+  }
+  const hasDockerfile = await import_fs_extra15.default.pathExists(import_path14.default.join(projectRoot, "Dockerfile"));
+  if (hasDockerfile && dockerServices.size === 0) {
+    dockerServices.add(import_path14.default.basename(projectRoot));
+  }
+  return {
+    hasTypeScript,
+    hasPython,
+    dockerServices: [...dockerServices],
+    generatedRegistry: false
+  };
+}
+function upsertManagedBlock(fileContent, blockBody, startMarker = XTRM_BLOCK_START, endMarker = XTRM_BLOCK_END) {
+  const normalizedBody = blockBody.trim();
+  const managedBlock = `${startMarker}
+${normalizedBody}
+${endMarker}`;
+  const escapedStart = startMarker.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&");
+  const escapedEnd = endMarker.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&");
+  const existingBlockPattern = new RegExp(`${escapedStart}[\\s\\S]*?${escapedEnd}`, "m");
+  if (existingBlockPattern.test(fileContent)) {
+    return fileContent.replace(existingBlockPattern, managedBlock);
+  }
+  const trimmed = fileContent.trimStart();
+  if (!trimmed) return `${managedBlock}
+`;
+  return `${managedBlock}
+
+${trimmed}`;
+}
+async function injectProjectInstructionHeaders(projectRoot) {
+  const targets = [
+    { output: "AGENTS.md", template: "agents-top.md" },
+    { output: "CLAUDE.md", template: "claude-top.md" }
+  ];
+  console.log(kleur_default.bold("Injecting xtrm agent instruction headers..."));
+  for (const target of targets) {
+    const templatePath = import_path14.default.join(INSTRUCTIONS_DIR, target.template);
+    if (!await import_fs_extra15.default.pathExists(templatePath)) {
+      console.log(kleur_default.yellow(`  \u26A0 Missing template: ${target.template}`));
+      continue;
+    }
+    const template = await import_fs_extra15.default.readFile(templatePath, "utf8");
+    const outputPath = import_path14.default.join(projectRoot, target.output);
+    const existing = await import_fs_extra15.default.pathExists(outputPath) ? await import_fs_extra15.default.readFile(outputPath, "utf8") : "";
+    const next = upsertManagedBlock(existing, template);
+    if (next === existing) {
+      console.log(kleur_default.dim(`  \u2713 ${target.output} already up to date`));
+      continue;
+    }
+    await import_fs_extra15.default.writeFile(outputPath, next.endsWith("\n") ? next : `${next}
+`, "utf8");
+    console.log(`${kleur_default.green("  \u2713")} updated ${target.output}`);
+  }
+}
+async function getAvailableProjectSkills() {
+  if (!await import_fs_extra15.default.pathExists(PROJECT_SKILLS_DIR)) {
+    return [];
+  }
+  const entries = await import_fs_extra15.default.readdir(PROJECT_SKILLS_DIR);
+  const skills = [];
+  for (const entry of entries) {
+    const entryPath = import_path14.default.join(PROJECT_SKILLS_DIR, entry);
+    const stat = await import_fs_extra15.default.stat(entryPath);
+    if (stat.isDirectory() && await import_fs_extra15.default.pathExists(import_path14.default.join(entryPath, ".claude"))) {
+      skills.push(entry);
+    }
+  }
+  return skills.sort();
+}
+function getScriptFilename(hook) {
+  const cmd = hook.command || hook.hooks?.[0]?.command || "";
+  if (typeof cmd !== "string") return null;
+  const m = cmd.match(/\/hooks\/([A-Za-z0-9_/-]+\.(?:py|cjs|mjs|js))/);
+  if (m) return m[1];
+  const m2 = cmd.match(/([A-Za-z0-9_-]+\.(?:py|cjs|mjs|js))(?!.*[A-Za-z0-9._-]+\.(?:py|cjs|mjs|js))/);
+  return m2?.[1] ?? null;
+}
+function pruneStaleHooks(existing, canonical) {
+  const result = { ...existing };
+  const removed = [];
+  if (!result.hooks || typeof result.hooks !== "object") {
+    return { result, removed };
+  }
+  if (!canonical.hooks || typeof canonical.hooks !== "object") {
+    return { result, removed };
+  }
+  const canonicalScripts = /* @__PURE__ */ new Set();
+  const canonicalBasenames = /* @__PURE__ */ new Set();
+  for (const hooks of Object.values(canonical.hooks)) {
+    const hookList = Array.isArray(hooks) ? hooks : [hooks];
+    for (const wrapper of hookList) {
+      const innerHooks = wrapper.hooks || [wrapper];
+      for (const hook of innerHooks) {
+        const script = getScriptFilename(hook);
+        if (!script) continue;
+        canonicalScripts.add(script);
+        canonicalBasenames.add(import_path14.default.basename(script));
+      }
+    }
+  }
+  for (const [event, hooks] of Object.entries(result.hooks)) {
+    if (!Array.isArray(hooks)) continue;
+    const prunedWrappers = [];
+    for (const wrapper of hooks) {
+      const innerHooks = wrapper.hooks || [wrapper];
+      const keptInner = [];
+      for (const hook of innerHooks) {
+        const script = getScriptFilename(hook);
+        if (!script) {
+          keptInner.push(hook);
+          continue;
+        }
+        if (canonicalScripts.has(script)) {
+          keptInner.push(hook);
+          continue;
+        }
+        const sameSkillFamily = canonicalBasenames.has(import_path14.default.basename(script));
+        if (sameSkillFamily) {
+          removed.push(`${event}:${script}`);
+          continue;
+        }
+        keptInner.push(hook);
+      }
+      if (keptInner.length > 0) {
+        if (wrapper.hooks) {
+          prunedWrappers.push({ ...wrapper, hooks: keptInner });
+        } else if (keptInner.length === 1) {
+          prunedWrappers.push(keptInner[0]);
+        } else {
+          prunedWrappers.push({ ...wrapper, hooks: keptInner });
+        }
+      }
+    }
+    if (prunedWrappers.length > 0) {
+      result.hooks[event] = prunedWrappers;
+    } else {
+      delete result.hooks[event];
+    }
+  }
+  return { result, removed };
+}
+function deepMergeHooks(existing, incoming) {
+  const result = { ...existing };
+  if (!result.hooks) result.hooks = {};
+  if (!incoming.hooks) return result;
+  for (const [event, incomingHooks] of Object.entries(incoming.hooks)) {
+    if (!result.hooks[event]) {
+      result.hooks[event] = incomingHooks;
+    } else {
+      const existingEventHooks = Array.isArray(result.hooks[event]) ? result.hooks[event] : [result.hooks[event]];
+      const incomingEventHooks = Array.isArray(incomingHooks) ? incomingHooks : [incomingHooks];
+      const getCommand = (h) => h.command || h.hooks?.[0]?.command;
+      const getCommandKey = (cmd) => {
+        if (!cmd || typeof cmd !== "string") return null;
+        const m = cmd.match(/([A-Za-z0-9._-]+\.(?:py|cjs|mjs|js))(?!.*[A-Za-z0-9._-]+\.(?:py|cjs|mjs|js))/);
+        return m?.[1] ?? null;
+      };
+      const mergeMatcher2 = (existingMatcher, incomingMatcher) => {
+        const existingParts = existingMatcher.split("|").map((s) => s.trim()).filter(Boolean);
+        const incomingParts = incomingMatcher.split("|").map((s) => s.trim()).filter(Boolean);
+        const merged = [...existingParts];
+        for (const part of incomingParts) {
+          if (!merged.includes(part)) merged.push(part);
+        }
+        return merged.join("|");
+      };
+      const mergedEventHooks = [...existingEventHooks];
+      for (const incomingHook of incomingEventHooks) {
+        const incomingCmd = getCommand(incomingHook);
+        if (!incomingCmd) {
+          mergedEventHooks.push(incomingHook);
+          continue;
+        }
+        const incomingKey = getCommandKey(incomingCmd);
+        const existingIndex = mergedEventHooks.findIndex((h) => {
+          const existingCmd = getCommand(h);
+          if (existingCmd === incomingCmd) return true;
+          if (!incomingKey) return false;
+          return getCommandKey(existingCmd) === incomingKey;
+        });
+        if (existingIndex === -1) {
+          mergedEventHooks.push(incomingHook);
+          continue;
+        }
+        const existingHook = mergedEventHooks[existingIndex];
+        if (typeof existingHook.matcher === "string" && typeof incomingHook.matcher === "string") {
+          existingHook.matcher = mergeMatcher2(existingHook.matcher, incomingHook.matcher);
+        }
+      }
+      result.hooks[event] = mergedEventHooks;
+    }
+  }
+  return result;
+}
+function extractReadmeDescription(readmeContent) {
+  const lines = readmeContent.split("\n");
+  const headingIndex = lines.findIndex((line) => line.trim().startsWith("# "));
+  const searchStart = headingIndex >= 0 ? headingIndex + 1 : 0;
+  for (const rawLine of lines.slice(searchStart)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith("#") || line.startsWith("[![") || line.startsWith("<")) {
+      continue;
+    }
+    return line.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1").replace(/[*_`]/g, "").trim();
+  }
+  return "No description available";
+}
+async function installProjectSkill(toolName, projectRootOverride) {
+  const skillPath = import_path14.default.join(PROJECT_SKILLS_DIR, toolName);
+  if (!await import_fs_extra15.default.pathExists(skillPath)) {
+    console.error(kleur_default.red(`
+\u2717 Project skill '${toolName}' not found.
+`));
+    console.error(kleur_default.dim(`  Available project skills:
+`));
+    await listProjectSkills();
+    process.exit(1);
+  }
+  const projectRoot = projectRootOverride ?? getProjectRoot2();
+  const claudeDir = import_path14.default.join(projectRoot, ".claude");
+  console.log(kleur_default.dim(`
+  Installing project skill: ${kleur_default.cyan(toolName)}`));
+  console.log(kleur_default.dim(`  Target: ${projectRoot}
+`));
+  const skillClaudeDir = import_path14.default.join(skillPath, ".claude");
+  const skillSettingsPath = import_path14.default.join(skillClaudeDir, "settings.json");
+  const skillSkillsDir = import_path14.default.join(skillClaudeDir, "skills");
+  const skillReadmePath = import_path14.default.join(skillPath, "README.md");
+  if (await import_fs_extra15.default.pathExists(skillSettingsPath)) {
+    console.log(kleur_default.bold("\u2500\u2500 Installing Hooks \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
+    const targetSettingsPath = import_path14.default.join(claudeDir, "settings.json");
+    await import_fs_extra15.default.mkdirp(import_path14.default.dirname(targetSettingsPath));
+    let existingSettings = {};
+    if (await import_fs_extra15.default.pathExists(targetSettingsPath)) {
+      try {
+        existingSettings = JSON.parse(await import_fs_extra15.default.readFile(targetSettingsPath, "utf8"));
+      } catch {
+      }
+    }
+    const incomingSettings = JSON.parse(await import_fs_extra15.default.readFile(skillSettingsPath, "utf8"));
+    const { result: prunedSettings, removed } = pruneStaleHooks(existingSettings, incomingSettings);
+    if (removed.length > 0) {
+      console.log(kleur_default.yellow(`  \u21B3 Pruned ${removed.length} stale hook(s): ${removed.join(", ")}`));
+    }
+    const mergedSettings = deepMergeHooks(prunedSettings, incomingSettings);
+    await import_fs_extra15.default.writeFile(targetSettingsPath, JSON.stringify(mergedSettings, null, 2) + "\n");
+    console.log(`${kleur_default.green("  \u2713")} settings.json (hooks merged)`);
+  }
+  if (await import_fs_extra15.default.pathExists(skillSkillsDir)) {
+    console.log(kleur_default.bold("\n\u2500\u2500 Installing Skills \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
+    const targetSkillsDir = import_path14.default.join(claudeDir, "skills");
+    const skillEntries = await import_fs_extra15.default.readdir(skillSkillsDir);
+    for (const entry of skillEntries) {
+      const src = import_path14.default.join(skillSkillsDir, entry);
+      const dest = import_path14.default.join(targetSkillsDir, entry);
+      await import_fs_extra15.default.copy(src, dest, {
+        filter: (src2) => !src2.includes(".Zone.Identifier") && !src2.includes("__pycache__") && !src2.includes(".pytest_cache") && !src2.endsWith(".pyc")
+      });
+      console.log(`${kleur_default.green("  \u2713")} .claude/skills/${entry}/`);
+    }
+  }
+  if (await import_fs_extra15.default.pathExists(skillClaudeDir)) {
+    const claudeEntries = await import_fs_extra15.default.readdir(skillClaudeDir);
+    for (const entry of claudeEntries) {
+      if (entry === "settings.json" || entry === "skills") {
+        continue;
+      }
+      const src = import_path14.default.join(skillClaudeDir, entry);
+      const dest = import_path14.default.join(claudeDir, entry);
+      await import_fs_extra15.default.copy(src, dest, {
+        filter: (src2) => !src2.includes(".Zone.Identifier") && !src2.includes("__pycache__") && !src2.includes(".pytest_cache") && !src2.endsWith(".pyc")
+      });
+      console.log(`${kleur_default.green("  \u2713")} .claude/${entry}/`);
+    }
+  }
+  const claudeSkillsDir = import_path14.default.join(claudeDir, "skills");
+  if (await import_fs_extra15.default.pathExists(claudeSkillsDir)) {
+    const agentsDir = import_path14.default.join(projectRoot, ".agents");
+    const agentsSkillsLink = import_path14.default.join(agentsDir, "skills");
+    const symlinkTarget = import_path14.default.join("..", ".claude", "skills");
+    let needsSymlink = true;
+    if (await import_fs_extra15.default.pathExists(agentsSkillsLink)) {
+      try {
+        const stat = await import_fs_extra15.default.lstat(agentsSkillsLink);
+        if (stat.isSymbolicLink()) {
+          const current = await import_fs_extra15.default.readlink(agentsSkillsLink);
+          if (current === symlinkTarget) {
+            needsSymlink = false;
+          } else {
+            await import_fs_extra15.default.remove(agentsSkillsLink);
+          }
+        } else {
+          console.log(kleur_default.yellow("  \u26A0 .agents/skills/ is a real directory \u2014 skipping Pi symlink"));
+          needsSymlink = false;
+        }
+      } catch {
+        needsSymlink = true;
+      }
+    }
+    if (needsSymlink) {
+      await import_fs_extra15.default.mkdirp(agentsDir);
+      await import_fs_extra15.default.symlink(symlinkTarget, agentsSkillsLink);
+      console.log(`${kleur_default.green("  \u2713")} .agents/skills \u2192 ../.claude/skills`);
+    } else {
+      console.log(kleur_default.dim("  \u2713 .agents/skills symlink already in place"));
+    }
+  }
+  if (await import_fs_extra15.default.pathExists(skillReadmePath)) {
+    console.log(kleur_default.bold("\n\u2500\u2500 Installing Documentation \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
+    const docsDir = import_path14.default.join(claudeDir, "docs");
+    await import_fs_extra15.default.mkdirp(docsDir);
+    const destReadme = import_path14.default.join(docsDir, `${toolName}-readme.md`);
+    await import_fs_extra15.default.copy(skillReadmePath, destReadme);
+    console.log(`${kleur_default.green("  \u2713")} .claude/docs/${toolName}-readme.md`);
+  }
+  if (toolName === "service-skills-set") {
+    console.log(kleur_default.bold("\n\u2500\u2500 Installing Git Hooks \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
+    await installGitHooks(projectRoot, skillClaudeDir);
+    console.log(`${kleur_default.green("  \u2713")} .githooks/pre-commit`);
+    console.log(`${kleur_default.green("  \u2713")} .githooks/pre-push`);
+    console.log(`${kleur_default.green("  \u2713")} activated in .git/hooks/`);
+  }
+  console.log(kleur_default.bold("\n\u2500\u2500 Post-Install Steps \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
+  console.log(kleur_default.yellow("\n  \u26A0 IMPORTANT: Manual setup required!\n"));
+  console.log(kleur_default.white(`  ${toolName} requires additional configuration.`));
+  console.log(kleur_default.white(`  Please read: ${kleur_default.cyan(".claude/docs/" + toolName + "-readme.md")}
+`));
+  if (toolName === "tdd-guard") {
+    const tddGuardCheck = (0, import_child_process6.spawnSync)("tdd-guard", ["--version"], { stdio: "pipe" });
+    if (tddGuardCheck.status !== 0) {
+      console.log(kleur_default.red("  \u2717 tdd-guard CLI not found globally!\n"));
+      console.log(kleur_default.white("  Install the global CLI:"));
+      console.log(kleur_default.cyan("    npm install -g tdd-guard\n"));
+    } else {
+      console.log(kleur_default.green("  \u2713 tdd-guard CLI found globally"));
+    }
+    console.log(kleur_default.white("\n  Install a test reporter (choose one):"));
+    console.log(kleur_default.dim("    npm install --save-dev tdd-guard-vitest    # Vitest"));
+    console.log(kleur_default.dim("    npm install --save-dev tdd-guard-jest      # Jest"));
+    console.log(kleur_default.dim("    pip install tdd-guard-pytest               # pytest\n"));
+  }
+  if (toolName === "quality-gates") {
+    console.log(kleur_default.white("  Install language dependencies:\n"));
+    console.log(kleur_default.white("  TypeScript:"));
+    console.log(kleur_default.dim("    npm install --save-dev typescript eslint prettier"));
+    console.log(kleur_default.white("\n  Python:"));
+    console.log(kleur_default.dim("    pip install ruff mypy"));
+    console.log(kleur_default.white("\n  For TDD (test-first) enforcement, install separately:"));
+    console.log(kleur_default.dim("    npm install -g tdd-guard"));
+    console.log(kleur_default.dim("    xtrm install project tdd-guard\n"));
+  }
+  console.log(kleur_default.green("  \u2713 Installation complete!\n"));
+}
+async function installAllProjectSkills(projectRootOverride) {
+  const skills = await getAvailableProjectSkills();
+  if (skills.length === 0) {
+    console.log(kleur_default.dim("  No project skills available.\n"));
+    return;
+  }
+  const projectRoot = projectRootOverride ?? getProjectRoot2();
+  console.log(kleur_default.bold(`
+Installing ${skills.length} project skills:
+`));
+  for (const skill of skills) {
+    console.log(kleur_default.dim(`  \u2022 ${skill}`));
+  }
+  console.log("");
+  for (const skill of skills) {
+    await installProjectSkill(skill, projectRoot);
+  }
+}
+async function runPreflight(projectRoot, opts) {
+  const repoRoot = await findRepoRoot().catch(() => projectRoot);
+  const bootstrapPlan = inventoryDeps();
+  let skillsChanges = 0;
+  try {
+    const ctx = await getContext({
+      createMissingDirs: false,
+      isGlobal: opts.global,
+      projectRoot
+      // Target project, not source repo
+    });
+    for (const target of ctx.targets) {
+      try {
+        const changeSet = await calculateDiff(repoRoot, target, false);
+        skillsChanges += Object.values(changeSet).reduce(
+          (sum, c) => sum + c.missing.length + c.outdated.length,
+          0
+        );
+      } catch {
+      }
+    }
+  } catch {
+  }
+  const needsBdInit = !await import_fs_extra15.default.pathExists(import_path14.default.join(projectRoot, ".beads"));
+  const gitnexusStatus = (0, import_child_process6.spawnSync)("gitnexus", ["status"], {
+    cwd: projectRoot,
+    encoding: "utf8",
+    timeout: 5e3
+  });
+  const gnText = `${gitnexusStatus.stdout ?? ""}
+${gitnexusStatus.stderr ?? ""}`.toLowerCase();
+  const needsGitNexus = gitnexusStatus.status !== 0 || gnText.includes("stale") || gnText.includes("not indexed") || gnText.includes("missing");
+  const detected = await detectProjectFeatures(projectRoot);
+  const projectTypes = [
+    ...detected.hasTypeScript ? ["TypeScript"] : [],
+    ...detected.hasPython ? ["Python"] : []
+  ];
+  return { projectRoot, bootstrapPlan, skillsChanges, needsBdInit, needsGitNexus, projectTypes };
+}
+function renderInitPlan(inventory) {
+  const { bootstrapPlan, skillsChanges, needsBdInit, needsGitNexus, projectTypes } = inventory;
+  console.log(kleur_default.bold("\n  xtrm init \u2014 Installation Plan"));
+  console.log(kleur_default.dim("  " + "\u2500".repeat(50)));
+  renderBootstrapPlan(bootstrapPlan);
+  renderClaudeRuntimePlanSummary();
+  console.log(kleur_default.bold("\n  Pi Runtime"));
+  console.log(kleur_default.dim("  \u21BB  extensions + packages sync"));
+  console.log(kleur_default.bold("\n  Skills"));
+  if (skillsChanges > 0) {
+    console.log(`${kleur_default.cyan("  \u2191")}  ${skillsChanges} change${skillsChanges !== 1 ? "s" : ""} pending`);
+  } else {
+    console.log(kleur_default.dim("  \u2713  already up to date"));
+  }
+  console.log(kleur_default.bold("\n  Project Bootstrap"));
+  const projActions = [
+    needsBdInit ? "bd init \u2014 initialize beads workspace" : null,
+    needsGitNexus ? "gitnexus analyze \u2014 build code index" : null,
+    "AGENTS.md + CLAUDE.md \u2014 workflow headers",
+    "project-skills \u2014 service-skills-set, quality-gates"
+  ].filter(Boolean);
+  for (const action of projActions) {
+    console.log(`${kleur_default.cyan("  \u2022")}  ${action}`);
+  }
+  console.log(kleur_default.bold("\n  Verification"));
+  console.log(kleur_default.dim("  \u2713  unified summary after execution"));
+  if (projectTypes.length > 0) {
+    console.log(kleur_default.dim(`
+  Detected: ${projectTypes.join(", ")}`));
+  }
+  console.log(kleur_default.dim("\n  " + "\u2500".repeat(50) + "\n"));
+}
+async function confirmInitPlan(yes) {
+  return confirmDestructiveAction({
+    yes,
+    message: "Proceed with xtrm init?",
+    initial: true
+  });
+}
+async function runProjectBootstrap(projectRoot) {
+  await runBdInitForProject(projectRoot);
+  await injectProjectInstructionHeaders(projectRoot);
+  await runGitNexusInitForProject(projectRoot);
+  await installAllProjectSkills(projectRoot);
+}
+async function runProjectInit(opts = {}) {
+  const { dryRun = false, yes = false } = opts;
+  const effectiveYes = yes || process.argv.includes("--yes") || process.argv.includes("-y");
+  let projectRoot;
+  try {
+    projectRoot = getProjectRoot2();
+  } catch (err) {
+    console.log(kleur_default.yellow(`
+  \u26A0 Skipping project bootstrap: ${err.message}
+`));
+    return;
+  }
+  const inventory = await runPreflight(projectRoot, opts);
+  renderInitPlan(inventory);
+  if (dryRun) {
+    console.log(kleur_default.dim("  Dry run \u2014 no changes written\n"));
+    return;
+  }
+  const ok = await confirmInitPlan(effectiveYes);
+  if (!ok) {
+    console.log(kleur_default.dim("  Init cancelled.\n"));
+    return;
+  }
+  await runMachineBootstrapPhase({ dryRun: false });
+  await runClaudeRuntimeSyncPhase({ repoRoot: projectRoot, dryRun: false, isGlobal: false });
+  await runInstall({ ...opts, yes: true, backport: false, skipMachineBootstrap: true, skipClaudeRuntimeSync: true });
+  await runProjectBootstrap(projectRoot);
+  const verification = await runInitVerification(projectRoot);
+  renderVerificationSummary(verification);
+  if (verification.allPassed) {
+    console.log(kleur_default.bold("  Next steps:"));
+    console.log(kleur_default.white("    \u2022 Quality gates are active globally"));
+    console.log(kleur_default.white("    \u2022 Run `xt pi` or `xt claude` to start a worktree session"));
+    if (inventory.projectTypes.length > 0) {
+      console.log(kleur_default.white(`    \u2022 Project types: ${inventory.projectTypes.join(", ")}`));
+    }
+  } else {
+    console.log(kleur_default.bold("  Troubleshooting:"));
+    console.log(kleur_default.white("    \u2022 Re-run `xtrm init` to retry incomplete phases"));
+    console.log(kleur_default.white("    \u2022 Check individual tool status with `xt pi doctor` or `xt claude doctor`"));
+  }
+  console.log("");
+}
+async function runBdInitForProject(projectRoot) {
+  console.log(kleur_default.bold("Running beads initialization (bd init)..."));
+  const result = (0, import_child_process6.spawnSync)("bd", ["init"], {
+    cwd: projectRoot,
+    encoding: "utf8",
+    timeout: 15e3
+  });
+  if (result.error) {
+    console.log(kleur_default.yellow(`  \u26A0 Could not run bd init (${result.error.message})`));
+    return;
+  }
+  if (result.status !== 0) {
+    const text = `${result.stdout || ""}
+${result.stderr || ""}`.toLowerCase();
+    if (text.includes("already initialized")) {
+      console.log(kleur_default.dim("  \u2713 beads workspace already initialized"));
+      return;
+    }
+    if (result.stdout) process.stdout.write(result.stdout);
+    if (result.stderr) process.stderr.write(result.stderr);
+    console.log(kleur_default.yellow(`  \u26A0 bd init exited with code ${result.status}`));
+    return;
+  }
+  if (result.stdout) process.stdout.write(result.stdout);
+  if (result.stderr) process.stderr.write(result.stderr);
+}
+async function runGitNexusInitForProject(projectRoot) {
+  const gitnexusCheck = (0, import_child_process6.spawnSync)("gitnexus", ["--version"], {
+    cwd: projectRoot,
+    encoding: "utf8",
+    timeout: 5e3
+  });
+  if (gitnexusCheck.status !== 0) {
+    console.log(kleur_default.yellow("  \u26A0 gitnexus not found; skipping index bootstrap"));
+    console.log(kleur_default.dim("    Install with: npm install -g gitnexus"));
+    return;
+  }
+  console.log(kleur_default.bold("Checking GitNexus index status..."));
+  const status = (0, import_child_process6.spawnSync)("gitnexus", ["status"], {
+    cwd: projectRoot,
+    encoding: "utf8",
+    timeout: 1e4
+  });
+  const statusText = `${status.stdout || ""}
+${status.stderr || ""}`.toLowerCase();
+  const needsAnalyze = status.status !== 0 || statusText.includes("stale") || statusText.includes("not indexed") || statusText.includes("missing");
+  if (!needsAnalyze) {
+    console.log(kleur_default.dim("  \u2713 GitNexus index is ready"));
+    return;
+  }
+  console.log(kleur_default.bold("Running GitNexus indexing (gitnexus analyze)..."));
+  const analyze = (0, import_child_process6.spawnSync)("gitnexus", ["analyze"], {
+    cwd: projectRoot,
+    encoding: "utf8",
+    timeout: 12e4
+  });
+  if (analyze.status === 0) {
+    console.log(kleur_default.green("  \u2713 GitNexus index updated"));
+    return;
+  }
+  if (analyze.stdout) process.stdout.write(analyze.stdout);
+  if (analyze.stderr) process.stderr.write(analyze.stderr);
+  console.log(kleur_default.yellow(`  \u26A0 gitnexus analyze exited with code ${analyze.status}`));
+}
+async function listProjectSkills() {
+  const entries = await getAvailableProjectSkills();
+  if (entries.length === 0) {
+    console.log(kleur_default.dim("  No project skills available.\n"));
+    return;
+  }
+  const skills = [];
+  for (const entry of entries) {
+    const readmePath = import_path14.default.join(PROJECT_SKILLS_DIR, entry, "README.md");
+    let description = "No description available";
+    if (await import_fs_extra15.default.pathExists(readmePath)) {
+      const readmeContent = await import_fs_extra15.default.readFile(readmePath, "utf8");
+      description = extractReadmeDescription(readmeContent).slice(0, 80);
+    }
+    skills.push({ name: entry, description });
+  }
+  if (skills.length === 0) {
+    console.log(kleur_default.dim("  No project skills available.\n"));
+    return;
+  }
+  console.log(kleur_default.bold("\nAvailable Project Skills:\n"));
+  const Table = require_cli_table3();
+  const table = new Table({
+    head: [kleur_default.cyan("Skill"), kleur_default.cyan("Description")],
+    colWidths: [25, 60],
+    style: { head: [], border: [] }
+  });
+  for (const skill of skills) {
+    table.push([kleur_default.white(skill.name), kleur_default.dim(skill.description)]);
+  }
+  console.log(table.toString());
+  console.log(kleur_default.bold("\n\nUsage (legacy):\n"));
+  console.log(kleur_default.dim("  xtrm install project <skill-name>   Install a legacy project skill"));
+  console.log(kleur_default.dim("  xtrm install project all            Install all legacy project skills"));
+  console.log(kleur_default.dim("  xtrm install project list           List available legacy skills\n"));
+  console.log(kleur_default.bold("Preferred:\n"));
+  console.log(kleur_default.dim("  xtrm init                           Bootstrap project data for global hooks/skills\n"));
+}
+function getProjectRoot2() {
+  const result = (0, import_child_process6.spawnSync)("git", ["rev-parse", "--show-toplevel"], {
+    encoding: "utf8",
+    timeout: 5e3
+  });
+  if (result.status !== 0) {
+    throw new Error("Not inside a git repository. Run this command from your target project directory.");
+  }
+  return import_path14.default.resolve(result.stdout.trim());
+}
+
+// src/commands/status.ts
+var import_prompts3 = __toESM(require_prompts3(), 1);
+
 // src/core/sync-executor.ts
-var import_path14 = __toESM(require("path"), 1);
-var import_fs_extra13 = __toESM(require_lib(), 1);
+var import_path17 = __toESM(require("path"), 1);
+var import_fs_extra18 = __toESM(require_lib(), 1);
 
 // src/utils/atomic-config.ts
-var import_node_crypto2 = require("crypto");
-var import_fs_extra11 = __toESM(require_lib(), 1);
+var import_node_crypto4 = require("crypto");
+var import_fs_extra16 = __toESM(require_lib(), 1);
 var import_comment_json = __toESM(require_src3(), 1);
 var PROTECTED_KEYS = [
   "permissions.allow",
@@ -39212,7 +35788,7 @@ async function atomicWrite(filePath, data, options = {}) {
     backupOnSuccess = false,
     backupSuffix = ".bak"
   } = options;
-  const tempFilePath = `${filePath}.tmp.${(0, import_node_crypto2.randomUUID)()}`;
+  const tempFilePath = `${filePath}.tmp.${(0, import_node_crypto4.randomUUID)()}`;
   try {
     let content;
     if (preserveComments) {
@@ -39220,20 +35796,20 @@ async function atomicWrite(filePath, data, options = {}) {
     } else {
       content = JSON.stringify(data, null, 2);
     }
-    await import_fs_extra11.default.writeFile(tempFilePath, content, "utf8");
-    const tempStats = await import_fs_extra11.default.stat(tempFilePath);
+    await import_fs_extra16.default.writeFile(tempFilePath, content, "utf8");
+    const tempStats = await import_fs_extra16.default.stat(tempFilePath);
     if (tempStats.size === 0) {
       throw new Error("Temporary file is empty - write failed");
     }
-    if (backupOnSuccess && await import_fs_extra11.default.pathExists(filePath)) {
+    if (backupOnSuccess && await import_fs_extra16.default.pathExists(filePath)) {
       const backupPath = `${filePath}${backupSuffix}`;
-      await import_fs_extra11.default.copy(filePath, backupPath);
+      await import_fs_extra16.default.copy(filePath, backupPath);
     }
-    await import_fs_extra11.default.rename(tempFilePath, filePath);
+    await import_fs_extra16.default.rename(tempFilePath, filePath);
   } catch (error48) {
     try {
-      if (await import_fs_extra11.default.pathExists(tempFilePath)) {
-        await import_fs_extra11.default.unlink(tempFilePath);
+      if (await import_fs_extra16.default.pathExists(tempFilePath)) {
+        await import_fs_extra16.default.unlink(tempFilePath);
       }
     } catch (cleanupError) {
     }
@@ -39242,10 +35818,10 @@ async function atomicWrite(filePath, data, options = {}) {
 }
 async function safeReadConfig(filePath) {
   try {
-    if (!await import_fs_extra11.default.pathExists(filePath)) {
+    if (!await import_fs_extra16.default.pathExists(filePath)) {
       return {};
     }
-    const content = await import_fs_extra11.default.readFile(filePath, "utf8");
+    const content = await import_fs_extra16.default.readFile(filePath, "utf8");
     try {
       return (0, import_comment_json.parse)(content);
     } catch (parseError) {
@@ -39296,7 +35872,7 @@ async function safeMergeConfig(localConfigPath, repoConfig, options = {}) {
 }
 
 // src/utils/config-adapter.ts
-var import_path12 = __toESM(require("path"), 1);
+var import_path15 = __toESM(require("path"), 1);
 var import_os4 = __toESM(require("os"), 1);
 var ConfigAdapter = class {
   systemRoot;
@@ -39305,7 +35881,7 @@ var ConfigAdapter = class {
   constructor(systemRoot) {
     this.systemRoot = systemRoot;
     this.homeDir = import_os4.default.homedir();
-    this.hooksDir = import_path12.default.join(this.systemRoot, "hooks");
+    this.hooksDir = import_path15.default.join(this.systemRoot, "hooks");
   }
   /**
    * Adapt hooks config for Claude Code format.
@@ -39327,7 +35903,7 @@ var ConfigAdapter = class {
         if (Array.isArray(hooks)) {
           hooksConfig.hooks[event] = hooks.map((hook) => {
             if (hook.script) {
-              const resolvedScriptPath = this.resolvePath(import_path12.default.join(this.hooksDir, hook.script));
+              const resolvedScriptPath = this.resolvePath(import_path15.default.join(this.hooksDir, hook.script));
               const command = this.buildScriptCommand(hook.script, resolvedScriptPath);
               const innerHook = { type: "command", command };
               if (hook.timeout) innerHook.timeout = hook.timeout;
@@ -39341,13 +35917,13 @@ var ConfigAdapter = class {
       }
     }
     if (hooksConfig.statusLine && hooksConfig.statusLine.script) {
-      const resolvedScriptPath = this.resolvePath(import_path12.default.join(this.hooksDir, hooksConfig.statusLine.script));
+      const resolvedScriptPath = this.resolvePath(import_path15.default.join(this.hooksDir, hooksConfig.statusLine.script));
       const command = this.buildScriptCommand(hooksConfig.statusLine.script, resolvedScriptPath);
       hooksConfig.statusLine = { type: "command", command };
     }
   }
   buildScriptCommand(scriptName, resolvedPath) {
-    const ext = import_path12.default.extname(scriptName).toLowerCase();
+    const ext = import_path15.default.extname(scriptName).toLowerCase();
     if (ext === ".js" || ext === ".cjs" || ext === ".mjs") {
       return `node "${resolvedPath}"`;
     } else if (ext === ".sh") {
@@ -39368,27 +35944,27 @@ var ConfigAdapter = class {
 };
 
 // src/utils/sync-mcp-cli.ts
-var import_child_process5 = require("child_process");
-var import_util2 = require("util");
+var import_child_process7 = require("child_process");
+var import_util = require("util");
 
 // src/utils/env-manager.ts
-var import_path13 = __toESM(require("path"), 1);
+var import_path16 = __toESM(require("path"), 1);
 var import_os5 = __toESM(require("os"), 1);
 var import_dotenv = __toESM(require_main(), 1);
-var CONFIG_DIR = import_path13.default.join(import_os5.default.homedir(), ".config", "jaggers-agent-tools");
-var ENV_FILE = import_path13.default.join(CONFIG_DIR, ".env");
-var ENV_EXAMPLE_FILE = import_path13.default.join(CONFIG_DIR, ".env.example");
+var CONFIG_DIR = import_path16.default.join(import_os5.default.homedir(), ".config", "jaggers-agent-tools");
+var ENV_FILE = import_path16.default.join(CONFIG_DIR, ".env");
+var ENV_EXAMPLE_FILE = import_path16.default.join(CONFIG_DIR, ".env.example");
 
 // src/utils/sync-mcp-cli.ts
-var execAsync = (0, import_util2.promisify)(import_child_process5.exec);
+var execAsync = (0, import_util.promisify)(import_child_process7.exec);
 
 // src/core/rollback.ts
-var import_fs_extra12 = __toESM(require_lib(), 1);
+var import_fs_extra17 = __toESM(require_lib(), 1);
 async function createBackup(filePath) {
   const timestamp = Date.now();
   const backupPath = `${filePath}.backup-${timestamp}`;
-  if (await import_fs_extra12.default.pathExists(filePath)) {
-    await import_fs_extra12.default.copy(filePath, backupPath);
+  if (await import_fs_extra17.default.pathExists(filePath)) {
+    await import_fs_extra17.default.copy(filePath, backupPath);
   }
   return {
     originalPath: filePath,
@@ -39397,12 +35973,12 @@ async function createBackup(filePath) {
   };
 }
 async function restoreBackup(backup) {
-  if (await import_fs_extra12.default.pathExists(backup.backupPath)) {
-    await import_fs_extra12.default.move(backup.backupPath, backup.originalPath, { overwrite: true });
+  if (await import_fs_extra17.default.pathExists(backup.backupPath)) {
+    await import_fs_extra17.default.move(backup.backupPath, backup.originalPath, { overwrite: true });
   }
 }
 async function cleanupBackup(backup) {
-  await import_fs_extra12.default.remove(backup.backupPath);
+  await import_fs_extra17.default.remove(backup.backupPath);
 }
 
 // src/core/sync-executor.ts
@@ -39425,8 +36001,8 @@ var SAFE_GIT_BASH_ALLOWLIST = [
   "Bash(git fetch:*)"
 ];
 async function normalizeLegacyBashAllowlist(settingsPath, isDryRun) {
-  if (!await import_fs_extra13.default.pathExists(settingsPath)) return false;
-  const settings = await import_fs_extra13.default.readJson(settingsPath);
+  if (!await import_fs_extra18.default.pathExists(settingsPath)) return false;
+  const settings = await import_fs_extra18.default.readJson(settingsPath);
   const allow = settings?.permissions?.allow;
   if (!Array.isArray(allow)) return false;
   const hasLegacy = allow.some(
@@ -39445,7 +36021,7 @@ async function normalizeLegacyBashAllowlist(settingsPath, isDryRun) {
     return true;
   }
   settings.permissions.allow = filteredAllow;
-  await import_fs_extra13.default.writeJson(settingsPath, settings, { spaces: 2 });
+  await import_fs_extra18.default.writeJson(settingsPath, settings, { spaces: 2 });
   console.log(kleur_default.dim("      (Replaced legacy Bash(bd:*)/Bash(git:*) allowlist entries)"));
   return true;
 }
@@ -39472,7 +36048,7 @@ async function filterHooksByInstalledScripts(hooksConfig) {
         if (typeof command !== "string" || !command.trim()) continue;
         const scriptPath = extractHookCommandPath(command);
         if (!scriptPath) continue;
-        if (await import_fs_extra13.default.pathExists(scriptPath)) {
+        if (await import_fs_extra18.default.pathExists(scriptPath)) {
           keptInner.push(inner);
         }
       }
@@ -39485,7 +36061,7 @@ async function filterHooksByInstalledScripts(hooksConfig) {
   return hooksConfig;
 }
 async function executeSync(repoRoot, systemRoot, changeSet, mode, actionType, isDryRun = false, options) {
-  const normalizedRoot = import_path14.default.normalize(systemRoot).replace(/\\/g, "/");
+  const normalizedRoot = import_path17.default.normalize(systemRoot).replace(/\\/g, "/");
   const isAgentsSkills = normalizedRoot.includes(".agents/skills");
   if (isAgentsSkills) {
     return executeSyncAgentsSkills(repoRoot, systemRoot, changeSet, mode, actionType, isDryRun);
@@ -39507,12 +36083,12 @@ async function executeSync(repoRoot, systemRoot, changeSet, mode, actionType, is
         }
         if (mode === "prune") {
           for (const itemToDelete of cat.drifted || []) {
-            const dest = import_path14.default.join(systemRoot, category, itemToDelete);
+            const dest = import_path17.default.join(systemRoot, category, itemToDelete);
             console.log(kleur_default.red(`  [x] PRUNING ${category}/${itemToDelete}`));
             if (!isDryRun) {
-              if (await import_fs_extra13.default.pathExists(dest)) {
+              if (await import_fs_extra18.default.pathExists(dest)) {
                 backups.push(await createBackup(dest));
-                await import_fs_extra13.default.remove(dest);
+                await import_fs_extra18.default.remove(dest);
               }
             }
             count++;
@@ -39525,17 +36101,17 @@ async function executeSync(repoRoot, systemRoot, changeSet, mode, actionType, is
       for (const item of itemsToProcess) {
         let src, dest;
         if (category === "config" && item === "settings.json" && actionType === "sync") {
-          src = import_path14.default.join(repoRoot, "config", "settings.json");
-          dest = import_path14.default.join(systemRoot, "settings.json");
+          src = import_path17.default.join(repoRoot, "config", "settings.json");
+          dest = import_path17.default.join(systemRoot, "settings.json");
           console.log(kleur_default.gray(`  --> config/settings.json`));
-          if (!isDryRun && await import_fs_extra13.default.pathExists(dest)) {
+          if (!isDryRun && await import_fs_extra18.default.pathExists(dest)) {
             backups.push(await createBackup(dest));
           }
-          const repoConfig = await import_fs_extra13.default.readJson(src);
+          const repoConfig = await import_fs_extra18.default.readJson(src);
           let finalRepoConfig = resolveConfigPaths(repoConfig, systemRoot);
-          const hooksSrc = import_path14.default.join(repoRoot, "config", "hooks.json");
-          if (await import_fs_extra13.default.pathExists(hooksSrc)) {
-            const hooksRaw = await import_fs_extra13.default.readJson(hooksSrc);
+          const hooksSrc = import_path17.default.join(repoRoot, "config", "hooks.json");
+          if (await import_fs_extra18.default.pathExists(hooksSrc)) {
+            const hooksRaw = await import_fs_extra18.default.readJson(hooksSrc);
             const hooksAdapted = await filterHooksByInstalledScripts(adapter.adaptHooksConfig(hooksRaw));
             if (hooksAdapted.hooks) {
               finalRepoConfig.hooks = hooksAdapted.hooks;
@@ -39545,8 +36121,8 @@ async function executeSync(repoRoot, systemRoot, changeSet, mode, actionType, is
               finalRepoConfig.statusLine = hooksAdapted.statusLine;
             }
           }
-          if (import_fs_extra13.default.existsSync(dest)) {
-            const localConfig = await import_fs_extra13.default.readJson(dest);
+          if (import_fs_extra18.default.existsSync(dest)) {
+            const localConfig = await import_fs_extra18.default.readJson(dest);
             const resolvedLocalConfig = resolveConfigPaths(localConfig, systemRoot);
             if (mode === "prune") {
               if (localConfig.mcpServers && finalRepoConfig.mcpServers) {
@@ -39575,42 +36151,42 @@ async function executeSync(repoRoot, systemRoot, changeSet, mode, actionType, is
             await normalizeLegacyBashAllowlist(dest, isDryRun);
           } else {
             if (!isDryRun) {
-              await import_fs_extra13.default.ensureDir(import_path14.default.dirname(dest));
-              await import_fs_extra13.default.writeJson(dest, finalRepoConfig, { spaces: 2 });
+              await import_fs_extra18.default.ensureDir(import_path17.default.dirname(dest));
+              await import_fs_extra18.default.writeJson(dest, finalRepoConfig, { spaces: 2 });
             }
             console.log(kleur_default.green(`      (Created new configuration)`));
           }
           count++;
           continue;
         }
-        const repoPath = import_path14.default.join(repoRoot, category);
-        const systemPath = import_path14.default.join(systemRoot, category);
+        const repoPath = import_path17.default.join(repoRoot, category);
+        const systemPath = import_path17.default.join(systemRoot, category);
         if (actionType === "backport") {
-          src = import_path14.default.join(systemPath, item);
-          dest = import_path14.default.join(repoPath, item);
+          src = import_path17.default.join(systemPath, item);
+          dest = import_path17.default.join(repoPath, item);
         } else {
-          src = import_path14.default.join(repoPath, item);
-          dest = import_path14.default.join(systemPath, item);
+          src = import_path17.default.join(repoPath, item);
+          dest = import_path17.default.join(systemPath, item);
         }
         console.log(kleur_default.gray(`  ${actionType === "backport" ? "<--" : "-->"} ${category}/${item}`));
-        if (!isDryRun && actionType === "sync" && await import_fs_extra13.default.pathExists(dest)) {
+        if (!isDryRun && actionType === "sync" && await import_fs_extra18.default.pathExists(dest)) {
           backups.push(await createBackup(dest));
         }
         if (mode === "symlink" && actionType === "sync" && category !== "config") {
           if (!isDryRun) {
             if (process.platform === "win32") {
               console.log(kleur_default.yellow("  \u26A0 Symlinks require Developer Mode on Windows \u2014 falling back to copy."));
-              await import_fs_extra13.default.remove(dest);
-              await import_fs_extra13.default.copy(src, dest);
+              await import_fs_extra18.default.remove(dest);
+              await import_fs_extra18.default.copy(src, dest);
             } else {
-              await import_fs_extra13.default.remove(dest);
-              await import_fs_extra13.default.ensureSymlink(src, dest);
+              await import_fs_extra18.default.remove(dest);
+              await import_fs_extra18.default.ensureSymlink(src, dest);
             }
           }
         } else {
           if (!isDryRun) {
-            await import_fs_extra13.default.remove(dest);
-            await import_fs_extra13.default.copy(src, dest);
+            await import_fs_extra18.default.remove(dest);
+            await import_fs_extra18.default.copy(src, dest);
           }
         }
         if (!isDryRun && actionType === "sync") {
@@ -39620,9 +36196,9 @@ async function executeSync(repoRoot, systemRoot, changeSet, mode, actionType, is
       }
     }
     if (!isDryRun && actionType === "sync") {
-      const manifestPath = import_path14.default.join(systemRoot, ".jaggers-sync-manifest.json");
-      const existing = await import_fs_extra13.default.pathExists(manifestPath) ? await import_fs_extra13.default.readJson(manifestPath) : {};
-      await import_fs_extra13.default.writeJson(manifestPath, {
+      const manifestPath = import_path17.default.join(systemRoot, ".jaggers-sync-manifest.json");
+      const existing = await import_fs_extra18.default.pathExists(manifestPath) ? await import_fs_extra18.default.readJson(manifestPath) : {};
+      await import_fs_extra18.default.writeJson(manifestPath, {
         ...existing,
         lastSync: (/* @__PURE__ */ new Date()).toISOString(),
         repoRoot,
@@ -39651,7 +36227,7 @@ async function executeSyncAgentsSkills(repoRoot, systemRoot, changeSet, mode, ac
   let count = 0;
   const backups = [];
   try {
-    const repoSkillsPath = import_path14.default.join(repoRoot, "skills");
+    const repoSkillsPath = import_path17.default.join(repoRoot, "skills");
     const itemsToProcess = [];
     if (actionType === "sync") {
       itemsToProcess.push(...changeSet.skills.missing, ...changeSet.skills.outdated);
@@ -39659,24 +36235,24 @@ async function executeSyncAgentsSkills(repoRoot, systemRoot, changeSet, mode, ac
       itemsToProcess.push(...changeSet.skills.drifted);
     }
     for (const item of itemsToProcess) {
-      const src = actionType === "backport" ? import_path14.default.join(systemRoot, item) : import_path14.default.join(repoSkillsPath, item);
-      const dest = actionType === "backport" ? import_path14.default.join(repoSkillsPath, item) : import_path14.default.join(systemRoot, item);
+      const src = actionType === "backport" ? import_path17.default.join(systemRoot, item) : import_path17.default.join(repoSkillsPath, item);
+      const dest = actionType === "backport" ? import_path17.default.join(repoSkillsPath, item) : import_path17.default.join(systemRoot, item);
       console.log(kleur_default.gray(`  ${actionType === "backport" ? "<--" : "-->"} ${item}`));
       if (!isDryRun) {
-        if (await import_fs_extra13.default.pathExists(dest)) backups.push(await createBackup(dest));
-        await import_fs_extra13.default.ensureDir(import_path14.default.dirname(dest));
+        if (await import_fs_extra18.default.pathExists(dest)) backups.push(await createBackup(dest));
+        await import_fs_extra18.default.ensureDir(import_path17.default.dirname(dest));
         if (mode === "symlink" && actionType === "sync") {
           if (process.platform === "win32") {
             console.log(kleur_default.yellow("  \u26A0 Symlinks require Developer Mode on Windows \u2014 falling back to copy."));
-            await import_fs_extra13.default.remove(dest);
-            await import_fs_extra13.default.copy(src, dest);
+            await import_fs_extra18.default.remove(dest);
+            await import_fs_extra18.default.copy(src, dest);
           } else {
-            await import_fs_extra13.default.remove(dest);
-            await import_fs_extra13.default.ensureSymlink(src, dest);
+            await import_fs_extra18.default.remove(dest);
+            await import_fs_extra18.default.ensureSymlink(src, dest);
           }
         } else {
-          await import_fs_extra13.default.remove(dest);
-          await import_fs_extra13.default.copy(src, dest);
+          await import_fs_extra18.default.remove(dest);
+          await import_fs_extra18.default.copy(src, dest);
         }
       }
       count++;
@@ -39704,7 +36280,7 @@ function resolveConfigPaths(config3, targetDir) {
         let val = obj[key];
         if (!val.startsWith("$") && !val.startsWith("~")) {
           if (val.match(/\/[^\s"']+\/hooks\//)) {
-            const hooksDir = import_path14.default.join(targetDir, "hooks");
+            const hooksDir = import_path17.default.join(targetDir, "hooks");
             let replacementDir = `${hooksDir}/`;
             if (process.platform === "win32") {
               replacementDir = replacementDir.replace(/\\/g, "/");
@@ -39720,1045 +36296,6 @@ function resolveConfigPaths(config3, targetDir) {
   recursiveReplace(newConfig);
   return newConfig;
 }
-
-// src/commands/install.ts
-var import_path15 = __toESM(require("path"), 1);
-function renderPlanTable(allChanges) {
-  const Table = require_cli_table3();
-  const table = new Table({
-    head: [
-      t.header("Target"),
-      t.header("+ New"),
-      t.header("\u2191 Update"),
-      t.header("Total")
-    ],
-    style: { head: [], border: [] }
-  });
-  for (const { target, changeSet, totalChanges } of allChanges) {
-    const missing = Object.values(changeSet).reduce((s, c) => s + c.missing.length, 0);
-    const outdated = Object.values(changeSet).reduce((s, c) => s + c.outdated.length, 0);
-    table.push([
-      formatTargetLabel(target),
-      missing > 0 ? String(missing) : t.label("\u2014"),
-      outdated > 0 ? String(outdated) : t.label("\u2014"),
-      kleur_default.bold(String(totalChanges))
-    ]);
-  }
-  console.log("\n" + table.toString() + "\n");
-}
-function printNextSteps() {
-  const d = (s) => kleur_default.dim(s);
-  const b = (s) => kleur_default.bold(s);
-  console.log(b("  Next steps\n"));
-  console.log(d("  In your project:"));
-  console.log(`  xtrm init                     ${d("initialize beads + gitnexus for this repo")}`);
-  console.log(`  bd prime                      ${d("load session context and available work")}`);
-  console.log(`  bv --robot-triage             ${d("graph-aware triage \u2014 find highest-impact work")}`);
-  console.log(`  bd update <id> --claim        ${d("claim an issue before editing any file")}`);
-  console.log(`  bd close <id>                 ${d("close when done")}`);
-  console.log("");
-  console.log(d("  Worktree workflow:"));
-  console.log(`  xt claude                     ${d("launch Claude Code in a sandboxed worktree")}`);
-  console.log(`  xt end --dry-run              ${d("preview PR title, body, and linked issues")}`);
-  console.log(`  xt end                        ${d("push branch, open PR, clean up worktree")}`);
-  console.log("");
-  console.log(d("  Reference:"));
-  console.log(`  xtrm status                   ${d("check installed vs repo")}`);
-  console.log(`  xtrm docs show                ${d("browse all documentation")}`);
-  console.log("");
-}
-async function renderSummaryCard(allChanges, totalCount, allSkipped, isDryRun) {
-  const boxen2 = (await Promise.resolve().then(() => (init_boxen(), boxen_exports))).default;
-  const hasDrift = allSkipped.length > 0;
-  const lines = [
-    kleur_default.bold("  \u2713 Install complete") + (hasDrift ? kleur_default.dim("  (with skipped drift)") : ""),
-    "",
-    `  ${t.label("Targets")}   ${allChanges.length} environment${allChanges.length !== 1 ? "s" : ""}`,
-    `  ${t.label("Installed")} ${totalCount} item${totalCount !== 1 ? "s" : ""}`,
-    ...hasDrift ? [
-      `  ${t.label("Skipped")}   ${allSkipped.length} drifted (local changes preserved)`,
-      `  ${t.label("Hint")}      run xtrm install --backport to push them back`
-    ] : [],
-    ...isDryRun ? ["", kleur_default.dim("  Dry run \u2014 no changes written")] : []
-  ];
-  console.log("\n" + boxen2(lines.join("\n"), {
-    padding: { top: 1, bottom: 1, left: 1, right: 3 },
-    borderStyle: "round",
-    borderColor: "gray"
-  }) + "\n");
-}
-function formatTargetLabel(target) {
-  const normalized = target.replace(/\\/g, "/").toLowerCase();
-  const home = import_os6.default.homedir().replace(/\\/g, "/").toLowerCase();
-  if (normalized.endsWith("/.agents/skills") || normalized.includes("/.agents/skills/")) {
-    return normalized.startsWith(home) ? "~/.agents/skills" : ".agents/skills";
-  }
-  return import_path15.default.basename(target);
-}
-async function runMachineBootstrap(opts = {}) {
-  await runMachineBootstrapPhase({ dryRun: false });
-}
-async function trySymlinkOrCopy(sourcePath, targetPath, dryRun) {
-  if (dryRun) return "noop";
-  await import_fs_extra14.default.ensureDir(import_path15.default.dirname(targetPath));
-  const sourceRealPath = await import_fs_extra14.default.realpath(sourcePath).catch(() => import_path15.default.resolve(sourcePath));
-  const existingStat = await import_fs_extra14.default.lstat(targetPath).catch(() => null);
-  if (existingStat?.isSymbolicLink()) {
-    const targetRealPath = await import_fs_extra14.default.realpath(targetPath).catch(() => null);
-    if (targetRealPath && targetRealPath === sourceRealPath) {
-      return "noop";
-    }
-  }
-  await import_fs_extra14.default.remove(targetPath);
-  try {
-    await import_fs_extra14.default.ensureSymlink(sourcePath, targetPath);
-    return "symlink";
-  } catch {
-    await import_fs_extra14.default.copy(sourcePath, targetPath);
-    return "copy";
-  }
-}
-async function prepareSkillsSymlinkLayout(params) {
-  const { dryRun, isGlobal, projectRoot, repoRoot } = params;
-  const baseRoot = isGlobal ? import_os6.default.homedir() : projectRoot;
-  const packageSkillsPath = import_path15.default.join(repoRoot, "skills");
-  const registryDefaultPath = import_path15.default.join(baseRoot, ".xtrm", "skills", "default");
-  const agentsSkillsPath = import_path15.default.join(baseRoot, ".agents", "skills");
-  const registryMode = await trySymlinkOrCopy(packageSkillsPath, registryDefaultPath, dryRun);
-  if (registryMode === "symlink") {
-    console.log(kleur_default.dim(`  \u2713 .xtrm/skills/default \u2192 ${packageSkillsPath}`));
-  } else if (registryMode === "copy") {
-    console.log(kleur_default.yellow("  \u26A0 Could not create .xtrm/skills/default symlink; using copy fallback"));
-  }
-  const agentsMode = await trySymlinkOrCopy(registryDefaultPath, agentsSkillsPath, dryRun);
-  if (agentsMode === "symlink") {
-    console.log(kleur_default.dim("  \u2713 .agents/skills \u2192 .xtrm/skills/default"));
-  } else if (agentsMode === "copy") {
-    console.log(kleur_default.yellow("  \u26A0 Could not create .agents/skills symlink; using copy fallback"));
-  }
-}
-async function runInstall(opts = {}) {
-  const { dryRun = false, yes = false, prune = false, backport = false, global: isGlobal = false, skipMachineBootstrap = false, skipClaudeRuntimeSync = false } = opts;
-  const effectiveYes = yes || process.argv.includes("--yes") || process.argv.includes("-y");
-  const syncType = backport ? "backport" : "sync";
-  const actionLabel = backport ? "backport" : "install";
-  const gitResult = (0, import_node_child_process6.spawnSync)("git", ["rev-parse", "--show-toplevel"], {
-    cwd: process.cwd(),
-    encoding: "utf8",
-    stdio: "pipe"
-  });
-  const projectRoot = gitResult.status === 0 ? (gitResult.stdout ?? "").trim() : process.cwd();
-  const repoRoot = await findRepoRoot();
-  if (!backport) {
-    await prepareSkillsSymlinkLayout({
-      dryRun,
-      isGlobal,
-      projectRoot,
-      repoRoot
-    });
-  }
-  const ctx = await getContext({
-    createMissingDirs: !dryRun,
-    isGlobal,
-    projectRoot
-  });
-  const { targets, syncMode } = ctx;
-  if (!backport && !skipMachineBootstrap) {
-    await runMachineBootstrap({ yes: effectiveYes });
-  }
-  if (!backport) {
-    if (!skipClaudeRuntimeSync) {
-      await runClaudeRuntimeSyncPhase({ repoRoot: projectRoot, dryRun, isGlobal });
-    }
-    await runPiInstall(dryRun, isGlobal, projectRoot);
-  }
-  const diffTasks = new Listr(
-    targets.map((target) => ({
-      title: formatTargetLabel(target),
-      task: async (listCtx, task) => {
-        try {
-          const changeSet = await calculateDiff(repoRoot, target, prune);
-          const totalChanges = Object.values(changeSet).reduce(
-            (sum, c) => sum + c.missing.length + c.outdated.length + c.drifted.length,
-            0
-          );
-          task.title = `${formatTargetLabel(target)}${t.muted(` \u2014 ${totalChanges} change${totalChanges !== 1 ? "s" : ""}`)}`;
-          if (totalChanges > 0) {
-            listCtx.allChanges.push({ target, changeSet, totalChanges, skippedDrifted: [] });
-          }
-        } catch (err) {
-          if (err instanceof PruneModeReadError) {
-            task.title = `${formatTargetLabel(target)} ${kleur_default.red("(skipped \u2014 cannot read in prune mode)")}`;
-          } else {
-            throw err;
-          }
-        }
-      }
-    })),
-    { concurrent: true, exitOnError: false }
-  );
-  const diffCtx = await diffTasks.run({ allChanges: [] });
-  const allChanges = diffCtx.allChanges;
-  if (allChanges.length === 0) {
-    console.log("\n" + kleur_default.bold("\u2713 Files are up-to-date") + "\n");
-    return;
-  }
-  renderPlanTable(allChanges);
-  if (dryRun) {
-    console.log(kleur_default.dim("  Dry run \u2014 no changes written\n"));
-    return;
-  }
-  const totalChangesCount = allChanges.reduce((s, c) => s + c.totalChanges, 0);
-  const confirmed = await confirmDestructiveAction({
-    yes: effectiveYes,
-    message: `Proceed with ${actionLabel} (${totalChangesCount} total changes)?`,
-    initial: true
-  });
-  if (!confirmed) {
-    console.log(t.muted("  Install cancelled.\n"));
-    return;
-  }
-  let totalCount = 0;
-  for (const { target, changeSet, skippedDrifted } of allChanges) {
-    console.log(t.bold(`
-  ${sym.arrow} ${formatTargetLabel(target)}`));
-    const count = await executeSync(repoRoot, target, changeSet, syncMode, syncType, dryRun);
-    totalCount += count;
-    for (const [category, cat] of Object.entries(changeSet)) {
-      const c = cat;
-      if (c.drifted.length > 0 && syncType === "sync") {
-        skippedDrifted.push(...c.drifted.map((item) => `${category}/${item}`));
-      }
-    }
-    console.log(t.success(`  ${sym.ok} ${count} item${count !== 1 ? "s" : ""} installed`));
-  }
-  const allSkipped = allChanges.flatMap((c) => c.skippedDrifted);
-  await renderSummaryCard(allChanges, totalCount, allSkipped, dryRun);
-  if (!dryRun && !backport) {
-    printNextSteps();
-  }
-}
-
-// src/core/init-verification.ts
-var import_child_process6 = require("child_process");
-var import_fs_extra15 = __toESM(require_lib(), 1);
-var import_path16 = __toESM(require("path"), 1);
-function verifyMachineBootstrap() {
-  return inventoryDeps();
-}
-function verifyClaudeRuntime() {
-  const OFFICIAL_PLUGINS = [
-    "serena@claude-plugins-official",
-    "context7@claude-plugins-official",
-    "github@claude-plugins-official",
-    "ralph-loop@claude-plugins-official"
-  ];
-  const result = (0, import_child_process6.spawnSync)("claude", ["plugin", "list"], { encoding: "utf8", stdio: "pipe" });
-  const output = result.stdout ?? "";
-  const xtrmToolsPlugin = output.includes("xtrm-tools@xtrm-tools") || output.includes("xtrm-tools");
-  const officialPlugins = [];
-  const missingPlugins = [];
-  for (const pluginId of OFFICIAL_PLUGINS) {
-    if (output.includes(pluginId)) {
-      officialPlugins.push(pluginId);
-    } else {
-      missingPlugins.push(pluginId);
-    }
-  }
-  return { xtrmToolsPlugin, officialPlugins, missingPlugins };
-}
-async function verifyPiRuntime(projectRoot) {
-  const pkgRoot = resolvePkgRoot4();
-  const sourceDir = import_path16.default.join(pkgRoot, "config", "pi", "extensions");
-  const targetDir = import_path16.default.join(projectRoot, ".pi", "extensions");
-  if (!await import_fs_extra15.default.pathExists(sourceDir)) {
-    return {
-      extensions: [],
-      packages: [],
-      missingExtensions: [],
-      staleExtensions: [],
-      orphanedExtensions: [],
-      missingPackages: [],
-      allRequiredPresent: true,
-      allPresent: true
-    };
-  }
-  return await inventoryPiRuntime(sourceDir, targetDir);
-}
-function verifyProjectBootstrap(projectRoot) {
-  const beadsInitialized = import_fs_extra15.default.pathExistsSync(import_path16.default.join(projectRoot, ".beads"));
-  const gnStatus = (0, import_child_process6.spawnSync)("gitnexus", ["status"], { cwd: projectRoot, encoding: "utf8", timeout: 5e3 });
-  const gnText = `${gnStatus.stdout ?? ""}
-${gnStatus.stderr ?? ""}`.toLowerCase();
-  const gitnexusIndexed = gnStatus.status === 0 && !gnText.includes("stale") && !gnText.includes("not indexed") && !gnText.includes("missing");
-  const agentsMd = import_fs_extra15.default.pathExistsSync(import_path16.default.join(projectRoot, "AGENTS.md"));
-  const claudeMd = import_fs_extra15.default.pathExistsSync(import_path16.default.join(projectRoot, "CLAUDE.md"));
-  const instructionHeaders = agentsMd || claudeMd;
-  return { beadsInitialized, gitnexusIndexed, instructionHeaders };
-}
-function resolvePkgRoot4() {
-  const candidates = [
-    import_path16.default.resolve(__dirname, "../.."),
-    import_path16.default.resolve(__dirname, "../../..")
-  ];
-  for (const c of candidates) {
-    if (import_fs_extra15.default.existsSync(import_path16.default.join(c, "config", "pi", "extensions"))) return c;
-  }
-  return candidates[0];
-}
-async function runInitVerification(projectRoot) {
-  const machinePlan = verifyMachineBootstrap();
-  const claudeResult = verifyClaudeRuntime();
-  const piPlan = await verifyPiRuntime(projectRoot);
-  const projectResult = verifyProjectBootstrap(projectRoot);
-  const allPassed = machinePlan.allRequiredPresent && claudeResult.xtrmToolsPlugin && claudeResult.missingPlugins.length === 0 && piPlan.allRequiredPresent && projectResult.beadsInitialized;
-  return {
-    machineBootstrap: {
-      allRequiredPresent: machinePlan.allRequiredPresent,
-      missingRequired: machinePlan.missingRequired.map((d) => d.dep.displayName)
-    },
-    claudeRuntime: {
-      xtrmToolsPlugin: claudeResult.xtrmToolsPlugin,
-      officialPlugins: claudeResult.officialPlugins,
-      missingPlugins: claudeResult.missingPlugins
-    },
-    piRuntime: {
-      allRequiredPresent: piPlan.allRequiredPresent,
-      missingExtensions: piPlan.missingExtensions.filter((s) => s.ext.required).map((s) => s.ext.displayName),
-      missingPackages: piPlan.missingPackages.filter((s) => s.pkg.required).map((s) => s.pkg.displayName)
-    },
-    projectBootstrap: projectResult,
-    allPassed
-  };
-}
-function renderVerificationSummary(result) {
-  console.log(kleur_default.bold("\n  Verification Summary"));
-  console.log(kleur_default.dim("  " + "\u2500".repeat(50)));
-  const mbIcon = result.machineBootstrap.allRequiredPresent ? sym.ok : sym.warn;
-  const mbLabel = "Machine Bootstrap";
-  if (result.machineBootstrap.allRequiredPresent) {
-    console.log(`  ${mbIcon} ${mbLabel}`);
-  } else {
-    const missing = result.machineBootstrap.missingRequired.join(", ");
-    console.log(`  ${mbIcon} ${mbLabel} \u2014 missing: ${missing}`);
-  }
-  const crIcon = result.claudeRuntime.xtrmToolsPlugin && result.claudeRuntime.missingPlugins.length === 0 ? sym.ok : sym.warn;
-  const crLabel = "Claude Runtime";
-  if (result.claudeRuntime.xtrmToolsPlugin && result.claudeRuntime.missingPlugins.length === 0) {
-    console.log(`  ${crIcon} ${crLabel}`);
-  } else if (!result.claudeRuntime.xtrmToolsPlugin) {
-    console.log(`  ${crIcon} ${crLabel} \u2014 missing xtrm-tools plugin`);
-  } else {
-    const missing = result.claudeRuntime.missingPlugins.join(", ");
-    console.log(`  ${crIcon} ${crLabel} \u2014 missing plugins: ${missing}`);
-  }
-  const prIcon = result.piRuntime.allRequiredPresent ? sym.ok : sym.warn;
-  const prLabel = "Pi Runtime";
-  if (result.piRuntime.allRequiredPresent) {
-    console.log(`  ${prIcon} ${prLabel}`);
-  } else {
-    const parts = [];
-    if (result.piRuntime.missingExtensions.length > 0) {
-      parts.push(`extensions: ${result.piRuntime.missingExtensions.join(", ")}`);
-    }
-    if (result.piRuntime.missingPackages.length > 0) {
-      parts.push(`packages: ${result.piRuntime.missingPackages.join(", ")}`);
-    }
-    console.log(`  ${prIcon} ${prLabel} \u2014 ${parts.join("; ")}`);
-  }
-  const pbParts = [];
-  if (!result.projectBootstrap.beadsInitialized) pbParts.push("beads");
-  if (!result.projectBootstrap.gitnexusIndexed) pbParts.push("gitnexus");
-  if (!result.projectBootstrap.instructionHeaders) pbParts.push("headers");
-  const pbIcon = pbParts.length === 0 ? sym.ok : sym.warn;
-  const pbLabel = "Project Bootstrap";
-  if (pbParts.length === 0) {
-    console.log(`  ${pbIcon} ${pbLabel}`);
-  } else {
-    console.log(`  ${pbIcon} ${pbLabel} \u2014 incomplete: ${pbParts.join(", ")}`);
-  }
-  console.log(kleur_default.dim("  " + "\u2500".repeat(50)));
-  if (result.allPassed) {
-    console.log(t.success("\n  \u2713 All phases verified successfully.\n"));
-  } else {
-    console.log(t.warning("\n  \u26A0 Some phases incomplete. Re-run `xtrm init` to fix.\n"));
-  }
-}
-
-// src/commands/init.ts
-function resolvePkgRoot5() {
-  const candidates = [
-    import_path17.default.resolve(__dirname, "../.."),
-    import_path17.default.resolve(__dirname, "../../..")
-  ];
-  const match = candidates.find((candidate) => import_fs_extra16.default.existsSync(import_path17.default.join(candidate, "project-skills")));
-  if (!match) {
-    throw new Error("Unable to locate project-skills directory from CLI runtime.");
-  }
-  return match;
-}
-var PKG_ROOT2 = resolvePkgRoot5();
-var PROJECT_SKILLS_DIR = import_path17.default.join(PKG_ROOT2, "project-skills");
-var MCP_CORE_CONFIG_PATH = import_path17.default.join(PKG_ROOT2, "config", "mcp_servers.json");
-var INSTRUCTIONS_DIR = import_path17.default.join(PKG_ROOT2, "config", "instructions");
-var XTRM_BLOCK_START = "<!-- xtrm:start -->";
-var XTRM_BLOCK_END = "<!-- xtrm:end -->";
-function parseComposeServices(content) {
-  const lines = content.split("\n");
-  const services = /* @__PURE__ */ new Set();
-  let inServices = false;
-  for (const line of lines) {
-    const raw = line.replace(/\t/g, "    ");
-    if (!inServices) {
-      if (/^services:\s*$/.test(raw)) {
-        inServices = true;
-      }
-      continue;
-    }
-    if (/^[^\s#].*:\s*$/.test(raw) && !/^services:\s*$/.test(raw)) {
-      break;
-    }
-    const serviceMatch = raw.match(/^\s{2}([A-Za-z0-9._-]+):\s*(?:#.*)?$/);
-    if (serviceMatch) {
-      services.add(serviceMatch[1]);
-    }
-  }
-  return [...services];
-}
-async function detectProjectFeatures(projectRoot) {
-  const hasTypeScript = await import_fs_extra16.default.pathExists(import_path17.default.join(projectRoot, "tsconfig.json"));
-  const hasPython = await import_fs_extra16.default.pathExists(import_path17.default.join(projectRoot, "pyproject.toml")) || await import_fs_extra16.default.pathExists(import_path17.default.join(projectRoot, "setup.py")) || await import_fs_extra16.default.pathExists(import_path17.default.join(projectRoot, "requirements.txt"));
-  const composeCandidates = [
-    "docker-compose.yml",
-    "docker-compose.yaml",
-    "compose.yml",
-    "compose.yaml"
-  ];
-  const dockerServices = /* @__PURE__ */ new Set();
-  for (const composeFile of composeCandidates) {
-    const composePath = import_path17.default.join(projectRoot, composeFile);
-    if (!await import_fs_extra16.default.pathExists(composePath)) continue;
-    try {
-      const content = await import_fs_extra16.default.readFile(composePath, "utf8");
-      for (const service of parseComposeServices(content)) {
-        dockerServices.add(service);
-      }
-    } catch {
-    }
-  }
-  const hasDockerfile = await import_fs_extra16.default.pathExists(import_path17.default.join(projectRoot, "Dockerfile"));
-  if (hasDockerfile && dockerServices.size === 0) {
-    dockerServices.add(import_path17.default.basename(projectRoot));
-  }
-  return {
-    hasTypeScript,
-    hasPython,
-    dockerServices: [...dockerServices],
-    generatedRegistry: false
-  };
-}
-function upsertManagedBlock(fileContent, blockBody, startMarker = XTRM_BLOCK_START, endMarker = XTRM_BLOCK_END) {
-  const normalizedBody = blockBody.trim();
-  const managedBlock = `${startMarker}
-${normalizedBody}
-${endMarker}`;
-  const escapedStart = startMarker.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&");
-  const escapedEnd = endMarker.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&");
-  const existingBlockPattern = new RegExp(`${escapedStart}[\\s\\S]*?${escapedEnd}`, "m");
-  if (existingBlockPattern.test(fileContent)) {
-    return fileContent.replace(existingBlockPattern, managedBlock);
-  }
-  const trimmed = fileContent.trimStart();
-  if (!trimmed) return `${managedBlock}
-`;
-  return `${managedBlock}
-
-${trimmed}`;
-}
-async function injectProjectInstructionHeaders(projectRoot) {
-  const targets = [
-    { output: "AGENTS.md", template: "agents-top.md" },
-    { output: "CLAUDE.md", template: "claude-top.md" }
-  ];
-  console.log(kleur_default.bold("Injecting xtrm agent instruction headers..."));
-  for (const target of targets) {
-    const templatePath = import_path17.default.join(INSTRUCTIONS_DIR, target.template);
-    if (!await import_fs_extra16.default.pathExists(templatePath)) {
-      console.log(kleur_default.yellow(`  \u26A0 Missing template: ${target.template}`));
-      continue;
-    }
-    const template = await import_fs_extra16.default.readFile(templatePath, "utf8");
-    const outputPath = import_path17.default.join(projectRoot, target.output);
-    const existing = await import_fs_extra16.default.pathExists(outputPath) ? await import_fs_extra16.default.readFile(outputPath, "utf8") : "";
-    const next = upsertManagedBlock(existing, template);
-    if (next === existing) {
-      console.log(kleur_default.dim(`  \u2713 ${target.output} already up to date`));
-      continue;
-    }
-    await import_fs_extra16.default.writeFile(outputPath, next.endsWith("\n") ? next : `${next}
-`, "utf8");
-    console.log(`${kleur_default.green("  \u2713")} updated ${target.output}`);
-  }
-}
-async function getAvailableProjectSkills() {
-  if (!await import_fs_extra16.default.pathExists(PROJECT_SKILLS_DIR)) {
-    return [];
-  }
-  const entries = await import_fs_extra16.default.readdir(PROJECT_SKILLS_DIR);
-  const skills = [];
-  for (const entry of entries) {
-    const entryPath = import_path17.default.join(PROJECT_SKILLS_DIR, entry);
-    const stat = await import_fs_extra16.default.stat(entryPath);
-    if (stat.isDirectory() && await import_fs_extra16.default.pathExists(import_path17.default.join(entryPath, ".claude"))) {
-      skills.push(entry);
-    }
-  }
-  return skills.sort();
-}
-function getScriptFilename(hook) {
-  const cmd = hook.command || hook.hooks?.[0]?.command || "";
-  if (typeof cmd !== "string") return null;
-  const m = cmd.match(/\/hooks\/([A-Za-z0-9_/-]+\.(?:py|cjs|mjs|js))/);
-  if (m) return m[1];
-  const m2 = cmd.match(/([A-Za-z0-9_-]+\.(?:py|cjs|mjs|js))(?!.*[A-Za-z0-9._-]+\.(?:py|cjs|mjs|js))/);
-  return m2?.[1] ?? null;
-}
-function pruneStaleHooks(existing, canonical) {
-  const result = { ...existing };
-  const removed = [];
-  if (!result.hooks || typeof result.hooks !== "object") {
-    return { result, removed };
-  }
-  if (!canonical.hooks || typeof canonical.hooks !== "object") {
-    return { result, removed };
-  }
-  const canonicalScripts = /* @__PURE__ */ new Set();
-  const canonicalBasenames = /* @__PURE__ */ new Set();
-  for (const hooks of Object.values(canonical.hooks)) {
-    const hookList = Array.isArray(hooks) ? hooks : [hooks];
-    for (const wrapper of hookList) {
-      const innerHooks = wrapper.hooks || [wrapper];
-      for (const hook of innerHooks) {
-        const script = getScriptFilename(hook);
-        if (!script) continue;
-        canonicalScripts.add(script);
-        canonicalBasenames.add(import_path17.default.basename(script));
-      }
-    }
-  }
-  for (const [event, hooks] of Object.entries(result.hooks)) {
-    if (!Array.isArray(hooks)) continue;
-    const prunedWrappers = [];
-    for (const wrapper of hooks) {
-      const innerHooks = wrapper.hooks || [wrapper];
-      const keptInner = [];
-      for (const hook of innerHooks) {
-        const script = getScriptFilename(hook);
-        if (!script) {
-          keptInner.push(hook);
-          continue;
-        }
-        if (canonicalScripts.has(script)) {
-          keptInner.push(hook);
-          continue;
-        }
-        const sameSkillFamily = canonicalBasenames.has(import_path17.default.basename(script));
-        if (sameSkillFamily) {
-          removed.push(`${event}:${script}`);
-          continue;
-        }
-        keptInner.push(hook);
-      }
-      if (keptInner.length > 0) {
-        if (wrapper.hooks) {
-          prunedWrappers.push({ ...wrapper, hooks: keptInner });
-        } else if (keptInner.length === 1) {
-          prunedWrappers.push(keptInner[0]);
-        } else {
-          prunedWrappers.push({ ...wrapper, hooks: keptInner });
-        }
-      }
-    }
-    if (prunedWrappers.length > 0) {
-      result.hooks[event] = prunedWrappers;
-    } else {
-      delete result.hooks[event];
-    }
-  }
-  return { result, removed };
-}
-function deepMergeHooks(existing, incoming) {
-  const result = { ...existing };
-  if (!result.hooks) result.hooks = {};
-  if (!incoming.hooks) return result;
-  for (const [event, incomingHooks] of Object.entries(incoming.hooks)) {
-    if (!result.hooks[event]) {
-      result.hooks[event] = incomingHooks;
-    } else {
-      const existingEventHooks = Array.isArray(result.hooks[event]) ? result.hooks[event] : [result.hooks[event]];
-      const incomingEventHooks = Array.isArray(incomingHooks) ? incomingHooks : [incomingHooks];
-      const getCommand = (h) => h.command || h.hooks?.[0]?.command;
-      const getCommandKey = (cmd) => {
-        if (!cmd || typeof cmd !== "string") return null;
-        const m = cmd.match(/([A-Za-z0-9._-]+\.(?:py|cjs|mjs|js))(?!.*[A-Za-z0-9._-]+\.(?:py|cjs|mjs|js))/);
-        return m?.[1] ?? null;
-      };
-      const mergeMatcher2 = (existingMatcher, incomingMatcher) => {
-        const existingParts = existingMatcher.split("|").map((s) => s.trim()).filter(Boolean);
-        const incomingParts = incomingMatcher.split("|").map((s) => s.trim()).filter(Boolean);
-        const merged = [...existingParts];
-        for (const part of incomingParts) {
-          if (!merged.includes(part)) merged.push(part);
-        }
-        return merged.join("|");
-      };
-      const mergedEventHooks = [...existingEventHooks];
-      for (const incomingHook of incomingEventHooks) {
-        const incomingCmd = getCommand(incomingHook);
-        if (!incomingCmd) {
-          mergedEventHooks.push(incomingHook);
-          continue;
-        }
-        const incomingKey = getCommandKey(incomingCmd);
-        const existingIndex = mergedEventHooks.findIndex((h) => {
-          const existingCmd = getCommand(h);
-          if (existingCmd === incomingCmd) return true;
-          if (!incomingKey) return false;
-          return getCommandKey(existingCmd) === incomingKey;
-        });
-        if (existingIndex === -1) {
-          mergedEventHooks.push(incomingHook);
-          continue;
-        }
-        const existingHook = mergedEventHooks[existingIndex];
-        if (typeof existingHook.matcher === "string" && typeof incomingHook.matcher === "string") {
-          existingHook.matcher = mergeMatcher2(existingHook.matcher, incomingHook.matcher);
-        }
-      }
-      result.hooks[event] = mergedEventHooks;
-    }
-  }
-  return result;
-}
-function extractReadmeDescription(readmeContent) {
-  const lines = readmeContent.split("\n");
-  const headingIndex = lines.findIndex((line) => line.trim().startsWith("# "));
-  const searchStart = headingIndex >= 0 ? headingIndex + 1 : 0;
-  for (const rawLine of lines.slice(searchStart)) {
-    const line = rawLine.trim();
-    if (!line || line.startsWith("#") || line.startsWith("[![") || line.startsWith("<")) {
-      continue;
-    }
-    return line.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1").replace(/[*_`]/g, "").trim();
-  }
-  return "No description available";
-}
-async function installProjectSkill(toolName, projectRootOverride) {
-  const skillPath = import_path17.default.join(PROJECT_SKILLS_DIR, toolName);
-  if (!await import_fs_extra16.default.pathExists(skillPath)) {
-    console.error(kleur_default.red(`
-\u2717 Project skill '${toolName}' not found.
-`));
-    console.error(kleur_default.dim(`  Available project skills:
-`));
-    await listProjectSkills();
-    process.exit(1);
-  }
-  const projectRoot = projectRootOverride ?? getProjectRoot();
-  const claudeDir = import_path17.default.join(projectRoot, ".claude");
-  console.log(kleur_default.dim(`
-  Installing project skill: ${kleur_default.cyan(toolName)}`));
-  console.log(kleur_default.dim(`  Target: ${projectRoot}
-`));
-  const skillClaudeDir = import_path17.default.join(skillPath, ".claude");
-  const skillSettingsPath = import_path17.default.join(skillClaudeDir, "settings.json");
-  const skillSkillsDir = import_path17.default.join(skillClaudeDir, "skills");
-  const skillReadmePath = import_path17.default.join(skillPath, "README.md");
-  if (await import_fs_extra16.default.pathExists(skillSettingsPath)) {
-    console.log(kleur_default.bold("\u2500\u2500 Installing Hooks \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
-    const targetSettingsPath = import_path17.default.join(claudeDir, "settings.json");
-    await import_fs_extra16.default.mkdirp(import_path17.default.dirname(targetSettingsPath));
-    let existingSettings = {};
-    if (await import_fs_extra16.default.pathExists(targetSettingsPath)) {
-      try {
-        existingSettings = JSON.parse(await import_fs_extra16.default.readFile(targetSettingsPath, "utf8"));
-      } catch {
-      }
-    }
-    const incomingSettings = JSON.parse(await import_fs_extra16.default.readFile(skillSettingsPath, "utf8"));
-    const { result: prunedSettings, removed } = pruneStaleHooks(existingSettings, incomingSettings);
-    if (removed.length > 0) {
-      console.log(kleur_default.yellow(`  \u21B3 Pruned ${removed.length} stale hook(s): ${removed.join(", ")}`));
-    }
-    const mergedSettings = deepMergeHooks(prunedSettings, incomingSettings);
-    await import_fs_extra16.default.writeFile(targetSettingsPath, JSON.stringify(mergedSettings, null, 2) + "\n");
-    console.log(`${kleur_default.green("  \u2713")} settings.json (hooks merged)`);
-  }
-  if (await import_fs_extra16.default.pathExists(skillSkillsDir)) {
-    console.log(kleur_default.bold("\n\u2500\u2500 Installing Skills \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
-    const targetSkillsDir = import_path17.default.join(claudeDir, "skills");
-    const skillEntries = await import_fs_extra16.default.readdir(skillSkillsDir);
-    for (const entry of skillEntries) {
-      const src = import_path17.default.join(skillSkillsDir, entry);
-      const dest = import_path17.default.join(targetSkillsDir, entry);
-      await import_fs_extra16.default.copy(src, dest, {
-        filter: (src2) => !src2.includes(".Zone.Identifier") && !src2.includes("__pycache__") && !src2.includes(".pytest_cache") && !src2.endsWith(".pyc")
-      });
-      console.log(`${kleur_default.green("  \u2713")} .claude/skills/${entry}/`);
-    }
-  }
-  if (await import_fs_extra16.default.pathExists(skillClaudeDir)) {
-    const claudeEntries = await import_fs_extra16.default.readdir(skillClaudeDir);
-    for (const entry of claudeEntries) {
-      if (entry === "settings.json" || entry === "skills") {
-        continue;
-      }
-      const src = import_path17.default.join(skillClaudeDir, entry);
-      const dest = import_path17.default.join(claudeDir, entry);
-      await import_fs_extra16.default.copy(src, dest, {
-        filter: (src2) => !src2.includes(".Zone.Identifier") && !src2.includes("__pycache__") && !src2.includes(".pytest_cache") && !src2.endsWith(".pyc")
-      });
-      console.log(`${kleur_default.green("  \u2713")} .claude/${entry}/`);
-    }
-  }
-  const claudeSkillsDir = import_path17.default.join(claudeDir, "skills");
-  if (await import_fs_extra16.default.pathExists(claudeSkillsDir)) {
-    const agentsDir = import_path17.default.join(projectRoot, ".agents");
-    const agentsSkillsLink = import_path17.default.join(agentsDir, "skills");
-    const symlinkTarget = import_path17.default.join("..", ".claude", "skills");
-    let needsSymlink = true;
-    if (await import_fs_extra16.default.pathExists(agentsSkillsLink)) {
-      try {
-        const stat = await import_fs_extra16.default.lstat(agentsSkillsLink);
-        if (stat.isSymbolicLink()) {
-          const current = await import_fs_extra16.default.readlink(agentsSkillsLink);
-          if (current === symlinkTarget) {
-            needsSymlink = false;
-          } else {
-            await import_fs_extra16.default.remove(agentsSkillsLink);
-          }
-        } else {
-          console.log(kleur_default.yellow("  \u26A0 .agents/skills/ is a real directory \u2014 skipping Pi symlink"));
-          needsSymlink = false;
-        }
-      } catch {
-        needsSymlink = true;
-      }
-    }
-    if (needsSymlink) {
-      await import_fs_extra16.default.mkdirp(agentsDir);
-      await import_fs_extra16.default.symlink(symlinkTarget, agentsSkillsLink);
-      console.log(`${kleur_default.green("  \u2713")} .agents/skills \u2192 ../.claude/skills`);
-    } else {
-      console.log(kleur_default.dim("  \u2713 .agents/skills symlink already in place"));
-    }
-  }
-  if (await import_fs_extra16.default.pathExists(skillReadmePath)) {
-    console.log(kleur_default.bold("\n\u2500\u2500 Installing Documentation \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
-    const docsDir = import_path17.default.join(claudeDir, "docs");
-    await import_fs_extra16.default.mkdirp(docsDir);
-    const destReadme = import_path17.default.join(docsDir, `${toolName}-readme.md`);
-    await import_fs_extra16.default.copy(skillReadmePath, destReadme);
-    console.log(`${kleur_default.green("  \u2713")} .claude/docs/${toolName}-readme.md`);
-  }
-  if (toolName === "service-skills-set") {
-    console.log(kleur_default.bold("\n\u2500\u2500 Installing Git Hooks \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
-    await installGitHooks(projectRoot, skillClaudeDir);
-    console.log(`${kleur_default.green("  \u2713")} .githooks/pre-commit`);
-    console.log(`${kleur_default.green("  \u2713")} .githooks/pre-push`);
-    console.log(`${kleur_default.green("  \u2713")} activated in .git/hooks/`);
-  }
-  console.log(kleur_default.bold("\n\u2500\u2500 Post-Install Steps \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"));
-  console.log(kleur_default.yellow("\n  \u26A0 IMPORTANT: Manual setup required!\n"));
-  console.log(kleur_default.white(`  ${toolName} requires additional configuration.`));
-  console.log(kleur_default.white(`  Please read: ${kleur_default.cyan(".claude/docs/" + toolName + "-readme.md")}
-`));
-  if (toolName === "tdd-guard") {
-    const tddGuardCheck = (0, import_child_process7.spawnSync)("tdd-guard", ["--version"], { stdio: "pipe" });
-    if (tddGuardCheck.status !== 0) {
-      console.log(kleur_default.red("  \u2717 tdd-guard CLI not found globally!\n"));
-      console.log(kleur_default.white("  Install the global CLI:"));
-      console.log(kleur_default.cyan("    npm install -g tdd-guard\n"));
-    } else {
-      console.log(kleur_default.green("  \u2713 tdd-guard CLI found globally"));
-    }
-    console.log(kleur_default.white("\n  Install a test reporter (choose one):"));
-    console.log(kleur_default.dim("    npm install --save-dev tdd-guard-vitest    # Vitest"));
-    console.log(kleur_default.dim("    npm install --save-dev tdd-guard-jest      # Jest"));
-    console.log(kleur_default.dim("    pip install tdd-guard-pytest               # pytest\n"));
-  }
-  if (toolName === "quality-gates") {
-    console.log(kleur_default.white("  Install language dependencies:\n"));
-    console.log(kleur_default.white("  TypeScript:"));
-    console.log(kleur_default.dim("    npm install --save-dev typescript eslint prettier"));
-    console.log(kleur_default.white("\n  Python:"));
-    console.log(kleur_default.dim("    pip install ruff mypy"));
-    console.log(kleur_default.white("\n  For TDD (test-first) enforcement, install separately:"));
-    console.log(kleur_default.dim("    npm install -g tdd-guard"));
-    console.log(kleur_default.dim("    xtrm install project tdd-guard\n"));
-  }
-  console.log(kleur_default.green("  \u2713 Installation complete!\n"));
-}
-async function installAllProjectSkills(projectRootOverride) {
-  const skills = await getAvailableProjectSkills();
-  if (skills.length === 0) {
-    console.log(kleur_default.dim("  No project skills available.\n"));
-    return;
-  }
-  const projectRoot = projectRootOverride ?? getProjectRoot();
-  console.log(kleur_default.bold(`
-Installing ${skills.length} project skills:
-`));
-  for (const skill of skills) {
-    console.log(kleur_default.dim(`  \u2022 ${skill}`));
-  }
-  console.log("");
-  for (const skill of skills) {
-    await installProjectSkill(skill, projectRoot);
-  }
-}
-async function runPreflight(projectRoot, opts) {
-  const repoRoot = await findRepoRoot().catch(() => projectRoot);
-  const bootstrapPlan = inventoryDeps();
-  let skillsChanges = 0;
-  try {
-    const ctx = await getContext({
-      createMissingDirs: false,
-      isGlobal: opts.global,
-      projectRoot
-      // Target project, not source repo
-    });
-    for (const target of ctx.targets) {
-      try {
-        const changeSet = await calculateDiff(repoRoot, target, false);
-        skillsChanges += Object.values(changeSet).reduce(
-          (sum, c) => sum + c.missing.length + c.outdated.length,
-          0
-        );
-      } catch {
-      }
-    }
-  } catch {
-  }
-  const needsBdInit = !await import_fs_extra16.default.pathExists(import_path17.default.join(projectRoot, ".beads"));
-  const gitnexusStatus = (0, import_child_process7.spawnSync)("gitnexus", ["status"], {
-    cwd: projectRoot,
-    encoding: "utf8",
-    timeout: 5e3
-  });
-  const gnText = `${gitnexusStatus.stdout ?? ""}
-${gitnexusStatus.stderr ?? ""}`.toLowerCase();
-  const needsGitNexus = gitnexusStatus.status !== 0 || gnText.includes("stale") || gnText.includes("not indexed") || gnText.includes("missing");
-  const detected = await detectProjectFeatures(projectRoot);
-  const projectTypes = [
-    ...detected.hasTypeScript ? ["TypeScript"] : [],
-    ...detected.hasPython ? ["Python"] : []
-  ];
-  return { projectRoot, bootstrapPlan, skillsChanges, needsBdInit, needsGitNexus, projectTypes };
-}
-function renderInitPlan(inventory) {
-  const { bootstrapPlan, skillsChanges, needsBdInit, needsGitNexus, projectTypes } = inventory;
-  console.log(kleur_default.bold("\n  xtrm init \u2014 Installation Plan"));
-  console.log(kleur_default.dim("  " + "\u2500".repeat(50)));
-  renderBootstrapPlan(bootstrapPlan);
-  renderClaudeRuntimePlanSummary();
-  console.log(kleur_default.bold("\n  Pi Runtime"));
-  console.log(kleur_default.dim("  \u21BB  extensions + packages sync"));
-  console.log(kleur_default.bold("\n  Skills"));
-  if (skillsChanges > 0) {
-    console.log(`${kleur_default.cyan("  \u2191")}  ${skillsChanges} change${skillsChanges !== 1 ? "s" : ""} pending`);
-  } else {
-    console.log(kleur_default.dim("  \u2713  already up to date"));
-  }
-  console.log(kleur_default.bold("\n  Project Bootstrap"));
-  const projActions = [
-    needsBdInit ? "bd init \u2014 initialize beads workspace" : null,
-    needsGitNexus ? "gitnexus analyze \u2014 build code index" : null,
-    "AGENTS.md + CLAUDE.md \u2014 workflow headers",
-    "project-skills \u2014 service-skills-set, quality-gates"
-  ].filter(Boolean);
-  for (const action of projActions) {
-    console.log(`${kleur_default.cyan("  \u2022")}  ${action}`);
-  }
-  console.log(kleur_default.bold("\n  Verification"));
-  console.log(kleur_default.dim("  \u2713  unified summary after execution"));
-  if (projectTypes.length > 0) {
-    console.log(kleur_default.dim(`
-  Detected: ${projectTypes.join(", ")}`));
-  }
-  console.log(kleur_default.dim("\n  " + "\u2500".repeat(50) + "\n"));
-}
-async function confirmInitPlan(yes) {
-  return confirmDestructiveAction({
-    yes,
-    message: "Proceed with xtrm init?",
-    initial: true
-  });
-}
-async function runProjectBootstrap(projectRoot) {
-  await runBdInitForProject(projectRoot);
-  await injectProjectInstructionHeaders(projectRoot);
-  await runGitNexusInitForProject(projectRoot);
-  await installAllProjectSkills(projectRoot);
-}
-async function runProjectInit(opts = {}) {
-  const { dryRun = false, yes = false } = opts;
-  const effectiveYes = yes || process.argv.includes("--yes") || process.argv.includes("-y");
-  let projectRoot;
-  try {
-    projectRoot = getProjectRoot();
-  } catch (err) {
-    console.log(kleur_default.yellow(`
-  \u26A0 Skipping project bootstrap: ${err.message}
-`));
-    return;
-  }
-  const inventory = await runPreflight(projectRoot, opts);
-  renderInitPlan(inventory);
-  if (dryRun) {
-    console.log(kleur_default.dim("  Dry run \u2014 no changes written\n"));
-    return;
-  }
-  const ok = await confirmInitPlan(effectiveYes);
-  if (!ok) {
-    console.log(kleur_default.dim("  Init cancelled.\n"));
-    return;
-  }
-  await runMachineBootstrapPhase({ dryRun: false });
-  await runClaudeRuntimeSyncPhase({ repoRoot: projectRoot, dryRun: false, isGlobal: false });
-  await runInstall({ ...opts, yes: true, backport: false, skipMachineBootstrap: true, skipClaudeRuntimeSync: true });
-  await runProjectBootstrap(projectRoot);
-  const verification = await runInitVerification(projectRoot);
-  renderVerificationSummary(verification);
-  if (verification.allPassed) {
-    console.log(kleur_default.bold("  Next steps:"));
-    console.log(kleur_default.white("    \u2022 Quality gates are active globally"));
-    console.log(kleur_default.white("    \u2022 Run `xt pi` or `xt claude` to start a worktree session"));
-    if (inventory.projectTypes.length > 0) {
-      console.log(kleur_default.white(`    \u2022 Project types: ${inventory.projectTypes.join(", ")}`));
-    }
-  } else {
-    console.log(kleur_default.bold("  Troubleshooting:"));
-    console.log(kleur_default.white("    \u2022 Re-run `xtrm init` to retry incomplete phases"));
-    console.log(kleur_default.white("    \u2022 Check individual tool status with `xt pi doctor` or `xt claude doctor`"));
-  }
-  console.log("");
-}
-async function runBdInitForProject(projectRoot) {
-  console.log(kleur_default.bold("Running beads initialization (bd init)..."));
-  const result = (0, import_child_process7.spawnSync)("bd", ["init"], {
-    cwd: projectRoot,
-    encoding: "utf8",
-    timeout: 15e3
-  });
-  if (result.error) {
-    console.log(kleur_default.yellow(`  \u26A0 Could not run bd init (${result.error.message})`));
-    return;
-  }
-  if (result.status !== 0) {
-    const text = `${result.stdout || ""}
-${result.stderr || ""}`.toLowerCase();
-    if (text.includes("already initialized")) {
-      console.log(kleur_default.dim("  \u2713 beads workspace already initialized"));
-      return;
-    }
-    if (result.stdout) process.stdout.write(result.stdout);
-    if (result.stderr) process.stderr.write(result.stderr);
-    console.log(kleur_default.yellow(`  \u26A0 bd init exited with code ${result.status}`));
-    return;
-  }
-  if (result.stdout) process.stdout.write(result.stdout);
-  if (result.stderr) process.stderr.write(result.stderr);
-}
-async function runGitNexusInitForProject(projectRoot) {
-  const gitnexusCheck = (0, import_child_process7.spawnSync)("gitnexus", ["--version"], {
-    cwd: projectRoot,
-    encoding: "utf8",
-    timeout: 5e3
-  });
-  if (gitnexusCheck.status !== 0) {
-    console.log(kleur_default.yellow("  \u26A0 gitnexus not found; skipping index bootstrap"));
-    console.log(kleur_default.dim("    Install with: npm install -g gitnexus"));
-    return;
-  }
-  console.log(kleur_default.bold("Checking GitNexus index status..."));
-  const status = (0, import_child_process7.spawnSync)("gitnexus", ["status"], {
-    cwd: projectRoot,
-    encoding: "utf8",
-    timeout: 1e4
-  });
-  const statusText = `${status.stdout || ""}
-${status.stderr || ""}`.toLowerCase();
-  const needsAnalyze = status.status !== 0 || statusText.includes("stale") || statusText.includes("not indexed") || statusText.includes("missing");
-  if (!needsAnalyze) {
-    console.log(kleur_default.dim("  \u2713 GitNexus index is ready"));
-    return;
-  }
-  console.log(kleur_default.bold("Running GitNexus indexing (gitnexus analyze)..."));
-  const analyze = (0, import_child_process7.spawnSync)("gitnexus", ["analyze"], {
-    cwd: projectRoot,
-    encoding: "utf8",
-    timeout: 12e4
-  });
-  if (analyze.status === 0) {
-    console.log(kleur_default.green("  \u2713 GitNexus index updated"));
-    return;
-  }
-  if (analyze.stdout) process.stdout.write(analyze.stdout);
-  if (analyze.stderr) process.stderr.write(analyze.stderr);
-  console.log(kleur_default.yellow(`  \u26A0 gitnexus analyze exited with code ${analyze.status}`));
-}
-async function listProjectSkills() {
-  const entries = await getAvailableProjectSkills();
-  if (entries.length === 0) {
-    console.log(kleur_default.dim("  No project skills available.\n"));
-    return;
-  }
-  const skills = [];
-  for (const entry of entries) {
-    const readmePath = import_path17.default.join(PROJECT_SKILLS_DIR, entry, "README.md");
-    let description = "No description available";
-    if (await import_fs_extra16.default.pathExists(readmePath)) {
-      const readmeContent = await import_fs_extra16.default.readFile(readmePath, "utf8");
-      description = extractReadmeDescription(readmeContent).slice(0, 80);
-    }
-    skills.push({ name: entry, description });
-  }
-  if (skills.length === 0) {
-    console.log(kleur_default.dim("  No project skills available.\n"));
-    return;
-  }
-  console.log(kleur_default.bold("\nAvailable Project Skills:\n"));
-  const Table = require_cli_table3();
-  const table = new Table({
-    head: [kleur_default.cyan("Skill"), kleur_default.cyan("Description")],
-    colWidths: [25, 60],
-    style: { head: [], border: [] }
-  });
-  for (const skill of skills) {
-    table.push([kleur_default.white(skill.name), kleur_default.dim(skill.description)]);
-  }
-  console.log(table.toString());
-  console.log(kleur_default.bold("\n\nUsage (legacy):\n"));
-  console.log(kleur_default.dim("  xtrm install project <skill-name>   Install a legacy project skill"));
-  console.log(kleur_default.dim("  xtrm install project all            Install all legacy project skills"));
-  console.log(kleur_default.dim("  xtrm install project list           List available legacy skills\n"));
-  console.log(kleur_default.bold("Preferred:\n"));
-  console.log(kleur_default.dim("  xtrm init                           Bootstrap project data for global hooks/skills\n"));
-}
-function getProjectRoot() {
-  const result = (0, import_child_process7.spawnSync)("git", ["rev-parse", "--show-toplevel"], {
-    encoding: "utf8",
-    timeout: 5e3
-  });
-  if (result.status !== 0) {
-    throw new Error("Not inside a git repository. Run this command from your target project directory.");
-  }
-  return import_path17.default.resolve(result.stdout.trim());
-}
-
-// src/commands/status.ts
-var import_prompts3 = __toESM(require_prompts3(), 1);
 
 // src/core/manifest.ts
 var import_path18 = require("path");
@@ -40860,7 +36397,7 @@ __export(external_exports, {
   check: () => check,
   cidrv4: () => cidrv42,
   cidrv6: () => cidrv62,
-  clone: () => clone2,
+  clone: () => clone,
   codec: () => codec,
   coerce: () => coerce_exports,
   config: () => config2,
@@ -41242,7 +36779,7 @@ __export(core_exports2, {
   _void: () => _void,
   _xid: () => _xid,
   _xor: () => _xor,
-  clone: () => clone2,
+  clone: () => clone,
   config: () => config2,
   createStandardJSONSchemaMethod: () => createStandardJSONSchemaMethod,
   createToJSONSchemaMethod: () => createToJSONSchemaMethod,
@@ -41266,7 +36803,7 @@ __export(core_exports2, {
   parse: () => parse2,
   parseAsync: () => parseAsync,
   prettifyError: () => prettifyError,
-  process: () => process15,
+  process: () => process10,
   regexes: () => regexes_exports,
   registry: () => registry,
   safeDecode: () => safeDecode,
@@ -41377,7 +36914,7 @@ __export(util_exports, {
   captureStackTrace: () => captureStackTrace,
   cleanEnum: () => cleanEnum,
   cleanRegex: () => cleanRegex,
-  clone: () => clone2,
+  clone: () => clone,
   cloneDef: () => cloneDef,
   createTransparentProxy: () => createTransparentProxy,
   defineLazy: () => defineLazy,
@@ -41530,10 +37067,10 @@ function mergeDefs(...defs) {
 function cloneDef(schema) {
   return mergeDefs(schema._zod.def);
 }
-function getElementAtPath(obj, path26) {
-  if (!path26)
+function getElementAtPath(obj, path29) {
+  if (!path29)
     return obj;
-  return path26.reduce((acc, key) => acc?.[key], obj);
+  return path29.reduce((acc, key) => acc?.[key], obj);
 }
 function promiseAllObject(promisesObj) {
   const keys = Object.keys(promisesObj);
@@ -41658,7 +37195,7 @@ var primitiveTypes = /* @__PURE__ */ new Set(["string", "number", "bigint", "boo
 function escapeRegex(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
-function clone2(inst, def, params) {
+function clone(inst, def, params) {
   const cl = new inst._zod.constr(def ?? inst._zod.def);
   if (!def || params?.parent)
     cl._zod.parent = inst;
@@ -41759,7 +37296,7 @@ function pick(schema, mask) {
     },
     checks: []
   });
-  return clone2(schema, def);
+  return clone(schema, def);
 }
 function omit(schema, mask) {
   const currDef = schema._zod.def;
@@ -41784,7 +37321,7 @@ function omit(schema, mask) {
     },
     checks: []
   });
-  return clone2(schema, def);
+  return clone(schema, def);
 }
 function extend(schema, shape) {
   if (!isPlainObject(shape)) {
@@ -41807,7 +37344,7 @@ function extend(schema, shape) {
       return _shape;
     }
   });
-  return clone2(schema, def);
+  return clone(schema, def);
 }
 function safeExtend(schema, shape) {
   if (!isPlainObject(shape)) {
@@ -41820,7 +37357,7 @@ function safeExtend(schema, shape) {
       return _shape;
     }
   });
-  return clone2(schema, def);
+  return clone(schema, def);
 }
 function merge(a, b) {
   const def = mergeDefs(a._zod.def, {
@@ -41835,7 +37372,7 @@ function merge(a, b) {
     checks: []
     // delete existing checks
   });
-  return clone2(a, def);
+  return clone(a, def);
 }
 function partial(Class2, schema, mask) {
   const currDef = schema._zod.def;
@@ -41873,7 +37410,7 @@ function partial(Class2, schema, mask) {
     },
     checks: []
   });
-  return clone2(schema, def);
+  return clone(schema, def);
 }
 function required(Class2, schema, mask) {
   const def = mergeDefs(schema._zod.def, {
@@ -41904,7 +37441,7 @@ function required(Class2, schema, mask) {
       return shape;
     }
   });
-  return clone2(schema, def);
+  return clone(schema, def);
 }
 function aborted(x, startIndex = 0) {
   if (x.aborted === true)
@@ -41916,11 +37453,11 @@ function aborted(x, startIndex = 0) {
   }
   return false;
 }
-function prefixIssues(path26, issues) {
+function prefixIssues(path29, issues) {
   return issues.map((iss) => {
     var _a2;
     (_a2 = iss).path ?? (_a2.path = []);
-    iss.path.unshift(path26);
+    iss.path.unshift(path29);
     return iss;
   });
 }
@@ -42085,8 +37622,8 @@ function formatError(error48, mapper = (issue2) => issue2.message) {
         let i = 0;
         while (i < issue2.path.length) {
           const el = issue2.path[i];
-          const terminal2 = i === issue2.path.length - 1;
-          if (!terminal2) {
+          const terminal = i === issue2.path.length - 1;
+          if (!terminal) {
             curr[el] = curr[el] || { _errors: [] };
           } else {
             curr[el] = curr[el] || { _errors: [] };
@@ -42103,7 +37640,7 @@ function formatError(error48, mapper = (issue2) => issue2.message) {
 }
 function treeifyError(error48, mapper = (issue2) => issue2.message) {
   const result = { errors: [] };
-  const processError = (error49, path26 = []) => {
+  const processError = (error49, path29 = []) => {
     var _a2, _b;
     for (const issue2 of error49.issues) {
       if (issue2.code === "invalid_union" && issue2.errors.length) {
@@ -42113,7 +37650,7 @@ function treeifyError(error48, mapper = (issue2) => issue2.message) {
       } else if (issue2.code === "invalid_element") {
         processError({ issues: issue2.issues }, issue2.path);
       } else {
-        const fullpath = [...path26, ...issue2.path];
+        const fullpath = [...path29, ...issue2.path];
         if (fullpath.length === 0) {
           result.errors.push(mapper(issue2));
           continue;
@@ -42122,7 +37659,7 @@ function treeifyError(error48, mapper = (issue2) => issue2.message) {
         let i = 0;
         while (i < fullpath.length) {
           const el = fullpath[i];
-          const terminal2 = i === fullpath.length - 1;
+          const terminal = i === fullpath.length - 1;
           if (typeof el === "string") {
             curr.properties ?? (curr.properties = {});
             (_a2 = curr.properties)[el] ?? (_a2[el] = { errors: [] });
@@ -42132,7 +37669,7 @@ function treeifyError(error48, mapper = (issue2) => issue2.message) {
             (_b = curr.items)[el] ?? (_b[el] = { errors: [] });
             curr = curr.items[el];
           }
-          if (terminal2) {
+          if (terminal) {
             curr.errors.push(mapper(issue2));
           }
           i++;
@@ -42145,8 +37682,8 @@ function treeifyError(error48, mapper = (issue2) => issue2.message) {
 }
 function toDotPath(_path) {
   const segs = [];
-  const path26 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
-  for (const seg of path26) {
+  const path29 = _path.map((seg) => typeof seg === "object" ? seg.key : seg);
+  for (const seg of path29) {
     if (typeof seg === "number")
       segs.push(`[${seg}]`);
     else if (typeof seg === "symbol")
@@ -51628,13 +47165,13 @@ function _stringbool(Classes, _params) {
   return codec2;
 }
 // @__NO_SIDE_EFFECTS__
-function _stringFormat(Class2, format2, fnOrRegex, _params = {}) {
+function _stringFormat(Class2, format, fnOrRegex, _params = {}) {
   const params = normalizeParams(_params);
   const def = {
     ...normalizeParams(_params),
     check: "string_format",
     type: "string",
-    format: format2,
+    format,
     fn: typeof fnOrRegex === "function" ? fnOrRegex : (val) => fnOrRegex.test(val),
     ...params
   };
@@ -51667,7 +47204,7 @@ function initializeContext(params) {
     external: params?.external ?? void 0
   };
 }
-function process15(schema, ctx, _params = { path: [], schemaPath: [] }) {
+function process10(schema, ctx, _params = { path: [], schemaPath: [] }) {
   var _a2;
   const def = schema._zod.def;
   const seen = ctx.seen.get(schema);
@@ -51704,7 +47241,7 @@ function process15(schema, ctx, _params = { path: [], schemaPath: [] }) {
     if (parent) {
       if (!result.ref)
         result.ref = parent;
-      process15(parent, ctx, params);
+      process10(parent, ctx, params);
       ctx.seen.get(parent).isParent = true;
     }
   }
@@ -51985,14 +47522,14 @@ function isTransforming(_schema, _ctx) {
 }
 var createToJSONSchemaMethod = (schema, processors = {}) => (params) => {
   const ctx = initializeContext({ ...params, processors });
-  process15(schema, ctx);
+  process10(schema, ctx);
   extractDefs(ctx, schema);
   return finalize(ctx, schema);
 };
 var createStandardJSONSchemaMethod = (schema, io, processors = {}) => (params) => {
   const { libraryOptions, target } = params ?? {};
   const ctx = initializeContext({ ...libraryOptions ?? {}, target, io, processors });
-  process15(schema, ctx);
+  process10(schema, ctx);
   extractDefs(ctx, schema);
   return finalize(ctx, schema);
 };
@@ -52009,16 +47546,16 @@ var formatMap = {
 var stringProcessor = (schema, ctx, _json, _params) => {
   const json2 = _json;
   json2.type = "string";
-  const { minimum, maximum, format: format2, patterns, contentEncoding } = schema._zod.bag;
+  const { minimum, maximum, format, patterns, contentEncoding } = schema._zod.bag;
   if (typeof minimum === "number")
     json2.minLength = minimum;
   if (typeof maximum === "number")
     json2.maxLength = maximum;
-  if (format2) {
-    json2.format = formatMap[format2] ?? format2;
+  if (format) {
+    json2.format = formatMap[format] ?? format;
     if (json2.format === "")
       delete json2.format;
-    if (format2 === "time") {
+    if (format === "time") {
       delete json2.format;
     }
   }
@@ -52040,8 +47577,8 @@ var stringProcessor = (schema, ctx, _json, _params) => {
 };
 var numberProcessor = (schema, ctx, _json, _params) => {
   const json2 = _json;
-  const { minimum, maximum, format: format2, multipleOf, exclusiveMaximum, exclusiveMinimum } = schema._zod.bag;
-  if (typeof format2 === "string" && format2.includes("int"))
+  const { minimum, maximum, format, multipleOf, exclusiveMaximum, exclusiveMinimum } = schema._zod.bag;
+  if (typeof format === "string" && format.includes("int"))
     json2.type = "integer";
   else
     json2.type = "number";
@@ -52249,7 +47786,7 @@ var arrayProcessor = (schema, ctx, _json, params) => {
   if (typeof maximum === "number")
     json2.maxItems = maximum;
   json2.type = "array";
-  json2.items = process15(def.element, ctx, { ...params, path: [...params.path, "items"] });
+  json2.items = process10(def.element, ctx, { ...params, path: [...params.path, "items"] });
 };
 var objectProcessor = (schema, ctx, _json, params) => {
   const json2 = _json;
@@ -52258,7 +47795,7 @@ var objectProcessor = (schema, ctx, _json, params) => {
   json2.properties = {};
   const shape = def.shape;
   for (const key in shape) {
-    json2.properties[key] = process15(shape[key], ctx, {
+    json2.properties[key] = process10(shape[key], ctx, {
       ...params,
       path: [...params.path, "properties", key]
     });
@@ -52281,7 +47818,7 @@ var objectProcessor = (schema, ctx, _json, params) => {
     if (ctx.io === "output")
       json2.additionalProperties = false;
   } else if (def.catchall) {
-    json2.additionalProperties = process15(def.catchall, ctx, {
+    json2.additionalProperties = process10(def.catchall, ctx, {
       ...params,
       path: [...params.path, "additionalProperties"]
     });
@@ -52290,7 +47827,7 @@ var objectProcessor = (schema, ctx, _json, params) => {
 var unionProcessor = (schema, ctx, json2, params) => {
   const def = schema._zod.def;
   const isExclusive = def.inclusive === false;
-  const options = def.options.map((x, i) => process15(x, ctx, {
+  const options = def.options.map((x, i) => process10(x, ctx, {
     ...params,
     path: [...params.path, isExclusive ? "oneOf" : "anyOf", i]
   }));
@@ -52302,11 +47839,11 @@ var unionProcessor = (schema, ctx, json2, params) => {
 };
 var intersectionProcessor = (schema, ctx, json2, params) => {
   const def = schema._zod.def;
-  const a = process15(def.left, ctx, {
+  const a = process10(def.left, ctx, {
     ...params,
     path: [...params.path, "allOf", 0]
   });
-  const b = process15(def.right, ctx, {
+  const b = process10(def.right, ctx, {
     ...params,
     path: [...params.path, "allOf", 1]
   });
@@ -52323,11 +47860,11 @@ var tupleProcessor = (schema, ctx, _json, params) => {
   json2.type = "array";
   const prefixPath = ctx.target === "draft-2020-12" ? "prefixItems" : "items";
   const restPath = ctx.target === "draft-2020-12" ? "items" : ctx.target === "openapi-3.0" ? "items" : "additionalItems";
-  const prefixItems = def.items.map((x, i) => process15(x, ctx, {
+  const prefixItems = def.items.map((x, i) => process10(x, ctx, {
     ...params,
     path: [...params.path, prefixPath, i]
   }));
-  const rest = def.rest ? process15(def.rest, ctx, {
+  const rest = def.rest ? process10(def.rest, ctx, {
     ...params,
     path: [...params.path, restPath, ...ctx.target === "openapi-3.0" ? [def.items.length] : []]
   }) : null;
@@ -52367,7 +47904,7 @@ var recordProcessor = (schema, ctx, _json, params) => {
   const keyBag = keyType._zod.bag;
   const patterns = keyBag?.patterns;
   if (def.mode === "loose" && patterns && patterns.size > 0) {
-    const valueSchema = process15(def.valueType, ctx, {
+    const valueSchema = process10(def.valueType, ctx, {
       ...params,
       path: [...params.path, "patternProperties", "*"]
     });
@@ -52377,12 +47914,12 @@ var recordProcessor = (schema, ctx, _json, params) => {
     }
   } else {
     if (ctx.target === "draft-07" || ctx.target === "draft-2020-12") {
-      json2.propertyNames = process15(def.keyType, ctx, {
+      json2.propertyNames = process10(def.keyType, ctx, {
         ...params,
         path: [...params.path, "propertyNames"]
       });
     }
-    json2.additionalProperties = process15(def.valueType, ctx, {
+    json2.additionalProperties = process10(def.valueType, ctx, {
       ...params,
       path: [...params.path, "additionalProperties"]
     });
@@ -52397,7 +47934,7 @@ var recordProcessor = (schema, ctx, _json, params) => {
 };
 var nullableProcessor = (schema, ctx, json2, params) => {
   const def = schema._zod.def;
-  const inner = process15(def.innerType, ctx, params);
+  const inner = process10(def.innerType, ctx, params);
   const seen = ctx.seen.get(schema);
   if (ctx.target === "openapi-3.0") {
     seen.ref = def.innerType;
@@ -52408,20 +47945,20 @@ var nullableProcessor = (schema, ctx, json2, params) => {
 };
 var nonoptionalProcessor = (schema, ctx, _json, params) => {
   const def = schema._zod.def;
-  process15(def.innerType, ctx, params);
+  process10(def.innerType, ctx, params);
   const seen = ctx.seen.get(schema);
   seen.ref = def.innerType;
 };
 var defaultProcessor = (schema, ctx, json2, params) => {
   const def = schema._zod.def;
-  process15(def.innerType, ctx, params);
+  process10(def.innerType, ctx, params);
   const seen = ctx.seen.get(schema);
   seen.ref = def.innerType;
   json2.default = JSON.parse(JSON.stringify(def.defaultValue));
 };
 var prefaultProcessor = (schema, ctx, json2, params) => {
   const def = schema._zod.def;
-  process15(def.innerType, ctx, params);
+  process10(def.innerType, ctx, params);
   const seen = ctx.seen.get(schema);
   seen.ref = def.innerType;
   if (ctx.io === "input")
@@ -52429,7 +47966,7 @@ var prefaultProcessor = (schema, ctx, json2, params) => {
 };
 var catchProcessor = (schema, ctx, json2, params) => {
   const def = schema._zod.def;
-  process15(def.innerType, ctx, params);
+  process10(def.innerType, ctx, params);
   const seen = ctx.seen.get(schema);
   seen.ref = def.innerType;
   let catchValue;
@@ -52443,32 +47980,32 @@ var catchProcessor = (schema, ctx, json2, params) => {
 var pipeProcessor = (schema, ctx, _json, params) => {
   const def = schema._zod.def;
   const innerType = ctx.io === "input" ? def.in._zod.def.type === "transform" ? def.out : def.in : def.out;
-  process15(innerType, ctx, params);
+  process10(innerType, ctx, params);
   const seen = ctx.seen.get(schema);
   seen.ref = innerType;
 };
 var readonlyProcessor = (schema, ctx, json2, params) => {
   const def = schema._zod.def;
-  process15(def.innerType, ctx, params);
+  process10(def.innerType, ctx, params);
   const seen = ctx.seen.get(schema);
   seen.ref = def.innerType;
   json2.readOnly = true;
 };
 var promiseProcessor = (schema, ctx, _json, params) => {
   const def = schema._zod.def;
-  process15(def.innerType, ctx, params);
+  process10(def.innerType, ctx, params);
   const seen = ctx.seen.get(schema);
   seen.ref = def.innerType;
 };
 var optionalProcessor = (schema, ctx, _json, params) => {
   const def = schema._zod.def;
-  process15(def.innerType, ctx, params);
+  process10(def.innerType, ctx, params);
   const seen = ctx.seen.get(schema);
   seen.ref = def.innerType;
 };
 var lazyProcessor = (schema, ctx, _json, params) => {
   const innerType = schema._zod.innerType;
-  process15(innerType, ctx, params);
+  process10(innerType, ctx, params);
   const seen = ctx.seen.get(schema);
   seen.ref = innerType;
 };
@@ -52520,7 +48057,7 @@ function toJSONSchema(input, params) {
     const defs = {};
     for (const entry of registry2._idmap.entries()) {
       const [_, schema] = entry;
-      process15(schema, ctx2);
+      process10(schema, ctx2);
     }
     const schemas = {};
     const external = {
@@ -52543,7 +48080,7 @@ function toJSONSchema(input, params) {
     return { schemas };
   }
   const ctx = initializeContext({ ...params, processors: allProcessors });
-  process15(input, ctx);
+  process10(input, ctx);
   extractDefs(ctx, input);
   return finalize(ctx, input);
 }
@@ -52601,7 +48138,7 @@ var JSONSchemaGenerator = class {
    * This must be called before emit().
    */
   process(schema, _params = { path: [], schemaPath: [] }) {
-    return process15(schema, this.ctx, _params);
+    return process10(schema, this.ctx, _params);
   }
   /**
    * Emit the final JSON Schema after processing.
@@ -52948,7 +48485,7 @@ var ZodType = /* @__PURE__ */ $constructor("ZodType", (inst, def) => {
     });
   };
   inst.with = inst.check;
-  inst.clone = (def2, params) => clone2(inst, def2, params);
+  inst.clone = (def2, params) => clone(inst, def2, params);
   inst.brand = () => inst;
   inst.register = ((reg, meta3) => {
     reg.add(inst, meta3);
@@ -53230,8 +48767,8 @@ var ZodCustomStringFormat = /* @__PURE__ */ $constructor("ZodCustomStringFormat"
   $ZodCustomStringFormat.init(inst, def);
   ZodStringFormat.init(inst, def);
 });
-function stringFormat(format2, fnOrRegex, _params = {}) {
-  return _stringFormat(ZodCustomStringFormat, format2, fnOrRegex, _params);
+function stringFormat(format, fnOrRegex, _params = {}) {
+  return _stringFormat(ZodCustomStringFormat, format, fnOrRegex, _params);
 }
 function hostname2(_params) {
   return _stringFormat(ZodCustomStringFormat, "hostname", regexes_exports.hostname, _params);
@@ -53241,11 +48778,11 @@ function hex2(_params) {
 }
 function hash(alg, params) {
   const enc = params?.enc ?? "hex";
-  const format2 = `${alg}_${enc}`;
-  const regex2 = regexes_exports[format2];
+  const format = `${alg}_${enc}`;
+  const regex2 = regexes_exports[format];
   if (!regex2)
-    throw new Error(`Unrecognized hash format: ${format2}`);
-  return _stringFormat(ZodCustomStringFormat, format2, regex2, params);
+    throw new Error(`Unrecognized hash format: ${format}`);
+  return _stringFormat(ZodCustomStringFormat, format, regex2, params);
 }
 var ZodNumber = /* @__PURE__ */ $constructor("ZodNumber", (inst, def) => {
   $ZodNumber.init(inst, def);
@@ -53561,7 +49098,7 @@ function record(keyType, valueType, params) {
   });
 }
 function partialRecord(keyType, valueType, params) {
-  const k = clone2(keyType);
+  const k = clone(keyType);
   k._zod.values = void 0;
   return new ZodRecord({
     type: "record",
@@ -54123,13 +49660,13 @@ function resolveRef(ref, ctx) {
   if (!ref.startsWith("#")) {
     throw new Error("External $ref is not supported, only local refs (#/...) are allowed");
   }
-  const path26 = ref.slice(1).split("/").filter(Boolean);
-  if (path26.length === 0) {
+  const path29 = ref.slice(1).split("/").filter(Boolean);
+  if (path29.length === 0) {
     return ctx.rootSchema;
   }
   const defsKey = ctx.version === "draft-2020-12" ? "$defs" : "definitions";
-  if (path26[0] === defsKey) {
-    const key = path26[1];
+  if (path29[0] === defsKey) {
+    const key = path29[1];
     if (!key || !ctx.defs[key]) {
       throw new Error(`Reference not found: ${ref}`);
     }
@@ -54221,52 +49758,52 @@ function convertBaseSchema(schema, ctx) {
     case "string": {
       let stringSchema = z.string();
       if (schema.format) {
-        const format2 = schema.format;
-        if (format2 === "email") {
+        const format = schema.format;
+        if (format === "email") {
           stringSchema = stringSchema.check(z.email());
-        } else if (format2 === "uri" || format2 === "uri-reference") {
+        } else if (format === "uri" || format === "uri-reference") {
           stringSchema = stringSchema.check(z.url());
-        } else if (format2 === "uuid" || format2 === "guid") {
+        } else if (format === "uuid" || format === "guid") {
           stringSchema = stringSchema.check(z.uuid());
-        } else if (format2 === "date-time") {
+        } else if (format === "date-time") {
           stringSchema = stringSchema.check(z.iso.datetime());
-        } else if (format2 === "date") {
+        } else if (format === "date") {
           stringSchema = stringSchema.check(z.iso.date());
-        } else if (format2 === "time") {
+        } else if (format === "time") {
           stringSchema = stringSchema.check(z.iso.time());
-        } else if (format2 === "duration") {
+        } else if (format === "duration") {
           stringSchema = stringSchema.check(z.iso.duration());
-        } else if (format2 === "ipv4") {
+        } else if (format === "ipv4") {
           stringSchema = stringSchema.check(z.ipv4());
-        } else if (format2 === "ipv6") {
+        } else if (format === "ipv6") {
           stringSchema = stringSchema.check(z.ipv6());
-        } else if (format2 === "mac") {
+        } else if (format === "mac") {
           stringSchema = stringSchema.check(z.mac());
-        } else if (format2 === "cidr") {
+        } else if (format === "cidr") {
           stringSchema = stringSchema.check(z.cidrv4());
-        } else if (format2 === "cidr-v6") {
+        } else if (format === "cidr-v6") {
           stringSchema = stringSchema.check(z.cidrv6());
-        } else if (format2 === "base64") {
+        } else if (format === "base64") {
           stringSchema = stringSchema.check(z.base64());
-        } else if (format2 === "base64url") {
+        } else if (format === "base64url") {
           stringSchema = stringSchema.check(z.base64url());
-        } else if (format2 === "e164") {
+        } else if (format === "e164") {
           stringSchema = stringSchema.check(z.e164());
-        } else if (format2 === "jwt") {
+        } else if (format === "jwt") {
           stringSchema = stringSchema.check(z.jwt());
-        } else if (format2 === "emoji") {
+        } else if (format === "emoji") {
           stringSchema = stringSchema.check(z.emoji());
-        } else if (format2 === "nanoid") {
+        } else if (format === "nanoid") {
           stringSchema = stringSchema.check(z.nanoid());
-        } else if (format2 === "cuid") {
+        } else if (format === "cuid") {
           stringSchema = stringSchema.check(z.cuid());
-        } else if (format2 === "cuid2") {
+        } else if (format === "cuid2") {
           stringSchema = stringSchema.check(z.cuid2());
-        } else if (format2 === "ulid") {
+        } else if (format === "ulid") {
           stringSchema = stringSchema.check(z.ulid());
-        } else if (format2 === "xid") {
+        } else if (format === "xid") {
           stringSchema = stringSchema.check(z.xid());
-        } else if (format2 === "ksuid") {
+        } else if (format === "ksuid") {
           stringSchema = stringSchema.check(z.ksuid());
         }
       }
@@ -54574,9 +50111,9 @@ function getManifestPath(projectDir) {
 }
 
 // src/commands/status.ts
-var import_fs_extra17 = __toESM(require_lib(), 1);
+var import_fs_extra19 = __toESM(require_lib(), 1);
 var import_path19 = __toESM(require("path"), 1);
-function formatTargetLabel2(target) {
+function formatTargetLabel(target) {
   const normalized = target.replace(/\\/g, "/").toLowerCase();
   if (normalized.endsWith("/.agents/skills") || normalized.includes("/.agents/skills/")) return "~/.agents/skills";
   if (normalized.endsWith("/.claude") || normalized.includes("/.claude/")) return "~/.claude";
@@ -54600,7 +50137,7 @@ function createStatusCommand() {
     const candidates = getCandidatePaths();
     const targets = [];
     for (const c of candidates) {
-      if (await import_fs_extra17.default.pathExists(c.path)) targets.push(c.path);
+      if (await import_fs_extra19.default.pathExists(c.path)) targets.push(c.path);
     }
     if (targets.length === 0) {
       console.log(kleur_default.yellow("\n  No agent environments found (~/.claude, ~/.agents/skills)\n"));
@@ -54611,8 +50148,8 @@ function createStatusCommand() {
       const manifestPath = getManifestPath(target);
       let lastSync = null;
       try {
-        if (await import_fs_extra17.default.pathExists(manifestPath)) {
-          const manifest = await import_fs_extra17.default.readJson(manifestPath);
+        if (await import_fs_extra19.default.pathExists(manifestPath)) {
+          const manifest = await import_fs_extra19.default.readJson(manifestPath);
           if (manifest.lastSync) lastSync = manifest.lastSync;
         }
       } catch {
@@ -54622,7 +50159,7 @@ function createStatusCommand() {
         (sum, c) => sum + c.missing.length + c.outdated.length + c.drifted.length,
         0
       );
-      results.push({ path: target, name: formatTargetLabel2(target), lastSync, changes: changeSet, totalChanges });
+      results.push({ path: target, name: formatTargetLabel(target), lastSync, changes: changeSet, totalChanges });
     }
     if (json2) {
       console.log(JSON.stringify({ targets: results }, null, 2));
@@ -54748,7 +50285,7 @@ function createHelpCommand() {
       "      2. Plan          \u2014 show what will change",
       "      3. Confirm       \u2014 single gate before all mutations",
       "      4. Machine       \u2014 install system tools (bd, dolt, bv, pi, pnpm)",
-      "      5. Claude        \u2014 xtrm-tools plugin + official plugins",
+      "      5. Claude        \u2014 .xtrm/hooks wiring into .claude/settings.json",
       "      6. Pi            \u2014 extensions + packages sync",
       "      7. Project       \u2014 bd init, GitNexus index, AGENTS.md/CLAUDE.md",
       "      8. Verify        \u2014 unified outcome summary",
@@ -54793,7 +50330,7 @@ function createHelpCommand() {
       "  xt claude [name]",
       "    Launch Claude in a sandboxed xt/<name> worktree.",
       "  xt claude install [--dry-run] [--yes/-y]",
-      "    Install/refresh xtrm Claude plugin + official plugins.",
+      "    Install/refresh .xtrm hook wiring in Claude settings.json.",
       "  xt claude status | xt claude doctor | xt claude reload",
       "",
       "  xt pi [name]",
@@ -54841,9 +50378,9 @@ function createHelpCommand() {
 }
 
 // src/commands/clean.ts
-var import_fs_extra18 = __toESM(require_lib(), 1);
+var import_fs_extra20 = __toESM(require_lib(), 1);
 var import_path20 = __toESM(require("path"), 1);
-var import_os7 = require("os");
+var import_os6 = require("os");
 var CANONICAL_HOOKS = /* @__PURE__ */ new Set([
   "using-xtrm-reminder.mjs",
   "beads-gate-core.mjs",
@@ -54905,18 +50442,18 @@ var IGNORED_ITEMS2 = /* @__PURE__ */ new Set([
   "node_modules"
 ]);
 async function cleanHooks(dryRun) {
-  const hooksDir = import_path20.default.join((0, import_os7.homedir)(), ".claude", "hooks");
+  const hooksDir = import_path20.default.join((0, import_os6.homedir)(), ".claude", "hooks");
   const removed = [];
   const cache = [];
-  if (!await import_fs_extra18.default.pathExists(hooksDir)) {
+  if (!await import_fs_extra20.default.pathExists(hooksDir)) {
     return { removed, cache };
   }
-  const entries = await import_fs_extra18.default.readdir(hooksDir);
+  const entries = await import_fs_extra20.default.readdir(hooksDir);
   for (const entry of entries) {
     if (IGNORED_ITEMS2.has(entry)) {
       if (!dryRun) {
         const fullPath2 = import_path20.default.join(hooksDir, entry);
-        await import_fs_extra18.default.remove(fullPath2);
+        await import_fs_extra20.default.remove(fullPath2);
       }
       cache.push(entry);
       continue;
@@ -54925,10 +50462,10 @@ async function cleanHooks(dryRun) {
       continue;
     }
     const fullPath = import_path20.default.join(hooksDir, entry);
-    const stat = await import_fs_extra18.default.stat(fullPath);
+    const stat = await import_fs_extra20.default.stat(fullPath);
     if (stat.isFile() || stat.isDirectory() && IGNORED_ITEMS2.has(entry)) {
       if (!dryRun) {
-        await import_fs_extra18.default.remove(fullPath);
+        await import_fs_extra20.default.remove(fullPath);
       }
       removed.push(entry);
     }
@@ -54936,12 +50473,12 @@ async function cleanHooks(dryRun) {
   return { removed, cache };
 }
 async function cleanSkills(dryRun) {
-  const skillsDir = import_path20.default.join((0, import_os7.homedir)(), ".agents", "skills");
+  const skillsDir = import_path20.default.join((0, import_os6.homedir)(), ".agents", "skills");
   const removed = [];
-  if (!await import_fs_extra18.default.pathExists(skillsDir)) {
+  if (!await import_fs_extra20.default.pathExists(skillsDir)) {
     return removed;
   }
-  const entries = await import_fs_extra18.default.readdir(skillsDir);
+  const entries = await import_fs_extra20.default.readdir(skillsDir);
   for (const entry of entries) {
     if (IGNORED_ITEMS2.has(entry)) {
       continue;
@@ -54953,10 +50490,10 @@ async function cleanSkills(dryRun) {
       continue;
     }
     const fullPath = import_path20.default.join(skillsDir, entry);
-    const stat = await import_fs_extra18.default.stat(fullPath);
+    const stat = await import_fs_extra20.default.stat(fullPath);
     if (stat.isDirectory()) {
       if (!dryRun) {
-        await import_fs_extra18.default.remove(fullPath);
+        await import_fs_extra20.default.remove(fullPath);
       }
       removed.push(entry);
     }
@@ -54964,14 +50501,14 @@ async function cleanSkills(dryRun) {
   return removed;
 }
 async function cleanOrphanedHookEntries(dryRun, repoRoot) {
-  const settingsPath = import_path20.default.join((0, import_os7.homedir)(), ".claude", "settings.json");
+  const settingsPath = import_path20.default.join((0, import_os6.homedir)(), ".claude", "settings.json");
   const removed = [];
-  if (!await import_fs_extra18.default.pathExists(settingsPath)) {
+  if (!await import_fs_extra20.default.pathExists(settingsPath)) {
     return removed;
   }
   let settings = {};
   try {
-    settings = await import_fs_extra18.default.readJson(settingsPath);
+    settings = await import_fs_extra20.default.readJson(settingsPath);
   } catch {
     return removed;
   }
@@ -54989,8 +50526,8 @@ async function cleanOrphanedHookEntries(dryRun, repoRoot) {
   if (repoRoot) {
     const hooksJsonPath = import_path20.default.join(repoRoot, "config", "hooks.json");
     try {
-      if (await import_fs_extra18.default.pathExists(hooksJsonPath)) {
-        const hooksJson = await import_fs_extra18.default.readJson(hooksJsonPath);
+      if (await import_fs_extra20.default.pathExists(hooksJsonPath)) {
+        const hooksJson = await import_fs_extra20.default.readJson(hooksJsonPath);
         for (const [event, entries] of Object.entries(hooksJson.hooks ?? {})) {
           for (const entry of entries) {
             const script = entry.script;
@@ -55052,7 +50589,7 @@ async function cleanOrphanedHookEntries(dryRun, repoRoot) {
     }
   }
   if (modified && !dryRun) {
-    await import_fs_extra18.default.writeJson(settingsPath, settings, { spaces: 2 });
+    await import_fs_extra20.default.writeJson(settingsPath, settings, { spaces: 2 });
   }
   return removed;
 }
@@ -55147,7 +50684,7 @@ function createCleanCommand() {
 // src/commands/end.ts
 var import_node_child_process7 = require("child_process");
 var import_node_fs5 = require("fs");
-var import_node_path6 = require("path");
+var import_node_path8 = require("path");
 function git(args, cwd) {
   const r = (0, import_node_child_process7.spawnSync)("git", args, { cwd, encoding: "utf8", stdio: "pipe" });
   return { ok: r.status === 0, out: (r.stdout ?? "").trim(), err: (r.stderr ?? "").trim() };
@@ -55163,15 +50700,15 @@ function npm(args, cwd) {
 function resolveMainRepoRoot(cwd) {
   const commonDirResult = git(["rev-parse", "--git-common-dir"], cwd);
   if (commonDirResult.ok && commonDirResult.out) {
-    const commonDir = (0, import_node_path6.isAbsolute)(commonDirResult.out) ? commonDirResult.out : (0, import_node_path6.resolve)(cwd, commonDirResult.out);
-    return commonDir.endsWith("/.git") || commonDir.endsWith("\\.git") ? (0, import_node_path6.dirname)(commonDir) : commonDir;
+    const commonDir = (0, import_node_path8.isAbsolute)(commonDirResult.out) ? commonDirResult.out : (0, import_node_path8.resolve)(cwd, commonDirResult.out);
+    return commonDir.endsWith("/.git") || commonDir.endsWith("\\.git") ? (0, import_node_path8.dirname)(commonDir) : commonDir;
   }
   const fallback = git(["rev-parse", "--show-toplevel"], cwd);
   return fallback.ok && fallback.out ? fallback.out : cwd;
 }
 function clearStatuslineClaim(repoRoot) {
   try {
-    const claimFile = (0, import_node_path6.join)(repoRoot, ".xtrm", "statusline-claim");
+    const claimFile = (0, import_node_path8.join)(repoRoot, ".xtrm", "statusline-claim");
     if ((0, import_node_fs5.existsSync)(claimFile)) (0, import_node_fs5.unlinkSync)(claimFile);
   } catch {
   }
@@ -55532,7 +51069,7 @@ function createEndCommand() {
 // src/commands/worktree.ts
 var import_node_child_process8 = require("child_process");
 var import_node_fs6 = require("fs");
-var import_node_path7 = require("path");
+var import_node_path9 = require("path");
 function git2(args, cwd) {
   const r = (0, import_node_child_process8.spawnSync)("git", args, { cwd, encoding: "utf8", stdio: "pipe" });
   return {
@@ -55587,7 +51124,7 @@ function detectNestedParents(paths) {
   for (const childPath of sorted) {
     for (const parentPath of sorted) {
       if (childPath === parentPath) continue;
-      if (childPath.startsWith(`${parentPath}${import_node_path7.sep}`)) {
+      if (childPath.startsWith(`${parentPath}${import_node_path9.sep}`)) {
         nested.set(childPath, parentPath);
         break;
       }
@@ -55608,7 +51145,7 @@ function listXtWorktrees(repoRoot) {
   }));
   for (const wt of worktrees) {
     try {
-      const metaFile = (0, import_node_fs6.existsSync)((0, import_node_path7.join)(wt.path, ".xtrm", "session-meta.json")) ? (0, import_node_path7.join)(wt.path, ".xtrm", "session-meta.json") : (0, import_node_path7.join)(wt.path, ".session-meta.json");
+      const metaFile = (0, import_node_fs6.existsSync)((0, import_node_path9.join)(wt.path, ".xtrm", "session-meta.json")) ? (0, import_node_path9.join)(wt.path, ".xtrm", "session-meta.json") : (0, import_node_path9.join)(wt.path, ".session-meta.json");
       const raw = (0, import_node_fs6.readFileSync)(metaFile, "utf8");
       const meta3 = JSON.parse(raw);
       wt.runtime = meta3.runtime;
@@ -55631,15 +51168,15 @@ function listXtWorktrees(repoRoot) {
   return worktrees;
 }
 function getManagedWorktreeRoot(repoRoot) {
-  return (0, import_node_path7.join)(repoRoot, ".xtrm", "worktrees");
+  return (0, import_node_path9.join)(repoRoot, ".xtrm", "worktrees");
 }
 function listOrphanManagedDirs(repoRoot) {
   const managedRoot = getManagedWorktreeRoot(repoRoot);
   if (!(0, import_node_fs6.existsSync)(managedRoot)) return [];
-  const activePaths = new Set(parseGitWorktreeList(repoRoot).map((wt) => (0, import_node_path7.resolve)(wt.path)));
+  const activePaths = new Set(parseGitWorktreeList(repoRoot).map((wt) => (0, import_node_path9.resolve)(wt.path)));
   const orphans = [];
   for (const entry of (0, import_node_fs6.readdirSync)(managedRoot)) {
-    const fullPath = (0, import_node_path7.join)(managedRoot, entry);
+    const fullPath = (0, import_node_path9.join)(managedRoot, entry);
     let isDirectory = false;
     try {
       isDirectory = (0, import_node_fs6.statSync)(fullPath).isDirectory();
@@ -55647,7 +51184,7 @@ function listOrphanManagedDirs(repoRoot) {
       continue;
     }
     if (!isDirectory) continue;
-    if (!activePaths.has((0, import_node_path7.resolve)(fullPath))) {
+    if (!activePaths.has((0, import_node_path9.resolve)(fullPath))) {
       orphans.push(fullPath);
     }
   }
@@ -55697,8 +51234,8 @@ function removeWorktreeEntry(repoRoot, worktreePath) {
 function getRepoRoot(cwd) {
   const commonDirResult = git2(["rev-parse", "--git-common-dir"], cwd);
   if (commonDirResult.ok && commonDirResult.out) {
-    const commonDir = (0, import_node_path7.isAbsolute)(commonDirResult.out) ? commonDirResult.out : (0, import_node_path7.resolve)(cwd, commonDirResult.out);
-    return commonDir.endsWith("/.git") || commonDir.endsWith("\\.git") ? (0, import_node_path7.dirname)(commonDir) : commonDir;
+    const commonDir = (0, import_node_path9.isAbsolute)(commonDirResult.out) ? commonDirResult.out : (0, import_node_path9.resolve)(cwd, commonDirResult.out);
+    return commonDir.endsWith("/.git") || commonDir.endsWith("\\.git") ? (0, import_node_path9.dirname)(commonDir) : commonDir;
   }
   const fallback = git2(["rev-parse", "--show-toplevel"], cwd);
   return fallback.ok && fallback.out ? fallback.out : cwd;
@@ -55890,7 +51427,7 @@ function createWorktreeCommand() {
 }
 function clearStatuslineClaim2(repoRoot) {
   try {
-    const claimFile = (0, import_node_path7.join)(repoRoot, ".xtrm", "statusline-claim");
+    const claimFile = (0, import_node_path9.join)(repoRoot, ".xtrm", "statusline-claim");
     if ((0, import_node_fs6.existsSync)(claimFile)) (0, import_node_fs6.unlinkSync)(claimFile);
   } catch {
   }
@@ -55975,11 +51512,11 @@ async function pickRuntime() {
 }
 
 // src/commands/docs.ts
-var import_fs_extra21 = __toESM(require_lib(), 1);
+var import_fs_extra23 = __toESM(require_lib(), 1);
 var import_path23 = __toESM(require("path"), 1);
 
 // src/utils/docs-scanner.ts
-var import_fs_extra19 = __toESM(require_lib(), 1);
+var import_fs_extra21 = __toESM(require_lib(), 1);
 var import_path21 = __toESM(require("path"), 1);
 function parseFrontmatter(content) {
   const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
@@ -56022,7 +51559,7 @@ async function scanDocFiles(repoRoot, options = {}) {
   const { dir, pattern, filter, recursive = true } = options;
   let gitignorePatterns = [];
   try {
-    const raw = await import_fs_extra19.default.readFile(import_path21.default.join(repoRoot, ".gitignore"), "utf8");
+    const raw = await import_fs_extra21.default.readFile(import_path21.default.join(repoRoot, ".gitignore"), "utf8");
     gitignorePatterns = parseGitignorePatterns(raw);
   } catch {
   }
@@ -56031,7 +51568,7 @@ async function scanDocFiles(repoRoot, options = {}) {
   async function walk(dirPath) {
     let entries;
     try {
-      entries = await import_fs_extra19.default.readdir(dirPath, { withFileTypes: true });
+      entries = await import_fs_extra21.default.readdir(dirPath, { withFileTypes: true });
     } catch {
       return;
     }
@@ -56050,8 +51587,8 @@ async function scanDocFiles(repoRoot, options = {}) {
       if (pattern && !entry.name.includes(pattern)) continue;
       let docEntry;
       try {
-        const stat = await import_fs_extra19.default.stat(fullPath);
-        const content = await import_fs_extra19.default.readFile(fullPath, "utf8");
+        const stat = await import_fs_extra21.default.stat(fullPath);
+        const content = await import_fs_extra21.default.readFile(fullPath, "utf8");
         const frontmatter = parseFrontmatter(content);
         if (filter && (!frontmatter || frontmatter[filter.field] !== filter.value)) continue;
         docEntry = {
@@ -56080,13 +51617,13 @@ async function scanDocFiles(repoRoot, options = {}) {
 }
 
 // src/utils/docs-cache.ts
-var import_fs_extra20 = __toESM(require_lib(), 1);
+var import_fs_extra22 = __toESM(require_lib(), 1);
 var import_path22 = __toESM(require("path"), 1);
 var CACHE_PATH = import_path22.default.join(".xtrm", "cache", "docs-list.json");
 var DEFAULT_TTL_MS = 6e4;
 async function readCache(repoRoot) {
   try {
-    const raw = await import_fs_extra20.default.readFile(import_path22.default.join(repoRoot, CACHE_PATH), "utf8");
+    const raw = await import_fs_extra22.default.readFile(import_path22.default.join(repoRoot, CACHE_PATH), "utf8");
     const parsed = JSON.parse(raw);
     parsed.entries = parsed.entries.map((e) => ({
       ...e,
@@ -56099,13 +51636,13 @@ async function readCache(repoRoot) {
 }
 async function writeCache(repoRoot, entries) {
   const cachePath = import_path22.default.join(repoRoot, CACHE_PATH);
-  await import_fs_extra20.default.ensureDir(import_path22.default.dirname(cachePath));
+  await import_fs_extra22.default.ensureDir(import_path22.default.dirname(cachePath));
   const cache = {
     timestamp: Date.now(),
     repoRoot,
     entries
   };
-  await import_fs_extra20.default.writeFile(cachePath, JSON.stringify(cache, null, 2), "utf8");
+  await import_fs_extra22.default.writeFile(cachePath, JSON.stringify(cache, null, 2), "utf8");
 }
 function isCacheValid(cache, entries, ttlMs = DEFAULT_TTL_MS) {
   if (Date.now() - cache.timestamp > ttlMs) return false;
@@ -56316,8 +51853,8 @@ var REQUIRED_FIELDS = /* @__PURE__ */ new Set(["title", "type", "status", "updat
 async function collectDocFiles(repoRoot, filterPattern) {
   const candidates = [];
   const docsDir = import_path23.default.join(repoRoot, "docs");
-  if (await import_fs_extra21.default.pathExists(docsDir)) {
-    const entries = await import_fs_extra21.default.readdir(docsDir);
+  if (await import_fs_extra23.default.pathExists(docsDir)) {
+    const entries = await import_fs_extra23.default.readdir(docsDir);
     for (const entry of entries) {
       if (entry.endsWith(".md")) candidates.push(import_path23.default.join(docsDir, entry));
     }
@@ -56330,8 +51867,8 @@ async function collectDocFiles(repoRoot, filterPattern) {
     }
     let entry;
     try {
-      const stat = await import_fs_extra21.default.stat(filePath);
-      const content = await import_fs_extra21.default.readFile(filePath, "utf8");
+      const stat = await import_fs_extra23.default.stat(filePath);
+      const content = await import_fs_extra23.default.readFile(filePath, "utf8");
       const frontmatter = parseFrontmatter(content);
       entry = {
         filePath,
@@ -56539,7 +52076,7 @@ function createDocsCommand() {
       const docContents = /* @__PURE__ */ new Map();
       for (const doc of docEntries) {
         try {
-          const content = await import_fs_extra21.default.readFile(doc.filePath, "utf8");
+          const content = await import_fs_extra23.default.readFile(doc.filePath, "utf8");
           docContents.set(doc.relativePath, content);
         } catch {
         }
@@ -56586,7 +52123,7 @@ function createDocsCommand() {
         if (!fm || !fm[field]) {
           if (opts.fix && field === "updated_at") {
             try {
-              const content = await import_fs_extra21.default.readFile(entry.filePath, "utf8");
+              const content = await import_fs_extra23.default.readFile(entry.filePath, "utf8");
               const today = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
               let fixed;
               if (content.startsWith("---")) {
@@ -56599,7 +52136,7 @@ updated_at: ${today}
 
 ${content}`;
               }
-              await import_fs_extra21.default.writeFile(entry.filePath, fixed, "utf8");
+              await import_fs_extra23.default.writeFile(entry.filePath, fixed, "utf8");
               autoFixed.push(`${rel}: added updated_at: ${today}`);
             } catch {
               findings.push({ severity: "error", file: rel, message: `Missing required field: ${field}` });
@@ -56635,7 +52172,7 @@ ${content}`;
         });
       }
       try {
-        const content = await import_fs_extra21.default.readFile(entry.filePath, "utf8");
+        const content = await import_fs_extra23.default.readFile(entry.filePath, "utf8");
         const linkRe = /\[([^\]]+)\]\(([^)]+)\)/g;
         let m;
         while ((m = linkRe.exec(content)) !== null) {
@@ -56700,7 +52237,7 @@ ${content}`;
 // src/commands/memory.ts
 var import_node_child_process12 = require("child_process");
 var import_node_fs7 = require("fs");
-var import_node_path8 = require("path");
+var import_node_path10 = require("path");
 function createMemoryCommand() {
   return new Command("memory").description("Manage project memory (.xtrm/memory.md)").addCommand(createMemoryUpdateCommand());
 }
@@ -56730,7 +52267,7 @@ function createMemoryUpdateCommand() {
     const prompt = opts.dryRun ? "Dry run: classify all memories and show the full report. Do not call bd forget or write .xtrm/memory.md." : "Run the full memory processor workflow.";
     const args = ["run", "memory-processor", "--prompt", prompt];
     if (!opts.beads) args.push("--no-beads");
-    const memPath = (0, import_node_path8.join)(cwd, ".xtrm", "memory.md");
+    const memPath = (0, import_node_path10.join)(cwd, ".xtrm", "memory.md");
     const spinnerText = opts.dryRun ? "Analyzing memories..." : `${(0, import_node_fs7.existsSync)(memPath) ? "Updating" : "Creating"} .xtrm/memory.md...`;
     console.log(kleur_default.bold(`
   xt memory update${opts.dryRun ? " (dry run)" : ""}
@@ -56751,7 +52288,7 @@ function createMemoryUpdateCommand() {
 // src/commands/merge.ts
 var import_node_child_process13 = require("child_process");
 var import_node_fs8 = require("fs");
-var import_node_path9 = require("path");
+var import_node_path11 = require("path");
 function createMergeCommand() {
   return new Command("merge").description("Drain the xt worktree PR merge queue via the xt-merge specialist").option("--dry-run", "List queue and CI status without merging", false).option("-y, --yes", "Skip confirmation prompt", false).option("--no-beads", "Skip creating a tracking bead for this run", false).action(async (opts) => {
     const cwd = process.cwd();
@@ -56811,7 +52348,7 @@ function createMergeCommand() {
     console.log(kleur_default.bold(`
   xt merge${opts.dryRun ? " (dry run)" : ""}
 `));
-    const jobsDir = (0, import_node_path9.join)(cwd, ".specialists", "jobs");
+    const jobsDir = (0, import_node_path11.join)(cwd, ".specialists", "jobs");
     let jobsBefore;
     try {
       jobsBefore = new Set(
@@ -56851,7 +52388,7 @@ function createMergeCommand() {
 // src/commands/debug.ts
 var import_node_child_process14 = require("child_process");
 var import_node_fs9 = require("fs");
-var import_node_path10 = require("path");
+var import_node_path12 = require("path");
 var KIND_LABELS = {
   "session.start": { label: "SESS+", color: kleur_default.green },
   "session.end": { label: "SESS-", color: kleur_default.white },
@@ -56951,14 +52488,14 @@ function buildDetail(event) {
   }
   if (event.kind === "tool.call") {
     if (d?.cmd) parts.push(kleur_default.dim(d.cmd.slice(0, 72)));
-    if (d?.file) parts.push(kleur_default.dim((0, import_node_path10.basename)(d.file)));
+    if (d?.file) parts.push(kleur_default.dim((0, import_node_path12.basename)(d.file)));
     if (d?.pattern) parts.push(kleur_default.dim(`/${d.pattern}/`));
     if (d?.url) parts.push(kleur_default.dim(d.url.slice(0, 72)));
     if (d?.query) parts.push(kleur_default.dim(d.query.slice(0, 72)));
     if (d?.prompt) parts.push(kleur_default.dim(d.prompt.slice(0, 72)));
   } else {
     if (event.issue_id) parts.push(kleur_default.yellow(event.issue_id));
-    if (d?.file) parts.push(kleur_default.dim((0, import_node_path10.basename)(d.file)));
+    if (d?.file) parts.push(kleur_default.dim((0, import_node_path12.basename)(d.file)));
     if (d?.reason_code) parts.push(kleur_default.dim(`[${d.reason_code}]`));
     if (event.worktree) parts.push(kleur_default.dim(`wt:${event.worktree}`));
   }
@@ -56975,8 +52512,8 @@ function formatLine(event, colorMap) {
 function findDbPath(cwd) {
   let dir = cwd;
   for (let i = 0; i < 10; i++) {
-    if ((0, import_node_fs9.existsSync)((0, import_node_path10.join)(dir, ".beads"))) return (0, import_node_path10.join)(dir, ".xtrm", "debug.db");
-    const parent = (0, import_node_path10.join)(dir, "..");
+    if ((0, import_node_fs9.existsSync)((0, import_node_path12.join)(dir, ".beads"))) return (0, import_node_path12.join)(dir, ".xtrm", "debug.db");
+    const parent = (0, import_node_path12.join)(dir, "..");
     if (parent === dir) break;
     dir = parent;
   }
@@ -57051,7 +52588,7 @@ function createDebugCommand() {
 }
 
 // src/commands/report.ts
-var import_fs_extra22 = __toESM(require_lib(), 1);
+var import_fs_extra24 = __toESM(require_lib(), 1);
 var import_path24 = __toESM(require("path"), 1);
 var import_node_child_process15 = require("child_process");
 function run2(cmd, args, cwd) {
@@ -57150,17 +52687,17 @@ function collectOpenIssues(cwd) {
 }
 function collectSpecialistJobs(cwd) {
   const jobsDir = import_path24.default.join(cwd, ".specialists", "jobs");
-  if (!import_fs_extra22.default.pathExistsSync(jobsDir)) return [];
+  if (!import_fs_extra24.default.pathExistsSync(jobsDir)) return [];
   const jobs = [];
   try {
-    const dirs = import_fs_extra22.default.readdirSync(jobsDir).filter(
-      (d) => import_fs_extra22.default.statSync(import_path24.default.join(jobsDir, d)).isDirectory()
+    const dirs = import_fs_extra24.default.readdirSync(jobsDir).filter(
+      (d) => import_fs_extra24.default.statSync(import_path24.default.join(jobsDir, d)).isDirectory()
     );
     for (const dir of dirs) {
       const statusFile = import_path24.default.join(jobsDir, dir, "status.json");
-      if (!import_fs_extra22.default.pathExistsSync(statusFile)) continue;
+      if (!import_fs_extra24.default.pathExistsSync(statusFile)) continue;
       try {
-        const data = JSON.parse(import_fs_extra22.default.readFileSync(statusFile, "utf8"));
+        const data = JSON.parse(import_fs_extra24.default.readFileSync(statusFile, "utf8"));
         jobs.push({
           name: dir,
           status: data.status ?? "unknown",
@@ -57347,28 +52884,28 @@ async function generateReport(cwd) {
     memories
   });
   const reportsDir = import_path24.default.join(cwd, ".xtrm", "reports");
-  await import_fs_extra22.default.ensureDir(reportsDir);
+  await import_fs_extra24.default.ensureDir(reportsDir);
   const filename = `${date5}-${sessionHash}.md`;
   const filePath = import_path24.default.join(reportsDir, filename);
-  await import_fs_extra22.default.writeFile(filePath, skeleton, "utf8");
+  await import_fs_extra24.default.writeFile(filePath, skeleton, "utf8");
   return filePath;
 }
 async function showReport(cwd, target) {
   const reportsDir = import_path24.default.join(cwd, ".xtrm", "reports");
-  if (!await import_fs_extra22.default.pathExists(reportsDir)) {
+  if (!await import_fs_extra24.default.pathExists(reportsDir)) {
     console.error(kleur_default.red("\n  No reports found at .xtrm/reports/\n"));
     process.exit(1);
   }
   let filePath;
   if (target) {
-    if (await import_fs_extra22.default.pathExists(target)) {
+    if (await import_fs_extra24.default.pathExists(target)) {
       filePath = target;
     } else {
       const candidate = import_path24.default.join(reportsDir, target.endsWith(".md") ? target : `${target}.md`);
-      if (await import_fs_extra22.default.pathExists(candidate)) {
+      if (await import_fs_extra24.default.pathExists(candidate)) {
         filePath = candidate;
       } else {
-        const files = (await import_fs_extra22.default.readdir(reportsDir)).filter((f) => f.endsWith(".md") && f.includes(target));
+        const files = (await import_fs_extra24.default.readdir(reportsDir)).filter((f) => f.endsWith(".md") && f.includes(target));
         if (files.length === 0) {
           console.error(kleur_default.red(`
   No report matching "${target}"
@@ -57379,14 +52916,14 @@ async function showReport(cwd, target) {
       }
     }
   } else {
-    const files = (await import_fs_extra22.default.readdir(reportsDir)).filter((f) => f.endsWith(".md")).sort();
+    const files = (await import_fs_extra24.default.readdir(reportsDir)).filter((f) => f.endsWith(".md")).sort();
     if (files.length === 0) {
       console.error(kleur_default.red("\n  No reports found\n"));
       process.exit(1);
     }
     filePath = import_path24.default.join(reportsDir, files[files.length - 1]);
   }
-  const content = await import_fs_extra22.default.readFile(filePath, "utf8");
+  const content = await import_fs_extra24.default.readFile(filePath, "utf8");
   const rel = import_path24.default.relative(cwd, filePath);
   console.log(kleur_default.dim(`
   ${rel}
@@ -57395,11 +52932,11 @@ async function showReport(cwd, target) {
 }
 async function listReports(cwd) {
   const reportsDir = import_path24.default.join(cwd, ".xtrm", "reports");
-  if (!await import_fs_extra22.default.pathExists(reportsDir)) {
+  if (!await import_fs_extra24.default.pathExists(reportsDir)) {
     console.log(kleur_default.dim("\n  No reports directory at .xtrm/reports/\n"));
     return;
   }
-  const files = (await import_fs_extra22.default.readdir(reportsDir)).filter((f) => f.endsWith(".md")).sort();
+  const files = (await import_fs_extra24.default.readdir(reportsDir)).filter((f) => f.endsWith(".md")).sort();
   if (files.length === 0) {
     console.log(kleur_default.dim("\n  No reports found\n"));
     return;
@@ -57409,7 +52946,7 @@ async function listReports(cwd) {
 `));
   for (const file2 of files) {
     const filePath = import_path24.default.join(reportsDir, file2);
-    const content = await import_fs_extra22.default.readFile(filePath, "utf8");
+    const content = await import_fs_extra24.default.readFile(filePath, "utf8");
     const fmMatch = content.match(/^---\n([\s\S]*?)\n---/);
     let summary = "";
     if (fmMatch) {
@@ -57427,10 +52964,10 @@ async function listReports(cwd) {
 async function diffReports(cwd, a, b) {
   const reportsDir = import_path24.default.join(cwd, ".xtrm", "reports");
   const resolve4 = async (ref) => {
-    if (await import_fs_extra22.default.pathExists(ref)) return ref;
+    if (await import_fs_extra24.default.pathExists(ref)) return ref;
     const candidate = import_path24.default.join(reportsDir, ref.endsWith(".md") ? ref : `${ref}.md`);
-    if (await import_fs_extra22.default.pathExists(candidate)) return candidate;
-    const files = (await import_fs_extra22.default.readdir(reportsDir)).filter((f) => f.endsWith(".md") && f.includes(ref));
+    if (await import_fs_extra24.default.pathExists(candidate)) return candidate;
+    const files = (await import_fs_extra24.default.readdir(reportsDir)).filter((f) => f.endsWith(".md") && f.includes(ref));
     if (files.length > 0) return import_path24.default.join(reportsDir, files[files.length - 1]);
     console.error(kleur_default.red(`  No report matching "${ref}"`));
     process.exit(1);
@@ -57466,6 +53003,133 @@ function createReportCommand() {
   });
   cmd.action(() => cmd.help());
   return cmd;
+}
+
+// src/commands/skills.ts
+var import_fs_extra25 = __toESM(require_lib(), 1);
+var import_node_os7 = __toESM(require("os"), 1);
+var import_node_path13 = __toESM(require("path"), 1);
+function resolveScope(opts) {
+  if (opts.global && opts.local) {
+    throw new Error("Choose exactly one scope: --global or --local");
+  }
+  return opts.global ? "global" : "local";
+}
+async function resolveScopeRoot(scope) {
+  if (scope === "global") {
+    return import_node_os7.default.homedir();
+  }
+  return findRepoRoot();
+}
+async function resolveDefaultSkillsRoot(scopeRoot) {
+  const registryRoot = import_node_path13.default.join(scopeRoot, ".xtrm", "skills", "default");
+  if (!await import_fs_extra25.default.pathExists(registryRoot)) {
+    return null;
+  }
+  return { root: registryRoot, source: "registry" };
+}
+async function collectDefaultSkills(root, source) {
+  const names = await import_fs_extra25.default.readdir(root);
+  const skills = [];
+  for (const name of names) {
+    const skillPath = import_node_path13.default.join(root, name);
+    const stat = await import_fs_extra25.default.stat(skillPath).catch(() => null);
+    if (!stat?.isDirectory()) {
+      continue;
+    }
+    const skillFile = import_node_path13.default.join(skillPath, "SKILL.md");
+    if (!await import_fs_extra25.default.pathExists(skillFile)) {
+      continue;
+    }
+    skills.push({
+      name,
+      source,
+      tier: "default",
+      path: skillPath
+    });
+  }
+  return skills.sort((a, b) => a.name.localeCompare(b.name));
+}
+function printSkills(skills) {
+  if (skills.length === 0) {
+    console.log(kleur_default.yellow("\n  No skills found.\n"));
+    return;
+  }
+  for (const skill of skills) {
+    console.log(`  ${kleur_default.bold(skill.name)}  ${kleur_default.gray(`[${skill.tier}]`)}  ${kleur_default.cyan(skill.source)}  ${kleur_default.dim(skill.path)}`);
+  }
+  console.log(`
+  ${sym.ok} ${skills.length} skill${skills.length === 1 ? "" : "s"}
+`);
+}
+function printPackStub(action, pack) {
+  const verb = action === "enable" ? "Enabling" : "Disabling";
+  console.log(`
+  ${sym.warn} ${verb} pack '${pack}' is not available yet.`);
+  console.log(kleur_default.gray("  Pack management is coming in v0.9.\n"));
+}
+function createSkillsCommand() {
+  const skills = new Command("skills").description("List installed skills and manage skill packs");
+  skills.command("list").description("Show installed skills with source and tier").option("--global", "Use user-global scope (~/.xtrm/skills)", false).option("--local", "Use project-local scope (./.xtrm/skills)", false).option("--json", "Output JSON", false).action(async (opts) => {
+    try {
+      const scope = resolveScope(opts);
+      const scopeRoot = await resolveScopeRoot(scope);
+      const resolvedRoot = await resolveDefaultSkillsRoot(scopeRoot);
+      const skillsList = resolvedRoot ? await collectDefaultSkills(resolvedRoot.root, resolvedRoot.source) : [];
+      if (opts.json) {
+        console.log(JSON.stringify({
+          scope,
+          root: resolvedRoot?.root ?? null,
+          source: resolvedRoot?.source ?? null,
+          skills: skillsList
+        }, null, 2));
+        return;
+      }
+      console.log(kleur_default.bold(`
+  xt skills list (${scope})
+`));
+      printSkills(skillsList);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(kleur_default.red(`
+  ${sym.fail} ${msg}
+`));
+      process.exit(1);
+    }
+  });
+  skills.command("enable <pack>").description("Enable a skill pack (stub in v0.8)").option("--global", "Use user-global scope (~/.xtrm/skills)", false).option("--local", "Use project-local scope (./.xtrm/skills)", false).option("--json", "Output JSON", false).action(async (pack, opts) => {
+    try {
+      const scope = resolveScope(opts);
+      if (opts.json) {
+        console.log(JSON.stringify({ scope, pack, action: "enable", status: "not-implemented", version: "v0.8" }, null, 2));
+        return;
+      }
+      printPackStub("enable", pack);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(kleur_default.red(`
+  ${sym.fail} ${msg}
+`));
+      process.exit(1);
+    }
+  });
+  skills.command("disable <pack>").description("Disable a skill pack (stub in v0.8)").option("--global", "Use user-global scope (~/.xtrm/skills)", false).option("--local", "Use project-local scope (./.xtrm/skills)", false).option("--json", "Output JSON", false).action(async (pack, opts) => {
+    try {
+      const scope = resolveScope(opts);
+      if (opts.json) {
+        console.log(JSON.stringify({ scope, pack, action: "disable", status: "not-implemented", version: "v0.8" }, null, 2));
+        return;
+      }
+      printPackStub("disable", pack);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(kleur_default.red(`
+  ${sym.fail} ${msg}
+`));
+      process.exit(1);
+    }
+  });
+  return skills;
 }
 
 // src/utils/banner.ts
@@ -57517,7 +53181,7 @@ function selectTier() {
   if (hasTruecolor()) return 0;
   return 1;
 }
-function delay2(ms) {
+function delay(ms) {
   return new Promise((r) => setTimeout(r, ms));
 }
 async function typewriterTagline(text) {
@@ -57527,7 +53191,7 @@ async function typewriterTagline(text) {
   process.stdout.write(prefix);
   for (const ch of text) {
     process.stdout.write(ch);
-    await delay2(CHAR_DELAY);
+    await delay(CHAR_DELAY);
   }
   process.stdout.write(suffix + "\n");
 }
@@ -57621,7 +53285,7 @@ async function printBanner(version3) {
 // src/index.ts
 var version2 = "0.0.0";
 try {
-  version2 = JSON.parse((0, import_node_fs10.readFileSync)((0, import_node_path11.resolve)(__dirname, "../package.json"), "utf8")).version;
+  version2 = JSON.parse((0, import_node_fs10.readFileSync)((0, import_node_path14.resolve)(__dirname, "../package.json"), "utf8")).version;
 } catch {
 }
 var program2 = new Command();
@@ -57651,6 +53315,7 @@ program2.addCommand(createMemoryCommand());
 program2.addCommand(createMergeCommand());
 program2.addCommand(createDebugCommand());
 program2.addCommand(createReportCommand());
+program2.addCommand(createSkillsCommand());
 program2.addCommand(createHelpCommand());
 program2.command("update").description("Reinstall and sync all tools to latest (alias: xtrm init --prune -y)").action(async () => {
   await printBanner(version2);

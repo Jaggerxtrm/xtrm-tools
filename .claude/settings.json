@@ -181,5 +181,16 @@
         }
       ]
     }
+  ],
+  "PostToolUse": [
+    {
+      "matcher": "",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node .claude/hooks/specialists-complete.mjs"
+        }
+      ]
+    }
   ]
 }

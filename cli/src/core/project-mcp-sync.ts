@@ -2,7 +2,6 @@ import fs from 'fs-extra';
 import path from 'node:path';
 
 const CORE_MCP_CONFIG_FILE = 'mcp_servers.json';
-const OPTIONAL_MCP_CONFIG_FILE = 'mcp_servers_optional.json';
 const PROJECT_MCP_FILE = '.mcp.json';
 
 interface McpServerMap {
@@ -97,7 +96,6 @@ export async function syncProjectMcpConfig(projectRoot: string, options: SyncPro
     const { dryRun = false } = options;
     const xtrmConfigDir = path.join(projectRoot, '.xtrm', 'config');
     const coreConfigPath = path.join(xtrmConfigDir, CORE_MCP_CONFIG_FILE);
-    const optionalConfigPath = path.join(xtrmConfigDir, OPTIONAL_MCP_CONFIG_FILE);
     const targetMcpPath = path.join(projectRoot, PROJECT_MCP_FILE);
 
     if (!await fs.pathExists(coreConfigPath)) {
@@ -111,9 +109,9 @@ export async function syncProjectMcpConfig(projectRoot: string, options: SyncPro
     }
 
     const coreConfig = await fs.readJson(coreConfigPath) as McpConfigFile;
-    const optionalConfig = await fs.pathExists(optionalConfigPath)
-        ? (await fs.readJson(optionalConfigPath) as McpConfigFile)
-        : { mcpServers: {} };
+    // Optional servers are not merged by default — they pollute context.
+    // Users can manually add them to .mcp.json if needed.
+    const optionalConfig: McpConfigFile = { mcpServers: {} };
 
     const canonicalServers = mergeCanonicalServers(readMcpServers(coreConfig), readMcpServers(optionalConfig));
     const missingEnvWarnings = getMissingEnvWarnings(canonicalServers);

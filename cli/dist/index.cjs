@@ -46239,7 +46239,6 @@ function renderVerificationSummary(result) {
 var import_fs_extra18 = __toESM(require_lib(), 1);
 var import_node_path9 = __toESM(require("path"), 1);
 var CORE_MCP_CONFIG_FILE = "mcp_servers.json";
-var OPTIONAL_MCP_CONFIG_FILE = "mcp_servers_optional.json";
 var PROJECT_MCP_FILE = ".mcp.json";
 function sanitizeServerConfig(server) {
   const entries = Object.entries(server).filter(([key]) => !key.startsWith("_"));
@@ -46293,7 +46292,6 @@ async function syncProjectMcpConfig(projectRoot, options = {}) {
   const { dryRun = false } = options;
   const xtrmConfigDir = import_node_path9.default.join(projectRoot, ".xtrm", "config");
   const coreConfigPath = import_node_path9.default.join(xtrmConfigDir, CORE_MCP_CONFIG_FILE);
-  const optionalConfigPath = import_node_path9.default.join(xtrmConfigDir, OPTIONAL_MCP_CONFIG_FILE);
   const targetMcpPath = import_node_path9.default.join(projectRoot, PROJECT_MCP_FILE);
   if (!await import_fs_extra18.default.pathExists(coreConfigPath)) {
     return {
@@ -46305,7 +46303,7 @@ async function syncProjectMcpConfig(projectRoot, options = {}) {
     };
   }
   const coreConfig = await import_fs_extra18.default.readJson(coreConfigPath);
-  const optionalConfig = await import_fs_extra18.default.pathExists(optionalConfigPath) ? await import_fs_extra18.default.readJson(optionalConfigPath) : { mcpServers: {} };
+  const optionalConfig = { mcpServers: {} };
   const canonicalServers = mergeCanonicalServers(readMcpServers(coreConfig), readMcpServers(optionalConfig));
   const missingEnvWarnings = getMissingEnvWarnings(canonicalServers);
   const hasExistingMcp = await import_fs_extra18.default.pathExists(targetMcpPath);

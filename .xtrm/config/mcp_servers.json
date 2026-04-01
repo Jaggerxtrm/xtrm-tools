@@ -6,34 +6,6 @@
     "version": "2.0.0"
   },
   "mcpServers": {
-    "serena": {
-      "type": "stdio",
-      "command": "uvx",
-      "args": [
-        "--from",
-        "git+https://github.com/oraios/serena",
-        "serena",
-        "start-mcp-server",
-        "--context",
-        "ide-assistant"
-      ],
-      "env": {},
-      "_notes": {
-        "project": "Auto-detected from current working directory during usage",
-        "prerequisite": "Requires uvx (uv package manager)"
-      }
-    },
-    "context7": {
-      "type": "http",
-      "url": "https://mcp.context7.com/mcp",
-      "headers": {
-        "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY}"
-      },
-      "_notes": {
-        "auth": "Requires API key - user will be prompted during sync",
-        "env_file": "Store key in .env or ~/.jaggers/.env"
-      }
-    },
     "github-grep": {
       "type": "http",
       "url": "https://mcp.grep.app"

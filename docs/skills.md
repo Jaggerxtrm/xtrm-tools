@@ -3,8 +3,8 @@ title: Skills Catalog
 scope: skills
 category: overview
 version: 2.0.0
-updated: 2026-04-01
-synced_at: de153d07
+updated: 2026-04-02
+synced_at: 0e711e76
 description: "Skills tier architecture: default skills, optional packs, user packs, and xt skills CLI"
 source_of_truth_for:
   - ".xtrm/skills/**"
@@ -31,10 +31,12 @@ Skills are organized into a **three-tier architecture** under `.xtrm/skills/`. T
 | Tier | Location | Mutability | Purpose |
 |---|---|---|---|
 | **default** | `.xtrm/skills/default/` | Read-only (managed) | Baseline skills bundled with xtrm |
-| **optional** | `.xtrm/skills/optional/` | Managed packs | Add-on packs (future) |
+| **optional** | `.xtrm/skills/optional/` | Managed packs | Add-on packs (installed on demand) |
 | **user** | `.xtrm/skills/user/packs/` | User-writable | Custom skills and overlays |
 
 The `default/` directory is a symlink to the repo `skills/` directory, providing a live view without copying.
+
+Current optional pack catalog includes `research-methods`, `code-quality`, `security-ops`, `data-engineering`, and `architecture-design` (installed in commit `0e711e76`).
 
 ### Runtime Active Views
 

@@ -103,6 +103,8 @@ xt merge
 
 ### Skills
 
+Skills are resolved through a three-tier registry in `.xtrm/skills/` (`default` + `optional` + `user`). Optional packs are installed on demand; today’s catalog additions are `research-methods`, `code-quality`, `security-ops`, `data-engineering`, and `architecture-design`.
+
 Skills are organized into two categories: **xtrm workflow** skills built specifically for the xtrm stack, and **general-purpose** expert skills that work in any project.
 
 #### xtrm Workflow Skills

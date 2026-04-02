@@ -3,8 +3,8 @@ title: Skills Registry Exploration
 scope: skills-registry
 category: architecture
 version: 1.2.0
-updated: 2026-04-01
-synced_at: de153d07
+updated: 2026-04-02
+synced_at: 0e711e76
 description: "Skills registry design: three-tier model, CLI contract, migration plan"
 source_of_truth_for:
   - "cli/src/commands/skills.ts"
@@ -74,7 +74,7 @@ This section is normative for runtime-registry-first behavior.
 | Tier | Source | Required | Mutability | Asset contract |
 |---|---|---|---|---|
 | `default` | npm/plugin bundle shipped with xtrm | Yes | Read-only (managed) | Baseline skill set and manifests required for core runtime workflows |
-| `extra` | Optional skill packs installed/enabled by user | No | Managed (replaceable via pack lifecycle) | Add-on packs, domain bundles, and optional specialist sets |
+| `extra` | Optional skill packs installed/enabled by user | No | Managed (replaceable via pack lifecycle) | Add-on packs (e.g. research-methods, code-quality, security-ops, data-engineering, architecture-design), domain bundles, and optional specialist sets |
 | `user` | Local author-owned overlays in project/user scope | No | User-writable | Overrides/patches/custom skills that are not overwritten by managed sync |
 
 ### Required registry schema
@@ -155,6 +155,7 @@ Validation rules:
 
 - Populated by explicit install/enable actions (`xt skills enable <pack>`).
 - Contains optional packs that can add new skills or provide managed replacements of default definitions.
+- Current installed domain bundles: `research-methods`, `code-quality`, `security-ops`, `data-engineering`, `architecture-design`.
 - Pack records must include pack id, version, provenance, and compatibility constraints.
 - Can be added/removed without mutating `default`.
 

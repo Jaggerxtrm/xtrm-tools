@@ -222,6 +222,20 @@ Enriches tool output with knowledge graph context via `gitnexus augment`.
 
 ### Skills Tier Architecture (`.xtrm/skills/`)
 
+Three-tier layout: `default` (bundled baseline), `optional` (managed packs), and `user` (local overlays).
+
+#### Optional Packs (installed)
+
+| Pack | Skills |
+|------|--------|
+| `research-methods` | `brainstorming`, `academic-researcher`, `deep-research`, `fact-checker` |
+| `code-quality` | `systematic-debugging`, `verification-before-completion`, `code-review-excellence`, `multi-reviewer-patterns` |
+| `security-ops` | `security-auditor` |
+| `data-engineering` | `data-analyst` |
+| `architecture-design` | `architecture-patterns`, `subagent-driven-development`, `prompt-engineering-patterns` |
+
+Enable with `xt skills enable <pack-name>`.
+
 | Skill | Purpose |
 |-------|---------|
 | `using-xtrm` | Session operating manual — read at session start |

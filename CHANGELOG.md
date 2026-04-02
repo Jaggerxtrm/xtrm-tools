@@ -79,6 +79,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Optional skill packs installed (commit `0e711e76`)**: added domain bundles under `.xtrm/skills/optional/` — `research-methods` (`brainstorming`, `academic-researcher`, `deep-research`, `fact-checker`), `code-quality` (`systematic-debugging`, `verification-before-completion`, `code-review-excellence`, `multi-reviewer-patterns`), `security-ops` (`security-auditor`), `data-engineering` (`data-analyst`), `architecture-design` (`architecture-patterns`, `subagent-driven-development`, `prompt-engineering-patterns`).
 - gitnexus hook now fires on Grep/Read/Glob tools (parity with Pi); quality-check covers .cjs/.mjs files; quality gate env pre-check at SessionStart; policies.md rewritten from scaffold; using-xtrm SKILL.md rewritten; worktree-session migrated to bd worktree; branch state + xt end reminders in gate messages
 - `xtrm docs cross-check` command suite documentation across README, guides, CLI help, and detailed docs reference
 - docs: sync skills CLI docs — add xt skills to cli-architecture.md, update hooks.md dual-path resolution, mark Phase v0.8 DELIVERED in skills-registry-exploration.md (xtrm-ghgi)

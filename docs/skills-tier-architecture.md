@@ -3,7 +3,8 @@ title: Skills Tier Architecture
 scope: skills-tier
 category: architecture
 version: 1.0.0
-updated: 2026-04-01
+updated: 2026-04-02
+synced_at: 0e711e76
 description: "Three-tier skills model: default, optional packs, and user packs with runtime active views"
 source_of_truth_for:
   - ".xtrm/skills/**"
@@ -34,7 +35,7 @@ Skills are organized into a **three-tier model** under `.xtrm/skills/`:
 | Tier | Source | Mutability | Purpose |
 |---|---|---|---|
 | `default` | npm/plugin bundle shipped with xtrm | Read-only (managed) | Baseline skill set for core workflows |
-| `optional` | Optional packs installed by user | Managed (replaceable) | Add-on packs, domain bundles |
+| `optional` | Optional packs installed by user | Managed (replaceable) | Add-on packs and domain bundles (e.g. research-methods, code-quality, security-ops, data-engineering, architecture-design) |
 | `user` | Local author-owned overlays | User-writable | Custom skills, overrides |
 
 Each runtime (Claude, Pi) has an **active view** under `.xtrm/skills/active/{claude,pi}/` containing symlinks to the resolved skill set.
@@ -50,7 +51,7 @@ Each runtime (Claude, Pi) has an **active view** under `.xtrm/skills/active/{cla
 │
 ├── optional/                  # Tier 2: managed optional packs
 │   ├── README.txt             # Empty placeholder + docs
-│   └── <pack>/                # Optional packs (if installed)
+│   └── <pack>/                # Optional packs (e.g. research-methods, code-quality, security-ops)
 │       ├── PACK.json
 │       └── <skill>/SKILL.md
 │
@@ -95,6 +96,8 @@ Contains baseline skills required for bootstrapping and core workflows: `using-x
 - **Discovery**: Direct child directories with `PACK.json`
 
 Contains add-on packs that extend or replace default definitions. Packs can provide new skills or managed replacements.
+
+Current installed domain packs: `research-methods`, `code-quality`, `security-ops`, `data-engineering`, and `architecture-design`.
 
 ### user (Tier 3)
 

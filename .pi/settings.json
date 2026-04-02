@@ -3,7 +3,7 @@
     "../.xtrm/extensions"
   ],
   "skills": [
-    "../.xtrm/skills/default"
+    "../.xtrm/skills/active/pi"
   ],
   "packages": [
     "npm:pi-gitnexus",

@@ -6,29 +6,17 @@
           {
             "type": "command",
             "command": "node \"/home/dawid/projects/xtrm-tools/.xtrm/hooks/using-xtrm-reminder.mjs\""
-          }
-        ]
-      },
-      {
-        "hooks": [
+          },
           {
             "type": "command",
             "command": "node \"/home/dawid/projects/xtrm-tools/.xtrm/hooks/beads-compact-restore.mjs\"",
             "timeout": 5000
-          }
-        ]
-      },
-      {
-        "hooks": [
+          },
           {
             "type": "command",
             "command": "node \"/home/dawid/projects/xtrm-tools/.xtrm/hooks/quality-check-env.mjs\"",
             "timeout": 5000
-          }
-        ]
-      },
-      {
-        "hooks": [
+          },
           {
             "type": "command",
             "command": "node \"/home/dawid/projects/xtrm-tools/.xtrm/hooks/xtrm-session-logger.mjs\"",
@@ -39,76 +27,66 @@
     ],
     "PreToolUse": [
       {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit|mcp__serena__rename_symbol|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol",
         "hooks": [
           {
             "type": "command",
             "command": "node \"/home/dawid/projects/xtrm-tools/.xtrm/hooks/worktree-boundary.mjs\"",
             "timeout": 2000
-          }
-        ],
-        "matcher": "Edit|Write|MultiEdit|NotebookEdit|mcp__serena__rename_symbol|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol"
-      },
-      {
-        "hooks": [
+          },
           {
             "type": "command",
             "command": "node \"/home/dawid/projects/xtrm-tools/.xtrm/hooks/beads-edit-gate.mjs\"",
             "timeout": 5000
           }
-        ],
-        "matcher": "Edit|Write|MultiEdit|NotebookEdit|mcp__serena__rename_symbol|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol"
+        ]
       },
       {
+        "matcher": "Bash",
         "hooks": [
           {
             "type": "command",
             "command": "node \"/home/dawid/projects/xtrm-tools/.xtrm/hooks/beads-commit-gate.mjs\"",
             "timeout": 5000
           }
-        ],
-        "matcher": "Bash"
+        ]
       }
     ],
     "PostToolUse": [
       {
+        "matcher": "Bash|execute_shell_command|bash",
         "hooks": [
           {
             "type": "command",
             "command": "node \"/home/dawid/projects/xtrm-tools/.xtrm/hooks/beads-claim-sync.mjs\"",
             "timeout": 5000
           }
-        ],
-        "matcher": "Bash|execute_shell_command|bash"
+        ]
       },
       {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit|mcp__serena__rename_symbol|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol",
         "hooks": [
           {
             "type": "command",
             "command": "node \"/home/dawid/projects/xtrm-tools/.xtrm/hooks/quality-check.cjs\"",
             "timeout": 30000
-          }
-        ],
-        "matcher": "Edit|Write|MultiEdit|NotebookEdit|mcp__serena__rename_symbol|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol"
-      },
-      {
-        "hooks": [
+          },
           {
             "type": "command",
             "command": "python3 \"/home/dawid/projects/xtrm-tools/.xtrm/hooks/quality-check.py\"",
             "timeout": 30000
           }
-        ],
-        "matcher": "Edit|Write|MultiEdit|NotebookEdit|mcp__serena__rename_symbol|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol"
+        ]
       },
       {
+        "matcher": "Bash|Grep|Read|Glob|mcp__serena__find_symbol|mcp__serena__get_symbols_overview|mcp__serena__search_for_pattern|mcp__serena__find_referencing_symbols|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol|mcp__serena__rename_symbol",
         "hooks": [
           {
             "type": "command",
             "command": "node \"/home/dawid/projects/xtrm-tools/.xtrm/hooks/gitnexus/gitnexus-hook.cjs\"",
             "timeout": 10000
           }
-        ],
-        "matcher": "Bash|Grep|Read|Glob|mcp__serena__find_symbol|mcp__serena__get_symbols_overview|mcp__serena__search_for_pattern|mcp__serena__find_referencing_symbols|mcp__serena__replace_symbol_body|mcp__serena__insert_after_symbol|mcp__serena__insert_before_symbol|mcp__serena__rename_symbol"
+        ]
       },
       {
         "hooks": [
@@ -127,11 +105,7 @@
             "type": "command",
             "command": "node \"/home/dawid/projects/xtrm-tools/.xtrm/hooks/beads-stop-gate.mjs\"",
             "timeout": 5000
-          }
-        ]
-      },
-      {
-        "hooks": [
+          },
           {
             "type": "command",
             "command": "node \"/home/dawid/projects/xtrm-tools/.xtrm/hooks/beads-memory-gate.mjs\"",
@@ -151,5 +125,38 @@
         ]
       }
     ]
-  }
+  },
+  "UserPromptSubmit": [
+    {
+      "matcher": "",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node .claude/hooks/specialists-complete.mjs"
+        }
+      ]
+    }
+  ],
+  "PostToolUse": [
+    {
+      "matcher": "",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node .claude/hooks/specialists-complete.mjs"
+        }
+      ]
+    }
+  ],
+  "SessionStart": [
+    {
+      "matcher": "",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node .claude/hooks/specialists-session-start.mjs"
+        }
+      ]
+    }
+  ]
 }

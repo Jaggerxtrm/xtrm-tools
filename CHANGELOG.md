@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **`docs/skills-tier-architecture.md`**: New reference document covering three-tier skills model (default/optional/user), state.json schema, PACK.json schema, runtime active views, and xt skills CLI commands.
 - **`docs/xtrm-directory.md`**: New reference document for centralized `.xtrm/` directory layout — skills, hooks, extensions, worktrees, reports, registry.json.
+- **`docs/bash-tools.md`**: New reference for specialist bash CLIs (`ghgrep`, `ctx7`, `deepwiki`) including install source, usage examples, and CLI-vs-MCP guidance; README now links and surfaces `ghgrep` under capabilities.
 
 ### Changed
 - **`docs/skills.md`**: Rewritten to cover tier architecture, xt skills CLI, and updated skill catalog (v2.0.0).

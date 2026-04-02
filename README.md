@@ -28,7 +28,7 @@ Native integration with the [specialists](https://github.com/Jaggerxtrm/speciali
 
 ---
 
-**Version 0.5.30** | [Complete Guide](XTRM-GUIDE.md) | [Changelog](CHANGELOG.md)
+**Version 0.7.1** | [Complete Guide](XTRM-GUIDE.md) | [Changelog](CHANGELOG.md)
 
 ---
 
@@ -43,6 +43,7 @@ Native integration with the [specialists](https://github.com/Jaggerxtrm/speciali
 | [docs/pi-extensions.md](docs/pi-extensions.md) | Pi extensions — managed sync, authoring, parity notes |
 | [docs/worktrees.md](docs/worktrees.md) | xt worktrees — `xt claude/pi`, `xt attach`, `xt end`, isolation model |
 | [docs/mcp-servers.md](docs/mcp-servers.md) | MCP servers — gitnexus, github-grep, deepwiki, official plugins |
+| [docs/bash-tools.md](docs/bash-tools.md) | Bash-native specialist CLIs — ghgrep, ctx7, deepwiki |
 | [docs/cli-architecture.md](docs/cli-architecture.md) | CLI internals — install flow, diff/sync engine, config merge |
 | [docs/docs-commands.md](docs/docs-commands.md) | Docs command suite — `show`, `list`, `cross-check`, output modes, drift checks |
 | [docs/project-skills.md](docs/project-skills.md) | Legacy project-skill migration notes and current asset location |
@@ -62,7 +63,7 @@ xtrm init
 
 # Verify
 claude plugin list
-# → xtrm-tools@xtrm-tools  Version: 0.5.30  Status: enabled
+# → xtrm-tools@xtrm-tools  Version: 0.7.1  Status: enabled
 ```
 
 **One-line run:**
@@ -103,7 +104,7 @@ xt merge
 
 ### Skills
 
-Skills are resolved through a three-tier registry in `.xtrm/skills/` (`default` + `optional` + `user`). Optional packs are installed on demand; today’s catalog additions are `research-methods`, `code-quality`, `security-ops`, `data-engineering`, and `architecture-design`.
+Skills are resolved through a three-tier registry in `.xtrm/skills/` (`default` + `optional` + `user`). Optional packs are installed by default during `xt install`; activate any pack with `xt skills enable <pack>`. Current optional pack catalog: `research-methods`, `code-quality`, `security-ops`, `data-engineering`, and `architecture-design`.
 
 Skills are organized into two categories: **xtrm workflow** skills built specifically for the xtrm stack, and **general-purpose** expert skills that work in any project.
 
@@ -123,10 +124,12 @@ These skills implement the xtrm-specific development workflow — session manage
 | `planning` | Structured issue board from any spec, with phases and deps |
 | `test-planning` | Test coverage planning alongside implementation work |
 | `delegating` | Cost-optimized task delegation to background agents |
+| `using-specialists` | Specialist routing and execution workflow (`specialists run/feed/result`) |
 | `orchestrating-agents` | Multi-model orchestration (Gemini, Qwen handshake) |
 | `documenting` | SSOT doc maintenance with drift detection |
 | `sync-docs` | Doc audit and structural sync across a sprint |
 | `skill-creator` | Create, improve, and evaluate skills |
+| `specialists-creator` | Create and validate `.specialist.yaml` definitions |
 | `find-skills` | Discover and install skills on demand |
 | `creating-service-skills` | Generate operational service skill packages |
 | `scoping-service-skills` | Task intake and service routing |
@@ -152,6 +155,7 @@ Domain expert skills that can be used in any project, independent of the xtrm wo
 | `gitnexus-debugging` | Trace bugs through call chains |
 | `gitnexus-refactoring` | Plan safe refactors via dependency mapping |
 | `obsidian-cli` | Interact with Obsidian vaults via CLI |
+| `deepwiki` | Query repository/library docs via DeepWiki |
 
 ---
 
@@ -224,6 +228,16 @@ See [docs/cli-architecture.md](docs/cli-architecture.md) for internals.
 Official Claude plugins installed by `xtrm init`: `serena`, `context7`, `github`, `ralph-loop`.
 
 See [docs/mcp-servers.md](docs/mcp-servers.md) for configuration details.
+
+## Specialist Bash Tools
+
+| Tool | Purpose | Install source |
+|------|---------|----------------|
+| `ghgrep` | GitHub code search CLI wrapper over `mcp.grep.app` | Ships as `bin` in `xtrm-tools` |
+| `ctx7` | Context7 docs + skills CLI | Installed by machine-bootstrap (`xt install` / `xt init`) |
+| `deepwiki` | Repo documentation Q&A CLI | Installed by machine-bootstrap (`xt install` / `xt init`) |
+
+See [docs/bash-tools.md](docs/bash-tools.md) for usage examples and when to use CLIs vs MCP equivalents.
 
 ---
 

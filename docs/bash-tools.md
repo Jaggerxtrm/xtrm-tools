@@ -1,0 +1,160 @@
+---
+title: Specialist Bash Tools
+scope: bash-tools
+category: reference
+version: 1.0.0
+updated: 2026-04-02
+source_of_truth_for:
+  - "scripts/ghgrep.mjs"
+  - "cli/src/core/machine-bootstrap.ts"
+domain: []
+---
+
+# Specialist Bash Tools
+
+## Overview
+
+xtrm supports two access layers for specialist tooling:
+
+1. **MCP servers** for in-agent tool calls
+2. **Bash-native CLIs** for direct terminal workflows (manual use, scripts, CI snippets, piping)
+
+This doc is the bash-native companion to [docs/mcp-servers.md](./mcp-servers.md).
+
+## Tool matrix
+
+| Tool | What it is | Install source | MCP equivalent |
+|---|---|---|---|
+| `ghgrep` | GitHub code search CLI (zero-deps wrapper over `mcp.grep.app`, SSE transport) | Ships as `bin` in `xtrm-tools` (`package.json`) | `github-grep` server (`searchGitHub`) |
+| `ctx7` | Context7 docs/skills CLI for library lookup and skill management | Machine bootstrap (`npm install -g ctx7`) via `xt install` / `xt init` | `context7` MCP/plugin workflows |
+| `deepwiki` | DeepWiki CLI for repo wiki/doc Q&A | Machine bootstrap (`npm install -g @seflless/deepwiki`) via `xt install` / `xt init` | `deepwiki` MCP server |
+
+## ghgrep
+
+### What it is
+
+`ghgrep` is the xtrm-provided GitHub code search CLI wrapper around `mcp.grep.app`.
+
+### Install source
+
+Installed automatically when you install `xtrm-tools` (it is a package `bin`):
+
+```bash
+npm install -g github:Jaggerxtrm/xtrm-tools@latest
+```
+
+### Usage
+
+```bash
+ghgrep <query> [options]
+
+--lang <langs>     comma-separated: TypeScript,TSX,Python
+--repo <repo>      filter by repo: facebook/react
+--path <path>      file path pattern
+--regexp           regex mode (auto-prefixes (?s) for multiline)
+--case             case-sensitive
+--words            whole-word match
+--limit <n>        max results (default: 10)
+--json             raw MCP JSON output
+```
+
+### Examples
+
+```bash
+ghgrep "useEffect(" --lang TSX,TypeScript --limit 5
+ghgrep "AbortController" --repo vercel/next.js --path "packages/**"
+ghgrep "class\\s+NotFoundError" --regexp --lang TypeScript --json
+```
+
+### Use `ghgrep` vs MCP `github-grep`
+
+Use `ghgrep` when:
+- You are in shell-first flow (terminal, scripts, CI, copy/paste investigation)
+- You want raw payloads with `--json`
+- You are outside an agent runtime
+
+Use MCP `github-grep` when:
+- The agent should call search directly inside its own toolchain
+- You want results incorporated into agent reasoning context automatically
+
+## ctx7
+
+### What it is
+
+`ctx7` is the Context7 CLI for library documentation queries and skill management.
+
+### Install source
+
+Installed as a managed optional dependency by xtrm machine-bootstrap:
+
+```bash
+xt install
+# (or xt init)
+```
+
+Underlying package:
+
+```bash
+npm install -g ctx7
+```
+
+### Examples
+
+```bash
+ctx7 library react "hooks"
+ctx7 docs /facebook/react "useEffect cleanup"
+ctx7 skills list --claude
+```
+
+### Use `ctx7` vs MCP `context7`
+
+Use `ctx7` when:
+- You need CLI-driven docs queries in scripts or manual shell workflows
+- You are managing Context7 skills/login state
+
+Use MCP `context7` when:
+- You want agent-native docs retrieval inside a chat/tool run
+
+## deepwiki
+
+### What it is
+
+`deepwiki` is the DeepWiki CLI for querying documentation from public GitHub repositories.
+
+### Install source
+
+Installed as a managed optional dependency by xtrm machine-bootstrap:
+
+```bash
+xt install
+# (or xt init)
+```
+
+Underlying package:
+
+```bash
+npm install -g @seflless/deepwiki
+```
+
+### Examples
+
+```bash
+deepwiki toc facebook/react
+deepwiki ask facebook/react "How does reconciliation work?"
+deepwiki ask vercel/next.js "How does app router caching behave?" --json
+```
+
+### Use `deepwiki` vs MCP `deepwiki`
+
+Use `deepwiki` CLI when:
+- You want direct terminal output or machine-readable JSON in shell workflows
+- You are comparing answers across repos manually
+
+Use MCP `deepwiki` when:
+- The agent should perform documentation retrieval inline during tool execution
+
+## See also
+
+- [docs/mcp-servers.md](./mcp-servers.md)
+- [README.md](../README.md)
+- [CLAUDE.md](../CLAUDE.md) (Specialist Bash Tools)

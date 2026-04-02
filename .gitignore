@@ -60,6 +60,7 @@ skills/*-workspace/
 
 # Quality-gates hook runtime cache (accumulates local machine paths)
 hooks/tsconfig-cache.json
+.xtrm/hooks/tsconfig-cache.json
 .xtrm/session-meta.json
 
 # Project-level skills symlink (runtime artifact, installed by xtrm)

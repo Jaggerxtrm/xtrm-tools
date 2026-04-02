@@ -184,6 +184,56 @@ describe('installFromRegistry', () => {
     expect(await fs.pathExists(path.join(userXtrmDir, 'hooks', 'post-tool-use.mjs'))).toBe(true);
     expect(await fs.pathExists(path.join(userXtrmDir, 'memory.md'))).toBe(false);
   });
+
+  it('installs optional skills packs from registry assets', async () => {
+    const tempDir = await createTempDir();
+    const packageRoot = path.join(tempDir, 'pkg');
+    const userXtrmDir = path.join(tempDir, 'user-xtrm');
+
+    const packJsonSource = path.join(packageRoot, '.xtrm', 'skills', 'optional', 'pack-one', 'PACK.json');
+    const skillSource = path.join(packageRoot, '.xtrm', 'skills', 'optional', 'pack-one', 'beta', 'SKILL.md');
+
+    await fs.ensureDir(path.dirname(packJsonSource));
+    await fs.ensureDir(path.dirname(skillSource));
+    await fs.writeJson(packJsonSource, {
+      schemaVersion: '1',
+      name: 'pack-one',
+      version: '1.0.0',
+      description: 'pack',
+      skills: ['beta'],
+    });
+    await fs.writeFile(skillSource, '# beta\n', 'utf8');
+
+    const registry = {
+      version: '1.0.0',
+      assets: {
+        skills_optional: {
+          source_dir: '.xtrm/skills/optional',
+          install_mode: 'copy' as const,
+          files: {
+            'pack-one/PACK.json': { hash: 'pack-hash', version: '1.0.0' },
+            'pack-one/beta/SKILL.md': { hash: 'skill-hash', version: '1.0.0' },
+          },
+        },
+      },
+    };
+
+    await fs.ensureDir(path.join(packageRoot, '.xtrm'));
+    await fs.writeJson(path.join(packageRoot, '.xtrm', 'registry.json'), registry);
+
+    const result = await installFromRegistry({
+      packageRoot,
+      registry,
+      userXtrmDir,
+      dryRun: false,
+      force: true,
+      yes: true,
+    });
+
+    expect(result.installed).toBe(2);
+    expect(await fs.pathExists(path.join(userXtrmDir, 'skills', 'optional', 'pack-one', 'PACK.json'))).toBe(true);
+    expect(await fs.pathExists(path.join(userXtrmDir, 'skills', 'optional', 'pack-one', 'beta', 'SKILL.md'))).toBe(true);
+  });
 });
 
 describe('ensureAgentsSkillsSymlink', () => {

@@ -127,6 +127,10 @@
           "hash": "38801ee1f92d2ed6b0ca9306495f1a4106676bc5a5c89c6d15c2710593fade24",
           "version": "0.7.0"
         },
+        "deepwiki/SKILL.md": {
+          "hash": "cd0dadf31266cdf2ecbe9c129357133f105078d93e9c714d929378feaf3c4e63",
+          "version": "0.7.0"
+        },
         "delegating/config.yaml": {
           "hash": "74ab621ffdb27c2c4dbf897220117c14dc30536d342c40df37143f0a7727ecd4",
           "version": "0.7.0"
@@ -351,6 +355,26 @@
           "hash": "3eb21391e4512e6dfa47051159cb6f68d130bba068dbe5b6b4744c422ed18387",
           "version": "0.7.0"
         },
+        "quality-gates/.claude/hooks/hook-config.json": {
+          "hash": "f29b118917ec714bfa2dfefe478ea512f84b8f7ad80aebf647011b22d18a2717",
+          "version": "0.7.0"
+        },
+        "quality-gates/.claude/hooks/quality-check.cjs": {
+          "hash": "c6bbff2b05dcb810a5dc7437104a253398ef162b4a2403ba676ee136fe698dfb",
+          "version": "0.7.0"
+        },
+        "quality-gates/.claude/hooks/quality-check.py": {
+          "hash": "b46e1361dcdc0b41401c3a2b5872356391b2bc9877c4a72c058bc158eee82118",
+          "version": "0.7.0"
+        },
+        "quality-gates/.claude/settings.json": {
+          "hash": "78922a784ee78e9e50587e93628cd3b9d4dfbe49087adc4514e6781cea38cbb9",
+          "version": "0.7.0"
+        },
+        "quality-gates/.claude/skills/using-quality-gates/SKILL.md": {
+          "hash": "0570f34a7fbca7f4a53fd751503a78152401b0697e95baf06bf1c221b1000f83",
+          "version": "0.7.0"
+        },
         "quality-gates/evals/evals.json": {
           "hash": "2997124435c7cb6b773ae176d7475e76fd9299e7faa8436d27d745698b0d6ed2",
           "version": "0.7.0"
@@ -523,6 +547,14 @@
           "hash": "ba8bebb2c085444120743af8dc859dd7c2592d6290e93aa5e1c08403109bdce7",
           "version": "0.7.0"
         },
+        "specialists-creator/scripts/validate-specialist.ts": {
+          "hash": "38ee618b51b4327b2a63a1addd6ed3dd8a8397894f1aa2f7e39342bf6a83dbb5",
+          "version": "0.7.0"
+        },
+        "specialists-creator/SKILL.md": {
+          "hash": "77912dc72b055264b3601ac6b9040381b91a36610cf627aa718c129e006eb470",
+          "version": "0.7.0"
+        },
         "sync-docs/evals/evals.json": {
           "hash": "3790cb952840849d762b74be66fabf91f745400f519524c9e234c258cc502c0c",
           "version": "0.7.0"
@@ -599,6 +631,14 @@
           "hash": "3ca830174c3bf13ce573443618b43c5b03575f0cd13660c3206dd3eae21c39a7",
           "version": "0.7.0"
         },
+        "using-specialists/evals/evals.json": {
+          "hash": "d69d2ee9e9cb3739ca38cc8d5d73a12845c99c8c0e2da721b0ee1db10fb17bab",
+          "version": "0.7.0"
+        },
+        "using-specialists/SKILL.md": {
+          "hash": "326c2618861390babf5392899ace0eb4c6c30850996e0e0fb3194325a69a3ea8",
+          "version": "0.7.0"
+        },
         "using-tdd/SKILL.md": {
           "hash": "879d5decc9c8b25242efc2e1abda68f373570513560809f6d2e9c813ebbedd52",
           "version": "0.7.0"
@@ -621,12 +661,306 @@
         }
       }
     },
+    "skills_optional": {
+      "source_dir": ".xtrm/skills/optional",
+      "install_mode": "copy",
+      "files": {
+        "architecture-design/architecture-patterns/references/advanced-patterns.md": {
+          "hash": "e1cb31c83b532e579991de277836a1ea5e3d88b2ca30fc8ac16f6047ceca439e",
+          "version": "0.7.0"
+        },
+        "architecture-design/architecture-patterns/SKILL.md": {
+          "hash": "c53973f453ec828c4761921952acadaa933f3d8dd01eace6102f8c5316cf643f",
+          "version": "0.7.0"
+        },
+        "architecture-design/PACK.json": {
+          "hash": "bac39ce1b4d51e3debf29337bcfdf9ab76466f6e9bf8459960df6c0d0c61b7ba",
+          "version": "0.7.0"
+        },
+        "architecture-design/prompt-engineering-patterns/assets/few-shot-examples.json": {
+          "hash": "8e1ade9727b0bb1fb5540a781192b67e2692fbb5908ffe9eac3ec7cc2fbc6216",
+          "version": "0.7.0"
+        },
+        "architecture-design/prompt-engineering-patterns/assets/prompt-template-library.md": {
+          "hash": "c5756b6f9c5558d8ca82d845fd50492b53f1f4d6d02cf27585f411440a4723c2",
+          "version": "0.7.0"
+        },
+        "architecture-design/prompt-engineering-patterns/references/chain-of-thought.md": {
+          "hash": "41242eb267f1892430bb0001e1361c862cc98f1eafc958280d485cbee7c13e6d",
+          "version": "0.7.0"
+        },
+        "architecture-design/prompt-engineering-patterns/references/few-shot-learning.md": {
+          "hash": "d8784634f7beb4c60c51add45203ef2d9d0e4e3accbb81ba3295f87d893dba10",
+          "version": "0.7.0"
+        },
+        "architecture-design/prompt-engineering-patterns/references/prompt-optimization.md": {
+          "hash": "5c25ad9b49045ef35c55b531bd227f04628b0018080b0d4f05cb20b01b44ee41",
+          "version": "0.7.0"
+        },
+        "architecture-design/prompt-engineering-patterns/references/prompt-templates.md": {
+          "hash": "18db56a32be1639072631f0f7256b153acd678fe6092edad23b2a4a44016e3da",
+          "version": "0.7.0"
+        },
+        "architecture-design/prompt-engineering-patterns/references/system-prompts.md": {
+          "hash": "88aa10639dad981b07f3bba05539c4eefcc5fba5ed255c60eab0df238778e000",
+          "version": "0.7.0"
+        },
+        "architecture-design/prompt-engineering-patterns/scripts/optimize-prompt.py": {
+          "hash": "e2bd63207f0b6ed40944d8bb49311e0c97babb40d0fae974580c2dd3be99a671",
+          "version": "0.7.0"
+        },
+        "architecture-design/prompt-engineering-patterns/SKILL.md": {
+          "hash": "c455dde62511e04c420824be5dd5e516ab34d07842019dd7be2c9b41ca1e46bc",
+          "version": "0.7.0"
+        },
+        "architecture-design/subagent-driven-development/code-quality-reviewer-prompt.md": {
+          "hash": "06d1e7c2287e5a00bd1809bf39038abd5f413b4cf917c37d30f00c48f6293421",
+          "version": "0.7.0"
+        },
+        "architecture-design/subagent-driven-development/implementer-prompt.md": {
+          "hash": "a416193f881e5a712c988fffabfe1d5a97bffcd091eb95577c84fe2136588617",
+          "version": "0.7.0"
+        },
+        "architecture-design/subagent-driven-development/SKILL.md": {
+          "hash": "081ad3869e55c80bf8f890b4768a90c0e8057daf94b1b6fadebfc85ea5b8304a",
+          "version": "0.7.0"
+        },
+        "architecture-design/subagent-driven-development/spec-reviewer-prompt.md": {
+          "hash": "631980e472eec5394de8b89b69d432e54fd3f7f523ecf9afa7eb4cda0c9b2baf",
+          "version": "0.7.0"
+        },
+        "code-quality/code-review-excellence/SKILL.md": {
+          "hash": "014fff1c8db75807106484d5b16451607f0dde266ae50182a2753d68ad3449ed",
+          "version": "0.7.0"
+        },
+        "code-quality/multi-reviewer-patterns/SKILL.md": {
+          "hash": "30a8e067af085d6ddbf4f3775b212b0b24137ecc431a3e8570e3d6a09823a62a",
+          "version": "0.7.0"
+        },
+        "code-quality/PACK.json": {
+          "hash": "88fdbfb573fd394ac9d391be98a7c6bae176a7cf6fe8681ac85a0341361acbf0",
+          "version": "0.7.0"
+        },
+        "code-quality/systematic-debugging/SKILL.md": {
+          "hash": "4999cb851360485eca5074e727bbdd62ef20549c5d5b01216fcbf5831badb473",
+          "version": "0.7.0"
+        },
+        "code-quality/verification-before-completion/SKILL.md": {
+          "hash": "ea52d15aabaf72bc6b558efe2c126f161b53961090ddcd712000273bfe8c7b6c",
+          "version": "0.7.0"
+        },
+        "data-engineering/data-analyst/SKILL.md": {
+          "hash": "144e82457e8861ae540138f9d0168e1eb7c56761bc8db541733d448cb7cb3e1e",
+          "version": "0.7.0"
+        },
+        "data-engineering/PACK.json": {
+          "hash": "ace1268e5c066b494112cb2ffbb976df7857526a294b4b56d5ca86182a44d938",
+          "version": "0.7.0"
+        },
+        "README.txt": {
+          "hash": "4eb5182b790a60a7826d625348b69203156df899cd0776cc0b8fed3e95fbd513",
+          "version": "0.7.0"
+        },
+        "research-methods/academic-researcher/SKILL.md": {
+          "hash": "93334b34a735942fcfd66a4ddb02df13eea639864c579b47b356c9ad5d67d4d3",
+          "version": "0.7.0"
+        },
+        "research-methods/brainstorming/scripts/frame-template.html": {
+          "hash": "fb22ba9d47f3b83b56e0a95d52a3c2727db03b0d4365078d92c850293a62457b",
+          "version": "0.7.0"
+        },
+        "research-methods/brainstorming/scripts/helper.js": {
+          "hash": "e763d82f32b4ebb320be2f0d08449d3e5a0585778edf5c407c1fdab3f39976a5",
+          "version": "0.7.0"
+        },
+        "research-methods/brainstorming/scripts/server.cjs": {
+          "hash": "ea81185f581897c67d4b417eeb9bc7a158c50e0932c73047054fe53efc2683ef",
+          "version": "0.7.0"
+        },
+        "research-methods/brainstorming/scripts/start-server.sh": {
+          "hash": "3442a54b5ee5511637d27bf696e092b72f94c2324f40b5ba4410da4dd0c23bc8",
+          "version": "0.7.0"
+        },
+        "research-methods/brainstorming/scripts/stop-server.sh": {
+          "hash": "f65b7634a27343eab2086bdb6c59ba78695685f471b5a577b08a8817f7c50600",
+          "version": "0.7.0"
+        },
+        "research-methods/brainstorming/SKILL.md": {
+          "hash": "bba47904a7f6bbee3bf8a107ebbe84e65d392be683bbb898ded736b29e415f90",
+          "version": "0.7.0"
+        },
+        "research-methods/brainstorming/spec-document-reviewer-prompt.md": {
+          "hash": "12cb5ed58aef41b8da6fbb505547c71ca3f5658c83b66ca6e556c936308b3189",
+          "version": "0.7.0"
+        },
+        "research-methods/brainstorming/visual-companion.md": {
+          "hash": "a2bc6fc47d0df1df981d02f707a16225b147f462e7059175ad2bc5e6dd29fcae",
+          "version": "0.7.0"
+        },
+        "research-methods/deep-research/SKILL.md": {
+          "hash": "5637feab59dcc091d307fb0881907d9dfae74d3eccdf51b9bc8acf879c28c682",
+          "version": "0.7.0"
+        },
+        "research-methods/fact-checker/SKILL.md": {
+          "hash": "2a93fc43762d7f626379287f9c4aab02c4a4a6d1d04ca63f9444e6932ca0dade",
+          "version": "0.7.0"
+        },
+        "research-methods/PACK.json": {
+          "hash": "330d22a58d14685167f0f5490ac01eebd78ed6575ac1168cc1a47ddbb2f72206",
+          "version": "0.7.0"
+        },
+        "security-ops/PACK.json": {
+          "hash": "2925caefbbfc65d926d52338a84c29d9bd1b39707f95e7f6ab1413541fe4796e",
+          "version": "0.7.0"
+        },
+        "security-ops/security-auditor/SKILL.md": {
+          "hash": "794fa5153e7e5fc432783816167055283cc42252feb7ec6a930241554828f532",
+          "version": "0.7.0"
+        },
+        "xt-optional/docker-expert/SKILL.md": {
+          "hash": "e33b08feeaa8e110c08dddd030970547356514d42aa484e52f51e2fd2d4f451b",
+          "version": "0.7.0"
+        },
+        "xt-optional/obsidian-cli/SKILL.md": {
+          "hash": "b54257cdc0e5d04488b35b0c797bfe427b24359f0848d3c73924dcacf8da6358",
+          "version": "0.7.0"
+        },
+        "xt-optional/PACK.json": {
+          "hash": "d824669b877a9421c7ed1f5a1a4e7ed5533d4808ad180e982379a0c492c2b4e4",
+          "version": "0.7.0"
+        },
+        "xt-optional/python-testing/SKILL.md": {
+          "hash": "98ce1865de021c57f416bb41c9630a9d0ee85c790e8d512d4a8c9f2ebc63b501",
+          "version": "0.7.0"
+        },
+        "xt-optional/senior-backend/references/api_design_patterns.md": {
+          "hash": "5bef532218c1a4f994eef546fd102d124d6052eef4f472ef490079d747d1ccc7",
+          "version": "0.7.0"
+        },
+        "xt-optional/senior-backend/references/backend_security_practices.md": {
+          "hash": "c565222bd5ce1452614e62f1af0dc3e1b17e140ff261e92238d626b5d821a454",
+          "version": "0.7.0"
+        },
+        "xt-optional/senior-backend/references/database_optimization_guide.md": {
+          "hash": "e399dfdcf755186f54c34bdb37efda089e359932abb543adac2d5c398252243a",
+          "version": "0.7.0"
+        },
+        "xt-optional/senior-backend/scripts/api_load_tester.py": {
+          "hash": "dca9b04f0a8e643c720561e1549411064be77c3d85879e93edc5d49633a0f0cf",
+          "version": "0.7.0"
+        },
+        "xt-optional/senior-backend/scripts/api_scaffolder.py": {
+          "hash": "34c43d83d0f6aacfdba2b82576b2613b398fb0b69c7aaa78c8815d3cd76c0681",
+          "version": "0.7.0"
+        },
+        "xt-optional/senior-backend/scripts/database_migration_tool.py": {
+          "hash": "37ee8a932c440abf9b400f9b9f5ba046068c64e1e4d268bea49dc80a6dd4ea0d",
+          "version": "0.7.0"
+        },
+        "xt-optional/senior-backend/SKILL.md": {
+          "hash": "de1c35674ab09c38b0895ab29eddfaf501ceff19ecf4db39617d7fb1cbf8762d",
+          "version": "0.7.0"
+        },
+        "xt-optional/senior-data-scientist/references/experiment_design_frameworks.md": {
+          "hash": "4bb669406f3a3e2482bfc775e328643bda472a334dea7cdcb41c1b0bb87b4673",
+          "version": "0.7.0"
+        },
+        "xt-optional/senior-data-scientist/references/feature_engineering_patterns.md": {
+          "hash": "6657db3b24fc5fc721f4a29ce6be0ff0a6da1dae92aca67d56945ecc74858cd0",
+          "version": "0.7.0"
+        },
+        "xt-optional/senior-data-scientist/references/statistical_methods_advanced.md": {
+          "hash": "2ad183277b8e57a307085ca7265258d31a08761bc5d3f5844a33dbc79a40a48b",
+          "version": "0.7.0"
+        },
+        "xt-optional/senior-data-scientist/scripts/experiment_designer.py": {
+          "hash": "e086c9d66a67910d114c0831e16d6a658c712f11d5356b82f28687ba43de30fb",
+          "version": "0.7.0"
+        },
+        "xt-optional/senior-data-scientist/scripts/feature_engineering_pipeline.py": {
+          "hash": "706602f103fa3403196ceb0d110e91b56b039c0f21fc0302ebfc7856c1874168",
+          "version": "0.7.0"
+        },
+        "xt-optional/senior-data-scientist/scripts/model_evaluation_suite.py": {
+          "hash": "e7ce48ead1011fcf20f1cbed140061914ddc76b9ecf022101630bbec816fcc39",
+          "version": "0.7.0"
+        },
+        "xt-optional/senior-data-scientist/SKILL.md": {
+          "hash": "1e6974ea60451055b3b11ff8b12d6bbb8ef90ab2bf973830718271c8ed53de06",
+          "version": "0.7.0"
+        },
+        "xt-optional/senior-devops/references/cicd_pipeline_guide.md": {
+          "hash": "1a9081fd856eaad7643ddbb1b704b1e7dcf66f0e531e42e8740b21dd09439ddc",
+          "version": "0.7.0"
+        },
+        "xt-optional/senior-devops/references/deployment_strategies.md": {
+          "hash": "63d164425e4d097a60d947f2fe515e4e8e60966cba97b418858a6ee5b144660f",
+          "version": "0.7.0"
+        },
+        "xt-optional/senior-devops/references/infrastructure_as_code.md": {
+          "hash": "82f85a94d900384b7f57b13d4519af5c6f4b47a0d2a53129f0b4452f11945374",
+          "version": "0.7.0"
+        },
+        "xt-optional/senior-devops/scripts/deployment_manager.py": {
+          "hash": "11644f32cacc37d6340c805f698e96f8b3692a79352c16f500f96ccc7dde30f9",
+          "version": "0.7.0"
+        },
+        "xt-optional/senior-devops/scripts/pipeline_generator.py": {
+          "hash": "716dccacc6edd012e3295880138e28a573eba5185ed843f883f56866b50e387b",
+          "version": "0.7.0"
+        },
+        "xt-optional/senior-devops/scripts/terraform_scaffolder.py": {
+          "hash": "f5c3a34fa93cc91635a957163525cbb0324489451cb869225dccb38f927c6794",
+          "version": "0.7.0"
+        },
+        "xt-optional/senior-devops/SKILL.md": {
+          "hash": "478aed6e0ef1a629cd1e7b8d3805935ab154a15ed83a9fd928c1114d16abcaad",
+          "version": "0.7.0"
+        },
+        "xt-optional/senior-security/references/cryptography_implementation.md": {
+          "hash": "d4d994d22c107903fe29c6f6bde732f92e7a5eb26eaa9b200f10a3d4ddbe4adb",
+          "version": "0.7.0"
+        },
+        "xt-optional/senior-security/references/penetration_testing_guide.md": {
+          "hash": "06aaca9578eb2b91664f0ef964c03621b80c47469260b2982764615aaacdc512",
+          "version": "0.7.0"
+        },
+        "xt-optional/senior-security/references/security_architecture_patterns.md": {
+          "hash": "86619c5fb1ae5432b2d0be75b897144161f260afaa2ded33fae0988f5da50b1d",
+          "version": "0.7.0"
+        },
+        "xt-optional/senior-security/scripts/pentest_automator.py": {
+          "hash": "8b2280d6ee02a852b9fe92dc400fae1787998c4ad1d1d3bfbb19d06c05f40b30",
+          "version": "0.7.0"
+        },
+        "xt-optional/senior-security/scripts/security_auditor.py": {
+          "hash": "ce767c5773cbdd5d99601819061670839b521b6b9d13a4de6f10bd189caa2fe9",
+          "version": "0.7.0"
+        },
+        "xt-optional/senior-security/scripts/threat_modeler.py": {
+          "hash": "2a62f3043d9d402b15a5e749b3eecc657c0c390e8ddb8d36d9900f57c55ed2a5",
+          "version": "0.7.0"
+        },
+        "xt-optional/senior-security/SKILL.md": {
+          "hash": "d7e26f159d81a9e5ca9a7bc9ff3af116876068349d727b894c6b50020efbd7a7",
+          "version": "0.7.0"
+        }
+      }
+    },
     "config": {
       "source_dir": ".xtrm/config",
       "install_mode": "copy",
       "files": {
         ".env.example": {
           "hash": "70e6af83cb0faf13a74676a5a3b79551ac60997cccd226e14c8dbc5887c047d5",
+          "version": "0.7.0"
+        },
+        "claude.mcp.json": {
+          "hash": "20b811ccc82395f9f3cd9a45ef36b776c3382d553924ef34662dd817a0a1c197",
+          "version": "0.7.0"
+        },
+        "claude.mcp.optional.json": {
+          "hash": "6cf39ec4a4cf6096a8108c883456c80bd45f0d37430f9403ea44aea1590f4d5c",
           "version": "0.7.0"
         },
         "hooks.json": {
@@ -641,12 +975,8 @@
           "hash": "1d8ef30c1e2c1899f2c58e0b0eced0c9bb66665d9cfa7f57eab8172807959ff5",
           "version": "0.7.0"
         },
-        "claude.mcp.optional.json": {
-          "hash": "6cf39ec4a4cf6096a8108c883456c80bd45f0d37430f9403ea44aea1590f4d5c",
-          "version": "0.7.0"
-        },
-        "claude.mcp.json": {
-          "hash": "20b811ccc82395f9f3cd9a45ef36b776c3382d553924ef34662dd817a0a1c197",
+        "pi.mcp.json": {
+          "hash": "fb7f018e15e0d04b46ca473994ea275b46ebb21d741ff59c90188e26be8fb2d2",
           "version": "0.7.0"
         },
         "pi/auth.json.template": {
@@ -819,6 +1149,10 @@
         },
         "pi/settings.json.template": {
           "hash": "3acfbfd2a13b1319dd228ba2f9ae5f16ab203a2f0290f74b21cb763697ec2713",
+          "version": "0.7.0"
+        },
+        "README.md": {
+          "hash": "45a8977e6aaf3ce8cf349bc4382ab00e66329e5e240421fa25b04a71073d8aa9",
           "version": "0.7.0"
         },
         "settings.json": {

@@ -22,6 +22,10 @@ const assets = {
     source_dir: '.xtrm/skills/default',
     install_mode: 'copy',
   },
+  skills_optional: {
+    source_dir: '.xtrm/skills/optional',
+    install_mode: 'copy',
+  },
   config: {
     source_dir: '.xtrm/config',
     install_mode: 'copy',

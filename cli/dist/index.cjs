@@ -43922,10 +43922,32 @@ async function atomicSwapDirectory(tempRoot, targetRoot) {
     }
   }
 }
+async function findNonSymlinkEntries(runtimeRoot) {
+  const runtimeRootExists = await import_fs_extra6.default.pathExists(runtimeRoot);
+  if (!runtimeRootExists) {
+    return [];
+  }
+  const entryNames = (await import_fs_extra6.default.readdir(runtimeRoot)).sort((a, b) => a.localeCompare(b));
+  const nonSymlinkEntryNames = [];
+  for (const entryName of entryNames) {
+    const entryPath = import_node_path4.default.join(runtimeRoot, entryName);
+    const entryStat = await import_fs_extra6.default.lstat(entryPath).catch(() => null);
+    if (!entryStat?.isSymbolicLink()) {
+      nonSymlinkEntryNames.push(entryName);
+    }
+  }
+  return nonSymlinkEntryNames;
+}
 async function rebuildRuntimeActiveView(runtime, skillsRoot) {
   const selection = await selectRuntimeSkills(runtime, skillsRoot);
   const activeRuntimeRoot = resolveActiveRuntimeRoot(skillsRoot, runtime);
   await import_fs_extra6.default.ensureDir(import_node_path4.default.dirname(activeRuntimeRoot));
+  const nonSymlinkEntryNames = await findNonSymlinkEntries(activeRuntimeRoot);
+  if (nonSymlinkEntryNames.length > 0) {
+    console.log(
+      `[xtrm] Warning: ${activeRuntimeRoot} contains non-symlink entries (${nonSymlinkEntryNames.join(", ")}). These entries will be evicted during runtime view rebuild. Do not write skills to .claude/skills directly; write to .xtrm/skills/default or packs.`
+    );
+  }
   const tempRoot = await buildRuntimeTempView(runtime, skillsRoot, selection.skills);
   await atomicSwapDirectory(tempRoot, activeRuntimeRoot);
   return {
@@ -44345,6 +44367,10 @@ async function ensureSkillsSymlink(linkPath, symlinkTarget, label) {
       }
       await import_fs_extra8.default.remove(linkPath);
     } else {
+      if (label === ".claude/skills") {
+        console.log(kleur_default.yellow("  \u26A0 .claude/skills is a runtime-managed read-only view; direct writes are unsupported."));
+        console.log(kleur_default.yellow("    Move custom skills to .xtrm/skills/default or .xtrm/skills/{optional,user}/packs/* and rebuild."));
+      }
       await import_fs_extra8.default.remove(linkPath);
       console.log(kleur_default.yellow(`  \u26A0 ${label} was a real path \u2014 replaced with managed symlink`));
     }
@@ -45504,6 +45530,13 @@ async function checkDrift(registryPath, userXtrmDir) {
 }
 
 // src/core/registry-scaffold.ts
+var USER_OWNED_PATHS = [
+  "memory.md",
+  "skills/user/"
+];
+function isUserOwnedPath(relativePath) {
+  return USER_OWNED_PATHS.some((userOwnedPath) => userOwnedPath.endsWith("/") ? relativePath.startsWith(userOwnedPath) : relativePath === userOwnedPath);
+}
 function resolvePackageRoot2() {
   const candidates = [
     import_path8.default.resolve(__dirname, "../.."),
@@ -45620,6 +45653,9 @@ async function installFromRegistry(params) {
       const relativePath = toUserRelativePath(asset.source_dir, filePath);
       const sourcePath = import_path8.default.join(packageRoot, asset.source_dir, filePath);
       const targetPath = import_path8.default.join(userXtrmDir, relativePath);
+      if (isUserOwnedPath(relativePath)) {
+        continue;
+      }
       if (upToDateSet.has(relativePath)) {
         continue;
       }

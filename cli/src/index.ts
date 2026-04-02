@@ -30,7 +30,7 @@ const program = new Command();
 
 program
     .name('xtrm')
-    .description('Dual-runtime workflow system for Claude Code and Pi agents')
+    .description('Agent infrastructure layer for runtimes, skills, hooks, extensions, and packages')
     .version(version);
 
 // Add exit override for cleaner unknown command error

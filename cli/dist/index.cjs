@@ -52516,6 +52516,7 @@ var ART = [
   " \u255A\u2550\u255D  \u255A\u2550\u255D   \u255A\u2550\u255D   \u255A\u2550\u255D  \u255A\u2550\u255D\u255A\u2550\u255D     \u255A\u2550\u255D       \u255A\u2550\u255D    \u255A\u2550\u2550\u2550\u2550\u2550\u255D  \u255A\u2550\u2550\u2550\u2550\u2550\u255D \u255A\u2550\u2550\u2550\u2550\u2550\u2550\u255D\u255A\u2550\u2550\u2550\u2550\u2550\u2550\u255D"
 ];
 var ART_WIDTH = 84;
+var TAGLINE = "agent infrastructure layer \u2014 runtimes, skills,\n  hooks, extensions, packages";
 function isTTY2() {
   return Boolean(process.stdout.isTTY);
 }
@@ -52562,12 +52563,14 @@ async function typewriterTagline(text) {
   const CHAR_DELAY = 42;
   const prefix = `  \x1B[2m\u2014\x1B[0m  \x1B[1m\x1B[37m`;
   const suffix = `\x1B[0m  \x1B[2m\u2014\x1B[0m`;
-  process.stdout.write(prefix);
-  for (const ch of text) {
-    process.stdout.write(ch);
-    await delay(CHAR_DELAY);
+  for (const line of text.split("\n")) {
+    process.stdout.write(prefix);
+    for (const ch of line) {
+      process.stdout.write(ch);
+      await delay(CHAR_DELAY);
+    }
+    process.stdout.write(suffix + "\n");
   }
-  process.stdout.write(suffix + "\n");
 }
 var HUE_START = 170;
 var HUE_END = 230;
@@ -52601,7 +52604,7 @@ async function renderTier0(version3) {
   }
   process.stdout.write(rule + "\n");
   process.stdout.write("  \x1B[2mv" + version3 + "\x1B[0m\n");
-  await typewriterTagline("Sync agent tools across AI environments");
+  await typewriterTagline(TAGLINE);
 }
 function renderTier1(version3) {
   console.log("");
@@ -52611,7 +52614,7 @@ function renderTier1(version3) {
   console.log(kleur_default.dim(" " + "\u2500".repeat(ART_WIDTH - 1)));
   console.log(kleur_default.dim("  v" + version3));
   console.log(
-    "  " + kleur_default.dim("\u2014") + "  " + kleur_default.bold().white("Sync agent tools across AI environments") + "  " + kleur_default.dim("\u2014")
+    "  " + kleur_default.dim("\u2014") + "  " + kleur_default.bold().white(TAGLINE) + "  " + kleur_default.dim("\u2014")
   );
   console.log("");
 }
@@ -52620,19 +52623,19 @@ function renderTier2(version3) {
   console.log(
     kleur_default.cyan("  \u25C8  ") + kleur_default.bold().white("xtrm-tools") + kleur_default.dim("  v" + version3)
   );
-  console.log(kleur_default.dim("     Sync agent tools across AI environments"));
+  console.log(kleur_default.dim(`     ${TAGLINE}`));
   console.log("");
 }
 function renderTier3(version3) {
   console.log("");
   console.log(kleur_default.bold("  xtrm-tools") + kleur_default.dim(" v" + version3));
-  console.log(kleur_default.dim("  Sync agent tools across AI environments"));
+  console.log(kleur_default.dim(`  ${TAGLINE}`));
   console.log("");
 }
 function renderTier4(version3) {
   console.log("");
   console.log("xtrm-tools v" + version3);
-  console.log("Sync agent tools across AI environments");
+  console.log(TAGLINE);
   console.log("");
 }
 async function printBanner(version3) {
@@ -52663,7 +52666,7 @@ try {
 } catch {
 }
 var program2 = new Command();
-program2.name("xtrm").description("Dual-runtime workflow system for Claude Code and Pi agents").version(version2);
+program2.name("xtrm").description("Agent infrastructure layer for runtimes, skills, hooks, extensions, and packages").version(version2);
 program2.exitOverride((err) => {
   if (err.code === "commander.unknownCommand") {
     console.error(kleur_default.red(`

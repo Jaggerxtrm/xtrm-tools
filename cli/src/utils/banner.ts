@@ -11,6 +11,7 @@ const ART = [
 ];
 
 const ART_WIDTH = 84;
+const TAGLINE = 'agent infrastructure layer — runtimes, skills,\n  hooks, extensions, packages';
 
 // ── Detection helpers ───────────────────────────────────────────────────────
 
@@ -66,12 +67,14 @@ async function typewriterTagline(text: string): Promise<void> {
     const prefix = `  \x1b[2m\u2014\x1b[0m  \x1b[1m\x1b[37m`;
     const suffix = `\x1b[0m  \x1b[2m\u2014\x1b[0m`;
 
-    process.stdout.write(prefix);
-    for (const ch of text) {
-        process.stdout.write(ch);
-        await delay(CHAR_DELAY);
+    for (const line of text.split('\n')) {
+        process.stdout.write(prefix);
+        for (const ch of line) {
+            process.stdout.write(ch);
+            await delay(CHAR_DELAY);
+        }
+        process.stdout.write(suffix + '\n');
     }
-    process.stdout.write(suffix + '\n');
 }
 
 // ── Truecolor gradient (item 7: 170°→230° teal→indigo, sat=0.6) ───────────
@@ -115,7 +118,7 @@ async function renderTier0(version: string): Promise<void> {
     }
     process.stdout.write(rule + '\n');
     process.stdout.write('  \x1b[2mv' + version + '\x1b[0m\n');
-    await typewriterTagline('Sync agent tools across AI environments');
+    await typewriterTagline(TAGLINE);
 }
 
 function renderTier1(version: string): void {
@@ -125,7 +128,7 @@ function renderTier1(version: string): void {
     console.log(kleur.dim('  v' + version));
     console.log(
         '  ' + kleur.dim('\u2014') + '  ' +
-        kleur.bold().white('Sync agent tools across AI environments') +
+        kleur.bold().white(TAGLINE) +
         '  ' + kleur.dim('\u2014'),
     );
     console.log('');
@@ -138,21 +141,21 @@ function renderTier2(version: string): void {
         kleur.bold().white('xtrm-tools') +
         kleur.dim('  v' + version),
     );
-    console.log(kleur.dim('     Sync agent tools across AI environments'));
+    console.log(kleur.dim(`     ${TAGLINE}`));
     console.log('');
 }
 
 function renderTier3(version: string): void {
     console.log('');
     console.log(kleur.bold('  xtrm-tools') + kleur.dim(' v' + version));
-    console.log(kleur.dim('  Sync agent tools across AI environments'));
+    console.log(kleur.dim(`  ${TAGLINE}`));
     console.log('');
 }
 
 function renderTier4(version: string): void {
     console.log('');
     console.log('xtrm-tools v' + version);
-    console.log('Sync agent tools across AI environments');
+    console.log(TAGLINE);
     console.log('');
 }
 

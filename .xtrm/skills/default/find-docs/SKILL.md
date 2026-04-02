@@ -152,3 +152,24 @@ Do not silently fall back to training data — always tell the user why Context7
 - Always run `ctx7 library` first — `ctx7 docs react "hooks"` will fail without a valid ID
 - Use descriptive queries, not single words — `"React useEffect cleanup function"` not `"hooks"`
 - Do not include sensitive information (API keys, passwords, credentials) in queries
+
+## Related Skills
+
+**last30days** — For recent trends, community sentiment, and what people are saying _right now_:
+
+| Use `find-docs` | Use `last30days` |
+|-----------------|------------------|
+| "How do I use React useEffect?" | "What are people saying about React 19 beta?" |
+| "Next.js middleware API syntax" | "Best Next.js auth patterns 2026" |
+| "Prisma cascade delete syntax" | "Prisma vs Drizzle community opinions" |
+| API reference, stable documentation | Recent discussions, trends, real-world experiences |
+
+**When to use last30days:**
+- Researching trends, comparisons, or "best of" questions
+- Finding real-world experiences and community recommendations
+- Topics where recency matters (new releases, beta features, emerging tools)
+- "What are people using for X?" questions
+
+**Invocation:** `/last30days <topic>` (e.g., `/last30days AI video tools`)
+
+See: `.xtrm/skills/default/last30days/SKILL.md`

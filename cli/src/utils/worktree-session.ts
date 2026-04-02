@@ -193,9 +193,11 @@ export async function launchWorktreeSession(opts: WorktreeSessionOptions): Promi
         }
 
         // Ensure @xtrm/pi-core resolves before Pi extension loading starts.
-        const worktreeExtensionsDir = path.join(worktreePiDir, 'extensions');
+        // coreSrcDir must point to the actual core extension (.xtrm/extensions/core),
+        // not .pi/extensions — the symlink is placed in .xtrm/extensions/node_modules/.
+        const coreExtDir = path.join(worktreePath, '.xtrm', 'extensions', 'core');
         try {
-            await ensureCorePackageSymlink(worktreeExtensionsDir, worktreePath, false);
+            await ensureCorePackageSymlink(coreExtDir, worktreePath, false);
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
             console.log(kleur.dim(`  warning: could not ensure @xtrm/pi-core symlink (${message})`));

@@ -43977,6 +43977,8 @@ function resolvePkgRoot() {
   return candidates[0];
 }
 var PI_AGENT_DIR = process.env.PI_AGENT_DIR || import_path3.default.join((0, import_node_os.homedir)(), ".pi", "agent");
+var PROJECT_EXTENSIONS_ENTRY = "../.xtrm/extensions";
+var PROJECT_SKILLS_ENTRY = "../.xtrm/skills/active/pi";
 var MANAGED_EXTENSIONS = [
   { id: "core", displayName: "@xtrm/pi-core", isLibrary: true, required: true },
   { id: "auto-session-name", displayName: "auto-session-name", required: false },
@@ -44138,7 +44140,8 @@ function renderPiRuntimePlan(plan) {
 }
 async function ensureCorePackageSymlink(coreSrcDir, projectRoot, dryRun, log) {
   if (!await import_fs_extra7.default.pathExists(coreSrcDir)) return;
-  const nodeModulesDir = import_path3.default.join(projectRoot, ".pi", "node_modules", "@xtrm");
+  const extensionsDir = import_path3.default.join(projectRoot, ".xtrm", "extensions");
+  const nodeModulesDir = import_path3.default.join(extensionsDir, "node_modules", "@xtrm");
   const symlinkPath = import_path3.default.join(nodeModulesDir, "pi-core");
   const existing = await import_fs_extra7.default.lstat(symlinkPath).catch(() => null);
   if (existing) return;
@@ -44149,7 +44152,46 @@ async function ensureCorePackageSymlink(coreSrcDir, projectRoot, dryRun, log) {
   await import_fs_extra7.default.ensureDir(nodeModulesDir);
   const relTarget = import_path3.default.relative(nodeModulesDir, coreSrcDir);
   await import_fs_extra7.default.symlink(relTarget, symlinkPath);
-  log?.(kleur_default.dim(`Created @xtrm/pi-core symlink for module resolution`));
+  log?.(kleur_default.dim(`Created @xtrm/pi-core symlink \u2192 .xtrm/extensions/node_modules/@xtrm/pi-core`));
+}
+function isXtrmExtensionsSetting(entry) {
+  const normalizedEntry = entry.replaceAll("\\", "/").replace(/\/$/, "");
+  return normalizedEntry === PROJECT_EXTENSIONS_ENTRY || normalizedEntry === ".xtrm/extensions";
+}
+async function cleanupLegacyProjectExtensionCopies(projectRoot, dryRun, log) {
+  const piSettingsPath = import_path3.default.join(projectRoot, ".pi", "settings.json");
+  let existingSettings = {};
+  try {
+    existingSettings = await import_fs_extra7.default.readJson(piSettingsPath);
+  } catch {
+    return { removed: [], failed: [] };
+  }
+  const pointsToXtrmExtensions = (existingSettings.extensions ?? []).some(isXtrmExtensionsSetting);
+  if (!pointsToXtrmExtensions) return { removed: [], failed: [] };
+  const legacyExtensionsDir = import_path3.default.join(projectRoot, ".pi", "extensions");
+  if (!await import_fs_extra7.default.pathExists(legacyExtensionsDir)) return { removed: [], failed: [] };
+  const removed = [];
+  const failed = [];
+  for (const ext of MANAGED_EXTENSIONS) {
+    const legacyExtPath = import_path3.default.join(legacyExtensionsDir, ext.id);
+    const legacyStat = await import_fs_extra7.default.lstat(legacyExtPath).catch(() => null);
+    if (!legacyStat || legacyStat.isSymbolicLink() || !legacyStat.isDirectory()) {
+      continue;
+    }
+    if (dryRun) {
+      log?.(kleur_default.dim(`[DRY RUN] - .pi/extensions/${ext.id} (legacy copy)`));
+      continue;
+    }
+    try {
+      await import_fs_extra7.default.remove(legacyExtPath);
+      removed.push(ext.id);
+      log?.(kleur_default.dim(`Removed legacy .pi/extensions/${ext.id}`));
+    } catch (err) {
+      failed.push(ext.id);
+      log?.(kleur_default.red(`\u2717 Failed to remove legacy .pi/extensions/${ext.id}: ${err}`));
+    }
+  }
+  return { removed, failed };
 }
 async function updatePiSettings(projectRoot, dryRun, log) {
   const piSettingsPath = import_path3.default.join(projectRoot, ".pi", "settings.json");
@@ -44162,16 +44204,14 @@ async function updatePiSettings(projectRoot, dryRun, log) {
     existingSettings = await import_fs_extra7.default.readJson(piSettingsPath);
   } catch {
   }
-  const extensionsEntry = "../.xtrm/extensions";
-  const skillsEntry = "../.xtrm/skills/active/pi";
   const existingPackages = (existingSettings.packages ?? []).filter(
     (p) => !p.startsWith("./extensions/")
   );
   await import_fs_extra7.default.ensureDir(import_path3.default.join(projectRoot, ".pi"));
   await import_fs_extra7.default.writeJson(piSettingsPath, {
     ...existingSettings,
-    extensions: [extensionsEntry],
-    skills: [skillsEntry],
+    extensions: [PROJECT_EXTENSIONS_ENTRY],
+    skills: [PROJECT_SKILLS_ENTRY],
     packages: existingPackages
   }, { spaces: 2 });
   log?.(kleur_default.dim(`Updated .pi/settings.json \u2192 .xtrm/extensions + .xtrm/skills/active/pi`));
@@ -44307,6 +44347,9 @@ async function runPiRuntimeSync(opts = {}) {
   }
   console.log(kleur_default.dim("  " + "-".repeat(50)));
   const result = { ...emptyResult };
+  const legacyCleanup = await cleanupLegacyProjectExtensionCopies(resolvedProjectRoot, dryRun, log);
+  result.extensionsRemoved.push(...legacyCleanup.removed);
+  result.failed.push(...legacyCleanup.failed);
   for (const status of missingPackages) {
     const { pkg } = status;
     if (dryRun) {
@@ -44541,9 +44584,9 @@ async function launchWorktreeSession(opts) {
       } catch {
       }
     }
-    const worktreeExtensionsDir = import_node_path5.default.join(worktreePiDir, "extensions");
+    const coreExtDir = import_node_path5.default.join(worktreePath, ".xtrm", "extensions", "core");
     try {
-      await ensureCorePackageSymlink(worktreeExtensionsDir, worktreePath, false);
+      await ensureCorePackageSymlink(coreExtDir, worktreePath, false);
     } catch (error48) {
       const message = error48 instanceof Error ? error48.message : String(error48);
       console.log(kleur_default.dim(`  warning: could not ensure @xtrm/pi-core symlink (${message})`));

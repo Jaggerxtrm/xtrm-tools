@@ -36,6 +36,8 @@ function resolvePkgRoot(): string {
 }
 
 const PI_AGENT_DIR = process.env.PI_AGENT_DIR || path.join(homedir(), '.pi', 'agent');
+const PROJECT_EXTENSIONS_ENTRY = '../.xtrm/extensions';
+const PROJECT_SKILLS_ENTRY = '../.xtrm/skills/active/pi';
 
 // ── Extension Registry ───────────────────────────────────────────────────────
 
@@ -376,7 +378,7 @@ export interface PiSyncResult {
 }
 
 /**
- * Ensure @xtrm/pi-core is resolvable from .pi/node_modules/@xtrm/pi-core.
+ * Ensure @xtrm/pi-core is resolvable from .xtrm/extensions/node_modules/@xtrm/pi-core.
  * Creates a symlink pointing to the actual core source (not a mirror).
  */
 export async function ensureCorePackageSymlink(
@@ -387,7 +389,12 @@ export async function ensureCorePackageSymlink(
 ): Promise<void> {
     if (!await fs.pathExists(coreSrcDir)) return;
 
-    const nodeModulesDir = path.join(projectRoot, '.pi', 'node_modules', '@xtrm');
+    // Place symlink in .xtrm/extensions/node_modules/@xtrm/pi-core so that
+    // Node.js module resolution from any extension under .xtrm/extensions/
+    // can find @xtrm/pi-core by traversing up to .xtrm/extensions/node_modules/.
+    // (.pi/node_modules/ is NOT on the resolution path from .xtrm/extensions/.)
+    const extensionsDir = path.join(projectRoot, '.xtrm', 'extensions');
+    const nodeModulesDir = path.join(extensionsDir, 'node_modules', '@xtrm');
     const symlinkPath = path.join(nodeModulesDir, 'pi-core');
 
     // Use lstat (not pathExists) so we detect broken symlinks too
@@ -402,13 +409,66 @@ export async function ensureCorePackageSymlink(
     await fs.ensureDir(nodeModulesDir);
     const relTarget = path.relative(nodeModulesDir, coreSrcDir);
     await fs.symlink(relTarget, symlinkPath);
-    log?.(kleur.dim(`Created @xtrm/pi-core symlink for module resolution`));
+    log?.(kleur.dim(`Created @xtrm/pi-core symlink → .xtrm/extensions/node_modules/@xtrm/pi-core`));
 }
 
 /**
  * Update .pi/settings.json with extension package paths.
  * Pi only auto-discovers global extensions — project-scoped needs settings.json.
  */
+function isXtrmExtensionsSetting(entry: string): boolean {
+    const normalizedEntry = entry.replaceAll('\\', '/').replace(/\/$/, '');
+    return normalizedEntry === PROJECT_EXTENSIONS_ENTRY || normalizedEntry === '.xtrm/extensions';
+}
+
+async function cleanupLegacyProjectExtensionCopies(
+    projectRoot: string,
+    dryRun: boolean,
+    log?: (message: string) => void,
+): Promise<{ removed: string[]; failed: string[] }> {
+    const piSettingsPath = path.join(projectRoot, '.pi', 'settings.json');
+
+    let existingSettings: { extensions?: string[] } = {};
+    try {
+        existingSettings = await fs.readJson(piSettingsPath);
+    } catch {
+        return { removed: [], failed: [] };
+    }
+
+    const pointsToXtrmExtensions = (existingSettings.extensions ?? []).some(isXtrmExtensionsSetting);
+    if (!pointsToXtrmExtensions) return { removed: [], failed: [] };
+
+    const legacyExtensionsDir = path.join(projectRoot, '.pi', 'extensions');
+    if (!await fs.pathExists(legacyExtensionsDir)) return { removed: [], failed: [] };
+
+    const removed: string[] = [];
+    const failed: string[] = [];
+
+    for (const ext of MANAGED_EXTENSIONS) {
+        const legacyExtPath = path.join(legacyExtensionsDir, ext.id);
+        const legacyStat = await fs.lstat(legacyExtPath).catch(() => null);
+        if (!legacyStat || legacyStat.isSymbolicLink() || !legacyStat.isDirectory()) {
+            continue;
+        }
+
+        if (dryRun) {
+            log?.(kleur.dim(`[DRY RUN] - .pi/extensions/${ext.id} (legacy copy)`));
+            continue;
+        }
+
+        try {
+            await fs.remove(legacyExtPath);
+            removed.push(ext.id);
+            log?.(kleur.dim(`Removed legacy .pi/extensions/${ext.id}`));
+        } catch (err) {
+            failed.push(ext.id);
+            log?.(kleur.red(`✗ Failed to remove legacy .pi/extensions/${ext.id}: ${err}`));
+        }
+    }
+
+    return { removed, failed };
+}
+
 async function updatePiSettings(
     projectRoot: string,
     dryRun: boolean,
@@ -426,10 +486,6 @@ async function updatePiSettings(
         existingSettings = await fs.readJson(piSettingsPath);
     } catch { /* no existing settings */ }
 
-    // Point directly at .xtrm/ — Pi scans the directory for all extensions/skills
-    const extensionsEntry = '../.xtrm/extensions';
-    const skillsEntry = '../.xtrm/skills/active/pi';
-
     // Preserve user packages (npm:/git:/local), strip any old per-extension entries
     const existingPackages = (existingSettings.packages ?? []).filter(
         p => !p.startsWith('./extensions/')
@@ -438,8 +494,8 @@ async function updatePiSettings(
     await fs.ensureDir(path.join(projectRoot, '.pi'));
     await fs.writeJson(piSettingsPath, {
         ...existingSettings,
-        extensions: [extensionsEntry],
-        skills: [skillsEntry],
+        extensions: [PROJECT_EXTENSIONS_ENTRY],
+        skills: [PROJECT_SKILLS_ENTRY],
         packages: existingPackages,
     }, { spaces: 2 });
     log?.(kleur.dim(`Updated .pi/settings.json → .xtrm/extensions + .xtrm/skills/active/pi`));
@@ -634,6 +690,10 @@ export async function runPiRuntimeSync(opts: PiRuntimeOptions = {}): Promise<PiS
     console.log(kleur.dim('  ' + '-'.repeat(50)));
 
     const result: PiSyncResult = { ...emptyResult };
+
+    const legacyCleanup = await cleanupLegacyProjectExtensionCopies(resolvedProjectRoot, dryRun, log);
+    result.extensionsRemoved.push(...legacyCleanup.removed);
+    result.failed.push(...legacyCleanup.failed);
 
     // Install missing packages
     for (const status of missingPackages) {

@@ -323,8 +323,8 @@ export async function syncMcpServersWithCli(agent, mcpConfig, dryRun = false, pr
  * Load canonical MCP config from repository
  */
 export function loadCanonicalMcpConfig(repoRoot) {
-  const corePath = path.join(repoRoot, 'config', 'mcp_servers.json');
-  const optionalPath = path.join(repoRoot, 'config', 'mcp_servers_optional.json');
+  const corePath = path.join(repoRoot, 'config', 'claude.mcp.json');
+  const optionalPath = path.join(repoRoot, 'config', 'claude.mcp.optional.json');
   
   const config = { mcpServers: {} };
   

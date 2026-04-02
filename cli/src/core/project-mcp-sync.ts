@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import path from 'node:path';
 
-const CORE_MCP_CONFIG_FILE = 'mcp_servers.json';
+const CORE_MCP_CONFIG_FILE = 'claude.mcp.json';
 const PI_CORE_MCP_CONFIG_FILE = 'pi.mcp.json';
 const PROJECT_MCP_FILE = '.mcp.json';
 const PI_PROJECT_MCP_FILE = path.join('.pi', 'mcp.json');
@@ -21,6 +21,7 @@ interface McpProjectConfig {
 
 export interface SyncProjectMcpOptions {
     dryRun?: boolean;
+    preserveExistingFile?: boolean;
 }
 
 export interface SyncProjectMcpResult {
@@ -28,6 +29,7 @@ export interface SyncProjectMcpResult {
     missingEnvWarnings: string[];
     wroteFile: boolean;
     createdFile: boolean;
+    preservedExistingFile: boolean;
     mcpPath: string;
 }
 
@@ -95,7 +97,7 @@ function getMissingEnvWarnings(servers: McpServerMap): string[] {
 }
 
 export async function syncProjectMcpConfig(projectRoot: string, options: SyncProjectMcpOptions = {}): Promise<SyncProjectMcpResult> {
-    const { dryRun = false } = options;
+    const { dryRun = false, preserveExistingFile = false } = options;
     const xtrmConfigDir = path.join(projectRoot, '.xtrm', 'config');
     const coreConfigPath = path.join(xtrmConfigDir, CORE_MCP_CONFIG_FILE);
     const targetMcpPath = path.join(projectRoot, PROJECT_MCP_FILE);
@@ -106,6 +108,7 @@ export async function syncProjectMcpConfig(projectRoot: string, options: SyncPro
             missingEnvWarnings: [`canonical MCP config not found at ${coreConfigPath}`],
             wroteFile: false,
             createdFile: false,
+            preservedExistingFile: false,
             mcpPath: targetMcpPath,
         };
     }
@@ -116,9 +119,20 @@ export async function syncProjectMcpConfig(projectRoot: string, options: SyncPro
     const optionalConfig: McpConfigFile = { mcpServers: {} };
 
     const canonicalServers = mergeCanonicalServers(readMcpServers(coreConfig), readMcpServers(optionalConfig));
-    const missingEnvWarnings = getMissingEnvWarnings(canonicalServers);
 
     const hasExistingMcp = await fs.pathExists(targetMcpPath);
+    if (hasExistingMcp && preserveExistingFile) {
+        return {
+            addedServers: [],
+            missingEnvWarnings: [],
+            wroteFile: false,
+            createdFile: false,
+            preservedExistingFile: true,
+            mcpPath: targetMcpPath,
+        };
+    }
+
+    const missingEnvWarnings = getMissingEnvWarnings(canonicalServers);
     const existingConfig = hasExistingMcp
         ? (await fs.readJson(targetMcpPath) as Partial<McpProjectConfig>)
         : {};
@@ -149,6 +163,7 @@ export async function syncProjectMcpConfig(projectRoot: string, options: SyncPro
         missingEnvWarnings,
         wroteFile,
         createdFile: !hasExistingMcp,
+        preservedExistingFile: false,
         mcpPath: targetMcpPath,
     };
 }
@@ -165,6 +180,7 @@ export async function syncPiMcpConfig(projectRoot: string, options: SyncProjectM
             missingEnvWarnings: [`canonical MCP config not found at ${coreConfigPath}`],
             wroteFile: false,
             createdFile: false,
+            preservedExistingFile: false,
             mcpPath: targetMcpPath,
         };
     }
@@ -205,6 +221,7 @@ export async function syncPiMcpConfig(projectRoot: string, options: SyncProjectM
         missingEnvWarnings,
         wroteFile,
         createdFile: !hasExistingMcp,
+        preservedExistingFile: false,
         mcpPath: targetMcpPath,
     };
 }

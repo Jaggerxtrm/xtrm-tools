@@ -24,7 +24,7 @@ import { findRepoRoot } from '../utils/repo-root.js';
 import { confirmDestructiveAction } from '../utils/confirmation.js';
 
 const PKG_ROOT = resolvePackageRoot();
-const MCP_CORE_CONFIG_PATH = path.join(PKG_ROOT, '.xtrm', 'config', 'mcp_servers.json');
+const MCP_CORE_CONFIG_PATH = path.join(PKG_ROOT, '.xtrm', 'config', 'claude.mcp.json');
 const INSTRUCTIONS_DIR = path.join(PKG_ROOT, '.xtrm', 'config', 'instructions');
 const XTRM_BLOCK_START = '<!-- xtrm:start -->';
 const XTRM_BLOCK_END = '<!-- xtrm:end -->';
@@ -146,7 +146,7 @@ export async function ensureServiceRegistry(projectRoot: string, services: strin
             name: serviceName,
             description: `Detected from Docker configuration (${serviceName}).`,
             territory: [],
-            skill_path: `.claude/skills/${serviceId}/SKILL.md`,
+            skill_path: `.xtrm/skills/default/${serviceId}/SKILL.md`,
             last_sync: now,
         };
         changed = true;
@@ -558,7 +558,7 @@ function renderInitPlan(inventory: InitInventory): void {
     // Phase 6: Pi Runtime Sync (extensions + packages)
     console.log(kleur.bold('\n  Pi Runtime'));
     console.log(kleur.dim('  ↻  extensions + packages sync'));
-    console.log(kleur.dim('  ↻  .mcp.json + .pi/mcp.json sync from .xtrm/config/{mcp_servers.json,pi.mcp.json}'));
+    console.log(kleur.dim('  ↻  .mcp.json + .pi/mcp.json sync from .xtrm/config/{claude.mcp.json,pi.mcp.json}'));
 
     // Phase 6b: Runtime skills materialization + runtime pointers
     console.log(kleur.bold('\n  Skills'));
@@ -691,10 +691,12 @@ export async function runProjectInit(opts: InstallOpts = {}): Promise<void> {
     });
     await scaffoldSkillsDefaultFromPackage({ packageRoot, userXtrmDir, dryRun: false });
 
-    const mcpSync = await syncProjectMcpConfig(projectRoot);
+    const mcpSync = await syncProjectMcpConfig(projectRoot, { preserveExistingFile: true });
     if (mcpSync.wroteFile) {
         const verb = mcpSync.createdFile ? 'Created' : 'Updated';
         console.log(kleur.dim(`  • ${verb} ${mcpSync.mcpPath} (+${mcpSync.addedServers.length} server${mcpSync.addedServers.length === 1 ? '' : 's'})`));
+    } else if (mcpSync.preservedExistingFile) {
+        console.log(kleur.dim(`  • Preserved existing ${mcpSync.mcpPath}`));
     } else {
         console.log(kleur.dim(`  • ${mcpSync.mcpPath} already up to date`));
     }
@@ -727,7 +729,12 @@ export async function runProjectInit(opts: InstallOpts = {}): Promise<void> {
     await runPiInstall(false, Boolean(opts.global), projectRoot);
 
     // ── Phase 6b: Rebuild runtime skills views + wire runtime pointers ───────
-    await ensureAgentsSkillsSymlink(projectRoot);
+    const skillsActivation = await ensureAgentsSkillsSymlink(projectRoot);
+    if (skillsActivation.activatedClaudeSkills === skillsActivation.activatedPiSkills) {
+        console.log(kleur.green(`  ✓ Activated ${skillsActivation.activatedClaudeSkills} default skills → .xtrm/skills/active/{claude,pi}`));
+    } else {
+        console.log(kleur.green(`  ✓ Activated runtime skills → claude:${skillsActivation.activatedClaudeSkills}, pi:${skillsActivation.activatedPiSkills}`));
+    }
     await assertRuntimeSkillsViews(projectRoot);
 
     // ── Phase 7: Project Bootstrap ───────────────────────────────────────────

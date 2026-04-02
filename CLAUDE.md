@@ -212,7 +212,7 @@ Gate output appears as hook context. Fix failures before proceeding — do not c
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **xtrm-tools** (5433 symbols, 8143 relationships, 289 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **xtrm-tools** (5457 symbols, 8164 relationships, 291 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 

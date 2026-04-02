@@ -68,7 +68,8 @@ export async function runClaudeRuntimeSyncPhase(opts: ClaudeRuntimeSyncOptions):
     const settingsTemplatePath = path.join(packageRoot, '.xtrm', 'config', 'settings.json');
 
     const hooksConfig = await fs.readJson(hooksConfigPath) as NativeHooksConfig;
-    const generatedHooks: Record<string, HookWrapper[]> = hooksConfig.hooks ?? {};
+    const projectHooksDir = path.join(repoRoot, '.xtrm', 'hooks');
+    const generatedHooks = resolveHooksForProjectRuntime(hooksConfig.hooks ?? {}, projectHooksDir);
 
     const settingsPath = isGlobal
         ? path.join(os.homedir(), '.claude', 'settings.json')
@@ -142,6 +143,49 @@ export async function runClaudeRuntimeSyncPhase(opts: ClaudeRuntimeSyncOptions):
 }
 
 
+function resolveHooksForProjectRuntime(hooks: Record<string, HookWrapper[]>, projectHooksDir: string): Record<string, HookWrapper[]> {
+    const normalizedHooksDir = normalizeHookCommandPath(projectHooksDir);
+    const rewrittenHooks: Record<string, HookWrapper[]> = {};
+
+    for (const [eventName, wrappers] of Object.entries(hooks)) {
+        rewrittenHooks[eventName] = wrappers.map(wrapper => ({
+            ...wrapper,
+            hooks: wrapper.hooks.map(hook => {
+                if (hook.type !== 'command') {
+                    return hook;
+                }
+                return {
+                    ...hook,
+                    command: rewritePluginRootCommandToProjectHookPath(hook.command, normalizedHooksDir),
+                };
+            }),
+        }));
+    }
+
+    return rewrittenHooks;
+}
+
+function rewritePluginRootCommandToProjectHookPath(command: string, normalizedHooksDir: string): string {
+    const pluginRootPatterns = [
+        /\$\{CLAUDE_PLUGIN_ROOT\}\/hooks\/([^\s"']+)/g,
+        /\$CLAUDE_PLUGIN_ROOT\/hooks\/([^\s"']+)/g,
+    ];
+
+    let rewrittenCommand = command;
+    for (const pattern of pluginRootPatterns) {
+        rewrittenCommand = rewrittenCommand.replace(pattern, (_match, relativePath: string) => {
+            const normalizedRelativePath = relativePath.replace(/\\/g, '/');
+            const absoluteHookPath = path.join(normalizedHooksDir, normalizedRelativePath);
+            return `"${normalizeHookCommandPath(absoluteHookPath)}"`;
+        });
+    }
+
+    return rewrittenCommand;
+}
+
+function normalizeHookCommandPath(targetPath: string): string {
+    return targetPath.replace(/\\/g, '/');
+}
 
 function countHookEntries(hooks: Record<string, HookWrapper[]>): number {
     let count = 0;

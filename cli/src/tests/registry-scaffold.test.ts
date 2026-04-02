@@ -154,7 +154,7 @@ describe('ensureAgentsSkillsSymlink', () => {
       enabledPacks: { claude: ['pack-one'], pi: [] },
     });
 
-    await ensureAgentsSkillsSymlink(tempDir);
+    const activation = await ensureAgentsSkillsSymlink(tempDir);
 
     const claudeLink = path.join(tempDir, '.claude', 'skills');
     const activeClaude = path.join(skillsRoot, 'active', 'claude');
@@ -164,6 +164,15 @@ describe('ensureAgentsSkillsSymlink', () => {
 
     const activeEntries = (await fs.readdir(activeClaude)).sort();
     expect(activeEntries).toEqual(['alpha', 'beta']);
+
+    const activePi = path.join(skillsRoot, 'active', 'pi');
+    const activePiEntries = (await fs.readdir(activePi)).sort();
+    expect(activePiEntries).toEqual(['alpha']);
+
+    expect(activation).toEqual({
+      activatedClaudeSkills: 2,
+      activatedPiSkills: 1,
+    });
     expect((await fs.lstat(path.join(activeClaude, 'alpha'))).isSymbolicLink()).toBe(true);
     expect((await fs.lstat(path.join(activeClaude, 'beta'))).isSymbolicLink()).toBe(true);
     expect(await fs.pathExists(path.join(tempDir, '.agents', 'skills'))).toBe(false);
@@ -172,9 +181,13 @@ describe('ensureAgentsSkillsSymlink', () => {
   it('skips when .xtrm/skills/default does not exist', async () => {
     const tempDir = await createTempDir();
 
-    await ensureAgentsSkillsSymlink(tempDir);
+    const activation = await ensureAgentsSkillsSymlink(tempDir);
 
     expect(await fs.pathExists(path.join(tempDir, '.claude', 'skills'))).toBe(false);
+    expect(activation).toEqual({
+      activatedClaudeSkills: 0,
+      activatedPiSkills: 0,
+    });
   });
 
   itIfSymlinkSupported('is idempotent and logs already in place on second call', async () => {
@@ -205,5 +218,25 @@ describe('ensureAgentsSkillsSymlink', () => {
 
     expect((await fs.lstat(claudeSkillsDir)).isSymbolicLink()).toBe(true);
     expect(await fs.pathExists(path.join(claudeSkillsDir, 'local.txt'))).toBe(false);
+  });
+
+  itIfSymlinkSupported('evicts non-symlink entries from active/claude during rebuild', async () => {
+    const tempDir = await createTempDir();
+    const skillsRoot = path.join(tempDir, '.xtrm', 'skills');
+    const activeClaudeRoot = path.join(skillsRoot, 'active', 'claude');
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    await writeSkill(path.join(skillsRoot, 'default'), 'alpha');
+    await fs.ensureDir(path.join(activeClaudeRoot, 'corrupt-dir'));
+    await fs.writeFile(path.join(activeClaudeRoot, 'corrupt-dir', 'junk.txt'), 'junk', 'utf8');
+
+    await ensureAgentsSkillsSymlink(tempDir);
+
+    const activeEntries = (await fs.readdir(activeClaudeRoot)).sort();
+    expect(activeEntries).toEqual(['alpha']);
+    expect((await fs.lstat(path.join(activeClaudeRoot, 'alpha'))).isSymbolicLink()).toBe(true);
+
+    const messages = logSpy.mock.calls.map(([message]) => String(message));
+    expect(messages.some(message => message.includes('contains non-symlink entries (corrupt-dir)'))).toBe(true);
   });
 });

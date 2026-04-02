@@ -351,26 +351,6 @@
           "hash": "3eb21391e4512e6dfa47051159cb6f68d130bba068dbe5b6b4744c422ed18387",
           "version": "0.7.0"
         },
-        "quality-gates/.claude/hooks/hook-config.json": {
-          "hash": "f29b118917ec714bfa2dfefe478ea512f84b8f7ad80aebf647011b22d18a2717",
-          "version": "0.7.0"
-        },
-        "quality-gates/.claude/hooks/quality-check.cjs": {
-          "hash": "c6bbff2b05dcb810a5dc7437104a253398ef162b4a2403ba676ee136fe698dfb",
-          "version": "0.7.0"
-        },
-        "quality-gates/.claude/hooks/quality-check.py": {
-          "hash": "b46e1361dcdc0b41401c3a2b5872356391b2bc9877c4a72c058bc158eee82118",
-          "version": "0.7.0"
-        },
-        "quality-gates/.claude/settings.json": {
-          "hash": "78922a784ee78e9e50587e93628cd3b9d4dfbe49087adc4514e6781cea38cbb9",
-          "version": "0.7.0"
-        },
-        "quality-gates/.claude/skills/using-quality-gates/SKILL.md": {
-          "hash": "0570f34a7fbca7f4a53fd751503a78152401b0697e95baf06bf1c221b1000f83",
-          "version": "0.7.0"
-        },
         "quality-gates/evals/evals.json": {
           "hash": "2997124435c7cb6b773ae176d7475e76fd9299e7faa8436d27d745698b0d6ed2",
           "version": "0.7.0"
@@ -650,7 +630,7 @@
           "version": "0.7.0"
         },
         "hooks.json": {
-          "hash": "c92f78b4265c6ba662cc293066a225b9d3cf8045682e4a1fa33f5fcb2ab73393",
+          "hash": "d825bc9632a991203a36b0f4859b873d03fdf245836280ab6cef352f0cdd148d",
           "version": "0.7.0"
         },
         "instructions/agents-top.md": {
@@ -661,12 +641,12 @@
           "hash": "1d8ef30c1e2c1899f2c58e0b0eced0c9bb66665d9cfa7f57eab8172807959ff5",
           "version": "0.7.0"
         },
-        "mcp_servers_optional.json": {
+        "claude.mcp.optional.json": {
           "hash": "6cf39ec4a4cf6096a8108c883456c80bd45f0d37430f9403ea44aea1590f4d5c",
           "version": "0.7.0"
         },
-        "mcp_servers.json": {
-          "hash": "e86d6161c705ad47c843844eb996355e39de23904570eea462dd5da492a3c651",
+        "claude.mcp.json": {
+          "hash": "20b811ccc82395f9f3cd9a45ef36b776c3382d553924ef34662dd817a0a1c197",
           "version": "0.7.0"
         },
         "pi/auth.json.template": {

@@ -22,6 +22,42 @@ function getSessionHash(cwd: string): string {
     return r.ok ? r.out : Date.now().toString(36);
 }
 
+const MAX_REPORT_FILE_ROWS = 40;
+const MAX_SPECIALIST_ROWS = 25;
+
+function isSkillPath(filePath: string): boolean {
+    return filePath.startsWith('.xtrm/skills/')
+        || filePath.startsWith('.pi/skills/')
+        || filePath.endsWith('/SKILL.md');
+}
+
+function renderFileRows(lines: string[], files: string[]): void {
+    const regularFiles = files.filter(file => !isSkillPath(file));
+    const skillFiles = files.filter(isSkillPath);
+    const visibleRegularFiles = regularFiles.slice(0, MAX_REPORT_FILE_ROWS);
+
+    for (const file of visibleRegularFiles) {
+        lines.push(`- \`${file}\``);
+    }
+
+    const hiddenRegularCount = regularFiles.length - visibleRegularFiles.length;
+    if (hiddenRegularCount > 0) {
+        lines.push(`- ... and ${hiddenRegularCount} more files`);
+    }
+
+    if (skillFiles.length > 0) {
+        lines.push(`- \`[skill files]\` ${skillFiles.length} skill/runtime file(s)`);
+    }
+}
+
+function formatDuration(seconds: number | null): string {
+    if (seconds === null || Number.isNaN(seconds) || seconds < 0) return '?';
+    if (seconds < 60) return `${seconds}s`;
+    const minutes = Math.floor(seconds / 60);
+    const remSeconds = seconds % 60;
+    return `${minutes}m ${remSeconds}s`;
+}
+
 interface ClosedIssue {
     id: string;
     title: string;
@@ -103,36 +139,62 @@ function collectOpenIssues(cwd: string): OpenIssue[] {
 }
 
 interface SpecialistJob {
-    name: string;
+    id: string;
     status: string;
     specialist: string;
-    duration: string;
+    beadId: string;
+    model: string;
+    startedAtMs: number;
+    elapsedSeconds: number | null;
 }
 
-function collectSpecialistJobs(cwd: string): SpecialistJob[] {
+function parseNumber(value: unknown): number | null {
+    return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+function collectSpecialistJobs(cwd: string, sessionStartMs: number): SpecialistJob[] {
     const jobsDir = path.join(cwd, '.specialists', 'jobs');
     if (!fs.pathExistsSync(jobsDir)) return [];
 
     const jobs: SpecialistJob[] = [];
     try {
-        const dirs = fs.readdirSync(jobsDir).filter(d =>
-            fs.statSync(path.join(jobsDir, d)).isDirectory()
-        );
-        for (const dir of dirs) {
-            const statusFile = path.join(jobsDir, dir, 'status.json');
+        const entries = fs.readdirSync(jobsDir);
+        for (const entry of entries) {
+            const jobDir = path.join(jobsDir, entry);
+            if (!fs.statSync(jobDir).isDirectory()) continue;
+
+            const statusFile = path.join(jobDir, 'status.json');
             if (!fs.pathExistsSync(statusFile)) continue;
+
             try {
-                const data = JSON.parse(fs.readFileSync(statusFile, 'utf8'));
+                const data = JSON.parse(fs.readFileSync(statusFile, 'utf8')) as Record<string, unknown>;
+                const startedAtMs = parseNumber(data.started_at_ms) ?? 0;
+                if (startedAtMs > 0 && startedAtMs < sessionStartMs) continue;
+
+                const elapsedSeconds = parseNumber(data.elapsed_s)
+                    ?? (() => {
+                        const durationMs = parseNumber(data.duration_ms);
+                        return durationMs === null ? null : Math.round(durationMs / 1000);
+                    })();
+
                 jobs.push({
-                    name: dir,
-                    status: data.status ?? 'unknown',
-                    specialist: data.specialist_name ?? data.specialist ?? 'unknown',
-                    duration: data.duration_ms ? `${(data.duration_ms / 1000).toFixed(1)}s` : '?',
+                    id: String(data.id ?? entry),
+                    status: String(data.status ?? data.current_event ?? 'unknown'),
+                    specialist: String(data.specialist_name ?? data.specialist ?? 'unknown'),
+                    beadId: String(data.bead_id ?? ''),
+                    model: String(data.model ?? ''),
+                    startedAtMs,
+                    elapsedSeconds,
                 });
-            } catch { /* skip bad files */ }
+            } catch {
+                // skip malformed status files
+            }
         }
-    } catch { /* jobs dir unreadable */ }
-    return jobs;
+    } catch {
+        // jobs dir unreadable
+    }
+
+    return jobs.sort((a, b) => b.startedAtMs - a.startedAtMs);
 }
 
 function collectMemories(cwd: string): Array<{ key: string; content: string }> {
@@ -155,15 +217,12 @@ function collectMemories(cwd: string): Array<{ key: string; content: string }> {
 function buildSkeleton(opts: {
     date: string;
     branch: string;
-    defaultBranch: string;
-    commitLog: string;
     commitCount: number;
     closedIssues: ClosedIssue[];
     openIssues: OpenIssue[];
     newFiles: string[];
     modifiedFiles: string[];
     deletedFiles: string[];
-    diffStat: string;
     specialistJobs: SpecialistJob[];
     memories: Array<{ key: string; content: string }>;
 }): string {
@@ -222,17 +281,34 @@ function buildSkeleton(opts: {
     lines.push('## Specialist Dispatches');
     lines.push('');
     if (opts.specialistJobs.length > 0) {
-        lines.push('### Jobs');
-        lines.push('');
-        lines.push('| Job | Specialist | Status | Duration |');
-        lines.push('|-----|-----------|--------|----------|');
+        const statusCounts = new Map<string, number>();
         for (const job of opts.specialistJobs) {
-            lines.push(`| ${job.name} | ${job.specialist} | ${job.status} | ${job.duration} |`);
+            const current = statusCounts.get(job.status) ?? 0;
+            statusCounts.set(job.status, current + 1);
         }
+        const statusSummary = [...statusCounts.entries()]
+            .sort((a, b) => a[0].localeCompare(b[0]))
+            .map(([status, count]) => `${status}:${count}`)
+            .join(', ');
+
+        lines.push(`Session jobs detected: **${opts.specialistJobs.length}** (${statusSummary})`);
         lines.push('');
-        lines.push('<!-- FILL: Organize into Wave summary table with models and outcomes. Add Problems Encountered sub-table if any dispatches failed or had issues. -->');
+        lines.push('| Job | Specialist | Status | Bead | Model | Elapsed |');
+        lines.push('|-----|-----------|--------|------|-------|---------|');
+
+        const visibleJobs = opts.specialistJobs.slice(0, MAX_SPECIALIST_ROWS);
+        for (const job of visibleJobs) {
+            lines.push(`| ${job.id} | ${job.specialist} | ${job.status} | ${job.beadId || '-'} | ${job.model || '-'} | ${formatDuration(job.elapsedSeconds)} |`);
+        }
+
+        if (opts.specialistJobs.length > visibleJobs.length) {
+            lines.push(`| ... | ... | ... | ... | ... | ... (${opts.specialistJobs.length - visibleJobs.length} more) |`);
+        }
+
+        lines.push('');
+        lines.push('<!-- FILL: Keep this section session-scoped. Add only outcomes that affect handoff (failures, partial work, follow-up actions). -->');
     } else {
-        lines.push('*No specialist dispatches detected.*');
+        lines.push('*No specialist dispatches detected for this session range.*');
         lines.push('');
         lines.push('<!-- FILL: If specialists were used via MCP tools (not CLI), document dispatches here with wave/model/outcome details. -->');
     }
@@ -249,29 +325,28 @@ function buildSkeleton(opts: {
     // Code Changes
     lines.push('## Code Changes');
     lines.push('');
+    lines.push('### Change summary');
+    lines.push(`- Added: ${opts.newFiles.length}`);
+    lines.push(`- Modified: ${opts.modifiedFiles.length}`);
+    lines.push(`- Deleted: ${opts.deletedFiles.length}`);
+    lines.push('');
+
     if (opts.newFiles.length > 0) {
         lines.push('### New files');
-        for (const f of opts.newFiles) lines.push(`- \`${f}\``);
+        renderFileRows(lines, opts.newFiles);
         lines.push('');
     }
     if (opts.modifiedFiles.length > 0) {
         lines.push('### Modified files');
-        for (const f of opts.modifiedFiles) lines.push(`- \`${f}\``);
+        renderFileRows(lines, opts.modifiedFiles);
         lines.push('');
     }
     if (opts.deletedFiles.length > 0) {
         lines.push('### Deleted files');
-        for (const f of opts.deletedFiles) lines.push(`- \`${f}\``);
+        renderFileRows(lines, opts.deletedFiles);
         lines.push('');
     }
-    if (opts.diffStat) {
-        lines.push('### Diff stats');
-        lines.push('```');
-        lines.push(opts.diffStat);
-        lines.push('```');
-        lines.push('');
-    }
-    lines.push('<!-- FILL: Narrative explaining key modifications — what changed and why. Group logically if many files. -->');
+    lines.push('<!-- FILL: Narrative explaining key modifications — what changed and why. Group logically if many files. Keep to handoff-relevant changes only. -->');
     lines.push('');
 
     // Documentation Updates
@@ -338,14 +413,20 @@ async function generateReport(cwd: string): Promise<string> {
     const newFiles = run('git', ['diff', range, '--name-only', '--diff-filter=A'], cwd).out.split('\n').filter(Boolean);
     const modifiedFiles = run('git', ['diff', range, '--name-only', '--diff-filter=M'], cwd).out.split('\n').filter(Boolean);
     const deletedFiles = run('git', ['diff', range, '--name-only', '--diff-filter=D'], cwd).out.split('\n').filter(Boolean);
-    const diffStat = run('git', ['diff', range, '--stat'], cwd).out;
+
+    const oldestCommitEpoch = run('git', ['log', range, '--reverse', '--format=%ct'], cwd).out
+        .split('\n')
+        .find(Boolean);
+    const sessionStartMs = oldestCommitEpoch
+        ? Number(oldestCommitEpoch) * 1000
+        : Date.now() - (24 * 60 * 60 * 1000);
 
     // Beads data
     const closedIssues = collectClosedIssues(commitLog, cwd);
     const openIssues = collectOpenIssues(cwd);
 
     // Specialist data
-    const specialistJobs = collectSpecialistJobs(cwd);
+    const specialistJobs = collectSpecialistJobs(cwd, sessionStartMs);
 
     // Memories
     const memories = collectMemories(cwd);
@@ -354,15 +435,12 @@ async function generateReport(cwd: string): Promise<string> {
     const skeleton = buildSkeleton({
         date,
         branch,
-        defaultBranch,
-        commitLog,
         commitCount,
         closedIssues,
         openIssues,
         newFiles,
         modifiedFiles,
         deletedFiles,
-        diffStat,
         specialistJobs,
         memories,
     });

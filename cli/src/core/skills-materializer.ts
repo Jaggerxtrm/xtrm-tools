@@ -135,6 +135,26 @@ async function atomicSwapDirectory(tempRoot: string, targetRoot: string): Promis
   }
 }
 
+async function findNonSymlinkEntries(runtimeRoot: string): Promise<string[]> {
+  const runtimeRootExists = await fs.pathExists(runtimeRoot);
+  if (!runtimeRootExists) {
+    return [];
+  }
+
+  const entryNames = (await fs.readdir(runtimeRoot)).sort((a, b) => a.localeCompare(b));
+  const nonSymlinkEntryNames: string[] = [];
+
+  for (const entryName of entryNames) {
+    const entryPath = path.join(runtimeRoot, entryName);
+    const entryStat = await fs.lstat(entryPath).catch(() => null);
+    if (!entryStat?.isSymbolicLink()) {
+      nonSymlinkEntryNames.push(entryName);
+    }
+  }
+
+  return nonSymlinkEntryNames;
+}
+
 export async function rebuildRuntimeActiveView(
   runtime: SkillsRuntime,
   skillsRoot: string,
@@ -143,6 +163,15 @@ export async function rebuildRuntimeActiveView(
 
   const activeRuntimeRoot = resolveActiveRuntimeRoot(skillsRoot, runtime);
   await fs.ensureDir(path.dirname(activeRuntimeRoot));
+
+  const nonSymlinkEntryNames = await findNonSymlinkEntries(activeRuntimeRoot);
+  if (nonSymlinkEntryNames.length > 0) {
+    console.log(
+      `[xtrm] Warning: ${activeRuntimeRoot} contains non-symlink entries (${nonSymlinkEntryNames.join(', ')}). ` +
+      'These entries will be evicted during runtime view rebuild. ' +
+      'Do not write skills to .claude/skills directly; write to .xtrm/skills/default or packs.',
+    );
+  }
 
   const tempRoot = await buildRuntimeTempView(runtime, skillsRoot, selection.skills);
   await atomicSwapDirectory(tempRoot, activeRuntimeRoot);

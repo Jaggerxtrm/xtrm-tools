@@ -327,8 +327,8 @@ export async function syncMcpServersWithCli(
  * Load canonical MCP config from repository
  */
 export function loadCanonicalMcpConfig(repoRoot: string, includeOptional: boolean = false): any {
-    const corePath = path.join(repoRoot, 'config', 'mcp_servers.json');
-    const optionalPath = path.join(repoRoot, 'config', 'mcp_servers_optional.json');
+    const corePath = path.join(repoRoot, 'config', 'claude.mcp.json');
+    const optionalPath = path.join(repoRoot, 'config', 'claude.mcp.optional.json');
 
     const config: any = { mcpServers: {} };
 
@@ -349,7 +349,7 @@ export function loadCanonicalMcpConfig(repoRoot: string, includeOptional: boolea
  * Prompt user to select optional MCP servers
  */
 export async function promptOptionalServers(repoRoot: string): Promise<string[] | false> {
-    const optionalPath = path.join(repoRoot, 'config', 'mcp_servers_optional.json');
+    const optionalPath = path.join(repoRoot, 'config', 'claude.mcp.optional.json');
 
     if (!fs.existsSync(optionalPath)) {
         return false;

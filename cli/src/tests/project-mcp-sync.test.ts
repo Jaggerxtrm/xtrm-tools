@@ -14,7 +14,7 @@ beforeEach(async () => {
   projectRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'xtrm-mcp-sync-'));
   await fs.ensureDir(path.join(projectRoot, '.xtrm', 'config'));
 
-  await fs.writeJson(path.join(projectRoot, '.xtrm', 'config', 'mcp_servers.json'), {
+  await fs.writeJson(path.join(projectRoot, '.xtrm', 'config', 'claude.mcp.json'), {
     mcpServers: {
       serena: {
         type: 'stdio',
@@ -139,8 +139,31 @@ describe('syncProjectMcpConfig', () => {
     expect(canonicalKeys).toHaveLength(1);
   });
 
+  it('preserves existing .mcp.json when preserveExistingFile is enabled', async () => {
+    const mcpPath = path.join(projectRoot, '.mcp.json');
+    await fs.writeJson(mcpPath, {
+      mcpServers: {
+        custom: {
+          type: 'stdio',
+          command: 'node',
+          args: ['custom-mcp.js'],
+        },
+      },
+    }, { spaces: 2 });
+
+    const before = await fs.readFile(mcpPath, 'utf8');
+    const result = await syncProjectMcpConfig(projectRoot, { preserveExistingFile: true });
+    const after = await fs.readFile(mcpPath, 'utf8');
+
+    expect(result.wroteFile).toBe(false);
+    expect(result.createdFile).toBe(false);
+    expect(result.preservedExistingFile).toBe(true);
+    expect(result.addedServers).toEqual([]);
+    expect(after).toBe(before);
+  });
+
   it('handles missing canonical config gracefully', async () => {
-    await fs.remove(path.join(projectRoot, '.xtrm', 'config', 'mcp_servers.json'));
+    await fs.remove(path.join(projectRoot, '.xtrm', 'config', 'claude.mcp.json'));
 
     const result = await syncProjectMcpConfig(projectRoot);
 

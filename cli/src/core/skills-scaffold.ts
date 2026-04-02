@@ -5,6 +5,11 @@ import { rebuildAllRuntimeActiveViews } from './skills-materializer.js';
 import { resolveSkillsRoot } from './skills-layout.js';
 import { validateSkillsInvariants } from './skill-discovery.js';
 
+export interface SkillsActivationResult {
+    readonly activatedClaudeSkills: number;
+    readonly activatedPiSkills: number;
+}
+
 export async function ensureSkillsSymlink(
     linkPath: string,
     symlinkTarget: string,
@@ -20,6 +25,10 @@ export async function ensureSkillsSymlink(
             }
             await fs.remove(linkPath);
         } else {
+            if (label === '.claude/skills') {
+                console.log(kleur.yellow('  ⚠ .claude/skills is a runtime-managed read-only view; direct writes are unsupported.'));
+                console.log(kleur.yellow('    Move custom skills to .xtrm/skills/default or .xtrm/skills/{optional,user}/packs/* and rebuild.'));
+            }
             await fs.remove(linkPath);
             console.log(kleur.yellow(`  ⚠ ${label} was a real path — replaced with managed symlink`));
         }
@@ -29,9 +38,14 @@ export async function ensureSkillsSymlink(
     console.log(`${kleur.green('  ✓')} ${label} → ${symlinkTarget}`);
 }
 
-export async function ensureAgentsSkillsSymlink(projectRoot: string): Promise<void> {
+export async function ensureAgentsSkillsSymlink(projectRoot: string): Promise<SkillsActivationResult> {
     const skillsRoot = resolveSkillsRoot(projectRoot);
-    if (!await fs.pathExists(path.join(skillsRoot, 'default'))) return;
+    if (!await fs.pathExists(path.join(skillsRoot, 'default'))) {
+        return {
+            activatedClaudeSkills: 0,
+            activatedPiSkills: 0,
+        };
+    }
 
     const invariantViolations = await validateSkillsInvariants(skillsRoot);
     if (invariantViolations.length > 0) {
@@ -39,7 +53,9 @@ export async function ensureAgentsSkillsSymlink(projectRoot: string): Promise<vo
         throw new Error(`Skills invariants failed. ${summary}`);
     }
 
-    await rebuildAllRuntimeActiveViews(skillsRoot);
+    const materializedViews = await rebuildAllRuntimeActiveViews(skillsRoot);
+    const activatedClaudeSkills = materializedViews.find(view => view.runtime === 'claude')?.discoveredSkillCount ?? 0;
+    const activatedPiSkills = materializedViews.find(view => view.runtime === 'pi')?.discoveredSkillCount ?? 0;
 
     await ensureSkillsSymlink(
         path.join(projectRoot, '.claude', 'skills'),
@@ -51,4 +67,9 @@ export async function ensureAgentsSkillsSymlink(projectRoot: string): Promise<vo
     if (await fs.pathExists(agentsSkillsPath)) {
         console.log(kleur.dim('  ○ .agents/skills is deprecated; runtime skills are generated under .xtrm/skills/active/*'));
     }
+
+    return {
+        activatedClaudeSkills,
+        activatedPiSkills,
+    };
 }

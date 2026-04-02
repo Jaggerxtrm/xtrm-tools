@@ -86,7 +86,8 @@ function hasXtrmHookCommand(hooks: Record<string, HookWrapper[]>): boolean {
             for (const hook of wrapper.hooks ?? []) {
                 if (hook.type !== 'command') continue;
                 if (typeof hook.command !== 'string') continue;
-                if (hook.command.includes('.xtrm/hooks/')) return true;
+                const normalizedCommand = hook.command.replace(/\\/g, '/');
+                if (normalizedCommand.includes('/.xtrm/hooks/')) return true;
             }
         }
     }
@@ -94,28 +95,14 @@ function hasXtrmHookCommand(hooks: Record<string, HookWrapper[]>): boolean {
     return false;
 }
 
-function verifyClaudeRuntime(projectRoot: string): {
+function readClaudeSettingsVerification(settingsPath: string): {
     hooksWired: boolean;
     hooksEvents: number;
     hookCommands: number;
     settingsPath: string;
 } {
-    const settingsPath = path.join(projectRoot, '.claude', 'settings.json');
-    const fallbackSettingsPath = path.join(os.homedir(), '.claude', 'settings.json');
-
-    const resolvedSettingsPath = fs.pathExistsSync(settingsPath) ? settingsPath : fallbackSettingsPath;
-
-    if (!fs.pathExistsSync(resolvedSettingsPath)) {
-        return {
-            hooksWired: false,
-            hooksEvents: 0,
-            hookCommands: 0,
-            settingsPath: resolvedSettingsPath,
-        };
-    }
-
     try {
-        const settings = fs.readJsonSync(resolvedSettingsPath) as ClaudeSettings;
+        const settings = fs.readJsonSync(settingsPath) as ClaudeSettings;
         const hooks = settings.hooks ?? {};
         const hooksEvents = Object.keys(hooks).length;
         const hookCommands = countHookCommands(hooks);
@@ -125,16 +112,53 @@ function verifyClaudeRuntime(projectRoot: string): {
             hooksWired,
             hooksEvents,
             hookCommands,
-            settingsPath: resolvedSettingsPath,
+            settingsPath,
         };
     } catch {
         return {
             hooksWired: false,
             hooksEvents: 0,
             hookCommands: 0,
-            settingsPath: resolvedSettingsPath,
+            settingsPath,
         };
     }
+}
+
+function verifyClaudeRuntime(projectRoot: string): {
+    hooksWired: boolean;
+    hooksEvents: number;
+    hookCommands: number;
+    settingsPath: string;
+} {
+    const projectSettingsPath = path.join(projectRoot, '.claude', 'settings.json');
+    const fallbackSettingsPath = path.join(os.homedir(), '.claude', 'settings.json');
+    const candidatePaths = projectSettingsPath === fallbackSettingsPath
+        ? [projectSettingsPath]
+        : [projectSettingsPath, fallbackSettingsPath];
+
+    let fallbackResult = {
+        hooksWired: false,
+        hooksEvents: 0,
+        hookCommands: 0,
+        settingsPath: projectSettingsPath,
+    };
+
+    for (const settingsPath of candidatePaths) {
+        if (!fs.pathExistsSync(settingsPath)) {
+            continue;
+        }
+
+        const result = readClaudeSettingsVerification(settingsPath);
+        if (result.hooksWired) {
+            return result;
+        }
+
+        if (result.hookCommands > fallbackResult.hookCommands || result.hooksEvents > fallbackResult.hooksEvents) {
+            fallbackResult = result;
+        }
+    }
+
+    return fallbackResult;
 }
 
 async function verifyPiRuntime(projectRoot: string): Promise<PiRuntimePlan> {

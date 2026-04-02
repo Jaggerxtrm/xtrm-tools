@@ -4,7 +4,9 @@ import path from 'node:path';
 import { rmSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  installFromRegistry,
   isSkillsDefaultPath,
+  isUserOwnedPath,
   scaffoldSkillsDefaultFromPackage,
   stripXtrmPrefix,
   toPosix,
@@ -67,6 +69,18 @@ describe('registry-scaffold path helpers', () => {
   it('isSkillsDefaultPath returns false for config paths', () => {
     expect(isSkillsDefaultPath('config/settings.json')).toBe(false);
   });
+
+  it('isUserOwnedPath matches .xtrm/memory.md', () => {
+    expect(isUserOwnedPath('memory.md')).toBe(true);
+  });
+
+  it('isUserOwnedPath matches files under .xtrm/skills/user/', () => {
+    expect(isUserOwnedPath('skills/user/packs/local/PACK.json')).toBe(true);
+  });
+
+  it('isUserOwnedPath ignores non user-owned paths', () => {
+    expect(isUserOwnedPath('skills/default/using-xtrm/SKILL.md')).toBe(false);
+  });
 });
 
 describe('scaffoldSkillsDefaultFromPackage', () => {
@@ -123,6 +137,52 @@ describe('scaffoldSkillsDefaultFromPackage', () => {
 
     expect(result).toBe('noop');
     expect(await fs.pathExists(path.join(userXtrmDir, 'skills', 'default'))).toBe(false);
+  });
+});
+
+describe('installFromRegistry', () => {
+  it('never installs user-owned paths from registry assets', async () => {
+    const tempDir = await createTempDir();
+    const packageRoot = path.join(tempDir, 'pkg');
+    const userXtrmDir = path.join(tempDir, 'user-xtrm');
+
+    const memorySource = path.join(packageRoot, '.xtrm', 'memory.md');
+    const hookSource = path.join(packageRoot, '.xtrm', 'hooks', 'post-tool-use.mjs');
+
+    await fs.ensureDir(path.dirname(memorySource));
+    await fs.ensureDir(path.dirname(hookSource));
+    await fs.writeFile(memorySource, 'generated memory\n', 'utf8');
+    await fs.writeFile(hookSource, 'export default {}\n', 'utf8');
+
+    const registry = {
+      version: '1.0.0',
+      assets: {
+        core: {
+          source_dir: '.xtrm',
+          install_mode: 'copy' as const,
+          files: {
+            'memory.md': { hash: 'memory-hash', version: '1.0.0' },
+            'hooks/post-tool-use.mjs': { hash: 'hook-hash', version: '1.0.0' },
+          },
+        },
+      },
+    };
+
+    await fs.ensureDir(path.join(packageRoot, '.xtrm'));
+    await fs.writeJson(path.join(packageRoot, '.xtrm', 'registry.json'), registry);
+
+    const result = await installFromRegistry({
+      packageRoot,
+      registry,
+      userXtrmDir,
+      dryRun: false,
+      force: true,
+      yes: true,
+    });
+
+    expect(result.installed).toBe(1);
+    expect(await fs.pathExists(path.join(userXtrmDir, 'hooks', 'post-tool-use.mjs'))).toBe(true);
+    expect(await fs.pathExists(path.join(userXtrmDir, 'memory.md'))).toBe(false);
   });
 });
 

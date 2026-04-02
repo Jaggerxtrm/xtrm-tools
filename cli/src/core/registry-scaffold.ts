@@ -31,6 +31,17 @@ export interface InstallStats {
     forced: number;
 }
 
+export const USER_OWNED_PATHS: readonly string[] = [
+    'memory.md',
+    'skills/user/',
+];
+
+export function isUserOwnedPath(relativePath: string): boolean {
+    return USER_OWNED_PATHS.some(userOwnedPath => userOwnedPath.endsWith('/')
+        ? relativePath.startsWith(userOwnedPath)
+        : relativePath === userOwnedPath);
+}
+
 export function resolvePackageRoot(): string {
     const candidates = [
         path.resolve(__dirname, '../..'),
@@ -183,6 +194,10 @@ export async function installFromRegistry(params: {
             const relativePath = toUserRelativePath(asset.source_dir, filePath);
             const sourcePath = path.join(packageRoot, asset.source_dir, filePath);
             const targetPath = path.join(userXtrmDir, relativePath);
+
+            if (isUserOwnedPath(relativePath)) {
+                continue;
+            }
 
             if (upToDateSet.has(relativePath)) {
                 continue;

@@ -1,7 +1,7 @@
 # anatomy.md
 
-> Auto-maintained by OpenWolf. Last scanned: 2026-03-31T20:36:52.855Z
-> Files: 537 tracked | Anatomy hits: 0 | Misses: 0
+> Auto-maintained by OpenWolf. Last scanned: 2026-04-02T22:22:27.122Z
+> Files: 541 tracked | Anatomy hits: 0 | Misses: 0
 
 ## ./
 
@@ -1199,6 +1199,19 @@
 
 - `quality-check-hooks.test.ts` — Declares temp (~524 tok)
 
+## .xtrm/
+
+- `memory.md` — Project Memory — xtrm-tools (~232 tok)
+
 ## .xtrm/reports/
 
 - `2026-03-31-eee5e2a6.md` — Session Report — 2026-03-31 (continuation) (~3327 tok)
+- `2026-04-02-50363f61.md` — Session Report — 2026-04-02 (~2151 tok)
+
+## cli/src/
+
+- `index.ts` — __dirname is available in CJS output (tsup target: cjs) (~1196 tok)
+
+## cli/src/core/
+
+- `machine-bootstrap.ts` — Unified machine-bootstrap phase for managed third-party dependencies. (~4536 tok)

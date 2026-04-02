@@ -151,3 +151,5 @@
 {"id":"int-843bc533","kind":"tool_call","created_at":"2026-04-02T16:58:19.903100708Z","actor":"you@example.com","issue_id":"xtrm-796c","model":"openai-codex/gpt-5.4","tool_name":"overthinker","exit_code":0}
 {"id":"int-a64012bf","kind":"tool_call","created_at":"2026-04-02T19:31:42.543612324Z","actor":"you@example.com","issue_id":"xtrm-ts6z","model":"openai-codex/gpt-5.3-codex","tool_name":"executor","exit_code":0}
 {"id":"int-93866a6a","kind":"tool_call","created_at":"2026-04-02T19:34:34.08753348Z","actor":"you@example.com","issue_id":"xtrm-y0d7","model":"openai-codex/gpt-5.3-codex","tool_name":"executor","exit_code":0}
+{"id":"int-556d183a","kind":"tool_call","created_at":"2026-04-02T22:38:56.033616643Z","actor":"you@example.com","issue_id":"xtrm-rxn4","model":"anthropic/claude-sonnet-4-6","tool_name":"debugger","exit_code":0}
+{"id":"int-f46cba85","kind":"tool_call","created_at":"2026-04-02T22:51:54.100148783Z","actor":"you@example.com","issue_id":"xtrm-rxn4","model":"openai-codex/gpt-5.3-codex","tool_name":"executor","exit_code":0}

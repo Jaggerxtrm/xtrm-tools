@@ -40,6 +40,10 @@
     "toolPendingBg": "surfaceAlt",
     "toolSuccessBg": "surfaceAlt",
     "toolErrorBg": "surfaceAlt",
+    "toolUseBg": "surfaceAlt",
+    "toolUsePendingBg": "surfaceAlt",
+    "toolUseSuccessBg": "surfaceAlt",
+    "toolUseErrorBg": "surfaceAlt",
     "toolTitle": "",
     "toolOutput": "gray",
 

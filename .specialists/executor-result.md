@@ -1,44 +1,31 @@
-Done — I made targeted doc updates (no restructuring) for all three requested changes.
+Implemented minimal patch in `xtrm-ui` theme files only.
 
-### Updated files
+### Root cause (identified)
+`pidex-dark.json` was missing the newer tool-use background token family, so runtime fell back to default success coloring (green) for tool-use blocks.  
+Also, dark tool bg tokens were set to `surfaceAlt` instead of true black `surface`.
 
-- `README.md`
-  - Updated skills install behavior: optional packs are now populated by default via `xt install`, activation via `xt skills enable <pack>`.
-  - Added new default skills in catalogs: `deepwiki`, `specialists-creator`, `using-specialists`.
-  - Updated version references and added `0.7.1` row in Version History.
+### Exact changed files
+1. `.xtrm/config/pi/extensions/xtrm-ui/themes/pidex-dark.json`
+2. `.xtrm/config/pi/extensions/xtrm-ui/themes/pidex-light.json`
 
-- `CHANGELOG.md`
-  - Updated `v0.7.1` entry (dated `2026-04-02`) with explicit bullets for:
-    - optional pack install behavior docs update,
-    - `@xtrm/pi-core` symlink path docs update,
-    - new default skills docs update.
+(`pidex-dark.json` is present in-repo and now includes explicit tool-use bg tokens.)
 
-- `docs/skills.md`
-  - Updated optional tier wording to reflect auto-population by `xt install` and activation via `xt skills enable <pack>`.
-  - Added `using-specialists`, `specialists-creator`, `deepwiki` to skill catalogs.
+### Token(s) now controlling tool-use background (restored)
+From `pidex-dark.json`:
 
-- `docs/skills-tier-architecture.md`
-  - Updated optional tier source/activation semantics.
-  - Added new default skills mention in baseline examples.
+- `"toolPendingBg": "surface"`
+- `"toolSuccessBg": "surface"`
+- `"toolErrorBg": "surface"`
+- `"toolUseBg": "surface"`
+- `"toolUsePendingBg": "surface"`
+- `"toolUseSuccessBg": "surface"`
+- `"toolUseErrorBg": "surface"`
 
-- `docs/skills-registry-exploration.md`
-  - Updated optional/extra tier population note: auto-populated by `xt install`, explicitly activated with `xt skills enable <pack>`.
+With `surface = "#000000"`, tool-use blocks render dark/black again.
 
-- `docs/cli-architecture.md`
-  - Updated `xt skills list` behavior wording to reflect pre-populated optional directories + explicit runtime activation.
+### One concise runtime verification step
+In Pi TUI, run:
+1. `/xtrm-ui-theme dark`
+2. Execute any tool call (e.g. `ls`)
 
-- `docs/pi-extensions.md`
-  - Added `@xtrm/pi-core` resolution path:
-    - new: `.xtrm/extensions/node_modules/@xtrm/pi-core`
-    - legacy `.pi/node_modules/@xtrm/pi-core` marked retired.
-
-- `docs/xtrm-directory.md`
-  - Updated directory layout to include `.xtrm/extensions/node_modules/@xtrm/pi-core` symlink.
-  - Updated optional packs note to indicate default population during `xt install`.
-
-- `docs/XTRM-GUIDE.md`
-  - Updated `xt skills enable <pack>` command description to activation semantics.
-  - Added note about optional pack auto-population by `xt install`.
-  - Added Pi core symlink resolution path note.
-
-Also: bead `xtrm-y0d7` was claimed and closed with memory ack.
+Expected: tool-use/result block background is black/dark (not green).

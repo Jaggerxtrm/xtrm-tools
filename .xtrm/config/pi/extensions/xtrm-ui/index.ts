@@ -32,7 +32,7 @@ import {
   createWriteTool,
 } from "@mariozechner/pi-coding-agent";
 import { Box, Text, truncateToWidth, visibleWidth } from "@mariozechner/pi-tui";
-import { basename } from "node:path";
+import { basename, join } from "node:path";
 import {
   cleanOutputLines,
   countPrefixedItems,
@@ -968,6 +968,7 @@ function isXtrmTheme(name: string | undefined): boolean {
 export default function xtrmUiExtension(pi: ExtensionAPI): void {
   let prefs: XtrmUiPrefs = { ...DEFAULT_PREFS };
   let previousThemeName: string | null = null;
+  const extensionThemeDir = join(__dirname, "themes");
 
   const getPrefs = () => prefs;
   const setPrefs = (p: XtrmUiPrefs) => { prefs = p; };
@@ -980,12 +981,20 @@ export default function xtrmUiExtension(pi: ExtensionAPI): void {
     applyXtrmChrome(ctx, prefs, getThinkingLevel);
   };
 
+  pi.on("resources_discover", async () => ({
+    themePaths: [extensionThemeDir],
+  }));
+
   pi.on("session_start", async (_event, ctx) => {
     prefs = loadPrefs(ctx.sessionManager.getEntries() as Array<MaybeCustomEntry>);
     if (!previousThemeName && !isXtrmTheme(ctx.ui.theme.name)) {
       previousThemeName = ctx.ui.theme.name ?? null;
     }
     refresh(ctx);
+
+    setTimeout(() => {
+      if (prefs.forceTheme) ctx.ui.setTheme(prefs.themeName);
+    }, 0);
   });
 
   pi.on("session_switch", async (_event, ctx) => {

@@ -2,12 +2,12 @@
   "version": 1,
   "created_at": "2026-03-31T01:39:16.608Z",
   "lifetime": {
-    "total_tokens_estimated": 13675,
-    "total_reads": 32,
-    "total_writes": 9,
+    "total_tokens_estimated": 14203,
+    "total_reads": 36,
+    "total_writes": 11,
     "total_sessions": 6,
     "anatomy_hits": 0,
-    "anatomy_misses": 32,
+    "anatomy_misses": 36,
     "repeated_reads_blocked": 0,
     "estimated_savings_vs_bare_cli": 0
   },
@@ -659,6 +659,74 @@
       "id": "session-2026-04-02-0018",
       "started": "2026-04-02T22:18:01.247Z",
       "ended": "2026-04-02T22:24:15.518Z",
+      "reads": [
+        {
+          "file": "/home/dawid/projects/xtrm-tools/.specialists/default/memory-processor.specialist.yaml",
+          "tokens_estimated": 0,
+          "was_repeated": false,
+          "anatomy_had_description": false
+        },
+        {
+          "file": "/home/dawid/projects/xtrm-tools/cli/src/core/registry-scaffold.ts",
+          "tokens_estimated": 0,
+          "was_repeated": false,
+          "anatomy_had_description": false
+        }
+      ],
+      "writes": [
+        {
+          "file": "/home/dawid/projects/xtrm-tools/.xtrm/memory.md",
+          "tokens_estimated": 264,
+          "action": "edit"
+        }
+      ],
+      "totals": {
+        "input_tokens_estimated": 0,
+        "output_tokens_estimated": 264,
+        "reads_count": 2,
+        "writes_count": 1,
+        "repeated_reads_blocked": 0,
+        "anatomy_lookups": 0
+      }
+    },
+    {
+      "id": "session-2026-04-02-0018",
+      "started": "2026-04-02T22:18:01.247Z",
+      "ended": "2026-04-02T22:24:26.354Z",
+      "reads": [
+        {
+          "file": "/home/dawid/projects/xtrm-tools/.specialists/default/memory-processor.specialist.yaml",
+          "tokens_estimated": 0,
+          "was_repeated": false,
+          "anatomy_had_description": false
+        },
+        {
+          "file": "/home/dawid/projects/xtrm-tools/cli/src/core/registry-scaffold.ts",
+          "tokens_estimated": 0,
+          "was_repeated": false,
+          "anatomy_had_description": false
+        }
+      ],
+      "writes": [
+        {
+          "file": "/home/dawid/projects/xtrm-tools/.xtrm/memory.md",
+          "tokens_estimated": 264,
+          "action": "edit"
+        }
+      ],
+      "totals": {
+        "input_tokens_estimated": 0,
+        "output_tokens_estimated": 264,
+        "reads_count": 2,
+        "writes_count": 1,
+        "repeated_reads_blocked": 0,
+        "anatomy_lookups": 0
+      }
+    },
+    {
+      "id": "session-2026-04-02-0018",
+      "started": "2026-04-02T22:18:01.247Z",
+      "ended": "2026-04-02T22:25:37.950Z",
       "reads": [
         {
           "file": "/home/dawid/projects/xtrm-tools/.specialists/default/memory-processor.specialist.yaml",

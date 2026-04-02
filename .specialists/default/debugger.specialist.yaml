@@ -3,9 +3,10 @@ specialist:
     name: debugger
     version: 1.2.0
     description: >-
-      Autonomous debugger: given any symptom, error, or stack trace, systematically
-      traces call chains with GitNexus, identifies root cause at file:line precision,
-      ranks hypotheses, and delivers a prioritized, evidence-backed remediation plan.
+      Autonomous debugger: given any symptom, error, or stack trace,
+      systematically traces call chains with GitNexus, identifies root cause at
+      file:line precision, ranks hypotheses, and delivers a prioritized,
+      evidence-backed remediation plan.
     category: debugging
     tags:
       - debugging
@@ -19,7 +20,7 @@ specialist:
 
   execution:
     mode: tool
-    model: anthropic/claude-sonnet-4-6
+    model: openai-codex/gpt-5.3-codex
     fallback_model: qwen-cli/qwen3-coder-plus
     timeout_ms: 0
     stall_timeout_ms: 120000
@@ -109,8 +110,8 @@ specialist:
       - .xtrm/skills/default/xt-debugging
 
   capabilities:
-    required_tools: [bash, grep, find, read]
-    external_commands: [grep]
+    required_tools: [ bash, grep, find, read ]
+    external_commands: [ grep ]
 
   validation:
     files_to_watch:
@@ -118,4 +119,3 @@ specialist:
       - src/specialist/runner.ts
       - .agents/skills/xt-debugging/SKILL.md
     stale_threshold_days: 30
-

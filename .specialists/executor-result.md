@@ -1,54 +1,44 @@
-Completed. I applied the final cleanup for plugin-era infrastructure and validated the key checks.
+Done — I made targeted doc updates (no restructuring) for all three requested changes.
 
-### ✅ Removed directories
-Deleted from repo:
-- `plugins/` (including `plugins/xtrm-tools/...`)
-- `.claude-plugin/`
+### Updated files
 
-### ✅ Audited and cleaned plugin-path/runtime references in `cli/src`
-I ran the requested audits and cleaned remaining references, including:
-- `cli/src/core/init-verification.ts`  
-  - Reworked Claude runtime verification to validate `.xtrm/hooks` wiring in `.claude/settings.json` instead of plugin install state.
-- `cli/src/utils/worktree-session.ts`  
-  - Removed `installed_plugins.json` usage and plugin registration logic.
-  - Statusline now resolves from worktree-local `.xtrm/hooks/statusline.mjs`.
-- `cli/src/commands/claude.ts`  
-  - Updated install/reload/status/doctor messaging and checks to hook-wiring model (no `claude plugin list` flow).
-- `cli/src/commands/skills.ts`  
-  - Removed `CLAUDE_PLUGIN_ROOT` fallback.
-- `cli/src/commands/help.ts`, `cli/src/commands/init.ts`  
-  - Updated phase/help text to hook wiring.
-- `cli/src/tests/policy-parity.test.ts`  
-  - Removed `CLAUDE_PLUGIN_ROOT` literal usage from command resolution helper.
+- `README.md`
+  - Updated skills install behavior: optional packs are now populated by default via `xt install`, activation via `xt skills enable <pack>`.
+  - Added new default skills in catalogs: `deepwiki`, `specialists-creator`, `using-specialists`.
+  - Updated version references and added `0.7.1` row in Version History.
 
-### ✅ Additional required fix for build after deletion
-- Updated `scripts/sync-cli-version.mjs` to stop reading/writing deleted plugin manifests (`.claude-plugin/...`, `plugins/xtrm-tools/...`).
+- `CHANGELOG.md`
+  - Updated `v0.7.1` entry (dated `2026-04-02`) with explicit bullets for:
+    - optional pack install behavior docs update,
+    - `@xtrm/pi-core` symlink path docs update,
+    - new default skills docs update.
 
-### ✅ Docs updated
-- `CLAUDE.md` updated to describe `.xtrm` layout and hook wiring into `.claude/settings.json`.
-- `AGENTS.md` updated with explicit “Claude hook wiring (current model)” section.
-- Files remain separate (not merged).
+- `docs/skills.md`
+  - Updated optional tier wording to reflect auto-population by `xt install` and activation via `xt skills enable <pack>`.
+  - Added `using-specialists`, `specialists-creator`, `deepwiki` to skill catalogs.
 
----
+- `docs/skills-tier-architecture.md`
+  - Updated optional tier source/activation semantics.
+  - Added new default skills mention in baseline examples.
 
-## Validation results
+- `docs/skills-registry-exploration.md`
+  - Updated optional/extra tier population note: auto-populated by `xt install`, explicitly activated with `xt skills enable <pack>`.
 
-### Requested grep checks
-- `grep -r "plugins/" cli/src/ --include="*.ts"` → no matches
-- `grep -r "claude-plugin|\\.claude-plugin" cli/src/ --include="*.ts"` → no matches
-- `grep -r "plugin install|plugin marketplace" cli/src/ --include="*.ts"` → no matches
-- `grep -r "installed_plugins" . --include="*.ts" --include="*.mjs"` → no matches
+- `docs/cli-architecture.md`
+  - Updated `xt skills list` behavior wording to reflect pre-populated optional directories + explicit runtime activation.
 
-### Acceptance grep
-- `grep -r "CLAUDE_PLUGIN_ROOT|plugins/xtrm-tools|installed_plugins" cli/src/` → no matches
+- `docs/pi-extensions.md`
+  - Added `@xtrm/pi-core` resolution path:
+    - new: `.xtrm/extensions/node_modules/@xtrm/pi-core`
+    - legacy `.pi/node_modules/@xtrm/pi-core` marked retired.
 
-### Build/typecheck
-- `npm run build` → ✅ succeeds
-- `npm run typecheck` → ❌ fails due existing unrelated strict TS issues outside this cleanup scope (same pre-existing family: `prompts` typings, `preflight/context/debug` typing issues).
+- `docs/xtrm-directory.md`
+  - Updated directory layout to include `.xtrm/extensions/node_modules/@xtrm/pi-core` symlink.
+  - Updated optional packs note to indicate default population during `xt install`.
 
----
+- `docs/XTRM-GUIDE.md`
+  - Updated `xt skills enable <pack>` command description to activation semantics.
+  - Added note about optional pack auto-population by `xt install`.
+  - Added Pi core symlink resolution path note.
 
-Bead workflow also completed:
-- Claimed bead already existed
-- Saved memory + ack
-- Closed `xtrm-gl8b.9` with completion reason
+Also: bead `xtrm-y0d7` was claimed and closed with memory ack.

@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.7.1] - 2026-04-01
+## [0.7.1] - 2026-04-02
 
 ### Added
 - **`docs/skills-tier-architecture.md`**: New reference document covering three-tier skills model (default/optional/user), state.json schema, PACK.json schema, runtime active views, and xt skills CLI commands.
@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`docs/bash-tools.md`**: New reference for specialist bash CLIs (`ghgrep`, `ctx7`, `deepwiki`) including install source, usage examples, and CLI-vs-MCP guidance; README now links and surfaces `ghgrep` under capabilities.
 
 ### Changed
+- **Optional packs install behavior docs**: Updated README + skills docs to reflect that `xt install` now pre-populates `.xtrm/skills/optional/`; packs are activated with `xt skills enable <pack>`.
+- **Pi core resolution path docs**: Updated Pi architecture docs to reflect the new symlink location at `.xtrm/extensions/node_modules/@xtrm/pi-core` (replacing legacy `.pi/node_modules/@xtrm/pi-core`).
+- **Default skills catalog docs**: Added `deepwiki`, `specialists-creator`, and `using-specialists` to default-skill listings in README and skills documentation.
 - **`docs/skills.md`**: Rewritten to cover tier architecture, xt skills CLI, and updated skill catalog (v2.0.0).
 - **`docs/cli-architecture.md`**: Updated skills.ts section — enable/disable/create-pack now fully implemented, added runtime flags documentation (v1.5.0).
 - **`docs/skills-registry-exploration.md`**: Updated implementation status — Phase v0.9 pack lifecycle delivered, enable/disable/create-pack implemented (v1.2.0).

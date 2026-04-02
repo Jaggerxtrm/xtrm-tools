@@ -39,7 +39,7 @@ domain: [config, xtrm]
 .xtrm/
 ├── skills/              # Skills tier architecture
 │   ├── default/         # → ../../skills (symlink)
-│   ├── optional/        # Optional packs (managed)
+│   ├── optional/        # Optional packs (managed; populated by `xt install`)
 │   ├── user/packs/      # User packs (writable)
 │   ├── active/
 │   │   ├── claude/      # Claude runtime active view
@@ -53,6 +53,8 @@ domain: [config, xtrm]
 │   └── hooks.json       # Compiled hook configuration
 │
 ├── extensions/          # Pi extension packages
+│   ├── node_modules/
+│   │   └── @xtrm/pi-core -> ../core   # Managed symlink for Pi extension resolution
 │   └── <name>/          # Extension directory
 │       ├── index.ts
 │       └── package.json
@@ -92,6 +94,8 @@ The following paths are **deprecated** and should not be used:
 - `.pi/extensions/` symlink — migrated to `.xtrm/extensions/`
 
 The `xt init` command automatically symlinks `.claude/skills` and `.agents/skills` to `.xtrm/skills/default/` for backward compatibility.
+
+Optional packs under `.xtrm/skills/optional/` are now populated by default during `xt install`; enable runtime activation with `xt skills enable <pack>`.
 
 ## Related Docs
 

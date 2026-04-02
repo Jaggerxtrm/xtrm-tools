@@ -172,7 +172,7 @@ the full fill workflow and quality bar reference.
 
 Registers `xt skills`, the skill registry control surface for managing tiered skills and runtime active views.
 
-- **`xt skills list [--global|--local] [--claude|--pi] [--json]`**: shows tiered skill inventory. Reads from `.xtrm/skills/default/` plus optional/user packs (including installed optional packs like `research-methods`, `code-quality`, `security-ops`, `data-engineering`, `architecture-design`). Emits `defaultSkills`, `packs[]`, and `runtimeStatus[]` per runtime.
+- **`xt skills list [--global|--local] [--claude|--pi] [--json]`**: shows tiered skill inventory. Reads from `.xtrm/skills/default/` plus optional/user packs (optional pack directories are pre-populated by `xt install`, then runtime-activated via `xt skills enable <pack>`). Emits `defaultSkills`, `packs[]`, and `runtimeStatus[]` per runtime.
 - **`xt skills enable <pack> [--global|--local] [--claude|--pi] [--json]`**: enables a pack for target runtime(s). Updates `state.json.enabledPacks[runtime]`, rebuilds active view, syncs `PACK.json.skills` from filesystem if mismatch detected.
 - **`xt skills disable <pack> [--global|--local] [--claude|--pi] [--json]`**: disables a pack for target runtime(s). Removes from `state.json`, rebuilds active view. Use `disable all` to clear all enabled packs.
 - **`xt skills create-pack <name> [--global|--local] [--json]`**: creates user pack scaffold at `.xtrm/skills/user/packs/<name>/` with initial `PACK.json`.

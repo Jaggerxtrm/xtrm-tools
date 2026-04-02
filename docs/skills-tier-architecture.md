@@ -35,7 +35,7 @@ Skills are organized into a **three-tier model** under `.xtrm/skills/`:
 | Tier | Source | Mutability | Purpose |
 |---|---|---|---|
 | `default` | npm/plugin bundle shipped with xtrm | Read-only (managed) | Baseline skill set for core workflows |
-| `optional` | Optional packs installed by user | Managed (replaceable) | Add-on packs and domain bundles (e.g. research-methods, code-quality, security-ops, data-engineering, architecture-design) |
+| `optional` | Optional packs populated by `xt install` | Managed (replaceable) | Add-on packs and domain bundles (e.g. research-methods, code-quality, security-ops, data-engineering, architecture-design); activation is runtime-scoped via `xt skills enable <pack>` |
 | `user` | Local author-owned overlays | User-writable | Custom skills, overrides |
 
 Each runtime (Claude, Pi) has an **active view** under `.xtrm/skills/active/{claude,pi}/` containing symlinks to the resolved skill set.
@@ -86,18 +86,18 @@ The `.xtrm/skills/default/` entry is a symlink to `../../skills` (repo skills di
 - **Mutability**: Read-only — managed by xtrm updates
 - **Discovery**: Direct child directories with `SKILL.md`
 
-Contains baseline skills required for bootstrapping and core workflows: `using-xtrm`, `documenting`, `planning`, `test-planning`, `xt-end`, `xt-merge`, GitNexus skills, senior-* specialists, etc.
+Contains baseline skills required for bootstrapping and core workflows: `using-xtrm`, `documenting`, `planning`, `test-planning`, `xt-end`, `xt-merge`, `deepwiki`, `specialists-creator`, `using-specialists`, GitNexus skills, senior-* specialists, etc.
 
 ### optional (Tier 2)
 
-- **Source**: Installed via `xt skills enable <pack>`
-- **Required**: No — opt-in
+- **Source**: Populated by `xt install`; activation toggled via `xt skills enable <pack>`
+- **Required**: No — inactive until enabled per runtime
 - **Mutability**: Managed — replaceable via pack lifecycle
 - **Discovery**: Direct child directories with `PACK.json`
 
 Contains add-on packs that extend or replace default definitions. Packs can provide new skills or managed replacements.
 
-Current installed domain packs: `research-methods`, `code-quality`, `security-ops`, `data-engineering`, and `architecture-design`.
+Current optional domain pack catalog: `research-methods`, `code-quality`, `security-ops`, `data-engineering`, and `architecture-design`.
 
 ### user (Tier 3)
 

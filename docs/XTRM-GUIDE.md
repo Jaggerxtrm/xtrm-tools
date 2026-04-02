@@ -64,12 +64,14 @@ xt report show              # display latest (or named) report
 xt report list              # list all reports with metadata summary
 xt report diff <a> <b>      # compare two reports
 xt skills list              # show tiered skill inventory and runtime status
-xt skills enable <pack>     # enable a skill pack for Claude/Pi
+xt skills enable <pack>     # activate an installed optional pack for Claude/Pi
 xt skills disable <pack>    # disable a skill pack
 xt skills create-pack <name> # create user pack scaffold
 ```
 
 `xt` and `xtrm` are equivalent command names.
+
+`xt install` populates `.xtrm/skills/optional/` by default; packs remain inactive until enabled with `xt skills enable <pack>`.
 
 - `xt end` handles the publish step for a single worktree session: rebase onto the current target branch, push, open the PR, and optionally clean up the local worktree.
 - `xt merge` is the queue-drain follow-up when multiple `xt/*` PRs are open. It delegates to the `xt-merge` specialist, sorts queued PRs FIFO by creation time, waits for green CI on the head PR, merges with `--rebase --delete-branch`, then rebases and force-pushes the remaining queued branches before repeating. Use `xt merge --dry-run` to inspect queue order and CI state without merging.
@@ -159,6 +161,8 @@ Current extension layout is **directory-based** under `config/pi/extensions/<nam
 - `session-flow/`
 - `quality-gates/`
 - `service-skills/`
+
+Pi extension package resolution now relies on the managed symlink at `.xtrm/extensions/node_modules/@xtrm/pi-core` (legacy `.pi/node_modules/@xtrm/pi-core` is no longer used).
 
 ## Session Close Reports
 

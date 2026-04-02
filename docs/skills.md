@@ -31,12 +31,12 @@ Skills are organized into a **three-tier architecture** under `.xtrm/skills/`. T
 | Tier | Location | Mutability | Purpose |
 |---|---|---|---|
 | **default** | `.xtrm/skills/default/` | Read-only (managed) | Baseline skills bundled with xtrm |
-| **optional** | `.xtrm/skills/optional/` | Managed packs | Add-on packs (installed on demand) |
+| **optional** | `.xtrm/skills/optional/` | Managed packs | Add-on packs (populated automatically by `xt install`; activate with `xt skills enable <pack>`) |
 | **user** | `.xtrm/skills/user/packs/` | User-writable | Custom skills and overlays |
 
 The `default/` directory is a symlink to the repo `skills/` directory, providing a live view without copying.
 
-Current optional pack catalog includes `research-methods`, `code-quality`, `security-ops`, `data-engineering`, and `architecture-design` (installed in commit `0e711e76`).
+Current optional pack catalog includes `research-methods`, `code-quality`, `security-ops`, `data-engineering`, and `architecture-design` (automatically populated by `xt install`, then activated per runtime with `xt skills enable <pack>`).
 
 ### Runtime Active Views
 
@@ -106,6 +106,7 @@ See [skills-tier-architecture.md](skills-tier-architecture.md) for full CLI refe
 | `session-close-report` | Generate structured session handoff reports |
 | `documenting` | SSOT documentation + drift workflow |
 | `delegating` | Delegation routing and model strategy |
+| `using-specialists` | Specialist routing and execution workflow (`specialists run/feed/result`) |
 | `sync-docs` | Doc audit and structural sync |
 
 ### GitNexus Skills
@@ -140,6 +141,7 @@ See [skills-tier-architecture.md](skills-tier-architecture.md) for full CLI refe
 |---|---|
 | `clean-code` | Pragmatic coding standards |
 | `skill-creator` | Create and improve skills |
+| `specialists-creator` | Create and validate `.specialist.yaml` definitions |
 | `hook-development` | Claude Code plugin hooks |
 | `using-serena-lsp` | Semantic code navigation via LSP |
 
@@ -157,6 +159,7 @@ See [skills-tier-architecture.md](skills-tier-architecture.md) for full CLI refe
 | Skill | Primary Use |
 |---|---|
 | `obsidian-cli` | Obsidian vault interaction via CLI |
+| `deepwiki` | Query repository/library docs via DeepWiki |
 | `prompt-improving` | Prompt optimization via Claude XML patterns |
 | `orchestrating-agents` | Multi-agent collaboration patterns |
 | `find-skills` | Discover and install agent skills |

@@ -40,6 +40,7 @@ xtrm pi reload
 
 - `xtrm pi setup`, `xtrm pi install`, and `xtrm pi reload` all use the same managed extension sync path.
 - Managed extensions are copied to `~/.pi/agent/extensions/<name>/` and loaded via Pi auto-discovery.
+- `@xtrm/pi-core` is resolved via managed symlink at `.xtrm/extensions/node_modules/@xtrm/pi-core`.
 - Managed extensions are **not** registered with `pi install -l` to avoid duplicate discovery (`<dir>` + `<dir>/index.ts`) and command/flag/shortcut collisions.
 - Use `pi install -l` only for ad-hoc third-party/local extensions outside the managed `config/pi/extensions` set.
 
@@ -111,6 +112,7 @@ Adds `… +N more lines` indicator when truncated. Respects expanded view toggle
 ## Notes
 
 - Layout is directory-based (not legacy single `.ts` files).
+- Legacy `@xtrm/pi-core` path `.pi/node_modules/@xtrm/pi-core` has been retired in favor of `.xtrm/extensions/node_modules/@xtrm/pi-core`.
 - Custom footer now follows Claude statusline parity as a 2-line layout:
   - Line 1: `XTRM`, model + context used%, host, repo-relative dir, branch + git flags, optional venv
   - Line 2: claim-first issue row (`◐ <id> <title>`), else open-count fallback (`○ <N open>` / `○ no open issues`)

@@ -257,6 +257,7 @@ See [XTRM-GUIDE.md](XTRM-GUIDE.md) for the full `bd` command reference.
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 0.7.1 | 2026-04-02 | Optional packs pre-populated on install; Pi core symlink path fix; new default skills (`deepwiki`, `specialists-creator`, `using-specialists`) |
 | 0.5.30 | 2026-03-22 | Fix statusline on fresh installs; `xt end --dry-run` |
 | 0.5.29 | 2026-03-22 | Statusline truecolor gradient; `--no-verify` autocommit; xt-merge skill |
 | 0.5.24 | 2026-03-21 | Hash-based docs drift detection; CLI docs cleanup |

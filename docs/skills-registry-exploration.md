@@ -153,7 +153,7 @@ Validation rules:
 
 #### `extra` (optional packs)
 
-- Populated by explicit install/enable actions (`xt skills enable <pack>`).
+- Populated automatically by `xt install`; runtime activation is explicit via `xt skills enable <pack>`.
 - Contains optional packs that can add new skills or provide managed replacements of default definitions.
 - Current installed domain bundles: `research-methods`, `code-quality`, `security-ops`, `data-engineering`, `architecture-design`.
 - Pack records must include pack id, version, provenance, and compatibility constraints.

@@ -174,6 +174,11 @@ Gate output appears as hook context. Fix failures before proceeding — do not c
   - CLI: `npm install` in `cli/`
   - Python: Standard library only (no external deps for hooks)
 
+## Specialist Bash Tools
+- `ghgrep` — GitHub code search CLI wrapper for `mcp.grep.app` (SSE transport).
+  - Example: `ghgrep "useEffect(" --lang TSX,TypeScript --limit 5`
+  - Use `--json` for raw MCP payloads.
+
 ## Claude hook wiring model
 - `xt install` / `xt claude install` reads `.xtrm/config/hooks.json`.
 - Hook commands are written to `.claude/settings.json` as absolute `node "<project>/.xtrm/hooks/<script>.mjs"` entries.
@@ -212,7 +217,7 @@ Gate output appears as hook context. Fix failures before proceeding — do not c
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **xtrm-tools** (5470 symbols, 8197 relationships, 289 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **xtrm-tools** (5472 symbols, 8201 relationships, 289 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 

@@ -10,13 +10,15 @@
   ],
   "bin": {
     "xtrm": "cli/dist/index.cjs",
-    "xt": "cli/dist/index.cjs"
+    "xt": "cli/dist/index.cjs",
+    "ghgrep": "scripts/ghgrep.mjs"
   },
   "files": [
     "README.md",
     "CHANGELOG.md",
     "cli/dist",
     "cli/package.json",
+    "scripts/ghgrep.mjs",
     ".xtrm/config",
     ".xtrm/hooks",
     ".xtrm/extensions",

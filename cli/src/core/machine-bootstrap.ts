@@ -135,6 +135,17 @@ const MANAGED_DEPS: ManagedDependency[] = [
             default: [{ cmd: 'npm', args: ['install', '-g', '@seflless/deepwiki'] }],
         },
     },
+    {
+        id: 'ctx7',
+        cli: 'ctx7',
+        versionFlag: '--version',
+        displayName: 'ctx7',
+        description: 'Context7 CLI — library docs lookup for specialists',
+        required: false,
+        install: {
+            default: [{ cmd: 'npm', args: ['install', '-g', 'ctx7'] }],
+        },
+    },
 ];
 
 // ── Inventory ─────────────────────────────────────────────────────────────────

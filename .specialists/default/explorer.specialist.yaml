@@ -2,14 +2,16 @@ specialist:
   metadata:
     name: explorer
     version: 1.1.0
-    description: "Explores the codebase structure, identifies patterns, and answers architecture questions using GitNexus knowledge graph for deep call-chain and execution-flow awareness."
+    description: "Explores the codebase structure, identifies patterns, and answers
+      architecture questions using GitNexus knowledge graph for deep call-chain
+      and execution-flow awareness."
     category: analysis
-    tags: [codebase, architecture, exploration, gitnexus]
+    tags: [ codebase, architecture, exploration, gitnexus, github-search ]
     updated: "2026-03-11"
 
   execution:
     mode: tool
-    model: anthropic/claude-haiku-4-5
+    model: qwen3.5-plus
     fallback_model: anthropic/claude-sonnet-4-6
     timeout_ms: 0
     stall_timeout_ms: 120000
@@ -42,6 +44,7 @@ specialist:
 
       Use when GitNexus is unavailable or index is stale:
       - `find`, `tree`, `grep -r` for structure discovery
+      - `ghgrep <pattern> [--lang ... --repo ...]` for real GitHub code examples
       - Read key files: package.json, tsconfig.json, README.md, src/index.ts
       - Trace imports manually to understand layer dependencies
 
@@ -73,6 +76,7 @@ specialist:
   skills:
     paths:
       - .agents/skills/gitnexus-exploring/SKILL.md
+      - .agents/skills/github-search/SKILL.md
 
   validation:
     files_to_watch:
@@ -82,4 +86,4 @@ specialist:
     stale_threshold_days: 30
 
   communication:
-    publishes: [codebase_analysis]
+    publishes: [ codebase_analysis ]

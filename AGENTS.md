@@ -258,7 +258,7 @@ bv --robot-insights | jq '.Cycles'               # Circular deps — must fix
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **xtrm-tools** (5470 symbols, 8197 relationships, 289 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **xtrm-tools** (5472 symbols, 8201 relationships, 289 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 

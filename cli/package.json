@@ -6,11 +6,13 @@
   "type": "module",
   "bin": {
     "xtrm": "dist/index.cjs",
-    "xt": "dist/index.cjs"
+    "xt": "dist/index.cjs",
+    "ghgrep": "scripts/ghgrep.mjs"
   },
   "files": [
     "dist",
-    "config"
+    "config",
+    "scripts/ghgrep.mjs"
   ],
   "scripts": {
     "prebuild": "node -e \"if(process.cwd().includes('/.xtrm/worktrees/')){console.error('ERROR: Do not run npm run build from a worktree — dist paths will be contaminated.\\nRun from the main repo: cd <repo-root>/cli && npm run build');process.exit(1)}\"",

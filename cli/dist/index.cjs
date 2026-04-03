@@ -43977,6 +43977,8 @@ function resolvePkgRoot() {
   return candidates[0];
 }
 var PI_AGENT_DIR = process.env.PI_AGENT_DIR || import_path3.default.join((0, import_node_os.homedir)(), ".pi", "agent");
+var PI_MCP_ADAPTER_OVERRIDE_DIR = import_path3.default.join(PI_AGENT_DIR, "extensions", "pi-mcp-adapter");
+var PI_MCP_ADAPTER_REQUIRED_ENTRY = "commands.js";
 var PROJECT_EXTENSIONS_ENTRY = "../.xtrm/extensions";
 var PROJECT_SKILLS_ENTRY = "../.xtrm/skills/active/pi";
 var MANAGED_EXTENSIONS = [
@@ -44138,21 +44140,98 @@ function renderPiRuntimePlan(plan) {
     console.log(kleur_default.yellow("  \u26A0 Missing required items.\n"));
   }
 }
+function mergePiSyncResults(base, incoming) {
+  return {
+    extensionsAdded: [...base.extensionsAdded, ...incoming.extensionsAdded],
+    extensionsUpdated: [...base.extensionsUpdated, ...incoming.extensionsUpdated],
+    extensionsRemoved: [...base.extensionsRemoved, ...incoming.extensionsRemoved],
+    packagesInstalled: [...base.packagesInstalled, ...incoming.packagesInstalled],
+    failed: [...base.failed, ...incoming.failed]
+  };
+}
 async function ensureCorePackageSymlink(coreSrcDir, projectRoot, dryRun, log) {
-  if (!await import_fs_extra7.default.pathExists(coreSrcDir)) return;
+  if (!await import_fs_extra7.default.pathExists(coreSrcDir)) return "missing-source";
   const extensionsDir = import_path3.default.join(projectRoot, ".xtrm", "extensions");
   const nodeModulesDir = import_path3.default.join(extensionsDir, "node_modules", "@xtrm");
   const symlinkPath = import_path3.default.join(nodeModulesDir, "pi-core");
+  const expectedTarget = import_path3.default.resolve(coreSrcDir);
   const existing = await import_fs_extra7.default.lstat(symlinkPath).catch(() => null);
-  if (existing) return;
+  if (existing) {
+    if (existing.isSymbolicLink()) {
+      const currentLinkTarget = await import_fs_extra7.default.readlink(symlinkPath);
+      const resolvedTarget = import_path3.default.resolve(import_path3.default.dirname(symlinkPath), currentLinkTarget);
+      if (resolvedTarget === expectedTarget) {
+        return "ok";
+      }
+    }
+    if (dryRun) {
+      log?.(kleur_default.dim("[DRY RUN] would repair @xtrm/pi-core symlink target"));
+      return "would-repair";
+    }
+    await import_fs_extra7.default.remove(symlinkPath);
+    await import_fs_extra7.default.ensureDir(nodeModulesDir);
+    const relTarget2 = import_path3.default.relative(nodeModulesDir, coreSrcDir);
+    await import_fs_extra7.default.symlink(relTarget2, symlinkPath);
+    log?.(kleur_default.dim("Repaired @xtrm/pi-core symlink \u2192 .xtrm/extensions/node_modules/@xtrm/pi-core"));
+    return "repaired";
+  }
   if (dryRun) {
-    log?.(kleur_default.dim(`[DRY RUN] would create @xtrm/pi-core symlink`));
-    return;
+    log?.(kleur_default.dim("[DRY RUN] would create @xtrm/pi-core symlink"));
+    return "would-create";
   }
   await import_fs_extra7.default.ensureDir(nodeModulesDir);
   const relTarget = import_path3.default.relative(nodeModulesDir, coreSrcDir);
   await import_fs_extra7.default.symlink(relTarget, symlinkPath);
-  log?.(kleur_default.dim(`Created @xtrm/pi-core symlink \u2192 .xtrm/extensions/node_modules/@xtrm/pi-core`));
+  log?.(kleur_default.dim("Created @xtrm/pi-core symlink \u2192 .xtrm/extensions/node_modules/@xtrm/pi-core"));
+  return "created";
+}
+async function remediateStalePiMcpAdapterOverride(dryRun, log) {
+  const stat = await import_fs_extra7.default.lstat(PI_MCP_ADAPTER_OVERRIDE_DIR).catch(() => null);
+  if (!stat) {
+    return {
+      path: PI_MCP_ADAPTER_OVERRIDE_DIR,
+      found: false,
+      stale: false,
+      remediated: false
+    };
+  }
+  if (stat.isSymbolicLink()) {
+    return {
+      path: PI_MCP_ADAPTER_OVERRIDE_DIR,
+      found: true,
+      stale: false,
+      remediated: false
+    };
+  }
+  const hasRequiredEntry = await import_fs_extra7.default.pathExists(import_path3.default.join(PI_MCP_ADAPTER_OVERRIDE_DIR, PI_MCP_ADAPTER_REQUIRED_ENTRY));
+  if (stat.isDirectory() && hasRequiredEntry) {
+    return {
+      path: PI_MCP_ADAPTER_OVERRIDE_DIR,
+      found: true,
+      stale: false,
+      remediated: false
+    };
+  }
+  const reason = stat.isDirectory() ? `missing ${PI_MCP_ADAPTER_REQUIRED_ENTRY}` : "not a directory/symlink";
+  if (dryRun) {
+    log?.(kleur_default.dim(`[DRY RUN] would remove stale pi-mcp-adapter override (${reason})`));
+    return {
+      path: PI_MCP_ADAPTER_OVERRIDE_DIR,
+      found: true,
+      stale: true,
+      remediated: false,
+      reason
+    };
+  }
+  await import_fs_extra7.default.remove(PI_MCP_ADAPTER_OVERRIDE_DIR);
+  log?.(kleur_default.dim(`Removed stale pi-mcp-adapter override (${reason})`));
+  return {
+    path: PI_MCP_ADAPTER_OVERRIDE_DIR,
+    found: true,
+    stale: true,
+    remediated: true,
+    reason
+  };
 }
 function isXtrmExtensionsSetting(entry) {
   const normalizedEntry = entry.replaceAll("\\", "/").replace(/\/$/, "");
@@ -44312,20 +44391,26 @@ async function runPiRuntimeSync(opts = {}) {
     packagesInstalled: [],
     failed: []
   };
+  const result = { ...emptyResult };
   if (!await import_fs_extra7.default.pathExists(sourceDir)) {
     console.log(kleur_default.dim("\n  Managed extensions: skipped (not bundled in npm package)\n"));
-    return emptyResult;
+    return result;
+  }
+  const staleOverride = await remediateStalePiMcpAdapterOverride(dryRun, log);
+  if (staleOverride.remediated) {
+    result.extensionsRemoved.push("pi-mcp-adapter");
   }
   if (isGlobal) {
     const targetDir = import_path3.default.join(PI_AGENT_DIR, "extensions");
     const plan = await inventoryPiRuntime(sourceDir, targetDir);
     renderPiRuntimePlan(plan);
-    if (plan.allPresent) return emptyResult;
-    return await executePiSync(plan, sourceDir, targetDir, {
+    if (plan.allPresent) return result;
+    const synced = await executePiSync(plan, sourceDir, targetDir, {
       dryRun,
       isGlobal: true,
       removeOrphaned: true
     });
+    return mergePiSyncResults(result, synced);
   }
   const installedPkgIds = getInstalledPiPackages();
   const packageStatuses = [];
@@ -44346,7 +44431,6 @@ async function runPiRuntimeSync(opts = {}) {
     console.log(kleur_default.yellow(`  Missing:    ${names}`));
   }
   console.log(kleur_default.dim("  " + "-".repeat(50)));
-  const result = { ...emptyResult };
   const legacyCleanup = await cleanupLegacyProjectExtensionCopies(resolvedProjectRoot, dryRun, log);
   result.extensionsRemoved.push(...legacyCleanup.removed);
   result.failed.push(...legacyCleanup.failed);
@@ -45478,6 +45562,33 @@ function createPiCommand() {
     const bundleRoot = await findRepoRoot();
     const sourceDir = import_path7.default.join(bundleRoot, ".xtrm", "extensions");
     const globalTargetDir = import_path7.default.join(PI_AGENT_DIR4, "extensions");
+    try {
+      const staleOverride = await remediateStalePiMcpAdapterOverride(false);
+      if (staleOverride.stale && staleOverride.remediated) {
+        console.log(t.success("  \u2713 removed stale ~/.pi/agent/extensions/pi-mcp-adapter override"));
+      } else if (staleOverride.stale) {
+        console.log(kleur_default.yellow("  \u26A0 stale ~/.pi/agent/extensions/pi-mcp-adapter override detected"));
+        allOk = false;
+      } else {
+        console.log(t.success("  \u2713 pi-mcp-adapter override check passed"));
+      }
+    } catch (error48) {
+      console.log(kleur_default.yellow(`  \u26A0 failed to remediate pi-mcp-adapter override: ${error48}`));
+      allOk = false;
+    }
+    try {
+      const coreStatus = await ensureCorePackageSymlink(import_path7.default.join(sourceDir, "core"), projectRoot, false);
+      if (coreStatus === "repaired" || coreStatus === "created") {
+        console.log(t.success("  \u2713 repaired .xtrm/extensions/node_modules/@xtrm/pi-core symlink"));
+      } else if (coreStatus === "ok") {
+        console.log(t.success("  \u2713 @xtrm/pi-core symlink is healthy"));
+      } else if (coreStatus === "missing-source") {
+        console.log(kleur_default.dim("  \u25CB @xtrm/pi-core source not bundled in this install"));
+      }
+    } catch (error48) {
+      console.log(kleur_default.yellow(`  \u26A0 failed to ensure @xtrm/pi-core symlink: ${error48}`));
+      allOk = false;
+    }
     if (!await import_fs_extra11.default.pathExists(sourceDir)) {
       console.log(kleur_default.dim("  \u25CB managed extensions not bundled in this install"));
     } else {

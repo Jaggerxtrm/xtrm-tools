@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import fs from 'fs-extra';
 import os from 'node:os';
 import path from 'node:path';
-import { inventoryPiRuntime, executePiSync } from '../src/core/pi-runtime.js';
+import { inventoryPiRuntime, executePiSync, ensureAlwaysGlobalPiPackages } from '../src/core/pi-runtime.js';
 
 async function makeExtension(baseDir: string, name: string, extraFiles: Record<string, string> = {}): Promise<void> {
     const extDir = path.join(baseDir, name);
@@ -80,6 +80,46 @@ describe('inventoryPiRuntime', () => {
 
         // beads is required and present, but other required extensions are missing
         expect(plan.allRequiredPresent).toBe(false);
+    });
+});
+
+describe('ensureAlwaysGlobalPiPackages', () => {
+    let agentDir: string;
+
+    beforeEach(async () => {
+        agentDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pi-agent-'));
+    });
+
+    afterEach(async () => {
+        await fs.remove(agentDir);
+        vi.restoreAllMocks();
+    });
+
+    it('does not invoke pi install when global package directories already exist', async () => {
+        await fs.ensureDir(path.join(agentDir, 'npm', 'node_modules', 'pi-gitnexus'));
+        await fs.ensureDir(path.join(agentDir, 'npm', 'node_modules', 'pi-serena-tools'));
+
+        let installCalls = 0;
+        const result = await ensureAlwaysGlobalPiPackages(false, undefined, agentDir, () => {
+            installCalls += 1;
+            return 0;
+        });
+
+        expect(installCalls).toBe(0);
+        expect(result.installed).toEqual([]);
+        expect(result.failed).toEqual([]);
+    });
+
+    it('runs global installs for missing required runtime packages', async () => {
+        const installOrder: string[] = [];
+        const result = await ensureAlwaysGlobalPiPackages(false, undefined, agentDir, (piPackageId) => {
+            installOrder.push(piPackageId);
+            return 0;
+        });
+
+        expect(installOrder).toEqual(['npm:pi-gitnexus', 'npm:pi-serena-tools']);
+        expect(result.installed).toEqual(['npm:pi-gitnexus', 'npm:pi-serena-tools']);
+        expect(result.failed).toEqual([]);
     });
 });
 

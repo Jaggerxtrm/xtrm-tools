@@ -92,6 +92,11 @@ const MANAGED_PACKAGES: ManagedPackage[] = [
     { id: 'npm:@aliou/pi-processes', displayName: 'pi-processes', required: true },
 ];
 
+const ALWAYS_GLOBAL_INSTALL_PACKAGE_IDS = new Set<string>([
+    'npm:pi-gitnexus',
+    'npm:pi-serena-tools',
+]);
+
 // ── Inventory ─────────────────────────────────────────────────────────────────
 
 export interface ExtensionStatus {
@@ -387,6 +392,60 @@ function mergePiSyncResults(base: PiSyncResult, incoming: PiSyncResult): PiSyncR
         packagesInstalled: [...base.packagesInstalled, ...incoming.packagesInstalled],
         failed: [...base.failed, ...incoming.failed],
     };
+}
+
+function parseNpmPackageName(piPackageId: string): string | null {
+    if (!piPackageId.startsWith('npm:')) return null;
+    const npmPackageName = piPackageId.slice(4).trim();
+    return npmPackageName.length > 0 ? npmPackageName : null;
+}
+
+async function isPackagePresentInPiAgent(agentDir: string, piPackageId: string): Promise<boolean> {
+    const npmPackageName = parseNpmPackageName(piPackageId);
+    if (!npmPackageName) return false;
+
+    const packageDir = path.join(agentDir, 'npm', 'node_modules', npmPackageName);
+    return fs.pathExists(packageDir);
+}
+
+export type PiPackageInstallRunner = (piPackageId: string) => number | null;
+
+export async function ensureAlwaysGlobalPiPackages(
+    dryRun: boolean,
+    log?: (message: string) => void,
+    agentDir: string = PI_AGENT_DIR,
+    installRunner: PiPackageInstallRunner = (piPackageId) => {
+        const installResult = spawnSync('pi', ['install', piPackageId], { stdio: 'pipe', encoding: 'utf8' });
+        return installResult.status;
+    },
+): Promise<{ installed: string[]; failed: string[] }> {
+    const installed: string[] = [];
+    const failed: string[] = [];
+
+    const packagesToEnsure = MANAGED_PACKAGES.filter(pkg => ALWAYS_GLOBAL_INSTALL_PACKAGE_IDS.has(pkg.id));
+
+    for (const pkg of packagesToEnsure) {
+        if (await isPackagePresentInPiAgent(agentDir, pkg.id)) {
+            continue;
+        }
+
+        if (dryRun) {
+            log?.(`[DRY RUN] pi install ${pkg.id}`);
+            continue;
+        }
+
+        const installStatus = installRunner(pkg.id);
+        if (installStatus === 0) {
+            installed.push(pkg.id);
+            log?.(`${sym.ok} ${pkg.displayName} (global)`);
+            continue;
+        }
+
+        failed.push(pkg.id);
+        log?.(kleur.yellow(`⚠ ${pkg.displayName} — global install failed`));
+    }
+
+    return { installed, failed };
 }
 
 /**
@@ -848,6 +907,10 @@ export async function runPiRuntimeSync(opts: PiRuntimeOptions = {}): Promise<PiS
             log(kleur.red(`✗ ${pkg.displayName}: ${err}`));
         }
     }
+
+    const alwaysGlobalInstallResult = await ensureAlwaysGlobalPiPackages(dryRun, log);
+    result.packagesInstalled.push(...alwaysGlobalInstallResult.installed);
+    result.failed.push(...alwaysGlobalInstallResult.failed);
 
     // Always rebuild active Pi skills view + update settings.json for project installs.
     const skillsRoot = resolveSkillsRoot(resolvedProjectRoot);

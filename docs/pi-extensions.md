@@ -39,6 +39,7 @@ xtrm pi reload
 ## Managed Extension Loading Model
 
 - `xtrm pi setup`, `xtrm pi install`, and `xtrm pi reload` all use the same managed extension sync path.
+- `xt pi` (new worktree launch) and `xt attach` when resuming Pi now run launch-time self-heal before starting Pi (repairs `.xtrm/extensions/node_modules/@xtrm/pi-core` and removes stale `~/.pi/agent/extensions/pi-mcp-adapter` overrides).
 - Managed extensions are copied to `~/.pi/agent/extensions/<name>/` and loaded via Pi auto-discovery.
 - `@xtrm/pi-core` is resolved via managed symlink at `.xtrm/extensions/node_modules/@xtrm/pi-core`.
 - Managed extensions are **not** registered with `pi install -l` to avoid duplicate discovery (`<dir>` + `<dir>/index.ts`) and command/flag/shortcut collisions.

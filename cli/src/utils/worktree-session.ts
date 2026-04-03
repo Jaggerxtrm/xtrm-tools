@@ -2,7 +2,7 @@ import kleur from 'kleur';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, writeFileSync, readFileSync, existsSync, symlinkSync, unlinkSync, lstatSync, readlinkSync, rmSync } from 'node:fs';
-import { ensureCorePackageSymlink } from '../core/pi-runtime.js';
+import { runPiLaunchPreflight } from '../core/pi-runtime.js';
 import { ensureAgentsSkillsSymlink } from '../core/skills-scaffold.js';
 
 export interface WorktreeSessionOptions {
@@ -192,15 +192,13 @@ export async function launchWorktreeSession(opts: WorktreeSessionOptions): Promi
             try { symlinkSync(projectPiNpmDir, worktreePiNpmDir); } catch { /* non-fatal */ }
         }
 
-        // Ensure @xtrm/pi-core resolves before Pi extension loading starts.
-        // coreSrcDir must point to the actual core extension (.xtrm/extensions/core),
-        // not .pi/extensions — the symlink is placed in .xtrm/extensions/node_modules/.
-        const coreExtDir = path.join(worktreePath, '.xtrm', 'extensions', 'core');
+        // Launch-path preflight: heal stale ~/.pi/agent override and ensure
+        // @xtrm/pi-core symlink before Pi starts loading extensions.
         try {
-            await ensureCorePackageSymlink(coreExtDir, worktreePath, false);
+            await runPiLaunchPreflight(worktreePath, false);
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
-            console.log(kleur.dim(`  warning: could not ensure @xtrm/pi-core symlink (${message})`));
+            console.log(kleur.dim(`  warning: pi launch preflight failed (${message})`));
         }
     }
 

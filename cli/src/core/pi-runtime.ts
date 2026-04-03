@@ -456,6 +456,11 @@ export interface PiMcpAdapterOverrideCheck {
     reason?: string;
 }
 
+export interface PiLaunchPreflightResult {
+    coreSymlinkStatus: CoreSymlinkStatus;
+    staleOverride: PiMcpAdapterOverrideCheck;
+}
+
 export async function remediateStalePiMcpAdapterOverride(
     dryRun: boolean,
     log?: (message: string) => void,
@@ -512,6 +517,25 @@ export async function remediateStalePiMcpAdapterOverride(
         stale: true,
         remediated: true,
         reason,
+    };
+}
+
+export async function runPiLaunchPreflight(
+    projectRoot: string,
+    dryRun: boolean,
+    log?: (message: string) => void,
+): Promise<PiLaunchPreflightResult> {
+    const staleOverride = await remediateStalePiMcpAdapterOverride(dryRun, log);
+    const coreSymlinkStatus = await ensureCorePackageSymlink(
+        path.join(projectRoot, '.xtrm', 'extensions', 'core'),
+        projectRoot,
+        dryRun,
+        log,
+    );
+
+    return {
+        coreSymlinkStatus,
+        staleOverride,
     };
 }
 
@@ -753,8 +777,8 @@ export async function runPiRuntimeSync(opts: PiRuntimeOptions = {}): Promise<PiS
         return result;
     }
 
-    const staleOverride = await remediateStalePiMcpAdapterOverride(dryRun, log);
-    if (staleOverride.remediated) {
+    const preflight = await runPiLaunchPreflight(resolvedProjectRoot, dryRun, log);
+    if (preflight.staleOverride.remediated) {
         result.extensionsRemoved.push('pi-mcp-adapter');
     }
 
@@ -840,7 +864,6 @@ export async function runPiRuntimeSync(opts: PiRuntimeOptions = {}): Promise<PiS
     }
 
     await updatePiSettings(resolvedProjectRoot, dryRun, log);
-    await ensureCorePackageSymlink(path.join(sourceDir, 'core'), resolvedProjectRoot, dryRun, log);
 
     // Base summary on what failed, not on pre-install missingPackages list
     const requiredFailed = missingPackages.filter(

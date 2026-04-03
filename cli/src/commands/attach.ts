@@ -3,6 +3,7 @@ import kleur from 'kleur';
 import prompts from 'prompts';
 import { spawnSync } from 'node:child_process';
 import { t } from '../utils/theme.js';
+import { runPiLaunchPreflight } from '../core/pi-runtime.js';
 import { listXtWorktrees, getRepoRoot } from './worktree.js';
 
 export function createAttachCommand(): Command {
@@ -76,6 +77,15 @@ export function createAttachCommand(): Command {
             console.log(t.bold(`\n  Attaching to ${branch}`));
             console.log(kleur.dim(`  runtime: ${runtime}  (resuming session)`));
             console.log(kleur.dim(`  path:    ${target.path}\n`));
+
+            if (runtime === 'pi') {
+                try {
+                    await runPiLaunchPreflight(target.path, false);
+                } catch (error) {
+                    const message = error instanceof Error ? error.message : String(error);
+                    console.log(kleur.dim(`  warning: pi launch preflight failed (${message})`));
+                }
+            }
 
             const result = spawnSync(runtime, resumeArgs, {
                 cwd: target.path,

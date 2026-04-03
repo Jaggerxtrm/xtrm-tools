@@ -36,6 +36,8 @@ function resolvePkgRoot(): string {
 }
 
 const PI_AGENT_DIR = process.env.PI_AGENT_DIR || path.join(homedir(), '.pi', 'agent');
+const PI_MCP_ADAPTER_OVERRIDE_DIR = path.join(PI_AGENT_DIR, 'extensions', 'pi-mcp-adapter');
+const PI_MCP_ADAPTER_REQUIRED_ENTRY = 'commands.js';
 const PROJECT_EXTENSIONS_ENTRY = '../.xtrm/extensions';
 const PROJECT_SKILLS_ENTRY = '../.xtrm/skills/active/pi';
 
@@ -377,17 +379,29 @@ export interface PiSyncResult {
     failed: string[];
 }
 
+function mergePiSyncResults(base: PiSyncResult, incoming: PiSyncResult): PiSyncResult {
+    return {
+        extensionsAdded: [...base.extensionsAdded, ...incoming.extensionsAdded],
+        extensionsUpdated: [...base.extensionsUpdated, ...incoming.extensionsUpdated],
+        extensionsRemoved: [...base.extensionsRemoved, ...incoming.extensionsRemoved],
+        packagesInstalled: [...base.packagesInstalled, ...incoming.packagesInstalled],
+        failed: [...base.failed, ...incoming.failed],
+    };
+}
+
 /**
  * Ensure @xtrm/pi-core is resolvable from .xtrm/extensions/node_modules/@xtrm/pi-core.
  * Creates a symlink pointing to the actual core source (not a mirror).
  */
+export type CoreSymlinkStatus = 'missing-source' | 'ok' | 'created' | 'repaired' | 'would-create' | 'would-repair';
+
 export async function ensureCorePackageSymlink(
     coreSrcDir: string,    // path to .xtrm/extensions/core (the actual source)
     projectRoot: string,
     dryRun: boolean,
     log?: (message: string) => void,
-): Promise<void> {
-    if (!await fs.pathExists(coreSrcDir)) return;
+): Promise<CoreSymlinkStatus> {
+    if (!await fs.pathExists(coreSrcDir)) return 'missing-source';
 
     // Place symlink in .xtrm/extensions/node_modules/@xtrm/pi-core so that
     // Node.js module resolution from any extension under .xtrm/extensions/
@@ -396,20 +410,109 @@ export async function ensureCorePackageSymlink(
     const extensionsDir = path.join(projectRoot, '.xtrm', 'extensions');
     const nodeModulesDir = path.join(extensionsDir, 'node_modules', '@xtrm');
     const symlinkPath = path.join(nodeModulesDir, 'pi-core');
+    const expectedTarget = path.resolve(coreSrcDir);
 
     // Use lstat (not pathExists) so we detect broken symlinks too
     const existing = await fs.lstat(symlinkPath).catch(() => null);
-    if (existing) return;
+    if (existing) {
+        if (existing.isSymbolicLink()) {
+            const currentLinkTarget = await fs.readlink(symlinkPath);
+            const resolvedTarget = path.resolve(path.dirname(symlinkPath), currentLinkTarget);
+            if (resolvedTarget === expectedTarget) {
+                return 'ok';
+            }
+        }
+
+        if (dryRun) {
+            log?.(kleur.dim('[DRY RUN] would repair @xtrm/pi-core symlink target'));
+            return 'would-repair';
+        }
+
+        await fs.remove(symlinkPath);
+        await fs.ensureDir(nodeModulesDir);
+        const relTarget = path.relative(nodeModulesDir, coreSrcDir);
+        await fs.symlink(relTarget, symlinkPath);
+        log?.(kleur.dim('Repaired @xtrm/pi-core symlink → .xtrm/extensions/node_modules/@xtrm/pi-core'));
+        return 'repaired';
+    }
 
     if (dryRun) {
-        log?.(kleur.dim(`[DRY RUN] would create @xtrm/pi-core symlink`));
-        return;
+        log?.(kleur.dim('[DRY RUN] would create @xtrm/pi-core symlink'));
+        return 'would-create';
     }
 
     await fs.ensureDir(nodeModulesDir);
     const relTarget = path.relative(nodeModulesDir, coreSrcDir);
     await fs.symlink(relTarget, symlinkPath);
-    log?.(kleur.dim(`Created @xtrm/pi-core symlink → .xtrm/extensions/node_modules/@xtrm/pi-core`));
+    log?.(kleur.dim('Created @xtrm/pi-core symlink → .xtrm/extensions/node_modules/@xtrm/pi-core'));
+    return 'created';
+}
+
+export interface PiMcpAdapterOverrideCheck {
+    path: string;
+    found: boolean;
+    stale: boolean;
+    remediated: boolean;
+    reason?: string;
+}
+
+export async function remediateStalePiMcpAdapterOverride(
+    dryRun: boolean,
+    log?: (message: string) => void,
+): Promise<PiMcpAdapterOverrideCheck> {
+    const stat = await fs.lstat(PI_MCP_ADAPTER_OVERRIDE_DIR).catch(() => null);
+    if (!stat) {
+        return {
+            path: PI_MCP_ADAPTER_OVERRIDE_DIR,
+            found: false,
+            stale: false,
+            remediated: false,
+        };
+    }
+
+    if (stat.isSymbolicLink()) {
+        return {
+            path: PI_MCP_ADAPTER_OVERRIDE_DIR,
+            found: true,
+            stale: false,
+            remediated: false,
+        };
+    }
+
+    const hasRequiredEntry = await fs.pathExists(path.join(PI_MCP_ADAPTER_OVERRIDE_DIR, PI_MCP_ADAPTER_REQUIRED_ENTRY));
+    if (stat.isDirectory() && hasRequiredEntry) {
+        return {
+            path: PI_MCP_ADAPTER_OVERRIDE_DIR,
+            found: true,
+            stale: false,
+            remediated: false,
+        };
+    }
+
+    const reason = stat.isDirectory()
+        ? `missing ${PI_MCP_ADAPTER_REQUIRED_ENTRY}`
+        : 'not a directory/symlink';
+
+    if (dryRun) {
+        log?.(kleur.dim(`[DRY RUN] would remove stale pi-mcp-adapter override (${reason})`));
+        return {
+            path: PI_MCP_ADAPTER_OVERRIDE_DIR,
+            found: true,
+            stale: true,
+            remediated: false,
+            reason,
+        };
+    }
+
+    await fs.remove(PI_MCP_ADAPTER_OVERRIDE_DIR);
+    log?.(kleur.dim(`Removed stale pi-mcp-adapter override (${reason})`));
+    return {
+        path: PI_MCP_ADAPTER_OVERRIDE_DIR,
+        found: true,
+        stale: true,
+        remediated: true,
+        reason,
+    };
 }
 
 /**
@@ -643,10 +746,16 @@ export async function runPiRuntimeSync(opts: PiRuntimeOptions = {}): Promise<PiS
         packagesInstalled: [],
         failed: [],
     };
+    const result: PiSyncResult = { ...emptyResult };
 
     if (!await fs.pathExists(sourceDir)) {
         console.log(kleur.dim('\n  Managed extensions: skipped (not bundled in npm package)\n'));
-        return emptyResult;
+        return result;
+    }
+
+    const staleOverride = await remediateStalePiMcpAdapterOverride(dryRun, log);
+    if (staleOverride.remediated) {
+        result.extensionsRemoved.push('pi-mcp-adapter');
     }
 
     // ── Global install: mirror extensions into ~/.pi/agent/extensions/ ──────────
@@ -654,12 +763,13 @@ export async function runPiRuntimeSync(opts: PiRuntimeOptions = {}): Promise<PiS
         const targetDir = path.join(PI_AGENT_DIR, 'extensions');
         const plan = await inventoryPiRuntime(sourceDir, targetDir);
         renderPiRuntimePlan(plan);
-        if (plan.allPresent) return emptyResult;
-        return await executePiSync(plan, sourceDir, targetDir, {
+        if (plan.allPresent) return result;
+        const synced = await executePiSync(plan, sourceDir, targetDir, {
             dryRun,
             isGlobal: true,
             removeOrphaned: true,
         });
+        return mergePiSyncResults(result, synced);
     }
 
     // ── Project install: no extension mirror ─────────────────────────────────────
@@ -688,8 +798,6 @@ export async function runPiRuntimeSync(opts: PiRuntimeOptions = {}): Promise<PiS
         console.log(kleur.yellow(`  Missing:    ${names}`));
     }
     console.log(kleur.dim('  ' + '-'.repeat(50)));
-
-    const result: PiSyncResult = { ...emptyResult };
 
     const legacyCleanup = await cleanupLegacyProjectExtensionCopies(resolvedProjectRoot, dryRun, log);
     result.extensionsRemoved.push(...legacyCleanup.removed);

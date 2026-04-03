@@ -7,7 +7,7 @@ import fs from 'fs-extra';
 import { findRepoRoot } from '../utils/repo-root.js';
 import { t } from '../utils/theme.js';
 import { runPiInstall } from './pi-install.js';
-import { inventoryPiRuntime } from '../core/pi-runtime.js';
+import { ensureCorePackageSymlink, inventoryPiRuntime, remediateStalePiMcpAdapterOverride } from '../core/pi-runtime.js';
 import { createInstallPiCommand } from './install-pi.js';
 import { launchWorktreeSession } from '../utils/worktree-session.js';
 import { confirmDestructiveAction } from '../utils/confirmation.js';
@@ -182,6 +182,35 @@ export function createPiCommand(): Command {
             const bundleRoot = await findRepoRoot();
             const sourceDir = path.join(bundleRoot, '.xtrm', 'extensions');
             const globalTargetDir = path.join(PI_AGENT_DIR, 'extensions');
+
+            try {
+                const staleOverride = await remediateStalePiMcpAdapterOverride(false);
+                if (staleOverride.stale && staleOverride.remediated) {
+                    console.log(t.success('  ✓ removed stale ~/.pi/agent/extensions/pi-mcp-adapter override'));
+                } else if (staleOverride.stale) {
+                    console.log(kleur.yellow('  ⚠ stale ~/.pi/agent/extensions/pi-mcp-adapter override detected'));
+                    allOk = false;
+                } else {
+                    console.log(t.success('  ✓ pi-mcp-adapter override check passed'));
+                }
+            } catch (error) {
+                console.log(kleur.yellow(`  ⚠ failed to remediate pi-mcp-adapter override: ${error}`));
+                allOk = false;
+            }
+
+            try {
+                const coreStatus = await ensureCorePackageSymlink(path.join(sourceDir, 'core'), projectRoot, false);
+                if (coreStatus === 'repaired' || coreStatus === 'created') {
+                    console.log(t.success('  ✓ repaired .xtrm/extensions/node_modules/@xtrm/pi-core symlink'));
+                } else if (coreStatus === 'ok') {
+                    console.log(t.success('  ✓ @xtrm/pi-core symlink is healthy'));
+                } else if (coreStatus === 'missing-source') {
+                    console.log(kleur.dim('  ○ @xtrm/pi-core source not bundled in this install'));
+                }
+            } catch (error) {
+                console.log(kleur.yellow(`  ⚠ failed to ensure @xtrm/pi-core symlink: ${error}`));
+                allOk = false;
+            }
 
             if (!await fs.pathExists(sourceDir)) {
                 console.log(kleur.dim('  ○ managed extensions not bundled in this install'));

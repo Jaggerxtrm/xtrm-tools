@@ -22,6 +22,8 @@
     ".xtrm/config",
     ".xtrm/hooks",
     ".xtrm/extensions",
+    ".xtrm/skills/default",
+    ".xtrm/skills/optional",
     ".xtrm/registry.json",
     "!**/__pycache__/**",
     "!**/*.pyc",

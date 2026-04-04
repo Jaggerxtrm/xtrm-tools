@@ -10,6 +10,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.7.1] - 2026-04-02
 
 ### Added
+
+## [0.7.3] - 2026-04-04
+
+### Changed
+- **Pi extensions architecture**: Refactored from project-level copies to global symlink model. Extensions now live in `.xtrm/ext-src/` (source of truth) and are symlinked to `~/.pi/agent/extensions/`. This eliminates project-level conflicts and worktrees no longer need extension bootstrap.
+- **Directory rename**: `.xtrm/extensions/` renamed to `.xtrm/ext-src/` to prevent Pi auto-discovery of project-level extensions (which would duplicate global symlinks).
+- **Legacy path removal**: `.pi/node_modules/@xtrm/pi-core` deprecated; `@xtrm/pi-core` now lives in `.xtrm/ext-src/core/`.
+- **`docs/pi-extensions.md`**: Comprehensive rewrite documenting global symlink model, sync behavior, worktree compatibility, and active extensions (v2.0.0).
+- **`docs/xtrm-directory.md`**: Updated directory layout to reflect `ext-src/` and global symlink architecture (v1.1.0).
+- **`docs/xtrm-ui.md`**: Updated source paths from `config/pi/extensions/` to `.xtrm/ext-src/` (v1.2.0).
+
+### Fixed
+- **Worktree extension sync**: Extensions are now global symlinks — worktrees automatically share extensions with main repo without bootstrap or drift issues.
+- **Pi runtime self-heal**: Launch-time repair now handles stale symlinks and orphaned extensions correctly.
+
 - **`docs/skills-tier-architecture.md`**: New reference document covering three-tier skills model (default/optional/user), state.json schema, PACK.json schema, runtime active views, and xt skills CLI commands.
 - **`docs/xtrm-directory.md`**: New reference document for centralized `.xtrm/` directory layout — skills, hooks, extensions, worktrees, reports, registry.json.
 - **`docs/bash-tools.md`**: New reference for specialist bash CLIs (`ghgrep`, `ctx7`, `deepwiki`) including install source, usage examples, and CLI-vs-MCP guidance; README now links and surfaces `ghgrep` under capabilities.

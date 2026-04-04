@@ -2,14 +2,14 @@
 title: XTRM UI Extension
 scope: xtrm-ui
 category: reference
-version: 1.1.0
-updated: 2026-04-03
-synced_at: HEAD
+version: 1.2.0
+updated: 2026-04-04
+synced_at: e6cca025
 description: "Pi extension that replaces pi-dex with XTRM-tuned chrome and pi-diff-style write/edit previews while preserving custom-footer ownership"
 source_of_truth_for:
-  - "config/pi/extensions/xtrm-ui/index.ts"
-  - "config/pi/extensions/xtrm-ui/package.json"
-  - "config/pi/extensions/xtrm-ui/themes/*.json"
+  - ".xtrm/ext-src/xtrm-ui/index.ts"
+  - ".xtrm/ext-src/xtrm-ui/package.json"
+  - ".xtrm/ext-src/xtrm-ui/themes/*.json"
 domain: [pi, extensions, ui, themes]
 ---
 
@@ -22,7 +22,7 @@ domain: [pi, extensions, ui, themes]
 | [Diff Rendering Integration](#diff-rendering-integration) | write/edit previews now use richer unified rendering |
 | [Defaults](#defaults) | Dark theme, compact, header on, footer off |
 | [Commands](#commands) | /xtrm-ui, /xtrm-ui-theme, /xtrm-ui-density, /xtrm-ui-header, /xtrm-ui-reset |
-| [Install](#install) | Auto-synced via xtrm install |
+| [Install](#install) | Auto-synced via global symlink on xtrm install |
 <!-- END INDEX -->
 
 ---
@@ -94,12 +94,17 @@ Preferences are persisted per session via `pi.appendEntry` and restored on
 
 ## Install
 
-`xtrm-ui` is a managed extension — it is automatically synced to
-`~/.pi/agent/extensions/xtrm-ui/` on every `xtrm install`. Pi auto-discovers
-extensions in that directory, so no manual `pi install -l` step is required.
+`xtrm-ui` is a managed extension using the **global symlink model**:
+
+- Source: `.xtrm/ext-src/xtrm-ui/` (git-tracked)
+- Global symlink: `~/.pi/agent/extensions/xtrm-ui` → `.xtrm/ext-src/xtrm-ui/`
+
+On `xtrm install` (or `xt pi` / `xt attach`), the symlink is created/verified.
+Pi auto-discovers extensions in `~/.pi/agent/extensions/`, so no manual
+`pi install -l` step is required.
 
 pi-dex (`npm:pi-dex`) is **not** installed when using xtrm-ui — it was removed
-from `config/pi/install-schema.json` to avoid the footer conflict.
+from managed packages to avoid the footer conflict.
 
 `@heyhuynhgiabuu/pi-diff` is declared as an extension dependency for capability
 parity/reference. Rendering currently uses the local compatibility adapter described

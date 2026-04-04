@@ -3,11 +3,5 @@
   "skills": [
     "../.xtrm/skills/active/pi"
   ],
-  "packages": [
-    "npm:pi-gitnexus",
-    "npm:pi-serena-tools",
-    "npm:lsp-pi",
-    "npm:@zenobius/pi-worktrees",
-    "npm:@robhowley/pi-structured-return"
-  ]
+  "packages": []
 }

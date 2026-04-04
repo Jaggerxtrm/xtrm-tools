@@ -769,12 +769,10 @@ export async function executePiSync(
         }
     }
 
-    // Install missing packages
+    // Install missing packages (always global at ~/.pi/agent/npm/)
     for (const status of plan.missingPackages) {
         const { pkg } = status;
-        const installArgs = isGlobal
-            ? ['install', pkg.id]
-            : ['install', pkg.id, '-l'];
+        const installArgs = ['install', pkg.id];
 
         if (dryRun) {
             log(`[DRY RUN] pi ${installArgs.join(' ')}`);
@@ -980,15 +978,15 @@ export async function runPiRuntimeSync(opts: PiRuntimeOptions = {}): Promise<PiS
     result.extensionsRemoved.push(...legacyCleanup.removed);
     result.failed.push(...legacyCleanup.failed);
 
-    // Install missing packages
+    // Install missing packages (always global at ~/.pi/agent/npm/)
     for (const status of missingPackages) {
         const { pkg } = status;
         if (dryRun) {
-            log(`[DRY RUN] pi install ${pkg.id} -l`);
+            log(`[DRY RUN] pi install ${pkg.id}`);
             continue;
         }
         try {
-            const r = spawnSync('pi', ['install', pkg.id, '-l'], { stdio: 'pipe', encoding: 'utf8' });
+            const r = spawnSync('pi', ['install', pkg.id], { stdio: 'pipe', encoding: 'utf8' });
             if (r.status === 0) {
                 result.packagesInstalled.push(pkg.id);
                 log(`${sym.ok} ${pkg.displayName}`);

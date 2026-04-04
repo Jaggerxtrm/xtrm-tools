@@ -44182,25 +44182,6 @@ async function launchWorktreeSession(opts) {
   console.log(kleur_default.green(`
   \u2713 Worktree ready \u2014 launching ${runtime}...
 `));
-  if (runtime === "pi") {
-    const projectPiNpmDir = import_node_path5.default.join(mainRepoRoot, ".pi", "npm");
-    const worktreePiNpmDir = import_node_path5.default.join(worktreePath, ".pi", "npm");
-    if ((0, import_node_fs.existsSync)(projectPiNpmDir)) {
-      try {
-        const existing = (0, import_node_fs.lstatSync)(worktreePiNpmDir, { throwIfNoEntry: false });
-        if (existing) {
-          if (existing.isSymbolicLink() && (0, import_node_fs.readlinkSync)(worktreePiNpmDir) === projectPiNpmDir) {
-          } else {
-            (0, import_node_fs.rmSync)(worktreePiNpmDir, { recursive: true, force: true });
-            (0, import_node_fs.symlinkSync)(projectPiNpmDir, worktreePiNpmDir);
-          }
-        } else {
-          (0, import_node_fs.symlinkSync)(projectPiNpmDir, worktreePiNpmDir);
-        }
-      } catch {
-      }
-    }
-  }
   if (runtime === "claude") {
     const claudeDir = import_node_path5.default.join(worktreePath, ".claude");
     try {
@@ -45197,7 +45178,7 @@ async function executePiSync(plan, sourceDir, targetDir, opts = {}) {
   }
   for (const status of plan.missingPackages) {
     const { pkg } = status;
-    const installArgs = isGlobal ? ["install", pkg.id] : ["install", pkg.id, "-l"];
+    const installArgs = ["install", pkg.id];
     if (dryRun) {
       log(`[DRY RUN] pi ${installArgs.join(" ")}`);
       continue;
@@ -45335,11 +45316,11 @@ async function runPiRuntimeSync(opts = {}) {
   for (const status of missingPackages) {
     const { pkg } = status;
     if (dryRun) {
-      log(`[DRY RUN] pi install ${pkg.id} -l`);
+      log(`[DRY RUN] pi install ${pkg.id}`);
       continue;
     }
     try {
-      const r = (0, import_child_process3.spawnSync)("pi", ["install", pkg.id, "-l"], { stdio: "pipe", encoding: "utf8" });
+      const r = (0, import_child_process3.spawnSync)("pi", ["install", pkg.id], { stdio: "pipe", encoding: "utf8" });
       if (r.status === 0) {
         result.packagesInstalled.push(pkg.id);
         log(`${sym.ok} ${pkg.displayName}`);

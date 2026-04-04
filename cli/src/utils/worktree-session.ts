@@ -172,32 +172,10 @@ export async function launchWorktreeSession(opts: WorktreeSessionOptions): Promi
     writeSessionMeta(worktreePath, runtime);
     console.log(kleur.green(`\n  ✓ Worktree ready — launching ${runtime}...\n`));
 
-    // Pi worktree: share npm cache to avoid reinstalling packages.
-    // Extensions are globally linked (~/.pi/agent/extensions/ → repo) so no
-    // extension bootstrap is needed in worktrees.
-    if (runtime === 'pi') {
-        const projectPiNpmDir = path.join(mainRepoRoot, '.pi', 'npm');
-        const worktreePiNpmDir = path.join(worktreePath, '.pi', 'npm');
-        // Always ensure symlink to main repo's .pi/npm/ (shared cache).
-        // bd worktree create may have copied .pi/ directory, so we need to
-        // replace it with a symlink to avoid duplicate npm installs.
-        if (existsSync(projectPiNpmDir)) {
-            try {
-                const existing = lstatSync(worktreePiNpmDir, { throwIfNoEntry: false });
-                if (existing) {
-                    if (existing.isSymbolicLink() && readlinkSync(worktreePiNpmDir) === projectPiNpmDir) {
-                        // Already correct symlink — nothing to do
-                    } else {
-                        // Remove existing dir/symlink and create correct symlink
-                        rmSync(worktreePiNpmDir, { recursive: true, force: true });
-                        symlinkSync(projectPiNpmDir, worktreePiNpmDir);
-                    }
-                } else {
-                    symlinkSync(projectPiNpmDir, worktreePiNpmDir);
-                }
-            } catch { /* non-fatal */ }
-        }
-    }
+    // Pi worktree: no bootstrap needed.
+    // - Extensions: globally linked (~/.pi/agent/extensions/ → repo)
+    // - Packages: installed globally at ~/.pi/agent/npm/
+    // Worktree inherits both from global locations.
 
     // Claude worktree: symlink gitignored dirs so the session has the same
     // environment as the main repo and wire local statusLine to .xtrm hooks.

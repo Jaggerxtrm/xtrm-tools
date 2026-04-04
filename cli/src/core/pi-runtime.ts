@@ -680,11 +680,11 @@ async function updatePiSettings(
     await fs.ensureDir(path.join(projectRoot, '.pi'));
     await fs.writeJson(piSettingsPath, {
         ...existingSettings,
-        extensions: [],  // Empty = Pi uses global ~/.pi/agent/extensions/ (which symlink to .xtrm/ext-src/)
+        extensions: [],  // Empty = Pi uses global ~/.pi/agent/extensions/
         skills: [PROJECT_SKILLS_ENTRY],
-        packages: existingPackages,
+        packages: [],  // Empty = packages installed globally at ~/.pi/agent/settings.json
     }, { spaces: 2 });
-    log?.(kleur.dim(`Updated .pi/settings.json → global extensions + .xtrm/skills/active/pi`));
+    log?.(kleur.dim(`Updated .pi/settings.json → global extensions + packages + .xtrm/skills/active/pi`));
 }
 
 /**

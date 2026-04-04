@@ -45110,11 +45110,12 @@ async function updatePiSettings(projectRoot, dryRun, log) {
   await import_fs_extra9.default.writeJson(piSettingsPath, {
     ...existingSettings,
     extensions: [],
-    // Empty = Pi uses global ~/.pi/agent/extensions/ (which symlink to .xtrm/ext-src/)
+    // Empty = Pi uses global ~/.pi/agent/extensions/
     skills: [PROJECT_SKILLS_ENTRY],
-    packages: existingPackages
+    packages: []
+    // Empty = packages installed globally at ~/.pi/agent/settings.json
   }, { spaces: 2 });
-  log?.(kleur_default.dim(`Updated .pi/settings.json \u2192 global extensions + .xtrm/skills/active/pi`));
+  log?.(kleur_default.dim(`Updated .pi/settings.json \u2192 global extensions + packages + .xtrm/skills/active/pi`));
 }
 async function executePiSync(plan, sourceDir, targetDir, opts = {}) {
   const {

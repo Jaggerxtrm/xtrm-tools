@@ -44185,9 +44185,18 @@ async function launchWorktreeSession(opts) {
   if (runtime === "pi") {
     const projectPiNpmDir = import_node_path5.default.join(mainRepoRoot, ".pi", "npm");
     const worktreePiNpmDir = import_node_path5.default.join(worktreePath, ".pi", "npm");
-    if ((0, import_node_fs.existsSync)(projectPiNpmDir) && !(0, import_node_fs.existsSync)(worktreePiNpmDir)) {
+    if ((0, import_node_fs.existsSync)(projectPiNpmDir)) {
       try {
-        (0, import_node_fs.symlinkSync)(projectPiNpmDir, worktreePiNpmDir);
+        const existing = (0, import_node_fs.lstatSync)(worktreePiNpmDir, { throwIfNoEntry: false });
+        if (existing) {
+          if (existing.isSymbolicLink() && (0, import_node_fs.readlinkSync)(worktreePiNpmDir) === projectPiNpmDir) {
+          } else {
+            (0, import_node_fs.rmSync)(worktreePiNpmDir, { recursive: true, force: true });
+            (0, import_node_fs.symlinkSync)(projectPiNpmDir, worktreePiNpmDir);
+          }
+        } else {
+          (0, import_node_fs.symlinkSync)(projectPiNpmDir, worktreePiNpmDir);
+        }
       } catch {
       }
     }

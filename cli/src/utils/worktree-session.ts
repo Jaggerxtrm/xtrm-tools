@@ -178,8 +178,24 @@ export async function launchWorktreeSession(opts: WorktreeSessionOptions): Promi
     if (runtime === 'pi') {
         const projectPiNpmDir = path.join(mainRepoRoot, '.pi', 'npm');
         const worktreePiNpmDir = path.join(worktreePath, '.pi', 'npm');
-        if (existsSync(projectPiNpmDir) && !existsSync(worktreePiNpmDir)) {
-            try { symlinkSync(projectPiNpmDir, worktreePiNpmDir); } catch { /* non-fatal */ }
+        // Always ensure symlink to main repo's .pi/npm/ (shared cache).
+        // bd worktree create may have copied .pi/ directory, so we need to
+        // replace it with a symlink to avoid duplicate npm installs.
+        if (existsSync(projectPiNpmDir)) {
+            try {
+                const existing = lstatSync(worktreePiNpmDir, { throwIfNoEntry: false });
+                if (existing) {
+                    if (existing.isSymbolicLink() && readlinkSync(worktreePiNpmDir) === projectPiNpmDir) {
+                        // Already correct symlink — nothing to do
+                    } else {
+                        // Remove existing dir/symlink and create correct symlink
+                        rmSync(worktreePiNpmDir, { recursive: true, force: true });
+                        symlinkSync(projectPiNpmDir, worktreePiNpmDir);
+                    }
+                } else {
+                    symlinkSync(projectPiNpmDir, worktreePiNpmDir);
+                }
+            } catch { /* non-fatal */ }
         }
     }
 

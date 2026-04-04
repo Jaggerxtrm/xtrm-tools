@@ -32,16 +32,19 @@ import {
   createWriteTool,
 } from "@mariozechner/pi-coding-agent";
 import { Box, Text, truncateToWidth, visibleWidth } from "@mariozechner/pi-tui";
+import { existsSync, readFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import {
   cleanOutputLines,
   countPrefixedItems,
+  createUnifiedLineDiff,
   diffStats,
   formatDuration,
   formatLineLabel,
   joinMeta,
   lineCount,
   previewLines,
+  renderRichDiffPreview,
   renderToolSummary,
   shortenCommand,
   shortenPath,
@@ -237,19 +240,6 @@ function renderVerticalPreview(theme: any, lines: string[], maxLines: number): s
   return text;
 }
 
-function renderDiffPreview(theme: any, diff: string, maxLines: number): string {
-  const lines = diff.split("\n").slice(0, maxLines);
-  let out = "";
-  for (const line of lines) {
-    const styled =
-      line.startsWith("+") && !line.startsWith("+++") ? theme.fg("toolDiffAdded", `  ${line}`)
-      : line.startsWith("-") && !line.startsWith("---") ? theme.fg("toolDiffRemoved", `  ${line}`)
-      : theme.fg("toolDiffContext", `  ${line}`);
-    out += (out ? "\n" : "") + styled;
-  }
-  if (diff.split("\n").length > maxLines) out += `\n${theme.fg("muted", `  … +${diff.split("\n").length - maxLines} more`)}`;
-  return out;
-}
 
 function lineRange(offset?: number, limit?: number): string | undefined {
   if (offset == null && limit == null) return undefined;
@@ -436,8 +426,14 @@ type XtrmMeta<TArgs = Record<string, unknown>> = {
   durationMs: number;
 };
 
+type XtrmWritePreview =
+  | { kind: "created"; lineCount: number }
+  | { kind: "updated"; diff: string; additions: number; removals: number }
+  | { kind: "unchanged" };
+
 type DetailsWithXtrmMeta<TDetails, TArgs = Record<string, unknown>> = TDetails & {
   xtrmMeta?: XtrmMeta<TArgs>;
+  xtrmWritePreview?: XtrmWritePreview;
 };
 
 const toolCache = new Map<string, BuiltInTools>();
@@ -482,6 +478,30 @@ function getXtrmMeta<TDetails extends object, TArgs extends Record<string, unkno
 function getTextContent(result: { content: Array<{ type: string; text?: string }> }): string {
   const item = result.content.find((content) => content.type === "text");
   return item?.text ?? "";
+}
+
+function createWritePreview(path: string, nextContent: string): XtrmWritePreview {
+  if (!path || !existsSync(path)) {
+    return { kind: "created", lineCount: lineCount(nextContent) };
+  }
+
+  let currentContent = "";
+  try {
+    currentContent = readFileSync(path, "utf8");
+  } catch {
+    return { kind: "created", lineCount: lineCount(nextContent) };
+  }
+
+  if (currentContent === nextContent) return { kind: "unchanged" };
+
+  const diff = createUnifiedLineDiff(currentContent, nextContent);
+  const stats = diffStats(diff);
+  return {
+    kind: "updated",
+    diff,
+    additions: stats.additions,
+    removals: stats.removals,
+  };
 }
 
 function renderPendingCall(toolName: string, args: Record<string, unknown>, theme: any): Text {
@@ -859,7 +879,7 @@ function registerXtrmUiTools(pi: ExtensionAPI): void {
       }
       const stats = details.diff ? diffStats(details.diff) : { additions: 0, removals: 0 };
       let text = renderToolSummary(theme, "success", "edit", shortenPath(String(meta?.args.path ?? "")), joinMeta([`+${stats.additions}`, `-${stats.removals}`, formatDuration(meta?.durationMs)]));
-      if (expanded && details.diff) text += `\n${renderDiffPreview(theme, details.diff, 18)}`;
+      if (expanded && details.diff) text += `\n${renderRichDiffPreview(theme, details.diff, 18)}`;
       return new Text(text, 0, 0);
     },
   });
@@ -871,11 +891,16 @@ function registerXtrmUiTools(pi: ExtensionAPI): void {
     parameters: getTools(process.cwd()).write.parameters,
     async execute(toolCallId, params, signal, onUpdate, ctx) {
       const started = Date.now();
+      const args = params as Record<string, unknown>;
+      const path = String(args.path ?? "");
+      const content = String(args.content ?? "");
+      const preview = createWritePreview(path, content);
       const result = await getTools(ctx.cwd).write.execute(toolCallId, params, signal, onUpdate);
-      return { ...result, details: withXtrmMeta(result.details as Record<string, never> | undefined, "write", params as Record<string, unknown>, Date.now() - started) };
+      const details = withXtrmMeta(result.details as Record<string, never> | undefined, "write", args, Date.now() - started);
+      return { ...result, details: { ...details, xtrmWritePreview: preview } };
     },
     renderCall: (args, theme) => renderPendingCallIfActive("write", args as Record<string, unknown>, theme),
-    renderResult(result, { isPartial }, theme) {
+    renderResult(result, { expanded, isPartial }, theme) {
       if (isPartial) return new Text(renderToolSummary(theme, "pending", "write", "writing", undefined), 0, 0);
       const details = (result.details ?? {}) as DetailsWithXtrmMeta<Record<string, never>, Record<string, unknown>>;
       const meta = getXtrmMeta<Record<string, never>, Record<string, unknown>>(details);
@@ -883,7 +908,41 @@ function registerXtrmUiTools(pi: ExtensionAPI): void {
       if (/^error/i.test(textContent.trim())) {
         return new Text(renderToolSummary(theme, "error", "write", shortenPath(String(meta?.args.path ?? "")), textContent.split("\n")[0]), 0, 0);
       }
-      return new Text(renderToolSummary(theme, "success", "write", shortenPath(String(meta?.args.path ?? "")), joinMeta([formatLineLabel(lineCount(String(meta?.args.content ?? "")), "line"), formatDuration(meta?.durationMs)])), 0, 0);
+
+      const subject = shortenPath(String(meta?.args.path ?? ""));
+      const preview = details.xtrmWritePreview;
+
+      if (preview?.kind === "unchanged") {
+        return new Text(renderToolSummary(theme, "success", "write", subject, joinMeta(["no changes", formatDuration(meta?.durationMs)])), 0, 0);
+      }
+
+      if (preview?.kind === "updated") {
+        let text = renderToolSummary(
+          theme,
+          "success",
+          "write",
+          subject,
+          joinMeta([`+${preview.additions}`, `-${preview.removals}`, formatDuration(meta?.durationMs)]),
+        );
+        if (expanded && preview.diff) text += `\n${renderRichDiffPreview(theme, preview.diff, 18)}`;
+        return new Text(text, 0, 0);
+      }
+
+      const lines = preview?.kind === "created"
+        ? preview.lineCount
+        : lineCount(String(meta?.args.content ?? ""));
+
+      return new Text(
+        renderToolSummary(
+          theme,
+          "success",
+          "write",
+          subject,
+          joinMeta([formatLineLabel(lines, "line"), formatDuration(meta?.durationMs)]),
+        ),
+        0,
+        0,
+      );
     },
   });
 

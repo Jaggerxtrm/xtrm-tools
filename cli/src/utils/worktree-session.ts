@@ -2,7 +2,7 @@ import kleur from 'kleur';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, writeFileSync, readFileSync, existsSync, symlinkSync, unlinkSync, lstatSync, readlinkSync, rmSync } from 'node:fs';
-import { runPiLaunchPreflight } from '../core/pi-runtime.js';
+
 import { ensureAgentsSkillsSymlink } from '../core/skills-scaffold.js';
 
 export interface WorktreeSessionOptions {
@@ -172,33 +172,14 @@ export async function launchWorktreeSession(opts: WorktreeSessionOptions): Promi
     writeSessionMeta(worktreePath, runtime);
     console.log(kleur.green(`\n  ✓ Worktree ready — launching ${runtime}...\n`));
 
-    // Pi worktree bootstrap.
-    // Pi resolves project runtime packages from <cwd>/.pi/npm/node_modules.
-    // In fresh worktrees this directory is missing, which causes Pi to reinstall all `npm:` packages
-    // on every `xt pi` launch. Reuse the main repo cache via symlink to avoid repeated reinstalls.
+    // Pi worktree: share npm cache to avoid reinstalling packages.
+    // Extensions are globally linked (~/.pi/agent/extensions/ → repo) so no
+    // extension bootstrap is needed in worktrees.
     if (runtime === 'pi') {
-        const projectPiDir = path.join(mainRepoRoot, '.pi');
-        const worktreePiDir = path.join(worktreePath, '.pi');
-
-        // If the worktree does not have .pi at all, link it to project root.
-        if (existsSync(projectPiDir) && !existsSync(worktreePiDir)) {
-            try { symlinkSync(projectPiDir, worktreePiDir); } catch { /* non-fatal */ }
-        }
-
-        // If .pi exists as a directory (tracked files), still share npm cache explicitly.
-        const projectPiNpmDir = path.join(projectPiDir, 'npm');
-        const worktreePiNpmDir = path.join(worktreePiDir, 'npm');
+        const projectPiNpmDir = path.join(mainRepoRoot, '.pi', 'npm');
+        const worktreePiNpmDir = path.join(worktreePath, '.pi', 'npm');
         if (existsSync(projectPiNpmDir) && !existsSync(worktreePiNpmDir)) {
             try { symlinkSync(projectPiNpmDir, worktreePiNpmDir); } catch { /* non-fatal */ }
-        }
-
-        // Launch-path preflight: heal stale ~/.pi/agent override and ensure
-        // @xtrm/pi-core symlink before Pi starts loading extensions.
-        try {
-            await runPiLaunchPreflight(worktreePath, false);
-        } catch (error) {
-            const message = error instanceof Error ? error.message : String(error);
-            console.log(kleur.dim(`  warning: pi launch preflight failed (${message})`));
         }
     }
 

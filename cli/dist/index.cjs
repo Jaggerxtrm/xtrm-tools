@@ -30,9 +30,9 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// ../node_modules/commander/lib/error.js
+// node_modules/.pnpm/commander@14.0.3/node_modules/commander/lib/error.js
 var require_error = __commonJS({
-  "../node_modules/commander/lib/error.js"(exports2) {
+  "node_modules/.pnpm/commander@14.0.3/node_modules/commander/lib/error.js"(exports2) {
     "use strict";
     var CommanderError2 = class extends Error {
       /**
@@ -66,9 +66,9 @@ var require_error = __commonJS({
   }
 });
 
-// ../node_modules/commander/lib/argument.js
+// node_modules/.pnpm/commander@14.0.3/node_modules/commander/lib/argument.js
 var require_argument = __commonJS({
-  "../node_modules/commander/lib/argument.js"(exports2) {
+  "node_modules/.pnpm/commander@14.0.3/node_modules/commander/lib/argument.js"(exports2) {
     "use strict";
     var { InvalidArgumentError: InvalidArgumentError2 } = require_error();
     var Argument2 = class {
@@ -195,9 +195,9 @@ var require_argument = __commonJS({
   }
 });
 
-// ../node_modules/commander/lib/help.js
+// node_modules/.pnpm/commander@14.0.3/node_modules/commander/lib/help.js
 var require_help = __commonJS({
-  "../node_modules/commander/lib/help.js"(exports2) {
+  "node_modules/.pnpm/commander@14.0.3/node_modules/commander/lib/help.js"(exports2) {
     "use strict";
     var { humanReadableArgName } = require_argument();
     var Help2 = class {
@@ -798,9 +798,9 @@ ${itemIndentStr}`);
   }
 });
 
-// ../node_modules/commander/lib/option.js
+// node_modules/.pnpm/commander@14.0.3/node_modules/commander/lib/option.js
 var require_option = __commonJS({
-  "../node_modules/commander/lib/option.js"(exports2) {
+  "node_modules/.pnpm/commander@14.0.3/node_modules/commander/lib/option.js"(exports2) {
     "use strict";
     var { InvalidArgumentError: InvalidArgumentError2 } = require_error();
     var Option2 = class {
@@ -1112,9 +1112,9 @@ var require_option = __commonJS({
   }
 });
 
-// ../node_modules/commander/lib/suggestSimilar.js
+// node_modules/.pnpm/commander@14.0.3/node_modules/commander/lib/suggestSimilar.js
 var require_suggestSimilar = __commonJS({
-  "../node_modules/commander/lib/suggestSimilar.js"(exports2) {
+  "node_modules/.pnpm/commander@14.0.3/node_modules/commander/lib/suggestSimilar.js"(exports2) {
     "use strict";
     var maxDistance = 3;
     function editDistance(a, b) {
@@ -1193,9 +1193,9 @@ var require_suggestSimilar = __commonJS({
   }
 });
 
-// ../node_modules/commander/lib/command.js
+// node_modules/.pnpm/commander@14.0.3/node_modules/commander/lib/command.js
 var require_command = __commonJS({
-  "../node_modules/commander/lib/command.js"(exports2) {
+  "node_modules/.pnpm/commander@14.0.3/node_modules/commander/lib/command.js"(exports2) {
     "use strict";
     var EventEmitter = require("events").EventEmitter;
     var childProcess = require("child_process");
@@ -3440,9 +3440,9 @@ Expecting one of '${allowedValues.join("', '")}'`);
   }
 });
 
-// ../node_modules/commander/index.js
+// node_modules/.pnpm/commander@14.0.3/node_modules/commander/index.js
 var require_commander = __commonJS({
-  "../node_modules/commander/index.js"(exports2) {
+  "node_modules/.pnpm/commander@14.0.3/node_modules/commander/index.js"(exports2) {
     "use strict";
     var { Argument: Argument2 } = require_argument();
     var { Command: Command2 } = require_command();
@@ -3463,9 +3463,9 @@ var require_commander = __commonJS({
   }
 });
 
-// ../node_modules/universalify/index.js
+// node_modules/.pnpm/universalify@2.0.1/node_modules/universalify/index.js
 var require_universalify = __commonJS({
-  "../node_modules/universalify/index.js"(exports2) {
+  "node_modules/.pnpm/universalify@2.0.1/node_modules/universalify/index.js"(exports2) {
     "use strict";
     exports2.fromCallback = function(fn) {
       return Object.defineProperty(function(...args) {
@@ -3491,9 +3491,9 @@ var require_universalify = __commonJS({
   }
 });
 
-// ../node_modules/graceful-fs/polyfills.js
+// node_modules/.pnpm/graceful-fs@4.2.11/node_modules/graceful-fs/polyfills.js
 var require_polyfills = __commonJS({
-  "../node_modules/graceful-fs/polyfills.js"(exports2, module2) {
+  "node_modules/.pnpm/graceful-fs@4.2.11/node_modules/graceful-fs/polyfills.js"(exports2, module2) {
     "use strict";
     var constants = require("constants");
     var origCwd = process.cwd;
@@ -3780,9 +3780,9 @@ var require_polyfills = __commonJS({
   }
 });
 
-// ../node_modules/graceful-fs/legacy-streams.js
+// node_modules/.pnpm/graceful-fs@4.2.11/node_modules/graceful-fs/legacy-streams.js
 var require_legacy_streams = __commonJS({
-  "../node_modules/graceful-fs/legacy-streams.js"(exports2, module2) {
+  "node_modules/.pnpm/graceful-fs@4.2.11/node_modules/graceful-fs/legacy-streams.js"(exports2, module2) {
     "use strict";
     var Stream = require("stream").Stream;
     module2.exports = legacy;
@@ -3877,9 +3877,9 @@ var require_legacy_streams = __commonJS({
   }
 });
 
-// ../node_modules/graceful-fs/clone.js
+// node_modules/.pnpm/graceful-fs@4.2.11/node_modules/graceful-fs/clone.js
 var require_clone = __commonJS({
-  "../node_modules/graceful-fs/clone.js"(exports2, module2) {
+  "node_modules/.pnpm/graceful-fs@4.2.11/node_modules/graceful-fs/clone.js"(exports2, module2) {
     "use strict";
     module2.exports = clone2;
     var getPrototypeOf = Object.getPrototypeOf || function(obj) {
@@ -3900,9 +3900,9 @@ var require_clone = __commonJS({
   }
 });
 
-// ../node_modules/graceful-fs/graceful-fs.js
+// node_modules/.pnpm/graceful-fs@4.2.11/node_modules/graceful-fs/graceful-fs.js
 var require_graceful_fs = __commonJS({
-  "../node_modules/graceful-fs/graceful-fs.js"(exports2, module2) {
+  "node_modules/.pnpm/graceful-fs@4.2.11/node_modules/graceful-fs/graceful-fs.js"(exports2, module2) {
     "use strict";
     var fs34 = require("fs");
     var polyfills = require_polyfills();
@@ -4271,9 +4271,9 @@ var require_graceful_fs = __commonJS({
   }
 });
 
-// ../node_modules/fs-extra/lib/fs/index.js
+// node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/fs/index.js
 var require_fs = __commonJS({
-  "../node_modules/fs-extra/lib/fs/index.js"(exports2) {
+  "node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/fs/index.js"(exports2) {
     "use strict";
     var u = require_universalify().fromCallback;
     var fs34 = require_graceful_fs();
@@ -4387,9 +4387,9 @@ var require_fs = __commonJS({
   }
 });
 
-// ../node_modules/fs-extra/lib/mkdirs/utils.js
+// node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/mkdirs/utils.js
 var require_utils = __commonJS({
-  "../node_modules/fs-extra/lib/mkdirs/utils.js"(exports2, module2) {
+  "node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/mkdirs/utils.js"(exports2, module2) {
     "use strict";
     var path36 = require("path");
     module2.exports.checkPath = function checkPath(pth) {
@@ -4405,9 +4405,9 @@ var require_utils = __commonJS({
   }
 });
 
-// ../node_modules/fs-extra/lib/mkdirs/make-dir.js
+// node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/mkdirs/make-dir.js
 var require_make_dir = __commonJS({
-  "../node_modules/fs-extra/lib/mkdirs/make-dir.js"(exports2, module2) {
+  "node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/mkdirs/make-dir.js"(exports2, module2) {
     "use strict";
     var fs34 = require_fs();
     var { checkPath } = require_utils();
@@ -4433,9 +4433,9 @@ var require_make_dir = __commonJS({
   }
 });
 
-// ../node_modules/fs-extra/lib/mkdirs/index.js
+// node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/mkdirs/index.js
 var require_mkdirs = __commonJS({
-  "../node_modules/fs-extra/lib/mkdirs/index.js"(exports2, module2) {
+  "node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/mkdirs/index.js"(exports2, module2) {
     "use strict";
     var u = require_universalify().fromPromise;
     var { makeDir: _makeDir, makeDirSync } = require_make_dir();
@@ -4452,9 +4452,9 @@ var require_mkdirs = __commonJS({
   }
 });
 
-// ../node_modules/fs-extra/lib/path-exists/index.js
+// node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/path-exists/index.js
 var require_path_exists = __commonJS({
-  "../node_modules/fs-extra/lib/path-exists/index.js"(exports2, module2) {
+  "node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/path-exists/index.js"(exports2, module2) {
     "use strict";
     var u = require_universalify().fromPromise;
     var fs34 = require_fs();
@@ -4468,9 +4468,9 @@ var require_path_exists = __commonJS({
   }
 });
 
-// ../node_modules/fs-extra/lib/util/utimes.js
+// node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/util/utimes.js
 var require_utimes = __commonJS({
-  "../node_modules/fs-extra/lib/util/utimes.js"(exports2, module2) {
+  "node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/util/utimes.js"(exports2, module2) {
     "use strict";
     var fs34 = require_fs();
     var u = require_universalify().fromPromise;
@@ -4502,9 +4502,9 @@ var require_utimes = __commonJS({
   }
 });
 
-// ../node_modules/fs-extra/lib/util/stat.js
+// node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/util/stat.js
 var require_stat = __commonJS({
-  "../node_modules/fs-extra/lib/util/stat.js"(exports2, module2) {
+  "node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/util/stat.js"(exports2, module2) {
     "use strict";
     var fs34 = require_fs();
     var path36 = require("path");
@@ -4634,9 +4634,9 @@ var require_stat = __commonJS({
   }
 });
 
-// ../node_modules/fs-extra/lib/util/async.js
+// node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/util/async.js
 var require_async = __commonJS({
-  "../node_modules/fs-extra/lib/util/async.js"(exports2, module2) {
+  "node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/util/async.js"(exports2, module2) {
     "use strict";
     async function asyncIteratorConcurrentProcess(iterator, fn) {
       const promises = [];
@@ -4662,9 +4662,9 @@ var require_async = __commonJS({
   }
 });
 
-// ../node_modules/fs-extra/lib/copy/copy.js
+// node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/copy/copy.js
 var require_copy = __commonJS({
-  "../node_modules/fs-extra/lib/copy/copy.js"(exports2, module2) {
+  "node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/copy/copy.js"(exports2, module2) {
     "use strict";
     var fs34 = require_fs();
     var path36 = require("path");
@@ -4788,9 +4788,9 @@ var require_copy = __commonJS({
   }
 });
 
-// ../node_modules/fs-extra/lib/copy/copy-sync.js
+// node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/copy/copy-sync.js
 var require_copy_sync = __commonJS({
-  "../node_modules/fs-extra/lib/copy/copy-sync.js"(exports2, module2) {
+  "node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/copy/copy-sync.js"(exports2, module2) {
     "use strict";
     var fs34 = require_graceful_fs();
     var path36 = require("path");
@@ -4926,9 +4926,9 @@ var require_copy_sync = __commonJS({
   }
 });
 
-// ../node_modules/fs-extra/lib/copy/index.js
+// node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/copy/index.js
 var require_copy2 = __commonJS({
-  "../node_modules/fs-extra/lib/copy/index.js"(exports2, module2) {
+  "node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/copy/index.js"(exports2, module2) {
     "use strict";
     var u = require_universalify().fromPromise;
     module2.exports = {
@@ -4938,9 +4938,9 @@ var require_copy2 = __commonJS({
   }
 });
 
-// ../node_modules/fs-extra/lib/remove/index.js
+// node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/remove/index.js
 var require_remove = __commonJS({
-  "../node_modules/fs-extra/lib/remove/index.js"(exports2, module2) {
+  "node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/remove/index.js"(exports2, module2) {
     "use strict";
     var fs34 = require_graceful_fs();
     var u = require_universalify().fromCallback;
@@ -4957,9 +4957,9 @@ var require_remove = __commonJS({
   }
 });
 
-// ../node_modules/fs-extra/lib/empty/index.js
+// node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/empty/index.js
 var require_empty = __commonJS({
-  "../node_modules/fs-extra/lib/empty/index.js"(exports2, module2) {
+  "node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/empty/index.js"(exports2, module2) {
     "use strict";
     var u = require_universalify().fromPromise;
     var fs34 = require_fs();
@@ -4996,9 +4996,9 @@ var require_empty = __commonJS({
   }
 });
 
-// ../node_modules/fs-extra/lib/ensure/file.js
+// node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/ensure/file.js
 var require_file = __commonJS({
-  "../node_modules/fs-extra/lib/ensure/file.js"(exports2, module2) {
+  "node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/ensure/file.js"(exports2, module2) {
     "use strict";
     var u = require_universalify().fromPromise;
     var path36 = require("path");
@@ -5055,9 +5055,9 @@ var require_file = __commonJS({
   }
 });
 
-// ../node_modules/fs-extra/lib/ensure/link.js
+// node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/ensure/link.js
 var require_link = __commonJS({
-  "../node_modules/fs-extra/lib/ensure/link.js"(exports2, module2) {
+  "node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/ensure/link.js"(exports2, module2) {
     "use strict";
     var u = require_universalify().fromPromise;
     var path36 = require("path");
@@ -5112,9 +5112,9 @@ var require_link = __commonJS({
   }
 });
 
-// ../node_modules/fs-extra/lib/ensure/symlink-paths.js
+// node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/ensure/symlink-paths.js
 var require_symlink_paths = __commonJS({
-  "../node_modules/fs-extra/lib/ensure/symlink-paths.js"(exports2, module2) {
+  "node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/ensure/symlink-paths.js"(exports2, module2) {
     "use strict";
     var path36 = require("path");
     var fs34 = require_fs();
@@ -5185,9 +5185,9 @@ var require_symlink_paths = __commonJS({
   }
 });
 
-// ../node_modules/fs-extra/lib/ensure/symlink-type.js
+// node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/ensure/symlink-type.js
 var require_symlink_type = __commonJS({
-  "../node_modules/fs-extra/lib/ensure/symlink-type.js"(exports2, module2) {
+  "node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/ensure/symlink-type.js"(exports2, module2) {
     "use strict";
     var fs34 = require_fs();
     var u = require_universalify().fromPromise;
@@ -5218,9 +5218,9 @@ var require_symlink_type = __commonJS({
   }
 });
 
-// ../node_modules/fs-extra/lib/ensure/symlink.js
+// node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/ensure/symlink.js
 var require_symlink = __commonJS({
-  "../node_modules/fs-extra/lib/ensure/symlink.js"(exports2, module2) {
+  "node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/ensure/symlink.js"(exports2, module2) {
     "use strict";
     var u = require_universalify().fromPromise;
     var path36 = require("path");
@@ -5237,10 +5237,19 @@ var require_symlink = __commonJS({
       } catch {
       }
       if (stats && stats.isSymbolicLink()) {
-        const [srcStat, dstStat] = await Promise.all([
-          fs34.stat(srcpath),
-          fs34.stat(dstpath)
-        ]);
+        let srcStat;
+        if (path36.isAbsolute(srcpath)) {
+          srcStat = await fs34.stat(srcpath);
+        } else {
+          const dstdir = path36.dirname(dstpath);
+          const relativeToDst = path36.join(dstdir, srcpath);
+          try {
+            srcStat = await fs34.stat(relativeToDst);
+          } catch {
+            srcStat = await fs34.stat(srcpath);
+          }
+        }
+        const dstStat = await fs34.stat(dstpath);
         if (areIdentical(srcStat, dstStat)) return;
       }
       const relative = await symlinkPaths(srcpath, dstpath);
@@ -5259,7 +5268,18 @@ var require_symlink = __commonJS({
       } catch {
       }
       if (stats && stats.isSymbolicLink()) {
-        const srcStat = fs34.statSync(srcpath);
+        let srcStat;
+        if (path36.isAbsolute(srcpath)) {
+          srcStat = fs34.statSync(srcpath);
+        } else {
+          const dstdir = path36.dirname(dstpath);
+          const relativeToDst = path36.join(dstdir, srcpath);
+          try {
+            srcStat = fs34.statSync(relativeToDst);
+          } catch {
+            srcStat = fs34.statSync(srcpath);
+          }
+        }
         const dstStat = fs34.statSync(dstpath);
         if (areIdentical(srcStat, dstStat)) return;
       }
@@ -5279,9 +5299,9 @@ var require_symlink = __commonJS({
   }
 });
 
-// ../node_modules/fs-extra/lib/ensure/index.js
+// node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/ensure/index.js
 var require_ensure = __commonJS({
-  "../node_modules/fs-extra/lib/ensure/index.js"(exports2, module2) {
+  "node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/ensure/index.js"(exports2, module2) {
     "use strict";
     var { createFile, createFileSync } = require_file();
     var { createLink, createLinkSync } = require_link();
@@ -5306,9 +5326,9 @@ var require_ensure = __commonJS({
   }
 });
 
-// ../node_modules/jsonfile/utils.js
+// node_modules/.pnpm/jsonfile@6.2.0/node_modules/jsonfile/utils.js
 var require_utils2 = __commonJS({
-  "../node_modules/jsonfile/utils.js"(exports2, module2) {
+  "node_modules/.pnpm/jsonfile@6.2.0/node_modules/jsonfile/utils.js"(exports2, module2) {
     "use strict";
     function stringify2(obj, { EOL = "\n", finalEOL = true, replacer = null, spaces } = {}) {
       const EOF = finalEOL ? EOL : "";
@@ -5323,9 +5343,9 @@ var require_utils2 = __commonJS({
   }
 });
 
-// ../node_modules/jsonfile/index.js
+// node_modules/.pnpm/jsonfile@6.2.0/node_modules/jsonfile/index.js
 var require_jsonfile = __commonJS({
-  "../node_modules/jsonfile/index.js"(exports2, module2) {
+  "node_modules/.pnpm/jsonfile@6.2.0/node_modules/jsonfile/index.js"(exports2, module2) {
     "use strict";
     var _fs;
     try {
@@ -5396,9 +5416,9 @@ var require_jsonfile = __commonJS({
   }
 });
 
-// ../node_modules/fs-extra/lib/json/jsonfile.js
+// node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/json/jsonfile.js
 var require_jsonfile2 = __commonJS({
-  "../node_modules/fs-extra/lib/json/jsonfile.js"(exports2, module2) {
+  "node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/json/jsonfile.js"(exports2, module2) {
     "use strict";
     var jsonFile = require_jsonfile();
     module2.exports = {
@@ -5411,9 +5431,9 @@ var require_jsonfile2 = __commonJS({
   }
 });
 
-// ../node_modules/fs-extra/lib/output-file/index.js
+// node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/output-file/index.js
 var require_output_file = __commonJS({
-  "../node_modules/fs-extra/lib/output-file/index.js"(exports2, module2) {
+  "node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/output-file/index.js"(exports2, module2) {
     "use strict";
     var u = require_universalify().fromPromise;
     var fs34 = require_fs();
@@ -5441,9 +5461,9 @@ var require_output_file = __commonJS({
   }
 });
 
-// ../node_modules/fs-extra/lib/json/output-json.js
+// node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/json/output-json.js
 var require_output_json = __commonJS({
-  "../node_modules/fs-extra/lib/json/output-json.js"(exports2, module2) {
+  "node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/json/output-json.js"(exports2, module2) {
     "use strict";
     var { stringify: stringify2 } = require_utils2();
     var { outputFile } = require_output_file();
@@ -5455,9 +5475,9 @@ var require_output_json = __commonJS({
   }
 });
 
-// ../node_modules/fs-extra/lib/json/output-json-sync.js
+// node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/json/output-json-sync.js
 var require_output_json_sync = __commonJS({
-  "../node_modules/fs-extra/lib/json/output-json-sync.js"(exports2, module2) {
+  "node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/json/output-json-sync.js"(exports2, module2) {
     "use strict";
     var { stringify: stringify2 } = require_utils2();
     var { outputFileSync } = require_output_file();
@@ -5469,9 +5489,9 @@ var require_output_json_sync = __commonJS({
   }
 });
 
-// ../node_modules/fs-extra/lib/json/index.js
+// node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/json/index.js
 var require_json = __commonJS({
-  "../node_modules/fs-extra/lib/json/index.js"(exports2, module2) {
+  "node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/json/index.js"(exports2, module2) {
     "use strict";
     var u = require_universalify().fromPromise;
     var jsonFile = require_jsonfile2();
@@ -5487,9 +5507,9 @@ var require_json = __commonJS({
   }
 });
 
-// ../node_modules/fs-extra/lib/move/move.js
+// node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/move/move.js
 var require_move = __commonJS({
-  "../node_modules/fs-extra/lib/move/move.js"(exports2, module2) {
+  "node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/move/move.js"(exports2, module2) {
     "use strict";
     var fs34 = require_fs();
     var path36 = require("path");
@@ -5539,9 +5559,9 @@ var require_move = __commonJS({
   }
 });
 
-// ../node_modules/fs-extra/lib/move/move-sync.js
+// node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/move/move-sync.js
 var require_move_sync = __commonJS({
-  "../node_modules/fs-extra/lib/move/move-sync.js"(exports2, module2) {
+  "node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/move/move-sync.js"(exports2, module2) {
     "use strict";
     var fs34 = require_graceful_fs();
     var path36 = require("path");
@@ -5592,9 +5612,9 @@ var require_move_sync = __commonJS({
   }
 });
 
-// ../node_modules/fs-extra/lib/move/index.js
+// node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/move/index.js
 var require_move2 = __commonJS({
-  "../node_modules/fs-extra/lib/move/index.js"(exports2, module2) {
+  "node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/move/index.js"(exports2, module2) {
     "use strict";
     var u = require_universalify().fromPromise;
     module2.exports = {
@@ -5604,9 +5624,9 @@ var require_move2 = __commonJS({
   }
 });
 
-// ../node_modules/fs-extra/lib/index.js
+// node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/index.js
 var require_lib = __commonJS({
-  "../node_modules/fs-extra/lib/index.js"(exports2, module2) {
+  "node_modules/.pnpm/fs-extra@11.3.4/node_modules/fs-extra/lib/index.js"(exports2, module2) {
     "use strict";
     module2.exports = {
       // Export promiseified graceful-fs:
@@ -5625,9 +5645,9 @@ var require_lib = __commonJS({
   }
 });
 
-// ../node_modules/prompts/node_modules/kleur/index.js
+// node_modules/.pnpm/kleur@3.0.3/node_modules/kleur/index.js
 var require_kleur = __commonJS({
-  "../node_modules/prompts/node_modules/kleur/index.js"(exports2, module2) {
+  "node_modules/.pnpm/kleur@3.0.3/node_modules/kleur/index.js"(exports2, module2) {
     "use strict";
     var { FORCE_COLOR: FORCE_COLOR2, NODE_DISABLE_COLORS: NODE_DISABLE_COLORS2, TERM: TERM2 } = process.env;
     var $2 = {
@@ -5722,9 +5742,9 @@ var require_kleur = __commonJS({
   }
 });
 
-// ../node_modules/prompts/dist/util/action.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/util/action.js
 var require_action = __commonJS({
-  "../node_modules/prompts/dist/util/action.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/util/action.js"(exports2, module2) {
     "use strict";
     module2.exports = (key, isSelect) => {
       if (key.meta && key.name !== "escape") return;
@@ -5759,9 +5779,9 @@ var require_action = __commonJS({
   }
 });
 
-// ../node_modules/prompts/dist/util/strip.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/util/strip.js
 var require_strip = __commonJS({
-  "../node_modules/prompts/dist/util/strip.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/util/strip.js"(exports2, module2) {
     "use strict";
     module2.exports = (str) => {
       const pattern = ["[\\u001B\\u009B][[\\]()#;?]*(?:(?:(?:(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]+)*|[a-zA-Z\\d]+(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]*)*)?\\u0007)", "(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PRZcf-ntqry=><~]))"].join("|");
@@ -5771,9 +5791,9 @@ var require_strip = __commonJS({
   }
 });
 
-// ../node_modules/sisteransi/src/index.js
+// node_modules/.pnpm/sisteransi@1.0.5/node_modules/sisteransi/src/index.js
 var require_src = __commonJS({
-  "../node_modules/sisteransi/src/index.js"(exports2, module2) {
+  "node_modules/.pnpm/sisteransi@1.0.5/node_modules/sisteransi/src/index.js"(exports2, module2) {
     "use strict";
     var ESC = "\x1B";
     var CSI = `${ESC}[`;
@@ -5827,9 +5847,9 @@ var require_src = __commonJS({
   }
 });
 
-// ../node_modules/prompts/dist/util/clear.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/util/clear.js
 var require_clear = __commonJS({
-  "../node_modules/prompts/dist/util/clear.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/util/clear.js"(exports2, module2) {
     "use strict";
     function _createForOfIteratorHelper(o, allowArrayLike) {
       var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"];
@@ -5904,9 +5924,9 @@ var require_clear = __commonJS({
   }
 });
 
-// ../node_modules/prompts/dist/util/figures.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/util/figures.js
 var require_figures = __commonJS({
-  "../node_modules/prompts/dist/util/figures.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/util/figures.js"(exports2, module2) {
     "use strict";
     var main = {
       arrowUp: "\u2191",
@@ -5941,9 +5961,9 @@ var require_figures = __commonJS({
   }
 });
 
-// ../node_modules/prompts/dist/util/style.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/util/style.js
 var require_style = __commonJS({
-  "../node_modules/prompts/dist/util/style.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/util/style.js"(exports2, module2) {
     "use strict";
     var c = require_kleur();
     var figures = require_figures();
@@ -5986,9 +6006,9 @@ var require_style = __commonJS({
   }
 });
 
-// ../node_modules/prompts/dist/util/lines.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/util/lines.js
 var require_lines = __commonJS({
-  "../node_modules/prompts/dist/util/lines.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/util/lines.js"(exports2, module2) {
     "use strict";
     var strip = require_strip();
     module2.exports = function(msg, perLine) {
@@ -5999,9 +6019,9 @@ var require_lines = __commonJS({
   }
 });
 
-// ../node_modules/prompts/dist/util/wrap.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/util/wrap.js
 var require_wrap = __commonJS({
-  "../node_modules/prompts/dist/util/wrap.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/util/wrap.js"(exports2, module2) {
     "use strict";
     module2.exports = (msg, opts = {}) => {
       const tab = Number.isSafeInteger(parseInt(opts.margin)) ? new Array(parseInt(opts.margin)).fill(" ").join("") : opts.margin || "";
@@ -6015,9 +6035,9 @@ var require_wrap = __commonJS({
   }
 });
 
-// ../node_modules/prompts/dist/util/entriesToDisplay.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/util/entriesToDisplay.js
 var require_entriesToDisplay = __commonJS({
-  "../node_modules/prompts/dist/util/entriesToDisplay.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/util/entriesToDisplay.js"(exports2, module2) {
     "use strict";
     module2.exports = (cursor, total, maxVisible) => {
       maxVisible = maxVisible || total;
@@ -6032,9 +6052,9 @@ var require_entriesToDisplay = __commonJS({
   }
 });
 
-// ../node_modules/prompts/dist/util/index.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/util/index.js
 var require_util = __commonJS({
-  "../node_modules/prompts/dist/util/index.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/util/index.js"(exports2, module2) {
     "use strict";
     module2.exports = {
       action: require_action(),
@@ -6049,9 +6069,9 @@ var require_util = __commonJS({
   }
 });
 
-// ../node_modules/prompts/dist/elements/prompt.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/elements/prompt.js
 var require_prompt = __commonJS({
-  "../node_modules/prompts/dist/elements/prompt.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/elements/prompt.js"(exports2, module2) {
     "use strict";
     var readline = require("readline");
     var _require = require_util();
@@ -6114,9 +6134,9 @@ var require_prompt = __commonJS({
   }
 });
 
-// ../node_modules/prompts/dist/elements/text.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/elements/text.js
 var require_text = __commonJS({
-  "../node_modules/prompts/dist/elements/text.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/elements/text.js"(exports2, module2) {
     "use strict";
     function asyncGeneratorStep(gen, resolve4, reject, _next, _throw, key, arg) {
       try {
@@ -6330,9 +6350,9 @@ ${i ? " " : figures.pointerSmall} ${color.red().italic(l)}`, ``);
   }
 });
 
-// ../node_modules/prompts/dist/elements/select.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/elements/select.js
 var require_select = __commonJS({
-  "../node_modules/prompts/dist/elements/select.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/elements/select.js"(exports2, module2) {
     "use strict";
     var color = require_kleur();
     var Prompt = require_prompt();
@@ -6478,9 +6498,9 @@ var require_select = __commonJS({
   }
 });
 
-// ../node_modules/prompts/dist/elements/toggle.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/elements/toggle.js
 var require_toggle = __commonJS({
-  "../node_modules/prompts/dist/elements/toggle.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/elements/toggle.js"(exports2, module2) {
     "use strict";
     var color = require_kleur();
     var Prompt = require_prompt();
@@ -6576,9 +6596,9 @@ var require_toggle = __commonJS({
   }
 });
 
-// ../node_modules/prompts/dist/dateparts/datepart.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/dateparts/datepart.js
 var require_datepart = __commonJS({
-  "../node_modules/prompts/dist/dateparts/datepart.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/dateparts/datepart.js"(exports2, module2) {
     "use strict";
     var DatePart = class _DatePart {
       constructor({
@@ -6615,9 +6635,9 @@ var require_datepart = __commonJS({
   }
 });
 
-// ../node_modules/prompts/dist/dateparts/meridiem.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/dateparts/meridiem.js
 var require_meridiem = __commonJS({
-  "../node_modules/prompts/dist/dateparts/meridiem.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/dateparts/meridiem.js"(exports2, module2) {
     "use strict";
     var DatePart = require_datepart();
     var Meridiem = class extends DatePart {
@@ -6639,9 +6659,9 @@ var require_meridiem = __commonJS({
   }
 });
 
-// ../node_modules/prompts/dist/dateparts/day.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/dateparts/day.js
 var require_day = __commonJS({
-  "../node_modules/prompts/dist/dateparts/day.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/dateparts/day.js"(exports2, module2) {
     "use strict";
     var DatePart = require_datepart();
     var pos = (n) => {
@@ -6671,9 +6691,9 @@ var require_day = __commonJS({
   }
 });
 
-// ../node_modules/prompts/dist/dateparts/hours.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/dateparts/hours.js
 var require_hours = __commonJS({
-  "../node_modules/prompts/dist/dateparts/hours.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/dateparts/hours.js"(exports2, module2) {
     "use strict";
     var DatePart = require_datepart();
     var Hours = class extends DatePart {
@@ -6699,9 +6719,9 @@ var require_hours = __commonJS({
   }
 });
 
-// ../node_modules/prompts/dist/dateparts/milliseconds.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/dateparts/milliseconds.js
 var require_milliseconds = __commonJS({
-  "../node_modules/prompts/dist/dateparts/milliseconds.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/dateparts/milliseconds.js"(exports2, module2) {
     "use strict";
     var DatePart = require_datepart();
     var Milliseconds = class extends DatePart {
@@ -6725,9 +6745,9 @@ var require_milliseconds = __commonJS({
   }
 });
 
-// ../node_modules/prompts/dist/dateparts/minutes.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/dateparts/minutes.js
 var require_minutes = __commonJS({
-  "../node_modules/prompts/dist/dateparts/minutes.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/dateparts/minutes.js"(exports2, module2) {
     "use strict";
     var DatePart = require_datepart();
     var Minutes = class extends DatePart {
@@ -6752,9 +6772,9 @@ var require_minutes = __commonJS({
   }
 });
 
-// ../node_modules/prompts/dist/dateparts/month.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/dateparts/month.js
 var require_month = __commonJS({
-  "../node_modules/prompts/dist/dateparts/month.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/dateparts/month.js"(exports2, module2) {
     "use strict";
     var DatePart = require_datepart();
     var Month = class extends DatePart {
@@ -6781,9 +6801,9 @@ var require_month = __commonJS({
   }
 });
 
-// ../node_modules/prompts/dist/dateparts/seconds.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/dateparts/seconds.js
 var require_seconds = __commonJS({
-  "../node_modules/prompts/dist/dateparts/seconds.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/dateparts/seconds.js"(exports2, module2) {
     "use strict";
     var DatePart = require_datepart();
     var Seconds = class extends DatePart {
@@ -6808,9 +6828,9 @@ var require_seconds = __commonJS({
   }
 });
 
-// ../node_modules/prompts/dist/dateparts/year.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/dateparts/year.js
 var require_year = __commonJS({
-  "../node_modules/prompts/dist/dateparts/year.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/dateparts/year.js"(exports2, module2) {
     "use strict";
     var DatePart = require_datepart();
     var Year = class extends DatePart {
@@ -6835,9 +6855,9 @@ var require_year = __commonJS({
   }
 });
 
-// ../node_modules/prompts/dist/dateparts/index.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/dateparts/index.js
 var require_dateparts = __commonJS({
-  "../node_modules/prompts/dist/dateparts/index.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/dateparts/index.js"(exports2, module2) {
     "use strict";
     module2.exports = {
       DatePart: require_datepart(),
@@ -6853,9 +6873,9 @@ var require_dateparts = __commonJS({
   }
 });
 
-// ../node_modules/prompts/dist/elements/date.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/elements/date.js
 var require_date = __commonJS({
-  "../node_modules/prompts/dist/elements/date.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/elements/date.js"(exports2, module2) {
     "use strict";
     function asyncGeneratorStep(gen, resolve4, reject, _next, _throw, key, arg) {
       try {
@@ -7079,9 +7099,9 @@ ${i ? ` ` : figures.pointerSmall} ${color.red().italic(l)}`, ``);
   }
 });
 
-// ../node_modules/prompts/dist/elements/number.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/elements/number.js
 var require_number = __commonJS({
-  "../node_modules/prompts/dist/elements/number.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/elements/number.js"(exports2, module2) {
     "use strict";
     function asyncGeneratorStep(gen, resolve4, reject, _next, _throw, key, arg) {
       try {
@@ -7294,9 +7314,9 @@ ${i ? ` ` : figures.pointerSmall} ${color.red().italic(l)}`, ``);
   }
 });
 
-// ../node_modules/prompts/dist/elements/multiselect.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/elements/multiselect.js
 var require_multiselect = __commonJS({
-  "../node_modules/prompts/dist/elements/multiselect.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/elements/multiselect.js"(exports2, module2) {
     "use strict";
     var color = require_kleur();
     var _require = require_src();
@@ -7525,9 +7545,9 @@ Instructions:
   }
 });
 
-// ../node_modules/prompts/dist/elements/autocomplete.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/elements/autocomplete.js
 var require_autocomplete = __commonJS({
-  "../node_modules/prompts/dist/elements/autocomplete.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/elements/autocomplete.js"(exports2, module2) {
     "use strict";
     function asyncGeneratorStep(gen, resolve4, reject, _next, _throw, key, arg) {
       try {
@@ -7780,9 +7800,9 @@ var require_autocomplete = __commonJS({
   }
 });
 
-// ../node_modules/prompts/dist/elements/autocompleteMultiselect.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/elements/autocompleteMultiselect.js
 var require_autocompleteMultiselect = __commonJS({
-  "../node_modules/prompts/dist/elements/autocompleteMultiselect.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/elements/autocompleteMultiselect.js"(exports2, module2) {
     "use strict";
     var color = require_kleur();
     var _require = require_src();
@@ -7939,9 +7959,9 @@ Filtered results for: ${this.inputValue ? this.inputValue : color.gray("Enter so
   }
 });
 
-// ../node_modules/prompts/dist/elements/confirm.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/elements/confirm.js
 var require_confirm = __commonJS({
-  "../node_modules/prompts/dist/elements/confirm.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/elements/confirm.js"(exports2, module2) {
     "use strict";
     var color = require_kleur();
     var Prompt = require_prompt();
@@ -8011,9 +8031,9 @@ var require_confirm = __commonJS({
   }
 });
 
-// ../node_modules/prompts/dist/elements/index.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/elements/index.js
 var require_elements = __commonJS({
-  "../node_modules/prompts/dist/elements/index.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/elements/index.js"(exports2, module2) {
     "use strict";
     module2.exports = {
       TextPrompt: require_text(),
@@ -8029,9 +8049,9 @@ var require_elements = __commonJS({
   }
 });
 
-// ../node_modules/prompts/dist/prompts.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/prompts.js
 var require_prompts = __commonJS({
-  "../node_modules/prompts/dist/prompts.js"(exports2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/prompts.js"(exports2) {
     "use strict";
     var $2 = exports2;
     var el = require_elements();
@@ -8093,9 +8113,9 @@ var require_prompts = __commonJS({
   }
 });
 
-// ../node_modules/prompts/dist/index.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/index.js
 var require_dist = __commonJS({
-  "../node_modules/prompts/dist/index.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/dist/index.js"(exports2, module2) {
     "use strict";
     function ownKeys(object2, enumerableOnly) {
       var keys = Object.keys(object2);
@@ -8313,9 +8333,9 @@ var require_dist = __commonJS({
   }
 });
 
-// ../node_modules/prompts/lib/util/action.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/util/action.js
 var require_action2 = __commonJS({
-  "../node_modules/prompts/lib/util/action.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/util/action.js"(exports2, module2) {
     "use strict";
     module2.exports = (key, isSelect) => {
       if (key.meta && key.name !== "escape") return;
@@ -8350,9 +8370,9 @@ var require_action2 = __commonJS({
   }
 });
 
-// ../node_modules/prompts/lib/util/strip.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/util/strip.js
 var require_strip2 = __commonJS({
-  "../node_modules/prompts/lib/util/strip.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/util/strip.js"(exports2, module2) {
     "use strict";
     module2.exports = (str) => {
       const pattern = [
@@ -8365,9 +8385,9 @@ var require_strip2 = __commonJS({
   }
 });
 
-// ../node_modules/prompts/lib/util/clear.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/util/clear.js
 var require_clear2 = __commonJS({
-  "../node_modules/prompts/lib/util/clear.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/util/clear.js"(exports2, module2) {
     "use strict";
     var strip = require_strip2();
     var { erase, cursor } = require_src();
@@ -8384,9 +8404,9 @@ var require_clear2 = __commonJS({
   }
 });
 
-// ../node_modules/prompts/lib/util/figures.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/util/figures.js
 var require_figures2 = __commonJS({
-  "../node_modules/prompts/lib/util/figures.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/util/figures.js"(exports2, module2) {
     "use strict";
     var main = {
       arrowUp: "\u2191",
@@ -8421,9 +8441,9 @@ var require_figures2 = __commonJS({
   }
 });
 
-// ../node_modules/prompts/lib/util/style.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/util/style.js
 var require_style2 = __commonJS({
-  "../node_modules/prompts/lib/util/style.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/util/style.js"(exports2, module2) {
     "use strict";
     var c = require_kleur();
     var figures = require_figures2();
@@ -8454,9 +8474,9 @@ var require_style2 = __commonJS({
   }
 });
 
-// ../node_modules/prompts/lib/util/lines.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/util/lines.js
 var require_lines2 = __commonJS({
-  "../node_modules/prompts/lib/util/lines.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/util/lines.js"(exports2, module2) {
     "use strict";
     var strip = require_strip2();
     module2.exports = function(msg, perLine) {
@@ -8467,9 +8487,9 @@ var require_lines2 = __commonJS({
   }
 });
 
-// ../node_modules/prompts/lib/util/wrap.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/util/wrap.js
 var require_wrap2 = __commonJS({
-  "../node_modules/prompts/lib/util/wrap.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/util/wrap.js"(exports2, module2) {
     "use strict";
     module2.exports = (msg, opts = {}) => {
       const tab = Number.isSafeInteger(parseInt(opts.margin)) ? new Array(parseInt(opts.margin)).fill(" ").join("") : opts.margin || "";
@@ -8484,9 +8504,9 @@ var require_wrap2 = __commonJS({
   }
 });
 
-// ../node_modules/prompts/lib/util/entriesToDisplay.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/util/entriesToDisplay.js
 var require_entriesToDisplay2 = __commonJS({
-  "../node_modules/prompts/lib/util/entriesToDisplay.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/util/entriesToDisplay.js"(exports2, module2) {
     "use strict";
     module2.exports = (cursor, total, maxVisible) => {
       maxVisible = maxVisible || total;
@@ -8498,9 +8518,9 @@ var require_entriesToDisplay2 = __commonJS({
   }
 });
 
-// ../node_modules/prompts/lib/util/index.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/util/index.js
 var require_util2 = __commonJS({
-  "../node_modules/prompts/lib/util/index.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/util/index.js"(exports2, module2) {
     "use strict";
     module2.exports = {
       action: require_action2(),
@@ -8515,9 +8535,9 @@ var require_util2 = __commonJS({
   }
 });
 
-// ../node_modules/prompts/lib/elements/prompt.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/elements/prompt.js
 var require_prompt2 = __commonJS({
-  "../node_modules/prompts/lib/elements/prompt.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/elements/prompt.js"(exports2, module2) {
     "use strict";
     var readline = require("readline");
     var { action } = require_util2();
@@ -8574,9 +8594,9 @@ var require_prompt2 = __commonJS({
   }
 });
 
-// ../node_modules/prompts/lib/elements/text.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/elements/text.js
 var require_text2 = __commonJS({
-  "../node_modules/prompts/lib/elements/text.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/elements/text.js"(exports2, module2) {
     "use strict";
     var color = require_kleur();
     var Prompt = require_prompt2();
@@ -8755,9 +8775,9 @@ ${i ? " " : figures.pointerSmall} ${color.red().italic(l)}`, ``);
   }
 });
 
-// ../node_modules/prompts/lib/elements/select.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/elements/select.js
 var require_select2 = __commonJS({
-  "../node_modules/prompts/lib/elements/select.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/elements/select.js"(exports2, module2) {
     "use strict";
     var color = require_kleur();
     var Prompt = require_prompt2();
@@ -8898,9 +8918,9 @@ var require_select2 = __commonJS({
   }
 });
 
-// ../node_modules/prompts/lib/elements/toggle.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/elements/toggle.js
 var require_toggle2 = __commonJS({
-  "../node_modules/prompts/lib/elements/toggle.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/elements/toggle.js"(exports2, module2) {
     "use strict";
     var color = require_kleur();
     var Prompt = require_prompt2();
@@ -8999,9 +9019,9 @@ var require_toggle2 = __commonJS({
   }
 });
 
-// ../node_modules/prompts/lib/dateparts/datepart.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/dateparts/datepart.js
 var require_datepart2 = __commonJS({
-  "../node_modules/prompts/lib/dateparts/datepart.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/dateparts/datepart.js"(exports2, module2) {
     "use strict";
     var DatePart = class _DatePart {
       constructor({ token, date: date5, parts, locales }) {
@@ -9033,9 +9053,9 @@ var require_datepart2 = __commonJS({
   }
 });
 
-// ../node_modules/prompts/lib/dateparts/meridiem.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/dateparts/meridiem.js
 var require_meridiem2 = __commonJS({
-  "../node_modules/prompts/lib/dateparts/meridiem.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/dateparts/meridiem.js"(exports2, module2) {
     "use strict";
     var DatePart = require_datepart2();
     var Meridiem = class extends DatePart {
@@ -9057,9 +9077,9 @@ var require_meridiem2 = __commonJS({
   }
 });
 
-// ../node_modules/prompts/lib/dateparts/day.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/dateparts/day.js
 var require_day2 = __commonJS({
-  "../node_modules/prompts/lib/dateparts/day.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/dateparts/day.js"(exports2, module2) {
     "use strict";
     var DatePart = require_datepart2();
     var pos = (n) => {
@@ -9089,9 +9109,9 @@ var require_day2 = __commonJS({
   }
 });
 
-// ../node_modules/prompts/lib/dateparts/hours.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/dateparts/hours.js
 var require_hours2 = __commonJS({
-  "../node_modules/prompts/lib/dateparts/hours.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/dateparts/hours.js"(exports2, module2) {
     "use strict";
     var DatePart = require_datepart2();
     var Hours = class extends DatePart {
@@ -9118,9 +9138,9 @@ var require_hours2 = __commonJS({
   }
 });
 
-// ../node_modules/prompts/lib/dateparts/milliseconds.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/dateparts/milliseconds.js
 var require_milliseconds2 = __commonJS({
-  "../node_modules/prompts/lib/dateparts/milliseconds.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/dateparts/milliseconds.js"(exports2, module2) {
     "use strict";
     var DatePart = require_datepart2();
     var Milliseconds = class extends DatePart {
@@ -9144,9 +9164,9 @@ var require_milliseconds2 = __commonJS({
   }
 });
 
-// ../node_modules/prompts/lib/dateparts/minutes.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/dateparts/minutes.js
 var require_minutes2 = __commonJS({
-  "../node_modules/prompts/lib/dateparts/minutes.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/dateparts/minutes.js"(exports2, module2) {
     "use strict";
     var DatePart = require_datepart2();
     var Minutes = class extends DatePart {
@@ -9171,9 +9191,9 @@ var require_minutes2 = __commonJS({
   }
 });
 
-// ../node_modules/prompts/lib/dateparts/month.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/dateparts/month.js
 var require_month2 = __commonJS({
-  "../node_modules/prompts/lib/dateparts/month.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/dateparts/month.js"(exports2, module2) {
     "use strict";
     var DatePart = require_datepart2();
     var Month = class extends DatePart {
@@ -9200,9 +9220,9 @@ var require_month2 = __commonJS({
   }
 });
 
-// ../node_modules/prompts/lib/dateparts/seconds.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/dateparts/seconds.js
 var require_seconds2 = __commonJS({
-  "../node_modules/prompts/lib/dateparts/seconds.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/dateparts/seconds.js"(exports2, module2) {
     "use strict";
     var DatePart = require_datepart2();
     var Seconds = class extends DatePart {
@@ -9227,9 +9247,9 @@ var require_seconds2 = __commonJS({
   }
 });
 
-// ../node_modules/prompts/lib/dateparts/year.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/dateparts/year.js
 var require_year2 = __commonJS({
-  "../node_modules/prompts/lib/dateparts/year.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/dateparts/year.js"(exports2, module2) {
     "use strict";
     var DatePart = require_datepart2();
     var Year = class extends DatePart {
@@ -9254,9 +9274,9 @@ var require_year2 = __commonJS({
   }
 });
 
-// ../node_modules/prompts/lib/dateparts/index.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/dateparts/index.js
 var require_dateparts2 = __commonJS({
-  "../node_modules/prompts/lib/dateparts/index.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/dateparts/index.js"(exports2, module2) {
     "use strict";
     module2.exports = {
       DatePart: require_datepart2(),
@@ -9272,9 +9292,9 @@ var require_dateparts2 = __commonJS({
   }
 });
 
-// ../node_modules/prompts/lib/elements/date.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/elements/date.js
 var require_date2 = __commonJS({
-  "../node_modules/prompts/lib/elements/date.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/elements/date.js"(exports2, module2) {
     "use strict";
     var color = require_kleur();
     var Prompt = require_prompt2();
@@ -9451,9 +9471,9 @@ ${i ? ` ` : figures.pointerSmall} ${color.red().italic(l)}`,
   }
 });
 
-// ../node_modules/prompts/lib/elements/number.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/elements/number.js
 var require_number2 = __commonJS({
-  "../node_modules/prompts/lib/elements/number.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/elements/number.js"(exports2, module2) {
     "use strict";
     var color = require_kleur();
     var Prompt = require_prompt2();
@@ -9631,9 +9651,9 @@ ${i ? ` ` : figures.pointerSmall} ${color.red().italic(l)}`, ``);
   }
 });
 
-// ../node_modules/prompts/lib/elements/multiselect.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/elements/multiselect.js
 var require_multiselect2 = __commonJS({
-  "../node_modules/prompts/lib/elements/multiselect.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/elements/multiselect.js"(exports2, module2) {
     "use strict";
     var color = require_kleur();
     var { cursor } = require_src();
@@ -9856,9 +9876,9 @@ Instructions:
   }
 });
 
-// ../node_modules/prompts/lib/elements/autocomplete.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/elements/autocomplete.js
 var require_autocomplete2 = __commonJS({
-  "../node_modules/prompts/lib/elements/autocomplete.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/elements/autocomplete.js"(exports2, module2) {
     "use strict";
     var color = require_kleur();
     var Prompt = require_prompt2();
@@ -10072,9 +10092,9 @@ var require_autocomplete2 = __commonJS({
   }
 });
 
-// ../node_modules/prompts/lib/elements/autocompleteMultiselect.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/elements/autocompleteMultiselect.js
 var require_autocompleteMultiselect2 = __commonJS({
-  "../node_modules/prompts/lib/elements/autocompleteMultiselect.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/elements/autocompleteMultiselect.js"(exports2, module2) {
     "use strict";
     var color = require_kleur();
     var { cursor } = require_src();
@@ -10232,9 +10252,9 @@ Filtered results for: ${this.inputValue ? this.inputValue : color.gray("Enter so
   }
 });
 
-// ../node_modules/prompts/lib/elements/confirm.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/elements/confirm.js
 var require_confirm2 = __commonJS({
-  "../node_modules/prompts/lib/elements/confirm.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/elements/confirm.js"(exports2, module2) {
     "use strict";
     var color = require_kleur();
     var Prompt = require_prompt2();
@@ -10305,9 +10325,9 @@ var require_confirm2 = __commonJS({
   }
 });
 
-// ../node_modules/prompts/lib/elements/index.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/elements/index.js
 var require_elements2 = __commonJS({
-  "../node_modules/prompts/lib/elements/index.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/elements/index.js"(exports2, module2) {
     "use strict";
     module2.exports = {
       TextPrompt: require_text2(),
@@ -10323,9 +10343,9 @@ var require_elements2 = __commonJS({
   }
 });
 
-// ../node_modules/prompts/lib/prompts.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/prompts.js
 var require_prompts2 = __commonJS({
-  "../node_modules/prompts/lib/prompts.js"(exports2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/prompts.js"(exports2) {
     "use strict";
     var $2 = exports2;
     var el = require_elements2();
@@ -10389,9 +10409,9 @@ var require_prompts2 = __commonJS({
   }
 });
 
-// ../node_modules/prompts/lib/index.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/index.js
 var require_lib2 = __commonJS({
-  "../node_modules/prompts/lib/index.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/lib/index.js"(exports2, module2) {
     "use strict";
     var prompts5 = require_prompts2();
     var passOn = ["suggest", "format", "onState", "validate", "onRender", "type"];
@@ -10463,9 +10483,9 @@ var require_lib2 = __commonJS({
   }
 });
 
-// ../node_modules/prompts/index.js
+// node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/index.js
 var require_prompts3 = __commonJS({
-  "../node_modules/prompts/index.js"(exports2, module2) {
+  "node_modules/.pnpm/prompts@2.4.2/node_modules/prompts/index.js"(exports2, module2) {
     "use strict";
     function isNodeLT(tar) {
       tar = (Array.isArray(tar) ? tar : tar.split(".")).map(Number);
@@ -10480,9 +10500,9 @@ var require_prompts3 = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/compile/codegen/code.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/compile/codegen/code.js
 var require_code = __commonJS({
-  "../node_modules/ajv/dist/compile/codegen/code.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/compile/codegen/code.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.regexpCode = exports2.getEsmExportName = exports2.getProperty = exports2.safeStringify = exports2.stringify = exports2.strConcat = exports2.addCodeArg = exports2.str = exports2._ = exports2.nil = exports2._Code = exports2.Name = exports2.IDENTIFIER = exports2._CodeOrName = void 0;
@@ -10634,9 +10654,9 @@ var require_code = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/compile/codegen/scope.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/compile/codegen/scope.js
 var require_scope = __commonJS({
-  "../node_modules/ajv/dist/compile/codegen/scope.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/compile/codegen/scope.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.ValueScope = exports2.ValueScopeName = exports2.Scope = exports2.varKinds = exports2.UsedValueState = void 0;
@@ -10779,9 +10799,9 @@ var require_scope = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/compile/codegen/index.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/compile/codegen/index.js
 var require_codegen = __commonJS({
-  "../node_modules/ajv/dist/compile/codegen/index.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/compile/codegen/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.or = exports2.and = exports2.not = exports2.CodeGen = exports2.operators = exports2.varKinds = exports2.ValueScopeName = exports2.ValueScope = exports2.Scope = exports2.Name = exports2.regexpCode = exports2.stringify = exports2.getProperty = exports2.nil = exports2.strConcat = exports2.str = exports2._ = void 0;
@@ -11499,9 +11519,9 @@ var require_codegen = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/compile/util.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/compile/util.js
 var require_util3 = __commonJS({
-  "../node_modules/ajv/dist/compile/util.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/compile/util.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.checkStrictMode = exports2.getErrorPath = exports2.Type = exports2.useFunc = exports2.setEvaluated = exports2.evaluatedPropsToName = exports2.mergeEvaluated = exports2.eachItem = exports2.unescapeJsonPointer = exports2.escapeJsonPointer = exports2.escapeFragment = exports2.unescapeFragment = exports2.schemaRefOrVal = exports2.schemaHasRulesButRef = exports2.schemaHasRules = exports2.checkUnknownRules = exports2.alwaysValidSchema = exports2.toHash = void 0;
@@ -11666,9 +11686,9 @@ var require_util3 = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/compile/names.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/compile/names.js
 var require_names = __commonJS({
-  "../node_modules/ajv/dist/compile/names.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/compile/names.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -11705,9 +11725,9 @@ var require_names = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/compile/errors.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/compile/errors.js
 var require_errors = __commonJS({
-  "../node_modules/ajv/dist/compile/errors.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/compile/errors.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.extendErrors = exports2.resetErrorsCount = exports2.reportExtraError = exports2.reportError = exports2.keyword$DataError = exports2.keywordError = void 0;
@@ -11827,9 +11847,9 @@ var require_errors = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/compile/validate/boolSchema.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/compile/validate/boolSchema.js
 var require_boolSchema = __commonJS({
-  "../node_modules/ajv/dist/compile/validate/boolSchema.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/compile/validate/boolSchema.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.boolOrEmptySchema = exports2.topBoolOrEmptySchema = void 0;
@@ -11878,9 +11898,9 @@ var require_boolSchema = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/compile/rules.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/compile/rules.js
 var require_rules = __commonJS({
-  "../node_modules/ajv/dist/compile/rules.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/compile/rules.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.getRules = exports2.isJSONType = void 0;
@@ -11909,9 +11929,9 @@ var require_rules = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/compile/validate/applicability.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/compile/validate/applicability.js
 var require_applicability = __commonJS({
-  "../node_modules/ajv/dist/compile/validate/applicability.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/compile/validate/applicability.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.shouldUseRule = exports2.shouldUseGroup = exports2.schemaHasRulesForType = void 0;
@@ -11932,9 +11952,9 @@ var require_applicability = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/compile/validate/dataType.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/compile/validate/dataType.js
 var require_dataType = __commonJS({
-  "../node_modules/ajv/dist/compile/validate/dataType.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/compile/validate/dataType.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.reportTypeError = exports2.checkDataTypes = exports2.checkDataType = exports2.coerceAndCheckDataType = exports2.getJSONTypes = exports2.getSchemaTypes = exports2.DataType = void 0;
@@ -12116,9 +12136,9 @@ var require_dataType = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/compile/validate/defaults.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/compile/validate/defaults.js
 var require_defaults = __commonJS({
-  "../node_modules/ajv/dist/compile/validate/defaults.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/compile/validate/defaults.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.assignDefaults = void 0;
@@ -12153,9 +12173,9 @@ var require_defaults = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/vocabularies/code.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/code.js
 var require_code2 = __commonJS({
-  "../node_modules/ajv/dist/vocabularies/code.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/code.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.validateUnion = exports2.validateArray = exports2.usePattern = exports2.callValidateCode = exports2.schemaProperties = exports2.allSchemaProperties = exports2.noPropertyInData = exports2.propertyInData = exports2.isOwnProperty = exports2.hasPropFunc = exports2.reportMissingProp = exports2.checkMissingProp = exports2.checkReportMissingProp = void 0;
@@ -12286,9 +12306,9 @@ var require_code2 = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/compile/validate/keyword.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/compile/validate/keyword.js
 var require_keyword = __commonJS({
-  "../node_modules/ajv/dist/compile/validate/keyword.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/compile/validate/keyword.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.validateKeywordUsage = exports2.validSchemaType = exports2.funcKeywordCode = exports2.macroKeywordCode = void 0;
@@ -12404,9 +12424,9 @@ var require_keyword = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/compile/validate/subschema.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/compile/validate/subschema.js
 var require_subschema = __commonJS({
-  "../node_modules/ajv/dist/compile/validate/subschema.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/compile/validate/subschema.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.extendSubschemaMode = exports2.extendSubschemaData = exports2.getSubschema = void 0;
@@ -12487,9 +12507,9 @@ var require_subschema = __commonJS({
   }
 });
 
-// ../node_modules/fast-deep-equal/index.js
+// node_modules/.pnpm/fast-deep-equal@3.1.3/node_modules/fast-deep-equal/index.js
 var require_fast_deep_equal = __commonJS({
-  "../node_modules/fast-deep-equal/index.js"(exports2, module2) {
+  "node_modules/.pnpm/fast-deep-equal@3.1.3/node_modules/fast-deep-equal/index.js"(exports2, module2) {
     "use strict";
     module2.exports = function equal(a, b) {
       if (a === b) return true;
@@ -12522,9 +12542,9 @@ var require_fast_deep_equal = __commonJS({
   }
 });
 
-// ../node_modules/json-schema-traverse/index.js
+// node_modules/.pnpm/json-schema-traverse@1.0.0/node_modules/json-schema-traverse/index.js
 var require_json_schema_traverse = __commonJS({
-  "../node_modules/json-schema-traverse/index.js"(exports2, module2) {
+  "node_modules/.pnpm/json-schema-traverse@1.0.0/node_modules/json-schema-traverse/index.js"(exports2, module2) {
     "use strict";
     var traverse = module2.exports = function(schema, opts, cb) {
       if (typeof opts == "function") {
@@ -12610,9 +12630,9 @@ var require_json_schema_traverse = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/compile/resolve.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/compile/resolve.js
 var require_resolve = __commonJS({
-  "../node_modules/ajv/dist/compile/resolve.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/compile/resolve.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.getSchemaRefs = exports2.resolveUrl = exports2.normalizeId = exports2._getFullPath = exports2.getFullPath = exports2.inlineRef = void 0;
@@ -12766,9 +12786,9 @@ var require_resolve = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/compile/validate/index.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/compile/validate/index.js
 var require_validate = __commonJS({
-  "../node_modules/ajv/dist/compile/validate/index.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/compile/validate/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.getData = exports2.KeywordCxt = exports2.validateFunctionCode = void 0;
@@ -13274,9 +13294,9 @@ var require_validate = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/runtime/validation_error.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/runtime/validation_error.js
 var require_validation_error = __commonJS({
-  "../node_modules/ajv/dist/runtime/validation_error.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/runtime/validation_error.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var ValidationError = class extends Error {
@@ -13290,9 +13310,9 @@ var require_validation_error = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/compile/ref_error.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/compile/ref_error.js
 var require_ref_error = __commonJS({
-  "../node_modules/ajv/dist/compile/ref_error.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/compile/ref_error.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var resolve_1 = require_resolve();
@@ -13307,9 +13327,9 @@ var require_ref_error = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/compile/index.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/compile/index.js
 var require_compile = __commonJS({
-  "../node_modules/ajv/dist/compile/index.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/compile/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.resolveSchema = exports2.getCompilingSchema = exports2.resolveRef = exports2.compileSchema = exports2.SchemaEnv = void 0;
@@ -13531,9 +13551,9 @@ var require_compile = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/refs/data.json
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/refs/data.json
 var require_data = __commonJS({
-  "../node_modules/ajv/dist/refs/data.json"(exports2, module2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/refs/data.json"(exports2, module2) {
     module2.exports = {
       $id: "https://raw.githubusercontent.com/ajv-validator/ajv/master/lib/refs/data.json#",
       description: "Meta-schema for $data reference (JSON AnySchema extension proposal)",
@@ -13550,9 +13570,9 @@ var require_data = __commonJS({
   }
 });
 
-// ../node_modules/fast-uri/lib/utils.js
+// node_modules/.pnpm/fast-uri@3.1.0/node_modules/fast-uri/lib/utils.js
 var require_utils3 = __commonJS({
-  "../node_modules/fast-uri/lib/utils.js"(exports2, module2) {
+  "node_modules/.pnpm/fast-uri@3.1.0/node_modules/fast-uri/lib/utils.js"(exports2, module2) {
     "use strict";
     var isUUID = RegExp.prototype.test.bind(/^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/iu);
     var isIPv4 = RegExp.prototype.test.bind(/^(?:(?:25[0-5]|2[0-4]\d|1\d{2}|[1-9]\d|\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d{2}|[1-9]\d|\d)$/u);
@@ -13807,9 +13827,9 @@ var require_utils3 = __commonJS({
   }
 });
 
-// ../node_modules/fast-uri/lib/schemes.js
+// node_modules/.pnpm/fast-uri@3.1.0/node_modules/fast-uri/lib/schemes.js
 var require_schemes = __commonJS({
-  "../node_modules/fast-uri/lib/schemes.js"(exports2, module2) {
+  "node_modules/.pnpm/fast-uri@3.1.0/node_modules/fast-uri/lib/schemes.js"(exports2, module2) {
     "use strict";
     var { isUUID } = require_utils3();
     var URN_REG = /([\da-z][\d\-a-z]{0,31}):((?:[\w!$'()*+,\-.:;=@]|%[\da-f]{2})+)/iu;
@@ -14017,9 +14037,9 @@ var require_schemes = __commonJS({
   }
 });
 
-// ../node_modules/fast-uri/index.js
+// node_modules/.pnpm/fast-uri@3.1.0/node_modules/fast-uri/index.js
 var require_fast_uri = __commonJS({
-  "../node_modules/fast-uri/index.js"(exports2, module2) {
+  "node_modules/.pnpm/fast-uri@3.1.0/node_modules/fast-uri/index.js"(exports2, module2) {
     "use strict";
     var { normalizeIPv6, removeDotSegments, recomposeAuthority, normalizeComponentEncoding, isIPv4, nonSimpleDomain } = require_utils3();
     var { SCHEMES, getSchemeHandler } = require_schemes();
@@ -14272,9 +14292,9 @@ var require_fast_uri = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/runtime/uri.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/runtime/uri.js
 var require_uri = __commonJS({
-  "../node_modules/ajv/dist/runtime/uri.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/runtime/uri.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var uri = require_fast_uri();
@@ -14283,9 +14303,9 @@ var require_uri = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/core.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/core.js
 var require_core = __commonJS({
-  "../node_modules/ajv/dist/core.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/core.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.CodeGen = exports2.Name = exports2.nil = exports2.stringify = exports2.str = exports2._ = exports2.KeywordCxt = void 0;
@@ -14894,9 +14914,9 @@ var require_core = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/vocabularies/core/id.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/core/id.js
 var require_id = __commonJS({
-  "../node_modules/ajv/dist/vocabularies/core/id.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/core/id.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var def = {
@@ -14909,9 +14929,9 @@ var require_id = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/vocabularies/core/ref.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/core/ref.js
 var require_ref = __commonJS({
-  "../node_modules/ajv/dist/vocabularies/core/ref.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/core/ref.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.callRef = exports2.getValidate = void 0;
@@ -15031,9 +15051,9 @@ var require_ref = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/vocabularies/core/index.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/core/index.js
 var require_core2 = __commonJS({
-  "../node_modules/ajv/dist/vocabularies/core/index.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/core/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var id_1 = require_id();
@@ -15052,9 +15072,9 @@ var require_core2 = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/vocabularies/validation/limitNumber.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/validation/limitNumber.js
 var require_limitNumber = __commonJS({
-  "../node_modules/ajv/dist/vocabularies/validation/limitNumber.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/validation/limitNumber.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -15084,9 +15104,9 @@ var require_limitNumber = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/vocabularies/validation/multipleOf.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/validation/multipleOf.js
 var require_multipleOf = __commonJS({
-  "../node_modules/ajv/dist/vocabularies/validation/multipleOf.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/validation/multipleOf.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -15112,9 +15132,9 @@ var require_multipleOf = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/runtime/ucs2length.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/runtime/ucs2length.js
 var require_ucs2length = __commonJS({
-  "../node_modules/ajv/dist/runtime/ucs2length.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/runtime/ucs2length.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     function ucs2length(str) {
@@ -15138,9 +15158,9 @@ var require_ucs2length = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/vocabularies/validation/limitLength.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/validation/limitLength.js
 var require_limitLength = __commonJS({
-  "../node_modules/ajv/dist/vocabularies/validation/limitLength.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/validation/limitLength.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -15170,9 +15190,9 @@ var require_limitLength = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/vocabularies/validation/pattern.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/validation/pattern.js
 var require_pattern = __commonJS({
-  "../node_modules/ajv/dist/vocabularies/validation/pattern.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/validation/pattern.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var code_1 = require_code2();
@@ -15207,9 +15227,9 @@ var require_pattern = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/vocabularies/validation/limitProperties.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/validation/limitProperties.js
 var require_limitProperties = __commonJS({
-  "../node_modules/ajv/dist/vocabularies/validation/limitProperties.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/validation/limitProperties.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -15236,9 +15256,9 @@ var require_limitProperties = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/vocabularies/validation/required.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/validation/required.js
 var require_required = __commonJS({
-  "../node_modules/ajv/dist/vocabularies/validation/required.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/validation/required.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var code_1 = require_code2();
@@ -15318,9 +15338,9 @@ var require_required = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/vocabularies/validation/limitItems.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/validation/limitItems.js
 var require_limitItems = __commonJS({
-  "../node_modules/ajv/dist/vocabularies/validation/limitItems.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/validation/limitItems.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -15347,9 +15367,9 @@ var require_limitItems = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/runtime/equal.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/runtime/equal.js
 var require_equal = __commonJS({
-  "../node_modules/ajv/dist/runtime/equal.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/runtime/equal.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var equal = require_fast_deep_equal();
@@ -15358,9 +15378,9 @@ var require_equal = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/vocabularies/validation/uniqueItems.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/validation/uniqueItems.js
 var require_uniqueItems = __commonJS({
-  "../node_modules/ajv/dist/vocabularies/validation/uniqueItems.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/validation/uniqueItems.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var dataType_1 = require_dataType();
@@ -15425,9 +15445,9 @@ var require_uniqueItems = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/vocabularies/validation/const.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/validation/const.js
 var require_const = __commonJS({
-  "../node_modules/ajv/dist/vocabularies/validation/const.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/validation/const.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -15454,9 +15474,9 @@ var require_const = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/vocabularies/validation/enum.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/validation/enum.js
 var require_enum = __commonJS({
-  "../node_modules/ajv/dist/vocabularies/validation/enum.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/validation/enum.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -15503,9 +15523,9 @@ var require_enum = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/vocabularies/validation/index.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/validation/index.js
 var require_validation = __commonJS({
-  "../node_modules/ajv/dist/vocabularies/validation/index.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/validation/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var limitNumber_1 = require_limitNumber();
@@ -15541,9 +15561,9 @@ var require_validation = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/vocabularies/applicator/additionalItems.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/applicator/additionalItems.js
 var require_additionalItems = __commonJS({
-  "../node_modules/ajv/dist/vocabularies/applicator/additionalItems.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/applicator/additionalItems.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.validateAdditionalItems = void 0;
@@ -15594,9 +15614,9 @@ var require_additionalItems = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/vocabularies/applicator/items.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/applicator/items.js
 var require_items = __commonJS({
-  "../node_modules/ajv/dist/vocabularies/applicator/items.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/applicator/items.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.validateTuple = void 0;
@@ -15651,9 +15671,9 @@ var require_items = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/vocabularies/applicator/prefixItems.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/applicator/prefixItems.js
 var require_prefixItems = __commonJS({
-  "../node_modules/ajv/dist/vocabularies/applicator/prefixItems.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/applicator/prefixItems.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var items_1 = require_items();
@@ -15668,9 +15688,9 @@ var require_prefixItems = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/vocabularies/applicator/items2020.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/applicator/items2020.js
 var require_items2020 = __commonJS({
-  "../node_modules/ajv/dist/vocabularies/applicator/items2020.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/applicator/items2020.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -15703,9 +15723,9 @@ var require_items2020 = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/vocabularies/applicator/contains.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/applicator/contains.js
 var require_contains = __commonJS({
-  "../node_modules/ajv/dist/vocabularies/applicator/contains.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/applicator/contains.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -15797,9 +15817,9 @@ var require_contains = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/vocabularies/applicator/dependencies.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/applicator/dependencies.js
 var require_dependencies = __commonJS({
-  "../node_modules/ajv/dist/vocabularies/applicator/dependencies.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/applicator/dependencies.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.validateSchemaDeps = exports2.validatePropertyDeps = exports2.error = void 0;
@@ -15891,9 +15911,9 @@ var require_dependencies = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/vocabularies/applicator/propertyNames.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/applicator/propertyNames.js
 var require_propertyNames = __commonJS({
-  "../node_modules/ajv/dist/vocabularies/applicator/propertyNames.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/applicator/propertyNames.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -15934,9 +15954,9 @@ var require_propertyNames = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/vocabularies/applicator/additionalProperties.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/applicator/additionalProperties.js
 var require_additionalProperties = __commonJS({
-  "../node_modules/ajv/dist/vocabularies/applicator/additionalProperties.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/applicator/additionalProperties.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var code_1 = require_code2();
@@ -16040,9 +16060,9 @@ var require_additionalProperties = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/vocabularies/applicator/properties.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/applicator/properties.js
 var require_properties = __commonJS({
-  "../node_modules/ajv/dist/vocabularies/applicator/properties.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/applicator/properties.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var validate_1 = require_validate();
@@ -16098,9 +16118,9 @@ var require_properties = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/vocabularies/applicator/patternProperties.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/applicator/patternProperties.js
 var require_patternProperties = __commonJS({
-  "../node_modules/ajv/dist/vocabularies/applicator/patternProperties.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/applicator/patternProperties.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var code_1 = require_code2();
@@ -16172,9 +16192,9 @@ var require_patternProperties = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/vocabularies/applicator/not.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/applicator/not.js
 var require_not = __commonJS({
-  "../node_modules/ajv/dist/vocabularies/applicator/not.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/applicator/not.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var util_1 = require_util3();
@@ -16203,9 +16223,9 @@ var require_not = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/vocabularies/applicator/anyOf.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/applicator/anyOf.js
 var require_anyOf = __commonJS({
-  "../node_modules/ajv/dist/vocabularies/applicator/anyOf.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/applicator/anyOf.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var code_1 = require_code2();
@@ -16220,9 +16240,9 @@ var require_anyOf = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/vocabularies/applicator/oneOf.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/applicator/oneOf.js
 var require_oneOf = __commonJS({
-  "../node_modules/ajv/dist/vocabularies/applicator/oneOf.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/applicator/oneOf.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -16278,9 +16298,9 @@ var require_oneOf = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/vocabularies/applicator/allOf.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/applicator/allOf.js
 var require_allOf = __commonJS({
-  "../node_modules/ajv/dist/vocabularies/applicator/allOf.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/applicator/allOf.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var util_1 = require_util3();
@@ -16305,9 +16325,9 @@ var require_allOf = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/vocabularies/applicator/if.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/applicator/if.js
 var require_if = __commonJS({
-  "../node_modules/ajv/dist/vocabularies/applicator/if.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/applicator/if.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -16374,9 +16394,9 @@ var require_if = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/vocabularies/applicator/thenElse.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/applicator/thenElse.js
 var require_thenElse = __commonJS({
-  "../node_modules/ajv/dist/vocabularies/applicator/thenElse.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/applicator/thenElse.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var util_1 = require_util3();
@@ -16392,9 +16412,9 @@ var require_thenElse = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/vocabularies/applicator/index.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/applicator/index.js
 var require_applicator = __commonJS({
-  "../node_modules/ajv/dist/vocabularies/applicator/index.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/applicator/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var additionalItems_1 = require_additionalItems();
@@ -16440,9 +16460,9 @@ var require_applicator = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/vocabularies/format/format.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/format/format.js
 var require_format = __commonJS({
-  "../node_modules/ajv/dist/vocabularies/format/format.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/format/format.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -16530,9 +16550,9 @@ var require_format = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/vocabularies/format/index.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/format/index.js
 var require_format2 = __commonJS({
-  "../node_modules/ajv/dist/vocabularies/format/index.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/format/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var format_1 = require_format();
@@ -16541,9 +16561,9 @@ var require_format2 = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/vocabularies/metadata.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/metadata.js
 var require_metadata = __commonJS({
-  "../node_modules/ajv/dist/vocabularies/metadata.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/metadata.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.contentVocabulary = exports2.metadataVocabulary = void 0;
@@ -16564,9 +16584,9 @@ var require_metadata = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/vocabularies/draft7.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/draft7.js
 var require_draft7 = __commonJS({
-  "../node_modules/ajv/dist/vocabularies/draft7.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/draft7.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var core_1 = require_core2();
@@ -16586,9 +16606,9 @@ var require_draft7 = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/vocabularies/discriminator/types.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/discriminator/types.js
 var require_types = __commonJS({
-  "../node_modules/ajv/dist/vocabularies/discriminator/types.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/discriminator/types.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.DiscrError = void 0;
@@ -16600,9 +16620,9 @@ var require_types = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/vocabularies/discriminator/index.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/discriminator/index.js
 var require_discriminator = __commonJS({
-  "../node_modules/ajv/dist/vocabularies/discriminator/index.js"(exports2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/vocabularies/discriminator/index.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var codegen_1 = require_codegen();
@@ -16705,9 +16725,9 @@ var require_discriminator = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/refs/json-schema-draft-07.json
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/refs/json-schema-draft-07.json
 var require_json_schema_draft_07 = __commonJS({
-  "../node_modules/ajv/dist/refs/json-schema-draft-07.json"(exports2, module2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/refs/json-schema-draft-07.json"(exports2, module2) {
     module2.exports = {
       $schema: "http://json-schema.org/draft-07/schema#",
       $id: "http://json-schema.org/draft-07/schema#",
@@ -16862,9 +16882,9 @@ var require_json_schema_draft_07 = __commonJS({
   }
 });
 
-// ../node_modules/ajv/dist/ajv.js
+// node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/ajv.js
 var require_ajv = __commonJS({
-  "../node_modules/ajv/dist/ajv.js"(exports2, module2) {
+  "node_modules/.pnpm/ajv@8.18.0/node_modules/ajv/dist/ajv.js"(exports2, module2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.MissingRefError = exports2.ValidationError = exports2.CodeGen = exports2.Name = exports2.nil = exports2.stringify = exports2.str = exports2._ = exports2.KeywordCxt = exports2.Ajv = void 0;
@@ -16932,9 +16952,9 @@ var require_ajv = __commonJS({
   }
 });
 
-// ../node_modules/ajv-formats/dist/formats.js
+// node_modules/.pnpm/ajv-formats@2.1.1_ajv@8.18.0/node_modules/ajv-formats/dist/formats.js
 var require_formats = __commonJS({
-  "../node_modules/ajv-formats/dist/formats.js"(exports2) {
+  "node_modules/.pnpm/ajv-formats@2.1.1_ajv@8.18.0/node_modules/ajv-formats/dist/formats.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.formatNames = exports2.fastFormats = exports2.fullFormats = void 0;
@@ -17099,9 +17119,9 @@ var require_formats = __commonJS({
   }
 });
 
-// ../node_modules/ajv-formats/dist/limit.js
+// node_modules/.pnpm/ajv-formats@2.1.1_ajv@8.18.0/node_modules/ajv-formats/dist/limit.js
 var require_limit = __commonJS({
-  "../node_modules/ajv-formats/dist/limit.js"(exports2) {
+  "node_modules/.pnpm/ajv-formats@2.1.1_ajv@8.18.0/node_modules/ajv-formats/dist/limit.js"(exports2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.formatLimitDefinition = void 0;
@@ -17171,9 +17191,9 @@ var require_limit = __commonJS({
   }
 });
 
-// ../node_modules/ajv-formats/dist/index.js
+// node_modules/.pnpm/ajv-formats@2.1.1_ajv@8.18.0/node_modules/ajv-formats/dist/index.js
 var require_dist2 = __commonJS({
-  "../node_modules/ajv-formats/dist/index.js"(exports2, module2) {
+  "node_modules/.pnpm/ajv-formats@2.1.1_ajv@8.18.0/node_modules/ajv-formats/dist/index.js"(exports2, module2) {
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     var formats_1 = require_formats();
@@ -17213,9 +17233,9 @@ var require_dist2 = __commonJS({
   }
 });
 
-// ../node_modules/semver/internal/constants.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/internal/constants.js
 var require_constants = __commonJS({
-  "../node_modules/semver/internal/constants.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/internal/constants.js"(exports2, module2) {
     "use strict";
     var SEMVER_SPEC_VERSION = "2.0.0";
     var MAX_LENGTH = 256;
@@ -17245,9 +17265,9 @@ var require_constants = __commonJS({
   }
 });
 
-// ../node_modules/semver/internal/debug.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/internal/debug.js
 var require_debug = __commonJS({
-  "../node_modules/semver/internal/debug.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/internal/debug.js"(exports2, module2) {
     "use strict";
     var debug = typeof process === "object" && process.env && process.env.NODE_DEBUG && /\bsemver\b/i.test(process.env.NODE_DEBUG) ? (...args) => console.error("SEMVER", ...args) : () => {
     };
@@ -17255,9 +17275,9 @@ var require_debug = __commonJS({
   }
 });
 
-// ../node_modules/semver/internal/re.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/internal/re.js
 var require_re = __commonJS({
-  "../node_modules/semver/internal/re.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/internal/re.js"(exports2, module2) {
     "use strict";
     var {
       MAX_SAFE_COMPONENT_LENGTH,
@@ -17343,9 +17363,9 @@ var require_re = __commonJS({
   }
 });
 
-// ../node_modules/semver/internal/parse-options.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/internal/parse-options.js
 var require_parse_options = __commonJS({
-  "../node_modules/semver/internal/parse-options.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/internal/parse-options.js"(exports2, module2) {
     "use strict";
     var looseOption = Object.freeze({ loose: true });
     var emptyOpts = Object.freeze({});
@@ -17362,9 +17382,9 @@ var require_parse_options = __commonJS({
   }
 });
 
-// ../node_modules/semver/internal/identifiers.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/internal/identifiers.js
 var require_identifiers = __commonJS({
-  "../node_modules/semver/internal/identifiers.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/internal/identifiers.js"(exports2, module2) {
     "use strict";
     var numeric = /^[0-9]+$/;
     var compareIdentifiers = (a, b) => {
@@ -17387,9 +17407,9 @@ var require_identifiers = __commonJS({
   }
 });
 
-// ../node_modules/semver/classes/semver.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/classes/semver.js
 var require_semver = __commonJS({
-  "../node_modules/semver/classes/semver.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/classes/semver.js"(exports2, module2) {
     "use strict";
     var debug = require_debug();
     var { MAX_LENGTH, MAX_SAFE_INTEGER } = require_constants();
@@ -17666,9 +17686,9 @@ var require_semver = __commonJS({
   }
 });
 
-// ../node_modules/semver/functions/parse.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/parse.js
 var require_parse = __commonJS({
-  "../node_modules/semver/functions/parse.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/parse.js"(exports2, module2) {
     "use strict";
     var SemVer = require_semver();
     var parse4 = (version3, options, throwErrors = false) => {
@@ -17688,9 +17708,9 @@ var require_parse = __commonJS({
   }
 });
 
-// ../node_modules/semver/functions/valid.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/valid.js
 var require_valid = __commonJS({
-  "../node_modules/semver/functions/valid.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/valid.js"(exports2, module2) {
     "use strict";
     var parse4 = require_parse();
     var valid = (version3, options) => {
@@ -17701,9 +17721,9 @@ var require_valid = __commonJS({
   }
 });
 
-// ../node_modules/semver/functions/clean.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/clean.js
 var require_clean = __commonJS({
-  "../node_modules/semver/functions/clean.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/clean.js"(exports2, module2) {
     "use strict";
     var parse4 = require_parse();
     var clean = (version3, options) => {
@@ -17714,9 +17734,9 @@ var require_clean = __commonJS({
   }
 });
 
-// ../node_modules/semver/functions/inc.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/inc.js
 var require_inc = __commonJS({
-  "../node_modules/semver/functions/inc.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/inc.js"(exports2, module2) {
     "use strict";
     var SemVer = require_semver();
     var inc = (version3, release, options, identifier, identifierBase) => {
@@ -17738,9 +17758,9 @@ var require_inc = __commonJS({
   }
 });
 
-// ../node_modules/semver/functions/diff.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/diff.js
 var require_diff = __commonJS({
-  "../node_modules/semver/functions/diff.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/diff.js"(exports2, module2) {
     "use strict";
     var parse4 = require_parse();
     var diff = (version1, version22) => {
@@ -17782,9 +17802,9 @@ var require_diff = __commonJS({
   }
 });
 
-// ../node_modules/semver/functions/major.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/major.js
 var require_major = __commonJS({
-  "../node_modules/semver/functions/major.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/major.js"(exports2, module2) {
     "use strict";
     var SemVer = require_semver();
     var major = (a, loose) => new SemVer(a, loose).major;
@@ -17792,9 +17812,9 @@ var require_major = __commonJS({
   }
 });
 
-// ../node_modules/semver/functions/minor.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/minor.js
 var require_minor = __commonJS({
-  "../node_modules/semver/functions/minor.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/minor.js"(exports2, module2) {
     "use strict";
     var SemVer = require_semver();
     var minor = (a, loose) => new SemVer(a, loose).minor;
@@ -17802,9 +17822,9 @@ var require_minor = __commonJS({
   }
 });
 
-// ../node_modules/semver/functions/patch.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/patch.js
 var require_patch = __commonJS({
-  "../node_modules/semver/functions/patch.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/patch.js"(exports2, module2) {
     "use strict";
     var SemVer = require_semver();
     var patch = (a, loose) => new SemVer(a, loose).patch;
@@ -17812,9 +17832,9 @@ var require_patch = __commonJS({
   }
 });
 
-// ../node_modules/semver/functions/prerelease.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/prerelease.js
 var require_prerelease = __commonJS({
-  "../node_modules/semver/functions/prerelease.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/prerelease.js"(exports2, module2) {
     "use strict";
     var parse4 = require_parse();
     var prerelease = (version3, options) => {
@@ -17825,9 +17845,9 @@ var require_prerelease = __commonJS({
   }
 });
 
-// ../node_modules/semver/functions/compare.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/compare.js
 var require_compare = __commonJS({
-  "../node_modules/semver/functions/compare.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/compare.js"(exports2, module2) {
     "use strict";
     var SemVer = require_semver();
     var compare = (a, b, loose) => new SemVer(a, loose).compare(new SemVer(b, loose));
@@ -17835,9 +17855,9 @@ var require_compare = __commonJS({
   }
 });
 
-// ../node_modules/semver/functions/rcompare.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/rcompare.js
 var require_rcompare = __commonJS({
-  "../node_modules/semver/functions/rcompare.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/rcompare.js"(exports2, module2) {
     "use strict";
     var compare = require_compare();
     var rcompare = (a, b, loose) => compare(b, a, loose);
@@ -17845,9 +17865,9 @@ var require_rcompare = __commonJS({
   }
 });
 
-// ../node_modules/semver/functions/compare-loose.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/compare-loose.js
 var require_compare_loose = __commonJS({
-  "../node_modules/semver/functions/compare-loose.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/compare-loose.js"(exports2, module2) {
     "use strict";
     var compare = require_compare();
     var compareLoose = (a, b) => compare(a, b, true);
@@ -17855,9 +17875,9 @@ var require_compare_loose = __commonJS({
   }
 });
 
-// ../node_modules/semver/functions/compare-build.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/compare-build.js
 var require_compare_build = __commonJS({
-  "../node_modules/semver/functions/compare-build.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/compare-build.js"(exports2, module2) {
     "use strict";
     var SemVer = require_semver();
     var compareBuild = (a, b, loose) => {
@@ -17869,9 +17889,9 @@ var require_compare_build = __commonJS({
   }
 });
 
-// ../node_modules/semver/functions/sort.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/sort.js
 var require_sort = __commonJS({
-  "../node_modules/semver/functions/sort.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/sort.js"(exports2, module2) {
     "use strict";
     var compareBuild = require_compare_build();
     var sort = (list, loose) => list.sort((a, b) => compareBuild(a, b, loose));
@@ -17879,9 +17899,9 @@ var require_sort = __commonJS({
   }
 });
 
-// ../node_modules/semver/functions/rsort.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/rsort.js
 var require_rsort = __commonJS({
-  "../node_modules/semver/functions/rsort.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/rsort.js"(exports2, module2) {
     "use strict";
     var compareBuild = require_compare_build();
     var rsort = (list, loose) => list.sort((a, b) => compareBuild(b, a, loose));
@@ -17889,9 +17909,9 @@ var require_rsort = __commonJS({
   }
 });
 
-// ../node_modules/semver/functions/gt.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/gt.js
 var require_gt = __commonJS({
-  "../node_modules/semver/functions/gt.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/gt.js"(exports2, module2) {
     "use strict";
     var compare = require_compare();
     var gt = (a, b, loose) => compare(a, b, loose) > 0;
@@ -17899,9 +17919,9 @@ var require_gt = __commonJS({
   }
 });
 
-// ../node_modules/semver/functions/lt.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/lt.js
 var require_lt = __commonJS({
-  "../node_modules/semver/functions/lt.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/lt.js"(exports2, module2) {
     "use strict";
     var compare = require_compare();
     var lt = (a, b, loose) => compare(a, b, loose) < 0;
@@ -17909,9 +17929,9 @@ var require_lt = __commonJS({
   }
 });
 
-// ../node_modules/semver/functions/eq.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/eq.js
 var require_eq = __commonJS({
-  "../node_modules/semver/functions/eq.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/eq.js"(exports2, module2) {
     "use strict";
     var compare = require_compare();
     var eq = (a, b, loose) => compare(a, b, loose) === 0;
@@ -17919,9 +17939,9 @@ var require_eq = __commonJS({
   }
 });
 
-// ../node_modules/semver/functions/neq.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/neq.js
 var require_neq = __commonJS({
-  "../node_modules/semver/functions/neq.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/neq.js"(exports2, module2) {
     "use strict";
     var compare = require_compare();
     var neq = (a, b, loose) => compare(a, b, loose) !== 0;
@@ -17929,9 +17949,9 @@ var require_neq = __commonJS({
   }
 });
 
-// ../node_modules/semver/functions/gte.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/gte.js
 var require_gte = __commonJS({
-  "../node_modules/semver/functions/gte.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/gte.js"(exports2, module2) {
     "use strict";
     var compare = require_compare();
     var gte = (a, b, loose) => compare(a, b, loose) >= 0;
@@ -17939,9 +17959,9 @@ var require_gte = __commonJS({
   }
 });
 
-// ../node_modules/semver/functions/lte.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/lte.js
 var require_lte = __commonJS({
-  "../node_modules/semver/functions/lte.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/lte.js"(exports2, module2) {
     "use strict";
     var compare = require_compare();
     var lte = (a, b, loose) => compare(a, b, loose) <= 0;
@@ -17949,9 +17969,9 @@ var require_lte = __commonJS({
   }
 });
 
-// ../node_modules/semver/functions/cmp.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/cmp.js
 var require_cmp = __commonJS({
-  "../node_modules/semver/functions/cmp.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/cmp.js"(exports2, module2) {
     "use strict";
     var eq = require_eq();
     var neq = require_neq();
@@ -17999,9 +18019,9 @@ var require_cmp = __commonJS({
   }
 });
 
-// ../node_modules/semver/functions/coerce.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/coerce.js
 var require_coerce = __commonJS({
-  "../node_modules/semver/functions/coerce.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/coerce.js"(exports2, module2) {
     "use strict";
     var SemVer = require_semver();
     var parse4 = require_parse();
@@ -18045,9 +18065,9 @@ var require_coerce = __commonJS({
   }
 });
 
-// ../node_modules/semver/internal/lrucache.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/internal/lrucache.js
 var require_lrucache = __commonJS({
-  "../node_modules/semver/internal/lrucache.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/internal/lrucache.js"(exports2, module2) {
     "use strict";
     var LRUCache = class {
       constructor() {
@@ -18083,9 +18103,9 @@ var require_lrucache = __commonJS({
   }
 });
 
-// ../node_modules/semver/classes/range.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/classes/range.js
 var require_range = __commonJS({
-  "../node_modules/semver/classes/range.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/classes/range.js"(exports2, module2) {
     "use strict";
     var SPACE_CHARACTERS = /\s+/g;
     var Range = class _Range {
@@ -18460,9 +18480,9 @@ var require_range = __commonJS({
   }
 });
 
-// ../node_modules/semver/classes/comparator.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/classes/comparator.js
 var require_comparator = __commonJS({
-  "../node_modules/semver/classes/comparator.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/classes/comparator.js"(exports2, module2) {
     "use strict";
     var ANY = /* @__PURE__ */ Symbol("SemVer ANY");
     var Comparator = class _Comparator {
@@ -18573,9 +18593,9 @@ var require_comparator = __commonJS({
   }
 });
 
-// ../node_modules/semver/functions/satisfies.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/satisfies.js
 var require_satisfies = __commonJS({
-  "../node_modules/semver/functions/satisfies.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/functions/satisfies.js"(exports2, module2) {
     "use strict";
     var Range = require_range();
     var satisfies = (version3, range, options) => {
@@ -18590,9 +18610,9 @@ var require_satisfies = __commonJS({
   }
 });
 
-// ../node_modules/semver/ranges/to-comparators.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/ranges/to-comparators.js
 var require_to_comparators = __commonJS({
-  "../node_modules/semver/ranges/to-comparators.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/ranges/to-comparators.js"(exports2, module2) {
     "use strict";
     var Range = require_range();
     var toComparators = (range, options) => new Range(range, options).set.map((comp) => comp.map((c) => c.value).join(" ").trim().split(" "));
@@ -18600,9 +18620,9 @@ var require_to_comparators = __commonJS({
   }
 });
 
-// ../node_modules/semver/ranges/max-satisfying.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/ranges/max-satisfying.js
 var require_max_satisfying = __commonJS({
-  "../node_modules/semver/ranges/max-satisfying.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/ranges/max-satisfying.js"(exports2, module2) {
     "use strict";
     var SemVer = require_semver();
     var Range = require_range();
@@ -18629,9 +18649,9 @@ var require_max_satisfying = __commonJS({
   }
 });
 
-// ../node_modules/semver/ranges/min-satisfying.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/ranges/min-satisfying.js
 var require_min_satisfying = __commonJS({
-  "../node_modules/semver/ranges/min-satisfying.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/ranges/min-satisfying.js"(exports2, module2) {
     "use strict";
     var SemVer = require_semver();
     var Range = require_range();
@@ -18658,9 +18678,9 @@ var require_min_satisfying = __commonJS({
   }
 });
 
-// ../node_modules/semver/ranges/min-version.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/ranges/min-version.js
 var require_min_version = __commonJS({
-  "../node_modules/semver/ranges/min-version.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/ranges/min-version.js"(exports2, module2) {
     "use strict";
     var SemVer = require_semver();
     var Range = require_range();
@@ -18717,9 +18737,9 @@ var require_min_version = __commonJS({
   }
 });
 
-// ../node_modules/semver/ranges/valid.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/ranges/valid.js
 var require_valid2 = __commonJS({
-  "../node_modules/semver/ranges/valid.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/ranges/valid.js"(exports2, module2) {
     "use strict";
     var Range = require_range();
     var validRange = (range, options) => {
@@ -18733,9 +18753,9 @@ var require_valid2 = __commonJS({
   }
 });
 
-// ../node_modules/semver/ranges/outside.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/ranges/outside.js
 var require_outside = __commonJS({
-  "../node_modules/semver/ranges/outside.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/ranges/outside.js"(exports2, module2) {
     "use strict";
     var SemVer = require_semver();
     var Comparator = require_comparator();
@@ -18802,9 +18822,9 @@ var require_outside = __commonJS({
   }
 });
 
-// ../node_modules/semver/ranges/gtr.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/ranges/gtr.js
 var require_gtr = __commonJS({
-  "../node_modules/semver/ranges/gtr.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/ranges/gtr.js"(exports2, module2) {
     "use strict";
     var outside = require_outside();
     var gtr = (version3, range, options) => outside(version3, range, ">", options);
@@ -18812,9 +18832,9 @@ var require_gtr = __commonJS({
   }
 });
 
-// ../node_modules/semver/ranges/ltr.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/ranges/ltr.js
 var require_ltr = __commonJS({
-  "../node_modules/semver/ranges/ltr.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/ranges/ltr.js"(exports2, module2) {
     "use strict";
     var outside = require_outside();
     var ltr = (version3, range, options) => outside(version3, range, "<", options);
@@ -18822,9 +18842,9 @@ var require_ltr = __commonJS({
   }
 });
 
-// ../node_modules/semver/ranges/intersects.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/ranges/intersects.js
 var require_intersects = __commonJS({
-  "../node_modules/semver/ranges/intersects.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/ranges/intersects.js"(exports2, module2) {
     "use strict";
     var Range = require_range();
     var intersects = (r1, r2, options) => {
@@ -18836,9 +18856,9 @@ var require_intersects = __commonJS({
   }
 });
 
-// ../node_modules/semver/ranges/simplify.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/ranges/simplify.js
 var require_simplify = __commonJS({
-  "../node_modules/semver/ranges/simplify.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/ranges/simplify.js"(exports2, module2) {
     "use strict";
     var satisfies = require_satisfies();
     var compare = require_compare();
@@ -18886,9 +18906,9 @@ var require_simplify = __commonJS({
   }
 });
 
-// ../node_modules/semver/ranges/subset.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/ranges/subset.js
 var require_subset = __commonJS({
-  "../node_modules/semver/ranges/subset.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/ranges/subset.js"(exports2, module2) {
     "use strict";
     var Range = require_range();
     var Comparator = require_comparator();
@@ -19048,9 +19068,9 @@ var require_subset = __commonJS({
   }
 });
 
-// ../node_modules/semver/index.js
+// node_modules/.pnpm/semver@7.7.4/node_modules/semver/index.js
 var require_semver2 = __commonJS({
-  "../node_modules/semver/index.js"(exports2, module2) {
+  "node_modules/.pnpm/semver@7.7.4/node_modules/semver/index.js"(exports2, module2) {
     "use strict";
     var internalRe = require_re();
     var constants = require_constants();
@@ -19143,9 +19163,9 @@ var require_semver2 = __commonJS({
   }
 });
 
-// ../node_modules/esprima/dist/esprima.js
+// node_modules/.pnpm/esprima@4.0.1/node_modules/esprima/dist/esprima.js
 var require_esprima = __commonJS({
-  "../node_modules/esprima/dist/esprima.js"(exports2, module2) {
+  "node_modules/.pnpm/esprima@4.0.1/node_modules/esprima/dist/esprima.js"(exports2, module2) {
     "use strict";
     (function webpackUniversalModuleDefinition(root, factory) {
       if (typeof exports2 === "object" && typeof module2 === "object")
@@ -25379,80 +25399,9 @@ var require_esprima = __commonJS({
   }
 });
 
-// ../node_modules/core-util-is/lib/util.js
-var require_util4 = __commonJS({
-  "../node_modules/core-util-is/lib/util.js"(exports2) {
-    "use strict";
-    function isArray(arg) {
-      if (Array.isArray) {
-        return Array.isArray(arg);
-      }
-      return objectToString2(arg) === "[object Array]";
-    }
-    exports2.isArray = isArray;
-    function isBoolean(arg) {
-      return typeof arg === "boolean";
-    }
-    exports2.isBoolean = isBoolean;
-    function isNull(arg) {
-      return arg === null;
-    }
-    exports2.isNull = isNull;
-    function isNullOrUndefined(arg) {
-      return arg == null;
-    }
-    exports2.isNullOrUndefined = isNullOrUndefined;
-    function isNumber(arg) {
-      return typeof arg === "number";
-    }
-    exports2.isNumber = isNumber;
-    function isString2(arg) {
-      return typeof arg === "string";
-    }
-    exports2.isString = isString2;
-    function isSymbol(arg) {
-      return typeof arg === "symbol";
-    }
-    exports2.isSymbol = isSymbol;
-    function isUndefined2(arg) {
-      return arg === void 0;
-    }
-    exports2.isUndefined = isUndefined2;
-    function isRegExp(re) {
-      return objectToString2(re) === "[object RegExp]";
-    }
-    exports2.isRegExp = isRegExp;
-    function isObject3(arg) {
-      return typeof arg === "object" && arg !== null;
-    }
-    exports2.isObject = isObject3;
-    function isDate(d) {
-      return objectToString2(d) === "[object Date]";
-    }
-    exports2.isDate = isDate;
-    function isError(e) {
-      return objectToString2(e) === "[object Error]" || e instanceof Error;
-    }
-    exports2.isError = isError;
-    function isFunction2(arg) {
-      return typeof arg === "function";
-    }
-    exports2.isFunction = isFunction2;
-    function isPrimitive(arg) {
-      return arg === null || typeof arg === "boolean" || typeof arg === "number" || typeof arg === "string" || typeof arg === "symbol" || // ES6 symbol
-      typeof arg === "undefined";
-    }
-    exports2.isPrimitive = isPrimitive;
-    exports2.isBuffer = require("buffer").Buffer.isBuffer;
-    function objectToString2(o) {
-      return Object.prototype.toString.call(o);
-    }
-  }
-});
-
-// ../node_modules/array-timsort/src/index.js
+// node_modules/.pnpm/array-timsort@1.0.3/node_modules/array-timsort/src/index.js
 var require_src2 = __commonJS({
-  "../node_modules/array-timsort/src/index.js"(exports2, module2) {
+  "node_modules/.pnpm/array-timsort@1.0.3/node_modules/array-timsort/src/index.js"(exports2, module2) {
     "use strict";
     var DEFAULT_MIN_MERGE = 32;
     var DEFAULT_MIN_GALLOPING = 7;
@@ -26166,17 +26115,10 @@ var require_src2 = __commonJS({
   }
 });
 
-// ../node_modules/comment-json/src/common.js
+// node_modules/.pnpm/comment-json@4.6.2/node_modules/comment-json/src/common.js
 var require_common = __commonJS({
-  "../node_modules/comment-json/src/common.js"(exports2, module2) {
+  "node_modules/.pnpm/comment-json@4.6.2/node_modules/comment-json/src/common.js"(exports2, module2) {
     "use strict";
-    var {
-      isObject: isObject3,
-      isArray,
-      isString: isString2,
-      isNumber,
-      isFunction: isFunction2
-    } = require_util4();
     var PREFIX_BEFORE = "before";
     var PREFIX_AFTER_PROP = "after-prop";
     var PREFIX_AFTER_COLON = "after-colon";
@@ -26207,6 +26149,39 @@ var require_common = __commonJS({
     var NON_PROP_SYMBOL_KEYS = NON_PROP_SYMBOL_PREFIXES.map(Symbol.for);
     var COLON = ":";
     var UNDEFINED = void 0;
+    var LINE_BREAKS_BEFORE = /* @__PURE__ */ new WeakMap();
+    var LINE_BREAKS_AFTER = /* @__PURE__ */ new WeakMap();
+    var RAW_STRING_LITERALS = /* @__PURE__ */ new WeakMap();
+    var is_string = (subject) => typeof subject === "string";
+    var is_number = (subject) => typeof subject === "number";
+    var is_object = (v) => typeof v === "object" && v !== null;
+    var normalize_key = (key) => is_string(key) || is_number(key) ? String(key) : null;
+    var set_raw_string_literal = (host, key, raw) => {
+      if (!is_object(host) || !is_string(raw)) {
+        return;
+      }
+      const normalized = normalize_key(key);
+      if (normalized === null) {
+        return;
+      }
+      let map2 = RAW_STRING_LITERALS.get(host);
+      if (!map2) {
+        map2 = /* @__PURE__ */ new Map();
+        RAW_STRING_LITERALS.set(host, map2);
+      }
+      map2.set(normalized, raw);
+    };
+    var get_raw_string_literal = (host, key) => {
+      if (!is_object(host)) {
+        return;
+      }
+      const normalized = normalize_key(key);
+      if (normalized === null) {
+        return;
+      }
+      const map2 = RAW_STRING_LITERALS.get(host);
+      return map2 ? map2.get(normalized) : void 0;
+    };
     var symbol2 = (prefix, key) => /* @__PURE__ */ Symbol.for(prefix + COLON + key);
     var symbol_checked = (prefix, key) => {
       if (key) {
@@ -26276,7 +26251,7 @@ var require_common = __commonJS({
     };
     var assign = (target, source, keys) => {
       keys.forEach((key) => {
-        if (!isString2(key) && !isNumber(key)) {
+        if (typeof key !== "string" && typeof key !== "number") {
           return;
         }
         if (!Object.hasOwn(source, key)) {
@@ -26287,7 +26262,17 @@ var require_common = __commonJS({
       });
       return target;
     };
-    var is_raw_json = isFunction2(JSON.isRawJSON) ? JSON.isRawJSON : () => false;
+    var is_raw_json = typeof JSON.isRawJSON === "function" ? JSON.isRawJSON : () => false;
+    var set_comment_line_breaks = (comment, before, after) => {
+      if (is_number(before) && before >= 0) {
+        LINE_BREAKS_BEFORE.set(comment, before);
+      }
+      if (is_number(after) && after >= 0) {
+        LINE_BREAKS_AFTER.set(comment, after);
+      }
+    };
+    var get_comment_line_breaks_before = (comment) => LINE_BREAKS_BEFORE.get(comment);
+    var get_comment_line_breaks_after = (comment) => LINE_BREAKS_AFTER.get(comment);
     module2.exports = {
       PROP_SYMBOL_PREFIXES,
       PREFIX_BEFORE,
@@ -26311,7 +26296,15 @@ var require_common = __commonJS({
       copy_comments,
       swap_comments,
       assign_non_prop_comments,
+      is_string,
+      is_number,
+      is_object,
       is_raw_json,
+      set_raw_string_literal,
+      get_raw_string_literal,
+      set_comment_line_breaks,
+      get_comment_line_breaks_before,
+      get_comment_line_breaks_after,
       /**
        * Assign properties and comments from source to target object.
        *
@@ -26341,16 +26334,16 @@ var require_common = __commonJS({
        * assign(target, source, [])
        */
       assign(target, source, keys) {
-        if (!isObject3(target)) {
+        if (!is_object(target)) {
           throw new TypeError("Cannot convert undefined or null to object");
         }
-        if (!isObject3(source)) {
+        if (!is_object(source)) {
           return target;
         }
         if (keys === UNDEFINED) {
           keys = Object.keys(source);
           assign_non_prop_comments(target, source);
-        } else if (!isArray(keys)) {
+        } else if (!Array.isArray(keys)) {
           throw new TypeError("keys must be array or undefined");
         } else if (keys.length === 0) {
           assign_non_prop_comments(target, source);
@@ -26402,13 +26395,13 @@ var require_common = __commonJS({
         where: to_where,
         key: to_key
       }, override = false) {
-        if (!isObject3(source)) {
+        if (!is_object(source)) {
           throw new TypeError("source must be an object");
         }
         if (!target) {
           target = source;
         }
-        if (!isObject3(target)) {
+        if (!is_object(target)) {
           return;
         }
         const from_prop = symbol_checked(from_where, from_key);
@@ -26454,7 +26447,7 @@ var require_common = __commonJS({
         where,
         key
       }) {
-        if (!isObject3(target)) {
+        if (!is_object(target)) {
           throw new TypeError("target must be an object");
         }
         const prop = symbol_checked(where, key);
@@ -26467,11 +26460,10 @@ var require_common = __commonJS({
   }
 });
 
-// ../node_modules/comment-json/src/array.js
+// node_modules/.pnpm/comment-json@4.6.2/node_modules/comment-json/src/array.js
 var require_array = __commonJS({
-  "../node_modules/comment-json/src/array.js"(exports2, module2) {
+  "node_modules/.pnpm/comment-json@4.6.2/node_modules/comment-json/src/array.js"(exports2, module2) {
     "use strict";
-    var { isArray } = require_util4();
     var { sort } = require_src2();
     var {
       PROP_SYMBOL_PREFIXES,
@@ -26618,7 +26610,7 @@ var require_array = __commonJS({
         move_comments(ret, this, 0, this.length, 0);
         items.forEach((item) => {
           const prev = length;
-          length += isArray(item) ? item.length : 1;
+          length += Array.isArray(item) ? item.length : 1;
           if (!(item instanceof _CommentArray)) {
             return;
           }
@@ -26652,9 +26644,9 @@ var require_array = __commonJS({
   }
 });
 
-// ../node_modules/comment-json/src/parse.js
+// node_modules/.pnpm/comment-json@4.6.2/node_modules/comment-json/src/parse.js
 var require_parse2 = __commonJS({
-  "../node_modules/comment-json/src/parse.js"(exports2, module2) {
+  "node_modules/.pnpm/comment-json@4.6.2/node_modules/comment-json/src/parse.js"(exports2, module2) {
     "use strict";
     var esprima = require_esprima();
     var {
@@ -26677,7 +26669,10 @@ var require_parse2 = __commonJS({
       MINUS,
       EMPTY,
       UNDEFINED,
+      is_object,
       define: define2,
+      set_raw_string_literal,
+      set_comment_line_breaks,
       assign_non_prop_comments
     } = require_common();
     var tokenize = (code) => esprima.tokenize(code, {
@@ -26790,13 +26785,28 @@ var require_parse2 = __commonJS({
           ...current,
           inline
         };
+        const previous_line = last ? last.loc.end.line : 1;
+        set_comment_line_breaks(
+          comment,
+          Math.max(0, comment.loc.start.line - previous_line)
+        );
         comments.push(comment);
         next();
+      }
+      const { length } = comments;
+      if (length) {
+        const comment = comments[length - 1];
+        const current_line = current ? current.loc.start.line : comment.loc.end.line;
+        set_comment_line_breaks(
+          comment,
+          void 0,
+          Math.max(0, current_line - comment.loc.end.line)
+        );
       }
       if (remove_comments) {
         return;
       }
-      if (!comments.length) {
+      if (!length) {
         return;
       }
       if (prefix) {
@@ -26918,6 +26928,8 @@ var require_parse2 = __commonJS({
       let source;
       switch (tt) {
         case "String":
+          set_raw_string_literal(comments_host, last_prop, current.value);
+        // falls through
         case "Boolean":
         case "Null":
         case "Numeric":
@@ -26934,7 +26946,6 @@ var require_parse2 = __commonJS({
           return {};
       }
     }
-    var isObject3 = (subject) => Object(subject) === subject;
     var parse4 = (code, rev, no_comments) => {
       clean();
       current_code = code;
@@ -26955,7 +26966,7 @@ var require_parse2 = __commonJS({
       }
       let result = transform2("", final);
       if (!no_comments && result !== null) {
-        if (!isObject3(result)) {
+        if (!is_object(result)) {
           result = new Object(result);
         }
         assign_non_prop_comments(result, comments_host);
@@ -26971,17 +26982,10 @@ var require_parse2 = __commonJS({
   }
 });
 
-// ../node_modules/comment-json/src/stringify.js
+// node_modules/.pnpm/comment-json@4.6.2/node_modules/comment-json/src/stringify.js
 var require_stringify = __commonJS({
-  "../node_modules/comment-json/src/stringify.js"(exports2, module2) {
+  "node_modules/.pnpm/comment-json@4.6.2/node_modules/comment-json/src/stringify.js"(exports2, module2) {
     "use strict";
-    var {
-      isArray,
-      isObject: isObject3,
-      isFunction: isFunction2,
-      isNumber,
-      isString: isString2
-    } = require_util4();
     var {
       PREFIX_BEFORE_ALL,
       PREFIX_BEFORE,
@@ -26998,9 +27002,14 @@ var require_stringify = __commonJS({
       COMMA,
       EMPTY,
       UNDEFINED,
+      is_string,
+      is_number,
+      is_object,
+      get_raw_string_literal,
+      get_comment_line_breaks_before,
+      get_comment_line_breaks_after,
       is_raw_json
     } = require_common();
-    var ESCAPABLE = /[\\"\x00-\x1f\x7f-\x9f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g;
     var SPACE = " ";
     var LF = "\n";
     var STR_NULL = "null";
@@ -27009,43 +27018,66 @@ var require_stringify = __commonJS({
     var AFTER_COLON = (prop) => `${PREFIX_AFTER_COLON}:${prop}`;
     var AFTER_VALUE = (prop) => `${PREFIX_AFTER_VALUE}:${prop}`;
     var AFTER = (prop) => `${PREFIX_AFTER}:${prop}`;
-    var meta3 = {
-      "\b": "\\b",
-      "	": "\\t",
-      "\n": "\\n",
-      "\f": "\\f",
-      "\r": "\\r",
-      '"': '\\"',
-      "\\": "\\\\"
-    };
-    var escape2 = (string4) => {
-      ESCAPABLE.lastIndex = 0;
-      if (!ESCAPABLE.test(string4)) {
-        return string4;
-      }
-      return string4.replace(ESCAPABLE, (a) => {
-        const c = meta3[a];
-        return typeof c === "string" ? c : a;
-      });
-    };
-    var quote = (string4) => `"${escape2(string4)}"`;
+    var quote = JSON.stringify;
     var comment_stringify = (value, line) => line ? `//${value}` : `/*${value}*/`;
+    var repeat_line_breaks = (line_breaks, gap) => (LF + gap).repeat(line_breaks);
+    var read_line_breaks = (line_breaks) => is_number(line_breaks) && line_breaks >= 0 ? line_breaks : null;
+    var read_line_breaks_from_loc = (previous_comment, comment) => {
+      if (!previous_comment || !previous_comment.loc || !comment.loc) {
+        return null;
+      }
+      const { end } = previous_comment.loc;
+      const { start } = comment.loc;
+      if (!end || !start || !is_number(end.line) || !is_number(start.line)) {
+        return null;
+      }
+      const line_breaks = start.line - end.line;
+      return line_breaks >= 0 ? line_breaks : null;
+    };
+    var count_trailing_line_breaks = (str, gap) => {
+      const unit = LF + gap;
+      const { length } = unit;
+      let i = str.length;
+      let count = 0;
+      while (i >= length && str.slice(i - length, i) === unit) {
+        i -= length;
+        count++;
+      }
+      return count;
+    };
     var process_comments = (host, symbol_tag, deeper_gap, display_block) => {
       const comments = host[Symbol.for(symbol_tag)];
       if (!comments || !comments.length) {
         return EMPTY;
       }
-      let is_line_comment = false;
-      const str = comments.reduce((prev, {
-        inline,
-        type,
-        value
-      }) => {
-        const delimiter = inline ? SPACE : LF + deeper_gap;
-        is_line_comment = type === "LineComment";
-        return prev + delimiter + comment_stringify(value, is_line_comment);
-      }, EMPTY);
-      return display_block || is_line_comment ? str + LF + deeper_gap : str;
+      let str = EMPTY;
+      let last_comment = null;
+      comments.forEach((comment, i) => {
+        const {
+          inline,
+          type,
+          value
+        } = comment;
+        let line_breaks_before = read_line_breaks(
+          get_comment_line_breaks_before(comment)
+        );
+        if (line_breaks_before === null) {
+          line_breaks_before = read_line_breaks_from_loc(last_comment, comment);
+        }
+        if (line_breaks_before === null) {
+          line_breaks_before = inline ? 0 : 1;
+        }
+        const delimiter = line_breaks_before > 0 ? repeat_line_breaks(line_breaks_before, deeper_gap) : inline ? SPACE : i === 0 ? EMPTY : LF + deeper_gap;
+        const is_line_comment = type === "LineComment";
+        str += delimiter + comment_stringify(value, is_line_comment);
+        last_comment = comment;
+      });
+      const default_line_breaks_after = display_block || last_comment.type === "LineComment" ? 1 : 0;
+      const line_breaks_after = Math.max(
+        default_line_breaks_after,
+        read_line_breaks(get_comment_line_breaks_after(last_comment)) || 0
+      );
+      return str + repeat_line_breaks(line_breaks_after, deeper_gap);
     };
     var replacer = null;
     var indent = EMPTY;
@@ -27053,10 +27085,28 @@ var require_stringify = __commonJS({
       replacer = null;
       indent = EMPTY;
     };
-    var join10 = (one, two, gap) => one ? two ? one + two.trim() + LF + gap : one.trimRight() + LF + gap : two ? two.trimRight() + LF + gap : EMPTY;
+    var join10 = (one, two, gap) => one ? two ? one + two.trim() + LF + gap : one.trimRight() + repeat_line_breaks(
+      Math.max(1, count_trailing_line_breaks(one, gap)),
+      gap
+    ) : two ? two.trimRight() + repeat_line_breaks(
+      Math.max(1, count_trailing_line_breaks(two, gap)),
+      gap
+    ) : EMPTY;
     var join_content = (inside, value, gap) => {
       const comment = process_comments(value, PREFIX_BEFORE, gap + indent, true);
       return join10(comment, inside, gap);
+    };
+    var stringify_string = (holder, key, value) => {
+      const raw = get_raw_string_literal(holder, key);
+      if (is_string(raw)) {
+        try {
+          if (JSON.parse(raw) === value) {
+            return raw;
+          }
+        } catch (e) {
+        }
+      }
+      return quote(value);
     };
     var array_stringify = (value, gap) => {
       const deeper_gap = gap + indent;
@@ -27092,7 +27142,7 @@ var require_stringify = __commonJS({
       let inside = EMPTY;
       let after_comma = EMPTY;
       let first = true;
-      const keys = isArray(replacer) ? replacer : Object.keys(value);
+      const keys = Array.isArray(replacer) ? replacer : Object.keys(value);
       const iteratee = (key) => {
         const sv = stringify2(key, value, deeper_gap);
         if (sv === UNDEFINED) {
@@ -27121,15 +27171,15 @@ var require_stringify = __commonJS({
     };
     function stringify2(key, holder, gap) {
       let value = holder[key];
-      if (isObject3(value) && isFunction2(value.toJSON)) {
+      if (is_object(value) && typeof value.toJSON === "function") {
         value = value.toJSON(key);
       }
-      if (isFunction2(replacer)) {
+      if (typeof replacer === "function") {
         value = replacer.call(holder, key, value);
       }
       switch (typeof value) {
         case "string":
-          return quote(value);
+          return stringify_string(holder, key, value);
         case "number":
           return Number.isFinite(value) ? String(value) : STR_NULL;
         case "boolean":
@@ -27141,12 +27191,12 @@ var require_stringify = __commonJS({
           if (is_raw_json(value)) {
             return value.rawJSON;
           }
-          return isArray(value) ? array_stringify(value, gap) : object_stringify(value, gap);
+          return Array.isArray(value) ? array_stringify(value, gap) : object_stringify(value, gap);
         // undefined
         default:
       }
     }
-    var get_indent = (space) => isString2(space) ? space : isNumber(space) ? SPACE.repeat(space) : EMPTY;
+    var get_indent = (space) => typeof space === "string" ? space : typeof space === "number" ? SPACE.repeat(space) : EMPTY;
     var { toString } = Object.prototype;
     var PRIMITIVE_OBJECT_TYPES = [
       "[object Number]",
@@ -27165,21 +27215,21 @@ var require_stringify = __commonJS({
       if (!indent_) {
         return JSON.stringify(value, replacer_);
       }
-      if (!isFunction2(replacer_) && !isArray(replacer_)) {
+      if (typeof replacer_ !== "function" && !Array.isArray(replacer_)) {
         replacer_ = null;
       }
       replacer = replacer_;
       indent = indent_;
       const str = is_primitive_object(value) ? JSON.stringify(value) : stringify2("", { "": value }, EMPTY);
       clean();
-      return isObject3(value) ? process_comments(value, PREFIX_BEFORE_ALL, EMPTY, true).trimLeft() + str + process_comments(value, PREFIX_AFTER_ALL, EMPTY).trimRight() : str;
+      return is_object(value) ? process_comments(value, PREFIX_BEFORE_ALL, EMPTY, true).trimLeft() + str + process_comments(value, PREFIX_AFTER_ALL, EMPTY).trimRight() : str;
     };
   }
 });
 
-// ../node_modules/comment-json/src/index.js
+// node_modules/.pnpm/comment-json@4.6.2/node_modules/comment-json/src/index.js
 var require_src3 = __commonJS({
-  "../node_modules/comment-json/src/index.js"(exports2, module2) {
+  "node_modules/.pnpm/comment-json@4.6.2/node_modules/comment-json/src/index.js"(exports2, module2) {
     "use strict";
     var { parse: parse4, tokenize } = require_parse2();
     var stringify2 = require_stringify();
@@ -27215,9 +27265,9 @@ var require_src3 = __commonJS({
   }
 });
 
-// node_modules/dotenv/package.json
+// node_modules/.pnpm/dotenv@16.6.1/node_modules/dotenv/package.json
 var require_package = __commonJS({
-  "node_modules/dotenv/package.json"(exports2, module2) {
+  "node_modules/.pnpm/dotenv@16.6.1/node_modules/dotenv/package.json"(exports2, module2) {
     module2.exports = {
       name: "dotenv",
       version: "16.6.1",
@@ -27283,9 +27333,9 @@ var require_package = __commonJS({
   }
 });
 
-// node_modules/dotenv/lib/main.js
+// node_modules/.pnpm/dotenv@16.6.1/node_modules/dotenv/lib/main.js
 var require_main = __commonJS({
-  "node_modules/dotenv/lib/main.js"(exports2, module2) {
+  "node_modules/.pnpm/dotenv@16.6.1/node_modules/dotenv/lib/main.js"(exports2, module2) {
     "use strict";
     var fs34 = require("fs");
     var path36 = require("path");
@@ -27574,9 +27624,9 @@ var require_main = __commonJS({
   }
 });
 
-// ../node_modules/cli-table3/src/debug.js
+// node_modules/.pnpm/cli-table3@0.6.5/node_modules/cli-table3/src/debug.js
 var require_debug2 = __commonJS({
-  "../node_modules/cli-table3/src/debug.js"(exports2, module2) {
+  "node_modules/.pnpm/cli-table3@0.6.5/node_modules/cli-table3/src/debug.js"(exports2, module2) {
     "use strict";
     var messages = [];
     var level = 0;
@@ -27602,9 +27652,9 @@ var require_debug2 = __commonJS({
   }
 });
 
-// ../node_modules/cli-table3/node_modules/ansi-regex/index.js
+// node_modules/.pnpm/ansi-regex@5.0.1/node_modules/ansi-regex/index.js
 var require_ansi_regex = __commonJS({
-  "../node_modules/cli-table3/node_modules/ansi-regex/index.js"(exports2, module2) {
+  "node_modules/.pnpm/ansi-regex@5.0.1/node_modules/ansi-regex/index.js"(exports2, module2) {
     "use strict";
     module2.exports = ({ onlyFirst = false } = {}) => {
       const pattern = [
@@ -27616,18 +27666,18 @@ var require_ansi_regex = __commonJS({
   }
 });
 
-// ../node_modules/cli-table3/node_modules/strip-ansi/index.js
+// node_modules/.pnpm/strip-ansi@6.0.1/node_modules/strip-ansi/index.js
 var require_strip_ansi = __commonJS({
-  "../node_modules/cli-table3/node_modules/strip-ansi/index.js"(exports2, module2) {
+  "node_modules/.pnpm/strip-ansi@6.0.1/node_modules/strip-ansi/index.js"(exports2, module2) {
     "use strict";
     var ansiRegex = require_ansi_regex();
     module2.exports = (string4) => typeof string4 === "string" ? string4.replace(ansiRegex(), "") : string4;
   }
 });
 
-// ../node_modules/cli-table3/node_modules/is-fullwidth-code-point/index.js
+// node_modules/.pnpm/is-fullwidth-code-point@3.0.0/node_modules/is-fullwidth-code-point/index.js
 var require_is_fullwidth_code_point = __commonJS({
-  "../node_modules/cli-table3/node_modules/is-fullwidth-code-point/index.js"(exports2, module2) {
+  "node_modules/.pnpm/is-fullwidth-code-point@3.0.0/node_modules/is-fullwidth-code-point/index.js"(exports2, module2) {
     "use strict";
     var isFullwidthCodePoint = (codePoint) => {
       if (Number.isNaN(codePoint)) {
@@ -27658,9 +27708,9 @@ var require_is_fullwidth_code_point = __commonJS({
   }
 });
 
-// ../node_modules/cli-table3/node_modules/emoji-regex/index.js
+// node_modules/.pnpm/emoji-regex@8.0.0/node_modules/emoji-regex/index.js
 var require_emoji_regex = __commonJS({
-  "../node_modules/cli-table3/node_modules/emoji-regex/index.js"(exports2, module2) {
+  "node_modules/.pnpm/emoji-regex@8.0.0/node_modules/emoji-regex/index.js"(exports2, module2) {
     "use strict";
     module2.exports = function() {
       return /\uD83C\uDFF4\uDB40\uDC67\uDB40\uDC62(?:\uDB40\uDC65\uDB40\uDC6E\uDB40\uDC67|\uDB40\uDC73\uDB40\uDC63\uDB40\uDC74|\uDB40\uDC77\uDB40\uDC6C\uDB40\uDC73)\uDB40\uDC7F|\uD83D\uDC68(?:\uD83C\uDFFC\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68\uD83C\uDFFB|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFF\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB-\uDFFE])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFE\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB-\uDFFD])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFD\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB\uDFFC])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\u200D(?:\u2764\uFE0F\u200D(?:\uD83D\uDC8B\u200D)?\uD83D\uDC68|(?:\uD83D[\uDC68\uDC69])\u200D(?:\uD83D\uDC66\u200D\uD83D\uDC66|\uD83D\uDC67\u200D(?:\uD83D[\uDC66\uDC67]))|\uD83D\uDC66\u200D\uD83D\uDC66|\uD83D\uDC67\u200D(?:\uD83D[\uDC66\uDC67])|(?:\uD83D[\uDC68\uDC69])\u200D(?:\uD83D[\uDC66\uDC67])|[\u2695\u2696\u2708]\uFE0F|\uD83D[\uDC66\uDC67]|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|(?:\uD83C\uDFFB\u200D[\u2695\u2696\u2708]|\uD83C\uDFFF\u200D[\u2695\u2696\u2708]|\uD83C\uDFFE\u200D[\u2695\u2696\u2708]|\uD83C\uDFFD\u200D[\u2695\u2696\u2708]|\uD83C\uDFFC\u200D[\u2695\u2696\u2708])\uFE0F|\uD83C\uDFFB\u200D(?:\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C[\uDFFB-\uDFFF])|(?:\uD83E\uDDD1\uD83C\uDFFB\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1|\uD83D\uDC69\uD83C\uDFFC\u200D\uD83E\uDD1D\u200D\uD83D\uDC69)\uD83C\uDFFB|\uD83E\uDDD1(?:\uD83C\uDFFF\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1(?:\uD83C[\uDFFB-\uDFFF])|\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1)|(?:\uD83E\uDDD1\uD83C\uDFFE\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1|\uD83D\uDC69\uD83C\uDFFF\u200D\uD83E\uDD1D\u200D(?:\uD83D[\uDC68\uDC69]))(?:\uD83C[\uDFFB-\uDFFE])|(?:\uD83E\uDDD1\uD83C\uDFFC\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1|\uD83D\uDC69\uD83C\uDFFD\u200D\uD83E\uDD1D\u200D\uD83D\uDC69)(?:\uD83C[\uDFFB\uDFFC])|\uD83D\uDC69(?:\uD83C\uDFFE\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB-\uDFFD\uDFFF])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFC\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB\uDFFD-\uDFFF])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFB\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFC-\uDFFF])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFD\u200D(?:\uD83E\uDD1D\u200D\uD83D\uDC68(?:\uD83C[\uDFFB\uDFFC\uDFFE\uDFFF])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\u200D(?:\u2764\uFE0F\u200D(?:\uD83D\uDC8B\u200D(?:\uD83D[\uDC68\uDC69])|\uD83D[\uDC68\uDC69])|\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD])|\uD83C\uDFFF\u200D(?:\uD83C[\uDF3E\uDF73\uDF93\uDFA4\uDFA8\uDFEB\uDFED]|\uD83D[\uDCBB\uDCBC\uDD27\uDD2C\uDE80\uDE92]|\uD83E[\uDDAF-\uDDB3\uDDBC\uDDBD]))|\uD83D\uDC69\u200D\uD83D\uDC69\u200D(?:\uD83D\uDC66\u200D\uD83D\uDC66|\uD83D\uDC67\u200D(?:\uD83D[\uDC66\uDC67]))|(?:\uD83E\uDDD1\uD83C\uDFFD\u200D\uD83E\uDD1D\u200D\uD83E\uDDD1|\uD83D\uDC69\uD83C\uDFFE\u200D\uD83E\uDD1D\u200D\uD83D\uDC69)(?:\uD83C[\uDFFB-\uDFFD])|\uD83D\uDC69\u200D\uD83D\uDC66\u200D\uD83D\uDC66|\uD83D\uDC69\u200D\uD83D\uDC69\u200D(?:\uD83D[\uDC66\uDC67])|(?:\uD83D\uDC41\uFE0F\u200D\uD83D\uDDE8|\uD83D\uDC69(?:\uD83C\uDFFF\u200D[\u2695\u2696\u2708]|\uD83C\uDFFE\u200D[\u2695\u2696\u2708]|\uD83C\uDFFC\u200D[\u2695\u2696\u2708]|\uD83C\uDFFB\u200D[\u2695\u2696\u2708]|\uD83C\uDFFD\u200D[\u2695\u2696\u2708]|\u200D[\u2695\u2696\u2708])|(?:(?:\u26F9|\uD83C[\uDFCB\uDFCC]|\uD83D\uDD75)\uFE0F|\uD83D\uDC6F|\uD83E[\uDD3C\uDDDE\uDDDF])\u200D[\u2640\u2642]|(?:\u26F9|\uD83C[\uDFCB\uDFCC]|\uD83D\uDD75)(?:\uD83C[\uDFFB-\uDFFF])\u200D[\u2640\u2642]|(?:\uD83C[\uDFC3\uDFC4\uDFCA]|\uD83D[\uDC6E\uDC71\uDC73\uDC77\uDC81\uDC82\uDC86\uDC87\uDE45-\uDE47\uDE4B\uDE4D\uDE4E\uDEA3\uDEB4-\uDEB6]|\uD83E[\uDD26\uDD37-\uDD39\uDD3D\uDD3E\uDDB8\uDDB9\uDDCD-\uDDCF\uDDD6-\uDDDD])(?:(?:\uD83C[\uDFFB-\uDFFF])\u200D[\u2640\u2642]|\u200D[\u2640\u2642])|\uD83C\uDFF4\u200D\u2620)\uFE0F|\uD83D\uDC69\u200D\uD83D\uDC67\u200D(?:\uD83D[\uDC66\uDC67])|\uD83C\uDFF3\uFE0F\u200D\uD83C\uDF08|\uD83D\uDC15\u200D\uD83E\uDDBA|\uD83D\uDC69\u200D\uD83D\uDC66|\uD83D\uDC69\u200D\uD83D\uDC67|\uD83C\uDDFD\uD83C\uDDF0|\uD83C\uDDF4\uD83C\uDDF2|\uD83C\uDDF6\uD83C\uDDE6|[#\*0-9]\uFE0F\u20E3|\uD83C\uDDE7(?:\uD83C[\uDDE6\uDDE7\uDDE9-\uDDEF\uDDF1-\uDDF4\uDDF6-\uDDF9\uDDFB\uDDFC\uDDFE\uDDFF])|\uD83C\uDDF9(?:\uD83C[\uDDE6\uDDE8\uDDE9\uDDEB-\uDDED\uDDEF-\uDDF4\uDDF7\uDDF9\uDDFB\uDDFC\uDDFF])|\uD83C\uDDEA(?:\uD83C[\uDDE6\uDDE8\uDDEA\uDDEC\uDDED\uDDF7-\uDDFA])|\uD83E\uDDD1(?:\uD83C[\uDFFB-\uDFFF])|\uD83C\uDDF7(?:\uD83C[\uDDEA\uDDF4\uDDF8\uDDFA\uDDFC])|\uD83D\uDC69(?:\uD83C[\uDFFB-\uDFFF])|\uD83C\uDDF2(?:\uD83C[\uDDE6\uDDE8-\uDDED\uDDF0-\uDDFF])|\uD83C\uDDE6(?:\uD83C[\uDDE8-\uDDEC\uDDEE\uDDF1\uDDF2\uDDF4\uDDF6-\uDDFA\uDDFC\uDDFD\uDDFF])|\uD83C\uDDF0(?:\uD83C[\uDDEA\uDDEC-\uDDEE\uDDF2\uDDF3\uDDF5\uDDF7\uDDFC\uDDFE\uDDFF])|\uD83C\uDDED(?:\uD83C[\uDDF0\uDDF2\uDDF3\uDDF7\uDDF9\uDDFA])|\uD83C\uDDE9(?:\uD83C[\uDDEA\uDDEC\uDDEF\uDDF0\uDDF2\uDDF4\uDDFF])|\uD83C\uDDFE(?:\uD83C[\uDDEA\uDDF9])|\uD83C\uDDEC(?:\uD83C[\uDDE6\uDDE7\uDDE9-\uDDEE\uDDF1-\uDDF3\uDDF5-\uDDFA\uDDFC\uDDFE])|\uD83C\uDDF8(?:\uD83C[\uDDE6-\uDDEA\uDDEC-\uDDF4\uDDF7-\uDDF9\uDDFB\uDDFD-\uDDFF])|\uD83C\uDDEB(?:\uD83C[\uDDEE-\uDDF0\uDDF2\uDDF4\uDDF7])|\uD83C\uDDF5(?:\uD83C[\uDDE6\uDDEA-\uDDED\uDDF0-\uDDF3\uDDF7-\uDDF9\uDDFC\uDDFE])|\uD83C\uDDFB(?:\uD83C[\uDDE6\uDDE8\uDDEA\uDDEC\uDDEE\uDDF3\uDDFA])|\uD83C\uDDF3(?:\uD83C[\uDDE6\uDDE8\uDDEA-\uDDEC\uDDEE\uDDF1\uDDF4\uDDF5\uDDF7\uDDFA\uDDFF])|\uD83C\uDDE8(?:\uD83C[\uDDE6\uDDE8\uDDE9\uDDEB-\uDDEE\uDDF0-\uDDF5\uDDF7\uDDFA-\uDDFF])|\uD83C\uDDF1(?:\uD83C[\uDDE6-\uDDE8\uDDEE\uDDF0\uDDF7-\uDDFB\uDDFE])|\uD83C\uDDFF(?:\uD83C[\uDDE6\uDDF2\uDDFC])|\uD83C\uDDFC(?:\uD83C[\uDDEB\uDDF8])|\uD83C\uDDFA(?:\uD83C[\uDDE6\uDDEC\uDDF2\uDDF3\uDDF8\uDDFE\uDDFF])|\uD83C\uDDEE(?:\uD83C[\uDDE8-\uDDEA\uDDF1-\uDDF4\uDDF6-\uDDF9])|\uD83C\uDDEF(?:\uD83C[\uDDEA\uDDF2\uDDF4\uDDF5])|(?:\uD83C[\uDFC3\uDFC4\uDFCA]|\uD83D[\uDC6E\uDC71\uDC73\uDC77\uDC81\uDC82\uDC86\uDC87\uDE45-\uDE47\uDE4B\uDE4D\uDE4E\uDEA3\uDEB4-\uDEB6]|\uD83E[\uDD26\uDD37-\uDD39\uDD3D\uDD3E\uDDB8\uDDB9\uDDCD-\uDDCF\uDDD6-\uDDDD])(?:\uD83C[\uDFFB-\uDFFF])|(?:\u26F9|\uD83C[\uDFCB\uDFCC]|\uD83D\uDD75)(?:\uD83C[\uDFFB-\uDFFF])|(?:[\u261D\u270A-\u270D]|\uD83C[\uDF85\uDFC2\uDFC7]|\uD83D[\uDC42\uDC43\uDC46-\uDC50\uDC66\uDC67\uDC6B-\uDC6D\uDC70\uDC72\uDC74-\uDC76\uDC78\uDC7C\uDC83\uDC85\uDCAA\uDD74\uDD7A\uDD90\uDD95\uDD96\uDE4C\uDE4F\uDEC0\uDECC]|\uD83E[\uDD0F\uDD18-\uDD1C\uDD1E\uDD1F\uDD30-\uDD36\uDDB5\uDDB6\uDDBB\uDDD2-\uDDD5])(?:\uD83C[\uDFFB-\uDFFF])|(?:[\u231A\u231B\u23E9-\u23EC\u23F0\u23F3\u25FD\u25FE\u2614\u2615\u2648-\u2653\u267F\u2693\u26A1\u26AA\u26AB\u26BD\u26BE\u26C4\u26C5\u26CE\u26D4\u26EA\u26F2\u26F3\u26F5\u26FA\u26FD\u2705\u270A\u270B\u2728\u274C\u274E\u2753-\u2755\u2757\u2795-\u2797\u27B0\u27BF\u2B1B\u2B1C\u2B50\u2B55]|\uD83C[\uDC04\uDCCF\uDD8E\uDD91-\uDD9A\uDDE6-\uDDFF\uDE01\uDE1A\uDE2F\uDE32-\uDE36\uDE38-\uDE3A\uDE50\uDE51\uDF00-\uDF20\uDF2D-\uDF35\uDF37-\uDF7C\uDF7E-\uDF93\uDFA0-\uDFCA\uDFCF-\uDFD3\uDFE0-\uDFF0\uDFF4\uDFF8-\uDFFF]|\uD83D[\uDC00-\uDC3E\uDC40\uDC42-\uDCFC\uDCFF-\uDD3D\uDD4B-\uDD4E\uDD50-\uDD67\uDD7A\uDD95\uDD96\uDDA4\uDDFB-\uDE4F\uDE80-\uDEC5\uDECC\uDED0-\uDED2\uDED5\uDEEB\uDEEC\uDEF4-\uDEFA\uDFE0-\uDFEB]|\uD83E[\uDD0D-\uDD3A\uDD3C-\uDD45\uDD47-\uDD71\uDD73-\uDD76\uDD7A-\uDDA2\uDDA5-\uDDAA\uDDAE-\uDDCA\uDDCD-\uDDFF\uDE70-\uDE73\uDE78-\uDE7A\uDE80-\uDE82\uDE90-\uDE95])|(?:[#\*0-9\xA9\xAE\u203C\u2049\u2122\u2139\u2194-\u2199\u21A9\u21AA\u231A\u231B\u2328\u23CF\u23E9-\u23F3\u23F8-\u23FA\u24C2\u25AA\u25AB\u25B6\u25C0\u25FB-\u25FE\u2600-\u2604\u260E\u2611\u2614\u2615\u2618\u261D\u2620\u2622\u2623\u2626\u262A\u262E\u262F\u2638-\u263A\u2640\u2642\u2648-\u2653\u265F\u2660\u2663\u2665\u2666\u2668\u267B\u267E\u267F\u2692-\u2697\u2699\u269B\u269C\u26A0\u26A1\u26AA\u26AB\u26B0\u26B1\u26BD\u26BE\u26C4\u26C5\u26C8\u26CE\u26CF\u26D1\u26D3\u26D4\u26E9\u26EA\u26F0-\u26F5\u26F7-\u26FA\u26FD\u2702\u2705\u2708-\u270D\u270F\u2712\u2714\u2716\u271D\u2721\u2728\u2733\u2734\u2744\u2747\u274C\u274E\u2753-\u2755\u2757\u2763\u2764\u2795-\u2797\u27A1\u27B0\u27BF\u2934\u2935\u2B05-\u2B07\u2B1B\u2B1C\u2B50\u2B55\u3030\u303D\u3297\u3299]|\uD83C[\uDC04\uDCCF\uDD70\uDD71\uDD7E\uDD7F\uDD8E\uDD91-\uDD9A\uDDE6-\uDDFF\uDE01\uDE02\uDE1A\uDE2F\uDE32-\uDE3A\uDE50\uDE51\uDF00-\uDF21\uDF24-\uDF93\uDF96\uDF97\uDF99-\uDF9B\uDF9E-\uDFF0\uDFF3-\uDFF5\uDFF7-\uDFFF]|\uD83D[\uDC00-\uDCFD\uDCFF-\uDD3D\uDD49-\uDD4E\uDD50-\uDD67\uDD6F\uDD70\uDD73-\uDD7A\uDD87\uDD8A-\uDD8D\uDD90\uDD95\uDD96\uDDA4\uDDA5\uDDA8\uDDB1\uDDB2\uDDBC\uDDC2-\uDDC4\uDDD1-\uDDD3\uDDDC-\uDDDE\uDDE1\uDDE3\uDDE8\uDDEF\uDDF3\uDDFA-\uDE4F\uDE80-\uDEC5\uDECB-\uDED2\uDED5\uDEE0-\uDEE5\uDEE9\uDEEB\uDEEC\uDEF0\uDEF3-\uDEFA\uDFE0-\uDFEB]|\uD83E[\uDD0D-\uDD3A\uDD3C-\uDD45\uDD47-\uDD71\uDD73-\uDD76\uDD7A-\uDDA2\uDDA5-\uDDAA\uDDAE-\uDDCA\uDDCD-\uDDFF\uDE70-\uDE73\uDE78-\uDE7A\uDE80-\uDE82\uDE90-\uDE95])\uFE0F|(?:[\u261D\u26F9\u270A-\u270D]|\uD83C[\uDF85\uDFC2-\uDFC4\uDFC7\uDFCA-\uDFCC]|\uD83D[\uDC42\uDC43\uDC46-\uDC50\uDC66-\uDC78\uDC7C\uDC81-\uDC83\uDC85-\uDC87\uDC8F\uDC91\uDCAA\uDD74\uDD75\uDD7A\uDD90\uDD95\uDD96\uDE45-\uDE47\uDE4B-\uDE4F\uDEA3\uDEB4-\uDEB6\uDEC0\uDECC]|\uD83E[\uDD0F\uDD18-\uDD1F\uDD26\uDD30-\uDD39\uDD3C-\uDD3E\uDDB5\uDDB6\uDDB8\uDDB9\uDDBB\uDDCD-\uDDCF\uDDD1-\uDDDD])/g;
@@ -27668,9 +27718,9 @@ var require_emoji_regex = __commonJS({
   }
 });
 
-// ../node_modules/cli-table3/node_modules/string-width/index.js
+// node_modules/.pnpm/string-width@4.2.3/node_modules/string-width/index.js
 var require_string_width = __commonJS({
-  "../node_modules/cli-table3/node_modules/string-width/index.js"(exports2, module2) {
+  "node_modules/.pnpm/string-width@4.2.3/node_modules/string-width/index.js"(exports2, module2) {
     "use strict";
     var stripAnsi = require_strip_ansi();
     var isFullwidthCodePoint = require_is_fullwidth_code_point();
@@ -27705,9 +27755,9 @@ var require_string_width = __commonJS({
   }
 });
 
-// ../node_modules/cli-table3/src/utils.js
+// node_modules/.pnpm/cli-table3@0.6.5/node_modules/cli-table3/src/utils.js
 var require_utils4 = __commonJS({
-  "../node_modules/cli-table3/src/utils.js"(exports2, module2) {
+  "node_modules/.pnpm/cli-table3@0.6.5/node_modules/cli-table3/src/utils.js"(exports2, module2) {
     "use strict";
     var stringWidth = require_string_width();
     function codeRegex(capture) {
@@ -28008,9 +28058,9 @@ var require_utils4 = __commonJS({
   }
 });
 
-// ../node_modules/@colors/colors/lib/styles.js
+// node_modules/.pnpm/@colors+colors@1.5.0/node_modules/@colors/colors/lib/styles.js
 var require_styles = __commonJS({
-  "../node_modules/@colors/colors/lib/styles.js"(exports2, module2) {
+  "node_modules/.pnpm/@colors+colors@1.5.0/node_modules/@colors/colors/lib/styles.js"(exports2, module2) {
     "use strict";
     var styles = {};
     module2["exports"] = styles;
@@ -28076,9 +28126,9 @@ var require_styles = __commonJS({
   }
 });
 
-// ../node_modules/@colors/colors/lib/system/has-flag.js
+// node_modules/.pnpm/@colors+colors@1.5.0/node_modules/@colors/colors/lib/system/has-flag.js
 var require_has_flag = __commonJS({
-  "../node_modules/@colors/colors/lib/system/has-flag.js"(exports2, module2) {
+  "node_modules/.pnpm/@colors+colors@1.5.0/node_modules/@colors/colors/lib/system/has-flag.js"(exports2, module2) {
     "use strict";
     module2.exports = function(flag, argv) {
       argv = argv || process.argv;
@@ -28090,9 +28140,9 @@ var require_has_flag = __commonJS({
   }
 });
 
-// ../node_modules/@colors/colors/lib/system/supports-colors.js
+// node_modules/.pnpm/@colors+colors@1.5.0/node_modules/@colors/colors/lib/system/supports-colors.js
 var require_supports_colors = __commonJS({
-  "../node_modules/@colors/colors/lib/system/supports-colors.js"(exports2, module2) {
+  "node_modules/.pnpm/@colors+colors@1.5.0/node_modules/@colors/colors/lib/system/supports-colors.js"(exports2, module2) {
     "use strict";
     var os9 = require("os");
     var hasFlag = require_has_flag();
@@ -28186,9 +28236,9 @@ var require_supports_colors = __commonJS({
   }
 });
 
-// ../node_modules/@colors/colors/lib/custom/trap.js
+// node_modules/.pnpm/@colors+colors@1.5.0/node_modules/@colors/colors/lib/custom/trap.js
 var require_trap = __commonJS({
-  "../node_modules/@colors/colors/lib/custom/trap.js"(exports2, module2) {
+  "node_modules/.pnpm/@colors+colors@1.5.0/node_modules/@colors/colors/lib/custom/trap.js"(exports2, module2) {
     "use strict";
     module2["exports"] = function runTheTrap(text, options) {
       var result = "";
@@ -28256,9 +28306,9 @@ var require_trap = __commonJS({
   }
 });
 
-// ../node_modules/@colors/colors/lib/custom/zalgo.js
+// node_modules/.pnpm/@colors+colors@1.5.0/node_modules/@colors/colors/lib/custom/zalgo.js
 var require_zalgo = __commonJS({
-  "../node_modules/@colors/colors/lib/custom/zalgo.js"(exports2, module2) {
+  "node_modules/.pnpm/@colors+colors@1.5.0/node_modules/@colors/colors/lib/custom/zalgo.js"(exports2, module2) {
     "use strict";
     module2["exports"] = function zalgo(text, options) {
       text = text || "   he is here   ";
@@ -28444,9 +28494,9 @@ var require_zalgo = __commonJS({
   }
 });
 
-// ../node_modules/@colors/colors/lib/maps/america.js
+// node_modules/.pnpm/@colors+colors@1.5.0/node_modules/@colors/colors/lib/maps/america.js
 var require_america = __commonJS({
-  "../node_modules/@colors/colors/lib/maps/america.js"(exports2, module2) {
+  "node_modules/.pnpm/@colors+colors@1.5.0/node_modules/@colors/colors/lib/maps/america.js"(exports2, module2) {
     "use strict";
     module2["exports"] = function(colors) {
       return function(letter, i, exploded) {
@@ -28464,9 +28514,9 @@ var require_america = __commonJS({
   }
 });
 
-// ../node_modules/@colors/colors/lib/maps/zebra.js
+// node_modules/.pnpm/@colors+colors@1.5.0/node_modules/@colors/colors/lib/maps/zebra.js
 var require_zebra = __commonJS({
-  "../node_modules/@colors/colors/lib/maps/zebra.js"(exports2, module2) {
+  "node_modules/.pnpm/@colors+colors@1.5.0/node_modules/@colors/colors/lib/maps/zebra.js"(exports2, module2) {
     "use strict";
     module2["exports"] = function(colors) {
       return function(letter, i, exploded) {
@@ -28476,9 +28526,9 @@ var require_zebra = __commonJS({
   }
 });
 
-// ../node_modules/@colors/colors/lib/maps/rainbow.js
+// node_modules/.pnpm/@colors+colors@1.5.0/node_modules/@colors/colors/lib/maps/rainbow.js
 var require_rainbow = __commonJS({
-  "../node_modules/@colors/colors/lib/maps/rainbow.js"(exports2, module2) {
+  "node_modules/.pnpm/@colors+colors@1.5.0/node_modules/@colors/colors/lib/maps/rainbow.js"(exports2, module2) {
     "use strict";
     module2["exports"] = function(colors) {
       var rainbowColors = ["red", "yellow", "green", "blue", "magenta"];
@@ -28493,9 +28543,9 @@ var require_rainbow = __commonJS({
   }
 });
 
-// ../node_modules/@colors/colors/lib/maps/random.js
+// node_modules/.pnpm/@colors+colors@1.5.0/node_modules/@colors/colors/lib/maps/random.js
 var require_random = __commonJS({
-  "../node_modules/@colors/colors/lib/maps/random.js"(exports2, module2) {
+  "node_modules/.pnpm/@colors+colors@1.5.0/node_modules/@colors/colors/lib/maps/random.js"(exports2, module2) {
     "use strict";
     module2["exports"] = function(colors) {
       var available = [
@@ -28524,9 +28574,9 @@ var require_random = __commonJS({
   }
 });
 
-// ../node_modules/@colors/colors/lib/colors.js
+// node_modules/.pnpm/@colors+colors@1.5.0/node_modules/@colors/colors/lib/colors.js
 var require_colors = __commonJS({
-  "../node_modules/@colors/colors/lib/colors.js"(exports2, module2) {
+  "node_modules/.pnpm/@colors+colors@1.5.0/node_modules/@colors/colors/lib/colors.js"(exports2, module2) {
     "use strict";
     var colors = {};
     module2["exports"] = colors;
@@ -28669,18 +28719,18 @@ var require_colors = __commonJS({
   }
 });
 
-// ../node_modules/@colors/colors/safe.js
+// node_modules/.pnpm/@colors+colors@1.5.0/node_modules/@colors/colors/safe.js
 var require_safe = __commonJS({
-  "../node_modules/@colors/colors/safe.js"(exports2, module2) {
+  "node_modules/.pnpm/@colors+colors@1.5.0/node_modules/@colors/colors/safe.js"(exports2, module2) {
     "use strict";
     var colors = require_colors();
     module2["exports"] = colors;
   }
 });
 
-// ../node_modules/cli-table3/src/cell.js
+// node_modules/.pnpm/cli-table3@0.6.5/node_modules/cli-table3/src/cell.js
 var require_cell = __commonJS({
-  "../node_modules/cli-table3/src/cell.js"(exports2, module2) {
+  "node_modules/.pnpm/cli-table3@0.6.5/node_modules/cli-table3/src/cell.js"(exports2, module2) {
     "use strict";
     var { info, debug } = require_debug2();
     var utils = require_utils4();
@@ -29053,9 +29103,9 @@ var require_cell = __commonJS({
   }
 });
 
-// ../node_modules/cli-table3/src/layout-manager.js
+// node_modules/.pnpm/cli-table3@0.6.5/node_modules/cli-table3/src/layout-manager.js
 var require_layout_manager = __commonJS({
-  "../node_modules/cli-table3/src/layout-manager.js"(exports2, module2) {
+  "node_modules/.pnpm/cli-table3@0.6.5/node_modules/cli-table3/src/layout-manager.js"(exports2, module2) {
     "use strict";
     var { warn, debug } = require_debug2();
     var Cell = require_cell();
@@ -29291,9 +29341,9 @@ var require_layout_manager = __commonJS({
   }
 });
 
-// ../node_modules/cli-table3/src/table.js
+// node_modules/.pnpm/cli-table3@0.6.5/node_modules/cli-table3/src/table.js
 var require_table = __commonJS({
-  "../node_modules/cli-table3/src/table.js"(exports2, module2) {
+  "node_modules/.pnpm/cli-table3@0.6.5/node_modules/cli-table3/src/table.js"(exports2, module2) {
     "use strict";
     var debug = require_debug2();
     var utils = require_utils4();
@@ -29386,9 +29436,9 @@ var require_table = __commonJS({
   }
 });
 
-// ../node_modules/cli-table3/index.js
+// node_modules/.pnpm/cli-table3@0.6.5/node_modules/cli-table3/index.js
 var require_cli_table3 = __commonJS({
-  "../node_modules/cli-table3/index.js"(exports2, module2) {
+  "node_modules/.pnpm/cli-table3@0.6.5/node_modules/cli-table3/index.js"(exports2, module2) {
     "use strict";
     module2.exports = require_table();
   }
@@ -29398,7 +29448,7 @@ var require_cli_table3 = __commonJS({
 var import_node_fs10 = require("fs");
 var import_node_path20 = require("path");
 
-// ../node_modules/commander/esm.mjs
+// node_modules/.pnpm/commander@14.0.3/node_modules/commander/esm.mjs
 var import_index = __toESM(require_commander(), 1);
 var {
   program,
@@ -29415,7 +29465,7 @@ var {
   Help
 } = import_index.default;
 
-// ../node_modules/kleur/index.mjs
+// node_modules/.pnpm/kleur@4.1.5/node_modules/kleur/index.mjs
 var FORCE_COLOR;
 var NODE_DISABLE_COLORS;
 var NO_COLOR;
@@ -29517,7 +29567,7 @@ var kleur_default = $;
 
 // src/commands/claude.ts
 var import_node_child_process2 = require("child_process");
-var import_fs_extra9 = __toESM(require_lib(), 1);
+var import_fs_extra8 = __toESM(require_lib(), 1);
 var import_node_path6 = __toESM(require("path"), 1);
 
 // src/utils/repo-root.ts
@@ -29784,11 +29834,14 @@ var import_node_path5 = __toESM(require("path"), 1);
 var import_node_child_process = require("child_process");
 var import_node_fs = require("fs");
 
-// src/core/pi-runtime.ts
-var import_child_process2 = require("child_process");
-var import_fs_extra7 = __toESM(require_lib(), 1);
+// src/core/skills-scaffold.ts
 var import_path3 = __toESM(require("path"), 1);
-var import_node_os = require("os");
+var import_fs_extra7 = __toESM(require_lib(), 1);
+
+// src/core/skills-materializer.ts
+var import_node_crypto = require("crypto");
+var import_node_path4 = __toESM(require("path"), 1);
+var import_fs_extra6 = __toESM(require_lib(), 1);
 
 // src/core/skills-layout.ts
 var import_node_path = __toESM(require("path"), 1);
@@ -29825,7 +29878,7 @@ var import_node_path3 = __toESM(require("path"), 1);
 var import_fs_extra3 = __toESM(require_lib(), 1);
 var import_node_path2 = __toESM(require("path"), 1);
 
-// ../node_modules/zod/v4/classic/external.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/classic/external.js
 var external_exports = {};
 __export(external_exports, {
   $brand: () => $brand,
@@ -30066,7 +30119,7 @@ __export(external_exports, {
   xor: () => xor
 });
 
-// ../node_modules/zod/v4/core/index.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/core/index.js
 var core_exports2 = {};
 __export(core_exports2, {
   $ZodAny: () => $ZodAny,
@@ -30344,7 +30397,7 @@ __export(core_exports2, {
   version: () => version
 });
 
-// ../node_modules/zod/v4/core/core.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/core/core.js
 var NEVER = Object.freeze({
   status: "aborted"
 });
@@ -30419,7 +30472,7 @@ function config(newConfig) {
   return globalConfig;
 }
 
-// ../node_modules/zod/v4/core/util.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/core/util.js
 var util_exports = {};
 __export(util_exports, {
   BIGINT_FORMAT_RANGES: () => BIGINT_FORMAT_RANGES,
@@ -31098,7 +31151,7 @@ var Class = class {
   }
 };
 
-// ../node_modules/zod/v4/core/errors.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/core/errors.js
 var initializer = (inst, def) => {
   inst.name = "$ZodError";
   Object.defineProperty(inst, "_zod", {
@@ -31234,7 +31287,7 @@ function prettifyError(error48) {
   return lines.join("\n");
 }
 
-// ../node_modules/zod/v4/core/parse.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/core/parse.js
 var _parse = (_Err) => (schema, value, _ctx, _params) => {
   const ctx = _ctx ? Object.assign(_ctx, { async: false }) : { async: false };
   const result = schema._zod.run({ value, issues: [] }, ctx);
@@ -31322,7 +31375,7 @@ var _safeDecodeAsync = (_Err) => async (schema, value, _ctx) => {
 };
 var safeDecodeAsync = /* @__PURE__ */ _safeDecodeAsync($ZodRealError);
 
-// ../node_modules/zod/v4/core/regexes.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/core/regexes.js
 var regexes_exports = {};
 __export(regexes_exports, {
   base64: () => base64,
@@ -31479,7 +31532,7 @@ var sha512_hex = /^[0-9a-fA-F]{128}$/;
 var sha512_base64 = /* @__PURE__ */ fixedBase64(86, "==");
 var sha512_base64url = /* @__PURE__ */ fixedBase64url(86);
 
-// ../node_modules/zod/v4/core/checks.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/core/checks.js
 var $ZodCheck = /* @__PURE__ */ $constructor("$ZodCheck", (inst, def) => {
   var _a2;
   inst._zod ?? (inst._zod = {});
@@ -32027,7 +32080,7 @@ var $ZodCheckOverwrite = /* @__PURE__ */ $constructor("$ZodCheckOverwrite", (ins
   };
 });
 
-// ../node_modules/zod/v4/core/doc.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/core/doc.js
 var Doc = class {
   constructor(args = []) {
     this.content = [];
@@ -32063,14 +32116,14 @@ var Doc = class {
   }
 };
 
-// ../node_modules/zod/v4/core/versions.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/core/versions.js
 var version = {
   major: 4,
   minor: 3,
   patch: 6
 };
 
-// ../node_modules/zod/v4/core/schemas.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/core/schemas.js
 var $ZodType = /* @__PURE__ */ $constructor("$ZodType", (inst, def) => {
   var _a2;
   inst ?? (inst = {});
@@ -34041,7 +34094,7 @@ function handleRefineResult(result, payload, input, inst) {
   }
 }
 
-// ../node_modules/zod/v4/locales/index.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/index.js
 var locales_exports = {};
 __export(locales_exports, {
   ar: () => ar_default,
@@ -34095,7 +34148,7 @@ __export(locales_exports, {
   zhTW: () => zh_TW_default
 });
 
-// ../node_modules/zod/v4/locales/ar.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/ar.js
 var error = () => {
   const Sizable = {
     string: { unit: "\u062D\u0631\u0641", verb: "\u0623\u0646 \u064A\u062D\u0648\u064A" },
@@ -34202,7 +34255,7 @@ function ar_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/az.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/az.js
 var error2 = () => {
   const Sizable = {
     string: { unit: "simvol", verb: "olmal\u0131d\u0131r" },
@@ -34308,7 +34361,7 @@ function az_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/be.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/be.js
 function getBelarusianPlural(count, one, few, many) {
   const absCount = Math.abs(count);
   const lastDigit = absCount % 10;
@@ -34465,7 +34518,7 @@ function be_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/bg.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/bg.js
 var error4 = () => {
   const Sizable = {
     string: { unit: "\u0441\u0438\u043C\u0432\u043E\u043B\u0430", verb: "\u0434\u0430 \u0441\u044A\u0434\u044A\u0440\u0436\u0430" },
@@ -34586,7 +34639,7 @@ function bg_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/ca.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/ca.js
 var error5 = () => {
   const Sizable = {
     string: { unit: "car\xE0cters", verb: "contenir" },
@@ -34695,7 +34748,7 @@ function ca_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/cs.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/cs.js
 var error6 = () => {
   const Sizable = {
     string: { unit: "znak\u016F", verb: "m\xEDt" },
@@ -34807,7 +34860,7 @@ function cs_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/da.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/da.js
 var error7 = () => {
   const Sizable = {
     string: { unit: "tegn", verb: "havde" },
@@ -34923,7 +34976,7 @@ function da_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/de.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/de.js
 var error8 = () => {
   const Sizable = {
     string: { unit: "Zeichen", verb: "zu haben" },
@@ -35032,7 +35085,7 @@ function de_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/en.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/en.js
 var error9 = () => {
   const Sizable = {
     string: { unit: "characters", verb: "to have" },
@@ -35141,7 +35194,7 @@ function en_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/eo.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/eo.js
 var error10 = () => {
   const Sizable = {
     string: { unit: "karaktrojn", verb: "havi" },
@@ -35251,7 +35304,7 @@ function eo_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/es.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/es.js
 var error11 = () => {
   const Sizable = {
     string: { unit: "caracteres", verb: "tener" },
@@ -35384,7 +35437,7 @@ function es_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/fa.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/fa.js
 var error12 = () => {
   const Sizable = {
     string: { unit: "\u06A9\u0627\u0631\u0627\u06A9\u062A\u0631", verb: "\u062F\u0627\u0634\u062A\u0647 \u0628\u0627\u0634\u062F" },
@@ -35499,7 +35552,7 @@ function fa_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/fi.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/fi.js
 var error13 = () => {
   const Sizable = {
     string: { unit: "merkki\xE4", subject: "merkkijonon" },
@@ -35612,7 +35665,7 @@ function fi_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/fr.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/fr.js
 var error14 = () => {
   const Sizable = {
     string: { unit: "caract\xE8res", verb: "avoir" },
@@ -35721,7 +35774,7 @@ function fr_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/fr-CA.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/fr-CA.js
 var error15 = () => {
   const Sizable = {
     string: { unit: "caract\xE8res", verb: "avoir" },
@@ -35829,7 +35882,7 @@ function fr_CA_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/he.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/he.js
 var error16 = () => {
   const TypeNames = {
     string: { label: "\u05DE\u05D7\u05E8\u05D5\u05D6\u05EA", gender: "f" },
@@ -36024,7 +36077,7 @@ function he_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/hu.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/hu.js
 var error17 = () => {
   const Sizable = {
     string: { unit: "karakter", verb: "legyen" },
@@ -36133,7 +36186,7 @@ function hu_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/hy.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/hy.js
 function getArmenianPlural(count, one, many) {
   return Math.abs(count) === 1 ? one : many;
 }
@@ -36281,7 +36334,7 @@ function hy_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/id.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/id.js
 var error19 = () => {
   const Sizable = {
     string: { unit: "karakter", verb: "memiliki" },
@@ -36388,7 +36441,7 @@ function id_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/is.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/is.js
 var error20 = () => {
   const Sizable = {
     string: { unit: "stafi", verb: "a\xF0 hafa" },
@@ -36498,7 +36551,7 @@ function is_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/it.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/it.js
 var error21 = () => {
   const Sizable = {
     string: { unit: "caratteri", verb: "avere" },
@@ -36607,7 +36660,7 @@ function it_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/ja.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/ja.js
 var error22 = () => {
   const Sizable = {
     string: { unit: "\u6587\u5B57", verb: "\u3067\u3042\u308B" },
@@ -36715,7 +36768,7 @@ function ja_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/ka.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/ka.js
 var error23 = () => {
   const Sizable = {
     string: { unit: "\u10E1\u10D8\u10DB\u10D1\u10DD\u10DA\u10DD", verb: "\u10E3\u10DC\u10D3\u10D0 \u10E8\u10D4\u10D8\u10EA\u10D0\u10D5\u10D3\u10D4\u10E1" },
@@ -36828,7 +36881,7 @@ function ka_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/km.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/km.js
 var error24 = () => {
   const Sizable = {
     string: { unit: "\u178F\u17BD\u17A2\u1780\u17D2\u179F\u179A", verb: "\u1782\u17BD\u179A\u1798\u17B6\u1793" },
@@ -36939,12 +36992,12 @@ function km_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/kh.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/kh.js
 function kh_default() {
   return km_default();
 }
 
-// ../node_modules/zod/v4/locales/ko.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/ko.js
 var error25 = () => {
   const Sizable = {
     string: { unit: "\uBB38\uC790", verb: "to have" },
@@ -37056,7 +37109,7 @@ function ko_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/lt.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/lt.js
 var capitalizeFirstCharacter = (text) => {
   return text.charAt(0).toUpperCase() + text.slice(1);
 };
@@ -37260,7 +37313,7 @@ function lt_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/mk.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/mk.js
 var error27 = () => {
   const Sizable = {
     string: { unit: "\u0437\u043D\u0430\u0446\u0438", verb: "\u0434\u0430 \u0438\u043C\u0430\u0430\u0442" },
@@ -37370,7 +37423,7 @@ function mk_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/ms.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/ms.js
 var error28 = () => {
   const Sizable = {
     string: { unit: "aksara", verb: "mempunyai" },
@@ -37478,7 +37531,7 @@ function ms_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/nl.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/nl.js
 var error29 = () => {
   const Sizable = {
     string: { unit: "tekens", verb: "heeft" },
@@ -37589,7 +37642,7 @@ function nl_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/no.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/no.js
 var error30 = () => {
   const Sizable = {
     string: { unit: "tegn", verb: "\xE5 ha" },
@@ -37698,7 +37751,7 @@ function no_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/ota.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/ota.js
 var error31 = () => {
   const Sizable = {
     string: { unit: "harf", verb: "olmal\u0131d\u0131r" },
@@ -37808,7 +37861,7 @@ function ota_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/ps.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/ps.js
 var error32 = () => {
   const Sizable = {
     string: { unit: "\u062A\u0648\u06A9\u064A", verb: "\u0648\u0644\u0631\u064A" },
@@ -37923,7 +37976,7 @@ function ps_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/pl.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/pl.js
 var error33 = () => {
   const Sizable = {
     string: { unit: "znak\xF3w", verb: "mie\u0107" },
@@ -38033,7 +38086,7 @@ function pl_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/pt.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/pt.js
 var error34 = () => {
   const Sizable = {
     string: { unit: "caracteres", verb: "ter" },
@@ -38142,7 +38195,7 @@ function pt_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/ru.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/ru.js
 function getRussianPlural(count, one, few, many) {
   const absCount = Math.abs(count);
   const lastDigit = absCount % 10;
@@ -38299,7 +38352,7 @@ function ru_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/sl.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/sl.js
 var error36 = () => {
   const Sizable = {
     string: { unit: "znakov", verb: "imeti" },
@@ -38409,7 +38462,7 @@ function sl_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/sv.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/sv.js
 var error37 = () => {
   const Sizable = {
     string: { unit: "tecken", verb: "att ha" },
@@ -38520,7 +38573,7 @@ function sv_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/ta.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/ta.js
 var error38 = () => {
   const Sizable = {
     string: { unit: "\u0B8E\u0BB4\u0BC1\u0BA4\u0BCD\u0BA4\u0BC1\u0B95\u0BCD\u0B95\u0BB3\u0BCD", verb: "\u0B95\u0BCA\u0BA3\u0BCD\u0B9F\u0BBF\u0BB0\u0BC1\u0B95\u0BCD\u0B95 \u0BB5\u0BC7\u0BA3\u0BCD\u0B9F\u0BC1\u0BAE\u0BCD" },
@@ -38631,7 +38684,7 @@ function ta_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/th.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/th.js
 var error39 = () => {
   const Sizable = {
     string: { unit: "\u0E15\u0E31\u0E27\u0E2D\u0E31\u0E01\u0E29\u0E23", verb: "\u0E04\u0E27\u0E23\u0E21\u0E35" },
@@ -38742,7 +38795,7 @@ function th_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/tr.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/tr.js
 var error40 = () => {
   const Sizable = {
     string: { unit: "karakter", verb: "olmal\u0131" },
@@ -38848,7 +38901,7 @@ function tr_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/uk.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/uk.js
 var error41 = () => {
   const Sizable = {
     string: { unit: "\u0441\u0438\u043C\u0432\u043E\u043B\u0456\u0432", verb: "\u043C\u0430\u0442\u0438\u043C\u0435" },
@@ -38957,12 +39010,12 @@ function uk_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/ua.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/ua.js
 function ua_default() {
   return uk_default();
 }
 
-// ../node_modules/zod/v4/locales/ur.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/ur.js
 var error42 = () => {
   const Sizable = {
     string: { unit: "\u062D\u0631\u0648\u0641", verb: "\u06C1\u0648\u0646\u0627" },
@@ -39073,7 +39126,7 @@ function ur_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/uz.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/uz.js
 var error43 = () => {
   const Sizable = {
     string: { unit: "belgi", verb: "bo\u2018lishi kerak" },
@@ -39183,7 +39236,7 @@ function uz_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/vi.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/vi.js
 var error44 = () => {
   const Sizable = {
     string: { unit: "k\xFD t\u1EF1", verb: "c\xF3" },
@@ -39292,7 +39345,7 @@ function vi_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/zh-CN.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/zh-CN.js
 var error45 = () => {
   const Sizable = {
     string: { unit: "\u5B57\u7B26", verb: "\u5305\u542B" },
@@ -39402,7 +39455,7 @@ function zh_CN_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/zh-TW.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/zh-TW.js
 var error46 = () => {
   const Sizable = {
     string: { unit: "\u5B57\u5143", verb: "\u64C1\u6709" },
@@ -39510,7 +39563,7 @@ function zh_TW_default() {
   };
 }
 
-// ../node_modules/zod/v4/locales/yo.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/locales/yo.js
 var error47 = () => {
   const Sizable = {
     string: { unit: "\xE0mi", verb: "n\xED" },
@@ -39618,7 +39671,7 @@ function yo_default() {
   };
 }
 
-// ../node_modules/zod/v4/core/registries.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/core/registries.js
 var _a;
 var $output = /* @__PURE__ */ Symbol("ZodOutput");
 var $input = /* @__PURE__ */ Symbol("ZodInput");
@@ -39668,7 +39721,7 @@ function registry() {
 (_a = globalThis).__zod_globalRegistry ?? (_a.__zod_globalRegistry = registry());
 var globalRegistry = globalThis.__zod_globalRegistry;
 
-// ../node_modules/zod/v4/core/api.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/core/api.js
 // @__NO_SIDE_EFFECTS__
 function _string(Class2, params) {
   return new Class2({
@@ -40707,7 +40760,7 @@ function _stringFormat(Class2, format, fnOrRegex, _params = {}) {
   return inst;
 }
 
-// ../node_modules/zod/v4/core/to-json-schema.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/core/to-json-schema.js
 function initializeContext(params) {
   let target = params?.target ?? "draft-2020-12";
   if (target === "draft-4")
@@ -41059,7 +41112,7 @@ var createStandardJSONSchemaMethod = (schema, io, processors = {}) => (params) =
   return finalize(ctx, schema);
 };
 
-// ../node_modules/zod/v4/core/json-schema-processors.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/core/json-schema-processors.js
 var formatMap = {
   guid: "uuid",
   url: "uri",
@@ -41610,7 +41663,7 @@ function toJSONSchema(input, params) {
   return finalize(ctx, input);
 }
 
-// ../node_modules/zod/v4/core/json-schema-generator.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/core/json-schema-generator.js
 var JSONSchemaGenerator = class {
   /** @deprecated Access via ctx instead */
   get metadataRegistry() {
@@ -41685,10 +41738,10 @@ var JSONSchemaGenerator = class {
   }
 };
 
-// ../node_modules/zod/v4/core/json-schema.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/core/json-schema.js
 var json_schema_exports = {};
 
-// ../node_modules/zod/v4/classic/schemas.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/classic/schemas.js
 var schemas_exports2 = {};
 __export(schemas_exports2, {
   ZodAny: () => ZodAny,
@@ -41857,7 +41910,7 @@ __export(schemas_exports2, {
   xor: () => xor
 });
 
-// ../node_modules/zod/v4/classic/checks.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/classic/checks.js
 var checks_exports2 = {};
 __export(checks_exports2, {
   endsWith: () => _endsWith,
@@ -41891,7 +41944,7 @@ __export(checks_exports2, {
   uppercase: () => _uppercase
 });
 
-// ../node_modules/zod/v4/classic/iso.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/classic/iso.js
 var iso_exports = {};
 __export(iso_exports, {
   ZodISODate: () => ZodISODate,
@@ -41932,7 +41985,7 @@ function duration2(params) {
   return _isoDuration(ZodISODuration, params);
 }
 
-// ../node_modules/zod/v4/classic/errors.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/classic/errors.js
 var initializer2 = (inst, issues) => {
   $ZodError.init(inst, issues);
   inst.name = "ZodError";
@@ -41972,7 +42025,7 @@ var ZodRealError = $constructor("ZodError", initializer2, {
   Parent: Error
 });
 
-// ../node_modules/zod/v4/classic/parse.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/classic/parse.js
 var parse2 = /* @__PURE__ */ _parse(ZodRealError);
 var parseAsync2 = /* @__PURE__ */ _parseAsync(ZodRealError);
 var safeParse2 = /* @__PURE__ */ _safeParse(ZodRealError);
@@ -41986,7 +42039,7 @@ var safeDecode2 = /* @__PURE__ */ _safeDecode(ZodRealError);
 var safeEncodeAsync2 = /* @__PURE__ */ _safeEncodeAsync(ZodRealError);
 var safeDecodeAsync2 = /* @__PURE__ */ _safeDecodeAsync(ZodRealError);
 
-// ../node_modules/zod/v4/classic/schemas.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/classic/schemas.js
 var ZodType = /* @__PURE__ */ $constructor("ZodType", (inst, def) => {
   $ZodType.init(inst, def);
   Object.assign(inst["~standard"], {
@@ -43065,7 +43118,7 @@ function preprocess(fn, schema) {
   return pipe(transform(fn), schema);
 }
 
-// ../node_modules/zod/v4/classic/compat.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/classic/compat.js
 var ZodIssueCode = {
   invalid_type: "invalid_type",
   too_big: "too_big",
@@ -43091,7 +43144,7 @@ var ZodFirstPartyTypeKind;
 /* @__PURE__ */ (function(ZodFirstPartyTypeKind2) {
 })(ZodFirstPartyTypeKind || (ZodFirstPartyTypeKind = {}));
 
-// ../node_modules/zod/v4/classic/from-json-schema.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/classic/from-json-schema.js
 var z = {
   ...schemas_exports2,
   ...checks_exports2,
@@ -43565,7 +43618,7 @@ function fromJSONSchema(schema, params) {
   return convertSchema(schema, ctx);
 }
 
-// ../node_modules/zod/v4/classic/coerce.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/classic/coerce.js
 var coerce_exports = {};
 __export(coerce_exports, {
   bigint: () => bigint3,
@@ -43590,7 +43643,7 @@ function date4(params) {
   return _coercedDate(ZodDate, params);
 }
 
-// ../node_modules/zod/v4/classic/external.js
+// node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/classic/external.js
 config(en_default());
 
 // src/core/pack-metadata.ts
@@ -43759,11 +43812,6 @@ async function validateSkillsInvariants(skillsRoot) {
   }
   return violations;
 }
-
-// src/core/skills-materializer.ts
-var import_node_crypto = require("crypto");
-var import_node_path4 = __toESM(require("path"), 1);
-var import_fs_extra6 = __toESM(require_lib(), 1);
 
 // src/core/skills-state.ts
 var import_fs_extra5 = __toESM(require_lib(), 1);
@@ -43965,550 +44013,33 @@ async function rebuildAllRuntimeActiveViews(skillsRoot) {
   return results;
 }
 
-// src/core/pi-runtime.ts
-function resolvePkgRoot() {
-  const candidates = [
-    import_path3.default.resolve(__dirname, "../.."),
-    import_path3.default.resolve(__dirname, "../../..")
-  ];
-  for (const c of candidates) {
-    if (import_fs_extra7.default.existsSync(import_path3.default.join(c, ".xtrm", "extensions"))) return c;
-  }
-  return candidates[0];
-}
-var PI_AGENT_DIR = process.env.PI_AGENT_DIR || import_path3.default.join((0, import_node_os.homedir)(), ".pi", "agent");
-var PI_MCP_ADAPTER_OVERRIDE_DIR = import_path3.default.join(PI_AGENT_DIR, "extensions", "pi-mcp-adapter");
-var PI_MCP_ADAPTER_REQUIRED_ENTRY = "commands.js";
-var PROJECT_EXTENSIONS_ENTRY = "../.xtrm/extensions";
-var PROJECT_SKILLS_ENTRY = "../.xtrm/skills/active/pi";
-var MANAGED_EXTENSIONS = [
-  { id: "core", displayName: "@xtrm/pi-core", isLibrary: true, required: true },
-  { id: "auto-session-name", displayName: "auto-session-name", required: false },
-  { id: "auto-update", displayName: "auto-update", required: false },
-  { id: "beads", displayName: "beads", required: true },
-  { id: "compact-header", displayName: "compact-header", required: false },
-  { id: "custom-footer", displayName: "custom-footer", required: true },
-  { id: "custom-provider-qwen-cli", displayName: "custom-provider-qwen-cli", required: false },
-  { id: "git-checkpoint", displayName: "git-checkpoint", required: false },
-  { id: "lsp-bootstrap", displayName: "lsp-bootstrap", required: false },
-  { id: "pi-serena-compact", displayName: "pi-serena-compact", required: false },
-  { id: "quality-gates", displayName: "quality-gates", required: true },
-  { id: "service-skills", displayName: "service-skills", required: false },
-  { id: "session-flow", displayName: "session-flow", required: true },
-  { id: "xtrm-loader", displayName: "xtrm-loader", required: true },
-  { id: "xtrm-ui", displayName: "xtrm-ui", required: true }
-];
-var MANAGED_PACKAGES = [
-  { id: "npm:pi-gitnexus", displayName: "pi-gitnexus", required: true },
-  { id: "npm:pi-serena-tools", displayName: "pi-serena-tools", required: true },
-  { id: "npm:@zenobius/pi-worktrees", displayName: "pi-worktrees", required: true },
-  { id: "npm:@robhowley/pi-structured-return", displayName: "pi-structured-return", required: true },
-  { id: "npm:@aliou/pi-guardrails", displayName: "pi-guardrails", required: false },
-  { id: "npm:@aliou/pi-processes", displayName: "pi-processes", required: true }
-];
-function getInstalledPiPackages() {
-  const result = (0, import_child_process2.spawnSync)("pi", ["list"], { encoding: "utf8", stdio: "pipe" });
-  if (result.status !== 0) return [];
-  const output = result.stdout;
-  const packages = [];
-  for (const line of output.split("\n")) {
-    const match = line.match(/^\s+(npm:[\w\-/@]+)/);
-    if (match) packages.push(match[1]);
-  }
-  return packages.sort();
-}
-async function listInstalledExtensions(targetDir) {
-  if (!await import_fs_extra7.default.pathExists(targetDir)) return [];
-  const entries = await import_fs_extra7.default.readdir(targetDir, { withFileTypes: true });
-  return entries.filter((e) => e.isDirectory() || e.isSymbolicLink()).map((e) => e.name).sort();
-}
-async function inventoryPiRuntime(sourceDir, targetDir) {
-  const installedExtNames = await listInstalledExtensions(targetDir);
-  const extensionStatuses = [];
-  const missingExtensions = [];
-  const staleExtensions = [];
-  const orphanedExtensions = [];
-  for (const ext of MANAGED_EXTENSIONS) {
-    const srcPath = import_path3.default.join(sourceDir, ext.id);
-    const dstPath = import_path3.default.join(targetDir, ext.id);
-    const srcExists = await import_fs_extra7.default.pathExists(srcPath);
-    const dstExists = await import_fs_extra7.default.pathExists(dstPath);
-    if (!srcExists) {
-      continue;
-    }
-    if (!dstExists) {
-      const status2 = { ext, installed: false };
-      extensionStatuses.push(status2);
-      missingExtensions.push(status2);
-      continue;
-    }
-    let isStale = false;
-    if (srcPath !== dstPath) {
-      const dstStat = await import_fs_extra7.default.lstat(dstPath);
-      if (dstStat.isSymbolicLink()) {
-        const linkTarget = await import_fs_extra7.default.readlink(dstPath);
-        const resolvedTarget = import_path3.default.resolve(import_path3.default.dirname(dstPath), linkTarget);
-        isStale = resolvedTarget !== import_path3.default.resolve(srcPath);
-      } else {
-        isStale = true;
-      }
-    }
-    const status = {
-      ext,
-      installed: true,
-      stale: isStale
-    };
-    extensionStatuses.push(status);
-    if (isStale) {
-      staleExtensions.push(status);
-    }
-  }
-  const managedIds = new Set(MANAGED_EXTENSIONS.map((e) => e.id));
-  for (const name of installedExtNames) {
-    if (!managedIds.has(name)) {
-      orphanedExtensions.push(name);
-    }
-  }
-  const installedPkgIds = getInstalledPiPackages();
-  const packageStatuses = [];
-  const missingPackages = [];
-  for (const pkg of MANAGED_PACKAGES) {
-    const isInstalled = installedPkgIds.includes(pkg.id);
-    const status = { pkg, installed: isInstalled };
-    packageStatuses.push(status);
-    if (!isInstalled) {
-      missingPackages.push(status);
-    }
-  }
-  const allRequiredPresent = missingExtensions.every((s) => !s.ext.required) && staleExtensions.every((s) => !s.ext.required) && missingPackages.every((s) => !s.pkg.required);
-  const allPresent = missingExtensions.length === 0 && staleExtensions.length === 0 && orphanedExtensions.length === 0 && missingPackages.length === 0;
-  return {
-    extensions: extensionStatuses,
-    packages: packageStatuses,
-    missingExtensions,
-    staleExtensions,
-    orphanedExtensions,
-    missingPackages,
-    allRequiredPresent,
-    allPresent
-  };
-}
-function renderPiRuntimePlan(plan) {
-  console.log(kleur_default.bold("\n  Pi Runtime"));
-  console.log(kleur_default.dim("  " + "-".repeat(50)));
-  const extTotal = plan.extensions.length;
-  const extOk = plan.extensions.filter((s) => s.installed && !s.stale).length;
-  console.log(kleur_default.dim(`  Extensions: ${extOk}/${extTotal} up-to-date`));
-  if (plan.missingExtensions.length > 0) {
-    const names = plan.missingExtensions.map((s) => s.ext.displayName).join(", ");
-    console.log(kleur_default.yellow(`  Missing:    ${names}`));
-  }
-  if (plan.staleExtensions.length > 0) {
-    const names = plan.staleExtensions.map((s) => s.ext.displayName).join(", ");
-    console.log(kleur_default.yellow(`  Stale:      ${names}`));
-  }
-  if (plan.orphanedExtensions.length > 0) {
-    const names = plan.orphanedExtensions.join(", ");
-    console.log(kleur_default.red(`  Orphaned:   ${names} (will remove)`));
-  }
-  const pkgTotal = plan.packages.length;
-  const pkgOk = plan.packages.filter((s) => s.installed).length;
-  console.log(kleur_default.dim(`  Packages:   ${pkgOk}/${pkgTotal} installed`));
-  if (plan.missingPackages.length > 0) {
-    const names = plan.missingPackages.map((s) => s.pkg.displayName).join(", ");
-    console.log(kleur_default.yellow(`  Missing:    ${names}`));
-  }
-  console.log(kleur_default.dim("  " + "-".repeat(50)));
-  if (plan.allPresent) {
-    console.log(t.success("  \u2713 All extensions and packages present.\n"));
-  } else if (plan.allRequiredPresent) {
-    console.log(t.success("  \u2713 All required items present."));
-    const optionalMissing = [
-      ...plan.missingExtensions.filter((s) => !s.ext.required),
-      ...plan.missingPackages.filter((s) => !s.pkg.required)
-    ];
-    if (optionalMissing.length > 0) {
-      const names = optionalMissing.map(
-        (s) => "ext" in s ? s.ext.displayName : s.pkg.displayName
-      ).join(", ");
-      console.log(kleur_default.dim(`  \u25CB Optional not installed: ${names}
-`));
-    } else {
-      console.log("");
-    }
-  } else {
-    console.log(kleur_default.yellow("  \u26A0 Missing required items.\n"));
-  }
-}
-function mergePiSyncResults(base, incoming) {
-  return {
-    extensionsAdded: [...base.extensionsAdded, ...incoming.extensionsAdded],
-    extensionsUpdated: [...base.extensionsUpdated, ...incoming.extensionsUpdated],
-    extensionsRemoved: [...base.extensionsRemoved, ...incoming.extensionsRemoved],
-    packagesInstalled: [...base.packagesInstalled, ...incoming.packagesInstalled],
-    failed: [...base.failed, ...incoming.failed]
-  };
-}
-async function ensureCorePackageSymlink(coreSrcDir, projectRoot, dryRun, log) {
-  if (!await import_fs_extra7.default.pathExists(coreSrcDir)) return "missing-source";
-  const extensionsDir = import_path3.default.join(projectRoot, ".xtrm", "extensions");
-  const nodeModulesDir = import_path3.default.join(extensionsDir, "node_modules", "@xtrm");
-  const symlinkPath = import_path3.default.join(nodeModulesDir, "pi-core");
-  const expectedTarget = import_path3.default.resolve(coreSrcDir);
-  const existing = await import_fs_extra7.default.lstat(symlinkPath).catch(() => null);
-  if (existing) {
-    if (existing.isSymbolicLink()) {
-      const currentLinkTarget = await import_fs_extra7.default.readlink(symlinkPath);
-      const resolvedTarget = import_path3.default.resolve(import_path3.default.dirname(symlinkPath), currentLinkTarget);
-      if (resolvedTarget === expectedTarget) {
-        return "ok";
-      }
-    }
-    if (dryRun) {
-      log?.(kleur_default.dim("[DRY RUN] would repair @xtrm/pi-core symlink target"));
-      return "would-repair";
-    }
-    await import_fs_extra7.default.remove(symlinkPath);
-    await import_fs_extra7.default.ensureDir(nodeModulesDir);
-    const relTarget2 = import_path3.default.relative(nodeModulesDir, coreSrcDir);
-    await import_fs_extra7.default.symlink(relTarget2, symlinkPath);
-    log?.(kleur_default.dim("Repaired @xtrm/pi-core symlink \u2192 .xtrm/extensions/node_modules/@xtrm/pi-core"));
-    return "repaired";
-  }
-  if (dryRun) {
-    log?.(kleur_default.dim("[DRY RUN] would create @xtrm/pi-core symlink"));
-    return "would-create";
-  }
-  await import_fs_extra7.default.ensureDir(nodeModulesDir);
-  const relTarget = import_path3.default.relative(nodeModulesDir, coreSrcDir);
-  await import_fs_extra7.default.symlink(relTarget, symlinkPath);
-  log?.(kleur_default.dim("Created @xtrm/pi-core symlink \u2192 .xtrm/extensions/node_modules/@xtrm/pi-core"));
-  return "created";
-}
-async function remediateStalePiMcpAdapterOverride(dryRun, log) {
-  const stat = await import_fs_extra7.default.lstat(PI_MCP_ADAPTER_OVERRIDE_DIR).catch(() => null);
-  if (!stat) {
-    return {
-      path: PI_MCP_ADAPTER_OVERRIDE_DIR,
-      found: false,
-      stale: false,
-      remediated: false
-    };
-  }
-  if (stat.isSymbolicLink()) {
-    return {
-      path: PI_MCP_ADAPTER_OVERRIDE_DIR,
-      found: true,
-      stale: false,
-      remediated: false
-    };
-  }
-  const hasRequiredEntry = await import_fs_extra7.default.pathExists(import_path3.default.join(PI_MCP_ADAPTER_OVERRIDE_DIR, PI_MCP_ADAPTER_REQUIRED_ENTRY));
-  if (stat.isDirectory() && hasRequiredEntry) {
-    return {
-      path: PI_MCP_ADAPTER_OVERRIDE_DIR,
-      found: true,
-      stale: false,
-      remediated: false
-    };
-  }
-  const reason = stat.isDirectory() ? `missing ${PI_MCP_ADAPTER_REQUIRED_ENTRY}` : "not a directory/symlink";
-  if (dryRun) {
-    log?.(kleur_default.dim(`[DRY RUN] would remove stale pi-mcp-adapter override (${reason})`));
-    return {
-      path: PI_MCP_ADAPTER_OVERRIDE_DIR,
-      found: true,
-      stale: true,
-      remediated: false,
-      reason
-    };
-  }
-  await import_fs_extra7.default.remove(PI_MCP_ADAPTER_OVERRIDE_DIR);
-  log?.(kleur_default.dim(`Removed stale pi-mcp-adapter override (${reason})`));
-  return {
-    path: PI_MCP_ADAPTER_OVERRIDE_DIR,
-    found: true,
-    stale: true,
-    remediated: true,
-    reason
-  };
-}
-function isXtrmExtensionsSetting(entry) {
-  const normalizedEntry = entry.replaceAll("\\", "/").replace(/\/$/, "");
-  return normalizedEntry === PROJECT_EXTENSIONS_ENTRY || normalizedEntry === ".xtrm/extensions";
-}
-async function cleanupLegacyProjectExtensionCopies(projectRoot, dryRun, log) {
-  const piSettingsPath = import_path3.default.join(projectRoot, ".pi", "settings.json");
-  let existingSettings = {};
-  try {
-    existingSettings = await import_fs_extra7.default.readJson(piSettingsPath);
-  } catch {
-    return { removed: [], failed: [] };
-  }
-  const pointsToXtrmExtensions = (existingSettings.extensions ?? []).some(isXtrmExtensionsSetting);
-  if (!pointsToXtrmExtensions) return { removed: [], failed: [] };
-  const legacyExtensionsDir = import_path3.default.join(projectRoot, ".pi", "extensions");
-  if (!await import_fs_extra7.default.pathExists(legacyExtensionsDir)) return { removed: [], failed: [] };
-  const removed = [];
-  const failed = [];
-  for (const ext of MANAGED_EXTENSIONS) {
-    const legacyExtPath = import_path3.default.join(legacyExtensionsDir, ext.id);
-    const legacyStat = await import_fs_extra7.default.lstat(legacyExtPath).catch(() => null);
-    if (!legacyStat || legacyStat.isSymbolicLink() || !legacyStat.isDirectory()) {
-      continue;
-    }
-    if (dryRun) {
-      log?.(kleur_default.dim(`[DRY RUN] - .pi/extensions/${ext.id} (legacy copy)`));
-      continue;
-    }
-    try {
-      await import_fs_extra7.default.remove(legacyExtPath);
-      removed.push(ext.id);
-      log?.(kleur_default.dim(`Removed legacy .pi/extensions/${ext.id}`));
-    } catch (err) {
-      failed.push(ext.id);
-      log?.(kleur_default.red(`\u2717 Failed to remove legacy .pi/extensions/${ext.id}: ${err}`));
-    }
-  }
-  return { removed, failed };
-}
-async function updatePiSettings(projectRoot, dryRun, log) {
-  const piSettingsPath = import_path3.default.join(projectRoot, ".pi", "settings.json");
-  if (dryRun) {
-    log?.(kleur_default.dim(`[DRY RUN] would update .pi/settings.json`));
-    return;
-  }
-  let existingSettings = {};
-  try {
-    existingSettings = await import_fs_extra7.default.readJson(piSettingsPath);
-  } catch {
-  }
-  const existingPackages = (existingSettings.packages ?? []).filter(
-    (p) => !p.startsWith("./extensions/")
-  );
-  await import_fs_extra7.default.ensureDir(import_path3.default.join(projectRoot, ".pi"));
-  await import_fs_extra7.default.writeJson(piSettingsPath, {
-    ...existingSettings,
-    extensions: [PROJECT_EXTENSIONS_ENTRY],
-    skills: [PROJECT_SKILLS_ENTRY],
-    packages: existingPackages
-  }, { spaces: 2 });
-  log?.(kleur_default.dim(`Updated .pi/settings.json \u2192 .xtrm/extensions + .xtrm/skills/active/pi`));
-}
-async function executePiSync(plan, sourceDir, targetDir, opts = {}) {
-  const {
-    dryRun = false,
-    isGlobal = false,
-    projectRoot,
-    removeOrphaned = true,
-    log = (msg) => console.log(kleur_default.dim(`    ${msg}`))
-  } = opts;
-  const result = {
-    extensionsAdded: [],
-    extensionsUpdated: [],
-    extensionsRemoved: [],
-    packagesInstalled: [],
-    failed: []
-  };
-  if (!dryRun) {
-    await import_fs_extra7.default.ensureDir(targetDir);
-  }
-  const toSync = [...plan.missingExtensions, ...plan.staleExtensions];
-  for (const status of toSync) {
-    const { ext } = status;
-    const srcPath = import_path3.default.join(sourceDir, ext.id);
-    const dstPath = import_path3.default.join(targetDir, ext.id);
-    if (dryRun) {
-      log(`[DRY RUN] ${status.installed ? "\u21BB" : "+"} ${ext.displayName}`);
-      continue;
-    }
-    try {
-      await import_fs_extra7.default.remove(dstPath);
-      const relTarget = import_path3.default.relative(targetDir, srcPath);
-      await import_fs_extra7.default.symlink(relTarget, dstPath);
-      if (status.installed) {
-        result.extensionsUpdated.push(ext.id);
-        log(`\u21BB ${ext.displayName} (symlinked)`);
-      } else {
-        result.extensionsAdded.push(ext.id);
-        log(`+ ${ext.displayName} (symlinked)`);
-      }
-    } catch (err) {
-      result.failed.push(ext.id);
-      log(kleur_default.red(`\u2717 ${ext.displayName}: ${err}`));
-    }
-  }
-  if (removeOrphaned && plan.orphanedExtensions.length > 0) {
-    for (const orphanId of plan.orphanedExtensions) {
-      const orphanPath = import_path3.default.join(targetDir, orphanId);
-      if (dryRun) {
-        log(kleur_default.red(`[DRY RUN] - ${orphanId} (orphaned)`));
-        continue;
-      }
-      try {
-        await import_fs_extra7.default.remove(orphanPath);
-        result.extensionsRemoved.push(orphanId);
-        log(kleur_default.red(`- ${orphanId} (orphaned)`));
-      } catch (err) {
-        result.failed.push(orphanId);
-        log(kleur_default.red(`\u2717 ${orphanId}: ${err}`));
-      }
-    }
-  }
-  for (const status of plan.missingPackages) {
-    const { pkg } = status;
-    const installArgs = isGlobal ? ["install", pkg.id] : ["install", pkg.id, "-l"];
-    if (dryRun) {
-      log(`[DRY RUN] pi ${installArgs.join(" ")}`);
-      continue;
-    }
-    try {
-      const r = (0, import_child_process2.spawnSync)("pi", installArgs, { stdio: "pipe", encoding: "utf8" });
-      if (r.status === 0) {
-        result.packagesInstalled.push(pkg.id);
-        log(`${sym.ok} ${pkg.displayName}`);
-      } else {
-        result.failed.push(pkg.id);
-        log(kleur_default.yellow(`\u26A0 ${pkg.displayName} \u2014 install failed`));
-      }
-    } catch (err) {
-      result.failed.push(pkg.id);
-      log(kleur_default.red(`\u2717 ${pkg.displayName}: ${err}`));
-    }
-  }
-  return result;
-}
-async function runPiRuntimeSync(opts = {}) {
-  const { dryRun = false, isGlobal = false, projectRoot } = opts;
-  const pkgRoot = resolvePkgRoot();
-  const sourceDir = import_path3.default.join(pkgRoot, ".xtrm", "extensions");
-  const resolvedProjectRoot = projectRoot || process.cwd();
-  const log = (msg) => console.log(kleur_default.dim(`    ${msg}`));
-  const emptyResult = {
-    extensionsAdded: [],
-    extensionsUpdated: [],
-    extensionsRemoved: [],
-    packagesInstalled: [],
-    failed: []
-  };
-  const result = { ...emptyResult };
-  if (!await import_fs_extra7.default.pathExists(sourceDir)) {
-    console.log(kleur_default.dim("\n  Managed extensions: skipped (not bundled in npm package)\n"));
-    return result;
-  }
-  const staleOverride = await remediateStalePiMcpAdapterOverride(dryRun, log);
-  if (staleOverride.remediated) {
-    result.extensionsRemoved.push("pi-mcp-adapter");
-  }
-  if (isGlobal) {
-    const targetDir = import_path3.default.join(PI_AGENT_DIR, "extensions");
-    const plan = await inventoryPiRuntime(sourceDir, targetDir);
-    renderPiRuntimePlan(plan);
-    if (plan.allPresent) return result;
-    const synced = await executePiSync(plan, sourceDir, targetDir, {
-      dryRun,
-      isGlobal: true,
-      removeOrphaned: true
-    });
-    return mergePiSyncResults(result, synced);
-  }
-  const installedPkgIds = getInstalledPiPackages();
-  const packageStatuses = [];
-  const missingPackages = [];
-  for (const pkg of MANAGED_PACKAGES) {
-    const isInstalled = installedPkgIds.includes(pkg.id);
-    const status = { pkg, installed: isInstalled };
-    packageStatuses.push(status);
-    if (!isInstalled) missingPackages.push(status);
-  }
-  console.log(kleur_default.bold("\n  Pi Runtime"));
-  console.log(kleur_default.dim("  " + "-".repeat(50)));
-  console.log(kleur_default.dim(`  Extensions: via .xtrm/extensions (settings.json)`));
-  const pkgOk = packageStatuses.filter((s) => s.installed).length;
-  console.log(kleur_default.dim(`  Packages:   ${pkgOk}/${packageStatuses.length} installed`));
-  if (missingPackages.length > 0) {
-    const names = missingPackages.map((s) => s.pkg.displayName).join(", ");
-    console.log(kleur_default.yellow(`  Missing:    ${names}`));
-  }
-  console.log(kleur_default.dim("  " + "-".repeat(50)));
-  const legacyCleanup = await cleanupLegacyProjectExtensionCopies(resolvedProjectRoot, dryRun, log);
-  result.extensionsRemoved.push(...legacyCleanup.removed);
-  result.failed.push(...legacyCleanup.failed);
-  for (const status of missingPackages) {
-    const { pkg } = status;
-    if (dryRun) {
-      log(`[DRY RUN] pi install ${pkg.id} -l`);
-      continue;
-    }
-    try {
-      const r = (0, import_child_process2.spawnSync)("pi", ["install", pkg.id, "-l"], { stdio: "pipe", encoding: "utf8" });
-      if (r.status === 0) {
-        result.packagesInstalled.push(pkg.id);
-        log(`${sym.ok} ${pkg.displayName}`);
-      } else {
-        result.failed.push(pkg.id);
-        log(kleur_default.yellow(`\u26A0 ${pkg.displayName} \u2014 install failed`));
-      }
-    } catch (err) {
-      result.failed.push(pkg.id);
-      log(kleur_default.red(`\u2717 ${pkg.displayName}: ${err}`));
-    }
-  }
-  const skillsRoot = resolveSkillsRoot(resolvedProjectRoot);
-  if (await import_fs_extra7.default.pathExists(import_path3.default.join(skillsRoot, "default"))) {
-    const invariantViolations = await validateSkillsInvariants(skillsRoot);
-    if (invariantViolations.length > 0) {
-      const summary = invariantViolations.map((violation) => `${violation.code}: ${violation.message}`).join("; ");
-      throw new Error(`Skills invariants failed. ${summary}`);
-    }
-    if (!dryRun) {
-      await rebuildRuntimeActiveView("pi", skillsRoot);
-    }
-  }
-  await updatePiSettings(resolvedProjectRoot, dryRun, log);
-  await ensureCorePackageSymlink(import_path3.default.join(sourceDir, "core"), resolvedProjectRoot, dryRun, log);
-  const requiredFailed = missingPackages.filter(
-    (s) => s.pkg.required && result.failed.includes(s.pkg.id)
-  );
-  if (missingPackages.length === 0 || result.failed.length === 0) {
-    console.log(t.success("  \u2713 All required items present.\n"));
-  } else if (requiredFailed.length === 0) {
-    console.log(t.success("  \u2713 All required items present.\n"));
-  } else {
-    console.log(kleur_default.yellow("  \u26A0 Missing required items.\n"));
-  }
-  return result;
-}
-
 // src/core/skills-scaffold.ts
-var import_path4 = __toESM(require("path"), 1);
-var import_fs_extra8 = __toESM(require_lib(), 1);
 async function ensureSkillsSymlink(linkPath, symlinkTarget, label) {
-  const existing = await import_fs_extra8.default.lstat(linkPath).catch(() => null);
+  const existing = await import_fs_extra7.default.lstat(linkPath).catch(() => null);
   if (existing) {
     if (existing.isSymbolicLink()) {
-      const current = await import_fs_extra8.default.readlink(linkPath);
+      const current = await import_fs_extra7.default.readlink(linkPath);
       if (current === symlinkTarget) {
         console.log(kleur_default.dim(`  \u2713 ${label} symlink already in place`));
         return;
       }
-      await import_fs_extra8.default.remove(linkPath);
+      await import_fs_extra7.default.remove(linkPath);
     } else {
       if (label === ".claude/skills") {
         console.log(kleur_default.yellow("  \u26A0 .claude/skills is a runtime-managed read-only view; direct writes are unsupported."));
         console.log(kleur_default.yellow("    Move custom skills to .xtrm/skills/default or .xtrm/skills/{optional,user}/packs/* and rebuild."));
       }
-      await import_fs_extra8.default.remove(linkPath);
+      await import_fs_extra7.default.remove(linkPath);
       console.log(kleur_default.yellow(`  \u26A0 ${label} was a real path \u2014 replaced with managed symlink`));
     }
   }
-  await import_fs_extra8.default.mkdirp(import_path4.default.dirname(linkPath));
-  await import_fs_extra8.default.symlink(symlinkTarget, linkPath);
+  await import_fs_extra7.default.mkdirp(import_path3.default.dirname(linkPath));
+  await import_fs_extra7.default.symlink(symlinkTarget, linkPath);
   console.log(`${kleur_default.green("  \u2713")} ${label} \u2192 ${symlinkTarget}`);
 }
 async function ensureAgentsSkillsSymlink(projectRoot) {
   const skillsRoot = resolveSkillsRoot(projectRoot);
-  if (!await import_fs_extra8.default.pathExists(import_path4.default.join(skillsRoot, "default"))) {
+  if (!await import_fs_extra7.default.pathExists(import_path3.default.join(skillsRoot, "default"))) {
     return {
       activatedClaudeSkills: 0,
       activatedPiSkills: 0
@@ -44523,12 +44054,12 @@ async function ensureAgentsSkillsSymlink(projectRoot) {
   const activatedClaudeSkills = materializedViews.find((view) => view.runtime === "claude")?.discoveredSkillCount ?? 0;
   const activatedPiSkills = materializedViews.find((view) => view.runtime === "pi")?.discoveredSkillCount ?? 0;
   await ensureSkillsSymlink(
-    import_path4.default.join(projectRoot, ".claude", "skills"),
-    import_path4.default.join("..", ".xtrm", "skills", "active", "claude"),
+    import_path3.default.join(projectRoot, ".claude", "skills"),
+    import_path3.default.join("..", ".xtrm", "skills", "active", "claude"),
     ".claude/skills"
   );
-  const agentsSkillsPath = import_path4.default.join(projectRoot, ".agents", "skills");
-  if (await import_fs_extra8.default.pathExists(agentsSkillsPath)) {
+  const agentsSkillsPath = import_path3.default.join(projectRoot, ".agents", "skills");
+  if (await import_fs_extra7.default.pathExists(agentsSkillsPath)) {
     console.log(kleur_default.dim("  \u25CB .agents/skills is deprecated; runtime skills are generated under .xtrm/skills/active/*"));
   }
   return {
@@ -44652,28 +44183,13 @@ async function launchWorktreeSession(opts) {
   \u2713 Worktree ready \u2014 launching ${runtime}...
 `));
   if (runtime === "pi") {
-    const projectPiDir = import_node_path5.default.join(mainRepoRoot, ".pi");
-    const worktreePiDir = import_node_path5.default.join(worktreePath, ".pi");
-    if ((0, import_node_fs.existsSync)(projectPiDir) && !(0, import_node_fs.existsSync)(worktreePiDir)) {
-      try {
-        (0, import_node_fs.symlinkSync)(projectPiDir, worktreePiDir);
-      } catch {
-      }
-    }
-    const projectPiNpmDir = import_node_path5.default.join(projectPiDir, "npm");
-    const worktreePiNpmDir = import_node_path5.default.join(worktreePiDir, "npm");
+    const projectPiNpmDir = import_node_path5.default.join(mainRepoRoot, ".pi", "npm");
+    const worktreePiNpmDir = import_node_path5.default.join(worktreePath, ".pi", "npm");
     if ((0, import_node_fs.existsSync)(projectPiNpmDir) && !(0, import_node_fs.existsSync)(worktreePiNpmDir)) {
       try {
         (0, import_node_fs.symlinkSync)(projectPiNpmDir, worktreePiNpmDir);
       } catch {
       }
-    }
-    const coreExtDir = import_node_path5.default.join(worktreePath, ".xtrm", "extensions", "core");
-    try {
-      await ensureCorePackageSymlink(coreExtDir, worktreePath, false);
-    } catch (error48) {
-      const message = error48 instanceof Error ? error48.message : String(error48);
-      console.log(kleur_default.dim(`  warning: could not ensure @xtrm/pi-core symlink (${message})`));
     }
   }
   if (runtime === "claude") {
@@ -44753,7 +44269,7 @@ async function confirmDestructiveAction(opts) {
 }
 
 // src/core/machine-bootstrap.ts
-var import_child_process3 = require("child_process");
+var import_child_process2 = require("child_process");
 var OFFICIAL_CLAUDE_PLUGINS = ["serena", "context7"];
 var OFFICIAL_MARKETPLACE = "claude-plugins-official";
 var MANAGED_DEPS = [
@@ -44859,7 +44375,7 @@ var MANAGED_DEPS = [
   }
 ];
 function checkDep(dep) {
-  const result = (0, import_child_process3.spawnSync)(dep.cli, [dep.versionFlag], {
+  const result = (0, import_child_process2.spawnSync)(dep.cli, [dep.versionFlag], {
     encoding: "utf8",
     stdio: "pipe",
     timeout: 5e3
@@ -44946,7 +44462,7 @@ function executeBootstrap(plan, opts = {}) {
     for (const step of steps) {
       const cmd = step.sudo && process.platform !== "darwin" ? "sudo" : step.cmd;
       const args = step.sudo && process.platform !== "darwin" ? [step.cmd, ...step.args] : step.args;
-      const r = (0, import_child_process3.spawnSync)(cmd, args, { stdio: "inherit" });
+      const r = (0, import_child_process2.spawnSync)(cmd, args, { stdio: "inherit" });
       if (r.status !== 0) {
         ok = false;
         break;
@@ -44997,7 +44513,7 @@ function normalizePluginName(name) {
   return atIndex === -1 ? trimmed : trimmed.slice(0, atIndex);
 }
 function readInstalledOfficialPlugins() {
-  const listResult = (0, import_child_process3.spawnSync)("claude", ["plugin", "list", "--json"], {
+  const listResult = (0, import_child_process2.spawnSync)("claude", ["plugin", "list", "--json"], {
     encoding: "utf8",
     stdio: "pipe",
     timeout: 1e4
@@ -45025,14 +44541,14 @@ function readInstalledOfficialPlugins() {
   return installedNames;
 }
 function ensureOfficialMarketplace() {
-  const listResult = (0, import_child_process3.spawnSync)("claude", ["plugin", "marketplace", "list"], {
+  const listResult = (0, import_child_process2.spawnSync)("claude", ["plugin", "marketplace", "list"], {
     encoding: "utf8",
     stdio: "pipe",
     timeout: 1e4
   });
   const output = listResult.stdout ?? "";
   if (output.includes(OFFICIAL_MARKETPLACE)) return;
-  (0, import_child_process3.spawnSync)("claude", [
+  (0, import_child_process2.spawnSync)("claude", [
     "plugin",
     "marketplace",
     "add",
@@ -45040,12 +44556,12 @@ function ensureOfficialMarketplace() {
   ], { stdio: "inherit", timeout: 12e4 });
 }
 function tryInstallOfficialPlugin(pluginName) {
-  const directInstall = (0, import_child_process3.spawnSync)("claude", ["plugin", "install", pluginName, "--scope", "user"], { stdio: "inherit" });
+  const directInstall = (0, import_child_process2.spawnSync)("claude", ["plugin", "install", pluginName, "--scope", "user"], { stdio: "inherit" });
   if (directInstall.status === 0) {
     return true;
   }
   const marketplaceQualified = `${pluginName}@${OFFICIAL_MARKETPLACE}`;
-  const marketplaceInstall = (0, import_child_process3.spawnSync)("claude", ["plugin", "install", marketplaceQualified, "--scope", "user"], { stdio: "inherit" });
+  const marketplaceInstall = (0, import_child_process2.spawnSync)("claude", ["plugin", "install", marketplaceQualified, "--scope", "user"], { stdio: "inherit" });
   return marketplaceInstall.status === 0;
 }
 function ensureOfficialPlugins(dryRun) {
@@ -45104,9 +44620,9 @@ function getProjectSettingsPath(repoRoot) {
   return import_node_path6.default.join(repoRoot, ".claude", "settings.json");
 }
 function hasXtrmHookWiring(settingsPath) {
-  if (!import_fs_extra9.default.existsSync(settingsPath)) return false;
+  if (!import_fs_extra8.default.existsSync(settingsPath)) return false;
   try {
-    const data = import_fs_extra9.default.readJsonSync(settingsPath);
+    const data = import_fs_extra8.default.readJsonSync(settingsPath);
     const groups = Object.values(data.hooks ?? {});
     for (const wrappers of groups) {
       for (const wrapper of wrappers) {
@@ -45220,6 +44736,620 @@ var import_fs_extra11 = __toESM(require_lib(), 1);
 var import_path5 = __toESM(require("path"), 1);
 var import_node_child_process3 = require("child_process");
 var import_node_os2 = require("os");
+
+// src/core/pi-runtime.ts
+var import_child_process3 = require("child_process");
+var import_fs_extra9 = __toESM(require_lib(), 1);
+var import_path4 = __toESM(require("path"), 1);
+var import_node_os = require("os");
+function resolvePkgRoot() {
+  const candidates = [
+    import_path4.default.resolve(__dirname, "../.."),
+    import_path4.default.resolve(__dirname, "../../..")
+  ];
+  for (const c of candidates) {
+    if (import_fs_extra9.default.existsSync(import_path4.default.join(c, ".xtrm", "extensions"))) return c;
+  }
+  return candidates[0];
+}
+var PI_AGENT_DIR = process.env.PI_AGENT_DIR || import_path4.default.join((0, import_node_os.homedir)(), ".pi", "agent");
+var PI_MCP_ADAPTER_OVERRIDE_DIR = import_path4.default.join(PI_AGENT_DIR, "extensions", "pi-mcp-adapter");
+var PI_MCP_ADAPTER_REQUIRED_ENTRY = "commands.js";
+var PROJECT_EXTENSIONS_ENTRY = "../.xtrm/extensions";
+var PROJECT_SKILLS_ENTRY = "../.xtrm/skills/active/pi";
+var MANAGED_EXTENSIONS = [
+  { id: "core", displayName: "@xtrm/pi-core", isLibrary: true, required: true },
+  { id: "auto-session-name", displayName: "auto-session-name", required: false },
+  { id: "auto-update", displayName: "auto-update", required: false },
+  { id: "beads", displayName: "beads", required: true },
+  { id: "compact-header", displayName: "compact-header", required: false },
+  { id: "custom-footer", displayName: "custom-footer", required: true },
+  { id: "custom-provider-qwen-cli", displayName: "custom-provider-qwen-cli", required: false },
+  { id: "git-checkpoint", displayName: "git-checkpoint", required: false },
+  { id: "lsp-bootstrap", displayName: "lsp-bootstrap", required: false },
+  { id: "pi-serena-compact", displayName: "pi-serena-compact", required: false },
+  { id: "quality-gates", displayName: "quality-gates", required: true },
+  { id: "service-skills", displayName: "service-skills", required: false },
+  { id: "session-flow", displayName: "session-flow", required: true },
+  { id: "xtrm-loader", displayName: "xtrm-loader", required: true },
+  { id: "xtrm-ui", displayName: "xtrm-ui", required: true }
+];
+var MANAGED_PACKAGES = [
+  { id: "npm:pi-gitnexus", displayName: "pi-gitnexus", required: true },
+  { id: "npm:pi-serena-tools", displayName: "pi-serena-tools", required: true },
+  { id: "npm:@zenobius/pi-worktrees", displayName: "pi-worktrees", required: true },
+  { id: "npm:@robhowley/pi-structured-return", displayName: "pi-structured-return", required: true },
+  { id: "npm:@aliou/pi-guardrails", displayName: "pi-guardrails", required: false },
+  { id: "npm:@aliou/pi-processes", displayName: "pi-processes", required: true }
+];
+var ALWAYS_GLOBAL_INSTALL_PACKAGE_IDS = /* @__PURE__ */ new Set([
+  "npm:pi-gitnexus",
+  "npm:pi-serena-tools"
+]);
+function getInstalledPiPackages() {
+  const result = (0, import_child_process3.spawnSync)("pi", ["list"], { encoding: "utf8", stdio: "pipe" });
+  if (result.status !== 0) return [];
+  const output = result.stdout;
+  const packages = [];
+  for (const line of output.split("\n")) {
+    const match = line.match(/^\s+(npm:[\w\-/@]+)/);
+    if (match) packages.push(match[1]);
+  }
+  return packages.sort();
+}
+async function listInstalledExtensions(targetDir) {
+  if (!await import_fs_extra9.default.pathExists(targetDir)) return [];
+  const entries = await import_fs_extra9.default.readdir(targetDir, { withFileTypes: true });
+  return entries.filter((e) => e.isDirectory() || e.isSymbolicLink()).map((e) => e.name).sort();
+}
+async function inventoryPiRuntime(sourceDir, targetDir) {
+  const installedExtNames = await listInstalledExtensions(targetDir);
+  const extensionStatuses = [];
+  const missingExtensions = [];
+  const staleExtensions = [];
+  const orphanedExtensions = [];
+  for (const ext of MANAGED_EXTENSIONS) {
+    const srcPath = import_path4.default.join(sourceDir, ext.id);
+    const dstPath = import_path4.default.join(targetDir, ext.id);
+    const srcExists = await import_fs_extra9.default.pathExists(srcPath);
+    const dstExists = await import_fs_extra9.default.pathExists(dstPath);
+    if (!srcExists) {
+      continue;
+    }
+    if (!dstExists) {
+      const status2 = { ext, installed: false };
+      extensionStatuses.push(status2);
+      missingExtensions.push(status2);
+      continue;
+    }
+    let isStale = false;
+    if (srcPath !== dstPath) {
+      const dstStat = await import_fs_extra9.default.lstat(dstPath);
+      if (dstStat.isSymbolicLink()) {
+        const linkTarget = await import_fs_extra9.default.readlink(dstPath);
+        const resolvedTarget = import_path4.default.resolve(import_path4.default.dirname(dstPath), linkTarget);
+        isStale = resolvedTarget !== import_path4.default.resolve(srcPath);
+      } else {
+        isStale = true;
+      }
+    }
+    const status = {
+      ext,
+      installed: true,
+      stale: isStale
+    };
+    extensionStatuses.push(status);
+    if (isStale) {
+      staleExtensions.push(status);
+    }
+  }
+  const managedIds = new Set(MANAGED_EXTENSIONS.map((e) => e.id));
+  for (const name of installedExtNames) {
+    if (!managedIds.has(name)) {
+      orphanedExtensions.push(name);
+    }
+  }
+  const installedPkgIds = getInstalledPiPackages();
+  const packageStatuses = [];
+  const missingPackages = [];
+  for (const pkg of MANAGED_PACKAGES) {
+    const isInstalled = installedPkgIds.includes(pkg.id);
+    const status = { pkg, installed: isInstalled };
+    packageStatuses.push(status);
+    if (!isInstalled) {
+      missingPackages.push(status);
+    }
+  }
+  const allRequiredPresent = missingExtensions.every((s) => !s.ext.required) && staleExtensions.every((s) => !s.ext.required) && missingPackages.every((s) => !s.pkg.required);
+  const allPresent = missingExtensions.length === 0 && staleExtensions.length === 0 && orphanedExtensions.length === 0 && missingPackages.length === 0;
+  return {
+    extensions: extensionStatuses,
+    packages: packageStatuses,
+    missingExtensions,
+    staleExtensions,
+    orphanedExtensions,
+    missingPackages,
+    allRequiredPresent,
+    allPresent
+  };
+}
+function renderPiRuntimePlan(plan) {
+  console.log(kleur_default.bold("\n  Pi Runtime"));
+  console.log(kleur_default.dim("  " + "-".repeat(50)));
+  const extTotal = plan.extensions.length;
+  const extOk = plan.extensions.filter((s) => s.installed && !s.stale).length;
+  console.log(kleur_default.dim(`  Extensions: ${extOk}/${extTotal} up-to-date`));
+  if (plan.missingExtensions.length > 0) {
+    const names = plan.missingExtensions.map((s) => s.ext.displayName).join(", ");
+    console.log(kleur_default.yellow(`  Missing:    ${names}`));
+  }
+  if (plan.staleExtensions.length > 0) {
+    const names = plan.staleExtensions.map((s) => s.ext.displayName).join(", ");
+    console.log(kleur_default.yellow(`  Stale:      ${names}`));
+  }
+  if (plan.orphanedExtensions.length > 0) {
+    const names = plan.orphanedExtensions.join(", ");
+    console.log(kleur_default.red(`  Orphaned:   ${names} (will remove)`));
+  }
+  const pkgTotal = plan.packages.length;
+  const pkgOk = plan.packages.filter((s) => s.installed).length;
+  console.log(kleur_default.dim(`  Packages:   ${pkgOk}/${pkgTotal} installed`));
+  if (plan.missingPackages.length > 0) {
+    const names = plan.missingPackages.map((s) => s.pkg.displayName).join(", ");
+    console.log(kleur_default.yellow(`  Missing:    ${names}`));
+  }
+  console.log(kleur_default.dim("  " + "-".repeat(50)));
+  if (plan.allPresent) {
+    console.log(t.success("  \u2713 All extensions and packages present.\n"));
+  } else if (plan.allRequiredPresent) {
+    console.log(t.success("  \u2713 All required items present."));
+    const optionalMissing = [
+      ...plan.missingExtensions.filter((s) => !s.ext.required),
+      ...plan.missingPackages.filter((s) => !s.pkg.required)
+    ];
+    if (optionalMissing.length > 0) {
+      const names = optionalMissing.map(
+        (s) => "ext" in s ? s.ext.displayName : s.pkg.displayName
+      ).join(", ");
+      console.log(kleur_default.dim(`  \u25CB Optional not installed: ${names}
+`));
+    } else {
+      console.log("");
+    }
+  } else {
+    console.log(kleur_default.yellow("  \u26A0 Missing required items.\n"));
+  }
+}
+function mergePiSyncResults(base, incoming) {
+  return {
+    extensionsAdded: [...base.extensionsAdded, ...incoming.extensionsAdded],
+    extensionsUpdated: [...base.extensionsUpdated, ...incoming.extensionsUpdated],
+    extensionsRemoved: [...base.extensionsRemoved, ...incoming.extensionsRemoved],
+    packagesInstalled: [...base.packagesInstalled, ...incoming.packagesInstalled],
+    failed: [...base.failed, ...incoming.failed]
+  };
+}
+function parseNpmPackageName(piPackageId) {
+  if (!piPackageId.startsWith("npm:")) return null;
+  const npmPackageName = piPackageId.slice(4).trim();
+  return npmPackageName.length > 0 ? npmPackageName : null;
+}
+async function isPackagePresentInPiAgent(agentDir, piPackageId) {
+  const npmPackageName = parseNpmPackageName(piPackageId);
+  if (!npmPackageName) return false;
+  const packageDir = import_path4.default.join(agentDir, "npm", "node_modules", npmPackageName);
+  return import_fs_extra9.default.pathExists(packageDir);
+}
+async function ensureAlwaysGlobalPiPackages(dryRun, log, agentDir = PI_AGENT_DIR, installRunner = (piPackageId) => {
+  const installResult = (0, import_child_process3.spawnSync)("pi", ["install", piPackageId], { stdio: "pipe", encoding: "utf8" });
+  return installResult.status;
+}) {
+  const installed = [];
+  const failed = [];
+  const packagesToEnsure = MANAGED_PACKAGES.filter((pkg) => ALWAYS_GLOBAL_INSTALL_PACKAGE_IDS.has(pkg.id));
+  for (const pkg of packagesToEnsure) {
+    if (await isPackagePresentInPiAgent(agentDir, pkg.id)) {
+      continue;
+    }
+    if (dryRun) {
+      log?.(`[DRY RUN] pi install ${pkg.id}`);
+      continue;
+    }
+    const installStatus = installRunner(pkg.id);
+    if (installStatus === 0) {
+      installed.push(pkg.id);
+      log?.(`${sym.ok} ${pkg.displayName} (global)`);
+      continue;
+    }
+    failed.push(pkg.id);
+    log?.(kleur_default.yellow(`\u26A0 ${pkg.displayName} \u2014 global install failed`));
+  }
+  return { installed, failed };
+}
+async function ensureCorePackageSymlink(coreSrcDir, projectRoot, dryRun, log) {
+  if (!await import_fs_extra9.default.pathExists(coreSrcDir)) return "missing-source";
+  const extensionsDir = import_path4.default.join(projectRoot, ".xtrm", "extensions");
+  const nodeModulesDir = import_path4.default.join(extensionsDir, "node_modules", "@xtrm");
+  const symlinkPath = import_path4.default.join(nodeModulesDir, "pi-core");
+  const expectedTarget = import_path4.default.resolve(coreSrcDir);
+  const existing = await import_fs_extra9.default.lstat(symlinkPath).catch(() => null);
+  if (existing) {
+    if (existing.isSymbolicLink()) {
+      const currentLinkTarget = await import_fs_extra9.default.readlink(symlinkPath);
+      const resolvedTarget = import_path4.default.resolve(import_path4.default.dirname(symlinkPath), currentLinkTarget);
+      if (resolvedTarget === expectedTarget) {
+        return "ok";
+      }
+    }
+    if (dryRun) {
+      log?.(kleur_default.dim("[DRY RUN] would repair @xtrm/pi-core symlink target"));
+      return "would-repair";
+    }
+    await import_fs_extra9.default.remove(symlinkPath);
+    await import_fs_extra9.default.ensureDir(nodeModulesDir);
+    const relTarget2 = import_path4.default.relative(nodeModulesDir, coreSrcDir);
+    await import_fs_extra9.default.symlink(relTarget2, symlinkPath);
+    log?.(kleur_default.dim("Repaired @xtrm/pi-core symlink \u2192 .xtrm/extensions/node_modules/@xtrm/pi-core"));
+    return "repaired";
+  }
+  if (dryRun) {
+    log?.(kleur_default.dim("[DRY RUN] would create @xtrm/pi-core symlink"));
+    return "would-create";
+  }
+  await import_fs_extra9.default.ensureDir(nodeModulesDir);
+  const relTarget = import_path4.default.relative(nodeModulesDir, coreSrcDir);
+  await import_fs_extra9.default.symlink(relTarget, symlinkPath);
+  log?.(kleur_default.dim("Created @xtrm/pi-core symlink \u2192 .xtrm/extensions/node_modules/@xtrm/pi-core"));
+  return "created";
+}
+async function remediateStalePiMcpAdapterOverride(dryRun, log) {
+  const stat = await import_fs_extra9.default.lstat(PI_MCP_ADAPTER_OVERRIDE_DIR).catch(() => null);
+  if (!stat) {
+    return {
+      path: PI_MCP_ADAPTER_OVERRIDE_DIR,
+      found: false,
+      stale: false,
+      remediated: false
+    };
+  }
+  if (stat.isSymbolicLink()) {
+    return {
+      path: PI_MCP_ADAPTER_OVERRIDE_DIR,
+      found: true,
+      stale: false,
+      remediated: false
+    };
+  }
+  const hasRequiredEntry = await import_fs_extra9.default.pathExists(import_path4.default.join(PI_MCP_ADAPTER_OVERRIDE_DIR, PI_MCP_ADAPTER_REQUIRED_ENTRY));
+  if (stat.isDirectory() && hasRequiredEntry) {
+    return {
+      path: PI_MCP_ADAPTER_OVERRIDE_DIR,
+      found: true,
+      stale: false,
+      remediated: false
+    };
+  }
+  const reason = stat.isDirectory() ? `missing ${PI_MCP_ADAPTER_REQUIRED_ENTRY}` : "not a directory/symlink";
+  if (dryRun) {
+    log?.(kleur_default.dim(`[DRY RUN] would remove stale pi-mcp-adapter override (${reason})`));
+    return {
+      path: PI_MCP_ADAPTER_OVERRIDE_DIR,
+      found: true,
+      stale: true,
+      remediated: false,
+      reason
+    };
+  }
+  await import_fs_extra9.default.remove(PI_MCP_ADAPTER_OVERRIDE_DIR);
+  log?.(kleur_default.dim(`Removed stale pi-mcp-adapter override (${reason})`));
+  return {
+    path: PI_MCP_ADAPTER_OVERRIDE_DIR,
+    found: true,
+    stale: true,
+    remediated: true,
+    reason
+  };
+}
+async function runPiLaunchPreflight(projectRoot, dryRun, log) {
+  const staleOverride = await remediateStalePiMcpAdapterOverride(dryRun, log);
+  const coreSymlinkStatus = await ensureCorePackageSymlink(
+    import_path4.default.join(projectRoot, ".xtrm", "extensions", "core"),
+    projectRoot,
+    dryRun,
+    log
+  );
+  return {
+    coreSymlinkStatus,
+    staleOverride
+  };
+}
+function isXtrmExtensionsSetting(entry) {
+  const normalizedEntry = entry.replaceAll("\\", "/").replace(/\/$/, "");
+  return normalizedEntry === PROJECT_EXTENSIONS_ENTRY || normalizedEntry === ".xtrm/extensions";
+}
+async function cleanupLegacyProjectExtensionCopies(projectRoot, dryRun, log) {
+  const piSettingsPath = import_path4.default.join(projectRoot, ".pi", "settings.json");
+  let existingSettings = {};
+  try {
+    existingSettings = await import_fs_extra9.default.readJson(piSettingsPath);
+  } catch {
+    return { removed: [], failed: [] };
+  }
+  const pointsToXtrmExtensions = (existingSettings.extensions ?? []).some(isXtrmExtensionsSetting);
+  if (!pointsToXtrmExtensions) return { removed: [], failed: [] };
+  const legacyExtensionsDir = import_path4.default.join(projectRoot, ".pi", "extensions");
+  if (!await import_fs_extra9.default.pathExists(legacyExtensionsDir)) return { removed: [], failed: [] };
+  const removed = [];
+  const failed = [];
+  for (const ext of MANAGED_EXTENSIONS) {
+    const legacyExtPath = import_path4.default.join(legacyExtensionsDir, ext.id);
+    const legacyStat = await import_fs_extra9.default.lstat(legacyExtPath).catch(() => null);
+    if (!legacyStat || legacyStat.isSymbolicLink() || !legacyStat.isDirectory()) {
+      continue;
+    }
+    if (dryRun) {
+      log?.(kleur_default.dim(`[DRY RUN] - .pi/extensions/${ext.id} (legacy copy)`));
+      continue;
+    }
+    try {
+      await import_fs_extra9.default.remove(legacyExtPath);
+      removed.push(ext.id);
+      log?.(kleur_default.dim(`Removed legacy .pi/extensions/${ext.id}`));
+    } catch (err) {
+      failed.push(ext.id);
+      log?.(kleur_default.red(`\u2717 Failed to remove legacy .pi/extensions/${ext.id}: ${err}`));
+    }
+  }
+  return { removed, failed };
+}
+async function updatePiSettings(projectRoot, dryRun, log) {
+  const piSettingsPath = import_path4.default.join(projectRoot, ".pi", "settings.json");
+  if (dryRun) {
+    log?.(kleur_default.dim(`[DRY RUN] would update .pi/settings.json`));
+    return;
+  }
+  let existingSettings = {};
+  try {
+    existingSettings = await import_fs_extra9.default.readJson(piSettingsPath);
+  } catch {
+  }
+  const existingPackages = (existingSettings.packages ?? []).filter(
+    (p) => !p.startsWith("./extensions/")
+  );
+  await import_fs_extra9.default.ensureDir(import_path4.default.join(projectRoot, ".pi"));
+  await import_fs_extra9.default.writeJson(piSettingsPath, {
+    ...existingSettings,
+    extensions: [],
+    // Empty = Pi uses default global path (~/.pi/agent/extensions/)
+    skills: [PROJECT_SKILLS_ENTRY],
+    packages: existingPackages
+  }, { spaces: 2 });
+  log?.(kleur_default.dim(`Updated .pi/settings.json \u2192 global extensions + .xtrm/skills/active/pi`));
+}
+async function executePiSync(plan, sourceDir, targetDir, opts = {}) {
+  const {
+    dryRun = false,
+    isGlobal = false,
+    projectRoot,
+    removeOrphaned = true,
+    log = (msg) => console.log(kleur_default.dim(`    ${msg}`))
+  } = opts;
+  const result = {
+    extensionsAdded: [],
+    extensionsUpdated: [],
+    extensionsRemoved: [],
+    packagesInstalled: [],
+    failed: []
+  };
+  if (!dryRun) {
+    await import_fs_extra9.default.ensureDir(targetDir);
+  }
+  const toSync = [...plan.missingExtensions, ...plan.staleExtensions];
+  for (const status of toSync) {
+    const { ext } = status;
+    const srcPath = import_path4.default.join(sourceDir, ext.id);
+    const dstPath = import_path4.default.join(targetDir, ext.id);
+    if (dryRun) {
+      log(`[DRY RUN] ${status.installed ? "\u21BB" : "+"} ${ext.displayName}`);
+      continue;
+    }
+    try {
+      await import_fs_extra9.default.remove(dstPath);
+      const relTarget = import_path4.default.relative(targetDir, srcPath);
+      await import_fs_extra9.default.symlink(relTarget, dstPath);
+      if (status.installed) {
+        result.extensionsUpdated.push(ext.id);
+        log(`\u21BB ${ext.displayName} (symlinked)`);
+      } else {
+        result.extensionsAdded.push(ext.id);
+        log(`+ ${ext.displayName} (symlinked)`);
+      }
+    } catch (err) {
+      result.failed.push(ext.id);
+      log(kleur_default.red(`\u2717 ${ext.displayName}: ${err}`));
+    }
+  }
+  if (removeOrphaned && plan.orphanedExtensions.length > 0) {
+    for (const orphanId of plan.orphanedExtensions) {
+      const orphanPath = import_path4.default.join(targetDir, orphanId);
+      if (dryRun) {
+        log(kleur_default.red(`[DRY RUN] - ${orphanId} (orphaned)`));
+        continue;
+      }
+      try {
+        await import_fs_extra9.default.remove(orphanPath);
+        result.extensionsRemoved.push(orphanId);
+        log(kleur_default.red(`- ${orphanId} (orphaned)`));
+      } catch (err) {
+        result.failed.push(orphanId);
+        log(kleur_default.red(`\u2717 ${orphanId}: ${err}`));
+      }
+    }
+  }
+  for (const status of plan.missingPackages) {
+    const { pkg } = status;
+    const installArgs = isGlobal ? ["install", pkg.id] : ["install", pkg.id, "-l"];
+    if (dryRun) {
+      log(`[DRY RUN] pi ${installArgs.join(" ")}`);
+      continue;
+    }
+    try {
+      const r = (0, import_child_process3.spawnSync)("pi", installArgs, { stdio: "pipe", encoding: "utf8" });
+      if (r.status === 0) {
+        result.packagesInstalled.push(pkg.id);
+        log(`${sym.ok} ${pkg.displayName}`);
+      } else {
+        result.failed.push(pkg.id);
+        log(kleur_default.yellow(`\u26A0 ${pkg.displayName} \u2014 install failed`));
+      }
+    } catch (err) {
+      result.failed.push(pkg.id);
+      log(kleur_default.red(`\u2717 ${pkg.displayName}: ${err}`));
+    }
+  }
+  return result;
+}
+async function ensurePiCoreResolution(repoRoot, dryRun = false, log = (msg) => console.log(kleur_default.dim(`    ${msg}`))) {
+  const repoExtDir = import_path4.default.join(repoRoot, ".xtrm", "extensions");
+  const coreDir = import_path4.default.join(repoExtDir, "core");
+  if (!await import_fs_extra9.default.pathExists(coreDir)) {
+    log("No .xtrm/extensions/core/ found \u2014 skipping pi-core resolution");
+    return { ok: false, created: false };
+  }
+  const nodeModulesDir = import_path4.default.join(repoExtDir, "node_modules", "@xtrm");
+  const symlinkPath = import_path4.default.join(nodeModulesDir, "pi-core");
+  const relativeTarget = import_path4.default.join("..", "..", "core");
+  if (dryRun) {
+    log("[DRY RUN] would create @xtrm/pi-core symlink");
+    return { ok: true, created: false };
+  }
+  try {
+    const existing = await import_fs_extra9.default.lstat(symlinkPath).catch(() => null);
+    if (existing) {
+      if (existing.isSymbolicLink()) {
+        const currentTarget = await import_fs_extra9.default.readlink(symlinkPath);
+        const resolvedTarget = import_path4.default.resolve(import_path4.default.dirname(symlinkPath), currentTarget);
+        if (resolvedTarget === import_path4.default.resolve(coreDir)) {
+          return { ok: true, created: false };
+        }
+      }
+      await import_fs_extra9.default.remove(symlinkPath);
+    }
+    await import_fs_extra9.default.ensureDir(nodeModulesDir);
+    await import_fs_extra9.default.symlink(relativeTarget, symlinkPath);
+    log("\u2713 @xtrm/pi-core symlink \u2192 .xtrm/extensions/node_modules/@xtrm/pi-core");
+    return { ok: true, created: true };
+  } catch (err) {
+    log(kleur_default.yellow(`\u26A0 @xtrm/pi-core symlink: ${err}`));
+    return { ok: false, created: false };
+  }
+}
+async function runPiRuntimeSync(opts = {}) {
+  const { dryRun = false, isGlobal = false, projectRoot } = opts;
+  const pkgRoot = resolvePkgRoot();
+  const sourceDir = import_path4.default.join(pkgRoot, ".xtrm", "extensions");
+  const resolvedProjectRoot = projectRoot || process.cwd();
+  const log = (msg) => console.log(kleur_default.dim(`    ${msg}`));
+  const emptyResult = {
+    extensionsAdded: [],
+    extensionsUpdated: [],
+    extensionsRemoved: [],
+    packagesInstalled: [],
+    failed: []
+  };
+  const result = { ...emptyResult };
+  if (!await import_fs_extra9.default.pathExists(sourceDir)) {
+    console.log(kleur_default.dim("\n  Managed extensions: skipped (not bundled in npm package)\n"));
+    return result;
+  }
+  const preflight = await runPiLaunchPreflight(resolvedProjectRoot, dryRun, log);
+  if (preflight.staleOverride.remediated) {
+    result.extensionsRemoved.push("pi-mcp-adapter");
+  }
+  if (isGlobal) {
+    const targetDir = import_path4.default.join(PI_AGENT_DIR, "extensions");
+    const plan = await inventoryPiRuntime(sourceDir, targetDir);
+    renderPiRuntimePlan(plan);
+    if (plan.allPresent) return result;
+    const synced = await executePiSync(plan, sourceDir, targetDir, {
+      dryRun,
+      isGlobal: true,
+      removeOrphaned: true
+    });
+    return mergePiSyncResults(result, synced);
+  }
+  await ensurePiCoreResolution(resolvedProjectRoot, dryRun, log);
+  const installedPkgIds = getInstalledPiPackages();
+  const packageStatuses = [];
+  const missingPackages = [];
+  for (const pkg of MANAGED_PACKAGES) {
+    const isInstalled = installedPkgIds.includes(pkg.id);
+    const status = { pkg, installed: isInstalled };
+    packageStatuses.push(status);
+    if (!isInstalled) missingPackages.push(status);
+  }
+  console.log(kleur_default.bold("\n  Pi Runtime"));
+  console.log(kleur_default.dim("  " + "-".repeat(50)));
+  console.log(kleur_default.dim(`  Extensions: .xtrm/extensions/ (auto-discovered)`));
+  const pkgOk = packageStatuses.filter((s) => s.installed).length;
+  console.log(kleur_default.dim(`  Packages:   ${pkgOk}/${packageStatuses.length} installed`));
+  if (missingPackages.length > 0) {
+    const names = missingPackages.map((s) => s.pkg.displayName).join(", ");
+    console.log(kleur_default.yellow(`  Missing:    ${names}`));
+  }
+  console.log(kleur_default.dim("  " + "-".repeat(50)));
+  const legacyCleanup = await cleanupLegacyProjectExtensionCopies(resolvedProjectRoot, dryRun, log);
+  result.extensionsRemoved.push(...legacyCleanup.removed);
+  result.failed.push(...legacyCleanup.failed);
+  for (const status of missingPackages) {
+    const { pkg } = status;
+    if (dryRun) {
+      log(`[DRY RUN] pi install ${pkg.id} -l`);
+      continue;
+    }
+    try {
+      const r = (0, import_child_process3.spawnSync)("pi", ["install", pkg.id, "-l"], { stdio: "pipe", encoding: "utf8" });
+      if (r.status === 0) {
+        result.packagesInstalled.push(pkg.id);
+        log(`${sym.ok} ${pkg.displayName}`);
+      } else {
+        result.failed.push(pkg.id);
+        log(kleur_default.yellow(`\u26A0 ${pkg.displayName} \u2014 install failed`));
+      }
+    } catch (err) {
+      result.failed.push(pkg.id);
+      log(kleur_default.red(`\u2717 ${pkg.displayName}: ${err}`));
+    }
+  }
+  const alwaysGlobalInstallResult = await ensureAlwaysGlobalPiPackages(dryRun, log);
+  result.packagesInstalled.push(...alwaysGlobalInstallResult.installed);
+  result.failed.push(...alwaysGlobalInstallResult.failed);
+  const skillsRoot = resolveSkillsRoot(resolvedProjectRoot);
+  if (await import_fs_extra9.default.pathExists(import_path4.default.join(skillsRoot, "default"))) {
+    const invariantViolations = await validateSkillsInvariants(skillsRoot);
+    if (invariantViolations.length > 0) {
+      const summary = invariantViolations.map((violation) => `${violation.code}: ${violation.message}`).join("; ");
+      throw new Error(`Skills invariants failed. ${summary}`);
+    }
+    if (!dryRun) {
+      await rebuildRuntimeActiveView("pi", skillsRoot);
+    }
+  }
+  await updatePiSettings(resolvedProjectRoot, dryRun, log);
+  const requiredFailed = missingPackages.filter(
+    (s) => s.pkg.required && result.failed.includes(s.pkg.id)
+  );
+  if (missingPackages.length === 0 || result.failed.length === 0) {
+    console.log(t.success("  \u2713 All required items present.\n"));
+  } else if (requiredFailed.length === 0) {
+    console.log(t.success("  \u2713 All required items present.\n"));
+  } else {
+    console.log(kleur_default.yellow("  \u26A0 Missing required items.\n"));
+  }
+  return result;
+}
+
+// src/commands/pi-install.ts
 var PI_AGENT_DIR2 = process.env.PI_AGENT_DIR || import_path5.default.join((0, import_node_os2.homedir)(), ".pi", "agent");
 function ensurePnpm(dryRun) {
   if (isPnpmInstalled()) {
@@ -46659,7 +46789,7 @@ var import_os4 = __toESM(require("os"), 1);
 var import_path11 = __toESM(require("path"), 1);
 var import_fs_extra18 = __toESM(require_lib(), 1);
 
-// node_modules/conf/dist/source/index.js
+// node_modules/.pnpm/conf@12.0.0/node_modules/conf/dist/source/index.js
 var import_node_util2 = require("util");
 var import_node_process6 = __toESM(require("process"), 1);
 var import_node_fs4 = __toESM(require("fs"), 1);
@@ -46667,7 +46797,7 @@ var import_node_path13 = __toESM(require("path"), 1);
 var import_node_crypto4 = __toESM(require("crypto"), 1);
 var import_node_assert = __toESM(require("assert"), 1);
 
-// ../node_modules/dot-prop/index.js
+// node_modules/.pnpm/dot-prop@8.0.2/node_modules/dot-prop/index.js
 var isObject2 = (value) => {
   const type = typeof value;
   return value !== null && (type === "object" || type === "function");
@@ -46882,7 +47012,7 @@ function hasProperty(object2, path36) {
   return true;
 }
 
-// ../node_modules/env-paths/index.js
+// node_modules/.pnpm/env-paths@3.0.0/node_modules/env-paths/index.js
 var import_node_path10 = __toESM(require("path"), 1);
 var import_node_os5 = __toESM(require("os"), 1);
 var import_node_process = __toESM(require("process"), 1);
@@ -46938,17 +47068,17 @@ function envPaths(name, { suffix = "nodejs" } = {}) {
   return linux(name);
 }
 
-// ../node_modules/atomically/dist/index.js
+// node_modules/.pnpm/atomically@2.1.1/node_modules/atomically/dist/index.js
 var import_node_events = require("events");
 var import_node_fs3 = require("fs");
 var import_node_path12 = __toESM(require("path"), 1);
 var import_node_stream = require("stream");
 
-// ../node_modules/stubborn-fs/dist/index.js
+// node_modules/.pnpm/stubborn-fs@2.0.0/node_modules/stubborn-fs/dist/index.js
 var import_node_fs2 = __toESM(require("fs"), 1);
 var import_node_util = require("util");
 
-// ../node_modules/stubborn-utils/dist/attemptify_async.js
+// node_modules/.pnpm/stubborn-utils@1.0.2/node_modules/stubborn-utils/dist/attemptify_async.js
 var attemptifyAsync = (fn, options) => {
   const { onError } = options;
   return function attemptified(...args) {
@@ -46957,7 +47087,7 @@ var attemptifyAsync = (fn, options) => {
 };
 var attemptify_async_default = attemptifyAsync;
 
-// ../node_modules/stubborn-utils/dist/attemptify_sync.js
+// node_modules/.pnpm/stubborn-utils@1.0.2/node_modules/stubborn-utils/dist/attemptify_sync.js
 var attemptifySync = (fn, options) => {
   const { onError } = options;
   return function attemptified(...args) {
@@ -46970,10 +47100,10 @@ var attemptifySync = (fn, options) => {
 };
 var attemptify_sync_default = attemptifySync;
 
-// ../node_modules/stubborn-utils/dist/constants.js
+// node_modules/.pnpm/stubborn-utils@1.0.2/node_modules/stubborn-utils/dist/constants.js
 var RETRY_INTERVAL = 250;
 
-// ../node_modules/stubborn-utils/dist/retryify_async.js
+// node_modules/.pnpm/stubborn-utils@1.0.2/node_modules/stubborn-utils/dist/retryify_async.js
 var retryifyAsync = (fn, options) => {
   const { isRetriable } = options;
   return function retryified(options2) {
@@ -46999,7 +47129,7 @@ var retryifyAsync = (fn, options) => {
 };
 var retryify_async_default = retryifyAsync;
 
-// ../node_modules/stubborn-utils/dist/retryify_sync.js
+// node_modules/.pnpm/stubborn-utils@1.0.2/node_modules/stubborn-utils/dist/retryify_sync.js
 var retryifySync = (fn, options) => {
   const { isRetriable } = options;
   return function retryified(options2) {
@@ -47022,10 +47152,10 @@ var retryifySync = (fn, options) => {
 };
 var retryify_sync_default = retryifySync;
 
-// ../node_modules/stubborn-fs/dist/constants.js
+// node_modules/.pnpm/stubborn-fs@2.0.0/node_modules/stubborn-fs/dist/constants.js
 var import_node_process2 = __toESM(require("process"), 1);
 
-// ../node_modules/stubborn-fs/dist/handlers.js
+// node_modules/.pnpm/stubborn-fs@2.0.0/node_modules/stubborn-fs/dist/handlers.js
 var Handlers = {
   /* API */
   isChangeErrorOk: (error48) => {
@@ -47059,7 +47189,7 @@ var Handlers = {
 };
 var handlers_default = Handlers;
 
-// ../node_modules/stubborn-fs/dist/constants.js
+// node_modules/.pnpm/stubborn-fs@2.0.0/node_modules/stubborn-fs/dist/constants.js
 var ATTEMPTIFY_CHANGE_ERROR_OPTIONS = {
   onError: handlers_default.onChangeError
 };
@@ -47071,7 +47201,7 @@ var RETRYIFY_OPTIONS = {
   isRetriable: handlers_default.isRetriableError
 };
 
-// ../node_modules/stubborn-fs/dist/index.js
+// node_modules/.pnpm/stubborn-fs@2.0.0/node_modules/stubborn-fs/dist/index.js
 var FS = {
   attempt: {
     /* ASYNC */
@@ -47117,7 +47247,7 @@ var FS = {
 };
 var dist_default = FS;
 
-// ../node_modules/atomically/dist/constants.js
+// node_modules/.pnpm/atomically@2.1.1/node_modules/atomically/dist/constants.js
 var import_node_process3 = __toESM(require("process"), 1);
 var DEFAULT_ENCODING = "utf8";
 var DEFAULT_FILE_MODE = 438;
@@ -47130,7 +47260,7 @@ var IS_POSIX = !!import_node_process3.default.getuid;
 var IS_USER_ROOT2 = import_node_process3.default.getuid ? !import_node_process3.default.getuid() : false;
 var LIMIT_BASENAME_LENGTH = 128;
 
-// ../node_modules/atomically/dist/utils/lang.js
+// node_modules/.pnpm/atomically@2.1.1/node_modules/atomically/dist/utils/lang.js
 var isException = (value) => {
   return value instanceof Error && "code" in value;
 };
@@ -47141,18 +47271,18 @@ var isUndefined = (value) => {
   return value === void 0;
 };
 
-// ../node_modules/atomically/dist/utils/temp.js
+// node_modules/.pnpm/atomically@2.1.1/node_modules/atomically/dist/utils/temp.js
 var import_node_path11 = __toESM(require("path"), 1);
 
-// ../node_modules/when-exit/dist/node/interceptor.js
+// node_modules/.pnpm/when-exit@2.1.5/node_modules/when-exit/dist/node/interceptor.js
 var import_node_process5 = __toESM(require("process"), 1);
 
-// ../node_modules/when-exit/dist/node/constants.js
+// node_modules/.pnpm/when-exit@2.1.5/node_modules/when-exit/dist/node/constants.js
 var import_node_process4 = __toESM(require("process"), 1);
 var IS_LINUX = import_node_process4.default.platform === "linux";
 var IS_WINDOWS = import_node_process4.default.platform === "win32";
 
-// ../node_modules/when-exit/dist/node/signals.js
+// node_modules/.pnpm/when-exit@2.1.5/node_modules/when-exit/dist/node/signals.js
 var Signals = ["SIGHUP", "SIGINT", "SIGTERM"];
 if (!IS_WINDOWS) {
   Signals.push("SIGALRM", "SIGABRT", "SIGVTALRM", "SIGXCPU", "SIGXFSZ", "SIGUSR2", "SIGTRAP", "SIGSYS", "SIGQUIT", "SIGIOT");
@@ -47162,7 +47292,7 @@ if (IS_LINUX) {
 }
 var signals_default = Signals;
 
-// ../node_modules/when-exit/dist/node/interceptor.js
+// node_modules/.pnpm/when-exit@2.1.5/node_modules/when-exit/dist/node/interceptor.js
 var Interceptor = class {
   /* CONSTRUCTOR */
   constructor() {
@@ -47203,11 +47333,11 @@ var Interceptor = class {
 };
 var interceptor_default = new Interceptor();
 
-// ../node_modules/when-exit/dist/node/index.js
+// node_modules/.pnpm/when-exit@2.1.5/node_modules/when-exit/dist/node/index.js
 var whenExit = interceptor_default.register;
 var node_default = whenExit;
 
-// ../node_modules/atomically/dist/utils/temp.js
+// node_modules/.pnpm/atomically@2.1.1/node_modules/atomically/dist/utils/temp.js
 var Temp = {
   /* VARIABLES */
   store: {},
@@ -47260,7 +47390,7 @@ var Temp = {
 node_default(Temp.purgeSyncAll);
 var temp_default = Temp;
 
-// ../node_modules/atomically/dist/index.js
+// node_modules/.pnpm/atomically@2.1.1/node_modules/atomically/dist/index.js
 function writeFileSync2(filePath, data, options = DEFAULT_WRITE_OPTIONS) {
   if (isString(options))
     return writeFileSync2(filePath, data, { encoding: options });
@@ -47338,11 +47468,11 @@ function writeFileSync2(filePath, data, options = DEFAULT_WRITE_OPTIONS) {
   }
 }
 
-// node_modules/conf/dist/source/index.js
+// node_modules/.pnpm/conf@12.0.0/node_modules/conf/dist/source/index.js
 var import_ajv = __toESM(require_ajv(), 1);
 var import_ajv_formats = __toESM(require_dist2(), 1);
 
-// ../node_modules/mimic-fn/index.js
+// node_modules/.pnpm/mimic-fn@4.0.0/node_modules/mimic-fn/index.js
 var copyProperty = (to, from, property, ignoreNonConfigurable) => {
   if (property === "length" || property === "prototype") {
     return;
@@ -47387,7 +47517,7 @@ function mimicFunction(to, from, { ignoreNonConfigurable = false } = {}) {
   return to;
 }
 
-// ../node_modules/debounce-fn/index.js
+// node_modules/.pnpm/debounce-fn@5.1.2/node_modules/debounce-fn/index.js
 var debounceFn = (inputFunction, options = {}) => {
   if (typeof inputFunction !== "function") {
     throw new TypeError(`Expected the first argument to be a function, got \`${typeof inputFunction}\``);
@@ -47452,10 +47582,10 @@ var debounceFn = (inputFunction, options = {}) => {
 };
 var debounce_fn_default = debounceFn;
 
-// node_modules/conf/dist/source/index.js
+// node_modules/.pnpm/conf@12.0.0/node_modules/conf/dist/source/index.js
 var import_semver = __toESM(require_semver2(), 1);
 
-// ../node_modules/uint8array-extras/index.js
+// node_modules/.pnpm/uint8array-extras@0.3.0/node_modules/uint8array-extras/index.js
 var objectToString = Object.prototype.toString;
 function isUint8Array(value) {
   return value && objectToString.call(value) === "[object Uint8Array]";
@@ -47494,7 +47624,7 @@ function stringToUint8Array(string4) {
 }
 var byteToHexLookupTable = Array.from({ length: 256 }, (_, index) => index.toString(16).padStart(2, "0"));
 
-// node_modules/conf/dist/source/index.js
+// node_modules/.pnpm/conf@12.0.0/node_modules/conf/dist/source/index.js
 var Ajv = import_ajv.default.default;
 var ajvFormats = import_ajv_formats.default.default;
 var encryptionAlgorithm = "aes-256-cbc";
@@ -50665,6 +50795,14 @@ function createAttachCommand() {
     console.log(kleur_default.dim(`  runtime: ${runtime}  (resuming session)`));
     console.log(kleur_default.dim(`  path:    ${target.path}
 `));
+    if (runtime === "pi") {
+      try {
+        await runPiLaunchPreflight(target.path, false);
+      } catch (error48) {
+        const message = error48 instanceof Error ? error48.message : String(error48);
+        console.log(kleur_default.dim(`  warning: pi launch preflight failed (${message})`));
+      }
+    }
     const result = (0, import_node_child_process8.spawnSync)(runtime, resumeArgs, {
       cwd: target.path,
       stdio: "inherit"

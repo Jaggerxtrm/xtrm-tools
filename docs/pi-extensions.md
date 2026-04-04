@@ -107,6 +107,7 @@ Adds `… +N more lines` indicator when truncated. Respects expanded view toggle
 - `quality-gates` — TypeScript/Python linting on file edit
 - `service-skills` — Service skill routing and activation
 - `custom-footer` — 2-line status bar with claim/open issues
+- `xtrm-ui` — pi-dex chrome + pi-diff-style write/edit rendering (keeps footer ownership disabled by default)
 - `xtrm-loader` — XTRM context injection (using-xtrm skill + `.xtrm/memory.md` + project context injected at `before_agent_start`)
 - `plan-mode` — Plan-mode workflow support
 

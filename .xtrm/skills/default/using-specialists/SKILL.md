@@ -72,37 +72,85 @@ specialists clean                             # purge old job directories
 specialists doctor                            # health check
 ```
 
-### Typical flow
+### Chained Bead Pipeline (standard workflow)
+
+Every specialist run gets its own child bead, chained via dependencies. Each step's
+output accumulates on its bead. Downstream steps see upstream output via `--context-depth`.
+The bead chain IS the context chain — no manual wiring needed.
+
+```
+task-abc: "Fix auth token refresh"
+  └── abc-exp: explorer        (auto-appends output to bead notes, READ_ONLY)
+  └── abc-impl: executor       (self-appends output to bead notes, closes bead)
+  └── abc-rev: reviewer        (auto-appends findings, READ_ONLY)
+  └── abc-fix: executor        (if reviewer found gaps — fix bead, same worktree)
+```
+
+Each specialist sees its own bead + the previous step's output + one more level up
+via `--context-depth 2`.
 
 ```bash
-# 1. Create a bead describing what you need
+# 1. Create the task bead
 bd create --title "Fix auth token refresh bug" --type bug --priority 2
 # -> unitAI-abc
 
-# 2. Explore first — never skip discovery
-specialists run explorer --bead unitAI-abc --context-depth 2 &
+# 2. Create chained child beads
+bd create --title "Explore: map token refresh code paths" --type task --priority 2
+# -> unitAI-abc-exp
+bd dep add abc-exp abc
+
+bd create --title "Implement: fix token refresh retry on 401" --type task --priority 2
+# -> unitAI-abc-impl
+bd dep add abc-impl abc-exp
+
+# 3. Wave 1 — Explorer
+specialists run explorer --bead abc-exp --context-depth 2 --background
 # -> Job started: e1f2g3
+# (explorer output auto-appends to abc-exp notes)
 
-# 3. Read exploration results, then run implementation
+# 4. Wave 2 — Executor (after explorer completes)
 specialists result e1f2g3
-specialists run executor --bead unitAI-abc --context-depth 2 &
+specialists run executor --bead abc-impl --context-depth 2 --background
 # -> Job started: a1b2c3
+# (executor sees abc-impl + abc-exp findings + abc via context-depth)
+# (executor self-appends output to abc-impl, closes abc-impl)
 
-# 4. Monitor (pick one)
-specialists feed a1b2c3              # check events so far
-specialists feed -f                  # tail all active jobs
-
-# 5. Read results and close
+# 5. Wave 3 — Reviewer (reviews executor's work)
 specialists result a1b2c3
-bd close unitAI-abc --reason "Fixed: token refresh now retries on 401"
+specialists run reviewer --job a1b2c3 --keep-alive --background
+# -> Job started: r4v5w6
+# (reviewer reads task bead from job's status.json automatically)
+# (reviewer auto-appends findings to bead notes)
+
+# 6. Read verdict
+specialists result r4v5w6
+# -> PASS? Close the task bead. PARTIAL/FAIL? Create a fix bead.
+
+# 7. If PARTIAL — fix loop (same worktree, new bead)
+bd create --title "Fix: reviewer gaps on abc" --type bug --priority 1
+# -> unitAI-abc-fix
+bd dep add abc-fix abc-impl
+
+specialists run executor --bead abc-fix --job a1b2c3 --context-depth 2 --background
+# (fixer sees abc-fix + abc-impl (executor output + reviewer findings) + abc-exp)
+# Repeat reviewer → fix until PASS.
+
+# 8. Close when reviewer says PASS
+bd close abc --reason "Fixed: token refresh retries on 401. Reviewer PASS 92/100."
 ```
+
+**Why chaining matters:**
+- Every step's output is preserved on its bead — full audit trail
+- `--context-depth 2` gives each specialist the previous step's findings automatically
+- No copy-pasting results between steps
+- The orchestrator only creates beads and dispatches — zero context injection
 
 ### Bead-first workflow (`--bead` is the prompt)
 
 For tracked work, the bead is not just bookkeeping — it is the specialist's prompt.
 The specialist reads:
 - the bead title + description
-- bead notes
+- bead notes (including output from previous specialists in the chain)
 - parent/ancestor bead context (controlled by `--context-depth`)
 
 `--prompt` and `--bead` cannot be combined. When you need to give a specialist
@@ -115,14 +163,15 @@ source. Read every command in src/cli/ and src/index.ts. Document all flags and 
 specialists run executor --bead unitAI-abc --context-depth 2 &
 ```
 
-This pattern was used extensively in Wave 5 of a real session — 4 executors all received
-writing instructions via bead notes and successfully produced doc files.
-
 **`--context-depth N`** — how many levels of parent-bead context to inject (default: 1).
-Prefer **`--context-depth 2`** for child-bead workflows so downstream waves inherit the
-parent task framing plus the immediate predecessor context.
+Prefer **`--context-depth 2`** for chained bead workflows so each step inherits the
+previous step's output plus one more level of context.
 
 **`--no-beads`** — skip creating an auto-tracking sub-bead, but still reads the `--bead` input.
+
+**`--job <job-id>`** — (planned, unitAI-hgpu) reuse another job's worktree as cwd. For
+READ_ONLY specialists like reviewer, also auto-resolves the job's bead for task context.
+Mutually exclusive with `--worktree`. See "Review and Fix Loop" below.
 
 ---
 
@@ -133,6 +182,7 @@ Run `specialists list` to see what's available. Match by task type:
 | Task type | Best specialist | Why |
 |-----------|----------------|-----|
 | Architecture exploration / initial discovery | **explorer** (claude-haiku-4-5) | Fast codebase mapping, READ_ONLY. Use first before any executor run. |
+| Live docs / library lookup / code discovery | **researcher** (claude-haiku-4-5) | Two modes: *targeted* (ctx7 for library docs, deepwiki for repo internals) and *discovery* (ghgrep → find interesting repos → deepwiki deep dive). Always use `--keep-alive` — enters `waiting` after each turn. |
 | Bug fix / implementation | **executor** (gpt-5.3-codex) | HIGH perms, writes code + tests autonomously after exploration is complete |
 | Bug investigation / "why is X broken" | **debugger** (claude-sonnet-4-6) | GitNexus-first triage, 5-phase investigation, hypothesis ranking, evidence-backed remediation. Use for ANY root cause analysis. |
 | Complex problems / design decisions / tradeoffs | **overthinker** (gpt-5.4) | Use before executor on any non-trivial task. 4-phase reasoning: analysis, devil's advocate, synthesis, conclusion. Iterate with `resume` to refine before handing off to executor. **Always use `--keep-alive`** — enters `waiting` after Phase 4 expecting your follow-up. |
@@ -147,6 +197,7 @@ Run `specialists list` to see what's available. Match by task type:
 
 ### Specialist selection lessons (from real sessions)
 
+- **researcher** is the docs and discovery specialist. Two modes: *targeted* (look up ctx7/deepwiki docs for a specific library relevant to the current job) and *discovery* (ghgrep for code patterns → spot interesting repos → deepwiki deep dive). Keep-alive by design — resume with follow-up questions or new research angles. Do not look up docs yourself — delegate to researcher.
 - **explorer** before **executor** when the bead lacks a clear track. If the bead already specifies files/symbols/approach, send executor directly. Use explorer when an executor would have to guess — it wastes time and tokens.
 - **debugger** is the most powerful investigation specialist. Uses GitNexus call-chain tracing (when available) for 5-phase root cause analysis with ranked hypotheses. Use for ANY "why is X broken" question — don't do the investigation yourself.
 - **sync-docs** is an interactive specialist — it audits first, then waits for approval before executing. Run with `--keep-alive` and use `resume` to approve or deny. Not a bug, it's the design.
@@ -159,6 +210,7 @@ Run `specialists list` to see what's available. Match by task type:
 
 ```bash
 specialists run explorer --bead unitAI-exp --context-depth 2 --background
+specialists run researcher --bead unitAI-research --context-depth 2 --keep-alive --background
 specialists run debugger --bead unitAI-bug --context-depth 2 --background
 specialists run planner --bead unitAI-scope --context-depth 2 --background
 specialists run overthinker --bead unitAI-design --context-depth 2 --keep-alive --background
@@ -174,34 +226,52 @@ specialists run specialists-creator --bead unitAI-skill --context-depth 2 --back
 For any task with non-obvious solutions — architecture decisions, tricky bugs, performance problems, API design — run **overthinker before executor**. The overthinker surfaces edge cases, challenges assumptions, and produces a refined solution direction. The executor then implements against that plan rather than guessing.
 
 ```bash
-# 1. Run explorer if context is needed (skip if bead already has scope)
-specialists run explorer --bead unitAI-prob --context-depth 2 --background
+# 1. Chain: task → explore → design → implement
+bd create --title "Redesign auth middleware" --type feature --priority 2
+# -> unitAI-task
 
-# 2. Run overthinker to think through the solution
+bd create --title "Explore: map auth middleware" --type task --priority 2
+# -> unitAI-exp
+bd dep add exp task
+
+bd create --title "Design: auth middleware approach" --type task --priority 2
+# -> unitAI-design
+bd dep add design exp
+
+bd create --title "Implement: auth middleware redesign" --type task --priority 2
+# -> unitAI-impl
+bd dep add impl design
+
+# 2. Explorer (output auto-appends to exp notes)
+specialists run explorer --bead unitAI-exp --context-depth 2 --background
+
+# 3. Overthinker (sees exp findings via context-depth)
 specialists run overthinker --bead unitAI-design --context-depth 2 --keep-alive --background
 # -> enters waiting after Phase 4
 
-# 3. Iterate: challenge assumptions, ask follow-ups, refine
+# 4. Iterate: challenge assumptions, ask follow-ups, refine
 specialists resume <job-id> "What about the edge case where X?"
 specialists resume <job-id> "Is option B safer than option A here?"
 
-# 4. Only when satisfied with the design — stop and hand off
+# 5. Only when satisfied with the design — stop overthinker
 specialists stop <job-id>
+# (overthinker output is on unitAI-design notes)
 
-# 5. Update executor bead notes with the agreed solution direction
-bd update unitAI-impl --notes "SOLUTION: <overthinker conclusion here>"
+# 6. Executor sees design + exp + task via context-depth — no manual wiring
 specialists run executor --bead unitAI-impl --context-depth 2 --background
 ```
 
-The overthinker is cheap relative to the cost of an executor implementing the wrong thing. Use it liberally on anything non-trivial. Explorer can run before (to gather context) or its output can inform executor targets after.
+The overthinker is cheap relative to the cost of an executor implementing the wrong thing.
+Use it liberally on anything non-trivial. The chained bead pattern means the executor
+automatically inherits the overthinker's conclusion — no need to copy-paste solutions
+into bead notes.
 
 ### Pi extensions availability (known gap)
 
-GitNexus and Serena are **pi extensions** installed globally via npm. Both are now wired
-in session.ts alongside quality-gates and service-skills. pi-gitnexus enables call-chain
-tracing for debugger/planner. pi-serena-tools enables token-efficient LSP reads/edits for
-explorer/executor (40+ tools, 75-95% token savings). Install: `pi install npm:pi-gitnexus`
-and `pi install npm:pi-serena-tools`.
+GitNexus and Serena are **pi extensions** (not MCP servers) at `~/.pi/agent/extensions/`.
+Specialists run with `--no-extensions` and only selectively re-enable `quality-gates` and
+`service-skills`. GitNexus (call-chain tracing for debugger/planner) and Serena LSP
+(token-efficient reads for explorer/executor) are NOT currently wired. Tracked as `unitAI-4abv`.
 
 ---
 
@@ -233,6 +303,7 @@ Only works with `--keep-alive` jobs. The session retains full conversation histo
 
 | Specialist | What triggers `waiting` | What to send via `resume` |
 |-----------|------------------------|--------------------------|
+| **researcher** | After delivering research findings | Follow-up question, new research angle, or "done, thanks" |
 | **reviewer** | After delivering verdict (PASS/PARTIAL/FAIL) | Your response, clarification, or "accepted, close out" |
 | **overthinker** | After Phase 4 conclusion | Follow-up question, counter-argument, or "done, thanks" |
 | **sync-docs** | After audit report | "approve", "deny", or specific instructions |
@@ -310,28 +381,23 @@ A wave is complete only when every job in that wave is in a terminal state (`com
 ### Canonical 4-wave pipeline example
 
 Use this when a task needs investigation, implementation, review, and doc follow-through.
+Each wave gets its own chained bead — the bead graph mirrors the wave dependency graph.
 
 ```bash
-# 0. Create the parent bead
-bd create --title "Improve using-specialists wave orchestration" --type task --priority 2
+# 0. Create the parent bead (the task itself)
+bd create --title "Improve wave orchestration" --type task --priority 2
 # -> unitAI-root
 
-# 1. Create child beads in dependency order
-bd create --title "Explore: map codebase for <task>" --type task --priority 2
+# 1. Create chained child beads — each wave step is a child of the previous
+bd create --title "Explore: map codebase for wave orchestration" --type task --priority 2
 # -> unitAI-exp
 bd dep add unitAI-exp unitAI-root
 
-bd create --title "Implement: <task>" --type task --priority 2
+bd create --title "Implement: wave orchestration improvements" --type task --priority 2
 # -> unitAI-impl
 bd dep add unitAI-impl unitAI-exp
 
-bd create --title "Review: <task> changes" --type task --priority 2
-# -> unitAI-review
-bd dep add unitAI-review unitAI-impl
-
-bd create --title "sync-docs: <task>" --type task --priority 2
-# -> unitAI-docs
-bd dep add unitAI-docs unitAI-review
+# reviewer and sync-docs don't need their own beads — they run via --job
 ```
 
 #### Wave 1 — Explorer
@@ -339,7 +405,7 @@ bd dep add unitAI-docs unitAI-review
 ```bash
 specialists run explorer --bead unitAI-exp --context-depth 2 --background
 # -> Job started: job1
-# (poll until completed, then read result)
+# (explorer output auto-appends to unitAI-exp notes)
 specialists result job1
 ```
 
@@ -350,27 +416,42 @@ Only after Wave 1 is complete:
 ```bash
 specialists run executor --bead unitAI-impl --context-depth 2 --background
 # -> Job started: job2
-# (poll until completed, validate, then advance)
+# (executor sees unitAI-impl + unitAI-exp findings + unitAI-root via context-depth)
+# (executor self-appends output, closes unitAI-impl)
 ```
 
 #### Wave 3 — Reviewer
 
-Only after Wave 2 is complete:
+Only after Wave 2 is complete. Reviewer uses `--job` to review the executor's work —
+no separate bead needed. It reads the task bead from the job's status.json automatically.
 
 ```bash
-specialists run reviewer --bead unitAI-review --context-depth 2 --keep-alive --background
+specialists run reviewer --job job2 --keep-alive --background
 # -> Job started: job3
-# (poll until waiting, read verdict — if changes needed, feed back before advancing)
+# (reviewer reads bead context from job2, auto-appends findings)
+specialists result job3
+# -> PASS? Proceed to Wave 4. PARTIAL? Create fix bead and loop.
+```
+
+**If PARTIAL — fix loop:**
+```bash
+bd create --title "Fix: reviewer gaps on impl" --type bug --priority 1
+# -> unitAI-fix1
+bd dep add unitAI-fix1 unitAI-impl
+
+specialists run executor --bead unitAI-fix1 --job job2 --context-depth 2 --background
+# (fixer runs in same worktree, sees fix1 + impl output + reviewer findings)
+# Repeat reviewer → fix until PASS.
 ```
 
 #### Wave 4 — sync-docs
 
-Only after Wave 3 is complete:
+Only after Wave 3 PASS:
 
 ```bash
-specialists run sync-docs --bead unitAI-docs --context-depth 2 --keep-alive --background
+specialists run sync-docs --bead unitAI-root --keep-alive --background
 # -> Job started: job4
-# (poll until waiting — sync-docs audits first; use `resume` to approve or deny)
+# (sync-docs audits root bead context; use `resume` to approve or deny)
 ```
 
 ### Within-wave parallelism example

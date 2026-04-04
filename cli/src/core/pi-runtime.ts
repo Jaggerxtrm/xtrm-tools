@@ -680,11 +680,11 @@ async function updatePiSettings(
     await fs.ensureDir(path.join(projectRoot, '.pi'));
     await fs.writeJson(piSettingsPath, {
         ...existingSettings,
-        extensions: [PROJECT_EXTENSIONS_ENTRY],
+        extensions: [],  // Empty = Pi uses default global path (~/.pi/agent/extensions/)
         skills: [PROJECT_SKILLS_ENTRY],
         packages: existingPackages,
     }, { spaces: 2 });
-    log?.(kleur.dim(`Updated .pi/settings.json → .xtrm/extensions + .xtrm/skills/active/pi`));
+    log?.(kleur.dim(`Updated .pi/settings.json → global extensions + .xtrm/skills/active/pi`));
 }
 
 /**
@@ -799,6 +799,57 @@ export async function executePiSync(
     return result;
 }
 
+// ── @xtrm/pi-core Resolution ────────────────────────────────────────────────
+
+/**
+ * Ensure @xtrm/pi-core is resolvable from project extensions.
+ * Creates symlink: .xtrm/extensions/node_modules/@xtrm/pi-core → ../core
+ */
+export async function ensurePiCoreResolution(
+    repoRoot: string,
+    dryRun: boolean = false,
+    log: (message: string) => void = (msg) => console.log(kleur.dim(`    ${msg}`)),
+): Promise<{ ok: boolean; created: boolean }> {
+    const repoExtDir = path.join(repoRoot, '.xtrm', 'extensions');
+    const coreDir = path.join(repoExtDir, 'core');
+
+    if (!await fs.pathExists(coreDir)) {
+        log('No .xtrm/extensions/core/ found — skipping pi-core resolution');
+        return { ok: false, created: false };
+    }
+
+    const nodeModulesDir = path.join(repoExtDir, 'node_modules', '@xtrm');
+    const symlinkPath = path.join(nodeModulesDir, 'pi-core');
+    const relativeTarget = path.join('..', '..', 'core');
+
+    if (dryRun) {
+        log('[DRY RUN] would create @xtrm/pi-core symlink');
+        return { ok: true, created: false };
+    }
+
+    try {
+        const existing = await fs.lstat(symlinkPath).catch(() => null);
+        if (existing) {
+            if (existing.isSymbolicLink()) {
+                const currentTarget = await fs.readlink(symlinkPath);
+                const resolvedTarget = path.resolve(path.dirname(symlinkPath), currentTarget);
+                if (resolvedTarget === path.resolve(coreDir)) {
+                    return { ok: true, created: false };
+                }
+            }
+            await fs.remove(symlinkPath);
+        }
+
+        await fs.ensureDir(nodeModulesDir);
+        await fs.symlink(relativeTarget, symlinkPath);
+        log('✓ @xtrm/pi-core symlink → .xtrm/extensions/node_modules/@xtrm/pi-core');
+        return { ok: true, created: true };
+    } catch (err) {
+        log(kleur.yellow(`⚠ @xtrm/pi-core symlink: ${err}`));
+        return { ok: false, created: false };
+    }
+}
+
 // ── Full Sync Flow ───────────────────────────────────────────────────────────
 
 export interface PiRuntimeOptions {
@@ -855,9 +906,11 @@ export async function runPiRuntimeSync(opts: PiRuntimeOptions = {}): Promise<PiS
         return mergePiSyncResults(result, synced);
     }
 
-    // ── Project install: no extension mirror ─────────────────────────────────────
-    // Pi discovers extensions directly from .xtrm/extensions via .pi/settings.json.
-    // Only manage packages + settings.json + core symlink here.
+    // ── Project install: ensure @xtrm/pi-core resolves ───────────────────────────
+    // Pi auto-discovers .xtrm/extensions/ at project level. We only need to
+    // ensure @xtrm/pi-core can be resolved by extensions that import it.
+
+    await ensurePiCoreResolution(resolvedProjectRoot, dryRun, log);
 
     const installedPkgIds = getInstalledPiPackages();
     const packageStatuses: PackageStatus[] = [];
@@ -873,7 +926,7 @@ export async function runPiRuntimeSync(opts: PiRuntimeOptions = {}): Promise<PiS
     // Render summary
     console.log(kleur.bold('\n  Pi Runtime'));
     console.log(kleur.dim('  ' + '-'.repeat(50)));
-    console.log(kleur.dim(`  Extensions: via .xtrm/extensions (settings.json)`));
+    console.log(kleur.dim(`  Extensions: .xtrm/extensions/ (auto-discovered)`));
     const pkgOk = packageStatuses.filter(s => s.installed).length;
     console.log(kleur.dim(`  Packages:   ${pkgOk}/${packageStatuses.length} installed`));
     if (missingPackages.length > 0) {

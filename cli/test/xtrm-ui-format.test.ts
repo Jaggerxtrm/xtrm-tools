@@ -3,6 +3,8 @@ import {
   shortenPath,
   shortenCommand,
   diffStats,
+  createUnifiedLineDiff,
+  renderRichDiffPreview,
   formatDuration,
   formatLineLabel,
   cleanOutputLines,
@@ -105,6 +107,61 @@ describe('diffStats', () => {
 
   it('returns zeros for empty diff', () => {
     expect(diffStats('')).toEqual({ additions: 0, removals: 0 });
+  });
+});
+
+// ── createUnifiedLineDiff ────────────────────────────────────────────────────
+
+describe('createUnifiedLineDiff', () => {
+  it('returns empty when content is unchanged', () => {
+    expect(createUnifiedLineDiff('same', 'same')).toBe('');
+  });
+
+  it('builds unified diff for changed content', () => {
+    const diff = createUnifiedLineDiff('const a = 1;\nconst b = 2;', 'const a = 1;\nconst b = 3;');
+    expect(diff).toContain('@@ -1,2 +1,2 @@');
+    expect(diff).toContain('-const b = 2;');
+    expect(diff).toContain('+const b = 3;');
+  });
+});
+
+// ── renderRichDiffPreview ────────────────────────────────────────────────────
+
+describe('renderRichDiffPreview', () => {
+  const theme = {
+    fg: (color: string, text: string) => `[${color}:${text}]`,
+    bold: (text: string) => `**${text}**`,
+  };
+
+  it('renders line-numbered diff output', () => {
+    const diff = [
+      '--- a/file.ts',
+      '+++ b/file.ts',
+      '@@ -1,2 +1,2 @@',
+      ' const value = 1;',
+      '-const label = "old";',
+      '+const label = "new";',
+    ].join('\n');
+
+    const rendered = renderRichDiffPreview(theme, diff, 12);
+    expect(rendered).toContain('[muted:   1    1 │]');
+    expect(rendered).toContain('[toolDiffRemoved:-const label = "**old**";]');
+    expect(rendered).toContain('[toolDiffAdded:+const label = "**new**";]');
+  });
+
+  it('adds truncation indicator when maxLines is hit', () => {
+    const diff = [
+      '--- a/file.ts',
+      '+++ b/file.ts',
+      '@@ -1,4 +1,4 @@',
+      '-a',
+      '+b',
+      '-c',
+      '+d',
+    ].join('\n');
+
+    const rendered = renderRichDiffPreview(theme, diff, 4);
+    expect(rendered).toContain('more');
   });
 });
 

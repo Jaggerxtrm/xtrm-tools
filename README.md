@@ -102,6 +102,11 @@ xt merge
 | **GitNexus** | Claude | Knowledge graph context for code exploration |
 | **Service Skills** | Pi | Territory-based Docker service skill activation |
 
+### Privacy & Telemetry
+
+**xtrm-tools does not collect any telemetry or analytics.** No usage data, no codebase scanning, no phone-home behavior. All operations run locally in your environment.
+
+
 ### Skills
 
 Skills are resolved through a three-tier registry in `.xtrm/skills/` (`default` + `optional` + `user`). Optional packs are installed by default during `xt install`; activate any pack with `xt skills enable <pack>`. Current optional pack catalog: `research-methods`, `code-quality`, `security-ops`, `data-engineering`, and `architecture-design`.

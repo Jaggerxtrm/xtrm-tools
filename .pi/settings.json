@@ -1,7 +1,5 @@
 {
-  "extensions": [
-    "../.xtrm/extensions"
-  ],
+  "extensions": [],
   "skills": [
     "../.xtrm/skills/active/pi"
   ],

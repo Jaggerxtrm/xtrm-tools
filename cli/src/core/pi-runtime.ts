@@ -680,7 +680,7 @@ async function updatePiSettings(
     await fs.ensureDir(path.join(projectRoot, '.pi'));
     await fs.writeJson(piSettingsPath, {
         ...existingSettings,
-        extensions: [],  // Empty = Pi uses default global path (~/.pi/agent/extensions/)
+        extensions: [],  // Empty = Pi uses global ~/.pi/agent/extensions/ (which symlink to .xtrm/ext-src/)
         skills: [PROJECT_SKILLS_ENTRY],
         packages: existingPackages,
     }, { spaces: 2 });
@@ -799,55 +799,93 @@ export async function executePiSync(
     return result;
 }
 
-// ── @xtrm/pi-core Resolution ────────────────────────────────────────────────
+// ── Extension Source Directory ─────────────────────────────────────────────
 
 /**
- * Ensure @xtrm/pi-core is resolvable from project extensions.
- * Creates symlink: .xtrm/extensions/node_modules/@xtrm/pi-core → ../core
+ * Extension source directory name.
+ * Named 'ext-src' to avoid Pi's auto-discovery of '.xtrm/extensions/'.
+ * Extensions are symlinked from ~/.pi/agent/extensions/ → .xtrm/ext-src/
  */
-export async function ensurePiCoreResolution(
+export const EXTENSION_SOURCE_DIR = 'ext-src';
+
+/**
+ * Link repo extensions to global ~/.pi/agent/extensions/
+ *
+ * Creates symlinks: ~/.pi/agent/extensions/<name> → <repo>/.xtrm/ext-src/<name>
+ * This allows Pi to find extensions via its default global path while keeping
+ * the actual files in the repo (git-tracked, SSOT).
+ */
+export async function linkExtensionsToGlobal(
     repoRoot: string,
     dryRun: boolean = false,
     log: (message: string) => void = (msg) => console.log(kleur.dim(`    ${msg}`)),
-): Promise<{ ok: boolean; created: boolean }> {
-    const repoExtDir = path.join(repoRoot, '.xtrm', 'extensions');
-    const coreDir = path.join(repoExtDir, 'core');
+): Promise<{ linked: string[]; failed: string[] }> {
+    const globalExtDir = path.join(PI_AGENT_DIR, 'extensions');
+    const repoExtDir = path.join(repoRoot, '.xtrm', EXTENSION_SOURCE_DIR);
 
-    if (!await fs.pathExists(coreDir)) {
-        log('No .xtrm/extensions/core/ found — skipping pi-core resolution');
-        return { ok: false, created: false };
+    const linked: string[] = [];
+    const failed: string[] = [];
+
+    if (!await fs.pathExists(repoExtDir)) {
+        log('No .xtrm/ext-src/ found — skipping global link');
+        return { linked, failed };
     }
-
-    const nodeModulesDir = path.join(repoExtDir, 'node_modules', '@xtrm');
-    const symlinkPath = path.join(nodeModulesDir, 'pi-core');
-    const relativeTarget = path.join('..', '..', 'core');
 
     if (dryRun) {
-        log('[DRY RUN] would create @xtrm/pi-core symlink');
-        return { ok: true, created: false };
+        log('[DRY RUN] would create extension symlinks in ~/.pi/agent/extensions/');
+        return { linked, failed };
     }
 
-    try {
-        const existing = await fs.lstat(symlinkPath).catch(() => null);
-        if (existing) {
-            if (existing.isSymbolicLink()) {
-                const currentTarget = await fs.readlink(symlinkPath);
-                const resolvedTarget = path.resolve(path.dirname(symlinkPath), currentTarget);
-                if (resolvedTarget === path.resolve(coreDir)) {
-                    return { ok: true, created: false };
-                }
-            }
-            await fs.remove(symlinkPath);
-        }
+    await fs.ensureDir(globalExtDir);
 
-        await fs.ensureDir(nodeModulesDir);
-        await fs.symlink(relativeTarget, symlinkPath);
-        log('✓ @xtrm/pi-core symlink → .xtrm/extensions/node_modules/@xtrm/pi-core');
-        return { ok: true, created: true };
+    // Create @xtrm/pi-core symlink so extensions can resolve it from global
+    const coreNodeModulesDir = path.join(globalExtDir, 'node_modules', '@xtrm');
+    const coreSymlinkPath = path.join(coreNodeModulesDir, 'pi-core');
+    const coreRelativeTarget = path.join('..', '..', 'core');
+    try {
+        await fs.ensureDir(coreNodeModulesDir);
+        const existing = await fs.lstat(coreSymlinkPath).catch(() => null);
+        if (existing) await fs.remove(coreSymlinkPath);
+        await fs.symlink(coreRelativeTarget, coreSymlinkPath);
+        log('✓ @xtrm/pi-core → global node_modules');
     } catch (err) {
         log(kleur.yellow(`⚠ @xtrm/pi-core symlink: ${err}`));
-        return { ok: false, created: false };
     }
+
+    const entries = await fs.readdir(repoExtDir, { withFileTypes: true });
+    for (const entry of entries) {
+        if (!entry.isDirectory()) continue;
+        if (entry.name === 'node_modules') continue;
+
+        const extPath = path.join(repoExtDir, entry.name);
+        const globalLink = path.join(globalExtDir, entry.name);
+
+        try {
+            // Remove existing symlink/dir if present
+            const existing = await fs.lstat(globalLink).catch(() => null);
+            if (existing) {
+                // Check if already correct
+                if (existing.isSymbolicLink()) {
+                    const currentTarget = await fs.readlink(globalLink);
+                    const resolvedTarget = path.resolve(path.dirname(globalLink), currentTarget);
+                    if (resolvedTarget === path.resolve(extPath)) {
+                        // Already correct
+                        continue;
+                    }
+                }
+                await fs.remove(globalLink);
+            }
+
+            await fs.symlink(extPath, globalLink);
+            linked.push(entry.name);
+            log(`✓ ${entry.name} → .xtrm/${EXTENSION_SOURCE_DIR}/${entry.name}`);
+        } catch (err) {
+            failed.push(entry.name);
+            log(kleur.red(`✗ ${entry.name}: ${err}`));
+        }
+    }
+
+    return { linked, failed };
 }
 
 // ── Full Sync Flow ───────────────────────────────────────────────────────────
@@ -906,11 +944,14 @@ export async function runPiRuntimeSync(opts: PiRuntimeOptions = {}): Promise<PiS
         return mergePiSyncResults(result, synced);
     }
 
-    // ── Project install: ensure @xtrm/pi-core resolves ───────────────────────────
-    // Pi auto-discovers .xtrm/extensions/ at project level. We only need to
-    // ensure @xtrm/pi-core can be resolved by extensions that import it.
+    // ── Project install: link extensions to global ───────────────────────────────
+    // Extensions are in .xtrm/ext-src/ (git-tracked, SSOT).
+    // We symlink ~/.pi/agent/extensions/ → .xtrm/ext-src/ so Pi finds them
+    // globally while we can edit them in the repo.
 
-    await ensurePiCoreResolution(resolvedProjectRoot, dryRun, log);
+    const linkResult = await linkExtensionsToGlobal(resolvedProjectRoot, dryRun, log);
+    result.extensionsAdded.push(...linkResult.linked);
+    result.failed.push(...linkResult.failed);
 
     const installedPkgIds = getInstalledPiPackages();
     const packageStatuses: PackageStatus[] = [];
@@ -926,7 +967,7 @@ export async function runPiRuntimeSync(opts: PiRuntimeOptions = {}): Promise<PiS
     // Render summary
     console.log(kleur.bold('\n  Pi Runtime'));
     console.log(kleur.dim('  ' + '-'.repeat(50)));
-    console.log(kleur.dim(`  Extensions: .xtrm/extensions/ (auto-discovered)`));
+    console.log(kleur.dim(`  Extensions: ~/.pi/agent/extensions/ → .xtrm/${EXTENSION_SOURCE_DIR}/`));
     const pkgOk = packageStatuses.filter(s => s.installed).length;
     console.log(kleur.dim(`  Packages:   ${pkgOk}/${packageStatuses.length} installed`));
     if (missingPackages.length > 0) {

@@ -45120,7 +45120,7 @@ async function updatePiSettings(projectRoot, dryRun, log) {
   await import_fs_extra9.default.writeJson(piSettingsPath, {
     ...existingSettings,
     extensions: [],
-    // Empty = Pi uses default global path (~/.pi/agent/extensions/)
+    // Empty = Pi uses global ~/.pi/agent/extensions/ (which symlink to .xtrm/ext-src/)
     skills: [PROJECT_SKILLS_ENTRY],
     packages: existingPackages
   }, { spaces: 2 });
@@ -45209,40 +45209,60 @@ async function executePiSync(plan, sourceDir, targetDir, opts = {}) {
   }
   return result;
 }
-async function ensurePiCoreResolution(repoRoot, dryRun = false, log = (msg) => console.log(kleur_default.dim(`    ${msg}`))) {
-  const repoExtDir = import_path4.default.join(repoRoot, ".xtrm", "extensions");
-  const coreDir = import_path4.default.join(repoExtDir, "core");
-  if (!await import_fs_extra9.default.pathExists(coreDir)) {
-    log("No .xtrm/extensions/core/ found \u2014 skipping pi-core resolution");
-    return { ok: false, created: false };
+var EXTENSION_SOURCE_DIR = "ext-src";
+async function linkExtensionsToGlobal(repoRoot, dryRun = false, log = (msg) => console.log(kleur_default.dim(`    ${msg}`))) {
+  const globalExtDir = import_path4.default.join(PI_AGENT_DIR, "extensions");
+  const repoExtDir = import_path4.default.join(repoRoot, ".xtrm", EXTENSION_SOURCE_DIR);
+  const linked = [];
+  const failed = [];
+  if (!await import_fs_extra9.default.pathExists(repoExtDir)) {
+    log("No .xtrm/ext-src/ found \u2014 skipping global link");
+    return { linked, failed };
   }
-  const nodeModulesDir = import_path4.default.join(repoExtDir, "node_modules", "@xtrm");
-  const symlinkPath = import_path4.default.join(nodeModulesDir, "pi-core");
-  const relativeTarget = import_path4.default.join("..", "..", "core");
   if (dryRun) {
-    log("[DRY RUN] would create @xtrm/pi-core symlink");
-    return { ok: true, created: false };
+    log("[DRY RUN] would create extension symlinks in ~/.pi/agent/extensions/");
+    return { linked, failed };
   }
+  await import_fs_extra9.default.ensureDir(globalExtDir);
+  const coreNodeModulesDir = import_path4.default.join(globalExtDir, "node_modules", "@xtrm");
+  const coreSymlinkPath = import_path4.default.join(coreNodeModulesDir, "pi-core");
+  const coreRelativeTarget = import_path4.default.join("..", "..", "core");
   try {
-    const existing = await import_fs_extra9.default.lstat(symlinkPath).catch(() => null);
-    if (existing) {
-      if (existing.isSymbolicLink()) {
-        const currentTarget = await import_fs_extra9.default.readlink(symlinkPath);
-        const resolvedTarget = import_path4.default.resolve(import_path4.default.dirname(symlinkPath), currentTarget);
-        if (resolvedTarget === import_path4.default.resolve(coreDir)) {
-          return { ok: true, created: false };
-        }
-      }
-      await import_fs_extra9.default.remove(symlinkPath);
-    }
-    await import_fs_extra9.default.ensureDir(nodeModulesDir);
-    await import_fs_extra9.default.symlink(relativeTarget, symlinkPath);
-    log("\u2713 @xtrm/pi-core symlink \u2192 .xtrm/extensions/node_modules/@xtrm/pi-core");
-    return { ok: true, created: true };
+    await import_fs_extra9.default.ensureDir(coreNodeModulesDir);
+    const existing = await import_fs_extra9.default.lstat(coreSymlinkPath).catch(() => null);
+    if (existing) await import_fs_extra9.default.remove(coreSymlinkPath);
+    await import_fs_extra9.default.symlink(coreRelativeTarget, coreSymlinkPath);
+    log("\u2713 @xtrm/pi-core \u2192 global node_modules");
   } catch (err) {
     log(kleur_default.yellow(`\u26A0 @xtrm/pi-core symlink: ${err}`));
-    return { ok: false, created: false };
   }
+  const entries = await import_fs_extra9.default.readdir(repoExtDir, { withFileTypes: true });
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    if (entry.name === "node_modules") continue;
+    const extPath = import_path4.default.join(repoExtDir, entry.name);
+    const globalLink = import_path4.default.join(globalExtDir, entry.name);
+    try {
+      const existing = await import_fs_extra9.default.lstat(globalLink).catch(() => null);
+      if (existing) {
+        if (existing.isSymbolicLink()) {
+          const currentTarget = await import_fs_extra9.default.readlink(globalLink);
+          const resolvedTarget = import_path4.default.resolve(import_path4.default.dirname(globalLink), currentTarget);
+          if (resolvedTarget === import_path4.default.resolve(extPath)) {
+            continue;
+          }
+        }
+        await import_fs_extra9.default.remove(globalLink);
+      }
+      await import_fs_extra9.default.symlink(extPath, globalLink);
+      linked.push(entry.name);
+      log(`\u2713 ${entry.name} \u2192 .xtrm/${EXTENSION_SOURCE_DIR}/${entry.name}`);
+    } catch (err) {
+      failed.push(entry.name);
+      log(kleur_default.red(`\u2717 ${entry.name}: ${err}`));
+    }
+  }
+  return { linked, failed };
 }
 async function runPiRuntimeSync(opts = {}) {
   const { dryRun = false, isGlobal = false, projectRoot } = opts;
@@ -45278,7 +45298,9 @@ async function runPiRuntimeSync(opts = {}) {
     });
     return mergePiSyncResults(result, synced);
   }
-  await ensurePiCoreResolution(resolvedProjectRoot, dryRun, log);
+  const linkResult = await linkExtensionsToGlobal(resolvedProjectRoot, dryRun, log);
+  result.extensionsAdded.push(...linkResult.linked);
+  result.failed.push(...linkResult.failed);
   const installedPkgIds = getInstalledPiPackages();
   const packageStatuses = [];
   const missingPackages = [];
@@ -45290,7 +45312,7 @@ async function runPiRuntimeSync(opts = {}) {
   }
   console.log(kleur_default.bold("\n  Pi Runtime"));
   console.log(kleur_default.dim("  " + "-".repeat(50)));
-  console.log(kleur_default.dim(`  Extensions: .xtrm/extensions/ (auto-discovered)`));
+  console.log(kleur_default.dim(`  Extensions: ~/.pi/agent/extensions/ \u2192 .xtrm/${EXTENSION_SOURCE_DIR}/`));
   const pkgOk = packageStatuses.filter((s) => s.installed).length;
   console.log(kleur_default.dim(`  Packages:   ${pkgOk}/${packageStatuses.length} installed`));
   if (missingPackages.length > 0) {

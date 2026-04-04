@@ -31,7 +31,7 @@ const assets = {
     install_mode: 'copy',
   },
   extensions: {
-    source_dir: '.xtrm/extensions',
+    source_dir: '.xtrm/ext-src',
     install_mode: 'copy',
   },
 };

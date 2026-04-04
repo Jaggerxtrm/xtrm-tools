@@ -25,6 +25,7 @@ domain: [skills, cli, registry]
 | [5) `xt skills` CLI contract (minimum)](#5-`xt-skills`-cli-contract-minimum) | Required baseline contract: |
 | [6) Migration plan for existing copy-based installs](#6-migration-plan-for-existing-copy-based-installs) | Goal: transition safely from copy-based installs to registry-driven behavior with idempotency and rollback |
 | [Phase v0.8 — Foundation ✅ DELIVERED (2026-03-31)](#phase-v0.8-—-foundation-✅-delivered-2026-03-31) | 1 |
+| [Phase v0.9 — Pack Lifecycle + Plugin Skill Bundle Removal ✅ DELIVERED (2026-04-01)](#phase-v0.9-—-pack-lifecycle-+-plugin-skill-bundle-removal-✅-delivered-2026-04-01) | 1 |
 | [Phase v0.9 — Dual-mode bridge](#phase-v0.9-—-dual-mode-bridge) | 1 |
 | [Phase v1.0 — Registry-first](#phase-v1.0-—-registry-first) | 1 |
 | [7) Risks and open questions](#7-risks-and-open-questions) | This is the hard boundary that drives Option B integration design |

@@ -1,15 +1,13 @@
 ---
 name: sync-docs
 description: >-
-  Doc audit and structural sync for xtrm projects. Use whenever the README
-  feels too long, docs are out of sync after a sprint, the CHANGELOG is behind,
-  or the user asks to "sync docs", "doc audit", "split readme", "check docs
-  health", or "detect drift". Prefer the xtrm docs command suite (`xtrm docs
-  list`, `xtrm docs show`, `xtrm docs cross-check`) for operator-facing
-  inspection, then use docs-only drift detection on README.md, CHANGELOG.md,
-  and docs/ plus the Python analyzers as validation/backstop tools.
+  Mode-routed documentation sync for xtrm projects. Three modes: targeted
+  (named docs only), area (time-windowed + source scope), full audit.
+  Commit-based context gathering, not PR-based. Use whenever docs need
+  syncing after code changes, the user asks to "sync docs", "update docs",
+  "doc audit", "check docs health", or "detect drift".
 gemini-command: sync-docs
-version: 1.3.0
+version: 2.0.0
 ---
 
 # sync-docs
@@ -19,127 +17,151 @@ Keeps project documentation in sync with code reality.
 ## Overview
 
 ```
-Phase 1: Gather context     — what changed recently?
-Phase 2: Inspect with xtrm  — what does the docs suite already report?
-Phase 3: Detect docs drift  — which docs/ files are stale?
-Phase 4: Analyze structure  — what belongs outside README?
-Phase 5: Plan + execute     — fix docs and changelog
-Phase 6: Validate           — schema-check all docs/
+Phase 0: Route mode/scope   — targeted, area, or full audit?
+Phase 1: Gather context      — commits, issues, changed files in window
+Phase 2: Inspect with xtrm   — what does the docs suite report?
+Phase 3: Detect drift         — which docs are stale?
+Phase 4: Plan delta           — what to edit vs report
+Phase 5: Execute fixes        — update docs within scope
+Phase 6: Validate             — confirm no remaining drift
 ```
 
-**Preferred workflow:** use the `xtrm docs` command suite first for human/operator-facing inspection, then use the Python scripts for drift validation, structure analysis, metadata checks, and sync checkpoints.
-
-**Audit vs Execute mode:** If the user asked for an audit/report/check-only task, stop after Phase 4. Only run fixes when the user explicitly asks for changes.
+**Audit vs Execute:** Bead-linked runs execute all phases. Non-bead runs with
+"audit/check/report" stop after Phase 4. Non-bead runs with "update/fix/sync"
+execute.
 
 ---
 
-## Phase 1: Gather Context
+## Phase 0: Route Mode and Scope
 
-Start with the user-facing docs suite so the agent sees the same command surfaces users do:
+Determine your mode BEFORE gathering context. This controls everything downstream.
+
+### Mode precedence
+
+| Priority | Condition | Mode |
+|----------|-----------|------|
+| 1 | Prompt contains explicit doc file paths | **Targeted** |
+| 2 | Prompt contains time window + directory/source scope | **Area** |
+| 3 | Everything else | **Full audit** |
+
+### Mode behaviors
+
+**Targeted** — edit ONLY the named docs. Gather recent context for understanding.
+Report collateral docs that likely also need updates but do NOT edit them.
+
+**Area** — derive candidate docs from changed source paths within the time window.
+Use drift detector to confirm staleness. Edit candidate docs within derived scope.
+
+**Full audit** — run complete docs audit. Contextualize with recent commits/issues.
+Use drift detector + structure analyzer for comprehensive coverage.
+
+### Execution policy
+
+| Condition | Action |
+|-----------|--------|
+| `$bead_id` present | Execute (all phases) |
+| No bead + "audit"/"check"/"report"/"what's stale" | Report only (stop Phase 4) |
+| No bead + "update"/"fix"/"sync" | Execute |
+
+---
+
+## Phase 1: Gather Scoped Context
+
+### Context gatherer
+
+The context gatherer supports time-window and scope-aware gathering:
 
 ```bash
-xtrm docs list
-xtrm docs list --json
-xtrm docs show --json
-xtrm docs cross-check --json --days 30
+# Targeted: specific docs + time window
+python3 .xtrm/skills/default/sync-docs/scripts/context_gatherer.py \
+  --doc docs/features.md --doc docs/cli-reference.md --since-hours 24
+
+# Area: source scope + time window
+python3 .xtrm/skills/default/sync-docs/scripts/context_gatherer.py \
+  --scope-path src/specialist/ --since-hours 24
+
+# Area: broader window
+python3 .xtrm/skills/default/sync-docs/scripts/context_gatherer.py \
+  --scope-path src/cli/ --since-days 7
+
+# Full audit: broad window
+python3 .xtrm/skills/default/sync-docs/scripts/context_gatherer.py \
+  --since-days 7
+
+# Legacy compat (commit count)
+python3 .xtrm/skills/default/sync-docs/scripts/context_gatherer.py \
+  --since-commits 30
 ```
 
-Use these commands for:
-- `xtrm docs list` — inventory docs files, paths, titles, types, and cache-backed scans
-- `xtrm docs show --json` — inspect frontmatter for README, CHANGELOG, and `docs/*.md`
-- `xtrm docs cross-check --json` — gather stale-doc, coverage-gap, and open-issue-ref signals
-
-Then gather deeper repository context if needed:
-
-```bash
-# Global install
-python3 "$HOME/.agents/skills/sync-docs/scripts/context_gatherer.py" [--since=30]
-
-# From repository
-python3 "skills/sync-docs/scripts/context_gatherer.py" [--since=30]
-```
+**Default:** `--since-hours 24` when no window specified.
 
 Outputs JSON with:
-- recently closed bd issues
-- merged PRs from git history
-- recent commits
-- docs drift report from `sync-docs/scripts/drift_detector.py`
+- `mode_hint`: targeted / area / full
+- `window`: type + value + git_since
+- `scope`: doc targets + source paths
+- `git.recent_commits`: commits with changed files
+- `git.changed_files`: unique files ranked by change frequency
+- `git.changed_dirs`: directory-level summary
+- `bd.closed_issues`: recently closed issues
+- `docs`: drift detector results
 
----
+### xtrm docs suite
 
-## Phase 2: Inspect with `xtrm docs`
-
-Treat the CLI docs suite as the primary operator workflow:
+Use for operator-facing inspection:
 
 ```bash
-xtrm docs --help
 xtrm docs list --json
 xtrm docs show --json
 xtrm docs cross-check --json --days 30
 ```
 
-Use it to answer:
-- what docs currently exist?
-- which docs have missing or outdated metadata?
-- are there coverage gaps between recent work and docs?
-- do docs reference open issues?
+---
 
-If the xtrm docs suite already isolates the problem clearly, proceed directly to fixes. If you need machine-level drift validation for `docs/*.md`, continue to the Python drift detector.
+## Phase 2: Inspect Docs State
+
+Use `xtrm docs` to answer:
+- What docs exist and their metadata?
+- Which have missing or outdated frontmatter?
+- Coverage gaps between recent work and docs?
+
+If the CLI already isolates the problem clearly, skip to Phase 4.
 
 ---
 
-## Phase 3: Detect docs/ Drift
+## Phase 3: Detect Drift
 
-Use the Python detector as the authoritative drift/backstop check for tracked `docs/*.md` pages:
+Use the drift detector filtered to your scope:
 
 ```bash
-python3 "skills/sync-docs/scripts/drift_detector.py" scan --since 30
-# optional JSON:
-python3 "skills/sync-docs/scripts/drift_detector.py" scan --since 30 --json
+# All docs
+python3 .xtrm/skills/default/sync-docs/scripts/drift_detector.py scan --json
+
+# With commit window
+python3 .xtrm/skills/default/sync-docs/scripts/drift_detector.py scan --since 30 --json
 ```
 
-A docs file is stale when:
+A doc is stale when:
 1. It declares `source_of_truth_for` globs in frontmatter
-2. AND there are commits affecting matching files AFTER the `synced_at` hash
+2. AND commits affecting matching files exist AFTER the `synced_at` hash
 
-### synced_at Checkpoint
+### Staleness model
 
-Add `synced_at: <git-hash>` to doc frontmatter to mark the last sync point:
-
-```yaml
----
-title: Hooks Reference
-updated: 2026-03-21
-synced_at: a1b2c3d  # git hash when doc was last synced
-source_of_truth_for:
-  - "hooks/**/*.mjs"
----
-```
-
-After updating a doc, run:
-```bash
-python3 "skills/sync-docs/scripts/drift_detector.py" update-sync docs/hooks.md
-```
-
-This sets `synced_at` to current HEAD, marking the doc as synced.
+- **Time windows** decide what recent work to consider now (relevance)
+- **`synced_at` / hash-based drift** decides whether a doc is actually stale (truth)
+- **Fallback**: when metadata is missing, time-window heuristics prioritize review
 
 ---
 
-## Phase 4: Analyze Document Structure
+## Phase 4: Plan Delta
 
-```bash
-python3 "skills/sync-docs/scripts/doc_structure_analyzer.py"
-```
+Before editing, identify:
+- Docs to update (within scope)
+- Docs to leave untouched
+- Collateral docs to report only (targeted mode)
 
-Checks:
-1. README bloat/extractable sections
-2. CHANGELOG staleness (date + version gap)
-3. Missing focused docs files
-4. Invalid docs schema (missing frontmatter)
+**If audit-only, stop here and output the report.**
 
-Statuses: `BLOATED`, `EXTRACTABLE`, `MISSING`, `STALE`, `INVALID_SCHEMA`, `OK`.
-
-If this is audit-only, stop here and report. In the report, include both:
+Include both:
 - `xtrm docs` findings (operator-facing)
 - Python analyzer findings (drift/structure enforcement)
 
@@ -148,139 +170,93 @@ If this is audit-only, stop here and report. In the report, include both:
 ## Phase 5: Execute Fixes
 
 | Situation | Action |
-|---|---|
+|-----------|--------|
+| Stale docs file | Update content + bump `version` + `updated` |
 | README bloated | Extract large sections to focused docs files |
 | Missing docs file | Generate scaffold via `validate_doc.py --generate` |
-| Stale docs file | Update content + bump `version` + `updated` |
-| Stale CHANGELOG | Add entry with local changelog script |
-| Invalid schema | Fix frontmatter and regenerate INDEX |
+| Stale CHANGELOG | Add entry with changelog script |
+| Invalid schema | Fix frontmatter |
 
-### Auto-fix known gaps
+### After each doc update
 
+Stamp the sync checkpoint:
 ```bash
-python3 "skills/sync-docs/scripts/doc_structure_analyzer.py" --fix
-python3 "skills/sync-docs/scripts/doc_structure_analyzer.py" --fix --bd-remember
+python3 .xtrm/skills/default/sync-docs/scripts/drift_detector.py update-sync <doc-path>
 ```
 
-### Create one docs scaffold
+### Targeted mode boundary
+
+In targeted mode, ONLY edit the named docs. If you discover other docs need
+updating, list them in your output as "Suggested follow-ups" — do not edit them.
+
+### Structure analysis (full audit only)
 
 ```bash
-python3 "skills/sync-docs/scripts/validate_doc.py" --generate docs/hooks.md \
-  --title "Hooks Reference" --scope "hooks" --category "reference" \
-  --source-for "hooks/**/*.mjs,policies/*.json"
+python3 .xtrm/skills/default/sync-docs/scripts/doc_structure_analyzer.py
+python3 .xtrm/skills/default/sync-docs/scripts/doc_structure_analyzer.py --fix
 ```
-
-### Validate and regenerate metadata/index
-
-```bash
-python3 "skills/sync-docs/scripts/validate_metadata.py" docs/
-```
-
-### Re-run xtrm docs suite after fixes
-
-```bash
-xtrm docs list --json
-xtrm docs show --json
-xtrm docs cross-check --json --days 30
-```
-
-Use this pass to confirm the user-facing docs workflow now reflects the repaired state before final validation.
 
 ### Add changelog entry
 
 ```bash
-python3 "skills/sync-docs/scripts/changelog/add_entry.py" \
+python3 .xtrm/skills/default/sync-docs/scripts/changelog/add_entry.py \
   CHANGELOG.md Added "Describe the documentation update"
 ```
 
 ---
 
-## Phase 6: Final Validation
+## Phase 6: Validate
 
-Run both layers:
+Re-run both layers:
 
 ```bash
 xtrm docs list --json
-xtrm docs show --json
 xtrm docs cross-check --json --days 30
-python3 "skills/sync-docs/scripts/validate_doc.py" docs/
-python3 "skills/sync-docs/scripts/drift_detector.py" scan --since 30
+python3 .xtrm/skills/default/sync-docs/scripts/drift_detector.py scan --json
 ```
 
-The `xtrm docs` commands confirm the end-user/operator view; the Python tools confirm schema and tracked-doc drift guarantees.
+Confirm updated docs no longer show as stale.
 
 ---
 
 ## Frontmatter Schema
 
-All `docs/*.md` files require valid YAML frontmatter. Scripts only validate `docs/*.md` (not subdirectories).
+All `docs/*.md` files require valid YAML frontmatter.
 
 ### Required Fields
 
 | Field | Format | Example |
 |-------|--------|---------|
-| `title` | string (quote if contains colon) | `"Session-Flow: Pi Parity"` |
+| `title` | string | `"Hooks Reference"` |
 | `scope` | string | `hooks` |
-| `category` | enum (see below) | `reference` |
+| `category` | enum | `reference` |
 | `version` | semver | `1.0.0` |
 | `updated` | date | `2026-03-22` |
 
 ### Valid Categories
 
-Only these values pass validation:
-
-| Category | Use for |
-|----------|---------|
-| `api` | API documentation |
-| `architecture` | System design, architecture decisions |
-| `guide` | How-to guides, tutorials |
-| `overview` | High-level introductions |
-| `plan` | Planning documents, roadmaps |
-| `reference` | Reference documentation |
-
-**Invalid**: `roadmap`, `deprecated`, `complete` — will fail validation.
-
-### YAML Quoting
-
-Titles with special characters (colons, quotes) must be quoted:
-
-```yaml
-# ✅ Correct
-title: "Session-Flow: Pi Parity"
-title: "What's New in v2.0"
-
-# ❌ Incorrect — YAML parse error
-title: Session-Flow: Pi Parity
-title: What's New in v2.0
-```
+`api` | `architecture` | `guide` | `overview` | `plan` | `reference`
 
 ### Optional Fields
 
 | Field | Format | Use |
 |-------|--------|-----|
-| `description` | string (quoted) | Brief summary |
+| `description` | string | Brief summary |
 | `source_of_truth_for` | list of globs | Link to code areas |
 | `synced_at` | git hash | Drift checkpoint |
 | `domain` | list of tags | Categorization |
 
 ---
 
-## docs/ as SSOT
-
-`docs/` is the only source of truth for project documentation in this workflow.
-Scripts validate `docs/*.md` only — subdirectories (`docs/plans/`, `docs/reference/`) are ignored.
-Use frontmatter (`source_of_truth_for`) to link docs pages to code areas and detect drift.
-
 ## Command Selection Rules
 
-Use `xtrm docs` commands first when the task is about understanding the current docs state:
-- `xtrm docs list --json` → inventory and filtering
-- `xtrm docs show --json` → frontmatter inspection
-- `xtrm docs cross-check --json` → recent-work drift, coverage gaps, open issue refs
+**`xtrm docs` first** for understanding current docs state:
+- `xtrm docs list --json` — inventory
+- `xtrm docs show --json` — frontmatter inspection
+- `xtrm docs cross-check --json` — drift, coverage gaps
 
-Use Python scripts when the task is about enforcement or synchronization internals:
-- `drift_detector.py` → `synced_at` / `source_of_truth_for` drift checks for `docs/*.md`
-- `doc_structure_analyzer.py` → README bloat, missing focused docs, changelog version gaps
-- `validate_metadata.py` / `validate_doc.py` → schema/index validation
-
-Do not replace the Python tools with `xtrm docs`; use the CLI for operator-facing inspection and the scripts for authoritative structural validation.
+**Python scripts** for enforcement and sync internals:
+- `drift_detector.py` — `synced_at` / `source_of_truth_for` checks
+- `doc_structure_analyzer.py` — README bloat, missing docs, changelog gaps
+- `validate_metadata.py` / `validate_doc.py` — schema/index validation
+- `context_gatherer.py` — scoped commit/issue context for sync decisions

@@ -45255,6 +45255,44 @@ async function linkExtensionsToGlobal(repoRoot, dryRun = false, log = (msg) => c
   }
   return { linked, failed };
 }
+async function ensureNpmPackageExtensionSymlinks(log) {
+  const os9 = require("os");
+  const homeDir = os9.homedir();
+  const extensionsDir = import_path4.default.join(homeDir, ".pi", "agent", "extensions");
+  await import_fs_extra9.default.ensureDir(extensionsDir);
+  const npmPrefix = (0, import_child_process3.spawnSync)("npm", ["prefix", "-g"], { encoding: "utf8" }).stdout.trim();
+  const globalNodeModules = import_path4.default.join(npmPrefix, "lib", "node_modules");
+  const npmPackages = [
+    { packageName: "pi-gitnexus", symlinkName: "gitnexus" },
+    { packageName: "pi-serena-tools", symlinkName: "serena" }
+  ];
+  for (const { packageName, symlinkName } of npmPackages) {
+    const packagePath = import_path4.default.join(globalNodeModules, packageName);
+    const symlinkPath = import_path4.default.join(extensionsDir, symlinkName);
+    const packageExists = await import_fs_extra9.default.pathExists(packagePath);
+    if (!packageExists) {
+      log?.(kleur_default.yellow(`  \u26A0 ${packageName} not found in ${globalNodeModules}, skipping symlink`));
+      continue;
+    }
+    const symlinkExists = await import_fs_extra9.default.lstat(symlinkPath).catch(() => null);
+    if (symlinkExists?.isSymbolicLink()) {
+      const currentTarget = await import_fs_extra9.default.readlink(symlinkPath);
+      const resolvedTarget = import_path4.default.resolve(extensionsDir, currentTarget);
+      if (resolvedTarget === packagePath) {
+        log?.(kleur_default.dim(`  \u2713 ${symlinkName} symlink already correct`));
+        continue;
+      }
+      log?.(kleur_default.dim(`  Removing stale ${symlinkName} symlink`));
+      await import_fs_extra9.default.remove(symlinkPath);
+    } else if (symlinkExists) {
+      log?.(kleur_default.dim(`  Removing stale ${symlinkName} (not a symlink)`));
+      await import_fs_extra9.default.remove(symlinkPath);
+    }
+    const relativeTarget = import_path4.default.relative(extensionsDir, packagePath);
+    await import_fs_extra9.default.symlink(relativeTarget, symlinkPath);
+    log?.(kleur_default.dim(`  Created ${symlinkName} symlink \u2192 ${relativeTarget}`));
+  }
+}
 async function runPiRuntimeSync(opts = {}) {
   const { dryRun = false, isGlobal = false, projectRoot } = opts;
   const pkgRoot = resolvePkgRoot();
@@ -45292,6 +45330,7 @@ async function runPiRuntimeSync(opts = {}) {
   const linkResult = await linkExtensionsToGlobal(resolvedProjectRoot, dryRun, log);
   result.extensionsAdded.push(...linkResult.linked);
   result.failed.push(...linkResult.failed);
+  await ensureNpmPackageExtensionSymlinks(log);
   const installedPkgIds = getInstalledPiPackages();
   const packageStatuses = [];
   const missingPackages = [];

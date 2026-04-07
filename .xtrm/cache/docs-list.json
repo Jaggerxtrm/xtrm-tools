@@ -1,5 +1,5 @@
 {
-  "timestamp": 1775092197711,
+  "timestamp": 1775536926148,
   "repoRoot": "/home/dawid/projects/xtrm-tools",
   "entries": [
     {
@@ -14,8 +14,24 @@
         "domain": "[]",
         "summary": "| Section | Summary | |---|---| | [Overview](#overview) | XTRM is a policy-driven workflow layer | | [Installation](#ins"
       },
-      "sizeBytes": 7597,
-      "lastModified": "2026-04-01T17:48:11.503Z"
+      "sizeBytes": 7919,
+      "lastModified": "2026-04-02T19:32:38.923Z"
+    },
+    {
+      "filePath": "/home/dawid/projects/xtrm-tools/docs/bash-tools.md",
+      "relativePath": "docs/bash-tools.md",
+      "frontmatter": {
+        "title": "Specialist Bash Tools",
+        "scope": "bash-tools",
+        "category": "reference",
+        "version": "1.0.0",
+        "updated": "2026-04-02",
+        "source_of_truth_for": "",
+        "domain": "[]",
+        "summary": "| Section | Summary | |---|---| | [Overview](#overview) | xtrm supports two access layers for specialist tooling: | | [T"
+      },
+      "sizeBytes": 4732,
+      "lastModified": "2026-04-04T13:00:53.594Z"
     },
     {
       "filePath": "/home/dawid/projects/xtrm-tools/docs/cli-architecture.md",
@@ -31,8 +47,8 @@
         "domain": "[cli]",
         "summary": "| Section | Summary | |---|---| | [Entry Point](#entry-point) | `cli/src/index | | [Install Flow (`xtrm install`)](#inst"
       },
-      "sizeBytes": 17293,
-      "lastModified": "2026-04-02T00:59:42.201Z"
+      "sizeBytes": 17273,
+      "lastModified": "2026-04-02T19:33:41.004Z"
     },
     {
       "filePath": "/home/dawid/projects/xtrm-tools/docs/docs-commands.md",
@@ -80,10 +96,11 @@
         "version": "1.1.0",
         "updated": "2026-04-01",
         "source_of_truth_for": "",
-        "domain": "[]"
+        "domain": "[]",
+        "summary": "| Section | Summary | |---|---| | [Overview](#overview) | xtrm now maintains **two MCP canonical sources** because Claud"
       },
-      "sizeBytes": 1196,
-      "lastModified": "2026-04-01T23:52:32.397Z"
+      "sizeBytes": 1718,
+      "lastModified": "2026-04-04T13:00:53.609Z"
     },
     {
       "filePath": "/home/dawid/projects/xtrm-tools/docs/mcp.md",
@@ -109,15 +126,15 @@
         "title": "Pi Extensions Reference",
         "scope": "pi-extensions",
         "category": "reference",
-        "version": "1.4.0",
-        "updated": "2026-03-25",
-        "synced_at": "ce0f13d",
+        "version": "2.0.0",
+        "updated": "2026-04-04",
+        "synced_at": "e6cca025",
         "source_of_truth_for": "",
         "domain": "[pi, extensions]",
-        "summary": "| Section | Summary | |---|---| | [Install Commands](#install-commands) | Each extension is a directory package: | | [Ma"
+        "summary": "| Section | Summary | |---|---| | [Architecture Overview](#architecture-overview) | Pi extensions use a **global symlink"
       },
-      "sizeBytes": 5264,
-      "lastModified": "2026-03-31T13:31:59.522Z"
+      "sizeBytes": 6735,
+      "lastModified": "2026-04-04T13:00:53.619Z"
     },
     {
       "filePath": "/home/dawid/projects/xtrm-tools/docs/policies.md",
@@ -163,40 +180,11 @@
         "updated": "2026-04-01",
         "description": "Migration notes for legacy project-scoped skills after the gl8b move",
         "source_of_truth_for": "",
-        "domain": "[skills, claude, pi]"
+        "domain": "[skills, claude, pi]",
+        "summary": "| Section | Summary | |---|---| | [Current Source Layout](#current-source-layout) | Use assets from: | | [Installer Expe"
       },
-      "sizeBytes": 987,
-      "lastModified": "2026-04-01T22:49:01.212Z"
-    },
-    {
-      "filePath": "/home/dawid/projects/xtrm-tools/docs/session-flow-test-report-hehp.md",
-      "relativePath": "docs/session-flow-test-report-hehp.md",
-      "frontmatter": {
-        "title": "Session-Flow Test Report: Pi Runtime Parity",
-        "scope": "session-flow",
-        "category": "reference",
-        "version": "1.0.0",
-        "updated": "2026-03-20",
-        "domain": "[pi, beads]",
-        "summary": "| Section | Summary | |---|---| | [1) Metadata](#1-metadata) | **Command/Event:** `bd update jaggers-agent-tools-hehp --"
-      },
-      "sizeBytes": 6844,
-      "lastModified": "2026-03-31T13:31:59.528Z"
-    },
-    {
-      "filePath": "/home/dawid/projects/xtrm-tools/docs/session-flow-test-report-template.md",
-      "relativePath": "docs/session-flow-test-report-template.md",
-      "frontmatter": {
-        "title": "Session-Flow Test Report Template",
-        "scope": "session-flow",
-        "category": "reference",
-        "version": "1.0.0",
-        "updated": "2026-03-20",
-        "domain": "[pi, beads]",
-        "summary": "| Section | Summary | |---|---| | [1) Metadata](#1-metadata) | For each scenario, fill **Expected**, **Observed**, and *"
-      },
-      "sizeBytes": 2594,
-      "lastModified": "2026-03-31T13:31:59.529Z"
+      "sizeBytes": 1308,
+      "lastModified": "2026-04-04T13:00:53.626Z"
     },
     {
       "filePath": "/home/dawid/projects/xtrm-tools/docs/skills-registry-exploration.md",
@@ -213,8 +201,8 @@
         "domain": "[skills, cli, registry]",
         "summary": "| Section | Summary | |---|---| | [1) Current architecture analysis and pain points](#1-current-architecture-analysis-an"
       },
-      "sizeBytes": 23319,
-      "lastModified": "2026-04-02T01:06:43.004Z"
+      "sizeBytes": 23532,
+      "lastModified": "2026-04-04T13:00:53.635Z"
     },
     {
       "filePath": "/home/dawid/projects/xtrm-tools/docs/skills-tier-architecture.md",
@@ -229,10 +217,10 @@
         "description": "Three-tier skills model: default, optional packs, and user packs with runtime active views",
         "source_of_truth_for": "",
         "domain": "[skills, cli, architecture]",
-        "summary": "| Section | Summary | |---|---| | [Overview](#overview) | Skills are organized into three tiers with runtime-specific ac"
+        "summary": "| Section | Summary | |---|---| | [Overview](#overview) | Skills are organized into a **three-tier model** under ` | | ["
       },
-      "sizeBytes": 9236,
-      "lastModified": "2026-04-02T01:07:17.368Z"
+      "sizeBytes": 10369,
+      "lastModified": "2026-04-04T13:00:53.643Z"
     },
     {
       "filePath": "/home/dawid/projects/xtrm-tools/docs/skills.md",
@@ -247,10 +235,10 @@
         "description": "Skills tier architecture: default skills, optional packs, user packs, and xt skills CLI",
         "source_of_truth_for": "",
         "domain": "[skills, claude, pi]",
-        "summary": "| Section | Summary | |---|---| | [Tier Architecture](#tier-architecture) | Three-tier model: default (managed), optiona"
+        "summary": "| Section | Summary | |---|---| | [Tier Architecture](#tier-architecture) | The `default/` directory is a symlink to the"
       },
-      "sizeBytes": 5944,
-      "lastModified": "2026-04-02T01:06:43.003Z"
+      "sizeBytes": 6833,
+      "lastModified": "2026-04-04T13:00:53.649Z"
     },
     {
       "filePath": "/home/dawid/projects/xtrm-tools/docs/testing.md",
@@ -308,15 +296,16 @@
         "title": ".xtrm Directory Reference",
         "scope": "xtrm-directory",
         "category": "reference",
-        "version": "1.0.0",
-        "updated": "2026-04-01",
+        "version": "1.1.0",
+        "updated": "2026-04-04",
+        "synced_at": "e6cca025",
         "description": "Centralized xtrm configuration and runtime data directory",
         "source_of_truth_for": "",
         "domain": "[config, xtrm]",
-        "summary": "| Section | Summary | |---|---| | [Overview](#overview) | `.xtrm/` is the canonical location for all xtrm-managed projec"
+        "summary": "| Section | Summary | |---|---| | [Overview](#overview) | ` | | [Directory Layout](#directory-layout) | Pi extensions fo"
       },
-      "sizeBytes": 3811,
-      "lastModified": "2026-04-01T17:47:18.817Z"
+      "sizeBytes": 6089,
+      "lastModified": "2026-04-04T13:00:53.657Z"
     },
     {
       "filePath": "/home/dawid/projects/xtrm-tools/docs/xtrm-ui.md",
@@ -325,16 +314,16 @@
         "title": "XTRM UI Extension",
         "scope": "xtrm-ui",
         "category": "reference",
-        "version": "1.0.0",
-        "updated": "2026-03-26",
-        "synced_at": "eb2a8e3",
-        "description": "Pi extension that replaces pi-dex with XTRM-tuned chrome: light theme default, compact tools, header, and footer disabled for custom-footer compatibility",
+        "version": "1.2.0",
+        "updated": "2026-04-04",
+        "synced_at": "e6cca025",
+        "description": "Pi extension that replaces pi-dex with XTRM-tuned chrome and pi-diff-style write/edit previews while preserving custom-footer ownership",
         "source_of_truth_for": "",
         "domain": "[pi, extensions, ui, themes]",
         "summary": "| Section | Summary | |---|---| | [Overview](#overview) | `xtrm-ui` is a Pi extension that wraps the visual chrome from "
       },
-      "sizeBytes": 4126,
-      "lastModified": "2026-03-31T13:31:59.536Z"
+      "sizeBytes": 4676,
+      "lastModified": "2026-04-04T13:00:53.661Z"
     }
   ]
 }

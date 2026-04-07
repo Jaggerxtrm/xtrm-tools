@@ -82,7 +82,7 @@ export async function scaffoldSkillsDefaultFromPackage(params: {
     packageRoot: string;
     userXtrmDir: string;
     dryRun: boolean;
-}): Promise<'symlink' | 'copy' | 'noop'> {
+}): Promise<'copy' | 'noop'> {
     const { packageRoot, userXtrmDir, dryRun } = params;
     const sourceDir = path.join(packageRoot, '.xtrm', 'skills', 'default');
     const targetDir = path.join(userXtrmDir, 'skills', 'default');
@@ -96,14 +96,8 @@ export async function scaffoldSkillsDefaultFromPackage(params: {
     }
 
     await fs.ensureDir(path.dirname(targetDir));
-
-    try {
-        await fs.ensureSymlink(sourceDir, targetDir);
-        return 'symlink';
-    } catch {
-        await fs.copy(sourceDir, targetDir);
-        return 'copy';
-    }
+    await fs.copy(sourceDir, targetDir);
+    return 'copy';
 }
 
 export function buildExpectedHashes(registry: RegistryManifest): Map<string, string> {

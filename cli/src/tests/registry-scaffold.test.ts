@@ -84,11 +84,12 @@ describe('registry-scaffold path helpers', () => {
 });
 
 describe('scaffoldSkillsDefaultFromPackage', () => {
-  it('returns symlink when targetDir does not exist', async () => {
+  it('returns copy when targetDir does not exist', async () => {
     const tempDir = await createTempDir();
     const packageRoot = path.join(tempDir, 'pkg');
     const userXtrmDir = path.join(tempDir, 'user-xtrm');
     const sourceDir = path.join(packageRoot, '.xtrm', 'skills', 'default');
+    const targetDir = path.join(userXtrmDir, 'skills', 'default');
 
     await fs.ensureDir(sourceDir);
     await fs.writeFile(path.join(sourceDir, 'README.md'), '# skill\n', 'utf8');
@@ -99,7 +100,9 @@ describe('scaffoldSkillsDefaultFromPackage', () => {
       dryRun: false,
     });
 
-    expect(result).toBe('symlink');
+    expect(result).toBe('copy');
+    expect((await fs.lstat(targetDir)).isSymbolicLink()).toBe(false);
+    expect(await fs.readFile(path.join(targetDir, 'README.md'), 'utf8')).toBe('# skill\n');
   });
 
   it('returns noop when targetDir already exists', async () => {

@@ -898,6 +898,72 @@ export interface PiRuntimeOptions {
  * Run full Pi runtime sync flow: inventory -> plan -> sync.
  *
  * Global installs mirror extensions into ~/.pi/agent/extensions/ (Pi reads them automatically).
+
+/**
+ * Ensure npm package extensions (pi-gitnexus, pi-serena-tools) are symlinked to ~/.pi/agent/extensions/
+ * 
+ * These packages are installed globally via npm but Pi expects them as directory extensions.
+ * Creates symlinks:
+ *   ~/.pi/agent/extensions/gitnexus -> <npm-global>/pi-gitnexus
+ *   ~/.pi/agent/extensions/serena -> <npm-global>/pi-serena-tools
+ */
+export async function ensureNpmPackageExtensionSymlinks(log?: (msg: string) => void): Promise<void> {
+    const os = require('os');
+    const homeDir = os.homedir();
+    const extensionsDir = path.join(homeDir, '.pi', 'agent', 'extensions');
+    
+    // Ensure extensions directory exists
+    await fs.ensureDir(extensionsDir);
+    
+    // Get global npm prefix to find package locations
+    const npmPrefix = spawnSync('npm', ['prefix', '-g'], { encoding: 'utf8' }).stdout.trim();
+    const globalNodeModules = path.join(npmPrefix, 'lib', 'node_modules');
+    
+    const npmPackages = [
+        { packageName: 'pi-gitnexus', symlinkName: 'gitnexus' },
+        { packageName: 'pi-serena-tools', symlinkName: 'serena' },
+    ];
+    
+    for (const { packageName, symlinkName } of npmPackages) {
+        const packagePath = path.join(globalNodeModules, packageName);
+        const symlinkPath = path.join(extensionsDir, symlinkName);
+        
+        // Check if package exists in global node_modules
+        const packageExists = await fs.pathExists(packagePath);
+        if (!packageExists) {
+            log?.(kleur.yellow(`  ⚠ ${packageName} not found in ${globalNodeModules}, skipping symlink`));
+            continue;
+        }
+        
+        // Check if symlink already exists and is correct
+        const symlinkExists = await fs.lstat(symlinkPath).catch(() => null);
+        if (symlinkExists?.isSymbolicLink()) {
+            const currentTarget = await fs.readlink(symlinkPath);
+            const resolvedTarget = path.resolve(extensionsDir, currentTarget);
+            if (resolvedTarget === packagePath) {
+                log?.(kleur.dim(`  ✓ ${symlinkName} symlink already correct`));
+                continue;
+            }
+            // Wrong target - remove and recreate
+            log?.(kleur.dim(`  Removing stale ${symlinkName} symlink`));
+            await fs.remove(symlinkPath);
+        } else if (symlinkExists) {
+            // Not a symlink (legacy copy) - remove and recreate
+            log?.(kleur.dim(`  Removing stale ${symlinkName} (not a symlink)`));
+            await fs.remove(symlinkPath);
+        }
+        
+        // Create relative symlink
+        const relativeTarget = path.relative(extensionsDir, packagePath);
+        await fs.symlink(relativeTarget, symlinkPath);
+        log?.(kleur.dim(`  Created ${symlinkName} symlink → ${relativeTarget}`));
+    }
+}
+
+/**
+ * Run full Pi runtime sync flow: inventory -> plan -> sync.
+ *
+ * Global installs mirror extensions into ~/.pi/agent/extensions/ (Pi reads them automatically).
  * Project installs skip the extension mirror — Pi discovers extensions directly via
  * .pi/settings.json pointing at ../.xtrm/extensions. Only packages are synced for project installs.
  */
@@ -950,6 +1016,8 @@ export async function runPiRuntimeSync(opts: PiRuntimeOptions = {}): Promise<PiS
     const linkResult = await linkExtensionsToGlobal(resolvedProjectRoot, dryRun, log);
     result.extensionsAdded.push(...linkResult.linked);
     result.failed.push(...linkResult.failed);
+    // Ensure npm package extensions (pi-gitnexus, pi-serena-tools) are symlinked
+    await ensureNpmPackageExtensionSymlinks(log);
 
     const installedPkgIds = getInstalledPiPackages();
     const packageStatuses: PackageStatus[] = [];

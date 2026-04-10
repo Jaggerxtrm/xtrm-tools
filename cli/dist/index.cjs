@@ -45923,13 +45923,8 @@ async function scaffoldSkillsDefaultFromPackage(params) {
     return "noop";
   }
   await import_fs_extra13.default.ensureDir(import_path8.default.dirname(targetDir));
-  try {
-    await import_fs_extra13.default.ensureSymlink(sourceDir, targetDir);
-    return "symlink";
-  } catch {
-    await import_fs_extra13.default.copy(sourceDir, targetDir);
-    return "copy";
-  }
+  await import_fs_extra13.default.copy(sourceDir, targetDir);
+  return "copy";
 }
 function buildExpectedHashes(registry2) {
   const expected = /* @__PURE__ */ new Map();

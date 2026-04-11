@@ -124,6 +124,56 @@ describe('scaffoldSkillsDefaultFromPackage', () => {
     expect(result).toBe('noop');
   });
 
+  it('removes broken symlink and copies when targetDir is a broken symlink', async () => {
+    const tempDir = await createTempDir();
+    const packageRoot = path.join(tempDir, 'pkg');
+    const userXtrmDir = path.join(tempDir, 'user-xtrm');
+    const sourceDir = path.join(packageRoot, '.xtrm', 'skills', 'default');
+    const targetDir = path.join(userXtrmDir, 'skills', 'default');
+
+    await fs.ensureDir(sourceDir);
+    await fs.writeFile(path.join(sourceDir, 'README.md'), '# skill\n', 'utf8');
+
+    // create a broken symlink at targetDir
+    await fs.ensureDir(path.dirname(targetDir));
+    await fs.symlink('/nonexistent/path/that/does/not/exist', targetDir);
+    expect((await fs.lstat(targetDir)).isSymbolicLink()).toBe(true);
+    expect(await fs.pathExists(targetDir)).toBe(false);
+
+    const result = await scaffoldSkillsDefaultFromPackage({
+      packageRoot,
+      userXtrmDir,
+      dryRun: false,
+    });
+
+    expect(result).toBe('copy');
+    expect(await fs.readFile(path.join(targetDir, 'README.md'), 'utf8')).toBe('# skill\n');
+  });
+
+  it('returns noop when targetDir is a valid symlink', async () => {
+    const tempDir = await createTempDir();
+    const packageRoot = path.join(tempDir, 'pkg');
+    const userXtrmDir = path.join(tempDir, 'user-xtrm');
+    const sourceDir = path.join(packageRoot, '.xtrm', 'skills', 'default');
+    const targetDir = path.join(userXtrmDir, 'skills', 'default');
+    const symlinkTarget = path.join(tempDir, 'dev-skills');
+
+    await fs.ensureDir(sourceDir);
+    await fs.ensureDir(symlinkTarget);
+    await fs.ensureDir(path.dirname(targetDir));
+    await fs.symlink(symlinkTarget, targetDir);
+
+    const result = await scaffoldSkillsDefaultFromPackage({
+      packageRoot,
+      userXtrmDir,
+      dryRun: false,
+    });
+
+    expect(result).toBe('noop');
+    // valid symlink target should remain untouched
+    expect((await fs.lstat(targetDir)).isSymbolicLink()).toBe(true);
+  });
+
   it('returns noop in dry-run mode', async () => {
     const tempDir = await createTempDir();
     const packageRoot = path.join(tempDir, 'pkg');

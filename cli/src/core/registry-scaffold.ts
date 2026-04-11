@@ -87,8 +87,18 @@ export async function scaffoldSkillsDefaultFromPackage(params: {
     const sourceDir = path.join(packageRoot, '.xtrm', 'skills', 'default');
     const targetDir = path.join(userXtrmDir, 'skills', 'default');
 
-    if (await fs.pathExists(targetDir)) {
-        return 'noop';
+    const stat = await fs.lstat(targetDir).catch(() => null);
+    if (stat) {
+        if (stat.isSymbolicLink()) {
+            const isValid = await fs.pathExists(targetDir);
+            if (isValid) {
+                return 'noop'; // valid symlink (dev mode), leave it alone
+            }
+            // broken symlink — remove and re-scaffold
+            await fs.remove(targetDir);
+        } else {
+            return 'noop'; // real directory, leave it alone
+        }
     }
 
     if (dryRun) {

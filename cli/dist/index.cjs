@@ -29671,12 +29671,31 @@ async function runClaudeRuntimeSyncPhase(opts) {
     console.log(t.success("  \u2713 Removed plugin-era settings keys (enabledPlugins, extraKnownMarketplaces)"));
   }
   console.log(t.success("  \u2713 Claude settings hooks synced\n"));
+  await ensureGlobalStatusLine();
   return {
     settingsPath,
     hooksEventsWritten,
     hooksEntriesWritten,
     wroteSettings: true
   };
+}
+async function ensureGlobalStatusLine() {
+  const homeDir = import_os.default.homedir();
+  const statuslineHookPath = import_path2.default.join(homeDir, ".xtrm", "hooks", "statusline.mjs");
+  const globalSettingsPath = import_path2.default.join(homeDir, ".claude", "settings.json");
+  if (!await import_fs_extra2.default.pathExists(statuslineHookPath)) {
+    return;
+  }
+  const expectedCommand = `node "${statuslineHookPath}"`;
+  const settings = await readSettings(globalSettingsPath);
+  const currentCommand = settings.statusLine?.command;
+  if (currentCommand === expectedCommand) {
+    return;
+  }
+  settings.statusLine = { type: "command", command: expectedCommand };
+  await import_fs_extra2.default.ensureDir(import_path2.default.dirname(globalSettingsPath));
+  await import_fs_extra2.default.writeJson(globalSettingsPath, settings, { spaces: 2 });
+  console.log(t.success(`  \u2713 Wired statusline \u2192 ~/.xtrm/hooks/statusline.mjs`));
 }
 function resolveHooksForProjectRuntime(hooks, projectHooksDir) {
   const normalizedHooksDir = normalizeHookCommandPath(projectHooksDir);

@@ -155,3 +155,11 @@
 {"id":"int-f46cba85","kind":"tool_call","created_at":"2026-04-02T22:51:54.100148783Z","actor":"you@example.com","issue_id":"xtrm-rxn4","model":"openai-codex/gpt-5.3-codex","tool_name":"executor","exit_code":0}
 {"id":"int-bc09ad1a","kind":"tool_call","created_at":"2026-04-04T02:11:35.079222519Z","actor":"you@example.com","issue_id":"ejgw","model":"openai-codex/gpt-5.4","tool_name":"overthinker","exit_code":0}
 {"id":"int-3e11a92f","kind":"tool_call","created_at":"2026-04-04T03:09:01.037871327Z","actor":"you@example.com","issue_id":"xtrm-wg8i","model":"dashscope/qwen3.5-plus","tool_name":"explorer","exit_code":1}
+{"id":"int-13b5c564","kind":"tool_call","created_at":"2026-04-07T10:27:04.423654548Z","actor":"you@example.com","issue_id":"xtrm-8nyp","model":"openai-codex/gpt-5.3-codex","tool_name":"executor","exit_code":0}
+{"id":"int-ef4a2ed2","kind":"tool_call","created_at":"2026-04-10T10:11:57.794383578Z","actor":"you@example.com","issue_id":"xtrm-2rur","model":"dashscope/qwen3.5-plus","tool_name":"explorer","exit_code":0}
+{"id":"int-3aaf1e3c","kind":"tool_call","created_at":"2026-04-10T13:17:13.35871786Z","actor":"you@example.com","issue_id":"xtrm-6ek7","model":"openai-codex/gpt-5.3-codex","tool_name":"executor","exit_code":0}
+{"id":"int-71cc9e86","kind":"tool_call","created_at":"2026-04-10T13:28:21.75461284Z","actor":"you@example.com","issue_id":"xtrm-6ek7","model":"openai-codex/gpt-5.3-codex","tool_name":"executor","exit_code":0}
+{"id":"int-79288bf4","kind":"tool_call","created_at":"2026-04-10T21:07:11.948716063Z","actor":"you@example.com","issue_id":"xtrm-6ek7","model":"openai-codex/gpt-5.3-codex","tool_name":"executor","exit_code":0}
+{"id":"int-2d9e39ca","kind":"tool_call","created_at":"2026-04-11T19:29:51.071457551Z","actor":"you@example.com","issue_id":"xtrm-6ek7","model":"openai-codex/gpt-5.3-codex","tool_name":"reviewer","exit_code":0}
+{"id":"int-72288628","kind":"tool_call","created_at":"2026-04-11T19:38:47.375694259Z","actor":"you@example.com","issue_id":"xtrm-6ek7","model":"openai-codex/gpt-5.3-codex","tool_name":"reviewer","exit_code":0}
+{"id":"int-bfb1ac06","kind":"tool_call","created_at":"2026-04-11T19:38:47.794277924Z","actor":"you@example.com","issue_id":"xtrm-6ek7","model":"openai-codex/gpt-5.3-codex","tool_name":"reviewer","exit_code":0}

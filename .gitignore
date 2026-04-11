@@ -68,3 +68,7 @@ hooks/tsconfig-cache.json
 
 # Keep synthesized memory under version control
 !.xtrm/memory.md
+
+.specialists/db/*.db
+.specialists/db/*.db-wal
+.specialists/db/*.db-shm

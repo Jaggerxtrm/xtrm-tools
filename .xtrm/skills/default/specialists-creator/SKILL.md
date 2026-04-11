@@ -6,7 +6,7 @@ description: >
   validating against the schema, and avoiding common specialist authoring
   mistakes.
 version: 1.1
-synced_at: 9648ffae
+synced_at: 236ca5e6
 ---
 
 # Specialist Author Guide
@@ -41,6 +41,8 @@ Rules:
 - Always pick the **highest version** in a family (`claude-sonnet-4-6` not `4-5`, `gemini-3.1-pro-preview` not `gemini-2.5-pro`)
 - `model` and `fallback_model` must be **different providers**
 - Never write a model string you have not pinged in this session
+
+---
 
 ---
 
@@ -145,74 +147,63 @@ specialists models  # confirm assignments look balanced
 ### For a new specialist (single model selection)
 
 > **See [⛔ MANDATORY FIRST STEP](#-mandatory-first-step--verify-models-before-writing-any-json) at the top of this skill.**
-> Use `pi --list-models` (not `specialists models`) to discover models, ping both before writing JSON.
+> Use `pi --list-models` (not `specialists models`) to discover models, ping both before mutating config.
 
 ```bash
 # 1. pi --list-models            — see exactly what's available on pi right now
 # 2. Pick tier + pick highest version in family
 # 3. pi --model <primary>  --print "ping"   — must return "pong"
 # 4. pi --model <fallback> --print "ping"   — must return "pong"
-# 5. Write JSON with verified model strings
+# 5. Run scaffold-specialist.ts first (pre-script already wired in specialists-creator)
+# 6. Use sp edit for field-by-field mutations
 ```
 
 **Rule:** Never hardcode a model without pinging it. If ping fails, try the next best in that tier.
 
 ---
 
-## JSON Format Notes
+## Quick Start: Scaffold + `sp edit`
 
-- All string enum values must be quoted: `"READ_ONLY"`, `"auto"`, `"markdown"`
-- Version must be a quoted string: `"1.0.0"` not `1.0.0`
-- Multi-line strings use `\n` for newlines in `task_template`
-- Comments are not supported in JSON — use `//` in a separate `.md` doc if needed
-- Use a JSON formatter/linter to catch syntax errors before validation
-
----
-
-## Quick Start: Minimal Skeleton
-
-```json
-{
-  "specialist": {
-    "metadata": {
-      "name": "my-specialist",
-      "version": "1.0.0",
-      "description": "One sentence.",
-      "category": "workflow"
-    },
-    "execution": {
-      "model": "anthropic/claude-sonnet-4-6",
-      "permission_required": "READ_ONLY"
-    },
-    "prompt": {
-      "task_template": "$prompt\n\nWorking directory: $cwd"
-    }
-  }
-}
-```
-
-Validate before committing:
 ```bash
-bun src/specialist/validate.ts specialists/my-specialist.specialist.json
+# 1. Create/normalize the specialist JSON with all schema sections present
+node config/skills/specialists-creator/scripts/scaffold-specialist.ts config/specialists/my-specialist.specialist.json
+
+# 2. Apply a preset for common model/thinking defaults (optional but preferred)
+sp edit my-specialist --preset standard
+
+# 3. Set individual fields via dot.path (primary mutation workflow)
+sp edit my-specialist specialist.metadata.name my-specialist
+sp edit my-specialist specialist.metadata.version 1.0.0
+sp edit my-specialist specialist.execution.model anthropic/claude-sonnet-4-6
+sp edit my-specialist specialist.execution.fallback_model google-gemini-cli/gemini-3.1-pro-preview
+sp edit my-specialist specialist.execution.permission_required READ_ONLY
+
+# 4. Use --file only for multiline prompt fields
+sp edit my-specialist specialist.prompt.system --file .tmp/system.prompt.txt
+sp edit my-specialist specialist.prompt.task_template --file .tmp/task-template.prompt.txt
+
+# 5. Verify materialized JSON
+sp view my-specialist
+
+# 6. Validate schema
+bun skills/specialist-author/scripts/validate-specialist.ts config/specialists/my-specialist.specialist.json
 ```
 
 ---
 
 ## Schema Reference
 
-> **Note:** YAML format is deprecated. All new specialists must use `.specialist.json`.
-
 ### `specialist.metadata` (required)
 
 | Field | Type | Required | Notes |
 |-------|------|----------|-------|
 | `name` | string | yes | kebab-case: `[a-z][a-z0-9-]*` |
-| `version` | string | yes | semver: `"1.0.0"` (quoted string in JSON) |
+| `version` | string | yes | semver: `1.0.0` |
 | `description` | string | yes | One sentence |
-| `category` | string | yes | Free text (e.g. `"workflow"`, `"analysis"`, `"codegen"`) |
+| `category` | string | yes | Free text (e.g. `workflow`, `analysis`, `codegen`) |
 | `author` | string | no | Optional |
 | `created` | string | no | Optional date |
-| `updated` | string | no | Optional date |
+| `updated` | string | no | Optional date, quote it: `"2026-03-22"` |
 | `tags` | string[] | no | Optional list |
 
 ### `specialist.execution` (required)
@@ -221,13 +212,14 @@ bun src/specialist/validate.ts specialists/my-specialist.specialist.json
 |-------|------|---------|-------|
 | `model` | string | — | required — ping before using |
 | `fallback_model` | string | — | must be a different provider |
-| `mode` | enum | `"auto"` | `"tool"` \| `"skill"` \| `"auto"` |
-| `timeout_ms` | number | `120000` | milliseconds |
+| `mode` | enum | `auto` | `tool` \| `skill` \| `auto` |
+| `timeout_ms` | number | `120000` | ms |
 | `stall_timeout_ms` | number | — | kill if no event for N ms |
 | `interactive` | boolean | `false` | enable multi-turn keep-alive by default |
-| `response_format` | enum | `"text"` | `"text"` \| `"json"` \| `"markdown"` |
-| `permission_required` | enum | `"READ_ONLY"` | see tier table below |
-| `thinking_level` | enum | — | `"off"` \| `"minimal"` \| `"low"` \| `"medium"` \| `"high"` \| `"xhigh"` |
+| `response_format` | enum | `text` | `text` \| `json` \| `markdown` |
+| `output_type` | enum | `custom` | `codegen` \| `analysis` \| `review` \| `synthesis` \| `orchestration` \| `workflow` \| `research` \| `custom` |
+| `permission_required` | enum | `READ_ONLY` | see tier table below |
+| `thinking_level` | enum | — | `off` \| `minimal` \| `low` \| `medium` \| `high` \| `xhigh` |
 
 **When to use `execution.interactive`**
 
@@ -259,50 +251,75 @@ bun src/specialist/validate.ts specialists/my-specialist.specialist.json
 | `output_schema` | object | no | JSON schema for structured output — injected into system prompt by runner; post-run validation is warn-only |
 | `examples` | array | no | Few-shot examples |
 
-**`output_schema` guidance**: Add when the specialist's output should be machine-readable by downstream consumers (mesk handoff, pipeline injection). The schema is injected as an instruction into the system prompt — the agent structures its output accordingly. Use `response_format: "markdown"` alongside it for human-readable output with a machine-readable block at the end.
+**Output contract precedence (runner-injected):** `response_format` → `output_type` → `output_schema`.
 
-Standard schemas by specialist type:
+**`response_format` behavior**
+- `text`: no report template is injected (raw behavior)
+- `json`: specialist must return one parseable JSON object
+- `markdown`: specialist must use canonical report sections when applicable:
+  - `## Summary`
+  - `## Status`
+  - `## Changes`
+  - `## Verification`
+  - `## Risks`
+  - `## Follow-ups`
+  - `## Beads`
+  - Optional: `## Architecture`, `## Acceptance Criteria`, `## Machine-readable block`
 
+**`output_type` (semantic archetype)**
+- `codegen`: implementation/change manifests
+- `analysis`: architecture/exploration reports
+- `review`: compliance/review verdicts
+- `synthesis`: decision summaries across multiple findings
+- `orchestration`: coordinator actions/state handoffs
+- `workflow`: procedural/operational run outputs
+- `research`: source-backed findings with confidence
+- `custom`: no built-in extension (schema still includes base contract fields in structured modes)
+
+**`output_schema` guidance**: Add when output must be machine-readable by downstream consumers (beads notes, feed, orchestrators). The schema is injected into the system prompt and validated post-run with warn-only behavior (never hard-fail in v1).
+
+**Mandatory markdown+schema rule:** if `response_format: markdown` and `output_schema` is present, the output must include `## Machine-readable block` containing exactly one JSON object in a single ` ```json ` fenced block. That JSON object is canonical and must match the schema.
+
+Standard schemas by specialist type (shown as the `output_schema` object value):
+
+executor — change manifest:
 ```json
-// executor — change manifest
-"prompt": {
-  "output_schema": {
-    "type": "object",
-    "properties": {
-      "status": { "enum": ["success", "partial", "failed"] },
-      "files_changed": { "type": "array", "items": { "type": "string" } },
-      "symbols_modified": { "type": "array", "items": { "type": "string" } },
-      "lint_pass": { "type": "boolean" },
-      "tests_pass": { "type": "boolean" },
-      "issues_closed": { "type": "array", "items": { "type": "string" } },
-      "follow_ups": { "type": "array", "items": { "type": "string" } }
-    }
+{
+  "type": "object",
+  "properties": {
+    "status": { "enum": ["success", "partial", "failed"] },
+    "files_changed": { "type": "array", "items": { "type": "string" } },
+    "symbols_modified": { "type": "array", "items": { "type": "string" } },
+    "lint_pass": { "type": "boolean" },
+    "tests_pass": { "type": "boolean" },
+    "issues_closed": { "type": "array", "items": { "type": "string" } },
+    "follow_ups": { "type": "array", "items": { "type": "string" } }
   }
 }
+```
 
-// explorer — analysis report
-"prompt": {
-  "output_schema": {
-    "type": "object",
-    "properties": {
-      "summary": { "type": "string" },
-      "key_files": { "type": "array", "items": { "type": "string" } },
-      "architecture_notes": { "type": "string" },
-      "recommendations": { "type": "array", "items": { "type": "string" } }
-    }
+explorer — analysis report:
+```json
+{
+  "type": "object",
+  "properties": {
+    "summary": { "type": "string" },
+    "key_files": { "type": "array", "items": { "type": "string" } },
+    "architecture_notes": { "type": "string" },
+    "recommendations": { "type": "array", "items": { "type": "string" } }
   }
 }
+```
 
-// planner — epic result
-"prompt": {
-  "output_schema": {
-    "type": "object",
-    "properties": {
-      "epic_id": { "type": "string" },
-      "children": { "type": "array", "items": { "type": "string" } },
-      "test_issues": { "type": "array", "items": { "type": "string" } },
-      "first_task": { "type": "string" }
-    }
+planner — epic result:
+```json
+{
+  "type": "object",
+  "properties": {
+    "epic_id": { "type": "string" },
+    "children": { "type": "array", "items": { "type": "string" } },
+    "test_issues": { "type": "array", "items": { "type": "string" } },
+    "first_task": { "type": "string" }
   }
 }
 ```
@@ -310,28 +327,30 @@ Standard schemas by specialist type:
 ### `specialist.skills` (optional)
 
 ```json
-"skills": {
-  "paths": [
-    "skills/my-skill/",
-    "~/.agents/skills/domain/",
-    "skills/notes.md"
-  ],
-  "scripts": [
-    {
-      "run": "./scripts/pre-check.sh",
-      "phase": "pre",
-      "inject_output": true
-    },
-    {
-      "run": "bd ready",
-      "phase": "pre",
-      "inject_output": true
-    },
-    {
-      "run": "./scripts/cleanup.sh",
-      "phase": "post"
-    }
-  ]
+{
+  "skills": {
+    "paths": [
+      "skills/my-skill/",
+      "~/.agents/skills/domain/",
+      "skills/notes.md"
+    ],
+    "scripts": [
+      {
+        "run": "./scripts/pre-check.sh",
+        "phase": "pre",
+        "inject_output": true
+      },
+      {
+        "run": "bd ready",
+        "phase": "pre",
+        "inject_output": true
+      },
+      {
+        "run": "./scripts/cleanup.sh",
+        "phase": "post"
+      }
+    ]
+  }
 }
 ```
 
@@ -344,9 +363,11 @@ Standard schemas by specialist type:
 Informational declarations used by pre-run validation and future tooling (e.g. `specialists doctor`).
 
 ```json
-"capabilities": {
-  "required_tools": ["bash", "read", "grep", "glob"],
-  "external_commands": ["bd", "git", "gh"]
+{
+  "capabilities": {
+    "required_tools": ["bash", "read", "grep", "glob"],
+    "external_commands": ["bd", "git", "gh"]
+  }
 }
 ```
 
@@ -355,7 +376,9 @@ Informational declarations used by pre-run validation and future tooling (e.g. `
 ### `specialist.output_file` (optional, top-level)
 
 ```json
-"output_file": ".specialists/my-specialist-result.md"
+{
+  "output_file": ".specialists/my-specialist-result.md"
+}
 ```
 
 Writes the final session output to this file path after the session completes. Relative to the working directory.
@@ -363,12 +386,19 @@ Writes the final session output to this file path after the session completes. R
 ### `specialist.communication` (optional)
 
 ```json
-"communication": {
-  "next_specialists": "planner"
+{
+  "communication": {
+    "next_specialists": "planner"
+  }
 }
-// or an array:
-"communication": {
-  "next_specialists": ["planner", "test-runner"]
+```
+
+Or as an array:
+```json
+{
+  "communication": {
+    "next_specialists": ["planner", "test-runner"]
+  }
 }
 ```
 
@@ -411,33 +441,13 @@ Drives the staleness detection shown in `specialists status` and `specialists li
 
 This specialist goes STALE the moment `schema.ts` or `runner.ts` is modified after March 1st, and AGED if that condition persists for more than 30 days.
 
-### `specialist.stall_detection` (optional)
-
-Controls stall detection warnings during specialist execution.
-
-| Field | Type | Default | Notes |
-|-------|------|---------|-------|
-| `running_silence_warn_ms` | number | `60000` | Warn if no events for N ms while running |
-| `running_silence_error_ms` | number | `300000` | Mark stale if no events for N ms while running |
-| `waiting_stale_ms` | number | `3600000` | Warn if waiting state lasts N ms |
-| `tool_duration_warn_ms` | number | `120000` | Warn if single tool runs longer than N ms |
-
-```json
-"stall_detection": {
-  "running_silence_warn_ms": 60000,
-  "running_silence_error_ms": 300000,
-  "waiting_stale_ms": 3600000,
-  "tool_duration_warn_ms": 120000
-}
-```
-
 ### `specialist.beads_integration` (optional)
 
 | Value | Behavior |
 |-------|----------|
-| `"auto"` (default) | Create tracking bead when permission_required is LOW+ |
-| `"always"` | Always create a tracking bead |
-| `"never"` | Never create a tracking bead |
+| `auto` (default) | Create tracking bead when permission_required is LOW+ |
+| `always` | Always create a tracking bead |
+| `never` | Never create a tracking bead |
 
 ---
 
@@ -467,11 +477,13 @@ These are **always available** in `task_template` — no configuration needed:
 Files listed under `skills.paths` are read and appended to the system prompt at runtime:
 
 ```json
-"skills": {
-  "paths": [
-    "skills/specialist-author/SKILL.md",
-    ".claude/agents.md"
-  ]
+{
+  "skills": {
+    "paths": [
+      "skills/specialist-author/SKILL.md",
+      ".claude/agents.md"
+    ]
+  }
 }
 ```
 
@@ -494,19 +506,21 @@ Missing files are silently skipped (no error).
 Scripts run **locally** (not inside the agent session):
 
 ```json
-"skills": {
-  "scripts": [
-    {
-      "run": "scripts/gather-context.sh",
-      "phase": "pre",
-      "inject_output": true
-    },
-    {
-      "run": "scripts/notify.sh",
-      "phase": "post",
-      "inject_output": false
-    }
-  ]
+{
+  "skills": {
+    "scripts": [
+      {
+        "run": "scripts/gather-context.sh",
+        "phase": "pre",
+        "inject_output": true
+      },
+      {
+        "run": "scripts/notify.sh",
+        "phase": "post",
+        "inject_output": false
+      }
+    ]
+  }
 }
 ```
 
@@ -542,12 +556,14 @@ Scripts run **locally** (not inside the agent session):
       "permission_required": "READ_ONLY"
     },
     "prompt": {
-      "system": "You are an expert code reviewer. Focus on correctness, maintainability, and security.\nDo NOT modify any files -- output a markdown review only.",
-      "task_template": "Review the following changes:\n\n$prompt\n\n$pre_script_output\n\nWorking directory: $cwd\n\nOutput a structured markdown review with sections: Summary, Issues, Suggestions.",
+      "system": "You are an expert code reviewer. Focus on correctness, maintainability, and security.\nDo NOT modify any files -- output a markdown review only.\n",
+      "task_template": "Review the following changes:\n\n$prompt\n\n$pre_script_output\n\nWorking directory: $cwd\n\nOutput a structured markdown review with sections: Summary, Issues, Suggestions.\n",
       "skill_inherit": "skills/code-review/guidelines.md"
     },
     "skills": {
-      "paths": ["skills/code-review/"],
+      "paths": [
+        "skills/code-review/"
+      ],
       "scripts": [
         {
           "run": "scripts/get-diff.sh",
@@ -571,19 +587,69 @@ Scripts run **locally** (not inside the agent session):
 
 ---
 
+## Context Window & Lifecycle Design
+
+Specialists run as long-lived Pi sessions. Context management is not optional — ignoring it causes silent quality degradation before any hard limit is hit.
+
+### Context rot starts before the window fills
+
+Quality degrades as the context grows — compressed early context causes inconsistency, missed facts, and instruction drift. Design for bounded, coherent runs rather than arbitrarily long ones.
+
+**Rules when authoring a specialist:**
+- Set `stall_timeout_ms` explicitly for any specialist that may idle between turns (keep-alive/interactive). Without it, a stuck session holds resources indefinitely.
+- Use `thinking_level: low` for orchestration/coordinator specialists that emit structured JSON output — thinking tokens cost context budget without improving structured output quality.
+- For research/explorer specialists: bounded scope per session + `handoff_summary` in `output_schema` > one unbounded session.
+- `interactive: true` specialists must define what "done" looks like in their system prompt — otherwise they drift.
+
+### Context metrics are always available
+
+`status.json` exposes `metrics.token_usage` (cumulative input+output tokens) and `metrics.turns` on every turn. These are written by 08zd Phase 1 and available to any caller (NodeSupervisor, orchestrator, human).
+
+**context_pct formula**: `(cumulative_input_tokens / model_context_window) * 100`
+
+Approximate context windows:
+| Model family | Window |
+|-------------|--------|
+| `claude-opus-4-6`, `claude-sonnet-4-6`, `claude-haiku-4-5` | 200k tokens |
+| `gemini-3.1-pro-preview` | 1M tokens |
+| `qwen3.5-plus`, `dashscope/qwen3.5-plus` | 128k tokens |
+| `zai/glm-5`, `zai/glm-5-turbo` | 128k tokens |
+
+### For Node members specifically
+
+NodeSupervisor injects `member_health` into the coordinator resume prompt on **every turn** — not just at warning thresholds. This is by design: the coordinator needs continuous data to make proactive rotation decisions before quality degrades.
+
+When authoring a specialist intended to run as a Node member:
+- Include a `handoff_summary` field in `output_schema` so context can be transferred on rotation
+- Keep system prompts concise — the NodeSupervisor will inject additional context on each resume
+- `thinking_level: low` or `off` for coordinator-class specialists; higher levels for deep analysis members
+
+### Design checklist for long-running specialists
+
+Before finalising a specialist that uses `interactive: true` or is expected to run many turns:
+
+```
+[ ] stall_timeout_ms set (not relying on timeout_ms alone)
+[ ] thinking_level set appropriately for the output type
+[ ] output_schema includes handoff_summary or equivalent for rotation
+[ ] system prompt has explicit termination condition ("you are done when...")
+[ ] task_template doesn't inject large static blobs that could be fetched on demand
+```
+
+---
+
 ## Common Errors and Fixes
 
-| Error | Cause | Fix |
-|-------|-------|-----|
-| `Must be kebab-case` | `name` has uppercase or spaces | Use `"my-specialist"` not `"MySpecialist"` |
-| `Must be semver` | `version: "v1.0"` or unquoted `1.0.0` | Use `"version": "1.0.0"` (quoted string, no `v` prefix) |
-| `Invalid enum value ... 'READ_WRITE'` | Wrong permission value | Use `"READ_ONLY"`, `"LOW"`, `"MEDIUM"`, or `"HIGH"` |
-| `Invalid enum value ... 'auto'` on permission_required | Using `"auto"` for permission_required | `"auto"` is only valid for `beads_integration` |
+| Zod Error | Cause | Fix |
+|-----------|-------|-----|
+| `Must be kebab-case` | `name` has uppercase or spaces | Use `my-specialist` not `MySpecialist` |
+| `Must be semver` | `version: "v1.0"` | Use `"version": "1.0.0"` (no `v` prefix) |
+| `Invalid enum value ... 'READ_WRITE'` | Wrong permission value | Use `READ_ONLY`, `LOW`, `MEDIUM`, or `HIGH` |
+| `Invalid enum value ... 'auto'` on permission_required | Using `auto` for permission_required | `auto` is only valid for `beads_integration` |
 | `Required` on `task_template` | `task_template` missing from `prompt` | Add `task_template` (even if just `"$prompt"`) |
 | `Required` on `model` | `model` missing from `execution` | Add a model string |
 | `Required` on `description` | Missing `description` in `metadata` | Add description string |
 | `Required` on `category` | Missing `category` in `metadata` | Add category string |
-| JSON parse error | Invalid JSON syntax (missing comma, trailing comma, unquoted keys) | Run through a JSON linter; all keys and string values must be quoted |
 | Silently ignored / no output | JSON valid but `task_template` doesn't use `$prompt` | Add `$prompt` to `task_template` |
 | `defaults` key unrecognized | Using `defaults` top-level key | Remove it; use `--variables` at invocation or built-ins |
 
@@ -599,13 +665,11 @@ Specialists are discovered from three scopes (highest priority first):
 
 Name your file `<metadata.name>.specialist.json`.
 
-> **Deprecated:** `.specialist.yaml` files are still supported but will print a deprecation warning. Migrate to `.specialist.json`.
-
 ---
 
 ## Validation Workflow
 
-Use the built-in `specialists validate` command or the schema validator directly.
+A bundled validator is included with this skill so the agent does not need to reconstruct the `bun -e` one-liner from memory. It prints `OK <file>` on success and a field-by-field error list on failure.
 
 ```bash
 # 1. MANDATORY: discover + ping models (see top of this skill)
@@ -613,19 +677,29 @@ pi --list-models
 pi --model <provider>/<primary-model-id>  --print "ping"   # must return "pong"
 pi --model <provider>/<fallback-model-id> --print "ping"   # must return "pong"
 
-# 2. Write the JSON with the verified model strings
+# 2. Scaffold first (fills missing schema sections/fields)
+node config/skills/specialists-creator/scripts/scaffold-specialist.ts config/specialists/my-specialist.specialist.json
 
-# 3. Validate schema (option A: CLI command)
-specialists validate specialists/my-specialist.specialist.json
+# 3. Mutate with sp edit (dot.path + presets)
+sp edit my-specialist --preset standard
+sp edit my-specialist specialist.execution.model <provider>/<primary-model-id>
+sp edit my-specialist specialist.execution.fallback_model <provider>/<fallback-model-id>
 
-#    OR (option B: direct schema validator)
-bun src/specialist/validate.ts specialists/my-specialist.specialist.json
+# 4. Use --file only for multiline prompt fields
+sp edit my-specialist specialist.prompt.system --file .tmp/system.prompt.txt
+sp edit my-specialist specialist.prompt.task_template --file .tmp/task-template.prompt.txt
 
-# 4. List to confirm discovery
+# 5. Verify rendered config
+sp view my-specialist
+
+# 6. Validate schema with the bundled helper
+bun skills/specialist-author/scripts/validate-specialist.ts config/specialists/my-specialist.specialist.json
+
+# 7. List to confirm discovery
 specialists list
 
-# 5. Smoke test
+# 8. Smoke test
 specialists run my-specialist --prompt "ping" --no-beads
 ```
 
-The validator uses `parseSpecialist()` from `src/specialist/schema.ts` which validates against the Zod schema and provides field-by-field error messages.
+If you need the underlying implementation, read `skills/specialist-author/scripts/validate-specialist.ts`. It is a thin Bun/TypeScript wrapper over `parseSpecialist()` from `src/specialist/schema.ts`, which keeps the helper cross-platform for Windows, macOS, and Linux.

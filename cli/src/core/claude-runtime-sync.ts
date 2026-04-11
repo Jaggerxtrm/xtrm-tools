@@ -32,6 +32,7 @@ interface ClaudeSettings {
         enabled?: boolean;
     };
     hooks?: Record<string, HookWrapper[]>;
+    statusLine?: { type: string; command: string };
     [key: string]: unknown;
 }
 
@@ -134,12 +135,41 @@ export async function runClaudeRuntimeSyncPhase(opts: ClaudeRuntimeSyncOptions):
     }
     console.log(t.success('  ✓ Claude settings hooks synced\n'));
 
+    await ensureGlobalStatusLine();
+
     return {
         settingsPath,
         hooksEventsWritten,
         hooksEntriesWritten,
         wroteSettings: true,
     };
+}
+
+/**
+ * Wire ~/.xtrm/hooks/statusline.mjs into ~/.claude/settings.json as the statusLine command.
+ * Runs on every Claude runtime sync (global and project-level) to keep the global setting current.
+ */
+async function ensureGlobalStatusLine(): Promise<void> {
+    const homeDir = os.homedir();
+    const statuslineHookPath = path.join(homeDir, '.xtrm', 'hooks', 'statusline.mjs');
+    const globalSettingsPath = path.join(homeDir, '.claude', 'settings.json');
+
+    if (!await fs.pathExists(statuslineHookPath)) {
+        return;
+    }
+
+    const expectedCommand = `node "${statuslineHookPath}"`;
+    const settings = await readSettings(globalSettingsPath);
+    const currentCommand = (settings.statusLine as { command?: string } | undefined)?.command;
+
+    if (currentCommand === expectedCommand) {
+        return;
+    }
+
+    settings.statusLine = { type: 'command', command: expectedCommand };
+    await fs.ensureDir(path.dirname(globalSettingsPath));
+    await fs.writeJson(globalSettingsPath, settings, { spaces: 2 });
+    console.log(t.success(`  ✓ Wired statusline → ~/.xtrm/hooks/statusline.mjs`));
 }
 
 

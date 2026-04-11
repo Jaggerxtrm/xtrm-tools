@@ -9,6 +9,9 @@ declare const __dirname: string;
 
 interface NativeHooksConfig {
     hooks: Record<string, HookWrapper[]>;
+    statusLine?: {
+        script?: string;
+    };
 }
 
 interface CommandHook {
@@ -32,6 +35,10 @@ interface ClaudeSettings {
         enabled?: boolean;
     };
     hooks?: Record<string, HookWrapper[]>;
+    statusLine?: {
+        type: 'command';
+        command: string;
+    };
     [key: string]: unknown;
 }
 
@@ -70,6 +77,7 @@ export async function runClaudeRuntimeSyncPhase(opts: ClaudeRuntimeSyncOptions):
     const hooksConfig = await fs.readJson(hooksConfigPath) as NativeHooksConfig;
     const projectHooksDir = path.join(repoRoot, '.xtrm', 'hooks');
     const generatedHooks = resolveHooksForProjectRuntime(hooksConfig.hooks ?? {}, projectHooksDir);
+    const generatedStatusLine = resolveStatusLineForProjectRuntime(hooksConfig.statusLine, projectHooksDir);
 
     const settingsPath = isGlobal
         ? path.join(os.homedir(), '.claude', 'settings.json')
@@ -82,6 +90,10 @@ export async function runClaudeRuntimeSyncPhase(opts: ClaudeRuntimeSyncOptions):
     const mergedSettings: ClaudeSettings = hasExistingSettings
         ? { ...existingSettings, hooks: generatedHooks }
         : { ...baseSettings, hooks: generatedHooks };
+
+    if (generatedStatusLine) {
+        mergedSettings.statusLine = generatedStatusLine;
+    }
 
     if (prune) {
         delete mergedSettings.enabledPlugins;
@@ -163,6 +175,43 @@ function resolveHooksForProjectRuntime(hooks: Record<string, HookWrapper[]>, pro
     }
 
     return rewrittenHooks;
+}
+
+function resolveStatusLineForProjectRuntime(statusLineConfig: NativeHooksConfig['statusLine'], projectHooksDir: string): ClaudeSettings['statusLine'] | undefined {
+    if (!statusLineConfig?.script) {
+        return undefined;
+    }
+
+    const normalizedHooksDir = normalizeHookCommandPath(projectHooksDir);
+    const resolvedScriptPath = resolveStatusLineScriptPath(statusLineConfig.script, normalizedHooksDir);
+
+    return {
+        type: 'command',
+        command: buildScriptCommand(statusLineConfig.script, resolvedScriptPath),
+    };
+}
+
+function resolveStatusLineScriptPath(script: string, normalizedHooksDir: string): string {
+    const pluginRootPattern = /^(?:\$\{CLAUDE_PLUGIN_ROOT\}|\$CLAUDE_PLUGIN_ROOT)\/hooks\/(.+)$/;
+    const pluginRootMatch = script.match(pluginRootPattern);
+    if (pluginRootMatch?.[1]) {
+        return normalizeHookCommandPath(path.join(normalizedHooksDir, pluginRootMatch[1]));
+    }
+
+    return normalizeHookCommandPath(path.join(normalizedHooksDir, script));
+}
+
+function buildScriptCommand(scriptName: string, resolvedPath: string): string {
+    const ext = path.extname(scriptName).toLowerCase();
+    if (ext === '.js' || ext === '.cjs' || ext === '.mjs') {
+        return `node "${resolvedPath}"`;
+    }
+    if (ext === '.sh') {
+        return `bash "${resolvedPath}"`;
+    }
+
+    const pythonBin = process.platform === 'win32' ? 'python' : 'python3';
+    return `${pythonBin} "${resolvedPath}"`;
 }
 
 function rewritePluginRootCommandToProjectHookPath(command: string, normalizedHooksDir: string): string {

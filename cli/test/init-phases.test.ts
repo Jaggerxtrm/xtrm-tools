@@ -30,7 +30,10 @@ const mocked = vi.hoisted(() => {
     const scaffoldSkillsDefaultFromPackage = vi.fn(async () => 'noop');
     const runPiInstall = vi.fn(async () => undefined);
     const runPluginEraCleanup = vi.fn(async () => undefined);
-    const ensureAgentsSkillsSymlink = vi.fn(async () => undefined);
+    const ensureAgentsSkillsSymlink = vi.fn(async () => ({
+        activatedClaudeSkills: 0,
+        activatedPiSkills: 0,
+    }));
     const assertRuntimeSkillsViews = vi.fn(async () => undefined);
     const syncProjectMcpConfig = vi.fn(async () => ({
         addedServers: ['serena'],
@@ -176,6 +179,7 @@ describe('xtrm init phased orchestrator', () => {
     let consoleLogSpy: ReturnType<typeof vi.spyOn>;
     let stdoutWriteSpy: ReturnType<typeof vi.spyOn>;
     let stderrWriteSpy: ReturnType<typeof vi.spyOn>;
+    let cwdSpy: ReturnType<typeof vi.spyOn>;
     let logs: string[];
 
     beforeEach(async () => {
@@ -194,12 +198,14 @@ describe('xtrm init phased orchestrator', () => {
         });
         stdoutWriteSpy = vi.spyOn(process.stdout, 'write').mockImplementation(() => true as any);
         stderrWriteSpy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true as any);
+        cwdSpy = vi.spyOn(process, 'cwd').mockReturnValue(projectRoot);
     });
 
     afterEach(async () => {
         consoleLogSpy.mockRestore();
         stdoutWriteSpy.mockRestore();
         stderrWriteSpy.mockRestore();
+        cwdSpy.mockRestore();
         await fs.remove(projectRoot);
         await fs.remove('/tmp/xtrm-pkg-root');
     });
@@ -269,6 +275,10 @@ describe('xtrm init phased orchestrator', () => {
         });
         mocked.ensureAgentsSkillsSymlink.mockImplementation(async () => {
             calls.push('ensureAgentsSkillsSymlink');
+            return {
+                activatedClaudeSkills: 1,
+                activatedPiSkills: 1,
+            };
         });
         mocked.runInitVerification.mockImplementation(async () => {
             calls.push('runInitVerification');
@@ -297,7 +307,7 @@ describe('xtrm init phased orchestrator', () => {
         expect(mocked.installFromRegistry).toHaveBeenCalledTimes(1);
         expect(mocked.scaffoldSkillsDefaultFromPackage).toHaveBeenCalledTimes(1);
         expect(mocked.runPiInstall).toHaveBeenCalledWith(false, false, projectRoot);
-        expect(mocked.syncProjectMcpConfig).toHaveBeenCalledWith(projectRoot);
+        expect(mocked.syncProjectMcpConfig).toHaveBeenCalledWith(projectRoot, { preserveExistingFile: true });
         expect(mocked.syncPiMcpConfig).toHaveBeenCalledWith(projectRoot);
         expect(mocked.ensureAgentsSkillsSymlink).toHaveBeenCalledWith(projectRoot);
         expect(runInstallSpy).not.toHaveBeenCalled();
@@ -331,5 +341,19 @@ describe('xtrm init phased orchestrator', () => {
         expect(mocked.runInitVerification).toHaveBeenCalledWith(projectRoot);
         expect(mocked.renderVerificationSummary).toHaveBeenCalled();
         expect(logs.join('\n')).toContain('Next steps:');
+    });
+
+    it('uses git root without prompting when --yes is supplied from a subdirectory', async () => {
+        const calls: string[] = [];
+        setupSpawnSync(projectRoot, calls);
+        cwdSpy.mockReturnValue(path.join(projectRoot, 'nested'));
+
+        const { runProjectInit } = await import('../src/commands/init.js?t=subdir-yes-' + Date.now());
+        await runProjectInit({ yes: true });
+
+        expect(mocked.prompts).not.toHaveBeenCalled();
+        expect(logs.join('\n')).toContain('CWD is not the git root.');
+        expect(logs.join('\n')).toContain('--yes supplied; proceeding with the git root.');
+        expect(mocked.runMachineBootstrap).toHaveBeenCalledWith({ dryRun: false });
     });
 });

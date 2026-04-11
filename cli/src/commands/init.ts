@@ -2,6 +2,7 @@ import { Command } from 'commander';
 import kleur from 'kleur';
 import path from 'path';
 import fs from 'fs-extra';
+import prompts from 'prompts';
 import { spawnSync } from 'child_process';
 import type { InstallOpts } from './install.js';
 import { runPiInstall } from './pi-install.js';
@@ -617,6 +618,91 @@ async function runProjectBootstrap(projectRoot: string, isGitRepo: boolean): Pro
     // Note: ensureAgentsSkillsSymlink runs in Phase 6b (before gitnexus init)
 }
 
+function hasInteractiveTTY(): boolean {
+    return Boolean(process.stdout.isTTY && process.stdin.isTTY);
+}
+
+async function resolveInitProjectRoot(yes: boolean): Promise<{ projectRoot: string; isGitRepo: boolean; aborted: boolean }> {
+    const cwd = path.resolve(process.cwd());
+
+    let gitRoot: string;
+    try {
+        gitRoot = getProjectRoot();
+    } catch {
+        console.log(kleur.yellow('\n  ⚠ Not a git repository — git-dependent phases (beads, gitnexus) will be skipped'));
+        console.log(kleur.dim('    Run git init first, then: gitnexus analyze\n'));
+        return { projectRoot: cwd, isGitRepo: false, aborted: false };
+    }
+
+    const resolvedGitRoot = path.resolve(gitRoot);
+    if (resolvedGitRoot === cwd) {
+        return { projectRoot: resolvedGitRoot, isGitRepo: true, aborted: false };
+    }
+
+    console.log(kleur.yellow('\n  ⚠ CWD is not the git root.'));
+    console.log(kleur.dim(`    CWD:      ${cwd}`));
+    console.log(kleur.dim(`    Git root: ${resolvedGitRoot}`));
+
+    if (yes) {
+        console.log(kleur.dim('    --yes supplied; proceeding with the git root.\n'));
+        return { projectRoot: resolvedGitRoot, isGitRepo: true, aborted: false };
+    }
+
+    if (!hasInteractiveTTY()) {
+        console.log(kleur.red('    Non-interactive session cannot choose automatically.'));
+        console.log(kleur.dim('    Re-run with --yes to proceed with the git root, or run from the git root directory.\n'));
+        return { projectRoot: resolvedGitRoot, isGitRepo: true, aborted: true };
+    }
+
+    const { action } = await prompts({
+        type: 'select',
+        name: 'action',
+        message: 'CWD is not the git root. Run git init here first, or continue targeting the git root?',
+        choices: [
+            { title: 'Abort and show instructions', value: 'abort' },
+            { title: 'Run git init in CWD and use this directory', value: 'git-init' },
+            { title: 'Proceed anyway and target the git root', value: 'proceed' },
+        ],
+        initial: 0,
+    });
+
+    if (action === 'git-init') {
+        const initResult = spawnSync('git', ['init'], {
+            cwd,
+            encoding: 'utf8',
+            timeout: 10000,
+        });
+
+        if (initResult.status !== 0) {
+            if (initResult.stdout) process.stdout.write(initResult.stdout);
+            if (initResult.stderr) process.stderr.write(initResult.stderr);
+            console.log(kleur.red('\n  ✗ Failed to initialize git repository in CWD.'));
+            console.log(kleur.dim('    Fix git init errors and re-run xtrm init.\n'));
+            return { projectRoot: resolvedGitRoot, isGitRepo: true, aborted: true };
+        }
+
+        try {
+            const refreshedGitRoot = getProjectRoot();
+            console.log(kleur.green(`  ✓ Initialized git repo in CWD: ${refreshedGitRoot}`));
+            return { projectRoot: path.resolve(refreshedGitRoot), isGitRepo: true, aborted: false };
+        } catch {
+            console.log(kleur.red('\n  ✗ git init succeeded, but git root could not be resolved.'));
+            console.log(kleur.dim('    Re-run xtrm init from this directory.\n'));
+            return { projectRoot: cwd, isGitRepo: true, aborted: true };
+        }
+    }
+
+    if (action === 'proceed') {
+        console.log(kleur.dim('    Proceeding with the existing git root.\n'));
+        return { projectRoot: resolvedGitRoot, isGitRepo: true, aborted: false };
+    }
+
+    console.log(kleur.dim('\n  Init cancelled.'));
+    console.log(kleur.dim(`  To initialize this directory as its own repo: cd ${cwd} && git init`));
+    console.log(kleur.dim(`  To target the existing repo root: cd ${resolvedGitRoot} && xtrm init\n`));
+    return { projectRoot: resolvedGitRoot, isGitRepo: true, aborted: true };
+}
+
 // ── Main Orchestrator ─────────────────────────────────────────────────────────
 // Top-level entrypoint for `xtrm init`. Runs all phases in order:
 //   1. Preflight          — inventory system state (read-only, no mutations)
@@ -633,16 +719,13 @@ export async function runProjectInit(opts: InstallOpts = {}): Promise<void> {
     const { dryRun = false, yes = false } = opts;
     const effectiveYes = yes || process.argv.includes('--yes') || process.argv.includes('-y');
 
-    let projectRoot: string;
-    let isGitRepo = true;
-    try {
-        projectRoot = getProjectRoot();
-    } catch {
-        projectRoot = process.cwd();
-        isGitRepo = false;
-        console.log(kleur.yellow('\n  ⚠ Not a git repository — git-dependent phases (beads, gitnexus) will be skipped'));
-        console.log(kleur.dim('    Run git init first, then: gitnexus analyze\n'));
+    const rootResolution = await resolveInitProjectRoot(effectiveYes);
+    if (rootResolution.aborted) {
+        return;
     }
+
+    const projectRoot = rootResolution.projectRoot;
+    const isGitRepo = rootResolution.isGitRepo;
 
     // ── Phase 1: Preflight / Inventory ──────────────────────────────────────
     const inventory = await runPreflight(projectRoot, opts);

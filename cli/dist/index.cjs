@@ -29623,11 +29623,15 @@ async function runClaudeRuntimeSyncPhase(opts) {
   const hooksConfig = await import_fs_extra2.default.readJson(hooksConfigPath);
   const projectHooksDir = import_path2.default.join(repoRoot, ".xtrm", "hooks");
   const generatedHooks = resolveHooksForProjectRuntime(hooksConfig.hooks ?? {}, projectHooksDir);
+  const generatedStatusLine = resolveStatusLineForProjectRuntime(hooksConfig.statusLine, projectHooksDir);
   const settingsPath = isGlobal ? import_path2.default.join(import_os.default.homedir(), ".claude", "settings.json") : import_path2.default.join(repoRoot, ".claude", "settings.json");
   const hasExistingSettings = await import_fs_extra2.default.pathExists(settingsPath);
   const baseSettings = await readBaseSettings(settingsTemplatePath);
   const existingSettings = hasExistingSettings ? await readSettings(settingsPath) : {};
   const mergedSettings = hasExistingSettings ? { ...existingSettings, hooks: generatedHooks } : { ...baseSettings, hooks: generatedHooks };
+  if (generatedStatusLine) {
+    mergedSettings.statusLine = generatedStatusLine;
+  }
   if (prune) {
     delete mergedSettings.enabledPlugins;
     delete mergedSettings.extraKnownMarketplaces;
@@ -29715,6 +29719,36 @@ function resolveHooksForProjectRuntime(hooks, projectHooksDir) {
     }));
   }
   return rewrittenHooks;
+}
+function resolveStatusLineForProjectRuntime(statusLineConfig, projectHooksDir) {
+  if (!statusLineConfig?.script) {
+    return void 0;
+  }
+  const normalizedHooksDir = normalizeHookCommandPath(projectHooksDir);
+  const resolvedScriptPath = resolveStatusLineScriptPath(statusLineConfig.script, normalizedHooksDir);
+  return {
+    type: "command",
+    command: buildScriptCommand(statusLineConfig.script, resolvedScriptPath)
+  };
+}
+function resolveStatusLineScriptPath(script, normalizedHooksDir) {
+  const pluginRootPattern = /^(?:\$\{CLAUDE_PLUGIN_ROOT\}|\$CLAUDE_PLUGIN_ROOT)\/hooks\/(.+)$/;
+  const pluginRootMatch = script.match(pluginRootPattern);
+  if (pluginRootMatch?.[1]) {
+    return normalizeHookCommandPath(import_path2.default.join(normalizedHooksDir, pluginRootMatch[1]));
+  }
+  return normalizeHookCommandPath(import_path2.default.join(normalizedHooksDir, script));
+}
+function buildScriptCommand(scriptName, resolvedPath) {
+  const ext = import_path2.default.extname(scriptName).toLowerCase();
+  if (ext === ".js" || ext === ".cjs" || ext === ".mjs") {
+    return `node "${resolvedPath}"`;
+  }
+  if (ext === ".sh") {
+    return `bash "${resolvedPath}"`;
+  }
+  const pythonBin = process.platform === "win32" ? "python" : "python3";
+  return `${pythonBin} "${resolvedPath}"`;
 }
 function rewritePluginRootCommandToProjectHookPath(command, normalizedHooksDir) {
   const pluginRootPatterns = [

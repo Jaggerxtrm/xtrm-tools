@@ -45997,12 +45997,16 @@ async function installFromRegistry(params) {
         installed: 0,
         upToDate: drift.upToDate.length,
         driftedSkipped: drift.drifted.length,
-        forced: 0
+        forced: 0,
+        expectedInstalls: 0,
+        missingSourceSkipped: 0
       };
     }
   }
   let installed = 0;
   let forced = 0;
+  let expectedInstalls = 0;
+  let missingSourceSkipped = 0;
   for (const asset of Object.values(registry2.assets)) {
     for (const [filePath] of Object.entries(asset.files)) {
       const relativePath = toUserRelativePath(asset.source_dir, filePath);
@@ -46025,6 +46029,13 @@ async function installFromRegistry(params) {
       if (isDrifted && force) {
         forced += 1;
       }
+      expectedInstalls += 1;
+      const sourceExists = await import_fs_extra13.default.pathExists(sourcePath);
+      if (!sourceExists) {
+        missingSourceSkipped += 1;
+        console.log(kleur_default.yellow(`  \u26A0 Skipping missing source file: ${toPosix2(import_path8.default.relative(packageRoot, sourcePath))}`));
+        continue;
+      }
       if (dryRun) {
         const action = isDrifted ? "overwrite" : "install";
         console.log(kleur_default.dim(`  [DRY RUN] would ${action} ${relativePath}`));
@@ -46040,7 +46051,9 @@ async function installFromRegistry(params) {
     installed,
     upToDate: upToDateSet.size,
     driftedSkipped: force ? 0 : driftedSet.size,
-    forced
+    forced,
+    expectedInstalls,
+    missingSourceSkipped
   };
 }
 
@@ -48617,7 +48630,7 @@ async function runProjectInit(opts = {}) {
   const userXtrmDir = ctx.targets[0];
   const registryPath = import_path15.default.join(packageRoot, ".xtrm", "registry.json");
   const registry2 = await import_fs_extra21.default.readJson(registryPath);
-  await installFromRegistry({
+  const registryInstallStats = await installFromRegistry({
     packageRoot,
     registry: registry2,
     userXtrmDir,
@@ -48625,6 +48638,10 @@ async function runProjectInit(opts = {}) {
     force: false,
     yes: true
   });
+  if (registryInstallStats.missingSourceSkipped > 0) {
+    console.log(kleur_default.yellow(`  \u26A0 Registry/source mismatch: skipped ${registryInstallStats.missingSourceSkipped} missing source file${registryInstallStats.missingSourceSkipped === 1 ? "" : "s"}.`));
+    console.log(kleur_default.yellow("    Init continued, but some skills/files may be absent until registry payload is corrected."));
+  }
   await scaffoldSkillsDefaultFromPackage({ packageRoot, userXtrmDir, dryRun: false });
   const mcpSync = await syncProjectMcpConfig(projectRoot, { preserveExistingFile: true });
   if (mcpSync.wroteFile) {

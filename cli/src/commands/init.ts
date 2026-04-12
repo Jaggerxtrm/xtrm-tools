@@ -764,7 +764,7 @@ export async function runProjectInit(opts: InstallOpts = {}): Promise<void> {
     const registryPath = path.join(packageRoot, '.xtrm', 'registry.json');
     const registry = await fs.readJson(registryPath) as RegistryManifest;
 
-    await installFromRegistry({
+    const registryInstallStats = await installFromRegistry({
         packageRoot,
         registry,
         userXtrmDir,
@@ -772,6 +772,11 @@ export async function runProjectInit(opts: InstallOpts = {}): Promise<void> {
         force: false,
         yes: true,
     });
+    if (registryInstallStats.missingSourceSkipped > 0) {
+        console.log(kleur.yellow(`  ⚠ Registry/source mismatch: skipped ${registryInstallStats.missingSourceSkipped} missing source file${registryInstallStats.missingSourceSkipped === 1 ? '' : 's'}.`));
+        console.log(kleur.yellow('    Init continued, but some skills/files may be absent until registry payload is corrected.'));
+    }
+
     await scaffoldSkillsDefaultFromPackage({ packageRoot, userXtrmDir, dryRun: false });
 
     const mcpSync = await syncProjectMcpConfig(projectRoot, { preserveExistingFile: true });

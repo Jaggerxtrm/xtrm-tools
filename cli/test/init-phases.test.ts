@@ -26,7 +26,14 @@ const mocked = vi.hoisted(() => {
     const findRepoRoot = vi.fn(async () => '/tmp/repo-root');
     const prompts = vi.fn(async () => ({ confirm: true }));
     const spawnSync = vi.fn();
-    const installFromRegistry = vi.fn(async () => ({ installed: 1, upToDate: 0, driftedSkipped: 0, forced: 0 }));
+    const installFromRegistry = vi.fn(async () => ({
+        installed: 1,
+        upToDate: 0,
+        driftedSkipped: 0,
+        forced: 0,
+        expectedInstalls: 1,
+        missingSourceSkipped: 0,
+    }));
     const scaffoldSkillsDefaultFromPackage = vi.fn(async () => 'noop');
     const runPiInstall = vi.fn(async () => undefined);
     const runPluginEraCleanup = vi.fn(async () => undefined);
@@ -264,7 +271,14 @@ describe('xtrm init phased orchestrator', () => {
         });
         mocked.installFromRegistry.mockImplementation(async () => {
             calls.push('installFromRegistry');
-            return { installed: 1, upToDate: 0, driftedSkipped: 0, forced: 0 };
+            return {
+                installed: 1,
+                upToDate: 0,
+                driftedSkipped: 0,
+                forced: 0,
+                expectedInstalls: 1,
+                missingSourceSkipped: 0,
+            };
         });
         mocked.scaffoldSkillsDefaultFromPackage.mockImplementation(async () => {
             calls.push('scaffoldSkillsDefaultFromPackage');

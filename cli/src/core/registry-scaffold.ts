@@ -29,6 +29,8 @@ export interface InstallStats {
     upToDate: number;
     driftedSkipped: number;
     forced: number;
+    expectedInstalls: number;
+    missingSourceSkipped: number;
 }
 
 export const USER_OWNED_PATHS: readonly string[] = [
@@ -186,12 +188,16 @@ export async function installFromRegistry(params: {
                 upToDate: drift.upToDate.length,
                 driftedSkipped: drift.drifted.length,
                 forced: 0,
+                expectedInstalls: 0,
+                missingSourceSkipped: 0,
             };
         }
     }
 
     let installed = 0;
     let forced = 0;
+    let expectedInstalls = 0;
+    let missingSourceSkipped = 0;
 
     for (const asset of Object.values(registry.assets)) {
         for (const [filePath] of Object.entries(asset.files)) {
@@ -222,6 +228,15 @@ export async function installFromRegistry(params: {
                 forced += 1;
             }
 
+            expectedInstalls += 1;
+
+            const sourceExists = await fs.pathExists(sourcePath);
+            if (!sourceExists) {
+                missingSourceSkipped += 1;
+                console.log(kleur.yellow(`  ⚠ Skipping missing source file: ${toPosix(path.relative(packageRoot, sourcePath))}`));
+                continue;
+            }
+
             if (dryRun) {
                 const action = isDrifted ? 'overwrite' : 'install';
                 console.log(kleur.dim(`  [DRY RUN] would ${action} ${relativePath}`));
@@ -240,5 +255,7 @@ export async function installFromRegistry(params: {
         upToDate: upToDateSet.size,
         driftedSkipped: force ? 0 : driftedSet.size,
         forced,
+        expectedInstalls,
+        missingSourceSkipped,
     };
 }

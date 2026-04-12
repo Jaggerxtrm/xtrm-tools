@@ -66,10 +66,12 @@ async function renderSummaryCard(stats: InstallStats, isDryRun: boolean): Promis
     const lines = [
         kleur.bold('  ✓ Install complete'),
         '',
+        `  ${t.label('Expected installs')} ${stats.expectedInstalls}`,
         `  ${t.label('Installed')} ${stats.installed}`,
         `  ${t.label('Up-to-date')} ${stats.upToDate}`,
         `  ${t.label('Drift skipped')} ${stats.driftedSkipped}`,
         `  ${t.label('Forced')} ${stats.forced}`,
+        `  ${t.label('Missing source skipped')} ${stats.missingSourceSkipped}`,
         ...(isDryRun ? ['', kleur.dim('  Dry run — no changes written')] : []),
     ];
 
@@ -208,6 +210,12 @@ export async function runInstall(opts: InstallOpts = {}): Promise<void> {
     }
 
     await renderSummaryCard(stats, dryRun);
+
+    if (stats.missingSourceSkipped > 0) {
+        console.log(kleur.yellow(`  ⚠ Registry/source mismatch: ${stats.missingSourceSkipped} expected file${stats.missingSourceSkipped === 1 ? '' : 's'} were missing from package payload.`));
+        console.log(kleur.yellow('    Install continued, but your runtime may be incomplete. Regenerate/publish registry assets to resolve.'));
+        console.log('');
+    }
 
     if (!dryRun) {
         printNextSteps();

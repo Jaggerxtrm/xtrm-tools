@@ -234,6 +234,8 @@ describe('installFromRegistry', () => {
     });
 
     expect(result.installed).toBe(1);
+    expect(result.expectedInstalls).toBe(1);
+    expect(result.missingSourceSkipped).toBe(0);
     expect(await fs.pathExists(path.join(userXtrmDir, 'hooks', 'post-tool-use.mjs'))).toBe(true);
     expect(await fs.pathExists(path.join(userXtrmDir, 'memory.md'))).toBe(false);
   });
@@ -284,8 +286,52 @@ describe('installFromRegistry', () => {
     });
 
     expect(result.installed).toBe(2);
+    expect(result.expectedInstalls).toBe(2);
+    expect(result.missingSourceSkipped).toBe(0);
     expect(await fs.pathExists(path.join(userXtrmDir, 'skills', 'optional', 'pack-one', 'PACK.json'))).toBe(true);
     expect(await fs.pathExists(path.join(userXtrmDir, 'skills', 'optional', 'pack-one', 'beta', 'SKILL.md'))).toBe(true);
+  });
+
+  it('skips missing source files referenced by registry and continues installing others', async () => {
+    const tempDir = await createTempDir();
+    const packageRoot = path.join(tempDir, 'pkg');
+    const userXtrmDir = path.join(tempDir, 'user-xtrm');
+
+    const existingSource = path.join(packageRoot, '.xtrm', 'skills', 'default', 'alpha', 'SKILL.md');
+    await fs.ensureDir(path.dirname(existingSource));
+    await fs.writeFile(existingSource, '# alpha\n', 'utf8');
+
+    const registry = {
+      version: '1.0.0',
+      assets: {
+        skills_default: {
+          source_dir: '.xtrm/skills/default',
+          install_mode: 'copy' as const,
+          files: {
+            'alpha/SKILL.md': { hash: 'alpha-hash', version: '1.0.0' },
+            'documenting/tests/integration_test.sh': { hash: 'missing-hash', version: '1.0.0' },
+          },
+        },
+      },
+    };
+
+    await fs.ensureDir(path.join(packageRoot, '.xtrm'));
+    await fs.writeJson(path.join(packageRoot, '.xtrm', 'registry.json'), registry);
+
+    const result = await installFromRegistry({
+      packageRoot,
+      registry,
+      userXtrmDir,
+      dryRun: false,
+      force: true,
+      yes: true,
+    });
+
+    expect(result.installed).toBe(1);
+    expect(result.expectedInstalls).toBe(2);
+    expect(result.missingSourceSkipped).toBe(1);
+    expect(await fs.pathExists(path.join(userXtrmDir, 'skills', 'default', 'alpha', 'SKILL.md'))).toBe(true);
+    expect(await fs.pathExists(path.join(userXtrmDir, 'skills', 'default', 'documenting', 'tests', 'integration_test.sh'))).toBe(false);
   });
 });
 

@@ -600,7 +600,7 @@
           "version": "0.7.8"
         },
         "last30days/SKILL.md": {
-          "hash": "a01019ad361601b37cac341b7300875e21c848411cd2c7554d48c8d91f304855",
+          "hash": "6c8b6f0d4c6edfaead1ed20d7260a86dcef653a3b419f5e6e8ed8aba1ee4b527",
           "version": "0.7.8"
         },
         "planning/evals/evals.json": {
@@ -844,11 +844,11 @@
           "version": "0.7.8"
         },
         "sync-docs/references/doc-structure.md": {
-          "hash": "6dc6e36fb34160a24c8080ab816654f93ac162fa0a04e739df266e03c8aa9f7a",
+          "hash": "bd30ca7777262b582c95d72a9507ad307aad21b806594ee98d855449763a6247",
           "version": "0.7.8"
         },
         "sync-docs/references/schema.md": {
-          "hash": "13304eb0bc4cdc7b014fef2d5ec6556848d5d7be710eacc33ac101a05c308a89",
+          "hash": "7429a43169df08d97706833119543eda6e10bd943b3a52b399c24b7561c7b75a",
           "version": "0.7.8"
         },
         "sync-docs/scripts/changelog/add_entry.py": {
@@ -860,7 +860,7 @@
           "version": "0.7.8"
         },
         "sync-docs/scripts/doc_structure_analyzer.py": {
-          "hash": "f92d94e3cf6c158dda64cb078675c96b536968c2985c6bec0a766bed0b57fd3f",
+          "hash": "313c99ae326909892aa64213b7720a8bd5337bb1b02b6badc8ea53b3cea29cca",
           "version": "0.7.8"
         },
         "sync-docs/scripts/drift_detector.py": {
@@ -1252,7 +1252,7 @@
           "version": "0.7.8"
         },
         "hooks.json": {
-          "hash": "b73946bd29d77dbffc1229ac93b040a1d369a8a4c9d8000f0b295c4f5d057a37",
+          "hash": "d825bc9632a991203a36b0f4859b873d03fdf245836280ab6cef352f0cdd148d",
           "version": "0.7.8"
         },
         "instructions/agents-top.md": {
@@ -1269,158 +1269,6 @@
         },
         "pi/auth.json.template": {
           "hash": "3d608dfc7574015abbf8c0c395845ecd2a2c8d166a25ca1cfda6398a82ee723b",
-          "version": "0.7.8"
-        },
-        "pi/extensions/auto-session-name/index.ts": {
-          "hash": "d4637a9b65cba9f63111282ece62794452cc5bbaf2c758ff8d60bcf3fbbe4ed2",
-          "version": "0.7.8"
-        },
-        "pi/extensions/auto-session-name/package.json": {
-          "hash": "66a5872caf5dda07c041b6152eeb7631eeac0af30a1e88a0d0813db0abb2e1d3",
-          "version": "0.7.8"
-        },
-        "pi/extensions/auto-update/index.ts": {
-          "hash": "9e9a99382ad5937f446319708d62d2f9b2ef59ae5df4206c8fa3196a64f8409b",
-          "version": "0.7.8"
-        },
-        "pi/extensions/auto-update/package.json": {
-          "hash": "adeb39b0905f274cf32ec708270a0dcf0ccc9e3f3ca58008d69ce77e4b049656",
-          "version": "0.7.8"
-        },
-        "pi/extensions/beads/index.ts": {
-          "hash": "eb0effc72321efda5e3a4905753bc51a59018e2409c1d4408a195f4742723b14",
-          "version": "0.7.8"
-        },
-        "pi/extensions/beads/package.json": {
-          "hash": "e552132af3506d4955830773d73339d07bbe04584572d65f0459cf9fb481921c",
-          "version": "0.7.8"
-        },
-        "pi/extensions/compact-header/index.ts": {
-          "hash": "2cb010efea29ff30b5ce4109c11636fc65ac980c7e5e3a3600cca16e1f5103e5",
-          "version": "0.7.8"
-        },
-        "pi/extensions/compact-header/package.json": {
-          "hash": "c3bd78b65ce0bef2e0fbdad58328c855aa42997380ea295fc02762da1988a9ce",
-          "version": "0.7.8"
-        },
-        "pi/extensions/core/adapter.ts": {
-          "hash": "d55afc0b8abcc3f93db40afd564c46a5023df2abc8caa229acbf923c0aa8c8a7",
-          "version": "0.7.8"
-        },
-        "pi/extensions/core/guard-rules.ts": {
-          "hash": "b7293c2492d627eca872344f7a537dbeabc3bcefe4d9abd2265bde6ee76b14b0",
-          "version": "0.7.8"
-        },
-        "pi/extensions/core/lib.ts": {
-          "hash": "aa134d956a49e9142ff67ff0baff72af03c7812ec5bcae1c4d0f4929fe4d6760",
-          "version": "0.7.8"
-        },
-        "pi/extensions/core/logger.ts": {
-          "hash": "ab251fb9ca9695901e8e753aceb14ac8ec06c3fc284c4d1b65d7705071700cb8",
-          "version": "0.7.8"
-        },
-        "pi/extensions/core/package.json": {
-          "hash": "8f7ddfa2a00bdf702cd85938635746b526862367b23c2fc484ff9dab8e8f53ab",
-          "version": "0.7.8"
-        },
-        "pi/extensions/core/runner.ts": {
-          "hash": "23385a97d3608a28ac8825c66f1f09ee50ee7aadef6272c031ad39b9d248db05",
-          "version": "0.7.8"
-        },
-        "pi/extensions/core/session-state.ts": {
-          "hash": "20f8a62f3b12e1ab27f4ae99e5867997fbbecd0de01ceae92ee607011677c9a7",
-          "version": "0.7.8"
-        },
-        "pi/extensions/custom-footer/index.ts": {
-          "hash": "03fc844d24e9bf4e1823d00bf668c036a2e9d878d2b2451db5f6e336efd9a60f",
-          "version": "0.7.8"
-        },
-        "pi/extensions/custom-footer/package.json": {
-          "hash": "1fe0c22fd394c30d61f7c837087c882777c5ea2ef2063f3e3ce6fe3db4cb1675",
-          "version": "0.7.8"
-        },
-        "pi/extensions/custom-provider-qwen-cli/index.ts": {
-          "hash": "664459d0ac9e4b4eaaf82e9b85e77ea1ff46b8285f414f3fa3015846dffe2823",
-          "version": "0.7.8"
-        },
-        "pi/extensions/custom-provider-qwen-cli/package.json": {
-          "hash": "04be7a4b1859af599dc00d1cffdf6b8f462fed03b9c81d0296b41d873753c786",
-          "version": "0.7.8"
-        },
-        "pi/extensions/git-checkpoint/index.ts": {
-          "hash": "7be562b5cc8413fd24cc21788a5a743f9de5aae0202d02bdeea3ffbed58fafe6",
-          "version": "0.7.8"
-        },
-        "pi/extensions/git-checkpoint/package.json": {
-          "hash": "10898f82c70f65d16c6c79c95438fab4168b67f9e08c63482b53aa04ba600953",
-          "version": "0.7.8"
-        },
-        "pi/extensions/lsp-bootstrap/index.ts": {
-          "hash": "1fa66f360a4e8963d6767dcec624c8898e8be7fb658cbf4d45dd67a93097a29d",
-          "version": "0.7.8"
-        },
-        "pi/extensions/lsp-bootstrap/package.json": {
-          "hash": "a987e53d3bb15ac140df69859d681f75b208a1dce2f2c8771e1aa4c112704fbc",
-          "version": "0.7.8"
-        },
-        "pi/extensions/pi-serena-compact/index.ts": {
-          "hash": "ecc01f02bccb2427c182ca04c21f39090f7cc20bb40640a2b5a678183e926754",
-          "version": "0.7.8"
-        },
-        "pi/extensions/pi-serena-compact/package.json": {
-          "hash": "1df0db10b1ffc2e6f6d3a7ede569483c8013d2150960094d39c9eae10f2fb984",
-          "version": "0.7.8"
-        },
-        "pi/extensions/quality-gates/index.ts": {
-          "hash": "62125a1bb12edadb4da448e0a1af63662c8c7130874badfd8748ca8df75c5f90",
-          "version": "0.7.8"
-        },
-        "pi/extensions/quality-gates/package.json": {
-          "hash": "78942fd800cc4f2c205c8a8c40b5d747bd6930f58cf267ead180c15c70f51a7a",
-          "version": "0.7.8"
-        },
-        "pi/extensions/service-skills/index.ts": {
-          "hash": "cb01d404b1dedc268d34d1f733b7d84ebdf5b8c4aad2ab3825f31da4651e8a61",
-          "version": "0.7.8"
-        },
-        "pi/extensions/service-skills/package.json": {
-          "hash": "b2759551a63319286de84df50e58dd516027a54950da7fcdeed31360b1916a21",
-          "version": "0.7.8"
-        },
-        "pi/extensions/session-flow/index.ts": {
-          "hash": "bd6f2b5fba6625e33bdf1b86eed7e71af1ab4943d11157ac99982039bfe44c25",
-          "version": "0.7.8"
-        },
-        "pi/extensions/session-flow/package.json": {
-          "hash": "a0a7dd848ba0ce9e5bfbd9bcf49e35378393cea1e5effe6f1153b56f1778009b",
-          "version": "0.7.8"
-        },
-        "pi/extensions/xtrm-loader/index.ts": {
-          "hash": "1549ee1c12d9946fab2f1ff95229cbc03de9325d278291791ae1476e69b87d61",
-          "version": "0.7.8"
-        },
-        "pi/extensions/xtrm-loader/package.json": {
-          "hash": "e5a6d6c8d31f6a917e34754f3724ee15908a8620d4eef73037a4363aa41b9d36",
-          "version": "0.7.8"
-        },
-        "pi/extensions/xtrm-ui/format.ts": {
-          "hash": "d606a9a2a37fde69f243a6636d568107c57d83ad47156a9ba97c680398f2e1ca",
-          "version": "0.7.8"
-        },
-        "pi/extensions/xtrm-ui/index.ts": {
-          "hash": "5ae6fdb67e7fe956c27a64fcf05c6bd1d3fab2ef821368b07bc588547baff57a",
-          "version": "0.7.8"
-        },
-        "pi/extensions/xtrm-ui/package.json": {
-          "hash": "112a9cefb6f5fb9ca3ad8cc834aa502ec39db454c8da696e161a8e2cb5e2cb36",
-          "version": "0.7.8"
-        },
-        "pi/extensions/xtrm-ui/themes/pidex-dark.json": {
-          "hash": "ee99359d96c6fb5d265281a0e591db615b6ceeb05e0d6a6c95dba98727d41718",
-          "version": "0.7.8"
-        },
-        "pi/extensions/xtrm-ui/themes/pidex-light.json": {
-          "hash": "faa59f41912a72c524cdb35f5c9f21e66fde0fadda045e3771c3fe823f7b8e43",
           "version": "0.7.8"
         },
         "pi/install-schema.json": {
@@ -1534,7 +1382,7 @@
           "version": "0.7.8"
         },
         "extensions/README.md": {
-          "hash": "1142652c7af785bb3da1dcfb9bdf776f484c8ce2b798428a2d34612e7cccf778",
+          "hash": "727ef41629e5917acb3e527aff01586c17b132156b8671155e32d8f2ffc3d44e",
           "version": "0.7.8"
         },
         "extensions/service-skills/index.ts": {
@@ -1574,11 +1422,15 @@
           "version": "0.7.8"
         },
         "MIGRATION_NOTES.md": {
-          "hash": "c697c004af1af95c3df6a2c170067080ac1a74a5cf8ed6bb186f386f8f482f47",
+          "hash": "35caea90fcead0a205c2917ff4e5b590458aea6c3639187bd3c90d622fb8e26c",
           "version": "0.7.8"
         },
         "package.json": {
-          "hash": "bb2d9dd266390d7b66d6fdee4f0826064cba67597d99e24582067cb5bc2e6ecd",
+          "hash": "696e5f2a66ca867d3c66d0f8bc050a0b7ea0391a079d2111e3c0d2fdc23fd3cc",
+          "version": "0.7.8"
+        },
+        "README.md": {
+          "hash": "1f8851d7dfea92e7d053a6268748ad982527ee738824234f2f4f33c95f53aa4b",
           "version": "0.7.8"
         },
         "src/core/adapter.ts": {
@@ -1602,7 +1454,7 @@
           "version": "0.7.8"
         },
         "src/core/README.md": {
-          "hash": "92c6641d107ead23926dae694ba32215913f5cd132e52334eee5918f85d42b7e",
+          "hash": "a9c5685c75740879014a72e6b69d9f83dc85bf1da331e8ee77281b6d98ae15f0",
           "version": "0.7.8"
         },
         "src/core/runner.ts": {

@@ -44750,7 +44750,7 @@ var PI_MCP_ADAPTER_OVERRIDE_DIR = import_path4.default.join(PI_AGENT_DIR, "exten
 var PI_MCP_ADAPTER_REQUIRED_ENTRY = "commands.js";
 var PROJECT_EXTENSIONS_ENTRY = "../.xtrm/extensions";
 var PROJECT_SKILLS_ENTRY = "../.xtrm/skills/active/pi";
-var PROJECT_EXTENSION_PACKAGE_ID = "npm:@xtrm/pi-extensions";
+var PROJECT_EXTENSION_PACKAGE_ID = "npm:@jaggerxtrm/pi-extensions";
 var LEGACY_PROJECT_EXTENSION_ENTRIES = /* @__PURE__ */ new Set([
   PROJECT_EXTENSIONS_ENTRY,
   ".xtrm/extensions"
@@ -44927,7 +44927,7 @@ function getProjectRequiredPackageStatuses(installedPkgIds) {
     const managed = MANAGED_PACKAGES.find((pkg2) => pkg2.id === packageId);
     const pkg = managed ?? {
       id: PROJECT_EXTENSION_PACKAGE_ID,
-      displayName: "@xtrm/pi-extensions",
+      displayName: "@jaggerxtrm/pi-extensions",
       required: true
     };
     return {
@@ -45570,7 +45570,7 @@ async function getPiProjectPointer(projectRoot) {
     const packageEntries = Array.isArray(settings.packages) ? settings.packages.filter((entry) => typeof entry === "string") : [];
     return {
       hasProjectSettings: true,
-      hasProjectExtensionPackage: packageEntries.includes("npm:@xtrm/pi-extensions"),
+      hasProjectExtensionPackage: packageEntries.includes("npm:@jaggerxtrm/pi-extensions"),
       pointsToXtrmExtensions: hasSettingsEntry(settings.extensions, "../.xtrm/extensions")
     };
   } catch {
@@ -45609,7 +45609,7 @@ function createPiCommand() {
     const projectScoped = pointer.hasProjectExtensionPackage || pointer.pointsToXtrmExtensions;
     if (projectScoped) {
       console.log(kleur_default.dim("  Scope:      project"));
-      console.log(kleur_default.dim(`  Extensions: package mode (npm:@xtrm/pi-extensions${pointer.hasProjectExtensionPackage ? "" : " missing"})`));
+      console.log(kleur_default.dim(`  Extensions: package mode (npm:@jaggerxtrm/pi-extensions${pointer.hasProjectExtensionPackage ? "" : " missing"})`));
     } else {
       console.log(kleur_default.dim("  Scope:      global"));
       const extOk = plan.extensions.filter((s) => s.installed && !s.stale).length;
@@ -45641,7 +45641,7 @@ function createPiCommand() {
       return;
     }
     if (hasProjectSettingsDrift) {
-      console.log(kleur_default.yellow("  Settings:   .pi/settings.json missing managed npm:@xtrm/pi-extensions entry"));
+      console.log(kleur_default.yellow("  Settings:   .pi/settings.json missing managed npm:@jaggerxtrm/pi-extensions entry"));
     }
     console.log(kleur_default.dim("\n  \u2192 run: xt pi reload\n"));
   });
@@ -45712,7 +45712,7 @@ function createPiCommand() {
         allOk = false;
       } else if (projectScoped) {
         if (pointer.hasProjectExtensionPackage) {
-          console.log(t.success("  \u2713 project runtime uses npm:@xtrm/pi-extensions"));
+          console.log(t.success("  \u2713 project runtime uses npm:@jaggerxtrm/pi-extensions"));
         } else {
           console.log(kleur_default.yellow("  \u26A0 legacy project extension pointer detected; run xt pi reload to migrate"));
           allOk = false;

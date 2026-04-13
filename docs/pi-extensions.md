@@ -32,8 +32,8 @@ domain: [pi, extensions]
 Pi extensions use a **package-install model**:
 
 1. **Source of truth**: `packages/pi-extensions/extensions/<name>/` + `packages/pi-extensions/src/core/`
-2. **Distribution unit**: `npm:@xtrm/pi-extensions`
-3. **Runtime wiring**: project `.pi/settings.json` includes `npm:@xtrm/pi-extensions` in `packages`
+2. **Distribution unit**: `npm:@jaggerxtrm/pi-extensions`
+3. **Runtime wiring**: project `.pi/settings.json` includes `npm:@jaggerxtrm/pi-extensions` in `packages`
 
 There is no supported runtime flow that depends on `config/pi/extensions/**` or `.xtrm/config/pi/extensions/**`.
 
@@ -59,7 +59,7 @@ packages/pi-extensions/
 
 ## Publish & Release Contract
 
-`@xtrm/pi-extensions` is published as an independent workspace package.
+`@jaggerxtrm/pi-extensions` is published as an independent workspace package.
 
 ### Release entrypoints
 
@@ -77,7 +77,7 @@ npm run release:all
 ### Runtime install contract
 
 ```bash
-pi install npm:@xtrm/pi-extensions
+pi install npm:@jaggerxtrm/pi-extensions
 ```
 
 Pi discovers the package using:
@@ -101,7 +101,7 @@ xtrm pi reload      # force reload after manual edits
 
 | State | Action |
 |-------|--------|
-| Missing `npm:@xtrm/pi-extensions` | Run `pi install npm:@xtrm/pi-extensions` |
+| Missing `npm:@jaggerxtrm/pi-extensions` | Run `pi install npm:@jaggerxtrm/pi-extensions` |
 | Missing `.pi/settings.json` | Create file and write managed `packages` + `skills` entries |
 | Legacy `.pi/extensions/<managed-id>` real copies | Remove legacy copies during cleanup |
 
@@ -158,7 +158,7 @@ Adds `… +N more lines` indicator when truncated. Respects expanded view toggle
 
 ## Notes
 
-- Managed XTRM extensions are delivered through `npm:@xtrm/pi-extensions`.
+- Managed XTRM extensions are delivered through `npm:@jaggerxtrm/pi-extensions`.
 - Use `pi install -l` only for ad-hoc third-party/local extensions outside the managed set.
 - Legacy `config/pi/extensions/**` and `.xtrm/config/pi/extensions/**` trees are retired.
 - Shared core helpers now live in `packages/pi-extensions/src/core/`.

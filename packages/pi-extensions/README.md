@@ -1,10 +1,10 @@
-# @xtrm/pi-extensions
+# @jaggerxtrm/pi-extensions
 
 Unified runtime package for xtrm-managed Pi extensions.
 
 ## Publish contract
 
-- Package is published as `@xtrm/pi-extensions` (public npm package).
+- Package is published as `@jaggerxtrm/pi-extensions` (public npm package).
 - No build step is required. Pi loads raw TypeScript extension entrypoints at runtime.
 - `prepublishOnly` runs `verify:runtime` to ensure required runtime assets exist:
   - `src/index.ts`
@@ -32,7 +32,7 @@ npm run release:all
 Managed project runtime install path:
 
 ```bash
-pi install npm:@xtrm/pi-extensions
+pi install npm:@jaggerxtrm/pi-extensions
 ```
 
 Pi discovers this package through:
@@ -40,4 +40,4 @@ Pi discovers this package through:
 - `keywords: ["pi-package"]`
 - `pi.extensions: ["./src/index.ts"]`
 
-After install, keep `.pi/settings.json` package wiring pointed at `npm:@xtrm/pi-extensions`.
+After install, keep `.pi/settings.json` package wiring pointed at `npm:@jaggerxtrm/pi-extensions`.

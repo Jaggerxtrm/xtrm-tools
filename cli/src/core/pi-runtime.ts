@@ -40,7 +40,7 @@ const PI_MCP_ADAPTER_OVERRIDE_DIR = path.join(PI_AGENT_DIR, 'extensions', 'pi-mc
 const PI_MCP_ADAPTER_REQUIRED_ENTRY = 'commands.js';
 const PROJECT_EXTENSIONS_ENTRY = '../.xtrm/extensions';
 const PROJECT_SKILLS_ENTRY = '../.xtrm/skills/active/pi';
-const PROJECT_EXTENSION_PACKAGE_ID = 'npm:@xtrm/pi-extensions';
+const PROJECT_EXTENSION_PACKAGE_ID = 'npm:@jaggerxtrm/pi-extensions';
 const LEGACY_PROJECT_EXTENSION_ENTRIES = new Set<string>([
     PROJECT_EXTENSIONS_ENTRY,
     '.xtrm/extensions',
@@ -360,7 +360,7 @@ function getProjectRequiredPackageStatuses(installedPkgIds: readonly string[]): 
         const managed = MANAGED_PACKAGES.find((pkg) => pkg.id === packageId);
         const pkg: ManagedPackage = managed ?? {
             id: PROJECT_EXTENSION_PACKAGE_ID,
-            displayName: '@xtrm/pi-extensions',
+            displayName: '@jaggerxtrm/pi-extensions',
             required: true,
         };
 
@@ -821,7 +821,7 @@ export interface PiRuntimeOptions {
  * Run full Pi runtime sync flow: inventory -> plan -> sync.
  *
  * Global installs mirror extension directories into ~/.pi/agent/extensions/.
- * Project installs use package-based extension registration via `pi install npm:@xtrm/pi-extensions`.
+ * Project installs use package-based extension registration via `pi install npm:@jaggerxtrm/pi-extensions`.
  */
 export async function runPiRuntimeSync(opts: PiRuntimeOptions = {}): Promise<PiSyncResult> {
     const { dryRun = false, isGlobal = false, projectRoot } = opts;

@@ -51,7 +51,7 @@ async function getPiProjectPointer(projectRoot: string): Promise<PiProjectPointe
 
         return {
             hasProjectSettings: true,
-            hasProjectExtensionPackage: packageEntries.includes('npm:@xtrm/pi-extensions'),
+            hasProjectExtensionPackage: packageEntries.includes('npm:@jaggerxtrm/pi-extensions'),
             pointsToXtrmExtensions: hasSettingsEntry(settings.extensions, '../.xtrm/extensions'),
         };
     } catch {
@@ -105,7 +105,7 @@ export function createPiCommand(): Command {
 
             if (projectScoped) {
                 console.log(kleur.dim('  Scope:      project'));
-                console.log(kleur.dim(`  Extensions: package mode (npm:@xtrm/pi-extensions${pointer.hasProjectExtensionPackage ? '' : ' missing'})`));
+                console.log(kleur.dim(`  Extensions: package mode (npm:@jaggerxtrm/pi-extensions${pointer.hasProjectExtensionPackage ? '' : ' missing'})`));
             } else {
                 console.log(kleur.dim('  Scope:      global'));
                 const extOk = plan.extensions.filter(s => s.installed && !s.stale).length;
@@ -143,7 +143,7 @@ export function createPiCommand(): Command {
             }
 
             if (hasProjectSettingsDrift) {
-                console.log(kleur.yellow('  Settings:   .pi/settings.json missing managed npm:@xtrm/pi-extensions entry'));
+                console.log(kleur.yellow('  Settings:   .pi/settings.json missing managed npm:@jaggerxtrm/pi-extensions entry'));
             }
 
             console.log(kleur.dim('\n  → run: xt pi reload\n'));
@@ -227,7 +227,7 @@ export function createPiCommand(): Command {
                     allOk = false;
                 } else if (projectScoped) {
                     if (pointer.hasProjectExtensionPackage) {
-                        console.log(t.success('  ✓ project runtime uses npm:@xtrm/pi-extensions'));
+                        console.log(t.success('  ✓ project runtime uses npm:@jaggerxtrm/pi-extensions'));
                     } else {
                         console.log(kleur.yellow('  ⚠ legacy project extension pointer detected; run xt pi reload to migrate'));
                         allOk = false;

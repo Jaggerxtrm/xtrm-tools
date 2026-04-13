@@ -1,24 +1,23 @@
 {
   "name": "@xtrm/pi-extensions",
-  "version": "0.1.0",
-  "description": "Managed Pi extensions for xtrm-tools",
+  "version": "1.0.0",
+  "description": "Unified Pi extension entrypoint for xtrm-managed extensions",
   "type": "module",
-  "private": true,
   "keywords": [
     "pi-package",
     "pi",
-    "extensions",
+    "extension",
     "xtrm"
   ],
-  "files": [
-    "extensions",
-    "src",
-    "themes",
-    "MIGRATION_NOTES.md"
-  ],
+  "exports": {
+    ".": "./src/index.ts",
+    "./registry": "./src/registry.ts"
+  },
   "pi": {
     "extensions": [
       "./src/index.ts"
     ]
-  }
+  },
+  "author": "xtrm",
+  "license": "MIT"
 }

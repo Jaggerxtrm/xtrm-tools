@@ -133,13 +133,17 @@ export function createPiCommand(): Command {
                 }
             }
 
-            const projectModeOk = pointer.hasProjectSettings ? pointer.hasProjectExtensionPackage || pointer.pointsToXtrmExtensions : true;
+            const hasProjectSettingsDrift = !pointer.hasProjectSettings || !pointer.hasProjectExtensionPackage;
             const hasGlobalDrift = !projectScoped && !plan.allPresent;
             const hasPackageDrift = plan.missingPackages.length > 0;
 
-            if (projectModeOk && !hasGlobalDrift && !hasPackageDrift) {
+            if (!hasProjectSettingsDrift && !hasGlobalDrift && !hasPackageDrift) {
                 console.log(t.success('\n  ✓ Pi runtime configuration looks healthy\n'));
                 return;
+            }
+
+            if (hasProjectSettingsDrift) {
+                console.log(kleur.yellow('  Settings:   .pi/settings.json missing managed npm:@xtrm/pi-extensions entry'));
             }
 
             console.log(kleur.dim('\n  → run: xt pi reload\n'));
@@ -218,7 +222,10 @@ export function createPiCommand(): Command {
                 const plan = await inventoryPiRuntime(sourceDir, globalTargetDir);
 
                 const projectScoped = pointer.hasProjectExtensionPackage || pointer.pointsToXtrmExtensions;
-                if (projectScoped) {
+                if (!pointer.hasProjectSettings) {
+                    console.log(kleur.yellow('  ⚠ missing .pi/settings.json; run xt pi reload to bootstrap project Pi settings'));
+                    allOk = false;
+                } else if (projectScoped) {
                     if (pointer.hasProjectExtensionPackage) {
                         console.log(t.success('  ✓ project runtime uses npm:@xtrm/pi-extensions'));
                     } else {

@@ -23,6 +23,15 @@
             "timeout": 3000
           }
         ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/specialists-session-start.mjs"
+          }
+        ]
       }
     ],
     "PreToolUse": [
@@ -96,6 +105,15 @@
             "timeout": 3000
           }
         ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/specialists-complete.mjs"
+          }
+        ]
       }
     ],
     "Stop": [
@@ -124,39 +142,21 @@
           }
         ]
       }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/specialists-complete.mjs"
+          }
+        ]
+      }
     ]
   },
-  "UserPromptSubmit": [
-    {
-      "matcher": "",
-      "hooks": [
-        {
-          "type": "command",
-          "command": "node .claude/hooks/specialists-complete.mjs"
-        }
-      ]
-    }
-  ],
-  "PostToolUse": [
-    {
-      "matcher": "",
-      "hooks": [
-        {
-          "type": "command",
-          "command": "node .claude/hooks/specialists-complete.mjs"
-        }
-      ]
-    }
-  ],
-  "SessionStart": [
-    {
-      "matcher": "",
-      "hooks": [
-        {
-          "type": "command",
-          "command": "node .claude/hooks/specialists-session-start.mjs"
-        }
-      ]
-    }
-  ]
+  "statusLine": {
+    "type": "command",
+    "command": "node \"/home/dawid/dev/xtrm-tools/.xtrm/hooks/statusline.mjs\""
+  }
 }

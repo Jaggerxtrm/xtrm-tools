@@ -303,7 +303,7 @@ process.on('unhandledRejection', (reason) => {
 ```
 Error: ENOENT: no such file or directory, access '/home/user/project/skills'
     at Object.accessSync (node:fs:254:3)
-    at findRepoRoot (/home/dawid/projects/jaggers-agent-tools/cli/src/utils/repo-root.ts:10:8)
+    at findRepoRoot (/home/dawid/dev/jaggers-agent-tools/cli/src/utils/repo-root.ts:10:8)
     ...
 ```
 

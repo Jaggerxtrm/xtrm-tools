@@ -9,6 +9,6 @@ fi
 # --- END BEADS INTEGRATION v0.59.0 ---
 
 # [jaggers] chain-githooks
-if [ -x "/home/dawid/projects/xtrm-tools/.githooks/pre-push" ]; then
-    "/home/dawid/projects/xtrm-tools/.githooks/pre-push" "$@"
+if [ -x "/home/dawid/dev/xtrm-tools/.githooks/pre-push" ]; then
+    "/home/dawid/dev/xtrm-tools/.githooks/pre-push" "$@"
 fi

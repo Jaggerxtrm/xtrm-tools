@@ -1,6 +1,6 @@
 ## Summary
 
-I've diagnosed the root cause of xt pi worktree extension loading failures and written findings to `/home/dawid/projects/xtrm-tools/context.md` (3.5KB).
+I've diagnosed the root cause of xt pi worktree extension loading failures and written findings to `/home/dawid/dev/xtrm-tools/context.md` (3.5KB).
 
 **Root Cause:**
 The `ensureCorePackageSymlink()` function creates the `@xtrm/pi-core` module symlink (`.pi/node_modules/@xtrm/pi-core → ../../extensions/core`), but it's **only called during Pi sync flows**, not during worktree startup. When `launchWorktreeSession()` spawns the Pi runtime in a fresh worktree, 5 required extensions (beads, custom-footer, quality-gates, session-flow, xtrm-loader) fail to import from `@xtrm/pi-core`.

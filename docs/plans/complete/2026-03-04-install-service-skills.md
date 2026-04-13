@@ -595,7 +595,7 @@ Expected: `dist/index.cjs` rebuilt, no errors
 
 ```bash
 cd /tmp && mkdir smoke-test && cd smoke-test && git init
-node /home/dawid/projects/jaggers-agent-tools/cli/dist/index.cjs install-service-skills
+node /home/dawid/dev/jaggers-agent-tools/cli/dist/index.cjs install-service-skills
 ```
 
 Expected: kleur-styled output with all sections (Skills, settings.json, Git hooks), Done message.
@@ -603,7 +603,7 @@ Expected: kleur-styled output with all sections (Skills, settings.json, Git hook
 **Step 8: Verify `--help` shows new subcommand**
 
 ```bash
-node /home/dawid/projects/jaggers-agent-tools/cli/dist/index.cjs --help
+node /home/dawid/dev/jaggers-agent-tools/cli/dist/index.cjs --help
 ```
 
 Expected output includes: `install-service-skills  Install the Service Skill Trinity into the current project`

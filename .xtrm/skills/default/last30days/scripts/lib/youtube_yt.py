@@ -260,6 +260,34 @@ def _clean_vtt(vtt_text: str) -> str:
 _YT_USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
 
 
+def _build_caption_track_candidates(caption_tracks: List[Dict[str, Any]]) -> List[str]:
+    """Return candidate caption track URLs in preferred fetch order."""
+    if not caption_tracks:
+        return []
+
+    en_exact = [track for track in caption_tracks if track.get("languageCode", "") == "en"]
+    en_variant = [
+        track for track in caption_tracks
+        if track.get("languageCode", "").startswith("en") and track not in en_exact
+    ]
+    original_lang = [
+        track for track in caption_tracks
+        if not track.get("languageCode", "").startswith("en")
+    ]
+
+    ordered_tracks = en_exact + en_variant + original_lang
+    seen: Set[str] = set()
+    candidate_urls: List[str] = []
+    for track in ordered_tracks:
+        base_url = track.get("baseUrl")
+        if not base_url or base_url in seen:
+            continue
+        seen.add(base_url)
+        candidate_urls.append(base_url)
+
+    return candidate_urls
+
+
 def _fetch_transcript_direct(video_id: str, timeout: int = 30) -> Optional[str]:
     """Fetch YouTube transcript via direct HTTP without yt-dlp.
 
@@ -319,41 +347,34 @@ def _fetch_transcript_direct(video_id: str, timeout: int = 30) -> Optional[str]:
         _log(f"Direct transcript: no caption tracks for {video_id}")
         return None
 
-    # Find English track (prefer exact 'en', then any en variant, then first track)
-    base_url = None
-    for track in caption_tracks:
-        lang = track.get("languageCode", "")
-        if lang == "en":
-            base_url = track.get("baseUrl")
-            break
-    if not base_url:
-        for track in caption_tracks:
-            lang = track.get("languageCode", "")
-            if lang.startswith("en"):
-                base_url = track.get("baseUrl")
-                break
-    if not base_url:
-        # Fall back to first available track
-        base_url = caption_tracks[0].get("baseUrl")
-    if not base_url:
+    candidate_urls = _build_caption_track_candidates(caption_tracks)
+    if not candidate_urls:
         _log(f"Direct transcript: no baseUrl in caption tracks for {video_id}")
         return None
 
-    # Step 3: Fetch the VTT subtitle file
-    sep = "&" if "?" in base_url else "?"
-    vtt_url = f"{base_url}{sep}fmt=vtt"
-    vtt_req = urllib.request.Request(vtt_url, headers=headers)
-    try:
-        with urllib.request.urlopen(vtt_req, timeout=timeout) as resp:
-            vtt_text = resp.read().decode("utf-8", errors="replace")
-    except (urllib.error.URLError, urllib.error.HTTPError, OSError, TimeoutError) as exc:
-        _log(f"Direct transcript: failed to fetch VTT for {video_id}: {exc}")
-        return None
+    subtitle_headers = {
+        **headers,
+        "Referer": watch_url,
+        "Origin": "https://www.youtube.com",
+        "Accept": "text/vtt,text/plain,*/*",
+    }
 
-    if not vtt_text or not vtt_text.strip():
-        return None
+    # Step 3: Fetch VTT subtitle file, trying preferred track order
+    for base_url in candidate_urls:
+        sep = "&" if "?" in base_url else "?"
+        vtt_url = f"{base_url}{sep}fmt=vtt"
+        vtt_req = urllib.request.Request(vtt_url, headers=subtitle_headers)
+        try:
+            with urllib.request.urlopen(vtt_req, timeout=timeout) as resp:
+                vtt_text = resp.read().decode("utf-8", errors="replace")
+        except (urllib.error.URLError, urllib.error.HTTPError, OSError, TimeoutError):
+            continue
 
-    return vtt_text
+        if vtt_text and vtt_text.strip():
+            return vtt_text
+
+    _log(f"Direct transcript: all caption track fetch attempts returned empty for {video_id}")
+    return None
 
 
 def _fetch_transcript_ytdlp(video_id: str, temp_dir: str) -> Optional[str]:
@@ -371,7 +392,7 @@ def _fetch_transcript_ytdlp(video_id: str, temp_dir: str) -> Optional[str]:
         "--ignore-config",
         "--no-cookies-from-browser",
         "--write-auto-subs",
-        "--sub-lang", "en",
+        "--sub-lang", "all",
         "--sub-format", "vtt",
         "--skip-download",
         "--no-warnings",
@@ -401,15 +422,13 @@ def _fetch_transcript_ytdlp(video_id: str, temp_dir: str) -> Optional[str]:
     except FileNotFoundError:
         return None
 
-    # yt-dlp may save as .en.vtt or .en-orig.vtt
-    vtt_path = Path(temp_dir) / f"{video_id}.en.vtt"
-    if not vtt_path.exists():
-        # Try alternate naming
-        for p in Path(temp_dir).glob(f"{video_id}*.vtt"):
-            vtt_path = p
-            break
-        else:
-            return None
+    # yt-dlp naming varies by language (e.g. .en.vtt, .it.vtt, .en-orig.vtt)
+    vtt_path = None
+    for p in Path(temp_dir).glob(f"{video_id}*.vtt"):
+        vtt_path = p
+        break
+    if not vtt_path:
+        return None
 
     try:
         return vtt_path.read_text(encoding="utf-8", errors="replace")

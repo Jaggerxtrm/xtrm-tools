@@ -9,9 +9,11 @@ const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, '..');
 const rootPkgPath = path.join(repoRoot, 'package.json');
 const cliPkgPath = path.join(repoRoot, 'cli', 'package.json');
+const piExtensionsPkgPath = path.join(repoRoot, 'packages', 'pi-extensions', 'package.json');
 
 const rootPkg = JSON.parse(fs.readFileSync(rootPkgPath, 'utf8'));
 const cliPkg = JSON.parse(fs.readFileSync(cliPkgPath, 'utf8'));
+const piExtensionsPkg = JSON.parse(fs.readFileSync(piExtensionsPkgPath, 'utf8'));
 
 if (!rootPkg.version || typeof rootPkg.version !== 'string') {
   console.error('Root package.json missing valid version');
@@ -36,10 +38,18 @@ if (rootPkg.bin) {
   }
 }
 
+if (piExtensionsPkg.version !== rootPkg.version) {
+  piExtensionsPkg.version = rootPkg.version;
+  changed = true;
+}
+
 if (!changed) {
-  console.log(`cli/package.json already in sync (${rootPkg.version})`);
+  console.log(`Workspace package versions already in sync (${rootPkg.version})`);
   process.exit(0);
 }
 
 fs.writeFileSync(cliPkgPath, `${JSON.stringify(cliPkg, null, 2)}\n`, 'utf8');
-console.log(`Synced cli/package.json (version: ${rootPkg.version}, bin: ${Object.keys(cliPkg.bin ?? {}).join(', ')})`);
+fs.writeFileSync(piExtensionsPkgPath, `${JSON.stringify(piExtensionsPkg, null, 2)}\n`, 'utf8');
+console.log(
+  `Synced workspace packages (version: ${rootPkg.version}, cli bin: ${Object.keys(cliPkg.bin ?? {}).join(', ')})`
+);

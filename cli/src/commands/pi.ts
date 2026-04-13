@@ -15,7 +15,8 @@ import { confirmDestructiveAction } from '../utils/confirmation.js';
 const PI_AGENT_DIR = process.env.PI_AGENT_DIR || path.join(homedir(), '.pi', 'agent');
 
 interface PiProjectPointer {
-    hasProjectExtensions: boolean;
+    hasProjectSettings: boolean;
+    hasProjectExtensionPackage: boolean;
     pointsToXtrmExtensions: boolean;
 }
 
@@ -35,24 +36,26 @@ function hasSettingsEntry(entries: unknown, expectedEntry: string): boolean {
 }
 
 async function getPiProjectPointer(projectRoot: string): Promise<PiProjectPointer> {
-    const projectExtensionsDir = path.join(projectRoot, '.xtrm', 'extensions');
     const settingsPath = path.join(projectRoot, '.pi', 'settings.json');
-
-    const hasProjectExtensions = await fs.pathExists(projectExtensionsDir);
     const hasSettingsFile = await fs.pathExists(settingsPath);
 
     if (!hasSettingsFile) {
-        return { hasProjectExtensions, pointsToXtrmExtensions: false };
+        return { hasProjectSettings: false, hasProjectExtensionPackage: false, pointsToXtrmExtensions: false };
     }
 
     try {
-        const settings = await fs.readJson(settingsPath) as { extensions?: unknown };
+        const settings = await fs.readJson(settingsPath) as { extensions?: unknown; packages?: unknown };
+        const packageEntries = Array.isArray(settings.packages)
+            ? settings.packages.filter((entry): entry is string => typeof entry === 'string')
+            : [];
+
         return {
-            hasProjectExtensions,
+            hasProjectSettings: true,
+            hasProjectExtensionPackage: packageEntries.includes('npm:@xtrm/pi-extensions'),
             pointsToXtrmExtensions: hasSettingsEntry(settings.extensions, '../.xtrm/extensions'),
         };
     } catch {
-        return { hasProjectExtensions, pointsToXtrmExtensions: false };
+        return { hasProjectSettings: true, hasProjectExtensionPackage: false, pointsToXtrmExtensions: false };
     }
 }
 
@@ -98,10 +101,11 @@ export function createPiCommand(): Command {
 
             const plan = await inventoryPiRuntime(sourceDir, globalTargetDir);
             const pkgOk = plan.packages.filter(s => s.installed).length;
+            const projectScoped = pointer.hasProjectExtensionPackage || pointer.pointsToXtrmExtensions;
 
-            if (pointer.hasProjectExtensions && pointer.pointsToXtrmExtensions) {
+            if (projectScoped) {
                 console.log(kleur.dim('  Scope:      project'));
-                console.log(kleur.dim('  Extensions: via .xtrm/extensions (.pi/settings.json)'));
+                console.log(kleur.dim(`  Extensions: package mode (npm:@xtrm/pi-extensions${pointer.hasProjectExtensionPackage ? '' : ' missing'})`));
             } else {
                 console.log(kleur.dim('  Scope:      global'));
                 const extOk = plan.extensions.filter(s => s.installed && !s.stale).length;
@@ -110,16 +114,12 @@ export function createPiCommand(): Command {
 
             console.log(kleur.dim(`  Packages:   ${pkgOk}/${plan.packages.length} installed`));
 
-            if (pointer.hasProjectExtensions && !pointer.pointsToXtrmExtensions) {
-                console.log(kleur.yellow('  Settings:   .pi/settings.json is not pointing to ../.xtrm/extensions'));
-            }
-
             if (plan.missingPackages.length > 0) {
                 const names = plan.missingPackages.map(s => s.pkg.displayName).join(', ');
                 console.log(kleur.yellow(`  Packages:   ${names}`));
             }
 
-            if (!pointer.pointsToXtrmExtensions) {
+            if (!projectScoped) {
                 if (plan.missingExtensions.length > 0) {
                     const names = plan.missingExtensions.map(s => s.ext.displayName).join(', ');
                     console.log(kleur.yellow(`  Missing:    ${names}`));
@@ -133,8 +133,8 @@ export function createPiCommand(): Command {
                 }
             }
 
-            const projectModeOk = pointer.hasProjectExtensions ? pointer.pointsToXtrmExtensions : true;
-            const hasGlobalDrift = !pointer.pointsToXtrmExtensions && !plan.allPresent;
+            const projectModeOk = pointer.hasProjectSettings ? pointer.hasProjectExtensionPackage || pointer.pointsToXtrmExtensions : true;
+            const hasGlobalDrift = !projectScoped && !plan.allPresent;
             const hasPackageDrift = plan.missingPackages.length > 0;
 
             if (projectModeOk && !hasGlobalDrift && !hasPackageDrift) {
@@ -217,11 +217,14 @@ export function createPiCommand(): Command {
             } else {
                 const plan = await inventoryPiRuntime(sourceDir, globalTargetDir);
 
-                if (pointer.hasProjectExtensions && pointer.pointsToXtrmExtensions) {
-                    console.log(t.success('  ✓ project runtime points to .xtrm/extensions'));
-                } else if (pointer.hasProjectExtensions) {
-                    console.log(kleur.yellow('  ⚠ .pi/settings.json does not include ../.xtrm/extensions'));
-                    allOk = false;
+                const projectScoped = pointer.hasProjectExtensionPackage || pointer.pointsToXtrmExtensions;
+                if (projectScoped) {
+                    if (pointer.hasProjectExtensionPackage) {
+                        console.log(t.success('  ✓ project runtime uses npm:@xtrm/pi-extensions'));
+                    } else {
+                        console.log(kleur.yellow('  ⚠ legacy project extension pointer detected; run xt pi reload to migrate'));
+                        allOk = false;
+                    }
                 } else if (plan.missingExtensions.length === 0 && plan.staleExtensions.length === 0 && plan.orphanedExtensions.length === 0) {
                     console.log(t.success(`  ✓ global extensions deployed (${plan.extensions.length})`));
                 } else {

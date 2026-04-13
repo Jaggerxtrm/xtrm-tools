@@ -675,8 +675,9 @@ async function updatePiSettings(
         existingSettings = {};
     }
 
+    const LEGACY_PACKAGE_IDS = new Set(['npm:@xtrm/pi-extensions', './extensions/']);
     const existingPackages = normalizeStringArray(existingSettings.packages)
-        .filter((entry) => !entry.startsWith('./extensions/'));
+        .filter((entry) => !LEGACY_PACKAGE_IDS.has(entry) && !entry.startsWith('./extensions/'));
     if (!existingPackages.includes(PROJECT_EXTENSION_PACKAGE_ID)) {
         existingPackages.push(PROJECT_EXTENSION_PACKAGE_ID);
     }

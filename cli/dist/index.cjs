@@ -45136,7 +45136,8 @@ async function updatePiSettings(projectRoot, dryRun, log) {
   } catch {
     existingSettings = {};
   }
-  const existingPackages = normalizeStringArray(existingSettings.packages).filter((entry) => !entry.startsWith("./extensions/"));
+  const LEGACY_PACKAGE_IDS = /* @__PURE__ */ new Set(["npm:@xtrm/pi-extensions", "./extensions/"]);
+  const existingPackages = normalizeStringArray(existingSettings.packages).filter((entry) => !LEGACY_PACKAGE_IDS.has(entry) && !entry.startsWith("./extensions/"));
   if (!existingPackages.includes(PROJECT_EXTENSION_PACKAGE_ID)) {
     existingPackages.push(PROJECT_EXTENSION_PACKAGE_ID);
   }

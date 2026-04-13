@@ -19,5 +19,11 @@
     ]
   },
   "author": "xtrm",
-  "license": "MIT"
+  "license": "MIT",
+  "files": [
+    "src",
+    "extensions",
+    "themes",
+    "MIGRATION_NOTES.md"
+  ]
 }

@@ -31,7 +31,7 @@ const assets = {
     install_mode: 'copy',
   },
   extensions: {
-    source_dir: '.xtrm/ext-src',
+    source_dir: 'packages/pi-extensions',
     install_mode: 'copy',
   },
 };

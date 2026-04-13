@@ -1,0 +1,24 @@
+{
+  "name": "@xtrm/pi-extensions",
+  "version": "0.1.0",
+  "description": "Managed Pi extensions for xtrm-tools",
+  "type": "module",
+  "private": true,
+  "keywords": [
+    "pi-package",
+    "pi",
+    "extensions",
+    "xtrm"
+  ],
+  "files": [
+    "extensions",
+    "src",
+    "themes",
+    "MIGRATION_NOTES.md"
+  ],
+  "pi": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  }
+}

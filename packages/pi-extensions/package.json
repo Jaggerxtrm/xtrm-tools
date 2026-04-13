@@ -1,0 +1,41 @@
+{
+  "name": "@xtrm/pi-extensions",
+  "version": "0.1.0",
+  "description": "Unified Pi extension package for xtrm runtime integrations",
+  "license": "MIT",
+  "type": "module",
+  "keywords": [
+    "pi-package",
+    "pi",
+    "pi-extension",
+    "xtrm"
+  ],
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src",
+    "extensions"
+  ],
+  "scripts": {
+    "build": "echo 'No build step: Pi executes TypeScript extension sources directly'",
+    "typecheck": "echo 'Typecheck wiring added in later migration phase'"
+  },
+  "peerDependencies": {
+    "@mariozechner/pi-ai": "*",
+    "@mariozechner/pi-coding-agent": "*",
+    "@sinclair/typebox": "*"
+  },
+  "pi": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  },
+  "xtrm": {
+    "layout": {
+      "core": "src/core",
+      "extensions": "extensions",
+      "note": "src/core internalizes former @xtrm/pi-core modules as package-private code"
+    }
+  }
+}

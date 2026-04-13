@@ -1,0 +1,23 @@
+{
+  "name": "@xtrm/pi-extensions",
+  "version": "1.0.0",
+  "description": "Unified Pi extension entrypoint for xtrm-managed extensions",
+  "type": "module",
+  "keywords": [
+    "pi-package",
+    "pi",
+    "extension",
+    "xtrm"
+  ],
+  "exports": {
+    ".": "./src/index.ts",
+    "./registry": "./src/registry.ts"
+  },
+  "pi": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  },
+  "author": "xtrm",
+  "license": "MIT"
+}

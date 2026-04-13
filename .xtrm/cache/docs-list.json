@@ -1,9 +1,9 @@
 {
-  "timestamp": 1775909280678,
-  "repoRoot": "/home/dawid/projects/xtrm-tools",
+  "timestamp": 1776084827734,
+  "repoRoot": "/home/dawid/dev/xtrm-tools/.worktrees/xtrm-uznf/xtrm-uznf-sync-docs",
   "entries": [
     {
-      "filePath": "/home/dawid/projects/xtrm-tools/docs/XTRM-GUIDE.md",
+      "filePath": "/home/dawid/dev/xtrm-tools/.worktrees/xtrm-uznf/xtrm-uznf-sync-docs/docs/XTRM-GUIDE.md",
       "relativePath": "docs/XTRM-GUIDE.md",
       "frontmatter": {
         "title": "XTRM-Tools Complete Guide",
@@ -14,11 +14,11 @@
         "domain": "[]",
         "summary": "| Section | Summary | |---|---| | [Overview](#overview) | XTRM is a policy-driven workflow layer | | [Installation](#ins"
       },
-      "sizeBytes": 7919,
-      "lastModified": "2026-04-02T19:32:38.923Z"
+      "sizeBytes": 7959,
+      "lastModified": "2026-04-13T12:53:39.460Z"
     },
     {
-      "filePath": "/home/dawid/projects/xtrm-tools/docs/bash-tools.md",
+      "filePath": "/home/dawid/dev/xtrm-tools/.worktrees/xtrm-uznf/xtrm-uznf-sync-docs/docs/bash-tools.md",
       "relativePath": "docs/bash-tools.md",
       "frontmatter": {
         "title": "Specialist Bash Tools",
@@ -30,28 +30,28 @@
         "domain": "[]",
         "summary": "| Section | Summary | |---|---| | [Overview](#overview) | xtrm supports two access layers for specialist tooling: | | [T"
       },
-      "sizeBytes": 4732,
-      "lastModified": "2026-04-04T13:00:53.594Z"
+      "sizeBytes": 4717,
+      "lastModified": "2026-04-13T12:53:39.460Z"
     },
     {
-      "filePath": "/home/dawid/projects/xtrm-tools/docs/cli-architecture.md",
+      "filePath": "/home/dawid/dev/xtrm-tools/.worktrees/xtrm-uznf/xtrm-uznf-sync-docs/docs/cli-architecture.md",
       "relativePath": "docs/cli-architecture.md",
       "frontmatter": {
         "title": "CLI Architecture",
         "scope": "cli-architecture",
         "category": "reference",
-        "version": "1.5.0",
-        "updated": "2026-04-02",
-        "synced_at": "de153d07",
+        "version": "1.6.0",
+        "updated": "2026-04-13",
+        "synced_at": "f1f6b5de",
         "source_of_truth_for": "",
         "domain": "[cli]",
         "summary": "| Section | Summary | |---|---| | [Entry Point](#entry-point) | `cli/src/index | | [Install Flow (`xtrm install`)](#inst"
       },
-      "sizeBytes": 17273,
-      "lastModified": "2026-04-02T19:33:41.004Z"
+      "sizeBytes": 17233,
+      "lastModified": "2026-04-13T12:53:39.461Z"
     },
     {
-      "filePath": "/home/dawid/projects/xtrm-tools/docs/docs-commands.md",
+      "filePath": "/home/dawid/dev/xtrm-tools/.worktrees/xtrm-uznf/xtrm-uznf-sync-docs/docs/docs-commands.md",
       "relativePath": "docs/docs-commands.md",
       "frontmatter": {
         "title": "Documentation Commands",
@@ -63,31 +63,31 @@
         "description": "Reference for xtrm docs subcommands: show, list, and cross-check",
         "source_of_truth_for": "",
         "domain": "[docs, cli]",
-        "summary": "| Section | Summary | |---|---| | [Command Suite](#command-suite) | Best for quick metadata inspection | | [`xtrm docs s"
+        "summary": "| Section | Summary | |---|---| | [Command Suite](#command-suite) | | Command | Purpose | | | [`xtrm docs show`](#xtrm-d"
       },
-      "sizeBytes": 3813,
-      "lastModified": "2026-03-31T13:31:59.516Z"
+      "sizeBytes": 3846,
+      "lastModified": "2026-04-13T12:53:39.461Z"
     },
     {
-      "filePath": "/home/dawid/projects/xtrm-tools/docs/hooks.md",
+      "filePath": "/home/dawid/dev/xtrm-tools/.worktrees/xtrm-uznf/xtrm-uznf-sync-docs/docs/hooks.md",
       "relativePath": "docs/hooks.md",
       "frontmatter": {
         "title": "Hooks Reference",
         "scope": "hooks",
         "category": "reference",
-        "version": "1.5.0",
-        "updated": "2026-03-31",
-        "synced_at": "50e04da9",
+        "version": "1.6.0",
+        "updated": "2026-04-13",
+        "synced_at": "f1f6b5de",
         "description": "All hook events, scripts, and behavior for the xtrm plugin",
         "source_of_truth_for": "",
         "domain": "[hooks, claude, enforcement]",
-        "summary": "| Section | Summary | |---|---| | [Event Model](#event-model) | Always installed (`xtrm init`) | | [Hook Groups](#hook-g"
+        "summary": "| Section | Summary | |---|---| | [Event Model](#event-model) | | Event | When | | | [Hook Groups](#hook-groups) | Alway"
       },
-      "sizeBytes": 7337,
-      "lastModified": "2026-04-01T22:51:04.090Z"
+      "sizeBytes": 7255,
+      "lastModified": "2026-04-13T12:53:39.462Z"
     },
     {
-      "filePath": "/home/dawid/projects/xtrm-tools/docs/mcp-servers.md",
+      "filePath": "/home/dawid/dev/xtrm-tools/.worktrees/xtrm-uznf/xtrm-uznf-sync-docs/docs/mcp-servers.md",
       "relativePath": "docs/mcp-servers.md",
       "frontmatter": {
         "title": "MCP Servers Configuration",
@@ -99,11 +99,11 @@
         "domain": "[]",
         "summary": "| Section | Summary | |---|---| | [Overview](#overview) | xtrm now maintains **two MCP canonical sources** because Claud"
       },
-      "sizeBytes": 1718,
-      "lastModified": "2026-04-04T13:00:53.609Z"
+      "sizeBytes": 1689,
+      "lastModified": "2026-04-13T12:53:39.462Z"
     },
     {
-      "filePath": "/home/dawid/projects/xtrm-tools/docs/mcp.md",
+      "filePath": "/home/dawid/dev/xtrm-tools/.worktrees/xtrm-uznf/xtrm-uznf-sync-docs/docs/mcp.md",
       "relativePath": "docs/mcp.md",
       "frontmatter": {
         "title": "MCP Module",
@@ -114,47 +114,47 @@
         "description": "MCP server configuration, canonical sources, and operational workflow",
         "source_of_truth_for": "",
         "domain": "[mcp, claude, config]",
-        "summary": "| Section | Summary | |---|---| | [Canonical Sources](#canonical-sources) | 1 | | [Operational Workflow](#operational-wo"
+        "summary": "| Section | Summary | |---|---| | [Canonical Sources](#canonical-sources) | | File | Purpose | | | [Operational Workflow"
       },
-      "sizeBytes": 2106,
-      "lastModified": "2026-03-31T13:31:59.520Z"
+      "sizeBytes": 2235,
+      "lastModified": "2026-04-13T12:53:39.462Z"
     },
     {
-      "filePath": "/home/dawid/projects/xtrm-tools/docs/pi-extensions.md",
+      "filePath": "/home/dawid/dev/xtrm-tools/.worktrees/xtrm-uznf/xtrm-uznf-sync-docs/docs/pi-extensions.md",
       "relativePath": "docs/pi-extensions.md",
       "frontmatter": {
         "title": "Pi Extensions Reference",
         "scope": "pi-extensions",
         "category": "reference",
         "version": "2.0.0",
-        "updated": "2026-04-04",
-        "synced_at": "e6cca025",
+        "updated": "2026-04-13",
+        "synced_at": "f1f6b5de",
         "source_of_truth_for": "",
         "domain": "[pi, extensions]",
-        "summary": "| Section | Summary | |---|---| | [Architecture Overview](#architecture-overview) | Pi extensions use a **global symlink"
+        "summary": "| Section | Summary | |---|---| | [Architecture Overview](#architecture-overview) | Pi extensions use a **package-instal"
       },
-      "sizeBytes": 6735,
-      "lastModified": "2026-04-04T13:00:53.619Z"
+      "sizeBytes": 6303,
+      "lastModified": "2026-04-13T12:53:39.462Z"
     },
     {
-      "filePath": "/home/dawid/projects/xtrm-tools/docs/policies.md",
+      "filePath": "/home/dawid/dev/xtrm-tools/.worktrees/xtrm-uznf/xtrm-uznf-sync-docs/docs/policies.md",
       "relativePath": "docs/policies.md",
       "frontmatter": {
         "title": "Policy Reference",
         "scope": "policies",
         "category": "reference",
-        "version": "1.3.0",
-        "updated": "2026-03-22",
-        "synced_at": "0fc2a3b",
+        "version": "1.4.0",
+        "updated": "2026-04-13",
+        "synced_at": "f1f6b5de",
         "source_of_truth_for": "",
         "domain": "[hooks, enforcement]",
-        "summary": "| Section | Summary | |---|---| | [Active Policies](#active-policies) | 1 | | [Add / Update Workflow](#add-update-workfl"
+        "summary": "| Section | Summary | |---|---| | [Active Policies](#active-policies) | | Policy | Runtime | Description | | | [Add / Up"
       },
-      "sizeBytes": 2006,
-      "lastModified": "2026-03-31T13:31:59.524Z"
+      "sizeBytes": 2031,
+      "lastModified": "2026-04-13T12:53:39.462Z"
     },
     {
-      "filePath": "/home/dawid/projects/xtrm-tools/docs/pre-install-cleanup.md",
+      "filePath": "/home/dawid/dev/xtrm-tools/.worktrees/xtrm-uznf/xtrm-uznf-sync-docs/docs/pre-install-cleanup.md",
       "relativePath": "docs/pre-install-cleanup.md",
       "frontmatter": {
         "title": "Pre-Install Cleanup Guide",
@@ -166,11 +166,11 @@
         "domain": "[install, migration, claude, pi]",
         "summary": "| Section | Summary | |---|---| | [1) Remove legacy Claude hook files](#1-remove-legacy-claude-hook-files) | _no summary"
       },
-      "sizeBytes": 2510,
-      "lastModified": "2026-03-31T13:31:59.526Z"
+      "sizeBytes": 2505,
+      "lastModified": "2026-04-13T12:53:39.463Z"
     },
     {
-      "filePath": "/home/dawid/projects/xtrm-tools/docs/project-skills.md",
+      "filePath": "/home/dawid/dev/xtrm-tools/.worktrees/xtrm-uznf/xtrm-uznf-sync-docs/docs/project-skills.md",
       "relativePath": "docs/project-skills.md",
       "frontmatter": {
         "title": "Project Skills Migration Reference",
@@ -183,47 +183,47 @@
         "domain": "[skills, claude, pi]",
         "summary": "| Section | Summary | |---|---| | [Current Source Layout](#current-source-layout) | Use assets from: | | [Installer Expe"
       },
-      "sizeBytes": 1308,
-      "lastModified": "2026-04-04T13:00:53.626Z"
+      "sizeBytes": 1367,
+      "lastModified": "2026-04-13T12:53:39.463Z"
     },
     {
-      "filePath": "/home/dawid/projects/xtrm-tools/docs/skills-registry-exploration.md",
+      "filePath": "/home/dawid/dev/xtrm-tools/.worktrees/xtrm-uznf/xtrm-uznf-sync-docs/docs/skills-registry-exploration.md",
       "relativePath": "docs/skills-registry-exploration.md",
       "frontmatter": {
         "title": "Skills Registry Exploration",
         "scope": "skills-registry",
         "category": "architecture",
         "version": "1.2.0",
-        "updated": "2026-04-02",
-        "synced_at": "0e711e76",
+        "updated": "2026-04-13",
+        "synced_at": "f0cca6f1",
         "description": "Skills registry design: three-tier model, CLI contract, migration plan",
         "source_of_truth_for": "",
         "domain": "[skills, cli, registry]",
         "summary": "| Section | Summary | |---|---| | [1) Current architecture analysis and pain points](#1-current-architecture-analysis-an"
       },
-      "sizeBytes": 23532,
-      "lastModified": "2026-04-04T13:00:53.635Z"
+      "sizeBytes": 23775,
+      "lastModified": "2026-04-13T12:53:39.463Z"
     },
     {
-      "filePath": "/home/dawid/projects/xtrm-tools/docs/skills-tier-architecture.md",
+      "filePath": "/home/dawid/dev/xtrm-tools/.worktrees/xtrm-uznf/xtrm-uznf-sync-docs/docs/skills-tier-architecture.md",
       "relativePath": "docs/skills-tier-architecture.md",
       "frontmatter": {
         "title": "Skills Tier Architecture",
         "scope": "skills-tier",
         "category": "architecture",
         "version": "1.0.0",
-        "updated": "2026-04-02",
-        "synced_at": "0e711e76",
+        "updated": "2026-04-13",
+        "synced_at": "f0cca6f1",
         "description": "Three-tier skills model: default, optional packs, and user packs with runtime active views",
         "source_of_truth_for": "",
         "domain": "[skills, cli, architecture]",
         "summary": "| Section | Summary | |---|---| | [Overview](#overview) | Skills are organized into a **three-tier model** under ` | | ["
       },
-      "sizeBytes": 10369,
-      "lastModified": "2026-04-04T13:00:53.643Z"
+      "sizeBytes": 10265,
+      "lastModified": "2026-04-13T12:53:39.464Z"
     },
     {
-      "filePath": "/home/dawid/projects/xtrm-tools/docs/skills.md",
+      "filePath": "/home/dawid/dev/xtrm-tools/.worktrees/xtrm-uznf/xtrm-uznf-sync-docs/docs/skills.md",
       "relativePath": "docs/skills.md",
       "frontmatter": {
         "title": "Skills Catalog",
@@ -235,13 +235,13 @@
         "description": "Skills tier architecture: default skills, optional packs, user packs, and xt skills CLI",
         "source_of_truth_for": "",
         "domain": "[skills, claude, pi]",
-        "summary": "| Section | Summary | |---|---| | [Tier Architecture](#tier-architecture) | The `default/` directory is a symlink to the"
+        "summary": "| Section | Summary | |---|---| | [Tier Architecture](#tier-architecture) | | Tier | Location | Mutability | Purpose | |"
       },
-      "sizeBytes": 6833,
-      "lastModified": "2026-04-04T13:00:53.649Z"
+      "sizeBytes": 6812,
+      "lastModified": "2026-04-13T12:53:39.464Z"
     },
     {
-      "filePath": "/home/dawid/projects/xtrm-tools/docs/testing.md",
+      "filePath": "/home/dawid/dev/xtrm-tools/.worktrees/xtrm-uznf/xtrm-uznf-sync-docs/docs/testing.md",
       "relativePath": "docs/testing.md",
       "frontmatter": {
         "title": "Production Live Testing Checklist",
@@ -253,11 +253,11 @@
         "domain": "[testing, hooks, skills]",
         "summary": "| Section | Summary | |---|---| | [Scope](#scope) | Project skills covered: | | [Global Preflight](#global-preflight) | "
       },
-      "sizeBytes": 5188,
-      "lastModified": "2026-03-31T13:31:59.532Z"
+      "sizeBytes": 5303,
+      "lastModified": "2026-04-13T12:53:39.465Z"
     },
     {
-      "filePath": "/home/dawid/projects/xtrm-tools/docs/todo.md",
+      "filePath": "/home/dawid/dev/xtrm-tools/.worktrees/xtrm-uznf/xtrm-uznf-sync-docs/docs/todo.md",
       "relativePath": "docs/todo.md",
       "frontmatter": {
         "title": "Skills Backlog",
@@ -270,10 +270,10 @@
         "summary": "- [ ] New skill: using github-grep, deepwiki, context7 to validate and explore implementation examples for best practice"
       },
       "sizeBytes": 702,
-      "lastModified": "2026-03-25T04:43:20.708Z"
+      "lastModified": "2026-04-13T12:48:18.208Z"
     },
     {
-      "filePath": "/home/dawid/projects/xtrm-tools/docs/worktrees.md",
+      "filePath": "/home/dawid/dev/xtrm-tools/.worktrees/xtrm-uznf/xtrm-uznf-sync-docs/docs/worktrees.md",
       "relativePath": "docs/worktrees.md",
       "frontmatter": {
         "title": "xt Worktrees",
@@ -286,29 +286,29 @@
         "domain": "[cli, worktrees, beads]",
         "summary": "| Section | Summary | |---|---| | [Quick Start](#quick-start) | `xt end` is the publish step for one worktree: it rebase"
       },
-      "sizeBytes": 12981,
-      "lastModified": "2026-03-31T13:31:59.534Z"
+      "sizeBytes": 12967,
+      "lastModified": "2026-04-13T12:53:39.465Z"
     },
     {
-      "filePath": "/home/dawid/projects/xtrm-tools/docs/xtrm-directory.md",
+      "filePath": "/home/dawid/dev/xtrm-tools/.worktrees/xtrm-uznf/xtrm-uznf-sync-docs/docs/xtrm-directory.md",
       "relativePath": "docs/xtrm-directory.md",
       "frontmatter": {
         "title": ".xtrm Directory Reference",
         "scope": "xtrm-directory",
         "category": "reference",
-        "version": "1.1.0",
-        "updated": "2026-04-04",
-        "synced_at": "e6cca025",
+        "version": "1.2.0",
+        "updated": "2026-04-13",
+        "synced_at": "f1f6b5de",
         "description": "Centralized xtrm configuration and runtime data directory",
         "source_of_truth_for": "",
         "domain": "[config, xtrm]",
-        "summary": "| Section | Summary | |---|---| | [Overview](#overview) | ` | | [Directory Layout](#directory-layout) | Pi extensions fo"
+        "summary": "| Section | Summary | |---|---| | [Overview](#overview) | ` | | [Directory Layout](#directory-layout) | | Subdirectory |"
       },
-      "sizeBytes": 6089,
-      "lastModified": "2026-04-04T13:00:53.657Z"
+      "sizeBytes": 5666,
+      "lastModified": "2026-04-13T12:53:39.466Z"
     },
     {
-      "filePath": "/home/dawid/projects/xtrm-tools/docs/xtrm-ui.md",
+      "filePath": "/home/dawid/dev/xtrm-tools/.worktrees/xtrm-uznf/xtrm-uznf-sync-docs/docs/xtrm-ui.md",
       "relativePath": "docs/xtrm-ui.md",
       "frontmatter": {
         "title": "XTRM UI Extension",
@@ -322,8 +322,8 @@
         "domain": "[pi, extensions, ui, themes]",
         "summary": "| Section | Summary | |---|---| | [Overview](#overview) | `xtrm-ui` is a Pi extension that wraps the visual chrome from "
       },
-      "sizeBytes": 4676,
-      "lastModified": "2026-04-04T13:00:53.661Z"
+      "sizeBytes": 4742,
+      "lastModified": "2026-04-13T12:53:39.466Z"
     }
   ]
 }

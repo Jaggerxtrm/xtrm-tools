@@ -136,7 +136,7 @@ Policies are the **single source of truth** for all enforcement rules.
     "hooks": [{ "event": "PreToolUse", "matcher": "Write|Edit", "command": "..." }]
   },
   "pi": {
-    "extension": "config/pi/extensions/policy-name.ts",
+    "extension": "packages/pi-extensions/extensions/policy-name.ts",
     "events": ["tool_call", "tool_result"]
   }
 }

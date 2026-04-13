@@ -37,11 +37,11 @@ function ensurePnpm(dryRun: boolean): void {
 }
 
 /**
- * Non-interactive Pi install: copies extensions + installs npm packages.
+ * Non-interactive Pi install: syncs Pi runtime packages/extensions.
  * Called automatically as part of `xtrm install`.
  *
  * @param isGlobal - When true, installs to global Pi dirs (~/.pi/agent/). Default false = project-scoped.
- * @param projectRoot - Project root for project-scoped installs. Defaults to findRepoRoot().
+ * @param projectRoot - Project root for project-scoped installs. Defaults to git root.
  */
 export async function runPiInstall(dryRun: boolean = false, isGlobal: boolean = false, projectRoot?: string): Promise<void> {
     if (!projectRoot) {

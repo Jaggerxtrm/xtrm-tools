@@ -29,11 +29,11 @@ Created a Pi extension that compacts verbose output from Serena/GitNexus MCP too
 - Preserved tools (`read_file`, `execute_shell_command`): 12 lines max
 - Respects expanded view toggle (press `e` in TUI)
 
-**Location:** `config/pi/extensions/pi-serena-compact/`
+**Location:** `packages/pi-extensions/extensions/pi-serena-compact/`
 
 **Documentation:** [pi-extensions.md](docs/pi-extensions.md#pi-serena-compact)
 
-**Survives reinstalls:** Synced from `config/pi/extensions/` → `~/.pi/agent/extensions/` during `xtrm install`.
+**Survives reinstalls:** Synced from `packages/pi-extensions/extensions/` → `~/.pi/agent/extensions/` during `xtrm install`.
 
 
 ## Pi UX Compatibility — `pi-dex` + XTRM Footer Coexistence

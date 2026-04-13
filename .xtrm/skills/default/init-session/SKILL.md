@@ -1,3 +1,6 @@
+---
+description: "Bootstrap context for a new session — load latest report, relevant memories, and orient to current project state."
+---
 # Session Start
 
 Bootstrap context for a new session. Read the latest session report, load relevant memories, and orient to current project state.

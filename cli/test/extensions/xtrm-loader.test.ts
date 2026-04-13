@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ExtensionHarness } from "./extension-harness";
-import xtrmLoaderExtension from "../../../config/pi/extensions/xtrm-loader/index";
+import xtrmLoaderExtension from "../../../packages/pi-extensions/extensions/xtrm-loader/index";
 import * as fs from "node:fs";
 
 vi.mock("node:os", () => ({

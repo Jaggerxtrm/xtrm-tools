@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import customFooterExtension from "../../../config/pi/extensions/custom-footer/index";
-import { SubprocessRunner, EventAdapter } from "../../../config/pi/extensions/core/lib";
+import customFooterExtension from "../../../packages/pi-extensions/extensions/custom-footer/index";
+import { SubprocessRunner, EventAdapter } from "../../../packages/pi-extensions/src/core/lib";
 
-vi.mock("../../../config/pi/extensions/core/lib", async () => {
-	const actual = await vi.importActual<any>("../../../config/pi/extensions/core/lib");
+vi.mock("../../../packages/pi-extensions/src/core/lib", async () => {
+	const actual = await vi.importActual<any>("../../../packages/pi-extensions/src/core/lib");
 	return {
 		...actual,
 		SubprocessRunner: { run: vi.fn() },

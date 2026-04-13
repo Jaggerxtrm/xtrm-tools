@@ -969,7 +969,7 @@ describe('hooks.json — beads-compact hooks wiring', () => {
 describe.skip('service-skills.ts (test environment issue)', () => {
   it('does not register a tool_call handler (fires Python on every tool)', () => {
     const src = readFileSync(
-      path.join(__dirname, '../../config/pi/extensions/service-skills.ts'),
+      path.join(__dirname, '../../packages/pi-extensions/extensions/service-skills/index.ts'),
       'utf8',
     );
     expect(

@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ExtensionHarness } from "./extension-harness";
-import qualityGatesExtension from "../../../config/pi/extensions/quality-gates/index";
-import { SubprocessRunner } from "../../../config/pi/extensions/core/lib";
+import qualityGatesExtension from "../../../packages/pi-extensions/extensions/quality-gates/index";
+import { SubprocessRunner } from "../../../packages/pi-extensions/src/core/lib";
 import * as fs from "node:fs";
 
-vi.mock("../../../config/pi/extensions/core/lib", async () => {
-	const actual = await vi.importActual<any>("../../../config/pi/extensions/core/lib");
+vi.mock("../../../packages/pi-extensions/src/core/lib", async () => {
+	const actual = await vi.importActual<any>("../../../packages/pi-extensions/src/core/lib");
 	return {
 		...actual,
 		SubprocessRunner: {

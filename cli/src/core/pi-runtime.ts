@@ -40,6 +40,11 @@ const PI_MCP_ADAPTER_OVERRIDE_DIR = path.join(PI_AGENT_DIR, 'extensions', 'pi-mc
 const PI_MCP_ADAPTER_REQUIRED_ENTRY = 'commands.js';
 const PROJECT_EXTENSIONS_ENTRY = '../.xtrm/extensions';
 const PROJECT_SKILLS_ENTRY = '../.xtrm/skills/active/pi';
+const PROJECT_EXTENSION_PACKAGE_ID = 'npm:@jaggerxtrm/pi-extensions';
+const LEGACY_PROJECT_EXTENSION_ENTRIES = new Set<string>([
+    PROJECT_EXTENSIONS_ENTRY,
+    '.xtrm/extensions',
+]);
 
 // ── Extension Registry ───────────────────────────────────────────────────────
 
@@ -97,6 +102,11 @@ const ALWAYS_GLOBAL_INSTALL_PACKAGE_IDS = new Set<string>([
     'npm:pi-serena-tools',
 ]);
 
+const PROJECT_REQUIRED_PACKAGE_IDS = [
+    PROJECT_EXTENSION_PACKAGE_ID,
+    ...MANAGED_PACKAGES.map(pkg => pkg.id),
+];
+
 // ── Inventory ─────────────────────────────────────────────────────────────────
 
 export interface ExtensionStatus {
@@ -120,45 +130,6 @@ export interface PiRuntimePlan {
     missingPackages: PackageStatus[];
     allRequiredPresent: boolean;
     allPresent: boolean;
-}
-
-/**
- * Compute a hash for an extension directory based on all files.
- */
-async function extensionHash(extDir: string): Promise<string> {
-    if (!await fs.pathExists(extDir)) return '';
-
-    const crypto = await import('node:crypto');
-    const files = await listFilesRecursive(extDir);
-    const hash = crypto.createHash('sha256');
-
-    for (const relativeFile of files) {
-        const absoluteFile = path.join(extDir, relativeFile);
-        hash.update(relativeFile);
-        hash.update('\0');
-        hash.update(await fs.readFile(absoluteFile));
-        hash.update('\0');
-    }
-
-    return hash.digest('hex');
-}
-
-async function listFilesRecursive(baseDir: string, currentDir: string = baseDir): Promise<string[]> {
-    const entries = await fs.readdir(currentDir, { withFileTypes: true });
-    const files: string[] = [];
-
-    for (const entry of entries) {
-        const fullPath = path.join(currentDir, entry.name);
-        if (entry.isDirectory()) {
-            files.push(...await listFilesRecursive(baseDir, fullPath));
-            continue;
-        }
-        if (entry.isFile()) {
-            files.push(path.relative(baseDir, fullPath));
-        }
-    }
-
-    return files.sort();
 }
 
 /**
@@ -382,6 +353,22 @@ export interface PiSyncResult {
     extensionsRemoved: string[];
     packagesInstalled: string[];
     failed: string[];
+}
+
+function getProjectRequiredPackageStatuses(installedPkgIds: readonly string[]): PackageStatus[] {
+    return PROJECT_REQUIRED_PACKAGE_IDS.map((packageId) => {
+        const managed = MANAGED_PACKAGES.find((pkg) => pkg.id === packageId);
+        const pkg: ManagedPackage = managed ?? {
+            id: PROJECT_EXTENSION_PACKAGE_ID,
+            displayName: '@jaggerxtrm/pi-extensions',
+            required: true,
+        };
+
+        return {
+            pkg,
+            installed: installedPkgIds.includes(packageId),
+        };
+    });
 }
 
 function mergePiSyncResults(base: PiSyncResult, incoming: PiSyncResult): PiSyncResult {
@@ -655,36 +642,62 @@ async function cleanupLegacyProjectExtensionCopies(
     return { removed, failed };
 }
 
+type PiSettingsShape = Record<string, unknown> & {
+    extensions?: unknown;
+    skills?: unknown;
+    packages?: unknown;
+};
+
+function normalizeStringArray(value: unknown): string[] {
+    if (!Array.isArray(value)) return [];
+    return value.filter((entry): entry is string => typeof entry === 'string');
+}
+
 async function updatePiSettings(
     projectRoot: string,
     dryRun: boolean,
     log?: (message: string) => void,
 ): Promise<void> {
-    const piSettingsPath = path.join(projectRoot, '.pi', 'settings.json');
+    const piDirPath = path.join(projectRoot, '.pi');
+    const piSettingsPath = path.join(piDirPath, 'settings.json');
 
     if (dryRun) {
-        log?.(kleur.dim(`[DRY RUN] would update .pi/settings.json`));
+        log?.(kleur.dim(`[DRY RUN] would ensure .pi/settings.json with ${PROJECT_EXTENSION_PACKAGE_ID}`));
         return;
     }
 
-    let existingSettings: { extensions?: string[]; skills?: string[]; packages?: string[] } = {};
+    await fs.ensureDir(piDirPath);
+
+    let existingSettings: PiSettingsShape = {};
     try {
-        existingSettings = await fs.readJson(piSettingsPath);
-    } catch { /* no existing settings */ }
+        existingSettings = await fs.readJson(piSettingsPath) as PiSettingsShape;
+    } catch {
+        existingSettings = {};
+    }
 
-    // Preserve user packages (npm:/git:/local), strip any old per-extension entries
-    const existingPackages = (existingSettings.packages ?? []).filter(
-        p => !p.startsWith('./extensions/')
-    );
+    const LEGACY_PACKAGE_IDS = new Set(['npm:@xtrm/pi-extensions', './extensions/']);
+    const existingPackages = normalizeStringArray(existingSettings.packages)
+        .filter((entry) => !LEGACY_PACKAGE_IDS.has(entry) && !entry.startsWith('./extensions/'));
+    if (!existingPackages.includes(PROJECT_EXTENSION_PACKAGE_ID)) {
+        existingPackages.push(PROJECT_EXTENSION_PACKAGE_ID);
+    }
 
-    await fs.ensureDir(path.join(projectRoot, '.pi'));
-    await fs.writeJson(piSettingsPath, {
+    const existingSkills = normalizeStringArray(existingSettings.skills)
+        .filter((entry) => entry !== PROJECT_SKILLS_ENTRY);
+    existingSkills.unshift(PROJECT_SKILLS_ENTRY);
+
+    const existingExtensions = normalizeStringArray(existingSettings.extensions)
+        .filter((entry) => !LEGACY_PROJECT_EXTENSION_ENTRIES.has(entry));
+
+    const nextSettings: PiSettingsShape = {
         ...existingSettings,
-        extensions: [],  // Empty = Pi uses global ~/.pi/agent/extensions/
-        skills: [PROJECT_SKILLS_ENTRY],
-        packages: [],  // Empty = packages installed globally at ~/.pi/agent/settings.json
-    }, { spaces: 2 });
-    log?.(kleur.dim(`Updated .pi/settings.json → global extensions + packages + .xtrm/skills/active/pi`));
+        extensions: existingExtensions,
+        skills: existingSkills,
+        packages: existingPackages,
+    };
+
+    await fs.writeJson(piSettingsPath, nextSettings, { spaces: 2 });
+    log?.(kleur.dim(`Updated .pi/settings.json → ${PROJECT_EXTENSION_PACKAGE_ID} + ${PROJECT_SKILLS_ENTRY}`));
 }
 
 /**
@@ -797,95 +810,6 @@ export async function executePiSync(
     return result;
 }
 
-// ── Extension Source Directory ─────────────────────────────────────────────
-
-/**
- * Extension source directory name.
- * Named 'ext-src' to avoid Pi's auto-discovery of '.xtrm/extensions/'.
- * Extensions are symlinked from ~/.pi/agent/extensions/ → .xtrm/ext-src/
- */
-export const EXTENSION_SOURCE_DIR = 'ext-src';
-
-/**
- * Link repo extensions to global ~/.pi/agent/extensions/
- *
- * Creates symlinks: ~/.pi/agent/extensions/<name> → <repo>/.xtrm/ext-src/<name>
- * This allows Pi to find extensions via its default global path while keeping
- * the actual files in the repo (git-tracked, SSOT).
- */
-export async function linkExtensionsToGlobal(
-    repoRoot: string,
-    dryRun: boolean = false,
-    log: (message: string) => void = (msg) => console.log(kleur.dim(`    ${msg}`)),
-): Promise<{ linked: string[]; failed: string[] }> {
-    const globalExtDir = path.join(PI_AGENT_DIR, 'extensions');
-    const repoExtDir = path.join(repoRoot, '.xtrm', EXTENSION_SOURCE_DIR);
-
-    const linked: string[] = [];
-    const failed: string[] = [];
-
-    if (!await fs.pathExists(repoExtDir)) {
-        log('No .xtrm/ext-src/ found — skipping global link');
-        return { linked, failed };
-    }
-
-    if (dryRun) {
-        log('[DRY RUN] would create extension symlinks in ~/.pi/agent/extensions/');
-        return { linked, failed };
-    }
-
-    await fs.ensureDir(globalExtDir);
-
-    // Create @xtrm/pi-core symlink so extensions can resolve it from global
-    const coreNodeModulesDir = path.join(globalExtDir, 'node_modules', '@xtrm');
-    const coreSymlinkPath = path.join(coreNodeModulesDir, 'pi-core');
-    const coreRelativeTarget = path.join('..', '..', 'core');
-    try {
-        await fs.ensureDir(coreNodeModulesDir);
-        const existing = await fs.lstat(coreSymlinkPath).catch(() => null);
-        if (existing) await fs.remove(coreSymlinkPath);
-        await fs.symlink(coreRelativeTarget, coreSymlinkPath);
-        log('✓ @xtrm/pi-core → global node_modules');
-    } catch (err) {
-        log(kleur.yellow(`⚠ @xtrm/pi-core symlink: ${err}`));
-    }
-
-    const entries = await fs.readdir(repoExtDir, { withFileTypes: true });
-    for (const entry of entries) {
-        if (!entry.isDirectory()) continue;
-        if (entry.name === 'node_modules') continue;
-
-        const extPath = path.join(repoExtDir, entry.name);
-        const globalLink = path.join(globalExtDir, entry.name);
-
-        try {
-            // Remove existing symlink/dir if present
-            const existing = await fs.lstat(globalLink).catch(() => null);
-            if (existing) {
-                // Check if already correct
-                if (existing.isSymbolicLink()) {
-                    const currentTarget = await fs.readlink(globalLink);
-                    const resolvedTarget = path.resolve(path.dirname(globalLink), currentTarget);
-                    if (resolvedTarget === path.resolve(extPath)) {
-                        // Already correct
-                        continue;
-                    }
-                }
-                await fs.remove(globalLink);
-            }
-
-            await fs.symlink(extPath, globalLink);
-            linked.push(entry.name);
-            log(`✓ ${entry.name} → .xtrm/${EXTENSION_SOURCE_DIR}/${entry.name}`);
-        } catch (err) {
-            failed.push(entry.name);
-            log(kleur.red(`✗ ${entry.name}: ${err}`));
-        }
-    }
-
-    return { linked, failed };
-}
-
 // ── Full Sync Flow ───────────────────────────────────────────────────────────
 
 export interface PiRuntimeOptions {
@@ -897,75 +821,8 @@ export interface PiRuntimeOptions {
 /**
  * Run full Pi runtime sync flow: inventory -> plan -> sync.
  *
- * Global installs mirror extensions into ~/.pi/agent/extensions/ (Pi reads them automatically).
-
-/**
- * Ensure npm package extensions (pi-gitnexus, pi-serena-tools) are symlinked to ~/.pi/agent/extensions/
- * 
- * These packages are installed globally via npm but Pi expects them as directory extensions.
- * Creates symlinks:
- *   ~/.pi/agent/extensions/gitnexus -> <npm-global>/pi-gitnexus
- *   ~/.pi/agent/extensions/serena -> <npm-global>/pi-serena-tools
- */
-export async function ensureNpmPackageExtensionSymlinks(log?: (msg: string) => void): Promise<void> {
-    const os = require('os');
-    const homeDir = os.homedir();
-    const extensionsDir = path.join(homeDir, '.pi', 'agent', 'extensions');
-    
-    // Ensure extensions directory exists
-    await fs.ensureDir(extensionsDir);
-    
-    // Get global npm prefix to find package locations
-    const npmPrefix = spawnSync('npm', ['prefix', '-g'], { encoding: 'utf8' }).stdout.trim();
-    const globalNodeModules = path.join(npmPrefix, 'lib', 'node_modules');
-    
-    const npmPackages = [
-        { packageName: 'pi-gitnexus', symlinkName: 'gitnexus' },
-        { packageName: 'pi-serena-tools', symlinkName: 'serena' },
-    ];
-    
-    for (const { packageName, symlinkName } of npmPackages) {
-        const packagePath = path.join(globalNodeModules, packageName);
-        const symlinkPath = path.join(extensionsDir, symlinkName);
-        
-        // Check if package exists in global node_modules
-        const packageExists = await fs.pathExists(packagePath);
-        if (!packageExists) {
-            log?.(kleur.yellow(`  ⚠ ${packageName} not found in ${globalNodeModules}, skipping symlink`));
-            continue;
-        }
-        
-        // Check if symlink already exists and is correct
-        const symlinkExists = await fs.lstat(symlinkPath).catch(() => null);
-        if (symlinkExists?.isSymbolicLink()) {
-            const currentTarget = await fs.readlink(symlinkPath);
-            const resolvedTarget = path.resolve(extensionsDir, currentTarget);
-            if (resolvedTarget === packagePath) {
-                log?.(kleur.dim(`  ✓ ${symlinkName} symlink already correct`));
-                continue;
-            }
-            // Wrong target - remove and recreate
-            log?.(kleur.dim(`  Removing stale ${symlinkName} symlink`));
-            await fs.remove(symlinkPath);
-        } else if (symlinkExists) {
-            // Not a symlink (legacy copy) - remove and recreate
-            log?.(kleur.dim(`  Removing stale ${symlinkName} (not a symlink)`));
-            await fs.remove(symlinkPath);
-        }
-        
-        // Create relative symlink
-        const relativeTarget = path.relative(extensionsDir, packagePath);
-        await fs.symlink(relativeTarget, symlinkPath);
-        log?.(kleur.dim(`  Created ${symlinkName} symlink → ${relativeTarget}`));
-    }
-}
-
-/**
- * Run full Pi runtime sync flow: inventory -> plan -> sync.
- *
- * Global installs mirror extensions into ~/.pi/agent/extensions/ (Pi reads them automatically).
- * Project installs skip the extension mirror — Pi discovers extensions directly via
- * .pi/settings.json pointing at ../.xtrm/extensions. Only packages are synced for project installs.
+ * Global installs mirror extension directories into ~/.pi/agent/extensions/.
+ * Project installs use package-based extension registration via `pi install npm:@jaggerxtrm/pi-extensions`.
  */
 export async function runPiRuntimeSync(opts: PiRuntimeOptions = {}): Promise<PiSyncResult> {
     const { dryRun = false, isGlobal = false, projectRoot } = opts;
@@ -975,14 +832,13 @@ export async function runPiRuntimeSync(opts: PiRuntimeOptions = {}): Promise<PiS
     const resolvedProjectRoot = projectRoot || process.cwd();
     const log = (msg: string) => console.log(kleur.dim(`    ${msg}`));
 
-    const emptyResult: PiSyncResult = {
+    const result: PiSyncResult = {
         extensionsAdded: [],
         extensionsUpdated: [],
         extensionsRemoved: [],
         packagesInstalled: [],
         failed: [],
     };
-    const result: PiSyncResult = { ...emptyResult };
 
     if (!await fs.pathExists(sourceDir)) {
         console.log(kleur.dim('\n  Managed extensions: skipped (not bundled in npm package)\n'));
@@ -994,12 +850,12 @@ export async function runPiRuntimeSync(opts: PiRuntimeOptions = {}): Promise<PiS
         result.extensionsRemoved.push('pi-mcp-adapter');
     }
 
-    // ── Global install: mirror extensions into ~/.pi/agent/extensions/ ──────────
     if (isGlobal) {
         const targetDir = path.join(PI_AGENT_DIR, 'extensions');
         const plan = await inventoryPiRuntime(sourceDir, targetDir);
         renderPiRuntimePlan(plan);
         if (plan.allPresent) return result;
+
         const synced = await executePiSync(plan, sourceDir, targetDir, {
             dryRun,
             isGlobal: true,
@@ -1008,36 +864,20 @@ export async function runPiRuntimeSync(opts: PiRuntimeOptions = {}): Promise<PiS
         return mergePiSyncResults(result, synced);
     }
 
-    // ── Project install: link extensions to global ───────────────────────────────
-    // Extensions are in .xtrm/ext-src/ (git-tracked, SSOT).
-    // We symlink ~/.pi/agent/extensions/ → .xtrm/ext-src/ so Pi finds them
-    // globally while we can edit them in the repo.
-
-    const linkResult = await linkExtensionsToGlobal(resolvedProjectRoot, dryRun, log);
-    result.extensionsAdded.push(...linkResult.linked);
-    result.failed.push(...linkResult.failed);
-    // Ensure npm package extensions (pi-gitnexus, pi-serena-tools) are symlinked
-    await ensureNpmPackageExtensionSymlinks(log);
-
     const installedPkgIds = getInstalledPiPackages();
-    const packageStatuses: PackageStatus[] = [];
-    const missingPackages: PackageStatus[] = [];
+    const packageStatuses = getProjectRequiredPackageStatuses(installedPkgIds);
+    const missingPackages = packageStatuses.filter((status) => !status.installed);
 
-    for (const pkg of MANAGED_PACKAGES) {
-        const isInstalled = installedPkgIds.includes(pkg.id);
-        const status: PackageStatus = { pkg, installed: isInstalled };
-        packageStatuses.push(status);
-        if (!isInstalled) missingPackages.push(status);
-    }
-
-    // Render summary
     console.log(kleur.bold('\n  Pi Runtime'));
     console.log(kleur.dim('  ' + '-'.repeat(50)));
-    console.log(kleur.dim(`  Extensions: ~/.pi/agent/extensions/ → .xtrm/${EXTENSION_SOURCE_DIR}/`));
-    const pkgOk = packageStatuses.filter(s => s.installed).length;
+    const extensionPackageInstalled = packageStatuses.some(
+        (status) => status.pkg.id === PROJECT_EXTENSION_PACKAGE_ID && status.installed,
+    );
+    console.log(kleur.dim(`  Extensions: ${extensionPackageInstalled ? 'package installed' : 'package missing'} (${PROJECT_EXTENSION_PACKAGE_ID})`));
+    const pkgOk = packageStatuses.filter((status) => status.installed).length;
     console.log(kleur.dim(`  Packages:   ${pkgOk}/${packageStatuses.length} installed`));
     if (missingPackages.length > 0) {
-        const names = missingPackages.map(s => s.pkg.displayName).join(', ');
+        const names = missingPackages.map((status) => status.pkg.displayName).join(', ');
         console.log(kleur.yellow(`  Missing:    ${names}`));
     }
     console.log(kleur.dim('  ' + '-'.repeat(50)));
@@ -1046,22 +886,47 @@ export async function runPiRuntimeSync(opts: PiRuntimeOptions = {}): Promise<PiS
     result.extensionsRemoved.push(...legacyCleanup.removed);
     result.failed.push(...legacyCleanup.failed);
 
-    // Install missing packages (always global at ~/.pi/agent/npm/)
+    // Clean stale global extension symlinks from pre-package-mode installs
+    const globalExtDir = path.join(PI_AGENT_DIR, 'extensions');
+    if (await fs.pathExists(globalExtDir)) {
+        const MANAGED_EXT_IDS = new Set(MANAGED_EXTENSIONS.map(e => e.id));
+        const STALE_SYMLINKS = new Set([...MANAGED_EXT_IDS, 'core', 'gitnexus', 'serena']);
+        const globalEntries = await fs.readdir(globalExtDir, { withFileTypes: true });
+        for (const entry of globalEntries) {
+            if (entry.isSymbolicLink() && STALE_SYMLINKS.has(entry.name)) {
+                if (!dryRun) {
+                    await fs.remove(path.join(globalExtDir, entry.name));
+                }
+                result.extensionsRemoved.push(entry.name);
+                log(`Removed stale global symlink: ${entry.name}`);
+            }
+        }
+        const staleNodeModules = path.join(globalExtDir, 'node_modules');
+        if (await fs.pathExists(staleNodeModules)) {
+            if (!dryRun) {
+                await fs.remove(staleNodeModules);
+            }
+            log('Removed stale global extensions/node_modules');
+        }
+    }
+
     for (const status of missingPackages) {
         const { pkg } = status;
         if (dryRun) {
             log(`[DRY RUN] pi install ${pkg.id}`);
             continue;
         }
+
         try {
-            const r = spawnSync('pi', ['install', pkg.id], { stdio: 'pipe', encoding: 'utf8' });
-            if (r.status === 0) {
+            const installResult = spawnSync('pi', ['install', pkg.id], { stdio: 'pipe', encoding: 'utf8' });
+            if (installResult.status === 0) {
                 result.packagesInstalled.push(pkg.id);
                 log(`${sym.ok} ${pkg.displayName}`);
-            } else {
-                result.failed.push(pkg.id);
-                log(kleur.yellow(`⚠ ${pkg.displayName} — install failed`));
+                continue;
             }
+
+            result.failed.push(pkg.id);
+            log(kleur.yellow(`⚠ ${pkg.displayName} — install failed`));
         } catch (err) {
             result.failed.push(pkg.id);
             log(kleur.red(`✗ ${pkg.displayName}: ${err}`));
@@ -1072,12 +937,11 @@ export async function runPiRuntimeSync(opts: PiRuntimeOptions = {}): Promise<PiS
     result.packagesInstalled.push(...alwaysGlobalInstallResult.installed);
     result.failed.push(...alwaysGlobalInstallResult.failed);
 
-    // Always rebuild active Pi skills view + update settings.json for project installs.
     const skillsRoot = resolveSkillsRoot(resolvedProjectRoot);
     if (await fs.pathExists(path.join(skillsRoot, 'default'))) {
         const invariantViolations = await validateSkillsInvariants(skillsRoot);
         if (invariantViolations.length > 0) {
-            const summary = invariantViolations.map(violation => `${violation.code}: ${violation.message}`).join('; ');
+            const summary = invariantViolations.map((violation) => `${violation.code}: ${violation.message}`).join('; ');
             throw new Error(`Skills invariants failed. ${summary}`);
         }
 
@@ -1088,13 +952,8 @@ export async function runPiRuntimeSync(opts: PiRuntimeOptions = {}): Promise<PiS
 
     await updatePiSettings(resolvedProjectRoot, dryRun, log);
 
-    // Base summary on what failed, not on pre-install missingPackages list
-    const requiredFailed = missingPackages.filter(
-        s => s.pkg.required && result.failed.includes(s.pkg.id)
-    );
-    if (missingPackages.length === 0 || result.failed.length === 0) {
-        console.log(t.success('  ✓ All required items present.\n'));
-    } else if (requiredFailed.length === 0) {
+    const requiredFailed = missingPackages.filter((status) => status.pkg.required && result.failed.includes(status.pkg.id));
+    if (requiredFailed.length === 0) {
         console.log(t.success('  ✓ All required items present.\n'));
     } else {
         console.log(kleur.yellow('  ⚠ Missing required items.\n'));

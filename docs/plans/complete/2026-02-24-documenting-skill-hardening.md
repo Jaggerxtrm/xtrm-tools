@@ -633,7 +633,7 @@ Expected: all 6 pass.
 **Step 5: Smoke test manually**
 
 ```bash
-cd /home/dawid/projects/jaggers-agent-tools
+cd /home/dawid/dev/jaggers-agent-tools
 python3 skills/documenting/scripts/drift_detector.py scan
 ```
 
@@ -733,7 +733,7 @@ repl   = 'domain: "project-skills"\ntracks:\n  - "project-skills/service-skills-
 **Step 3: Validate all memories after migration**
 
 ```bash
-for f in /home/dawid/projects/jaggers-agent-tools/.serena/memories/*.md; do
+for f in /home/dawid/dev/jaggers-agent-tools/.serena/memories/*.md; do
   python3 skills/documenting/scripts/validate_metadata.py "$f"
 done
 ```
@@ -842,7 +842,7 @@ git commit -m "feat(documenting): rewrite workflow with decision tree and drift 
 **Step 1: Run all documenting tests**
 
 ```bash
-cd /home/dawid/projects/jaggers-agent-tools
+cd /home/dawid/dev/jaggers-agent-tools
 python -m pytest skills/documenting/tests/ -v
 ```
 

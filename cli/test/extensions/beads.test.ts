@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ExtensionHarness } from "./extension-harness";
-import beadsExtension from "../../../config/pi/extensions/beads/index";
-import { SubprocessRunner } from "../../../config/pi/extensions/core/lib";
+import beadsExtension from "../../../packages/pi-extensions/extensions/beads/index";
+import { SubprocessRunner } from "../../../packages/pi-extensions/src/core/lib";
 import * as fs from "node:fs";
 
-vi.mock("../../../config/pi/extensions/core/lib", async () => {
+vi.mock("../../../packages/pi-extensions/src/core/lib", async () => {
 	return {
 		SubprocessRunner: {
 			run: vi.fn(),

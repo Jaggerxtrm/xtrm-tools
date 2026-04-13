@@ -45,8 +45,8 @@ SECTION_DOCS_MAP = [
 SUBSYSTEM_SIGNALS: list[tuple[str, str, str, str, str, str, list[str]]] = [
     ("hooks/", "hooks.md", "hooks/ directory exists",
      "Hooks Reference", "hooks", "reference", ["hooks/**/*.mjs", "policies/*.json"]),
-    ("config/pi/extensions/", "pi-extensions.md", "Pi extensions directory exists",
-     "Pi Extensions Reference", "pi-extensions", "reference", ["config/pi/extensions/**/*.ts"]),
+    ("packages/pi-extensions/extensions/", "pi-extensions.md", "Pi extensions directory exists",
+     "Pi Extensions Reference", "pi-extensions", "reference", ["packages/pi-extensions/extensions/**/*.ts"]),
     (".mcp.json", "mcp-servers.md", ".mcp.json present",
      "MCP Servers Configuration", "mcp-servers", "reference", [".mcp.json"]),
     ("policies/", "policies.md", "policies/ directory exists",

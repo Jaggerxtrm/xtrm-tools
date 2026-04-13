@@ -20,7 +20,7 @@ This reference defines what belongs in each focused docs/ file vs README.md.
 | Quick start, one-liner install | `README.md` | Always |
 | Feature overview table | `README.md` | Always, < 20 lines |
 | Hook events, scripts, behavior | `docs/hooks.md` | When hooks/ dir exists |
-| Pi/Copilot extension catalog | `docs/pi-extensions.md` | When config/pi/extensions/ exists |
+| Pi/Copilot extension catalog | `docs/pi-extensions.md` | When packages/pi-extensions/extensions/ exists |
 | System architecture, components | `docs/architecture.md` | When > 2 major subsystems |
 | Policy rules and enforcement | `docs/policies.md` | When policies/ dir exists |
 | MCP server config and usage | `docs/mcp-servers.md` | When .mcp.json or mcp servers exist |

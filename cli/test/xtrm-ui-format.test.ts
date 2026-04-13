@@ -13,7 +13,7 @@ import {
   countPrefixedItems,
   lineCount,
   previewLines,
-} from '../../config/pi/extensions/xtrm-ui/format';
+} from '../../packages/pi-extensions/extensions/xtrm-ui/format';
 
 // ── shortenPath ──────────────────────────────────────────────────────────────
 

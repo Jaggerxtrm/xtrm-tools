@@ -9,6 +9,16 @@ import {
 import { discoverDefaultSkills, discoverTierPacks, type DiscoveredSkill } from './skill-discovery.js';
 import { readSkillsState } from './skills-state.js';
 
+// Skills already shipped by npm Pi packages — exclude from 'pi' runtime view to avoid collisions.
+// These remain in the 'claude' view since specialists reference them.
+const PI_NPM_PROVIDED_SKILLS = new Set([
+  'gitnexus-debugging',
+  'gitnexus-exploring',
+  'gitnexus-impact-analysis',
+  'gitnexus-pr-review',
+  'gitnexus-refactoring',
+]);
+
 export interface RuntimeSkillSelection {
   readonly runtime: SkillsRuntime;
   readonly enabledPacks: string[];
@@ -76,12 +86,16 @@ export async function selectRuntimeSkills(
   const enabledPackSkills = await collectEnabledPackSkills(skillsRoot, enabledPacks);
   const allSkills = sortByName([...defaultSkills, ...enabledPackSkills]);
 
-  assertNoRuntimeCollisions(runtime, allSkills);
+  const filteredSkills = runtime === 'pi'
+    ? allSkills.filter(s => !PI_NPM_PROVIDED_SKILLS.has(s.name))
+    : allSkills;
+
+  assertNoRuntimeCollisions(runtime, filteredSkills);
 
   return {
     runtime,
     enabledPacks: [...enabledPacks],
-    skills: allSkills,
+    skills: filteredSkills,
   };
 }
 

@@ -43891,6 +43891,13 @@ async function setRuntimeEnabledPacks(skillsRoot, runtime, packNames) {
 }
 
 // src/core/skills-materializer.ts
+var PI_NPM_PROVIDED_SKILLS = /* @__PURE__ */ new Set([
+  "gitnexus-debugging",
+  "gitnexus-exploring",
+  "gitnexus-impact-analysis",
+  "gitnexus-pr-review",
+  "gitnexus-refactoring"
+]);
 function sortByName(entries) {
   return [...entries].sort((a, b) => a.name.localeCompare(b.name));
 }
@@ -43929,11 +43936,12 @@ async function selectRuntimeSkills(runtime, skillsRoot) {
   const defaultSkills = await discoverDefaultSkills(skillsRoot);
   const enabledPackSkills = await collectEnabledPackSkills(skillsRoot, enabledPacks);
   const allSkills = sortByName([...defaultSkills, ...enabledPackSkills]);
-  assertNoRuntimeCollisions(runtime, allSkills);
+  const filteredSkills = runtime === "pi" ? allSkills.filter((s) => !PI_NPM_PROVIDED_SKILLS.has(s.name)) : allSkills;
+  assertNoRuntimeCollisions(runtime, filteredSkills);
   return {
     runtime,
     enabledPacks: [...enabledPacks],
-    skills: allSkills
+    skills: filteredSkills
   };
 }
 async function buildRuntimeTempView(runtime, skillsRoot, selectedSkills) {

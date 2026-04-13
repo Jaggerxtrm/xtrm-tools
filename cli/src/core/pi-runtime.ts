@@ -41,6 +41,10 @@ const PI_MCP_ADAPTER_REQUIRED_ENTRY = 'commands.js';
 const PROJECT_EXTENSIONS_ENTRY = '../.xtrm/extensions';
 const PROJECT_SKILLS_ENTRY = '../.xtrm/skills/active/pi';
 const PROJECT_EXTENSION_PACKAGE_ID = 'npm:@xtrm/pi-extensions';
+const LEGACY_PROJECT_EXTENSION_ENTRIES = new Set<string>([
+    PROJECT_EXTENSIONS_ENTRY,
+    '.xtrm/extensions',
+]);
 
 // ── Extension Registry ───────────────────────────────────────────────────────
 
@@ -677,36 +681,61 @@ async function cleanupLegacyProjectExtensionCopies(
     return { removed, failed };
 }
 
+type PiSettingsShape = Record<string, unknown> & {
+    extensions?: unknown;
+    skills?: unknown;
+    packages?: unknown;
+};
+
+function normalizeStringArray(value: unknown): string[] {
+    if (!Array.isArray(value)) return [];
+    return value.filter((entry): entry is string => typeof entry === 'string');
+}
+
 async function updatePiSettings(
     projectRoot: string,
     dryRun: boolean,
     log?: (message: string) => void,
 ): Promise<void> {
-    const piSettingsPath = path.join(projectRoot, '.pi', 'settings.json');
+    const piDirPath = path.join(projectRoot, '.pi');
+    const piSettingsPath = path.join(piDirPath, 'settings.json');
 
     if (dryRun) {
-        log?.(kleur.dim(`[DRY RUN] would update .pi/settings.json`));
+        log?.(kleur.dim(`[DRY RUN] would ensure .pi/settings.json with ${PROJECT_EXTENSION_PACKAGE_ID}`));
         return;
     }
 
-    let existingSettings: { extensions?: string[]; skills?: string[]; packages?: string[] } = {};
+    await fs.ensureDir(piDirPath);
+
+    let existingSettings: PiSettingsShape = {};
     try {
-        existingSettings = await fs.readJson(piSettingsPath);
-    } catch { /* no existing settings */ }
+        existingSettings = await fs.readJson(piSettingsPath) as PiSettingsShape;
+    } catch {
+        existingSettings = {};
+    }
 
-    // Preserve user packages (npm:/git:/local), strip any old per-extension entries
-    const existingPackages = (existingSettings.packages ?? []).filter(
-        p => !p.startsWith('./extensions/')
-    );
+    const existingPackages = normalizeStringArray(existingSettings.packages)
+        .filter((entry) => !entry.startsWith('./extensions/'));
+    if (!existingPackages.includes(PROJECT_EXTENSION_PACKAGE_ID)) {
+        existingPackages.push(PROJECT_EXTENSION_PACKAGE_ID);
+    }
 
-    await fs.ensureDir(path.join(projectRoot, '.pi'));
-    await fs.writeJson(piSettingsPath, {
+    const existingSkills = normalizeStringArray(existingSettings.skills)
+        .filter((entry) => entry !== PROJECT_SKILLS_ENTRY);
+    existingSkills.unshift(PROJECT_SKILLS_ENTRY);
+
+    const existingExtensions = normalizeStringArray(existingSettings.extensions)
+        .filter((entry) => !LEGACY_PROJECT_EXTENSION_ENTRIES.has(entry));
+
+    const nextSettings: PiSettingsShape = {
         ...existingSettings,
-        extensions: [],  // Empty = Pi uses global ~/.pi/agent/extensions/
-        skills: [PROJECT_SKILLS_ENTRY],
-        packages: [],  // Empty = packages installed globally at ~/.pi/agent/settings.json
-    }, { spaces: 2 });
-    log?.(kleur.dim(`Updated .pi/settings.json → global extensions + packages + .xtrm/skills/active/pi`));
+        extensions: existingExtensions,
+        skills: existingSkills,
+        packages: existingPackages,
+    };
+
+    await fs.writeJson(piSettingsPath, nextSettings, { spaces: 2 });
+    log?.(kleur.dim(`Updated .pi/settings.json → ${PROJECT_EXTENSION_PACKAGE_ID} + ${PROJECT_SKILLS_ENTRY}`));
 }
 
 /**

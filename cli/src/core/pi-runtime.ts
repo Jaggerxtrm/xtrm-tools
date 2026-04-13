@@ -133,45 +133,6 @@ export interface PiRuntimePlan {
 }
 
 /**
- * Compute a hash for an extension directory based on all files.
- */
-async function extensionHash(extDir: string): Promise<string> {
-    if (!await fs.pathExists(extDir)) return '';
-
-    const crypto = await import('node:crypto');
-    const files = await listFilesRecursive(extDir);
-    const hash = crypto.createHash('sha256');
-
-    for (const relativeFile of files) {
-        const absoluteFile = path.join(extDir, relativeFile);
-        hash.update(relativeFile);
-        hash.update('\0');
-        hash.update(await fs.readFile(absoluteFile));
-        hash.update('\0');
-    }
-
-    return hash.digest('hex');
-}
-
-async function listFilesRecursive(baseDir: string, currentDir: string = baseDir): Promise<string[]> {
-    const entries = await fs.readdir(currentDir, { withFileTypes: true });
-    const files: string[] = [];
-
-    for (const entry of entries) {
-        const fullPath = path.join(currentDir, entry.name);
-        if (entry.isDirectory()) {
-            files.push(...await listFilesRecursive(baseDir, fullPath));
-            continue;
-        }
-        if (entry.isFile()) {
-            files.push(path.relative(baseDir, fullPath));
-        }
-    }
-
-    return files.sort();
-}
-
-/**
  * Parse `pi list` output to get installed package names.
  */
 function getInstalledPiPackages(): string[] {

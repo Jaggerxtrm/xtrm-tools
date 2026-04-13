@@ -44750,6 +44750,11 @@ var PI_MCP_ADAPTER_OVERRIDE_DIR = import_path4.default.join(PI_AGENT_DIR, "exten
 var PI_MCP_ADAPTER_REQUIRED_ENTRY = "commands.js";
 var PROJECT_EXTENSIONS_ENTRY = "../.xtrm/extensions";
 var PROJECT_SKILLS_ENTRY = "../.xtrm/skills/active/pi";
+var PROJECT_EXTENSION_PACKAGE_ID = "npm:@xtrm/pi-extensions";
+var LEGACY_PROJECT_EXTENSION_ENTRIES = /* @__PURE__ */ new Set([
+  PROJECT_EXTENSIONS_ENTRY,
+  ".xtrm/extensions"
+]);
 var MANAGED_EXTENSIONS = [
   { id: "core", displayName: "@xtrm/pi-core", isLibrary: true, required: true },
   { id: "auto-session-name", displayName: "auto-session-name", required: false },
@@ -44779,6 +44784,10 @@ var ALWAYS_GLOBAL_INSTALL_PACKAGE_IDS = /* @__PURE__ */ new Set([
   "npm:pi-gitnexus",
   "npm:pi-serena-tools"
 ]);
+var PROJECT_REQUIRED_PACKAGE_IDS = [
+  PROJECT_EXTENSION_PACKAGE_ID,
+  ...MANAGED_PACKAGES.map((pkg) => pkg.id)
+];
 function getInstalledPiPackages() {
   const result = (0, import_child_process3.spawnSync)("pi", ["list"], { encoding: "utf8", stdio: "pipe" });
   if (result.status !== 0) return [];
@@ -44912,6 +44921,20 @@ function renderPiRuntimePlan(plan) {
   } else {
     console.log(kleur_default.yellow("  \u26A0 Missing required items.\n"));
   }
+}
+function getProjectRequiredPackageStatuses(installedPkgIds) {
+  return PROJECT_REQUIRED_PACKAGE_IDS.map((packageId) => {
+    const managed = MANAGED_PACKAGES.find((pkg2) => pkg2.id === packageId);
+    const pkg = managed ?? {
+      id: PROJECT_EXTENSION_PACKAGE_ID,
+      displayName: "@xtrm/pi-extensions",
+      required: true
+    };
+    return {
+      pkg,
+      installed: installedPkgIds.includes(packageId)
+    };
+  });
 }
 function mergePiSyncResults(base, incoming) {
   return {
@@ -45095,30 +45118,39 @@ async function cleanupLegacyProjectExtensionCopies(projectRoot, dryRun, log) {
   }
   return { removed, failed };
 }
+function normalizeStringArray(value) {
+  if (!Array.isArray(value)) return [];
+  return value.filter((entry) => typeof entry === "string");
+}
 async function updatePiSettings(projectRoot, dryRun, log) {
-  const piSettingsPath = import_path4.default.join(projectRoot, ".pi", "settings.json");
+  const piDirPath = import_path4.default.join(projectRoot, ".pi");
+  const piSettingsPath = import_path4.default.join(piDirPath, "settings.json");
   if (dryRun) {
-    log?.(kleur_default.dim(`[DRY RUN] would update .pi/settings.json`));
+    log?.(kleur_default.dim(`[DRY RUN] would ensure .pi/settings.json with ${PROJECT_EXTENSION_PACKAGE_ID}`));
     return;
   }
+  await import_fs_extra9.default.ensureDir(piDirPath);
   let existingSettings = {};
   try {
     existingSettings = await import_fs_extra9.default.readJson(piSettingsPath);
   } catch {
+    existingSettings = {};
   }
-  const existingPackages = (existingSettings.packages ?? []).filter(
-    (p) => !p.startsWith("./extensions/")
-  );
-  await import_fs_extra9.default.ensureDir(import_path4.default.join(projectRoot, ".pi"));
-  await import_fs_extra9.default.writeJson(piSettingsPath, {
+  const existingPackages = normalizeStringArray(existingSettings.packages).filter((entry) => !entry.startsWith("./extensions/"));
+  if (!existingPackages.includes(PROJECT_EXTENSION_PACKAGE_ID)) {
+    existingPackages.push(PROJECT_EXTENSION_PACKAGE_ID);
+  }
+  const existingSkills = normalizeStringArray(existingSettings.skills).filter((entry) => entry !== PROJECT_SKILLS_ENTRY);
+  existingSkills.unshift(PROJECT_SKILLS_ENTRY);
+  const existingExtensions = normalizeStringArray(existingSettings.extensions).filter((entry) => !LEGACY_PROJECT_EXTENSION_ENTRIES.has(entry));
+  const nextSettings = {
     ...existingSettings,
-    extensions: [],
-    // Empty = Pi uses global ~/.pi/agent/extensions/
-    skills: [PROJECT_SKILLS_ENTRY],
-    packages: []
-    // Empty = packages installed globally at ~/.pi/agent/settings.json
-  }, { spaces: 2 });
-  log?.(kleur_default.dim(`Updated .pi/settings.json \u2192 global extensions + packages + .xtrm/skills/active/pi`));
+    extensions: existingExtensions,
+    skills: existingSkills,
+    packages: existingPackages
+  };
+  await import_fs_extra9.default.writeJson(piSettingsPath, nextSettings, { spaces: 2 });
+  log?.(kleur_default.dim(`Updated .pi/settings.json \u2192 ${PROJECT_EXTENSION_PACKAGE_ID} + ${PROJECT_SKILLS_ENTRY}`));
 }
 async function executePiSync(plan, sourceDir, targetDir, opts = {}) {
   const {
@@ -45203,113 +45235,19 @@ async function executePiSync(plan, sourceDir, targetDir, opts = {}) {
   }
   return result;
 }
-var EXTENSION_SOURCE_DIR = "ext-src";
-async function linkExtensionsToGlobal(repoRoot, dryRun = false, log = (msg) => console.log(kleur_default.dim(`    ${msg}`))) {
-  const globalExtDir = import_path4.default.join(PI_AGENT_DIR, "extensions");
-  const repoExtDir = import_path4.default.join(repoRoot, ".xtrm", EXTENSION_SOURCE_DIR);
-  const linked = [];
-  const failed = [];
-  if (!await import_fs_extra9.default.pathExists(repoExtDir)) {
-    log("No .xtrm/ext-src/ found \u2014 skipping global link");
-    return { linked, failed };
-  }
-  if (dryRun) {
-    log("[DRY RUN] would create extension symlinks in ~/.pi/agent/extensions/");
-    return { linked, failed };
-  }
-  await import_fs_extra9.default.ensureDir(globalExtDir);
-  const coreNodeModulesDir = import_path4.default.join(globalExtDir, "node_modules", "@xtrm");
-  const coreSymlinkPath = import_path4.default.join(coreNodeModulesDir, "pi-core");
-  const coreRelativeTarget = import_path4.default.join("..", "..", "core");
-  try {
-    await import_fs_extra9.default.ensureDir(coreNodeModulesDir);
-    const existing = await import_fs_extra9.default.lstat(coreSymlinkPath).catch(() => null);
-    if (existing) await import_fs_extra9.default.remove(coreSymlinkPath);
-    await import_fs_extra9.default.symlink(coreRelativeTarget, coreSymlinkPath);
-    log("\u2713 @xtrm/pi-core \u2192 global node_modules");
-  } catch (err) {
-    log(kleur_default.yellow(`\u26A0 @xtrm/pi-core symlink: ${err}`));
-  }
-  const entries = await import_fs_extra9.default.readdir(repoExtDir, { withFileTypes: true });
-  for (const entry of entries) {
-    if (!entry.isDirectory()) continue;
-    if (entry.name === "node_modules") continue;
-    const extPath = import_path4.default.join(repoExtDir, entry.name);
-    const globalLink = import_path4.default.join(globalExtDir, entry.name);
-    try {
-      const existing = await import_fs_extra9.default.lstat(globalLink).catch(() => null);
-      if (existing) {
-        if (existing.isSymbolicLink()) {
-          const currentTarget = await import_fs_extra9.default.readlink(globalLink);
-          const resolvedTarget = import_path4.default.resolve(import_path4.default.dirname(globalLink), currentTarget);
-          if (resolvedTarget === import_path4.default.resolve(extPath)) {
-            continue;
-          }
-        }
-        await import_fs_extra9.default.remove(globalLink);
-      }
-      await import_fs_extra9.default.symlink(extPath, globalLink);
-      linked.push(entry.name);
-      log(`\u2713 ${entry.name} \u2192 .xtrm/${EXTENSION_SOURCE_DIR}/${entry.name}`);
-    } catch (err) {
-      failed.push(entry.name);
-      log(kleur_default.red(`\u2717 ${entry.name}: ${err}`));
-    }
-  }
-  return { linked, failed };
-}
-async function ensureNpmPackageExtensionSymlinks(log) {
-  const os9 = require("os");
-  const homeDir = os9.homedir();
-  const extensionsDir = import_path4.default.join(homeDir, ".pi", "agent", "extensions");
-  await import_fs_extra9.default.ensureDir(extensionsDir);
-  const npmPrefix = (0, import_child_process3.spawnSync)("npm", ["prefix", "-g"], { encoding: "utf8" }).stdout.trim();
-  const globalNodeModules = import_path4.default.join(npmPrefix, "lib", "node_modules");
-  const npmPackages = [
-    { packageName: "pi-gitnexus", symlinkName: "gitnexus" },
-    { packageName: "pi-serena-tools", symlinkName: "serena" }
-  ];
-  for (const { packageName, symlinkName } of npmPackages) {
-    const packagePath = import_path4.default.join(globalNodeModules, packageName);
-    const symlinkPath = import_path4.default.join(extensionsDir, symlinkName);
-    const packageExists = await import_fs_extra9.default.pathExists(packagePath);
-    if (!packageExists) {
-      log?.(kleur_default.yellow(`  \u26A0 ${packageName} not found in ${globalNodeModules}, skipping symlink`));
-      continue;
-    }
-    const symlinkExists = await import_fs_extra9.default.lstat(symlinkPath).catch(() => null);
-    if (symlinkExists?.isSymbolicLink()) {
-      const currentTarget = await import_fs_extra9.default.readlink(symlinkPath);
-      const resolvedTarget = import_path4.default.resolve(extensionsDir, currentTarget);
-      if (resolvedTarget === packagePath) {
-        log?.(kleur_default.dim(`  \u2713 ${symlinkName} symlink already correct`));
-        continue;
-      }
-      log?.(kleur_default.dim(`  Removing stale ${symlinkName} symlink`));
-      await import_fs_extra9.default.remove(symlinkPath);
-    } else if (symlinkExists) {
-      log?.(kleur_default.dim(`  Removing stale ${symlinkName} (not a symlink)`));
-      await import_fs_extra9.default.remove(symlinkPath);
-    }
-    const relativeTarget = import_path4.default.relative(extensionsDir, packagePath);
-    await import_fs_extra9.default.symlink(relativeTarget, symlinkPath);
-    log?.(kleur_default.dim(`  Created ${symlinkName} symlink \u2192 ${relativeTarget}`));
-  }
-}
 async function runPiRuntimeSync(opts = {}) {
   const { dryRun = false, isGlobal = false, projectRoot } = opts;
   const pkgRoot = resolvePkgRoot();
   const sourceDir = import_path4.default.join(pkgRoot, ".xtrm", "extensions");
   const resolvedProjectRoot = projectRoot || process.cwd();
   const log = (msg) => console.log(kleur_default.dim(`    ${msg}`));
-  const emptyResult = {
+  const result = {
     extensionsAdded: [],
     extensionsUpdated: [],
     extensionsRemoved: [],
     packagesInstalled: [],
     failed: []
   };
-  const result = { ...emptyResult };
   if (!await import_fs_extra9.default.pathExists(sourceDir)) {
     console.log(kleur_default.dim("\n  Managed extensions: skipped (not bundled in npm package)\n"));
     return result;
@@ -45330,26 +45268,19 @@ async function runPiRuntimeSync(opts = {}) {
     });
     return mergePiSyncResults(result, synced);
   }
-  const linkResult = await linkExtensionsToGlobal(resolvedProjectRoot, dryRun, log);
-  result.extensionsAdded.push(...linkResult.linked);
-  result.failed.push(...linkResult.failed);
-  await ensureNpmPackageExtensionSymlinks(log);
   const installedPkgIds = getInstalledPiPackages();
-  const packageStatuses = [];
-  const missingPackages = [];
-  for (const pkg of MANAGED_PACKAGES) {
-    const isInstalled = installedPkgIds.includes(pkg.id);
-    const status = { pkg, installed: isInstalled };
-    packageStatuses.push(status);
-    if (!isInstalled) missingPackages.push(status);
-  }
+  const packageStatuses = getProjectRequiredPackageStatuses(installedPkgIds);
+  const missingPackages = packageStatuses.filter((status) => !status.installed);
   console.log(kleur_default.bold("\n  Pi Runtime"));
   console.log(kleur_default.dim("  " + "-".repeat(50)));
-  console.log(kleur_default.dim(`  Extensions: ~/.pi/agent/extensions/ \u2192 .xtrm/${EXTENSION_SOURCE_DIR}/`));
-  const pkgOk = packageStatuses.filter((s) => s.installed).length;
+  const extensionPackageInstalled = packageStatuses.some(
+    (status) => status.pkg.id === PROJECT_EXTENSION_PACKAGE_ID && status.installed
+  );
+  console.log(kleur_default.dim(`  Extensions: ${extensionPackageInstalled ? "package installed" : "package missing"} (${PROJECT_EXTENSION_PACKAGE_ID})`));
+  const pkgOk = packageStatuses.filter((status) => status.installed).length;
   console.log(kleur_default.dim(`  Packages:   ${pkgOk}/${packageStatuses.length} installed`));
   if (missingPackages.length > 0) {
-    const names = missingPackages.map((s) => s.pkg.displayName).join(", ");
+    const names = missingPackages.map((status) => status.pkg.displayName).join(", ");
     console.log(kleur_default.yellow(`  Missing:    ${names}`));
   }
   console.log(kleur_default.dim("  " + "-".repeat(50)));
@@ -45363,14 +45294,14 @@ async function runPiRuntimeSync(opts = {}) {
       continue;
     }
     try {
-      const r = (0, import_child_process3.spawnSync)("pi", ["install", pkg.id], { stdio: "pipe", encoding: "utf8" });
-      if (r.status === 0) {
+      const installResult = (0, import_child_process3.spawnSync)("pi", ["install", pkg.id], { stdio: "pipe", encoding: "utf8" });
+      if (installResult.status === 0) {
         result.packagesInstalled.push(pkg.id);
         log(`${sym.ok} ${pkg.displayName}`);
-      } else {
-        result.failed.push(pkg.id);
-        log(kleur_default.yellow(`\u26A0 ${pkg.displayName} \u2014 install failed`));
+        continue;
       }
+      result.failed.push(pkg.id);
+      log(kleur_default.yellow(`\u26A0 ${pkg.displayName} \u2014 install failed`));
     } catch (err) {
       result.failed.push(pkg.id);
       log(kleur_default.red(`\u2717 ${pkg.displayName}: ${err}`));
@@ -45391,12 +45322,8 @@ async function runPiRuntimeSync(opts = {}) {
     }
   }
   await updatePiSettings(resolvedProjectRoot, dryRun, log);
-  const requiredFailed = missingPackages.filter(
-    (s) => s.pkg.required && result.failed.includes(s.pkg.id)
-  );
-  if (missingPackages.length === 0 || result.failed.length === 0) {
-    console.log(t.success("  \u2713 All required items present.\n"));
-  } else if (requiredFailed.length === 0) {
+  const requiredFailed = missingPackages.filter((status) => status.pkg.required && result.failed.includes(status.pkg.id));
+  if (requiredFailed.length === 0) {
     console.log(t.success("  \u2713 All required items present.\n"));
   } else {
     console.log(kleur_default.yellow("  \u26A0 Missing required items.\n"));
@@ -45633,21 +45560,21 @@ function hasSettingsEntry(entries, expectedEntry) {
   });
 }
 async function getPiProjectPointer(projectRoot) {
-  const projectExtensionsDir = import_path7.default.join(projectRoot, ".xtrm", "extensions");
   const settingsPath = import_path7.default.join(projectRoot, ".pi", "settings.json");
-  const hasProjectExtensions = await import_fs_extra11.default.pathExists(projectExtensionsDir);
   const hasSettingsFile = await import_fs_extra11.default.pathExists(settingsPath);
   if (!hasSettingsFile) {
-    return { hasProjectExtensions, pointsToXtrmExtensions: false };
+    return { hasProjectSettings: false, hasProjectExtensionPackage: false, pointsToXtrmExtensions: false };
   }
   try {
     const settings = await import_fs_extra11.default.readJson(settingsPath);
+    const packageEntries = Array.isArray(settings.packages) ? settings.packages.filter((entry) => typeof entry === "string") : [];
     return {
-      hasProjectExtensions,
+      hasProjectSettings: true,
+      hasProjectExtensionPackage: packageEntries.includes("npm:@xtrm/pi-extensions"),
       pointsToXtrmExtensions: hasSettingsEntry(settings.extensions, "../.xtrm/extensions")
     };
   } catch {
-    return { hasProjectExtensions, pointsToXtrmExtensions: false };
+    return { hasProjectSettings: true, hasProjectExtensionPackage: false, pointsToXtrmExtensions: false };
   }
 }
 function createPiCommand() {
@@ -45679,23 +45606,21 @@ function createPiCommand() {
     }
     const plan = await inventoryPiRuntime(sourceDir, globalTargetDir);
     const pkgOk = plan.packages.filter((s) => s.installed).length;
-    if (pointer.hasProjectExtensions && pointer.pointsToXtrmExtensions) {
+    const projectScoped = pointer.hasProjectExtensionPackage || pointer.pointsToXtrmExtensions;
+    if (projectScoped) {
       console.log(kleur_default.dim("  Scope:      project"));
-      console.log(kleur_default.dim("  Extensions: via .xtrm/extensions (.pi/settings.json)"));
+      console.log(kleur_default.dim(`  Extensions: package mode (npm:@xtrm/pi-extensions${pointer.hasProjectExtensionPackage ? "" : " missing"})`));
     } else {
       console.log(kleur_default.dim("  Scope:      global"));
       const extOk = plan.extensions.filter((s) => s.installed && !s.stale).length;
       console.log(kleur_default.dim(`  Extensions: ${extOk}/${plan.extensions.length} up-to-date`));
     }
     console.log(kleur_default.dim(`  Packages:   ${pkgOk}/${plan.packages.length} installed`));
-    if (pointer.hasProjectExtensions && !pointer.pointsToXtrmExtensions) {
-      console.log(kleur_default.yellow("  Settings:   .pi/settings.json is not pointing to ../.xtrm/extensions"));
-    }
     if (plan.missingPackages.length > 0) {
       const names = plan.missingPackages.map((s) => s.pkg.displayName).join(", ");
       console.log(kleur_default.yellow(`  Packages:   ${names}`));
     }
-    if (!pointer.pointsToXtrmExtensions) {
+    if (!projectScoped) {
       if (plan.missingExtensions.length > 0) {
         const names = plan.missingExtensions.map((s) => s.ext.displayName).join(", ");
         console.log(kleur_default.yellow(`  Missing:    ${names}`));
@@ -45708,12 +45633,15 @@ function createPiCommand() {
         console.log(kleur_default.red(`  Orphaned:   ${plan.orphanedExtensions.join(", ")}`));
       }
     }
-    const projectModeOk = pointer.hasProjectExtensions ? pointer.pointsToXtrmExtensions : true;
-    const hasGlobalDrift = !pointer.pointsToXtrmExtensions && !plan.allPresent;
+    const hasProjectSettingsDrift = !pointer.hasProjectSettings || !pointer.hasProjectExtensionPackage;
+    const hasGlobalDrift = !projectScoped && !plan.allPresent;
     const hasPackageDrift = plan.missingPackages.length > 0;
-    if (projectModeOk && !hasGlobalDrift && !hasPackageDrift) {
+    if (!hasProjectSettingsDrift && !hasGlobalDrift && !hasPackageDrift) {
       console.log(t.success("\n  \u2713 Pi runtime configuration looks healthy\n"));
       return;
+    }
+    if (hasProjectSettingsDrift) {
+      console.log(kleur_default.yellow("  Settings:   .pi/settings.json missing managed npm:@xtrm/pi-extensions entry"));
     }
     console.log(kleur_default.dim("\n  \u2192 run: xt pi reload\n"));
   });
@@ -45778,11 +45706,17 @@ function createPiCommand() {
       console.log(kleur_default.dim("  \u25CB managed extensions not bundled in this install"));
     } else {
       const plan = await inventoryPiRuntime(sourceDir, globalTargetDir);
-      if (pointer.hasProjectExtensions && pointer.pointsToXtrmExtensions) {
-        console.log(t.success("  \u2713 project runtime points to .xtrm/extensions"));
-      } else if (pointer.hasProjectExtensions) {
-        console.log(kleur_default.yellow("  \u26A0 .pi/settings.json does not include ../.xtrm/extensions"));
+      const projectScoped = pointer.hasProjectExtensionPackage || pointer.pointsToXtrmExtensions;
+      if (!pointer.hasProjectSettings) {
+        console.log(kleur_default.yellow("  \u26A0 missing .pi/settings.json; run xt pi reload to bootstrap project Pi settings"));
         allOk = false;
+      } else if (projectScoped) {
+        if (pointer.hasProjectExtensionPackage) {
+          console.log(t.success("  \u2713 project runtime uses npm:@xtrm/pi-extensions"));
+        } else {
+          console.log(kleur_default.yellow("  \u26A0 legacy project extension pointer detected; run xt pi reload to migrate"));
+          allOk = false;
+        }
       } else if (plan.missingExtensions.length === 0 && plan.staleExtensions.length === 0 && plan.orphanedExtensions.length === 0) {
         console.log(t.success(`  \u2713 global extensions deployed (${plan.extensions.length})`));
       } else {

@@ -49,7 +49,7 @@ A list of glob patterns (fnmatch syntax) pointing to the source files this doc d
 source_of_truth_for:
   - "hooks/**/*.mjs"
   - "policies/*.json"
-  - "config/pi/extensions/**/*.ts"
+  - "packages/pi-extensions/extensions/**/*.ts"
 ```
 
 ### domain

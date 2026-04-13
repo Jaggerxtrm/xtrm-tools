@@ -6,7 +6,6 @@
   "type": "module",
   "workspaces": [
     "cli",
-    "config/pi/extensions/core",
     "packages/pi-extensions"
   ],
   "bin": {
@@ -29,7 +28,7 @@
     "!**/__pycache__/**",
     "!**/*.pyc",
     "!.xtrm/hooks/tsconfig-cache.json",
-    "!.xtrm/config/pi/extensions/**/.pi/**",
+    "!packages/pi-extensions/extensions/**/.pi/**",
     "!.xtrm/extensions/**/.pi/**",
     "!.xtrm/**/test_*.py",
     "!.xtrm/**/tests/**"
@@ -76,7 +75,7 @@
   },
   "pi": {
     "extensions": [
-      "./config/pi/extensions"
+      "./packages/pi-extensions"
     ],
     "packages": [
       "npm:pi-dex",

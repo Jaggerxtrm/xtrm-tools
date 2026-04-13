@@ -42,7 +42,7 @@ domain: [config, xtrm]
 | `.claude/hooks/` | `.xtrm/hooks/` | Hook scripts |
 | `.claude/settings.json` hooks | `.xtrm/hooks/` + policy compile | Hook configuration |
 | `.agents/skills/` | `.xtrm/skills/` | Skills tier architecture |
-| `.pi/extensions/` symlink | `.xtrm/ext-src/` + global symlinks | Pi extension packages |
+| `.pi/extensions/` symlink | `packages/pi-extensions/extensions/` + global symlinks | Pi extension packages |
 | `.pi/skills/` | `.xtrm/skills/active/pi/` | Runtime active view |
 | Worktree sibling dirs | `.xtrm/worktrees/` | Git worktrees |
 
@@ -114,8 +114,8 @@ domain: [config, xtrm]
 
 Pi extensions follow a **global symlink model**:
 
-1. **Source**: `.xtrm/ext-src/<name>/` contains the extension source (git-tracked)
-2. **Global symlink**: `~/.pi/agent/extensions/<name>` → `.xtrm/ext-src/<name>/`
+1. **Source**: `packages/pi-extensions/extensions/<name>/` contains the extension source (git-tracked)
+2. **Global symlink**: `~/.pi/agent/extensions/<name>` → `packages/pi-extensions/extensions/<name>/`
 3. **Pi loads from global only** — no project-level conflicts
 
 This means:
@@ -131,8 +131,8 @@ The following paths are **deprecated** and should not be used:
 
 - `.agents/skills/` — migrated to `.xtrm/skills/`
 - `.pi/skills/` — migrated to `.xtrm/skills/active/pi/`
-- `.xtrm/extensions/` — renamed to `.xtrm/ext-src/` in v0.7.3
-- `.pi/node_modules/@xtrm/pi-core` — migrated to `.xtrm/ext-src/core/`
+- `.xtrm/extensions/` — renamed to `packages/pi-extensions/extensions/` in v0.7.3
+- `.pi/node_modules/@xtrm/pi-core` — migrated to `packages/pi-extensions/src/core/`
 
 The `xt init` command automatically symlinks `.claude/skills` and `.agents/skills` to `.xtrm/skills/default/` for backward compatibility.
 

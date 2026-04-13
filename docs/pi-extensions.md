@@ -6,8 +6,8 @@ version: 2.0.0
 updated: 2026-04-04
 synced_at: e6cca025
 source_of_truth_for:
-  - ".xtrm/ext-src/**/index.ts"
-  - ".xtrm/ext-src/**/package.json"
+  - "packages/pi-extensions/extensions/**/index.ts"
+  - "packages/pi-extensions/extensions/**/package.json"
   - "cli/src/core/pi-runtime.ts"
 domain: [pi, extensions]
 ---
@@ -28,85 +28,57 @@ domain: [pi, extensions]
 
 ## Architecture Overview
 
-Pi extensions use a **global symlink model**:
+Pi extensions use a **package-install model**:
 
-1. **Source of truth**: `.xtrm/ext-src/<name>/` (git-tracked in xtrm-tools repo)
-2. **Global target**: `~/.pi/agent/extensions/<name>` → symlink to source
-3. **Pi loads from global only** — no project-level extension directories
+1. **Source of truth**: `packages/pi-extensions/extensions/<name>/` + `packages/pi-extensions/src/core/`
+2. **Distribution unit**: `npm:@xtrm/pi-extensions`
+3. **Runtime wiring**: project `.pi/settings.json` includes `npm:@xtrm/pi-extensions` in `packages`
 
-This eliminates conflicts when multiple worktrees or different projects share the same Pi runtime.
-
-```
-~/.pi/agent/extensions/
-├── beads -> /path/to/xtrm-tools/.xtrm/ext-src/beads/
-├── session-flow -> /path/to/xtrm-tools/.xtrm/ext-src/session-flow/
-├── xtrm-ui -> /path/to/xtrm-tools/.xtrm/ext-src/xtrm-ui/
-└── ...
-```
+There is no supported runtime flow that depends on `config/pi/extensions/**` or `.xtrm/config/pi/extensions/**`.
 
 ## Directory Layout
 
-```
-.xtrm/
-├── ext-src/                 # Extension source (git-tracked)
-│   ├── core/                # @xtrm/pi-core shared library
-│   │   ├── adapter.ts
-│   │   ├── guard-rules.ts
-│   │   ├── lib.ts
-│   │   ├── logger.ts
-│   │   ├── runner.ts
-│   │   ├── session-state.ts
-│   │   └── package.json
+```text
+packages/pi-extensions/
+├── extensions/             # managed extension entrypoints
 │   ├── beads/
-│   │   ├── index.ts
-│   │   └── package.json
 │   ├── session-flow/
 │   ├── quality-gates/
 │   ├── custom-footer/
+│   ├── service-skills/
 │   ├── xtrm-loader/
 │   ├── xtrm-ui/
-│   └── ...                  # Other managed extensions
-│
-└── node_modules/            # NOT USED for extensions anymore
-    └── @xtrm/
-        └── pi-core -> ../core/  # (legacy, removed in refactor)
+│   └── ...
+├── src/
+│   ├── core/               # shared runtime helpers
+│   ├── index.ts            # package entrypoint
+│   └── registry.ts
+└── themes/
 ```
-
-**Key change from legacy**: The old `.xtrm/extensions/` directory was renamed to `.xtrm/ext-src/` to prevent Pi from auto-discovering project-level extensions (which would conflict with global symlinks).
 
 ## Install Commands
 
 ```bash
-xtrm pi install     # Sync extensions: create global symlinks
-xtrm pi setup       # Interactive first-time setup
-xtrm pi status      # Show extension/package inventory
-xtrm pi doctor      # Diagnose issues
-xtrm pi reload      # Force reload after manual edits
+xtrm pi install     # install/verify runtime packages + settings wiring
+xtrm pi setup       # interactive first-time setup
+xtrm pi status      # show extension/package inventory
+xtrm pi doctor      # diagnose issues
+xtrm pi reload      # force reload after manual edits
 ```
 
 ### Sync Behavior
 
-`xtrm pi install` (and `xt pi` / `xt attach`) perform symlink sync:
+`xtrm pi install` (and `xt pi` / `xt attach`) ensure package-based runtime state:
 
 | State | Action |
 |-------|--------|
-| Missing symlink | Create `~/.pi/agent/extensions/<name>` → `.xtrm/ext-src/<name>` |
-| Stale symlink (wrong target) | Replace with correct target |
-| Real directory (legacy copy) | Remove, replace with symlink |
-| Orphaned extension (not in registry) | Remove from global |
+| Missing `npm:@xtrm/pi-extensions` | Run `pi install npm:@xtrm/pi-extensions` |
+| Missing `.pi/settings.json` | Create file and write managed `packages` + `skills` entries |
+| Legacy `.pi/extensions/<managed-id>` real copies | Remove legacy copies during cleanup |
 
 ### Worktree Compatibility
 
-Since extensions are global symlinks, **worktrees need no extension bootstrap**. A new worktree created via `xt pi` immediately uses the same extensions as the main repo — no copy, no symlink repair, no drift.
-
-## Why ext-src
-
-The directory is named `ext-src` (not `extensions`) for a specific reason:
-
-- Pi auto-discovers extensions in any `.xtrm/extensions/` subdirectory
-- If `.xtrm/extensions/` existed, Pi would load duplicates: global symlink + project copy
-- Renaming to `ext-src` hides extensions from Pi's auto-discovery
-- Only global `~/.pi/agent/extensions/` is on Pi's discovery path
+Worktrees reuse the same package model; no extension source mirroring from legacy config paths is required.
 
 ## Active Extensions
 
@@ -157,10 +129,10 @@ Adds `… +N more lines` indicator when truncated. Respects expanded view toggle
 
 ## Notes
 
-- Managed extensions are **not** registered with `pi install -l` to avoid duplicate discovery (`<dir>` + `<dir>/index.ts`) and command/flag/shortcut collisions.
+- Managed XTRM extensions are delivered through `npm:@xtrm/pi-extensions`.
 - Use `pi install -l` only for ad-hoc third-party/local extensions outside the managed set.
-- Legacy `.xtrm/extensions/` path is deprecated; renamed to `.xtrm/ext-src/` in v0.7.3.
-- Legacy `.pi/node_modules/@xtrm/pi-core` is deprecated; `@xtrm/pi-core` now lives in `.xtrm/ext-src/core/`.
+- Legacy `config/pi/extensions/**` and `.xtrm/config/pi/extensions/**` trees are retired.
+- Shared core helpers now live in `packages/pi-extensions/src/core/`.
 
 ## Related Docs
 

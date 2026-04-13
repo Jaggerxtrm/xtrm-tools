@@ -7,9 +7,9 @@ updated: 2026-04-04
 synced_at: e6cca025
 description: "Pi extension that replaces pi-dex with XTRM-tuned chrome and pi-diff-style write/edit previews while preserving custom-footer ownership"
 source_of_truth_for:
-  - ".xtrm/ext-src/xtrm-ui/index.ts"
-  - ".xtrm/ext-src/xtrm-ui/package.json"
-  - ".xtrm/ext-src/xtrm-ui/themes/*.json"
+  - "packages/pi-extensions/extensions/xtrm-ui/index.ts"
+  - "packages/pi-extensions/extensions/xtrm-ui/package.json"
+  - "packages/pi-extensions/extensions/xtrm-ui/themes/*.json"
 domain: [pi, extensions, ui, themes]
 ---
 
@@ -96,8 +96,8 @@ Preferences are persisted per session via `pi.appendEntry` and restored on
 
 `xtrm-ui` is a managed extension using the **global symlink model**:
 
-- Source: `.xtrm/ext-src/xtrm-ui/` (git-tracked)
-- Global symlink: `~/.pi/agent/extensions/xtrm-ui` → `.xtrm/ext-src/xtrm-ui/`
+- Source: `packages/pi-extensions/extensions/xtrm-ui/` (git-tracked)
+- Global symlink: `~/.pi/agent/extensions/xtrm-ui` → `packages/pi-extensions/extensions/xtrm-ui/`
 
 On `xtrm install` (or `xt pi` / `xt attach`), the symlink is created/verified.
 Pi auto-discovers extensions in `~/.pi/agent/extensions/`, so no manual

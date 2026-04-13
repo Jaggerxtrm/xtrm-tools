@@ -1,5 +1,5 @@
-# Extension entrypoint staging area
+# Managed Pi extension entrypoints
 
-Future migration phases will move extension entrypoints from `config/pi/extensions/**` into this directory.
+This directory is the canonical source for managed Pi extension entrypoints.
 
-This scaffold phase keeps runtime behavior unchanged and does not register these entrypoints yet.
+Runtime delivery is package-based via `npm:@xtrm/pi-extensions`.

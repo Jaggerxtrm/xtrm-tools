@@ -14,12 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.7.3] - 2026-04-04
 
 ### Changed
-- **Pi extensions architecture**: Refactored from project-level copies to global symlink model. Extensions now live in `.xtrm/ext-src/` (source of truth) and are symlinked to `~/.pi/agent/extensions/`. This eliminates project-level conflicts and worktrees no longer need extension bootstrap.
-- **Directory rename**: `.xtrm/extensions/` renamed to `.xtrm/ext-src/` to prevent Pi auto-discovery of project-level extensions (which would duplicate global symlinks).
-- **Legacy path removal**: `.pi/node_modules/@xtrm/pi-core` deprecated; `@xtrm/pi-core` now lives in `.xtrm/ext-src/core/`.
+- **Pi extensions architecture**: Refactored from project-level copies to global symlink model. Extensions now live in `packages/pi-extensions/extensions/` (source of truth) and are symlinked to `~/.pi/agent/extensions/`. This eliminates project-level conflicts and worktrees no longer need extension bootstrap.
+- **Directory rename**: `.xtrm/extensions/` renamed to `packages/pi-extensions/extensions/` to prevent Pi auto-discovery of project-level extensions (which would duplicate global symlinks).
+- **Legacy path removal**: `.pi/node_modules/@xtrm/pi-core` deprecated; `@xtrm/pi-core` now lives in `packages/pi-extensions/src/core/`.
 - **`docs/pi-extensions.md`**: Comprehensive rewrite documenting global symlink model, sync behavior, worktree compatibility, and active extensions (v2.0.0).
 - **`docs/xtrm-directory.md`**: Updated directory layout to reflect `ext-src/` and global symlink architecture (v1.1.0).
-- **`docs/xtrm-ui.md`**: Updated source paths from `config/pi/extensions/` to `.xtrm/ext-src/` (v1.2.0).
+- **`docs/xtrm-ui.md`**: Updated source paths from `packages/pi-extensions/extensions/` to `packages/pi-extensions/extensions/` (v1.2.0).
 
 ### Fixed
 - **Worktree extension sync**: Extensions are now global symlinks — worktrees automatically share extensions with main repo without bootstrap or drift issues.

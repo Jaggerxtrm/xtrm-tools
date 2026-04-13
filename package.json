@@ -6,7 +6,8 @@
   "type": "module",
   "workspaces": [
     "cli",
-    "config/pi/extensions/core"
+    "config/pi/extensions/core",
+    "packages/pi-extensions"
   ],
   "bin": {
     "xtrm": "cli/dist/index.cjs",

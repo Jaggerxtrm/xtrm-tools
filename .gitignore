@@ -51,7 +51,7 @@ skills/*-workspace/
 .specialists/jobs/
 .specialists/ready/
 .specialists/trace.jsonl
-.xtrm/config/pi/extensions/xtrm-ui/.serena/
+packages/pi-extensions/extensions/xtrm-ui/.serena/
 .xtrm/extensions/**/.pi/
 
 # Beads runtime files (always modified, not meaningful to track)

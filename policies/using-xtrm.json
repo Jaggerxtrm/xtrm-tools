@@ -13,7 +13,7 @@
     ]
   },
   "pi": {
-    "extension": "config/pi/extensions/xtrm-loader/index.ts",
+    "extension": "packages/pi-extensions/extensions/xtrm-loader/index.ts",
     "events": ["session_start", "before_agent_start"]
   }
 }

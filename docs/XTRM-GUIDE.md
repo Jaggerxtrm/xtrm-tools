@@ -18,7 +18,7 @@ domain: []
 | [Policy System](#policy-system) | Compile and verify policy output: |
 | [Hook Wiring (Claude)](#hook-wiring-claude) | Generated output: `hooks/hooks |
 | [Statusline](#statusline) | `statusline |
-| [Pi Extensions](#pi-extensions) | Current extension layout is **directory-based** under `config/pi/extensions/<name>/index |
+| [Pi Extensions](#pi-extensions) | Current extension layout is **directory-based** under `packages/pi-extensions/extensions/<name>/index |
 | [Session Close Reports](#session-close-reports) | Use `xt report` to produce structured handoff reports at the end of every session: |
 | [Docs and Drift](#docs-and-drift) | When changing hooks/policies/runtime behavior, update these docs together: |
 | [Troubleshooting](#troubleshooting) | If GitNexus is stale in a repo: |
@@ -155,7 +155,7 @@ Style principle: bold/dim/italic only, no hardcoded fg/bg.
 
 ## Pi Extensions
 
-Current extension layout is **directory-based** under `config/pi/extensions/<name>/index.ts`:
+Current extension layout is **directory-based** under `packages/pi-extensions/extensions/<name>/index.ts`:
 
 - `beads/`
 - `session-flow/`

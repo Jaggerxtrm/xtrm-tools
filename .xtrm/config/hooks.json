@@ -125,8 +125,5 @@
         ]
       }
     ]
-  },
-  "statusLine": {
-    "script": "statusline.mjs"
   }
 }

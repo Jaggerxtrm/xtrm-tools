@@ -126,7 +126,7 @@ function runPiCheck(policiesData) {
   }
 
   const expectedNames = policyExtPaths
-    .map((p) => p.replace(/^config\/pi\/extensions\//, ''))
+    .map((p) => p.replace(/^packages\/pi-extensions\/extensions\//, ''))
     .map((p) => p.replace(/\/index\.ts$/, ''));
   const expectedSet = new Set(expectedNames);
 

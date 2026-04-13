@@ -45288,6 +45288,28 @@ async function runPiRuntimeSync(opts = {}) {
   const legacyCleanup = await cleanupLegacyProjectExtensionCopies(resolvedProjectRoot, dryRun, log);
   result.extensionsRemoved.push(...legacyCleanup.removed);
   result.failed.push(...legacyCleanup.failed);
+  const globalExtDir = import_path4.default.join(PI_AGENT_DIR, "extensions");
+  if (await import_fs_extra9.default.pathExists(globalExtDir)) {
+    const MANAGED_EXT_IDS = new Set(MANAGED_EXTENSIONS.map((e) => e.id));
+    const STALE_SYMLINKS = /* @__PURE__ */ new Set([...MANAGED_EXT_IDS, "core", "gitnexus", "serena"]);
+    const globalEntries = await import_fs_extra9.default.readdir(globalExtDir, { withFileTypes: true });
+    for (const entry of globalEntries) {
+      if (entry.isSymbolicLink() && STALE_SYMLINKS.has(entry.name)) {
+        if (!dryRun) {
+          await import_fs_extra9.default.remove(import_path4.default.join(globalExtDir, entry.name));
+        }
+        result.extensionsRemoved.push(entry.name);
+        log(`Removed stale global symlink: ${entry.name}`);
+      }
+    }
+    const staleNodeModules = import_path4.default.join(globalExtDir, "node_modules");
+    if (await import_fs_extra9.default.pathExists(staleNodeModules)) {
+      if (!dryRun) {
+        await import_fs_extra9.default.remove(staleNodeModules);
+      }
+      log("Removed stale global extensions/node_modules");
+    }
+  }
   for (const status of missingPackages) {
     const { pkg } = status;
     if (dryRun) {

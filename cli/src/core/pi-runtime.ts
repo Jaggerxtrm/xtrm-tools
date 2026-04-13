@@ -886,6 +886,30 @@ export async function runPiRuntimeSync(opts: PiRuntimeOptions = {}): Promise<PiS
     result.extensionsRemoved.push(...legacyCleanup.removed);
     result.failed.push(...legacyCleanup.failed);
 
+    // Clean stale global extension symlinks from pre-package-mode installs
+    const globalExtDir = path.join(PI_AGENT_DIR, 'extensions');
+    if (await fs.pathExists(globalExtDir)) {
+        const MANAGED_EXT_IDS = new Set(MANAGED_EXTENSIONS.map(e => e.id));
+        const STALE_SYMLINKS = new Set([...MANAGED_EXT_IDS, 'core', 'gitnexus', 'serena']);
+        const globalEntries = await fs.readdir(globalExtDir, { withFileTypes: true });
+        for (const entry of globalEntries) {
+            if (entry.isSymbolicLink() && STALE_SYMLINKS.has(entry.name)) {
+                if (!dryRun) {
+                    await fs.remove(path.join(globalExtDir, entry.name));
+                }
+                result.extensionsRemoved.push(entry.name);
+                log(`Removed stale global symlink: ${entry.name}`);
+            }
+        }
+        const staleNodeModules = path.join(globalExtDir, 'node_modules');
+        if (await fs.pathExists(staleNodeModules)) {
+            if (!dryRun) {
+                await fs.remove(staleNodeModules);
+            }
+            log('Removed stale global extensions/node_modules');
+        }
+    }
+
     for (const status of missingPackages) {
         const { pkg } = status;
         if (dryRun) {

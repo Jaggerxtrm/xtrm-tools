@@ -6,6 +6,7 @@ version: 2.0.0
 updated: 2026-04-04
 synced_at: e6cca025
 source_of_truth_for:
+  - "packages/pi-extensions/package.json"
   - "packages/pi-extensions/extensions/**/index.ts"
   - "packages/pi-extensions/extensions/**/package.json"
   - "cli/src/core/pi-runtime.ts"
@@ -55,6 +56,34 @@ packages/pi-extensions/
 │   └── registry.ts
 └── themes/
 ```
+
+## Publish & Release Contract
+
+`@xtrm/pi-extensions` is published as an independent workspace package.
+
+### Release entrypoints
+
+```bash
+npm run release:pi-extensions
+npm run release:all
+```
+
+### Publish invariants
+
+- Version is synced from root `package.json` by `npm run sync:cli-version`.
+- npm tarball contents are restricted by `packages/pi-extensions/package.json#files`.
+- `prepublishOnly` verifies runtime assets required for Pi loading (raw TypeScript, no build step).
+
+### Runtime install contract
+
+```bash
+pi install npm:@xtrm/pi-extensions
+```
+
+Pi discovers the package using:
+
+- `keywords: ["pi-package"]`
+- `pi.extensions: ["./src/index.ts"]`
 
 ## Install Commands
 

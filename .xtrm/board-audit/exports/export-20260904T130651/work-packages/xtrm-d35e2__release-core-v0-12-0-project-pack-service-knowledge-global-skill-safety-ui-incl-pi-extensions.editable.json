@@ -1,0 +1,76 @@
+{
+  "content_sha256": "1417bfb02acb0417167c98f4b6a6c904a27c62c824b71d5cbe5eeba961ccbd68",
+  "desired_issues": {
+    "xtrm-d35e2": {
+      "_type": "issue",
+      "assignee": "jaggerxtrm",
+      "comment_count": 0,
+      "created_at": "2026-09-04T08:27:59Z",
+      "created_by": "jaggerxtrm",
+      "dependency_count": 0,
+      "dependent_count": 0,
+      "description": "## PROBLEM\nCore main holds unreleased functional work since v0.11.6: project-pack skill resolution + Claude loadability (ef14bf44/PR609), destructive global-cleanup prevention (b8697569/PR608), 5 retired pi-extensions (aead627f/PR607), launcher-owned --name (7f5874c1), xtrm-ui overhaul (#598-604), docs (#596, 12ee408c). npm xtrm-tools@0.11.6 tarball ships stale README. Specialists 3.21.6 is published and references coordinated Core ef14bf44.\n## SUCCESS\nOperator-approved (2026-09-03): cut v0.12.0 for xtrm-tools AND @jaggerxtrm/pi-extensions. Version bumps, changelog [0.12.0] section via repo flow, release notes, tag, GitHub release, npm publish both packages, registry verified, tarball dist byte-identical to main, machine runtime promoted, no host npm install (machine stays repo-linked).\n## CONSTRAINTS\nBase exactly origin/main 12ee408ccd994835882b1f1d490be82f676ecedc. Isolated worktree only; canonical /home/dawid/dev/core is on an unrelated feature branch and dirty — never touch it. No force-push, never republish existing versions. Release commit pattern follows ba351533 (v0.11.6): root+cli+pi-extensions package.json, package-lock.json, CHANGELOG.md.",
+      "heartbeat_at": "2026-09-04T08:27:59Z",
+      "id": "xtrm-d35e2",
+      "issue_type": "task",
+      "lease_expires_at": "2026-09-04T08:32:59Z",
+      "owner": "dawid.jgg@gmail.com",
+      "priority": 1,
+      "started_at": "2026-09-04T08:27:59Z",
+      "status": "in_progress",
+      "title": "release: core v0.12.0 (project-pack service knowledge, global-skill safety, ui) incl pi-extensions",
+      "updated_at": "2026-09-04T08:27:59Z"
+    }
+  },
+  "diagnostics": {
+    "dangling_relations": [],
+    "derived_dotted_parent_links": [],
+    "multiple_parent_nodes": []
+  },
+  "external_relations": [],
+  "hierarchy": {
+    "children": [],
+    "id": "xtrm-d35e2"
+  },
+  "issues": {
+    "xtrm-d35e2": {
+      "selection_state": "selected",
+      "source": {
+        "_type": "issue",
+        "assignee": "jaggerxtrm",
+        "comment_count": 0,
+        "created_at": "2026-09-04T08:27:59Z",
+        "created_by": "jaggerxtrm",
+        "dependency_count": 0,
+        "dependent_count": 0,
+        "description": "## PROBLEM\nCore main holds unreleased functional work since v0.11.6: project-pack skill resolution + Claude loadability (ef14bf44/PR609), destructive global-cleanup prevention (b8697569/PR608), 5 retired pi-extensions (aead627f/PR607), launcher-owned --name (7f5874c1), xtrm-ui overhaul (#598-604), docs (#596, 12ee408c). npm xtrm-tools@0.11.6 tarball ships stale README. Specialists 3.21.6 is published and references coordinated Core ef14bf44.\n## SUCCESS\nOperator-approved (2026-09-03): cut v0.12.0 for xtrm-tools AND @jaggerxtrm/pi-extensions. Version bumps, changelog [0.12.0] section via repo flow, release notes, tag, GitHub release, npm publish both packages, registry verified, tarball dist byte-identical to main, machine runtime promoted, no host npm install (machine stays repo-linked).\n## CONSTRAINTS\nBase exactly origin/main 12ee408ccd994835882b1f1d490be82f676ecedc. Isolated worktree only; canonical /home/dawid/dev/core is on an unrelated feature branch and dirty — never touch it. No force-push, never republish existing versions. Release commit pattern follows ba351533 (v0.11.6): root+cli+pi-extensions package.json, package-lock.json, CHANGELOG.md.",
+        "heartbeat_at": "2026-09-04T08:27:59Z",
+        "id": "xtrm-d35e2",
+        "issue_type": "task",
+        "lease_expires_at": "2026-09-04T08:32:59Z",
+        "owner": "dawid.jgg@gmail.com",
+        "priority": 1,
+        "started_at": "2026-09-04T08:27:59Z",
+        "status": "in_progress",
+        "title": "release: core v0.12.0 (project-pack service knowledge, global-skill safety, ui) incl pi-extensions",
+        "updated_at": "2026-09-04T08:27:59Z"
+      }
+    }
+  },
+  "new_comments": {},
+  "relations": [],
+  "repository": "xtrm-dev/core",
+  "root_id": "xtrm-d35e2",
+  "root_title": "release: core v0.12.0 (project-pack service knowledge, global-skill safety, ui) incl pi-extensions",
+  "roundtrip": {
+    "base_package_sha256": "1417bfb02acb0417167c98f4b6a6c904a27c62c824b71d5cbe5eeba961ccbd68",
+    "base_record_sha256": {
+      "xtrm-d35e2": "d12ed1f2a3066857bb14724a6d3f941e3f7e114ac5a785a91a03dee581564d07"
+    },
+    "edit_contract": "modify desired_issues and new_comments only; issues.*.source is immutable base state",
+    "prepared_at": "2026-09-04T11:06:54Z",
+    "schema_version": "xtrm.board-audit.roundtrip.v1"
+  },
+  "schema_version": "xtrm.board-audit.work-package.v1",
+  "scope": "open"
+}
